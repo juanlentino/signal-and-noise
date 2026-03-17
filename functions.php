@@ -4,7 +4,7 @@
  *
  * @package SignalNoise
  * @since 1.0.0
- * @version 3.6.1
+ * @version 3.7.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -338,51 +338,3 @@ function sn_reset_templates_page() {
 	echo '<p class="description" style="margin-top:1em;">This also runs automatically when you activate or update the theme.</p>';
 	echo '</div>';
 }
-
-/**
- * ──────────────────────────────────────────────────
- * QUOTER: Auth gate — admin-only access.
- * ──────────────────────────────────────────────────
- */
-add_action( 'template_redirect', function() {
-	if ( is_page_template( 'page-quoter' ) ) {
-		if ( ! is_user_logged_in() ) {
-			wp_redirect( wp_login_url( get_permalink() ) );
-			exit;
-		}
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( 'Access denied.', 'Restricted', array( 'response' => 403 ) );
-		}
-	}
-} );
-
-/**
- * QUOTER: Enqueue jsPDF only on quoter page.
- * Uses both is_page_template and slug check for block theme compat.
- */
-add_action( 'wp_enqueue_scripts', function() {
-	$is_quoter = is_page_template( 'page-quoter' );
-
-	// Fallback: check page slug or template meta directly (block theme compat).
-	if ( ! $is_quoter && is_singular( 'page' ) ) {
-		$template = get_page_template_slug( get_queried_object_id() );
-		$is_quoter = ( 'page-quoter' === $template );
-	}
-
-	if ( $is_quoter ) {
-		wp_enqueue_script(
-			'jspdf',
-			'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js',
-			array(),
-			'2.5.2',
-			true
-		);
-		wp_enqueue_script(
-			'sn-quoter',
-			get_theme_file_uri( 'assets/js/quoter.js' ) . '?v=' . wp_get_theme()->get( 'Version' ),
-			array( 'jspdf' ),
-			null,
-			true
-		);
-	}
-} );

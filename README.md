@@ -37,8 +37,7 @@ signal-and-noise/
 │   ├── fonts/                    # Self-hosted Bebas Neue + DM Mono (woff2)
 │   ├── images/                   # Favicon, logo (56px + 112px retina)
 │   └── js/
-│       ├── sticky-header.js      # Shrinking fixed header on scroll
-│       └── quoter.js             # Private quote generator (PDF via jsPDF)
+│       └── sticky-header.js      # Shrinking fixed header on scroll
 ├── parts/
 │   ├── header.html               # Site header (logo, nav, sticky behavior)
 │   └── footer.html               # Site footer (social links, copyright)
@@ -49,12 +48,11 @@ signal-and-noise/
 │   ├── page-music.html           # Spotify embeds + Muso.AI verified credits
 │   ├── page-resume.html          # Professional resume with PDF download
 │   ├── page-contact.html         # Contact Form 7 integration
-│   ├── page-quoter.html          # Private: admin-only project quote generator
 │   ├── page.html                 # Default page
 │   ├── single.html               # Single post
 │   ├── index.html                # Blog index
 │   └── 404.html                  # Not found
-├── functions.php                 # Theme functions, auth gates, performance optimizations
+├── functions.php                 # Theme functions, performance optimizations
 ├── style.css                     # Theme metadata + full changelog
 ├── theme.json                    # Colors, typography, spacing, templates, block config
 ├── readme.txt                    # WordPress.org-style readme
@@ -71,25 +69,7 @@ signal-and-noise/
 | Music | `page-music` | Public | Spotify embeds + Muso.AI verified credits section |
 | Resume | `page-resume` | Public | Professional summary with PDF download |
 | Contact | `page-contact` | Public | Contact Form 7 with theme-matched styling |
-| Quoter | `page-quoter` | Admin only | Hybrid pricing calculator with branded PDF export |
 | 404 | `404` | Public | Custom not-found page |
-
-## Private Quoter
-
-The Quoter is an admin-only tool for generating branded client quotes based on a hybrid pricing model (session days + deliverables).
-
-**Access control:** `functions.php` checks `is_user_logged_in()` and `current_user_can('manage_options')` via `template_redirect`. Non-admins are redirected to the WordPress login page. The page is not linked in navigation.
-
-**Features:**
-- Client info (name, email, project)
-- Variable component: session/consulting days × day rate
-- Fixed component: mix, master, production, songwriting, consulting deliverables with quantities
-- Configurable revision cap and overage pricing per round
-- Payment terms (50/50, 100% upfront, thirds, custom)
-- Live calculation with variable/fixed split ratio
-- One-click PDF export via jsPDF — branded with name, contact info, red accents, itemized breakdown, terms
-
-**Setup:** Create a WordPress page, assign the "Quoter (Private)" template. No navigation link needed.
 
 ## Performance
 
@@ -98,7 +78,7 @@ The theme was optimized through a multi-version PageSpeed Insights pass (v3.0.0�
 - **Zero external render-blocking resources.** All CSS is inline (critical path) or deferred.
 - **Self-hosted fonts.** Bebas Neue + DM Mono served as local woff2. No Google Fonts requests.
 - **Deferred analytics.** gtag.js loads on first user interaction, not on page load.
-- **Conditional script loading.** CF7 CSS/JS only on contact page. Cloudflare Turnstile only on contact page. jsPDF only on quoter page.
+- **Conditional script loading.** CF7 CSS/JS only on contact page. Cloudflare Turnstile only on contact page.
 - **No jQuery.** Zero framework dependencies.
 
 ## Deployment
