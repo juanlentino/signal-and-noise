@@ -4,7 +4,7 @@
  *
  * @package SignalNoise
  * @since 1.0.0
- * @version 3.6.0
+ * @version 3.6.1
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -358,9 +358,18 @@ add_action( 'template_redirect', function() {
 
 /**
  * QUOTER: Enqueue jsPDF only on quoter page.
+ * Uses both is_page_template and slug check for block theme compat.
  */
 add_action( 'wp_enqueue_scripts', function() {
-	if ( is_page_template( 'page-quoter' ) ) {
+	$is_quoter = is_page_template( 'page-quoter' );
+
+	// Fallback: check page slug or template meta directly (block theme compat).
+	if ( ! $is_quoter && is_singular( 'page' ) ) {
+		$template = get_page_template_slug( get_queried_object_id() );
+		$is_quoter = ( 'page-quoter' === $template );
+	}
+
+	if ( $is_quoter ) {
 		wp_enqueue_script(
 			'jspdf',
 			'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js',

@@ -4,7 +4,7 @@ Theme URI: https://juanlentino.com
 Author: Juan Lentino
 Author URI: https://juanlentino.com
 Description: White, clinical, brutalist WordPress block theme for music producers — inspired by nin.com. Bebas Neue + DM Mono typography, subtle film grain, and a stripped-back industrial palette. Black text, white space, red accents. Includes custom templates for Services, Music (with Muso.AI integration), Resume, and Contact pages.
-Version: 3.6.0
+Version: 3.6.1
 Requires at least: 6.4
 Tested up to: 6.9
 Requires PHP: 8.0
@@ -132,4 +132,8 @@ Changelog:
            configurable revision policy, payment terms, and one-click PDF export via jsPDF.
            Auth gate in functions.php redirects non-admins to WP login. Registered in
            theme.json as "Quoter (Private)". Assets: quoter.js (calc engine + PDF generator).
+  3.6.1 — Quoter fix: robust script loading for block themes. Added get_page_template_slug
+           fallback in wp_enqueue_scripts (is_page_template unreliable in FSE context). Rebuilt
+           quoter.js with DOM-ready fallback for deferred scripts, createElement for deliverable
+           rows (innerHTML was being sanitized by WP), and error handling for jsPDF loading.
 */
