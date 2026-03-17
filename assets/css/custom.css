@@ -1,0 +1,1097 @@
+/* ============================================
+   SIGNAL & NOISE — Custom Styles
+   Light Industrial — NIN Aesthetic
+   v3.4.5 — Self-Hosted Fonts + SEO
+   ============================================ */
+
+/* Fonts: Bebas Neue + DM Mono are declared in functions.php (inline critical)
+   and theme.json (fontFace). Do NOT add @font-face here — this file is inlined
+   in <head> so relative paths would break. */
+
+/* ============================================
+   BASE / GLOBAL
+   ============================================ */
+
+html {
+	scroll-behavior: smooth;
+	scrollbar-width: thin;
+	scrollbar-color: #d9d9d9 #ffffff;
+	overflow-x: hidden;
+}
+
+body {
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	overflow-x: hidden;
+}
+
+::selection {
+	background: #e00404;
+	color: #ffffff;
+}
+
+::-moz-selection {
+	background: #e00404;
+	color: #ffffff;
+}
+
+/* --- Film Grain Overlay --- */
+body::before {
+	content: "";
+	position: fixed;
+	inset: 0;
+	z-index: 9999;
+	pointer-events: none;
+	opacity: 0.025;
+	background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+	background-repeat: repeat;
+	background-size: 200px 200px;
+	mix-blend-mode: multiply;
+}
+
+/* --- Scanline effect --- */
+body::after {
+	content: "";
+	position: fixed;
+	inset: 0;
+	z-index: 9998;
+	pointer-events: none;
+	opacity: 0.01;
+	background: repeating-linear-gradient(
+		0deg,
+		transparent,
+		transparent 2px,
+		rgba(0, 0, 0, 0.04) 2px,
+		rgba(0, 0, 0, 0.04) 4px
+	);
+}
+
+/* --- Skip to Content (Accessibility) --- */
+.sn-skip-link {
+	position: absolute;
+	top: -100%;
+	left: 1rem;
+	z-index: 999999;
+	background: #000000;
+	color: #ffffff;
+	padding: 0.75rem 1.5rem;
+	font-family: var(--wp--preset--font-family--heading);
+	font-size: 0.85rem;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	text-decoration: none;
+}
+
+.sn-skip-link:focus {
+	top: 0.5rem;
+	outline: 2px solid #e00404;
+	outline-offset: 2px;
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+@keyframes fadeInUp {
+	from { opacity: 0.01; transform: translateY(30px); }
+	to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+	from { opacity: 0.01; }
+	to { opacity: 1; }
+}
+
+@keyframes slideInLeft {
+	from { opacity: 0.01; transform: translateX(-40px); }
+	to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes glitchFlicker {
+	0%, 100% { opacity: 1; }
+	92% { opacity: 1; }
+	93% { opacity: 0.8; transform: translateX(-2px); }
+	94% { opacity: 1; transform: translateX(1px); }
+	95% { opacity: 0.9; }
+	96% { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulseGlow {
+	0%, 100% { text-shadow: 0 0 8px rgba(224, 4, 4, 0.2); }
+	50% { text-shadow: 0 0 20px rgba(224, 4, 4, 0.4), 0 0 40px rgba(224, 4, 4, 0.1); }
+}
+
+@keyframes lineExpand {
+	from { width: 0; }
+	to { width: 60px; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	.wp-block-group,
+	.wp-block-columns,
+	.wp-block-image,
+	.wp-block-cover {
+		animation: fadeInUp 0.6s ease-out both;
+	}
+}
+
+/* ============================================
+   LOGO
+   ============================================ */
+
+.sn-logo-link {
+	display: flex;
+	align-items: center;
+	text-decoration: none;
+	flex-shrink: 0;
+}
+
+.sn-logo-img {
+	display: block;
+	width: 56px;
+	height: 56px;
+	object-fit: contain;
+	transition: opacity 0.3s ease;
+}
+
+.sn-logo-link:hover .sn-logo-img {
+	opacity: 0.7;
+}
+
+/* ============================================
+   HEADER
+   ============================================ */
+
+.sn-header {
+	animation: fadeIn 0.8s ease-out;
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 10000;
+	transition: padding 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Shrunk state on scroll */
+.sn-header.is-scrolled {
+	padding-top: 0.4rem !important;
+	padding-bottom: 0.4rem !important;
+	box-shadow: 0 1px 8px rgba(0, 0, 0, 0.06);
+}
+
+.sn-header.is-scrolled .sn-logo-img {
+	width: 38px;
+	height: 38px;
+}
+
+/* Push page content below fixed header */
+body {
+	padding-top: 80px;
+}
+
+/* Navigation links — desktop underline effect */
+.wp-block-navigation a {
+	position: relative;
+	transition: color 0.3s ease;
+}
+
+.wp-block-navigation a::after {
+	content: "";
+	position: absolute;
+	bottom: -4px;
+	left: 0;
+	width: 0;
+	height: 1px;
+	background-color: var(--wp--preset--color--blood);
+	transition: width 0.3s ease;
+}
+
+.wp-block-navigation a:hover::after {
+	width: 100%;
+}
+
+/* ============================================
+   MOBILE NAV OVERLAY
+   ============================================ */
+
+/* Hamburger + close icon styles (all sizes) */
+/* ── MOBILE NAV OVERLAY — Editorial Left ── */
+
+.wp-block-navigation__responsive-container-open {
+	z-index: 99999 !important;
+}
+
+.wp-block-navigation__responsive-container-close svg,
+.wp-block-navigation__responsive-container-open svg {
+	fill: #000000 !important;
+	width: 28px !important;
+	height: 28px !important;
+}
+
+/* Full-screen overlay */
+.wp-block-navigation__responsive-container.is-menu-open {
+	position: fixed !important;
+	top: 0 !important;
+	left: 0 !important;
+	right: 0 !important;
+	bottom: 0 !important;
+	width: 100% !important;
+	height: 100vh !important;
+	height: 100dvh !important;
+	z-index: 100000 !important;
+	background-color: #ffffff !important;
+	display: flex !important;
+	flex-direction: column !important;
+	align-items: center !important;
+	justify-content: center !important;
+	padding: 0 !important;
+	overflow-y: auto !important;
+}
+
+/* Close button — top right, matching header position */
+.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation__responsive-container-close {
+	position: absolute !important;
+	top: 1rem !important;
+	right: 1.25rem !important;
+	z-index: 100001 !important;
+}
+
+/* Content wrapper */
+.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation__responsive-container-content {
+	display: flex !important;
+	flex-direction: column !important;
+	align-items: center !important;
+	justify-content: center !important;
+	gap: 0 !important;
+	width: 100% !important;
+	height: 100% !important;
+	padding: 4rem 2rem 2rem !important;
+}
+
+/* Red accent line above the nav links */
+.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation__responsive-container-content::before {
+	content: "" !important;
+	display: block !important;
+	width: 40px !important;
+	height: 3px !important;
+	background: #e00404 !important;
+	margin-bottom: 2rem !important;
+}
+
+/* Override WP's right-justification on the inner <ul> */
+.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation__container,
+.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation__container.is-content-justification-right,
+.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation__container.items-justified-right {
+	display: flex !important;
+	flex-direction: column !important;
+	align-items: center !important;
+	justify-content: center !important;
+	width: 100% !important;
+	gap: 0 !important;
+}
+
+/* Each nav item */
+.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation-item {
+	width: auto !important;
+	border-bottom: none !important;
+}
+
+/* Nav links */
+.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation-item a {
+	font-size: 2.4rem !important;
+	font-family: var(--wp--preset--font-family--heading) !important;
+	letter-spacing: 0.04em !important;
+	text-transform: uppercase !important;
+	padding: 0.6rem 0 !important;
+	color: #000000 !important;
+	text-decoration: none !important;
+	display: block !important;
+	line-height: 1.1 !important;
+	text-align: center !important;
+	transition: color 0.2s ease !important;
+}
+
+/* Hover/active — red */
+.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation-item a:hover,
+.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation-item a:active {
+	color: #e00404 !important;
+}
+
+/* Remove desktop underline effect inside overlay */
+.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation-item a::after {
+	display: none !important;
+}
+
+/* ============================================
+   HERO SECTION
+   ============================================ */
+
+.sn-hero {
+	position: relative;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: flex-start;
+	min-height: calc(100vh - 80px - 90px) !important;
+	min-height: calc(100dvh - 80px - 90px) !important;
+}
+
+.sn-hero::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(
+		180deg,
+		rgba(255, 255, 255, 0.2) 0%,
+		rgba(255, 255, 255, 0.95) 100%
+	);
+	z-index: 1;
+	pointer-events: none;
+}
+
+.sn-hero > * {
+	position: relative;
+	z-index: 2;
+}
+
+.sn-hero-title {
+	animation: fadeInUp 1s ease-out 0.2s both;
+}
+
+.sn-hero-subtitle {
+	animation: fadeInUp 1s ease-out 0.5s both;
+}
+
+.sn-hero-cta {
+	animation: fadeInUp 1s ease-out 0.8s both;
+}
+
+/* ============================================
+   ACCENT LINE
+   ============================================ */
+
+.sn-accent-line::before {
+	content: "";
+	display: block;
+	width: 60px;
+	height: 2px;
+	background: var(--wp--preset--color--blood);
+	margin-bottom: 1.5rem;
+	animation: lineExpand 0.8s ease-out both;
+}
+
+/* ============================================
+   HERO / ABOUT IMAGES
+   ============================================ */
+
+.sn-hero-image img {
+	filter: grayscale(30%) contrast(1.1);
+	transition: filter 0.6s ease;
+}
+
+.sn-hero-image:hover img {
+	filter: grayscale(0%) contrast(1.05);
+}
+
+.sn-about-portrait img {
+	filter: grayscale(20%) contrast(1.1);
+	transition: filter 0.6s ease;
+}
+
+.sn-about-portrait:hover img {
+	filter: grayscale(0%) contrast(1);
+}
+
+/* ============================================
+   SERVICE CARDS
+   ============================================ */
+
+/* Service columns act as cards — target wp-block-column inside services sections */
+.sn-service-card,
+.wp-block-columns .wp-block-column:has(.sn-service-image) {
+	transition: transform 0.3s ease;
+}
+
+.sn-service-image img {
+	filter: grayscale(40%) contrast(1.1);
+	transition: filter 0.5s ease, transform 0.5s ease;
+}
+
+.sn-service-card:hover .sn-service-image img,
+.wp-block-column:hover .sn-service-image img {
+	filter: grayscale(0%) contrast(1.05);
+	transform: scale(1.02);
+}
+
+/* ============================================
+   PROCESS STRIP (How It Works)
+   ============================================ */
+
+.sn-process-strip .wp-block-column {
+	padding: 0 1rem 0 0;
+	border-right: 1px solid var(--wp--preset--color--concrete);
+}
+
+.sn-process-strip .wp-block-column:last-child {
+	border-right: none;
+	padding-right: 0;
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+
+.wp-block-button__link {
+	position: relative;
+	overflow: hidden;
+	transition: all 0.3s ease;
+	border: 1px solid transparent;
+}
+
+.wp-block-button__link:hover {
+	transform: translateY(-1px);
+	box-shadow: 0 4px 20px rgba(224, 4, 4, 0.2);
+}
+
+.is-style-outline .wp-block-button__link {
+	background: transparent !important;
+	border: 1px solid var(--wp--preset--color--bone);
+	color: var(--wp--preset--color--bone) !important;
+}
+
+.is-style-outline .wp-block-button__link:hover {
+	background: var(--wp--preset--color--bone) !important;
+	color: var(--wp--preset--color--void) !important;
+}
+
+/* ============================================
+   SEPARATORS
+   ============================================ */
+
+.wp-block-separator {
+	border-color: var(--wp--preset--color--concrete) !important;
+	opacity: 0.6;
+}
+
+/* ============================================
+   IMAGES
+   ============================================ */
+
+.wp-block-image img {
+	filter: contrast(1.02);
+	transition: filter 0.4s ease;
+	max-width: 100%;
+	height: auto;
+}
+
+.wp-block-image:hover img {
+	filter: contrast(1.06) brightness(1.01);
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+
+.sn-footer {
+	border-top: 1px solid var(--wp--preset--color--concrete);
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	z-index: 9990;
+}
+
+.sn-footer a {
+	transition: color 0.3s ease;
+}
+
+/* Social icons — minimum 44x44 touch target (WCAG) */
+.sn-footer .wp-block-social-link-anchor {
+	min-width: 44px;
+	min-height: 44px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+/* Push main content above fixed footer */
+main.wp-block-group {
+	padding-bottom: 90px;
+}
+
+/* ============================================
+   EMBEDS (Spotify, etc.)
+   ============================================ */
+
+.wp-block-embed,
+.wp-block-embed .wp-block-embed__wrapper {
+	background: #000000;
+}
+
+.wp-block-embed-spotify,
+.wp-block-embed-spotify .wp-block-embed__wrapper {
+	background: #000000 !important;
+}
+
+.wp-block-embed-spotify iframe {
+	border-radius: 0 !important;
+	background: #000000;
+}
+
+.wp-block-embed-spotify.wp-has-aspect-ratio .wp-block-embed__wrapper::before {
+	padding-top: 0 !important;
+}
+
+.wp-block-embed-spotify.wp-has-aspect-ratio .wp-block-embed__wrapper {
+	position: relative;
+	padding-bottom: 0 !important;
+}
+
+.wp-block-embed-spotify.wp-has-aspect-ratio .wp-block-embed__wrapper iframe {
+	position: relative !important;
+	height: 600px;
+}
+
+/* ============================================
+   PDF VIEWER
+   ============================================ */
+
+.wp-block-file .wp-block-file__embed {
+	min-height: 80vh;
+	border: 1px solid #d9d9d9;
+}
+
+.wp-block-file a.wp-block-file__button {
+	background: #000000;
+	color: #ffffff;
+	font-family: var(--wp--preset--font-family--heading);
+	text-transform: uppercase;
+	letter-spacing: 0.15em;
+	border-radius: 0;
+	padding: 0.9rem 2rem;
+	transition: all 0.3s ease;
+}
+
+.wp-block-file a.wp-block-file__button:hover {
+	background: #e00404;
+}
+
+/* ============================================
+   CONTACT FORM (CF7)
+   ============================================ */
+
+.wpcf7-form p {
+	margin-bottom: 1.25rem;
+}
+
+.wpcf7-form label {
+	display: block;
+	font-family: var(--wp--preset--font-family--body) !important;
+	font-size: 0.75rem !important;
+	font-weight: 500 !important;
+	letter-spacing: 0.2em !important;
+	text-transform: uppercase !important;
+	color: #000000 !important;
+	margin-bottom: 0.5rem;
+}
+
+.wpcf7-form > p > label {
+	font-family: var(--wp--preset--font-family--body) !important;
+	font-size: 0.75rem !important;
+	font-weight: 500 !important;
+	letter-spacing: 0.2em !important;
+	text-transform: uppercase !important;
+	color: #000000 !important;
+}
+
+.wpcf7 label {
+	font-family: var(--wp--preset--font-family--body) !important;
+	font-size: 0.75rem !important;
+	font-weight: 500 !important;
+	letter-spacing: 0.2em !important;
+	text-transform: uppercase !important;
+	color: #000000 !important;
+}
+
+.wpcf7-form .wpcf7-radio .wpcf7-list-item-label {
+	font-family: var(--wp--preset--font-family--body);
+	font-size: 0.75rem;
+	font-weight: 500;
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	color: #000000;
+}
+
+.wpcf7-form label br {
+	display: none;
+}
+
+.wpcf7-form input[type="text"],
+.wpcf7-form input[type="email"],
+.wpcf7-form textarea {
+	display: block;
+	width: 100%;
+	margin-top: 0.4rem;
+	padding: 0.75rem 1rem;
+	background: #ffffff;
+	border: 1px solid #d9d9d9;
+	border-radius: 0;
+	font-family: var(--wp--preset--font-family--body);
+	font-size: 0.9rem;
+	color: #000000;
+	transition: border-color 0.3s ease;
+	-webkit-appearance: none;
+	appearance: none;
+	box-sizing: border-box;
+}
+
+.wpcf7-form input[type="text"]:focus,
+.wpcf7-form input[type="email"]:focus,
+.wpcf7-form textarea:focus {
+	outline: none;
+	border-color: #e00404;
+}
+
+.wpcf7-form input[type="text"]::placeholder,
+.wpcf7-form input[type="email"]::placeholder,
+.wpcf7-form textarea::placeholder {
+	color: #999999;
+}
+
+.wpcf7-form textarea {
+	min-height: 160px;
+	resize: vertical;
+}
+
+.wpcf7-form input[type="submit"] {
+	display: inline-block;
+	background: #000000;
+	color: #ffffff;
+	font-family: var(--wp--preset--font-family--heading);
+	font-size: 1rem;
+	text-transform: uppercase;
+	letter-spacing: 0.15em;
+	padding: 0.9rem 2.5rem;
+	border: none;
+	border-radius: 0;
+	cursor: pointer;
+	transition: all 0.3s ease;
+	-webkit-appearance: none;
+	appearance: none;
+}
+
+.wpcf7-form input[type="submit"]:hover {
+	background: #e00404;
+}
+
+/* Akismet notice */
+.wpcf7-form p:has(a[href*="akismet"]) {
+	font-size: 0.7rem;
+	color: #999999;
+	margin-top: 1rem;
+}
+
+.wpcf7-form p:has(a[href*="akismet"]) a {
+	color: #666666;
+}
+
+/* Turnstile CAPTCHA */
+.wpcf7-turnstile {
+	margin-bottom: 1.25rem;
+}
+.wpcf7-turnstile iframe,
+.wpcf7-turnstile > div,
+.cf-turnstile,
+.cf-turnstile iframe,
+.cf-turnstile > div {
+	border: none !important;
+	outline: none !important;
+	box-shadow: none !important;
+}
+
+/* Validation states */
+.wpcf7-not-valid {
+	border-color: #e00404 !important;
+}
+
+.wpcf7-not-valid-tip {
+	font-family: var(--wp--preset--font-family--body);
+	font-size: 0.75rem;
+	color: #e00404;
+	margin-top: 0.35rem;
+}
+
+.wpcf7-response-output {
+	font-family: var(--wp--preset--font-family--body);
+	font-size: 0.85rem;
+	padding: 0.75rem 1rem;
+	margin: 1rem 0 0;
+	border: 1px solid #d9d9d9;
+}
+
+.wpcf7-form.sent .wpcf7-response-output {
+	border-color: #000000;
+	color: #000000;
+}
+
+.wpcf7-form.failed .wpcf7-response-output,
+.wpcf7-form.aborted .wpcf7-response-output,
+.wpcf7-form.spam .wpcf7-response-output {
+	border-color: #e00404;
+	color: #e00404;
+}
+
+/* Spinner */
+.wpcf7-spinner {
+	display: none;
+}
+
+/* ============================================
+   SCROLLBAR
+   ============================================ */
+
+::-webkit-scrollbar {
+	width: 6px;
+}
+
+::-webkit-scrollbar-track {
+	background: #ffffff;
+}
+
+::-webkit-scrollbar-thumb {
+	background: #d9d9d9;
+	border-radius: 0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: #e00404;
+}
+
+/* ============================================
+   RESPONSIVE — TABLET (max-width: 781px)
+   ============================================ */
+
+@media (max-width: 781px) {
+
+	/* Performance: Fast hero reveal for mobile Speed Index */
+	.sn-hero-title {
+		animation-duration: 0.3s !important;
+		animation-delay: 0s !important;
+	}
+	.sn-hero-subtitle {
+		animation-duration: 0.3s !important;
+		animation-delay: 0.05s !important;
+	}
+	.sn-hero-cta {
+		animation-duration: 0.3s !important;
+		animation-delay: 0.1s !important;
+	}
+	.sn-hero .sn-line-accent {
+		animation-duration: 0.3s !important;
+	}
+
+	/* Reduce grain on smaller screens */
+	body::before {
+		opacity: 0.015;
+	}
+
+	body::after {
+		display: none;
+	}
+
+	/* Logo */
+	.sn-logo-img {
+		width: 44px;
+		height: 44px;
+	}
+
+	.sn-header.is-scrolled .sn-logo-img {
+		width: 32px;
+		height: 32px;
+	}
+
+	/* Body offset for fixed header */
+	body {
+		padding-top: 65px;
+	}
+
+	/* Header padding */
+	.sn-header {
+		padding-left: 1.25rem !important;
+		padding-right: 1.25rem !important;
+	}
+
+	/* Hero */
+	.sn-hero {
+		min-height: calc(100vh - 65px - 90px) !important;
+		min-height: calc(100dvh - 65px - 90px) !important;
+		padding-top: 4rem !important;
+		padding-bottom: 4rem !important;
+		padding-left: 1.5rem !important;
+		padding-right: 1.5rem !important;
+	}
+
+	/* All WP columns stack on tablet */
+	.wp-block-columns {
+		flex-direction: column !important;
+		gap: 2rem !important;
+	}
+
+	.wp-block-column {
+		flex-basis: 100% !important;
+		width: 100% !important;
+	}
+
+	/* Content group padding */
+	.wp-block-group.has-background {
+		padding-left: 1.5rem !important;
+		padding-right: 1.5rem !important;
+	}
+
+	/* Services section spacing */
+	.sn-service-card,
+	.wp-block-columns .wp-block-column:has(.sn-service-image) {
+		padding-bottom: 2rem !important;
+	}
+
+	/* Disable hover transforms on touch */
+	.sn-service-card:hover,
+	.wp-block-column:hover {
+		transform: none;
+	}
+
+	/* Credibility strip stacks */
+	.sn-credibility-strip {
+		flex-direction: column !important;
+		gap: 1rem !important;
+	}
+
+	.sn-credibility-strip .wp-block-column {
+		padding: 0.25rem 0 !important;
+	}
+
+	/* Process strip stacks on tablet */
+	.sn-process-strip {
+		flex-direction: column !important;
+		gap: 2rem !important;
+	}
+
+	.sn-process-strip .wp-block-column {
+		border-right: none !important;
+		border-bottom: 1px solid var(--wp--preset--color--concrete);
+		padding: 0 0 1.5rem 0 !important;
+	}
+
+	.sn-process-strip .wp-block-column:last-child {
+		border-bottom: none;
+		padding-bottom: 0 !important;
+	}
+
+	/* PDF viewer shorter on tablet */
+	.wp-block-file .wp-block-file__embed {
+		min-height: 60vh;
+	}
+
+	/* Spotify embed */
+	.wp-block-embed-spotify.wp-has-aspect-ratio .wp-block-embed__wrapper iframe {
+		height: 500px;
+	}
+
+	/* Buttons — full width on tablet */
+	.wp-block-buttons {
+		flex-direction: column !important;
+		width: 100%;
+	}
+
+	.wp-block-button {
+		width: 100%;
+	}
+
+	.wp-block-button__link {
+		width: 100%;
+		text-align: center !important;
+		display: block !important;
+	}
+
+	/* Hero buttons exception — keep side by side */
+	.sn-hero-cta.wp-block-buttons {
+		flex-direction: row !important;
+		width: auto;
+	}
+
+	.sn-hero-cta .wp-block-button {
+		width: auto;
+	}
+
+	.sn-hero-cta .wp-block-button__link {
+		width: auto;
+		display: inline-block !important;
+	}
+}
+
+/* ============================================
+   RESPONSIVE — MOBILE (max-width: 480px)
+   ============================================ */
+
+@media (max-width: 480px) {
+
+	/* Header tighter */
+	.sn-header {
+		padding-left: 1rem !important;
+		padding-right: 1rem !important;
+		padding-top: 0.75rem !important;
+		padding-bottom: 0.75rem !important;
+	}
+
+	/* Smaller logo */
+	.sn-logo-img {
+		width: 38px;
+		height: 38px;
+	}
+
+	.sn-header.is-scrolled .sn-logo-img {
+		width: 30px;
+		height: 30px;
+	}
+
+	/* Body offset for fixed header */
+	body {
+		padding-top: 55px;
+	}
+
+	/* Hero */
+	.sn-hero {
+		min-height: calc(100vh - 55px - 70px) !important;
+		min-height: calc(100dvh - 55px - 70px) !important;
+		padding-top: 3rem !important;
+		padding-bottom: 3rem !important;
+		padding-left: 1.25rem !important;
+		padding-right: 1.25rem !important;
+	}
+
+	/* Content padding */
+	.wp-block-group.has-background {
+		padding-left: 1.25rem !important;
+		padding-right: 1.25rem !important;
+	}
+
+	/* Service headings — smaller on phone */
+	.sn-service-card h3,
+	.wp-block-column:has(.sn-service-image) h3,
+	.wp-block-group h3 {
+		font-size: 1.3rem !important;
+	}
+
+	/* Section headings */
+	.wp-block-heading[style*="clamp(3rem"] {
+		font-size: clamp(2.2rem, 10vw, 3rem) !important;
+	}
+
+	/* Credibility strip — left align on phone */
+	.sn-credibility-strip p {
+		text-align: left !important;
+	}
+
+	/* PDF viewer even shorter */
+	.wp-block-file .wp-block-file__embed {
+		min-height: 50vh;
+	}
+
+	/* Spotify iframe */
+	.wp-block-embed-spotify.wp-has-aspect-ratio .wp-block-embed__wrapper iframe {
+		height: 400px;
+	}
+
+	/* Hero buttons stack on small phones */
+	.sn-hero-cta.wp-block-buttons {
+		flex-direction: column !important;
+		width: 100%;
+	}
+
+	.sn-hero-cta .wp-block-button {
+		width: 100%;
+	}
+
+	.sn-hero-cta .wp-block-button__link {
+		width: 100%;
+		display: block !important;
+		text-align: center !important;
+	}
+
+	/* Nav overlay links on small screens */
+	.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation-item a {
+		font-size: 2rem !important;
+	}
+	.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation__responsive-container-content {
+		padding: 4.5rem 1.5rem 2rem !important;
+	}
+
+	/* Footer */
+	.sn-footer {
+		padding-left: 1.25rem !important;
+		padding-right: 1.25rem !important;
+	}
+
+	/* Social icons */
+	.wp-block-social-links {
+		justify-content: center;
+	}
+}
+
+/* ============================================
+   RESPONSIVE — LARGE DESKTOP (min-width: 1200px)
+   ============================================ */
+
+@media (min-width: 1200px) {
+
+	/* Hover effects only on desktop (pointer device) */
+	.sn-service-card:hover,
+	.wp-block-column:has(.sn-service-image):hover {
+		transform: translateX(4px);
+	}
+}
+
+/* ============================================
+   TOUCH DEVICE OVERRIDES
+   ============================================ */
+
+@media (hover: none) and (pointer: coarse) {
+	/* Disable hover transforms on touch devices */
+	.sn-service-card:hover,
+	.wp-block-column:has(.sn-service-image):hover {
+		transform: none !important;
+	}
+
+	.wp-block-button__link:hover {
+		transform: none !important;
+		box-shadow: none !important;
+	}
+
+	.sn-logo-link:hover .sn-logo-img {
+		opacity: 1;
+	}
+}
+
+/* Remove CF7 block wrapper border */
+.wp-block-contact-form-7-contact-form-selector {
+	border: none !important;
+	outline: none !important;
+	box-shadow: none !important;
+	-webkit-appearance: none !important;
+}
+.wp-block-contact-form-7-contact-form-selector > div {
+	border: none !important;
+	outline: none !important;
+	box-shadow: none !important;
+}
+.wpcf7 {
+	border: none !important;
+	outline: none !important;
+	box-shadow: none !important;
+}
+.wpcf7-form {
+	border: none !important;
+	outline: none !important;
+	box-shadow: none !important;
+}

@@ -1,0 +1,36 @@
+<!-- wp:template-part {"slug":"header","area":"header"} /-->
+
+<!-- wp:group {"tagName":"main","style":{"spacing":{"padding":{"top":"var:preset|spacing|50","bottom":"var:preset|spacing|50","left":"var:preset|spacing|40","right":"var:preset|spacing|40"}}},"layout":{"type":"constrained"}} -->
+<main class="wp-block-group" style="padding-top:var(--wp--preset--spacing--50);padding-right:var(--wp--preset--spacing--40);padding-bottom:var(--wp--preset--spacing--50);padding-left:var(--wp--preset--spacing--40)">
+
+	<!-- wp:query {"queryId":1,"query":{"perPage":10,"pages":0,"offset":0,"postType":"post","order":"desc","orderBy":"date","inherit":true}} -->
+	<div class="wp-block-query">
+
+		<!-- wp:post-template {"layout":{"type":"default"}} -->
+
+			<!-- wp:group {"style":{"spacing":{"padding":{"bottom":"var:preset|spacing|40"},"margin":{"bottom":"var:preset|spacing|40"}}},"layout":{"type":"constrained"}} -->
+			<div class="wp-block-group" style="margin-bottom:var(--wp--preset--spacing--40);padding-bottom:var(--wp--preset--spacing--40)">
+
+				<!-- wp:post-date {"style":{"typography":{"fontSize":"0.75rem","letterSpacing":"0.15em","textTransform":"uppercase"}},"textColor":"rust","fontFamily":"body"} /-->
+
+				<!-- wp:post-title {"level":2,"isLink":true,"style":{"typography":{"fontSize":"clamp(1.8rem, 3vw, 2.5rem)"},"elements":{"link":{"color":{"text":"var:preset|color|bone"},":hover":{"color":{"text":"var:preset|color|blood"}}}}},"fontFamily":"heading"} /-->
+
+				<!-- wp:post-excerpt {"moreText":"Read More →","excerptLength":30,"style":{"typography":{"fontSize":"0.9rem"}},"textColor":"rust"} /-->
+
+			</div>
+			<!-- /wp:group -->
+
+		<!-- /wp:post-template -->
+
+		<!-- wp:query-pagination {"layout":{"type":"flex","justifyContent":"space-between"}} -->
+			<!-- wp:query-pagination-previous {"style":{"typography":{"fontSize":"0.85rem"}},"fontFamily":"heading"} /-->
+			<!-- wp:query-pagination-next {"style":{"typography":{"fontSize":"0.85rem"}},"fontFamily":"heading"} /-->
+		<!-- /wp:query-pagination -->
+
+	</div>
+	<!-- /wp:query -->
+
+</main>
+<!-- /wp:group -->
+
+<!-- wp:template-part {"slug":"footer","area":"footer"} /-->
