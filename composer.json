@@ -1,0 +1,9 @@
+{
+    "name": "syntharchy/signal-and-noise",
+    "description": "Signal & Noise — WordPress FSE theme",
+    "type": "wordpress-theme",
+    "license": "proprietary",
+    "require": {
+        "php": ">=8.1"
+    }
+}
