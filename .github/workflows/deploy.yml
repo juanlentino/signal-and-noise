@@ -30,15 +30,18 @@ jobs:
           username: ${{ secrets.CLOUDWAYS_SSH_USER }}
           key: ${{ secrets.CLOUDWAYS_SSH_KEY }}
           script: |
-            THEME=/home/master/applications/nffqxsrgxz/public_html/wp-content/themes/signal-and-noise
             APP=/home/master/applications/nffqxsrgxz/public_html
 
-            # Copy staged files into theme directory
-            cp -rf /tmp/sn-deploy/* "$THEME/"
-            rm -rf /tmp/sn-deploy
+            # Zip staged files and install via WP CLI (runs as PHP user, has write perms)
+            cd /tmp/sn-deploy
+            zip -qr /tmp/signal-and-noise.zip .
+            cd "$APP"
+            wp theme install /tmp/signal-and-noise.zip --force --path=. 2>&1
+
+            # Clean up
+            rm -rf /tmp/sn-deploy /tmp/signal-and-noise.zip
 
             # Purge caches
-            cd "$APP"
             wp cache flush --path=. 2>/dev/null || true
             wp transient delete --all --path=. 2>/dev/null || true
             rm -rf wp-content/cache/breeze-minification/* 2>/dev/null || true
