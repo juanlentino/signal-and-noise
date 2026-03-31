@@ -4,7 +4,7 @@
  *
  * @package SignalNoise
  * @since 1.0.0
- * @version 3.12.0
+ * @version 3.12.1
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -129,18 +129,6 @@ add_action( 'wp_enqueue_scripts', function() {
 }, 20 );
 
 /**
- * Performance: Remove WP Statistics frontend styles and tracker script.
- */
-add_action( 'wp_enqueue_scripts', function() {
-	wp_dequeue_style( 'wp-statistics-tracker' );
-	wp_dequeue_style( 'wp_statistics_widget_css' );
-}, 20 );
-
-add_action( 'wp_enqueue_scripts', function() {
-	wp_dequeue_script( 'wp-statistics-tracker' );
-}, 99 );
-
-/**
  * Performance: Defer render-blocking WordPress core CSS.
  * Converts wp-block-library from render-blocking to non-blocking using
  * the media='print' onload pattern. Saves ~300ms on mobile.
@@ -247,9 +235,6 @@ add_action( 'template_redirect', function() {
 	ob_start( function( $html ) {
 		// Strip generator meta tags.
 		$html = preg_replace( '/<meta name="generator"[^>]*>\n?/i', '', $html );
-
-		// Strip WP Statistics frontend CSS (survives wp_dequeue when Breeze bundles it).
-		$html = preg_replace( '/<link[^>]*wp-statistics[^>]*>\n?/i', '', $html );
 
 		// Strip Cloudflare Turnstile on non-contact pages (17 KiB render-blocking).
 		if ( ! is_page( 'contact' ) ) {
