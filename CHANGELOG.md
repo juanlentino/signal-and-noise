@@ -2,6 +2,11 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [4.5.1] — 2026-03-31
+
+- Removed footer border-top separator (whitespace does the job)
+- Hero accent line widened from 60px to 120px (aligns with "hold" in subtitle)
+
 ## [4.5.0] — 2026-03-31
 
 - Footer: swapped SDG and copyright order (SDG → © rightmost)

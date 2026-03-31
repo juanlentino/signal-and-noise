@@ -1,7 +1,7 @@
 /* ============================================
    SIGNAL & NOISE — Custom Styles
    Light Industrial — NIN Aesthetic
-   v4.5.0 — Sizing & Polish Pass
+   v4.5.1 — Sizing & Polish Pass
    ============================================ */
 
 /* Fonts: Bebas Neue + DM Mono are declared in functions.php (inline critical)
@@ -523,7 +523,7 @@ body {
    ============================================ */
 
 .sn-footer {
-	border-top: 1px solid var(--wp--preset--color--concrete);
+	border-top: none;
 	position: fixed;
 	bottom: 0;
 	left: 0;

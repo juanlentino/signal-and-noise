@@ -167,7 +167,7 @@ body::after {
 }
 
 .sn-footer {
-	border-top: 1px solid var(--wp--preset--color--concrete);
+	border-top: none;
 }
 
 /* Shrunk state on scroll */
