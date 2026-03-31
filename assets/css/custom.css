@@ -368,6 +368,10 @@ body {
 	animation: fadeInUp 1s ease-out 0.8s both;
 }
 
+.sn-hero-accent {
+	animation: fadeInUp 1s ease-out 0.65s both;
+}
+
 /* ============================================
    ACCENT LINE
    ============================================ */
