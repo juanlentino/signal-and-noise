@@ -4,7 +4,7 @@
  *
  * @package SignalNoise
  * @since 1.0.0
- * @version 3.12.1
+ * @version 3.13.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -107,6 +107,17 @@ add_action( 'wp_head', function() {
 	</script>
 	<?php
 }, 10 );
+
+/**
+ * Analytics: Plausible CE tracking script.
+ * Self-hosted instance on Railway. Lightweight (~1 KiB), no cookies, GDPR-compliant.
+ */
+add_action( 'wp_head', function() {
+	if ( is_admin() || is_preview() ) return;
+	?>
+	<script defer data-domain="juanlentino.com" src="https://plausible-analytics-ce-production-fcb9.up.railway.app/js/script.js"></script>
+	<?php
+}, 11 );
 
 /**
  * Enqueue editor styles so the Site Editor matches the front end.
@@ -535,6 +546,14 @@ function sn_theme_options_page() {
 
 	echo '</div>'; // flex container
 	echo '</form>';
+
+	echo '<hr style="margin:1.5em 0;">';
+
+	// ── ANALYTICS ──
+	echo '<h2 style="font-size:1.1em;margin-bottom:0.8em;">Analytics</h2>';
+	echo '<p style="color:#666;font-size:0.85em;margin:0 0 12px;">Plausible CE — lightweight, cookie-free, GDPR-compliant.</p>';
+	echo '<iframe plausible-embed src="https://plausible-analytics-ce-production-fcb9.up.railway.app/share/juanlentino.com?auth=5lIheSB7pfsEp7sCfZQ6F&embed=true&theme=light" scrolling="no" frameborder="0" loading="lazy" style="width:100%;min-height:1600px;border:1px solid #c3c4c7;border-radius:4px;background:#fff;"></iframe>';
+	echo '<script async src="https://plausible-analytics-ce-production-fcb9.up.railway.app/js/embed.host.js"></script>';
 
 	echo '<hr style="margin:1.5em 0;">';
 
