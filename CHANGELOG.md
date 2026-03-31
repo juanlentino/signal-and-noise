@@ -2,6 +2,12 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [5.0.1] — 2026-03-31
+
+- Moved "How It Works" process strip from Services to Work With Me (belongs where booking happens)
+- Step 3 renamed from "Production" to "Book & Begin" with copy pointing to the calendar below
+- Services page goes straight from service cards to closing CTA
+
 ## [5.0.0] — 2026-03-31
 
 ### Full Analytics Dashboard
