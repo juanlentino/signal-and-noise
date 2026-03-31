@@ -4,7 +4,7 @@
  *
  * @package SignalNoise
  * @since 1.0.0
- * @version 3.10.0
+ * @version 3.10.1
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -285,7 +285,7 @@ add_action( 'wp_body_open', function() {
  * Called on theme activation and via admin button.
  */
 function sn_clear_template_overrides() {
-	$post_types = array( 'wp_template', 'wp_template_part' );
+	$post_types = array( 'wp_template', 'wp_template_part', 'wp_navigation' );
 	$count      = 0;
 
 	foreach ( $post_types as $post_type ) {
@@ -344,7 +344,7 @@ function sn_reset_templates_page() {
 
 	// Check for existing overrides.
 	$existing = get_posts( array(
-		'post_type'      => array( 'wp_template', 'wp_template_part' ),
+		'post_type'      => array( 'wp_template', 'wp_template_part', 'wp_navigation' ),
 		'posts_per_page' => -1,
 		'post_status'    => 'any',
 	) );
@@ -389,6 +389,9 @@ add_action( 'admin_init', function() {
 		delete_site_transient( 'update_themes' );
 		wp_clean_themes_cache();
 		wp_cache_flush();
+
+		// Clear all template/template-part/navigation overrides.
+		sn_clear_template_overrides();
 
 		// Store new version so this only runs once per deploy.
 		update_option( 'sn_deployed_version', $current, true );
