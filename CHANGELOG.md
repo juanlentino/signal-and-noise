@@ -2,6 +2,11 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [3.9.1] — 2026-03-31
+
+- Fixed hero layout: reverted from `default` to `constrained` with `justifyContent: left`
+- Content stays within 800px container, left-aligned, matching Contact page pattern
+
 ## [3.9.0] — 2026-03-31
 
 - Work With Me consulting page: tabbed 30/60-minute session booking via Cal.com

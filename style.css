@@ -4,7 +4,7 @@ Theme URI: https://juanlentino.com
 Author: Juan Lentino
 Author URI: https://juanlentino.com
 Description: White, clinical, brutalist WordPress block theme for music producers — inspired by nin.com. Bebas Neue + DM Mono typography, subtle film grain, and a stripped-back industrial palette. Black text, white space, red accents. Includes custom templates for Services, Music (with Muso.AI integration), Resume, and Contact pages.
-Version: 3.9.0
+Version: 3.9.1
 Requires at least: 6.4
 Tested up to: 6.9
 Requires PHP: 8.0
@@ -14,6 +14,9 @@ Text Domain: signal-noise
 Tags: full-site-editing, block-themes, dark, music, one-column, custom-colors, custom-menu, wide-blocks, editor-style
 
 Changelog:
+
+  3.9.1 — Fixed hero layout: reverted from default to constrained with left justification.
+           Content stays within 800px container, left-aligned, matching Contact page pattern.
 
   3.9.0 — Work With Me consulting page: tabbed 30/60-minute session booking via Cal.com,
            tab switching JS, theme-matched styling. Registered page-work-with-me template
