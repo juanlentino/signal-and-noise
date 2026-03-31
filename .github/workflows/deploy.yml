@@ -40,5 +40,9 @@ jobs:
             # Purge caches
             cd "$APP"
             wp cache flush --path=. 2>/dev/null || true
+            wp transient delete --all --path=. 2>/dev/null || true
             rm -rf wp-content/cache/breeze-minification/* 2>/dev/null || true
             rm -rf wp-content/cache/breeze/* 2>/dev/null || true
+
+            # Warm homepage cache
+            curl -s -o /dev/null https://juanlentino.com/ || true
