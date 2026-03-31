@@ -2,6 +2,12 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [3.9.2] — 2026-03-31
+
+- Fixed hero layout: removed `justifyContent: left` which pushed container to page edge
+- Reverted to original `constrained` with `contentSize: 1100px`
+- Text left-aligns naturally within centered container via CSS `.sn-hero` flex align-items
+
 ## [3.9.1] — 2026-03-31
 
 - Fixed hero layout: reverted from `default` to `constrained` with `justifyContent: left`
