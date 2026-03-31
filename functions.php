@@ -4,7 +4,7 @@
  *
  * @package SignalNoise
  * @since 1.0.0
- * @version 4.1.0
+ * @version 4.2.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -44,12 +44,16 @@ add_action( 'wp_head', function() {
 /**
  * Performance: Load full custom.css deferred (non-render-blocking).
  * Critical CSS above covers the first paint; this fills in the rest.
+ * Enqueued via wp_enqueue_style so Breeze's exclude filter works.
  */
-add_action( 'wp_head', function() {
-	$css_uri = get_theme_file_uri( 'assets/css/custom.css' ) . '?v=' . wp_get_theme()->get( 'Version' );
-	echo '<link rel="stylesheet" href="' . esc_url( $css_uri ) . '" media="print" onload="this.media=\'all\'">' . "\n";
-	echo '<noscript><link rel="stylesheet" href="' . esc_url( $css_uri ) . '"></noscript>' . "\n";
-}, 51 );
+add_action( 'wp_enqueue_scripts', function() {
+	wp_enqueue_style(
+		'sn-custom',
+		get_theme_file_uri( 'assets/css/custom.css' ),
+		array(),
+		wp_get_theme()->get( 'Version' )
+	);
+}, 10 );
 
 /**
  * Performance: Preload critical font files.
@@ -346,7 +350,7 @@ add_action( 'wp_enqueue_scripts', function() {
  * the media='print' onload pattern. Saves ~300ms on mobile.
  */
 add_filter( 'style_loader_tag', function( $html, $handle ) {
-	$defer_handles = array( 'wp-block-library', 'contact-form-7', 'trp-language-switcher' );
+	$defer_handles = array( 'wp-block-library', 'contact-form-7', 'trp-language-switcher', 'sn-custom' );
 	if ( in_array( $handle, $defer_handles, true ) ) {
 		$html = str_replace(
 			" media='all'",
@@ -412,8 +416,11 @@ add_filter( 'breeze_exclude_js', function( $excluded ) {
  * leave it alone.
  */
 add_filter( 'breeze_exclude_css', function( $excluded ) {
+	$excluded[] = 'sn-custom';
 	$excluded[] = 'custom.css';
 	$excluded[] = 'critical.css';
+	$excluded[] = 'signal-and-noise/assets/css/custom.css';
+	$excluded[] = 'signal-and-noise/assets/css/critical.css';
 	return $excluded;
 } );
 

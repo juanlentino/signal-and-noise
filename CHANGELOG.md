@@ -2,6 +2,96 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [4.2.0] — 2026-03-31
+
+- Fixed Breeze CSS minification: moved custom.css to `wp_enqueue_style` so `breeze_exclude_css` filter works
+- Breeze was ignoring the filter because custom.css was echoed as raw HTML, not enqueued
+
+## [4.1.0] — 2026-03-31
+
+- Consolidated dashboard: 4 widgets instead of 6
+- Visitor Trend: 30-day red bar chart with total count
+- Top Stats: single tabbed widget (Pages/Sources/Countries/Devices/Browsers)
+- Visitor Map: world choropleth via jsvectormap, colored by traffic
+
+## [4.0.0] — 2026-03-31
+
+- 6 native Plausible dashboard widgets pulling from Stats API
+- Visitors Today, Top Pages, Top Sources, Top Countries, Devices, Browsers
+
+## [3.14.3] — 2026-03-31
+
+- Restored default WP dashboard widgets, Plausible full-width on top
+
+## [3.14.2] — 2026-03-31
+
+- Clean dashboard: removed default widgets (reverted in 3.14.3)
+
+## [3.14.1] — 2026-03-31
+
+- Plausible analytics widget on WP Dashboard
+
+## [3.14.0] — 2026-03-31
+
+- Tabbed admin page: Dashboard, Analytics, Links tabs
+
+## [3.13.0] — 2026-03-31
+
+- Plausible CE tracking script on frontend (defer, ~1 KiB, cookie-free)
+- Plausible dashboard embedded in admin page
+
+## [3.12.1] — 2026-03-31
+
+- Removed WP Statistics cleanup code (plugin uninstalled)
+
+## [3.12.0] — 2026-03-31
+
+- Signal & Noise admin page: status panel, actions (Full Reset, Clear Overrides, Purge Caches, Check Updates), links
+
+## [3.11.1] — 2026-03-31
+
+- Test release for self-updater verification
+
+## [3.11.0] — 2026-03-31
+
+- GitHub self-updater: checks releases, one-click update from WP admin
+- `upgrader_source_selection` filter fixes the `-1` folder rename problem
+
+## [3.10.4] — 2026-03-31
+
+- Fixed contact form radio label: `.wpcf7-form p.form-label` styled to match other labels
+
+## [3.10.3] — 2026-03-31
+
+- Red accent line (60px) between hero subtitle and CTA buttons with fadeInUp animation
+
+## [3.10.2] — 2026-03-31
+
+- Removed default nav underline (`text-decoration: none`)
+- Thickened red accent from 1px to 2px
+
+## [3.10.1] — 2026-03-31
+
+- Auto-clear template parts + `wp_navigation` on theme update
+- Version-change detector triggers full override clear
+
+## [3.10.0] — 2026-03-31
+
+- Logo switched to media library images (persistent across theme uploads)
+
+## [3.9.9] — 2026-03-31
+
+- Fixed 60-min Cal.com tab: lazy init on first click (can't render into hidden container)
+- Removed prices from tab labels
+
+## [3.9.8] — 2026-03-31
+
+- Replaced Cal.com shortcodes with JS inline embeds (shortcodes don't render in block theme templates)
+
+## [3.9.7] — 2026-03-31
+
+- Added Work With Me to header navigation (hardcoded in parts/header.html)
+
 ## [3.9.6] — 2026-03-31
 
 - Full revert of `front-page.html` to pre-session state (v3.8.1)
