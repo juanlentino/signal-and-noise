@@ -4,7 +4,7 @@
  *
  * @package SignalNoise
  * @since 1.0.0
- * @version 3.14.0
+ * @version 3.14.1
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -118,6 +118,21 @@ add_action( 'wp_head', function() {
 	<script defer data-domain="juanlentino.com" src="https://plausible-analytics-ce-production-fcb9.up.railway.app/js/script.js"></script>
 	<?php
 }, 11 );
+
+/**
+ * Dashboard widget: Plausible CE analytics on the WP Dashboard.
+ */
+add_action( 'wp_dashboard_setup', function() {
+	wp_add_dashboard_widget(
+		'sn_plausible_widget',
+		'Analytics — Plausible',
+		function() {
+			echo '<iframe plausible-embed src="https://plausible-analytics-ce-production-fcb9.up.railway.app/share/juanlentino.com?auth=5lIheSB7pfsEp7sCfZQ6F&embed=true&theme=light" scrolling="no" frameborder="0" loading="lazy" style="width:100%;min-height:400px;border:none;"></iframe>';
+			echo '<script async src="https://plausible-analytics-ce-production-fcb9.up.railway.app/js/embed.host.js"></script>';
+			echo '<p style="margin:8px 0 0;font-size:0.85em;"><a href="https://plausible-analytics-ce-production-fcb9.up.railway.app/juanlentino.com" target="_blank">Open full dashboard &rarr;</a></p>';
+		}
+	);
+} );
 
 /**
  * Enqueue editor styles so the Site Editor matches the front end.
