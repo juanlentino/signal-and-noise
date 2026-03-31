@@ -192,6 +192,7 @@ body {
 /* Navigation links — desktop underline effect */
 .wp-block-navigation a {
 	position: relative;
+	text-decoration: none !important;
 	transition: color 0.3s ease;
 }
 
@@ -201,7 +202,7 @@ body {
 	bottom: -4px;
 	left: 0;
 	width: 0;
-	height: 1px;
+	height: 2px;
 	background-color: var(--wp--preset--color--blood);
 	transition: width 0.3s ease;
 }
