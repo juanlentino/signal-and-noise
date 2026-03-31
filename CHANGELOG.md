@@ -2,6 +2,10 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [4.5.0] — 2026-03-31
+
+- Footer: swapped SDG and copyright order (SDG → © rightmost)
+
 ## [4.4.2] — 2026-03-31
 
 ### QA pass — CSS sync audit
