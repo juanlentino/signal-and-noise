@@ -4,7 +4,7 @@
  *
  * @package SignalNoise
  * @since 1.0.0
- * @version 3.10.4
+ * @version 3.11.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -396,4 +396,126 @@ add_action( 'admin_init', function() {
 		// Store new version so this only runs once per deploy.
 		update_option( 'sn_deployed_version', $current, true );
 	}
+} );
+
+/**
+ * ──────────────────────────────────────────────────
+ * GITHUB SELF-UPDATER
+ *
+ * Checks GitHub releases for new versions and lets WordPress
+ * handle updates through the normal Appearance → Themes UI.
+ * No manual zip uploads, no deleting, no switching themes.
+ * Just click "Update" like any other theme.
+ *
+ * Requires: SN_GITHUB_TOKEN constant in wp-config.php
+ *   define( 'SN_GITHUB_TOKEN', 'github_pat_...' );
+ *
+ * The token needs only "contents: read" permission on
+ * the signal-and-noise repo (fine-grained PAT).
+ * ──────────────────────────────────────────────────
+ */
+
+define( 'SN_GITHUB_REPO', 'juanlentino/signal-and-noise' );
+define( 'SN_THEME_SLUG',  'signal-and-noise' );
+
+/**
+ * Check GitHub for a newer release and inject it into WP's update system.
+ */
+add_filter( 'pre_set_site_transient_update_themes', function( $transient ) {
+	if ( empty( $transient->checked ) ) {
+		return $transient;
+	}
+
+	if ( ! defined( 'SN_GITHUB_TOKEN' ) || empty( SN_GITHUB_TOKEN ) ) {
+		return $transient;
+	}
+
+	// Check cache first (12 hour TTL).
+	$cached = get_transient( 'sn_github_release' );
+	if ( false === $cached ) {
+		$response = wp_remote_get(
+			'https://api.github.com/repos/' . SN_GITHUB_REPO . '/releases/latest',
+			array(
+				'headers' => array(
+					'Authorization' => 'token ' . SN_GITHUB_TOKEN,
+					'Accept'        => 'application/vnd.github.v3+json',
+				),
+				'timeout' => 10,
+			)
+		);
+
+		if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
+			return $transient;
+		}
+
+		$cached = json_decode( wp_remote_retrieve_body( $response ), true );
+		set_transient( 'sn_github_release', $cached, 12 * HOUR_IN_SECONDS );
+	}
+
+	$remote_version = ltrim( $cached['tag_name'] ?? '', 'v' );
+	$local_version  = wp_get_theme( SN_THEME_SLUG )->get( 'Version' );
+
+	if ( version_compare( $remote_version, $local_version, '>' ) ) {
+		$transient->response[ SN_THEME_SLUG ] = array(
+			'theme'       => SN_THEME_SLUG,
+			'new_version' => $remote_version,
+			'url'         => $cached['html_url'] ?? '',
+			'package'     => 'https://api.github.com/repos/' . SN_GITHUB_REPO . '/zipball/' . $cached['tag_name'],
+		);
+	}
+
+	return $transient;
+} );
+
+/**
+ * Inject GitHub token into the download request so WP can fetch
+ * the zipball from a private repo.
+ */
+add_filter( 'http_request_args', function( $args, $url ) {
+	if ( defined( 'SN_GITHUB_TOKEN' ) && strpos( $url, 'api.github.com/repos/' . SN_GITHUB_REPO ) !== false ) {
+		$args['headers']['Authorization'] = 'token ' . SN_GITHUB_TOKEN;
+		$args['headers']['Accept']        = 'application/vnd.github.v3+json';
+	}
+	return $args;
+}, 10, 2 );
+
+/**
+ * Rename the extracted folder to signal-and-noise.
+ * Fixes the -1 folder problem for both GitHub zipball downloads
+ * (juanlentino-signal-and-noise-HASH/) and manual zip uploads.
+ */
+add_filter( 'upgrader_source_selection', function( $source, $remote_source, $upgrader ) {
+	// Only act on theme installations/updates.
+	if ( ! $upgrader instanceof Theme_Upgrader ) {
+		return $source;
+	}
+
+	// Check if the extracted folder contains our theme.
+	$style = trailingslashit( $source ) . 'style.css';
+	if ( ! file_exists( $style ) ) {
+		return $source;
+	}
+
+	$theme_data = get_file_data( $style, array( 'Name' => 'Theme Name' ) );
+	if ( empty( $theme_data['Name'] ) || false === strpos( $theme_data['Name'], 'Signal' ) ) {
+		return $source;
+	}
+
+	$corrected = trailingslashit( $remote_source ) . SN_THEME_SLUG . '/';
+	if ( $source === $corrected ) {
+		return $source;
+	}
+
+	if ( @rename( $source, $corrected ) ) {
+		return $corrected;
+	}
+
+	return $source;
+}, 10, 3 );
+
+/**
+ * Clear the GitHub release cache when checking for updates manually.
+ */
+add_action( 'load-update-core.php', function() {
+	delete_transient( 'sn_github_release' );
 } );
