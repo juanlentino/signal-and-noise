@@ -1,0 +1,36 @@
+name: Deploy Signal & Noise to WordPress
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'LICENSE'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy theme via rsync
+        uses: burnett01/rsync-deployments@7.0.1
+        with:
+          switches: -avz --delete --exclude='.git' --exclude='.github' --exclude='composer.lock' --exclude='.gitignore' --exclude='README.md'
+          path: ./
+          remote_path: /home/master/applications/nffqxsrgxz/public_html/wp-content/themes/signal-and-noise/
+          remote_host: ${{ secrets.CLOUDWAYS_SSH_HOST }}
+          remote_user: ${{ secrets.CLOUDWAYS_SSH_USER }}
+          remote_key: ${{ secrets.CLOUDWAYS_SSH_KEY }}
+
+      - name: Purge caches
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.CLOUDWAYS_SSH_HOST }}
+          username: ${{ secrets.CLOUDWAYS_SSH_USER }}
+          key: ${{ secrets.CLOUDWAYS_SSH_KEY }}
+          script: |
+            cd /home/master/applications/nffqxsrgxz/public_html
+            wp cache flush --path=. 2>/dev/null || true
+            rm -rf wp-content/cache/breeze-minification/* 2>/dev/null || true
+            rm -rf wp-content/cache/breeze/* 2>/dev/null || true
