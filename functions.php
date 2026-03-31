@@ -4,7 +4,7 @@
  *
  * @package SignalNoise
  * @since 1.0.0
- * @version 4.2.1
+ * @version 4.2.2
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -566,17 +566,9 @@ function sn_theme_options_page() {
 				$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_%'" );
 			}
 
-			// Breeze file caches.
-			$cache_base = ABSPATH . 'wp-content/cache/';
-			foreach ( array( 'breeze-minification', 'breeze' ) as $subdir ) {
-				$path = $cache_base . $subdir;
-				if ( is_dir( $path ) ) {
-					exec( 'rm -rf ' . escapeshellarg( $path ) . '/*' );
-				}
-			}
-
-			// Breeze Varnish via WP CLI (most reliable on Cloudways).
-			exec( 'cd ' . escapeshellarg( ABSPATH ) . ' && wp breeze purge --all --path=. 2>/dev/null' );
+			// Trigger Breeze purge via its own action hooks.
+			do_action( 'breeze_clear_all_cache' );
+			do_action( 'breeze_clear_varnish' );
 
 			$notices[] = array( 'success', 'All caches purged.' );
 		}
@@ -600,15 +592,8 @@ function sn_theme_options_page() {
 				$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_%'" );
 			}
 
-			$cache_base = ABSPATH . 'wp-content/cache/';
-			foreach ( array( 'breeze-minification', 'breeze' ) as $subdir ) {
-				$path = $cache_base . $subdir;
-				if ( is_dir( $path ) ) {
-					exec( 'rm -rf ' . escapeshellarg( $path ) . '/*' );
-				}
-			}
-
-			exec( 'cd ' . escapeshellarg( ABSPATH ) . ' && wp breeze purge --all --path=. 2>/dev/null' );
+			do_action( 'breeze_clear_all_cache' );
+			do_action( 'breeze_clear_varnish' );
 
 			$notices[] = array( 'success', 'Full reset: ' . $count . ' override(s) cleared + all caches purged.' );
 		}
