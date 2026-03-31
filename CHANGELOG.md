@@ -2,6 +2,11 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [3.9.6] — 2026-03-31
+
+- Full revert of `front-page.html` to pre-session state (v3.8.1)
+- Restored original subtitle paragraph (simple `1.1rem`, no clamp, no max-width)
+
 ## [3.9.5] — 2026-03-31
 
 - Reverted hero CSS to pre-session state; removed `margin-left: 0` that pushed content to page edge
