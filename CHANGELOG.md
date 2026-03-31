@@ -2,6 +2,15 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [4.4.2] — 2026-03-31
+
+### QA pass — CSS sync audit
+- Fixed film grain opacity mismatch: custom.css had 0.025, critical.css had 0.035 (synced to 0.035)
+- Fixed footer border conflict: critical.css was overriding custom.css border-top with `none !important`. Synced both to show the 1px concrete border
+- Fixed header transition: custom.css was missing `background-color 0.3s ease` from transition, causing the frosted-glass opacity to snap instead of fade on scroll
+- Fixed header scrolled state: custom.css was missing `background-color: rgba(255,255,255,0.85)` and glass morphism properties. Both CSS files now match
+- Removed dead `#trp-floater-ls` CSS (TranslatePress repositioned via plugin settings)
+
 ## [4.4.1] — 2026-03-31
 
 - TranslatePress floating switcher: repositioned above fixed footer (bottom: 70px) so it doesn't overlap copyright/SDG text
