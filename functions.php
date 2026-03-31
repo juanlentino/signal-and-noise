@@ -4,7 +4,7 @@
  *
  * @package SignalNoise
  * @since 1.0.0
- * @version 3.14.1
+ * @version 3.14.2
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -120,18 +120,48 @@ add_action( 'wp_head', function() {
 }, 11 );
 
 /**
- * Dashboard widget: Plausible CE analytics on the WP Dashboard.
+ * Dashboard: Clean up default widgets and add Plausible full-width.
  */
 add_action( 'wp_dashboard_setup', function() {
+	// Remove default clutter.
+	remove_meta_box( 'dashboard_site_health', 'dashboard', 'normal' );
+	remove_meta_box( 'dashboard_activity', 'dashboard', 'normal' );
+	remove_meta_box( 'dashboard_quick_press', 'dashboard', 'side' );
+	remove_meta_box( 'dashboard_primary', 'dashboard', 'side' );
+	remove_meta_box( 'dashboard_right_now', 'dashboard', 'normal' );
+
+	// Add Plausible widget.
 	wp_add_dashboard_widget(
 		'sn_plausible_widget',
-		'Analytics — Plausible',
+		'Analytics',
 		function() {
-			echo '<iframe plausible-embed src="https://plausible-analytics-ce-production-fcb9.up.railway.app/share/juanlentino.com?auth=5lIheSB7pfsEp7sCfZQ6F&embed=true&theme=light" scrolling="no" frameborder="0" loading="lazy" style="width:100%;min-height:400px;border:none;"></iframe>';
+			echo '<iframe plausible-embed src="https://plausible-analytics-ce-production-fcb9.up.railway.app/share/juanlentino.com?auth=5lIheSB7pfsEp7sCfZQ6F&embed=true&theme=light" scrolling="no" frameborder="0" loading="lazy" style="width:100%;min-height:1600px;border:none;"></iframe>';
 			echo '<script async src="https://plausible-analytics-ce-production-fcb9.up.railway.app/js/embed.host.js"></script>';
 			echo '<p style="margin:8px 0 0;font-size:0.85em;"><a href="https://plausible-analytics-ce-production-fcb9.up.railway.app/juanlentino.com" target="_blank">Open full dashboard &rarr;</a></p>';
 		}
 	);
+
+	// Force Plausible to span full width.
+	global $wp_meta_boxes;
+	$widget = $wp_meta_boxes['dashboard']['normal']['core']['sn_plausible_widget'] ?? null;
+	if ( $widget ) {
+		unset( $wp_meta_boxes['dashboard']['normal']['core']['sn_plausible_widget'] );
+		$wp_meta_boxes['dashboard']['normal']['high']['sn_plausible_widget'] = $widget;
+	}
+} );
+
+/**
+ * Dashboard CSS: make Plausible widget full-width.
+ */
+add_action( 'admin_head-index.php', function() {
+	echo '<style>
+		#sn_plausible_widget { width:100%; }
+		#dashboard-widgets .postbox-container { width:100%; }
+		#dashboard-widgets .meta-box-sortables { display:block; }
+		#dashboard-widgets #postbox-container-2,
+		#dashboard-widgets #postbox-container-3,
+		#dashboard-widgets #postbox-container-4 { display:none; }
+	</style>';
 } );
 
 /**
