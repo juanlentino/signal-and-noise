@@ -58,25 +58,57 @@ Modify in the Site Editor under Styles → Colors.
 
 == Changelog ==
 
+= 3.8.4 =
+* Left-aligned hero section (constrained → default layout)
+* Added max-width on subtitle paragraph
+
+= 3.8.3 =
+* Dequeued CF7 JS on non-contact pages
+* Removed WP Statistics frontend CSS and tracker JS
+* Deferred TranslatePress language switcher CSS
+* Output buffer stripping for Breeze-bundled assets
+
+= 3.8.2 =
+* Added composer.json + composer.lock for Aikido supply chain scanning
+
+= 3.8.1 =
+* Larger logo across all breakpoints (desktop 56→64px, tablet 44→52px, mobile 38→44px)
+
+= 3.8.0 =
+* Think Different light pass: film grain opacity bump, frosted glass header via backdrop-filter, pill-shaped buttons
+
+= 3.7.0 =
+* Removed Quoter from WordPress theme (moved to standalone app)
+
+= 3.6.0 =
+* Private Quoter tool with hybrid pricing model and PDF export
+
+= 3.5.0 =
+* Services page overhaul: consolidated cards, added How It Works process strip
+
+= 3.4.0 =
+* Split critical/deferred CSS. Delayed gtag.js until first user interaction
+
+= 3.3.0 =
+* Inlined custom.css. Zero external render-blocking resources
+
+= 3.2.0 =
+* Self-hosted fonts (Bebas Neue + DM Mono woff2). Eliminated Google Fonts dependency
+
+= 3.1.0 =
+* Direct gtag.js snippet replacing Site Kit
+
+= 3.0.0 =
+* PageSpeed Insights optimization pass: font preloading, GSI removal, deferred scripts
+
+= 2.9.0 =
+* Sticky shrinking header with requestAnimationFrame scroll handler
+
 = 2.0.0 =
 * Full palette inversion to match nin.com — white backgrounds, black text, red accents
-* Inverted film grain and scanline overlays with multiply blend mode
-* Hero gradient now fades to white
-* Buttons now black fill with red hover
-* Logo auto-inverts via CSS filter (remove rule once dark logo is uploaded)
-* Header gains bottom border for clean separation
-* Scrollbar and selection colors updated for light theme
-* Image filters softened for white background context
-* Updated social icon color values across all templates
 
 = 1.5.0 =
 * NIN aesthetic shift: replaced warm palette with cold, clinical colors
-* Void now pure black (#000000), White replaces Bone (#ffffff), Red replaces Blood (#e00404)
-* Removed Ember color entirely
-* Removed Portfolio custom post type and Genre taxonomy (unused)
-* Removed unused pattern category registration
-* Stripped placeholder/dev text from Music and Contact templates
-* Updated all hardcoded CSS colors to new palette
 * Increased grayscale and contrast on image filters for colder look
 * Updated social icon color values in footer and contact templates
 * Cleaned up theme.json: removed unused gradients and lineHeight values

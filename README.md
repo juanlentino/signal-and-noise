@@ -30,6 +30,9 @@ The design philosophy is deliberate restraint: no stock photography carousels, n
 
 ```
 signal-and-noise/
+├── .github/
+│   └── workflows/
+│       └── deploy.yml            # CI/CD: GitHub → Cloudways via rsync + SSH
 ├── assets/
 │   ├── css/
 │   │   ├── critical.css          # Inlined in <head> — above-the-fold styles
@@ -73,28 +76,42 @@ signal-and-noise/
 
 ## Performance
 
-The theme was optimized through a multi-version PageSpeed Insights pass (v3.0.0–v3.4.0):
+The theme was optimized through a multi-version PageSpeed Insights pass (v3.0.0–v3.8.4):
 
 - **Zero external render-blocking resources.** All CSS is inline (critical path) or deferred.
 - **Self-hosted fonts.** Bebas Neue + DM Mono served as local woff2. No Google Fonts requests.
 - **Deferred analytics.** gtag.js loads on first user interaction, not on page load.
 - **Conditional script loading.** CF7 CSS/JS only on contact page. Cloudflare Turnstile only on contact page.
+- **Output buffer stripping.** WP Statistics and TranslatePress assets removed from HTML when Breeze bundles survive wp_dequeue.
+- **Cloudflare edge caching.** HTML cached at edge with 31-day TTL. TTFB ~100ms cached.
 - **No jQuery.** Zero framework dependencies.
 
 ## Deployment
 
-### Manual (current)
+### GitHub → Cloudways (CI/CD)
+
+Push to `main` triggers automatic deployment via GitHub Actions:
+
+1. **rsync** stages theme files to `/tmp/sn-deploy/` on Cloudways server
+2. **cp** moves files into `wp-content/themes/signal-and-noise/`
+3. **Cache purge** flushes WP object cache, transients, Breeze page cache, and Breeze minification cache
+4. **Cache warmup** primes the homepage Cloudflare edge cache
+
+Required repository secrets:
+- `CLOUDWAYS_SSH_HOST` — Server IP (Server → Master Credentials)
+- `CLOUDWAYS_SSH_USER` — SSH username (Server → Master Credentials)
+- `CLOUDWAYS_SSH_KEY` — Ed25519 private key (public key added via Cloudways SSH Keys UI)
+
+Workflow: `.github/workflows/deploy.yml`
+
+### Manual (fallback)
 
 ```bash
 cd signal-and-noise
 zip -r signal-and-noise.zip . -x ".*" "__MACOSX/*" "*.zip" "README.md"
 ```
 
-Upload via WordPress → Appearance → Themes → Add New → Upload. Activate. Purge Breeze + Varnish.
-
-### GitHub → Cloudways (in progress)
-
-Git deployment from this repo to Cloudways server. Theme files deploy directly to `wp-content/themes/signal-and-noise/`.
+Upload via WordPress → Appearance → Themes → Add New → Upload. Activate. Purge Breeze + Varnish + Cloudflare.
 
 ### Template Override Handling
 
