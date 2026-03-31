@@ -85,7 +85,7 @@ The theme was optimized through a multi-version PageSpeed Insights pass (v3.0.0â
 - **Deferred analytics.** gtag.js loads on first user interaction, not on page load.
 - **Conditional script loading.** CF7 CSS/JS only on contact page. Cloudflare Turnstile only on contact page.
 - **Output buffer stripping.** WP Statistics and TranslatePress assets removed from HTML when Breeze bundles survive wp_dequeue.
-- **Cloudflare edge caching.** HTML cached at edge with 31-day TTL. TTFB ~100ms cached.
+- **Cloudflare + Varnish caching.** Cloudflare caches static assets at the edge. Varnish handles HTML caching server-side. TTFB ~150ms cached.
 - **No jQuery.** Zero framework dependencies.
 
 ## Deployment

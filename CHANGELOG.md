@@ -2,6 +2,13 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [3.9.3] — 2026-03-31
+
+- Excluded theme CSS from Breeze minification (`breeze_exclude_css` filter)
+- Breeze was stripping the `onload` handler from deferred custom.css, leaving styles on `media=print`
+- Removed Cloudflare "Cache Everything" page rules (were caching admin pages, API responses, theme/plugin thumbnails)
+- Cloudflare default behavior (cache static assets) + Varnish handles frontend performance
+
 ## [3.9.2] — 2026-03-31
 
 - Fixed hero layout: removed `justifyContent: left` which pushed container to page edge

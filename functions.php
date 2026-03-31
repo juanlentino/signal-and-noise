@@ -4,7 +4,7 @@
  *
  * @package SignalNoise
  * @since 1.0.0
- * @version 3.9.2
+ * @version 3.9.3
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -199,6 +199,21 @@ add_filter( 'breeze_exclude_js', function( $excluded ) {
 	$excluded[] = 'wp-block-navigation-view';
 	$excluded[] = 'wp-block-navigation';
 	$excluded[] = 'signal-noise-sticky-header';
+	return $excluded;
+} );
+
+/**
+ * Prevent Breeze from minifying theme CSS.
+ *
+ * Breeze CSS minification strips the onload handler from the deferred
+ * custom.css link tag (media=print → media=all on load), which breaks
+ * the non-render-blocking pattern. The theme handles its own CSS
+ * optimization (critical inline + deferred full), so Breeze should
+ * leave it alone.
+ */
+add_filter( 'breeze_exclude_css', function( $excluded ) {
+	$excluded[] = 'custom.css';
+	$excluded[] = 'critical.css';
 	return $excluded;
 } );
 

@@ -3,7 +3,7 @@ Contributors: Juan Lentino
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.0
-Stable tag: 3.9.2
+Stable tag: 3.9.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -57,6 +57,10 @@ Modify in the Site Editor under Styles → Colors.
 * Yoast SEO — for search engine optimization
 
 == Changelog ==
+
+= 3.9.3 =
+* Excluded theme CSS from Breeze minification (breeze_exclude_css filter)
+* Removed Cloudflare Cache Everything rules that broke admin pages
 
 = 3.9.2 =
 * Fixed hero layout: removed justifyContent:left, reverted to original constrained/1100px
