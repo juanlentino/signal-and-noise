@@ -4,7 +4,7 @@
  *
  * @package SignalNoise
  * @since 1.0.0
- * @version 3.13.0
+ * @version 3.14.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -336,6 +336,7 @@ function sn_theme_options_page() {
 	$theme         = wp_get_theme( 'signal-and-noise' );
 	$local_version = $theme->get( 'Version' );
 	$notices       = array();
+	$active_tab    = isset( $_GET['tab'] ) ? sanitize_text_field( $_GET['tab'] ) : 'dashboard';
 
 	// Handle form actions.
 	if ( isset( $_POST['sn_action'] ) && check_admin_referer( 'sn_theme_options_nonce' ) ) {
@@ -347,14 +348,11 @@ function sn_theme_options_page() {
 		}
 
 		if ( 'purge_caches' === $action ) {
-			// WP object cache + transients.
 			wp_cache_flush();
 			global $wpdb;
 			$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_%'" );
 			delete_site_transient( 'update_themes' );
 			wp_clean_themes_cache();
-
-			// Breeze file caches.
 			$breeze_dirs = array(
 				ABSPATH . 'wp-content/cache/breeze-minification/',
 				ABSPATH . 'wp-content/cache/breeze/',
@@ -370,36 +368,29 @@ function sn_theme_options_page() {
 					}
 				}
 			}
-
-			// Breeze Varnish purge (if available).
 			if ( class_exists( 'Breeze_PurgeVarnish' ) ) {
 				Breeze_PurgeVarnish::purge_cache();
 			} elseif ( function_exists( 'breeze_varnish_purge_all' ) ) {
 				breeze_varnish_purge_all();
 			}
-
-			$notices[] = array( 'success', 'All caches purged: WP object cache, transients, Breeze page cache, Breeze minification, Varnish.' );
+			$notices[] = array( 'success', 'All caches purged: WP object cache, transients, Breeze page/minification, Varnish.' );
 		}
 
 		if ( 'check_updates' === $action ) {
 			delete_transient( 'sn_github_release' );
 			delete_site_transient( 'update_themes' );
 			wp_clean_themes_cache();
-			$notices[] = array( 'info', 'Update cache cleared. Visit <a href="' . admin_url( 'update-core.php' ) . '">Dashboard → Updates</a> to check for new versions.' );
+			$notices[] = array( 'info', 'Update cache cleared. Visit <a href="' . admin_url( 'update-core.php' ) . '">Dashboard &rarr; Updates</a> to check for new versions.' );
 		}
 
 		if ( 'full_reset' === $action ) {
-			// Clear overrides.
 			$count = sn_clear_template_overrides();
-
-			// Purge caches.
 			wp_cache_flush();
 			global $wpdb;
 			$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_%'" );
 			delete_site_transient( 'update_themes' );
 			delete_transient( 'sn_github_release' );
 			wp_clean_themes_cache();
-
 			$breeze_dirs = array(
 				ABSPATH . 'wp-content/cache/breeze-minification/',
 				ABSPATH . 'wp-content/cache/breeze/',
@@ -415,14 +406,12 @@ function sn_theme_options_page() {
 					}
 				}
 			}
-
 			if ( class_exists( 'Breeze_PurgeVarnish' ) ) {
 				Breeze_PurgeVarnish::purge_cache();
 			} elseif ( function_exists( 'breeze_varnish_purge_all' ) ) {
 				breeze_varnish_purge_all();
 			}
-
-			$notices[] = array( 'success', 'Full reset complete: ' . $count . ' override(s) cleared + all caches purged.' );
+			$notices[] = array( 'success', 'Full reset: ' . $count . ' override(s) cleared + all caches purged.' );
 		}
 	}
 
@@ -454,118 +443,124 @@ function sn_theme_options_page() {
 		}
 	}
 
-	// Count existing overrides.
-	$overrides = get_posts( array(
-		'post_type'      => array( 'wp_template', 'wp_template_part', 'wp_navigation' ),
-		'posts_per_page' => -1,
-		'post_status'    => 'any',
-	) );
-
+	$overrides     = get_posts( array( 'post_type' => array( 'wp_template', 'wp_template_part', 'wp_navigation' ), 'posts_per_page' => -1, 'post_status' => 'any' ) );
 	$is_up_to_date = version_compare( $local_version, $github_version, '>=' );
+	$base_url      = admin_url( 'themes.php?page=sn-theme-options' );
 
-	// Render page.
+	// ── PAGE SHELL ──
 	echo '<div class="wrap">';
-	echo '<h1 style="font-size:1.6em;margin-bottom:0.3em;">Signal &amp; Noise</h1>';
-	echo '<p style="color:#666;margin-top:0;">Theme management and maintenance tools.</p>';
+	echo '<h1 style="font-size:1.6em;margin-bottom:0.2em;">Signal &amp; Noise</h1>';
+	echo '<p style="color:#666;margin-top:0;margin-bottom:1em;">Theme management, maintenance, and analytics.</p>';
 
 	// Notices.
 	foreach ( $notices as $n ) {
 		echo '<div class="notice notice-' . $n[0] . ' is-dismissible"><p>' . $n[1] . '</p></div>';
 	}
 
-	echo '<hr style="margin:1.5em 0;">';
+	// ── TABS ──
+	echo '<nav class="nav-tab-wrapper" style="margin-bottom:1.5em;">';
+	echo '<a href="' . esc_url( $base_url . '&tab=dashboard' ) . '" class="nav-tab' . ( 'dashboard' === $active_tab ? ' nav-tab-active' : '' ) . '">Dashboard</a>';
+	echo '<a href="' . esc_url( $base_url . '&tab=analytics' ) . '" class="nav-tab' . ( 'analytics' === $active_tab ? ' nav-tab-active' : '' ) . '">Analytics</a>';
+	echo '<a href="' . esc_url( $base_url . '&tab=links' ) . '" class="nav-tab' . ( 'links' === $active_tab ? ' nav-tab-active' : '' ) . '">Links</a>';
+	echo '</nav>';
 
-	// ── STATUS ──
-	echo '<h2 style="font-size:1.1em;margin-bottom:0.8em;">Status</h2>';
-	echo '<table class="form-table" style="max-width:500px;">';
-	echo '<tr><th style="width:180px;padding:8px 10px 8px 0;">Installed version</th><td style="padding:8px 0;"><code>' . esc_html( $local_version ) . '</code></td></tr>';
-	echo '<tr><th style="padding:8px 10px 8px 0;">Latest on GitHub</th><td style="padding:8px 0;"><code>' . esc_html( $github_version ) . '</code>';
-	if ( $is_up_to_date ) {
-		echo ' <span style="color:#00a32a;">&#10003; Up to date</span>';
-	} else {
-		echo ' <span style="color:#d63638;">&#9650; Update available</span>';
-	}
-	echo '</td></tr>';
-	echo '<tr><th style="padding:8px 10px 8px 0;">DB overrides</th><td style="padding:8px 0;">' . count( $overrides );
-	if ( count( $overrides ) > 0 ) {
-		echo ' <span style="color:#dba617;">&#9888; Templates are being read from database, not theme files</span>';
-	} else {
-		echo ' <span style="color:#00a32a;">&#10003; Clean</span>';
-	}
-	echo '</td></tr>';
-	echo '<tr><th style="padding:8px 10px 8px 0;">Self-updater</th><td style="padding:8px 0;">';
-	echo defined( 'SN_GITHUB_TOKEN' ) ? '<span style="color:#00a32a;">&#10003; Connected</span>' : '<span style="color:#d63638;">&#10005; SN_GITHUB_TOKEN not set in wp-config.php</span>';
-	echo '</td></tr>';
-	echo '</table>';
+	// ════════════════════════════════════════
+	// TAB: DASHBOARD
+	// ════════════════════════════════════════
+	if ( 'dashboard' === $active_tab ) {
 
-	// Override details.
-	if ( $overrides ) {
-		echo '<details style="margin-top:0.5em;"><summary style="cursor:pointer;color:#2271b1;font-size:0.85em;">View override details</summary><ul style="margin:0.5em 0 0 1.5em;">';
-		foreach ( $overrides as $tpl ) {
-			echo '<li><code>' . esc_html( $tpl->post_type ) . '/' . esc_html( $tpl->post_name ) . '</code></li>';
+		// ── STATUS ──
+		echo '<h2 style="font-size:1.1em;margin-bottom:0.8em;">Status</h2>';
+		echo '<table class="form-table" style="max-width:500px;">';
+		echo '<tr><th style="width:180px;padding:8px 10px 8px 0;">Installed version</th><td style="padding:8px 0;"><code>' . esc_html( $local_version ) . '</code></td></tr>';
+		echo '<tr><th style="padding:8px 10px 8px 0;">Latest on GitHub</th><td style="padding:8px 0;"><code>' . esc_html( $github_version ) . '</code>';
+		if ( $is_up_to_date ) {
+			echo ' <span style="color:#00a32a;">&#10003; Up to date</span>';
+		} else {
+			echo ' <span style="color:#d63638;">&#9650; Update available</span>';
 		}
-		echo '</ul></details>';
+		echo '</td></tr>';
+		echo '<tr><th style="padding:8px 10px 8px 0;">DB overrides</th><td style="padding:8px 0;">' . count( $overrides );
+		if ( count( $overrides ) > 0 ) {
+			echo ' <span style="color:#dba617;">&#9888; Reading from database, not theme files</span>';
+		} else {
+			echo ' <span style="color:#00a32a;">&#10003; Clean</span>';
+		}
+		echo '</td></tr>';
+		echo '<tr><th style="padding:8px 10px 8px 0;">Self-updater</th><td style="padding:8px 0;">';
+		echo defined( 'SN_GITHUB_TOKEN' ) ? '<span style="color:#00a32a;">&#10003; Connected</span>' : '<span style="color:#d63638;">&#10005; SN_GITHUB_TOKEN not set</span>';
+		echo '</td></tr>';
+		echo '</table>';
+
+		if ( $overrides ) {
+			echo '<details style="margin-top:0.5em;"><summary style="cursor:pointer;color:#2271b1;font-size:0.85em;">View override details</summary><ul style="margin:0.5em 0 0 1.5em;">';
+			foreach ( $overrides as $tpl ) {
+				echo '<li><code>' . esc_html( $tpl->post_type ) . '/' . esc_html( $tpl->post_name ) . '</code></li>';
+			}
+			echo '</ul></details>';
+		}
+
+		echo '<hr style="margin:1.5em 0;">';
+
+		// ── ACTIONS ──
+		echo '<h2 style="font-size:1.1em;margin-bottom:0.8em;">Actions</h2>';
+		echo '<form method="post">';
+		wp_nonce_field( 'sn_theme_options_nonce' );
+
+		echo '<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start;">';
+
+		echo '<div style="background:#fff;border:1px solid #c3c4c7;border-radius:4px;padding:16px 20px;max-width:260px;">';
+		echo '<strong style="display:block;margin-bottom:4px;">Full Reset</strong>';
+		echo '<p style="color:#666;font-size:0.85em;margin:0 0 12px;">Clears all overrides and purges every cache. Use after theme updates.</p>';
+		echo '<button type="submit" name="sn_action" value="full_reset" class="button button-primary">Run Full Reset</button>';
+		echo '</div>';
+
+		echo '<div style="background:#fff;border:1px solid #c3c4c7;border-radius:4px;padding:16px 20px;max-width:260px;">';
+		echo '<strong style="display:block;margin-bottom:4px;">Clear Overrides</strong>';
+		echo '<p style="color:#666;font-size:0.85em;margin:0 0 12px;">Removes template, template part, and navigation DB entries.</p>';
+		echo '<button type="submit" name="sn_action" value="clear_overrides" class="button">Clear Overrides</button>';
+		echo '</div>';
+
+		echo '<div style="background:#fff;border:1px solid #c3c4c7;border-radius:4px;padding:16px 20px;max-width:260px;">';
+		echo '<strong style="display:block;margin-bottom:4px;">Purge Caches</strong>';
+		echo '<p style="color:#666;font-size:0.85em;margin:0 0 12px;">WP object cache, transients, Breeze page/minification, Varnish.</p>';
+		echo '<button type="submit" name="sn_action" value="purge_caches" class="button">Purge All Caches</button>';
+		echo '</div>';
+
+		echo '<div style="background:#fff;border:1px solid #c3c4c7;border-radius:4px;padding:16px 20px;max-width:260px;">';
+		echo '<strong style="display:block;margin-bottom:4px;">Check for Updates</strong>';
+		echo '<p style="color:#666;font-size:0.85em;margin:0 0 12px;">Clears GitHub cache and checks for new versions now.</p>';
+		echo '<button type="submit" name="sn_action" value="check_updates" class="button">Check Now</button>';
+		echo '</div>';
+
+		echo '</div>';
+		echo '</form>';
+
+	// ════════════════════════════════════════
+	// TAB: ANALYTICS
+	// ════════════════════════════════════════
+	} elseif ( 'analytics' === $active_tab ) {
+
+		echo '<iframe plausible-embed src="https://plausible-analytics-ce-production-fcb9.up.railway.app/share/juanlentino.com?auth=5lIheSB7pfsEp7sCfZQ6F&embed=true&theme=light" scrolling="no" frameborder="0" loading="lazy" style="width:100%;min-height:1800px;border:1px solid #c3c4c7;border-radius:4px;background:#fff;"></iframe>';
+		echo '<script async src="https://plausible-analytics-ce-production-fcb9.up.railway.app/js/embed.host.js"></script>';
+
+	// ════════════════════════════════════════
+	// TAB: LINKS
+	// ════════════════════════════════════════
+	} elseif ( 'links' === $active_tab ) {
+
+		echo '<table class="form-table" style="max-width:500px;">';
+		echo '<tr><th style="width:180px;padding:8px 10px 8px 0;">GitHub Repository</th><td style="padding:8px 0;"><a href="https://github.com/juanlentino/signal-and-noise" target="_blank">juanlentino/signal-and-noise</a></td></tr>';
+		echo '<tr><th style="padding:8px 10px 8px 0;">Release History</th><td style="padding:8px 0;"><a href="https://github.com/juanlentino/signal-and-noise/releases" target="_blank">All releases</a></td></tr>';
+		if ( '#' !== $github_url && ! $is_up_to_date ) {
+			echo '<tr><th style="padding:8px 10px 8px 0;">Latest Release</th><td style="padding:8px 0;"><a href="' . esc_url( $github_url ) . '" target="_blank">v' . esc_html( $github_version ) . ' release notes</a></td></tr>';
+		}
+		echo '<tr><th style="padding:8px 10px 8px 0;">Plausible Dashboard</th><td style="padding:8px 0;"><a href="https://plausible-analytics-ce-production-fcb9.up.railway.app/juanlentino.com" target="_blank">Open in Plausible</a></td></tr>';
+		echo '<tr><th style="padding:8px 10px 8px 0;">Cloudflare</th><td style="padding:8px 0;"><a href="https://dash.cloudflare.com" target="_blank">Cloudflare Dashboard</a></td></tr>';
+		echo '<tr><th style="padding:8px 10px 8px 0;">Cloudways</th><td style="padding:8px 0;"><a href="https://platform.cloudways.com" target="_blank">Cloudways Platform</a></td></tr>';
+		echo '</table>';
+
 	}
-
-	echo '<hr style="margin:1.5em 0;">';
-
-	// ── ACTIONS ──
-	echo '<h2 style="font-size:1.1em;margin-bottom:0.8em;">Actions</h2>';
-	echo '<form method="post">';
-	wp_nonce_field( 'sn_theme_options_nonce' );
-
-	echo '<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start;">';
-
-	// Full Reset button.
-	echo '<div style="background:#fff;border:1px solid #c3c4c7;border-radius:4px;padding:16px 20px;max-width:280px;">';
-	echo '<strong style="display:block;margin-bottom:4px;">Full Reset</strong>';
-	echo '<p style="color:#666;font-size:0.85em;margin:0 0 12px;">Clears all template overrides and purges every cache. Use after theme uploads.</p>';
-	echo '<button type="submit" name="sn_action" value="full_reset" class="button button-primary">Run Full Reset</button>';
-	echo '</div>';
-
-	// Clear Overrides.
-	echo '<div style="background:#fff;border:1px solid #c3c4c7;border-radius:4px;padding:16px 20px;max-width:280px;">';
-	echo '<strong style="display:block;margin-bottom:4px;">Clear Overrides</strong>';
-	echo '<p style="color:#666;font-size:0.85em;margin:0 0 12px;">Removes template, template part, and navigation overrides from the database.</p>';
-	echo '<button type="submit" name="sn_action" value="clear_overrides" class="button">Clear Overrides</button>';
-	echo '</div>';
-
-	// Purge Caches.
-	echo '<div style="background:#fff;border:1px solid #c3c4c7;border-radius:4px;padding:16px 20px;max-width:280px;">';
-	echo '<strong style="display:block;margin-bottom:4px;">Purge Caches</strong>';
-	echo '<p style="color:#666;font-size:0.85em;margin:0 0 12px;">Clears WP object cache, transients, Breeze page/minification cache, and Varnish.</p>';
-	echo '<button type="submit" name="sn_action" value="purge_caches" class="button">Purge All Caches</button>';
-	echo '</div>';
-
-	// Check Updates.
-	echo '<div style="background:#fff;border:1px solid #c3c4c7;border-radius:4px;padding:16px 20px;max-width:280px;">';
-	echo '<strong style="display:block;margin-bottom:4px;">Check for Updates</strong>';
-	echo '<p style="color:#666;font-size:0.85em;margin:0 0 12px;">Clears the GitHub release cache and checks for new versions immediately.</p>';
-	echo '<button type="submit" name="sn_action" value="check_updates" class="button">Check Now</button>';
-	echo '</div>';
-
-	echo '</div>'; // flex container
-	echo '</form>';
-
-	echo '<hr style="margin:1.5em 0;">';
-
-	// ── ANALYTICS ──
-	echo '<h2 style="font-size:1.1em;margin-bottom:0.8em;">Analytics</h2>';
-	echo '<p style="color:#666;font-size:0.85em;margin:0 0 12px;">Plausible CE — lightweight, cookie-free, GDPR-compliant.</p>';
-	echo '<iframe plausible-embed src="https://plausible-analytics-ce-production-fcb9.up.railway.app/share/juanlentino.com?auth=5lIheSB7pfsEp7sCfZQ6F&embed=true&theme=light" scrolling="no" frameborder="0" loading="lazy" style="width:100%;min-height:1600px;border:1px solid #c3c4c7;border-radius:4px;background:#fff;"></iframe>';
-	echo '<script async src="https://plausible-analytics-ce-production-fcb9.up.railway.app/js/embed.host.js"></script>';
-
-	echo '<hr style="margin:1.5em 0;">';
-
-	// ── LINKS ──
-	echo '<h2 style="font-size:1.1em;margin-bottom:0.8em;">Links</h2>';
-	echo '<ul style="margin:0;">';
-	echo '<li><a href="https://github.com/juanlentino/signal-and-noise" target="_blank">GitHub Repository</a></li>';
-	echo '<li><a href="https://github.com/juanlentino/signal-and-noise/releases" target="_blank">Release History</a></li>';
-	if ( '#' !== $github_url && ! $is_up_to_date ) {
-		echo '<li><a href="' . esc_url( $github_url ) . '" target="_blank">Latest Release Notes</a></li>';
-	}
-	echo '</ul>';
 
 	echo '</div>'; // wrap
 }
