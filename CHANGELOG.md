@@ -2,6 +2,11 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [5.0.3] — 2026-03-31
+
+- Removed redundant "Book a session below." from Work With Me subtitle
+- Swapped steps 2 and 3: Book & Begin is now 02, Custom Quote is now 03 (book first, quote for larger projects comes after)
+
 ## [5.0.2] — 2026-03-31
 
 - Compacted How It Works on Work With Me: smaller numbers (2.5→1.8rem), shorter descriptions (10 words max), tighter padding, removed spacer
