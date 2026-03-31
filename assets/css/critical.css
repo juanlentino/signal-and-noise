@@ -139,10 +139,10 @@ body::after {
 
 .sn-logo-img {
 	display: block;
-	width: 64px;
-	height: 64px;
+	width: 80px;
+	height: 80px;
 	object-fit: contain;
-	transition: opacity 0.3s ease;
+	transition: opacity 0.3s ease, width 0.3s ease, height 0.3s ease;
 }
 
 .sn-logo-link:hover .sn-logo-img {
@@ -179,13 +179,13 @@ body::after {
 }
 
 .sn-header.is-scrolled .sn-logo-img {
-	width: 44px;
-	height: 44px;
+	width: 48px;
+	height: 48px;
 }
 
 /* Push page content below fixed header */
 body {
-	padding-top: 88px;
+	padding-top: 108px;
 }
 
 /* Navigation links — desktop underline effect */
@@ -225,8 +225,8 @@ body {
 	flex-direction: column;
 	justify-content: center;
 	align-items: flex-start;
-	min-height: calc(100vh - 88px - 90px) !important;
-	min-height: calc(100dvh - 88px - 90px) !important;
+	min-height: calc(100vh - 108px - 90px) !important;
+	min-height: calc(100dvh - 108px - 90px) !important;
 }
 
 .sn-hero::before {
@@ -245,6 +245,19 @@ body {
 .sn-hero > * {
 	position: relative;
 	z-index: 2;
+}
+
+/* Left-align hero children — override WP constrained layout auto-margins */
+.sn-hero.is-layout-constrained > :where(:not(.alignleft):not(.alignright):not(.alignfull)) {
+	margin-left: 0;
+}
+
+.sn-hero .sn-hero-title {
+	max-width: none;
+}
+
+.sn-hero .sn-hero-subtitle {
+	max-width: 640px;
 }
 
 .sn-hero-title {
@@ -325,19 +338,19 @@ body {
 		display: none;
 	}
 	.sn-logo-img {
-		width: 52px;
-		height: 52px;
+		width: 56px;
+		height: 56px;
 	}
 	body {
-		padding-top: 72px;
+		padding-top: 80px;
 	}
 	.sn-header {
 		padding-left: 1.25rem !important;
 		padding-right: 1.25rem !important;
 	}
 	.sn-hero {
-		min-height: calc(100vh - 72px - 90px) !important;
-		min-height: calc(100dvh - 72px - 90px) !important;
+		min-height: calc(100vh - 80px - 90px) !important;
+		min-height: calc(100dvh - 80px - 90px) !important;
 		padding-top: 4rem !important;
 		padding-bottom: 4rem !important;
 		padding-left: 1.5rem !important;
@@ -369,11 +382,11 @@ body {
 		height: 44px;
 	}
 	body {
-		padding-top: 60px;
+		padding-top: 65px;
 	}
 	.sn-hero {
-		min-height: calc(100vh - 60px - 70px) !important;
-		min-height: calc(100dvh - 60px - 70px) !important;
+		min-height: calc(100vh - 65px - 70px) !important;
+		min-height: calc(100dvh - 65px - 70px) !important;
 		padding-top: 3rem !important;
 		padding-bottom: 3rem !important;
 		padding-left: 1.25rem !important;
@@ -480,4 +493,26 @@ body {
 	letter-spacing: 0.2em !important;
 	text-transform: uppercase !important;
 	color: #000000 !important;
+}
+
+/* CF7 submit button — inlined as Breeze insurance */
+.wpcf7-form input[type="submit"] {
+	display: inline-block;
+	background: #000000;
+	color: #ffffff;
+	font-family: var(--wp--preset--font-family--heading);
+	font-size: 1rem;
+	text-transform: uppercase;
+	letter-spacing: 0.15em;
+	padding: 0.9rem 2.5rem;
+	border: none;
+	border-radius: 0;
+	cursor: pointer;
+	transition: all 0.3s ease;
+	-webkit-appearance: none;
+	appearance: none;
+}
+
+.wpcf7-form input[type="submit"]:hover {
+	background: #e00404;
 }

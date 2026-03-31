@@ -1,7 +1,7 @@
 /* ============================================
    SIGNAL & NOISE — Custom Styles
    Light Industrial — NIN Aesthetic
-   v3.4.5 — Self-Hosted Fonts + SEO
+   v4.3.0 — Sizing & Polish Pass
    ============================================ */
 
 /* Fonts: Bebas Neue + DM Mono are declared in functions.php (inline critical)
@@ -148,10 +148,10 @@ body::after {
 
 .sn-logo-img {
 	display: block;
-	width: 56px;
-	height: 56px;
+	width: 80px;
+	height: 80px;
 	object-fit: contain;
-	transition: opacity 0.3s ease;
+	transition: opacity 0.3s ease, width 0.3s ease, height 0.3s ease;
 }
 
 .sn-logo-link:hover .sn-logo-img {
@@ -180,13 +180,13 @@ body::after {
 }
 
 .sn-header.is-scrolled .sn-logo-img {
-	width: 38px;
-	height: 38px;
+	width: 48px;
+	height: 48px;
 }
 
 /* Push page content below fixed header */
 body {
-	padding-top: 80px;
+	padding-top: 108px;
 }
 
 /* Navigation links — desktop underline effect */
@@ -334,8 +334,8 @@ body {
 	flex-direction: column;
 	justify-content: center;
 	align-items: flex-start;
-	min-height: calc(100vh - 80px - 90px) !important;
-	min-height: calc(100dvh - 80px - 90px) !important;
+	min-height: calc(100vh - 108px - 90px) !important;
+	min-height: calc(100dvh - 108px - 90px) !important;
 }
 
 .sn-hero::before {
@@ -354,6 +354,21 @@ body {
 .sn-hero > * {
 	position: relative;
 	z-index: 2;
+}
+
+/* Left-align hero children — override WP constrained layout auto-margins.
+   :where() keeps specificity at 0 so WP .alignwide/.alignfull still work.
+   max-width: none lets h1 use the full container width. */
+.sn-hero.is-layout-constrained > :where(:not(.alignleft):not(.alignright):not(.alignfull)) {
+	margin-left: 0;
+}
+
+.sn-hero .sn-hero-title {
+	max-width: none;
+}
+
+.sn-hero .sn-hero-subtitle {
+	max-width: 640px;
 }
 
 .sn-hero-title {
@@ -817,18 +832,18 @@ main.wp-block-group {
 
 	/* Logo */
 	.sn-logo-img {
-		width: 44px;
-		height: 44px;
+		width: 56px;
+		height: 56px;
 	}
 
 	.sn-header.is-scrolled .sn-logo-img {
-		width: 32px;
-		height: 32px;
+		width: 38px;
+		height: 38px;
 	}
 
 	/* Body offset for fixed header */
 	body {
-		padding-top: 65px;
+		padding-top: 80px;
 	}
 
 	/* Header padding */
@@ -839,8 +854,8 @@ main.wp-block-group {
 
 	/* Hero */
 	.sn-hero {
-		min-height: calc(100vh - 65px - 90px) !important;
-		min-height: calc(100dvh - 65px - 90px) !important;
+		min-height: calc(100vh - 80px - 90px) !important;
+		min-height: calc(100dvh - 80px - 90px) !important;
 		padding-top: 4rem !important;
 		padding-bottom: 4rem !important;
 		padding-left: 1.5rem !important;
@@ -961,24 +976,24 @@ main.wp-block-group {
 
 	/* Smaller logo */
 	.sn-logo-img {
-		width: 38px;
-		height: 38px;
+		width: 44px;
+		height: 44px;
 	}
 
 	.sn-header.is-scrolled .sn-logo-img {
-		width: 30px;
-		height: 30px;
+		width: 34px;
+		height: 34px;
 	}
 
 	/* Body offset for fixed header */
 	body {
-		padding-top: 55px;
+		padding-top: 65px;
 	}
 
 	/* Hero */
 	.sn-hero {
-		min-height: calc(100vh - 55px - 70px) !important;
-		min-height: calc(100dvh - 55px - 70px) !important;
+		min-height: calc(100vh - 65px - 70px) !important;
+		min-height: calc(100dvh - 65px - 70px) !important;
 		padding-top: 3rem !important;
 		padding-bottom: 3rem !important;
 		padding-left: 1.25rem !important;
@@ -1064,6 +1079,34 @@ main.wp-block-group {
 	.sn-service-card:hover,
 	.wp-block-column:has(.sn-service-image):hover {
 		transform: translateX(4px);
+	}
+}
+
+/* ============================================
+   RESPONSIVE — XL DESKTOP (min-width: 1440px)
+   ============================================ */
+
+@media (min-width: 1440px) {
+
+	/* Slightly larger body text on big screens */
+	body {
+		font-size: 1.05rem;
+	}
+
+	/* Service card body text */
+	.sn-service-card p,
+	.wp-block-column:has(.sn-service-image) p {
+		font-size: 0.95rem;
+	}
+
+	/* Button padding scales up */
+	.wp-block-button__link {
+		padding: 1rem 2.25rem;
+	}
+
+	/* Hero subtitle breathes more */
+	.sn-hero-subtitle {
+		font-size: 1.2rem !important;
 	}
 }
 

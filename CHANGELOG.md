@@ -2,6 +2,18 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [4.3.0] — 2026-03-31
+
+### Sizing & Polish Pass
+- Logo: 56→80px desktop, 44→56px tablet, 38→44px mobile; scrolled states scaled proportionally
+- Nav text: 0.9rem→1rem
+- Hero subtitle: 1.1→1.15rem (1.2rem on 1440px+)
+- Hero left-alignment: CSS-only fix using `:where()` selector to override WP constrained layout auto-margins without breaking alignwide/alignfull; subtitle capped at 640px
+- XL desktop breakpoint (1440px+): body text 1.05rem, button padding scaled, hero subtitle 1.2rem
+- CF7 submit button: styles duplicated into critical.css as Breeze minification insurance
+- Body padding-top and hero min-height synced across all breakpoints (desktop/tablet/mobile) in both custom.css and critical.css
+- Header HTML `width`/`height` attributes updated to match CSS values
+
 ## [4.2.0] — 2026-03-31
 
 - Fixed Breeze CSS minification: moved custom.css to `wp_enqueue_style` so `breeze_exclude_css` filter works
