@@ -4,7 +4,7 @@
  *
  * @package SignalNoise
  * @since 1.0.0
- * @version 4.5.2
+ * @version 5.0.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -720,9 +720,208 @@ function sn_theme_options_page() {
 	// ════════════════════════════════════════
 	} elseif ( 'analytics' === $active_tab ) {
 
-		echo '<p>Analytics widgets are on the <a href="' . admin_url( 'index.php' ) . '">main Dashboard</a>. For the full interactive dashboard:</p>';
-		echo '<p style="margin-top:1em;"><a href="' . SN_PLAUSIBLE_URL . '/' . SN_PLAUSIBLE_SITE . '" target="_blank" class="button button-primary">Open Plausible Dashboard &rarr;</a></p>';
-		echo '<p style="margin-top:1.5em;color:#666;font-size:0.85em;">Widgets refresh every 5-15 minutes. Realtime visitor count refreshes every minute.</p>';
+		if ( ! defined( 'SN_PLAUSIBLE_KEY' ) ) {
+			echo '<p style="color:#d63638;">SN_PLAUSIBLE_KEY not defined in wp-config.php. Analytics requires a Plausible API key.</p>';
+		} else {
+
+		// ── Date range ──
+		$period     = isset( $_GET['sn_period'] ) ? sanitize_text_field( $_GET['sn_period'] ) : '30d';
+		$valid      = array( '7d', '30d', '6mo', '12mo' );
+		if ( ! in_array( $period, $valid, true ) ) $period = '30d';
+		$labels     = array( '7d' => '7 Days', '30d' => '30 Days', '6mo' => '6 Months', '12mo' => '12 Months' );
+		$cache_min  = ( $period === '7d' ) ? 5 : 15;
+
+		echo '<div style="display:flex;align-items:center;gap:8px;margin-bottom:1.5em;">';
+		foreach ( $labels as $p => $l ) {
+			$is_active = ( $p === $period );
+			$style = $is_active
+				? 'background:#1d2327;color:#fff;border-color:#1d2327;'
+				: 'background:#fff;color:#1d2327;';
+			echo '<a href="' . esc_url( add_query_arg( 'sn_period', $p, $base_url . '&tab=analytics' ) ) . '" class="button" style="' . $style . '">' . $l . '</a>';
+		}
+		echo '<span style="margin-left:auto;font-size:0.8em;color:#787c82;">Cached ' . $cache_min . ' min &middot; <a href="' . SN_PLAUSIBLE_URL . '/' . SN_PLAUSIBLE_SITE . '" target="_blank">Open Plausible &rarr;</a></span>';
+		echo '</div>';
+
+		// ── Aggregate metrics ──
+		$agg = sn_plausible_api( 'aggregate', array(
+			'period'  => $period,
+			'metrics' => 'visitors,visits,pageviews,views_per_visit,bounce_rate,visit_duration',
+			'compare' => 'previous_period',
+		), $cache_min );
+		$r = $agg['results'] ?? array();
+
+		echo '<div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:1.5em;">';
+		$metrics = array(
+			array( 'Visitors',        'visitors',        'number' ),
+			array( 'Visits',          'visits',           'number' ),
+			array( 'Pageviews',       'pageviews',        'number' ),
+			array( 'Views / Visit',   'views_per_visit',  'decimal' ),
+			array( 'Bounce Rate',     'bounce_rate',      'percent' ),
+			array( 'Visit Duration',  'visit_duration',   'duration' ),
+		);
+		foreach ( $metrics as $m ) {
+			$val    = $r[ $m[1] ]['value'] ?? 0;
+			$change = $r[ $m[1] ]['change'] ?? null;
+			switch ( $m[2] ) {
+				case 'number':   $display = sn_fmt( $val ); break;
+				case 'decimal':  $display = number_format( $val, 1 ); break;
+				case 'percent':  $display = $val . '%'; break;
+				case 'duration': $display = sn_duration( $val ); break;
+				default:         $display = $val;
+			}
+			$invert = ( $m[1] === 'bounce_rate' );
+			$ch     = $change;
+			if ( $invert && null !== $ch ) $ch = -$ch;
+			$color  = '#787c82';
+			$arrow  = '&#8212;';
+			if ( null !== $ch && $ch > 0 ) { $color = '#00a32a'; $arrow = '&#9650;'; }
+			if ( null !== $ch && $ch < 0 ) { $color = '#d63638'; $arrow = '&#9660;'; }
+			echo '<div style="flex:1;min-width:120px;background:#fff;border:1px solid #c3c4c7;border-radius:4px;padding:16px;text-align:center;">';
+			echo '<div style="font-size:1.6em;font-weight:700;color:#1d2327;">' . esc_html( $display ) . '</div>';
+			echo '<div style="font-size:0.75em;color:#787c82;margin-top:4px;">' . esc_html( $m[0] ) . '</div>';
+			if ( null !== $change ) {
+				echo '<div style="font-size:0.7em;color:' . $color . ';margin-top:4px;">' . $arrow . ' ' . abs( $change ) . '%</div>';
+			}
+			echo '</div>';
+		}
+		echo '</div>';
+
+		// ── Time series + Map row ──
+		$ts = sn_plausible_api( 'timeseries', array(
+			'period'  => $period,
+			'metrics' => 'visitors,pageviews',
+		), $cache_min );
+		$ts_results = $ts['results'] ?? array();
+
+		echo '<div style="display:flex;gap:16px;margin-bottom:1.5em;flex-wrap:wrap;">';
+
+		// Chart
+		echo '<div style="flex:2;min-width:400px;background:#fff;border:1px solid #c3c4c7;border-radius:4px;padding:16px;">';
+		echo '<h3 style="margin:0 0 12px;font-size:0.9em;color:#1d2327;">Visitor Trend</h3>';
+		$chart_id = 'sn_trend_' . wp_rand();
+		echo '<div style="height:260px;"><canvas id="' . $chart_id . '"></canvas></div>';
+
+		$ts_labels = array();
+		$ts_visitors = array();
+		$ts_pageviews = array();
+		foreach ( $ts_results as $point ) {
+			$ts_labels[]    = $point['date'] ?? '';
+			$ts_visitors[]  = $point['visitors'] ?? 0;
+			$ts_pageviews[] = $point['pageviews'] ?? 0;
+		}
+
+		echo '<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>';
+		echo '<script>';
+		echo 'function snInitChart(){';
+		echo 'if(typeof Chart==="undefined"){setTimeout(snInitChart,100);return;}';
+		echo 'var ctx=document.getElementById("' . $chart_id . '");';
+		echo 'new Chart(ctx,{type:"line",data:{';
+		echo 'labels:' . wp_json_encode( $ts_labels ) . ',';
+		echo 'datasets:[';
+		echo '{label:"Visitors",data:' . wp_json_encode( $ts_visitors ) . ',borderColor:"#e00404",backgroundColor:"rgba(224,4,4,0.05)",fill:true,tension:0.3,pointRadius:' . ( count($ts_visitors) > 60 ? '0' : '3' ) . ',borderWidth:2},';
+		echo '{label:"Pageviews",data:' . wp_json_encode( $ts_pageviews ) . ',borderColor:"#1d2327",backgroundColor:"transparent",fill:false,tension:0.3,pointRadius:' . ( count($ts_pageviews) > 60 ? '0' : '2' ) . ',borderWidth:1.5,borderDash:[4,4]}';
+		echo ']},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},';
+		echo 'plugins:{legend:{position:"bottom",labels:{usePointStyle:true,padding:16,font:{size:11}}}},';
+		echo 'scales:{x:{display:true,ticks:{maxTicksLimit:8,font:{size:10},color:"#787c82"},grid:{display:false}},';
+		echo 'y:{display:true,beginAtZero:true,ticks:{font:{size:10},color:"#787c82"},grid:{color:"rgba(0,0,0,0.04)"}}}';
+		echo '}});};';
+		echo 'if(document.readyState==="complete"){snInitChart();}else{window.addEventListener("load",snInitChart);}';
+		echo '</script>';
+		echo '</div>';
+
+		// Map
+		$countries_map = sn_plausible_api( 'breakdown', array( 'period' => $period, 'property' => 'visit:country', 'metrics' => 'visitors', 'limit' => '100' ), $cache_min );
+		$map_results   = $countries_map['results'] ?? array();
+
+		echo '<div style="flex:1;min-width:300px;background:#fff;border:1px solid #c3c4c7;border-radius:4px;padding:16px;">';
+		echo '<h3 style="margin:0 0 12px;font-size:0.9em;color:#1d2327;">Visitor Map</h3>';
+
+		if ( empty( $map_results ) ) {
+			echo '<p style="color:#787c82;font-size:0.85em;">No data yet.</p>';
+		} else {
+			$map_data = array();
+			foreach ( $map_results as $c ) {
+				$code = $c['country'] ?? '';
+				if ( $code ) $map_data[ $code ] = $c['visitors'];
+			}
+			$map_id = 'sn_amap_' . wp_rand();
+			echo '<div id="' . $map_id . '" style="width:100%;height:220px;"></div>';
+			echo '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsvectormap@1.6.0/dist/css/jsvectormap.min.css">';
+			echo '<script src="https://cdn.jsdelivr.net/npm/jsvectormap@1.6.0/dist/jsvectormap.min.js"></script>';
+			echo '<script src="https://cdn.jsdelivr.net/npm/jsvectormap@1.6.0/dist/maps/world.js"></script>';
+			echo '<script>';
+			echo 'var md=' . wp_json_encode( $map_data ) . ';';
+			echo 'function snInitAMap(){';
+			echo 'if(typeof jsVectorMap==="undefined"){setTimeout(snInitAMap,100);return;}';
+			echo 'var vals=Object.values(md);var mx=Math.max.apply(null,vals)||1;';
+			echo 'var colors={};Object.keys(md).forEach(function(k){var p=md[k]/mx;colors[k]="rgba(224,4,4,"+Math.max(0.15,p)+")";});';
+			echo 'new jsVectorMap({selector:"#' . $map_id . '",map:"world",';
+			echo 'backgroundColor:"transparent",';
+			echo 'regionStyle:{initial:{fill:"#e8e8e8",stroke:"#fff",strokeWidth:0.5},hover:{fill:"#e00404"}},';
+			echo 'series:{regions:[{values:colors,attribute:"fill"}]},';
+			echo 'showTooltip:true,zoomButtons:false,';
+			echo 'onRegionTooltipShow:function(e,el,code){var v=md[code]||0;el.html(el.html()+(v?" — "+v+" visitors":""));}';
+			echo '});}';
+			echo 'if(document.readyState==="complete"){snInitAMap();}else{window.addEventListener("load",snInitAMap);}';
+			echo '</script>';
+		}
+		echo '</div>';
+		echo '</div>';
+
+		// ── Breakdowns ──
+		$breakdowns = array(
+			'pages'       => array( 'label' => 'Pages',        'property' => 'event:page',         'key' => 'page' ),
+			'entry'       => array( 'label' => 'Entry Pages',  'property' => 'visit:entry_page',   'key' => 'entry_page' ),
+			'exit'        => array( 'label' => 'Exit Pages',   'property' => 'visit:exit_page',    'key' => 'exit_page' ),
+			'sources'     => array( 'label' => 'Sources',      'property' => 'visit:source',       'key' => 'source' ),
+			'referrers'   => array( 'label' => 'Referrers',    'property' => 'visit:referrer',     'key' => 'referrer' ),
+			'utm_medium'  => array( 'label' => 'UTM Medium',   'property' => 'visit:utm_medium',   'key' => 'utm_medium' ),
+			'utm_source'  => array( 'label' => 'UTM Source',   'property' => 'visit:utm_source',   'key' => 'utm_source' ),
+			'utm_campaign'=> array( 'label' => 'UTM Campaign', 'property' => 'visit:utm_campaign', 'key' => 'utm_campaign' ),
+			'countries'   => array( 'label' => 'Countries',    'property' => 'visit:country',      'key' => 'country' ),
+			'cities'      => array( 'label' => 'Cities',       'property' => 'visit:city',         'key' => 'city' ),
+			'devices'     => array( 'label' => 'Devices',      'property' => 'visit:device',       'key' => 'device' ),
+			'browsers'    => array( 'label' => 'Browsers',     'property' => 'visit:browser',      'key' => 'browser' ),
+			'os'          => array( 'label' => 'OS',           'property' => 'visit:os',           'key' => 'os' ),
+		);
+
+		echo '<div style="background:#fff;border:1px solid #c3c4c7;border-radius:4px;padding:16px;">';
+		echo '<h3 style="margin:0 0 12px;font-size:0.9em;color:#1d2327;">Breakdowns</h3>';
+
+		$bd_uid = 'sn_bd_' . wp_rand();
+		$bd_ids = array_keys( $breakdowns );
+
+		echo '<div style="display:flex;flex-wrap:wrap;border-bottom:1px solid #c3c4c7;margin-bottom:12px;gap:0;">';
+		$first = true;
+		foreach ( $breakdowns as $id => $bd ) {
+			$active = $first ? 'border-bottom:2px solid #e00404;color:#1d2327;' : 'border-bottom:2px solid transparent;color:#787c82;';
+			echo '<div onclick="snBdTab(\'' . $bd_uid . '\',\'' . $id . '\')" style="padding:8px 12px;cursor:pointer;font-size:0.8em;font-weight:500;white-space:nowrap;' . $active . '" id="' . $bd_uid . '_tab_' . $id . '">' . $bd['label'] . '</div>';
+			$first = false;
+		}
+		echo '</div>';
+
+		$first = true;
+		foreach ( $breakdowns as $id => $bd ) {
+			$data = sn_plausible_api( 'breakdown', array(
+				'period'   => $period,
+				'property' => $bd['property'],
+				'metrics'  => 'visitors',
+				'limit'    => '15',
+			), $cache_min );
+			echo '<div id="' . $bd_uid . '_panel_' . $id . '" style="' . ( $first ? '' : 'display:none;' ) . '">';
+			sn_ranked_list( $data['results'] ?? array(), $bd['key'] );
+			echo '</div>';
+			$first = false;
+		}
+
+		echo '<script>function snBdTab(u,t){' . wp_json_encode( $bd_ids ) . '.forEach(function(i){';
+		echo 'var p=document.getElementById(u+"_panel_"+i);var b=document.getElementById(u+"_tab_"+i);';
+		echo 'if(p)p.style.display=i===t?"":"none";';
+		echo 'if(b){b.style.borderBottomColor=i===t?"#e00404":"transparent";b.style.color=i===t?"#1d2327":"#787c82";}';
+		echo '});}</script>';
+		echo '</div>';
+
+		} // end SN_PLAUSIBLE_KEY check
 
 	// ════════════════════════════════════════
 	// TAB: LINKS

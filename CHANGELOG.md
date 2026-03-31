@@ -2,6 +2,19 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [5.0.0] — 2026-03-31
+
+### Full Analytics Dashboard
+- Replaced Analytics tab stub with a complete Plausible-powered dashboard
+- Date range picker: 7d, 30d, 6 months, 12 months (query param, no page reload framework needed)
+- 6 metric cards with period-over-period comparison: Visitors, Visits, Pageviews, Views/Visit, Bounce Rate, Visit Duration
+- Visitor trend chart (Chart.js 4.4.4): dual-line visitors + pageviews with responsive axes
+- Visitor map (jsvectormap 1.6.0): choropleth colored by traffic volume, respects selected date range
+- 13 tabbed breakdown panels: Pages, Entry Pages, Exit Pages, Sources, Referrers, UTM Medium, UTM Source, UTM Campaign, Countries, Cities, Devices, Browsers, OS
+- All data cached with transients (5 min for 7d, 15 min for longer ranges)
+- Graceful degradation if SN_PLAUSIBLE_KEY not set
+- Link to external Plausible dashboard preserved in header
+
 ## [4.5.2] — 2026-03-31
 
 - Fixed Visitor Map not highlighting countries: removed strtolower() on country codes (jsvectormap expects uppercase ISO 3166-1 alpha-2 codes matching Plausible's format)
