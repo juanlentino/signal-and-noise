@@ -4,7 +4,7 @@
  *
  * @package SignalNoise
  * @since 1.0.0
- * @version 4.2.2
+ * @version 4.2.3
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -42,9 +42,10 @@ add_action( 'wp_head', function() {
 }, 50 );
 
 /**
- * Performance: Load full custom.css deferred (non-render-blocking).
- * Critical CSS above covers the first paint; this fills in the rest.
- * Enqueued via wp_enqueue_style so Breeze's exclude filter works.
+ * Performance: Load full custom.css.
+ * Critical CSS above covers first paint; this fills in the rest.
+ * Loaded normally (not deferred) because Breeze minification strips
+ * the onload handler from deferred stylesheets.
  */
 add_action( 'wp_enqueue_scripts', function() {
 	wp_enqueue_style(
@@ -350,7 +351,7 @@ add_action( 'wp_enqueue_scripts', function() {
  * the media='print' onload pattern. Saves ~300ms on mobile.
  */
 add_filter( 'style_loader_tag', function( $html, $handle ) {
-	$defer_handles = array( 'wp-block-library', 'contact-form-7', 'trp-language-switcher', 'sn-custom' );
+	$defer_handles = array( 'wp-block-library', 'contact-form-7', 'trp-language-switcher' );
 	if ( in_array( $handle, $defer_handles, true ) ) {
 		$html = str_replace(
 			" media='all'",
@@ -407,20 +408,10 @@ add_filter( 'breeze_exclude_js', function( $excluded ) {
 } );
 
 /**
- * Prevent Breeze from minifying theme CSS.
- *
- * Breeze CSS minification strips the onload handler from the deferred
- * custom.css link tag (media=print → media=all on load), which breaks
- * the non-render-blocking pattern. The theme handles its own CSS
- * optimization (critical inline + deferred full), so Breeze should
- * leave it alone.
+ * Prevent Breeze from minifying critical inline CSS.
  */
 add_filter( 'breeze_exclude_css', function( $excluded ) {
-	$excluded[] = 'sn-custom';
-	$excluded[] = 'custom.css';
 	$excluded[] = 'critical.css';
-	$excluded[] = 'signal-and-noise/assets/css/custom.css';
-	$excluded[] = 'signal-and-noise/assets/css/critical.css';
 	return $excluded;
 } );
 
