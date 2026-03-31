@@ -2,6 +2,10 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [4.3.1] — 2026-03-31
+
+- Version bump to trigger self-updater (4.3.0 was already on server)
+
 ## [4.3.0] — 2026-03-31
 
 ### Sizing & Polish Pass
