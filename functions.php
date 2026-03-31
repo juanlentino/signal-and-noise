@@ -4,7 +4,7 @@
  *
  * @package SignalNoise
  * @since 1.0.0
- * @version 3.9.6
+ * @version 3.9.7
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
