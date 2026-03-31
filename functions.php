@@ -4,7 +4,7 @@
  *
  * @package SignalNoise
  * @since 1.0.0
- * @version 4.5.1
+ * @version 4.5.2
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -302,17 +302,19 @@ add_action( 'wp_dashboard_setup', function() {
 
 		$map_data = array();
 		foreach ( $results as $c ) {
-			$code = strtolower( $c['country'] ?? '' );
+			$code = $c['country'] ?? '';
 			if ( $code ) $map_data[ $code ] = $c['visitors'];
 		}
 
 		$map_id = 'sn_map_' . wp_rand();
 		echo '<div id="' . $map_id . '" style="width:100%;height:300px;"></div>';
-		echo '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsvectormap/dist/css/jsvectormap.min.css">';
-		echo '<script src="https://cdn.jsdelivr.net/npm/jsvectormap"></script>';
-		echo '<script src="https://cdn.jsdelivr.net/npm/jsvectormap/dist/maps/world.js"></script>';
-		echo '<script>document.addEventListener("DOMContentLoaded",function(){';
+		echo '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsvectormap@1.6.0/dist/css/jsvectormap.min.css">';
+		echo '<script src="https://cdn.jsdelivr.net/npm/jsvectormap@1.6.0/dist/jsvectormap.min.js"></script>';
+		echo '<script src="https://cdn.jsdelivr.net/npm/jsvectormap@1.6.0/dist/maps/world.js" id="sn-map-world"></script>';
+		echo '<script>';
 		echo 'var d=' . wp_json_encode( $map_data ) . ';';
+		echo 'function snInitMap(){';
+		echo 'if(typeof jsVectorMap==="undefined"){setTimeout(snInitMap,100);return;}';
 		echo 'var vals=Object.values(d);var mx=Math.max.apply(null,vals)||1;';
 		echo 'var colors={};Object.keys(d).forEach(function(k){var p=d[k]/mx;colors[k]="rgba(224,4,4,"+Math.max(0.15,p)+")";});';
 		echo 'new jsVectorMap({selector:"#' . $map_id . '",map:"world",';
@@ -321,7 +323,9 @@ add_action( 'wp_dashboard_setup', function() {
 		echo 'series:{regions:[{values:colors,attribute:"fill"}]},';
 		echo 'showTooltip:true,';
 		echo 'onRegionTooltipShow:function(e,el,code){var v=d[code]||0;el.html(el.html()+(v?" — "+v+" visitors":""));}';
-		echo '});});</script>';
+		echo '});}';
+		echo 'if(document.readyState==="complete"){snInitMap();}else{window.addEventListener("load",snInitMap);}';
+		echo '</script>';
 	} );
 } );
 

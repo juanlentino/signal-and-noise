@@ -2,6 +2,11 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [4.5.2] — 2026-03-31
+
+- Fixed Visitor Map not highlighting countries: removed strtolower() on country codes (jsvectormap expects uppercase ISO 3166-1 alpha-2 codes matching Plausible's format)
+- Fixed map script loading race condition: replaced DOMContentLoaded with window load + polling fallback; pinned jsvectormap CDN to v1.6.0
+
 ## [4.5.1] — 2026-03-31
 
 - Removed footer border-top separator (whitespace does the job)
