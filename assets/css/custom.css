@@ -1,7 +1,7 @@
 /* ============================================
    SIGNAL & NOISE — Custom Styles
    Light Industrial — NIN Aesthetic
-   v4.4.0 — Sizing & Polish Pass
+   v4.4.1 — Sizing & Polish Pass
    ============================================ */
 
 /* Fonts: Bebas Neue + DM Mono are declared in functions.php (inline critical)
@@ -524,6 +524,11 @@ body {
 	left: 0;
 	right: 0;
 	z-index: 9990;
+}
+
+/* TranslatePress floating switcher — sit above fixed footer */
+#trp-floater-ls {
+	bottom: 70px !important;
 }
 
 .sn-footer a {

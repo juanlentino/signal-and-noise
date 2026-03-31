@@ -2,6 +2,10 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [4.4.1] — 2026-03-31
+
+- TranslatePress floating switcher: repositioned above fixed footer (bottom: 70px) so it doesn't overlap copyright/SDG text
+
 ## [4.4.0] — 2026-03-31
 
 - Hero alignment: golden-ratio offset (15vw on wide screens) instead of flush container edge
