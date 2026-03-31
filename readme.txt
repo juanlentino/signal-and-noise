@@ -3,7 +3,7 @@ Contributors: Juan Lentino
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.0
-Stable tag: 3.9.4
+Stable tag: 3.9.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -57,6 +57,9 @@ Modify in the Site Editor under Styles → Colors.
 * Yoast SEO — for search engine optimization
 
 == Changelog ==
+
+= 3.9.5 =
+* Reverted hero CSS to pre-session state
 
 = 3.9.4 =
 * Fixed hero left-alignment: overrode WP constrained layout auto margins on hero children

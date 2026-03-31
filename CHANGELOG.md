@@ -2,6 +2,10 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [3.9.5] — 2026-03-31
+
+- Reverted hero CSS to pre-session state; removed `margin-left: 0` that pushed content to page edge
+
 ## [3.9.4] — 2026-03-31
 
 - Fixed hero left-alignment: overrode WP constrained layout `margin-left: auto` on hero children
