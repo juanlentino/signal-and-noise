@@ -2,6 +2,11 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [3.9.4] — 2026-03-31
+
+- Fixed hero left-alignment: overrode WP constrained layout `margin-left: auto` on hero children
+- WP's `is-layout-constrained` was centering content despite CSS flexbox `align-items: flex-start`
+
 ## [3.9.3] — 2026-03-31
 
 - Excluded theme CSS from Breeze minification (`breeze_exclude_css` filter)

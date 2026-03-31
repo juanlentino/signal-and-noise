@@ -353,6 +353,7 @@ body {
 .sn-hero > * {
 	position: relative;
 	z-index: 2;
+	margin-left: 0 !important;
 }
 
 .sn-hero-title {
