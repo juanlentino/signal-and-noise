@@ -32,14 +32,15 @@ jobs:
           script: |
             APP=/home/master/applications/nffqxsrgxz/public_html
 
-            # Zip staged files and install via WP CLI (runs as PHP user, has write perms)
-            cd /tmp/sn-deploy
-            zip -qr /tmp/signal-and-noise.zip .
+            # Restructure for WP: zip must contain signal-and-noise/ folder
+            mv /tmp/sn-deploy /tmp/signal-and-noise
+            cd /tmp
+            zip -qr /tmp/signal-and-noise.zip signal-and-noise/
             cd "$APP"
             wp theme install /tmp/signal-and-noise.zip --force --path=. 2>&1
 
             # Clean up
-            rm -rf /tmp/sn-deploy /tmp/signal-and-noise.zip
+            rm -rf /tmp/signal-and-noise /tmp/signal-and-noise.zip
 
             # Purge caches
             wp cache flush --path=. 2>/dev/null || true
