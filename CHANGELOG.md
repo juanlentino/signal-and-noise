@@ -2,6 +2,12 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [4.4.0] — 2026-03-31
+
+- Hero alignment: golden-ratio offset (15vw on wide screens) instead of flush container edge
+- Footer redesign: socials left, copyright + Soli Deo Gloria right (space-between flex layout)
+- Footer layout changed from centered constrained to full-width flex
+
 ## [4.3.3] — 2026-03-31
 
 - Fixed hero left-alignment positioning: content was flush to viewport edge (only offset by section padding). Added dynamic padding-left using max() to position content where a centered 1100px container would start on wide screens, falling back to theme spacing on narrow screens
