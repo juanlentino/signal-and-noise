@@ -2,6 +2,12 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [3.8.5] — 2026-03-31
+
+- Auto-flush theme cache on deploy: detects version mismatch on first admin page load after CI/CD deploy
+- Clears theme transients, object cache, and WP theme cache automatically
+- Zero cost on subsequent loads; only fires when the deployed version changes
+
 ## [3.8.4] — 2026-03-31
 
 - Left-aligned hero section: changed layout from constrained (centered) to default (flow)

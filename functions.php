@@ -4,7 +4,7 @@
  *
  * @package SignalNoise
  * @since 1.0.0
- * @version 3.8.4
+ * @version 3.8.5
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -355,3 +355,27 @@ function sn_reset_templates_page() {
 	echo '<p class="description" style="margin-top:1em;">This also runs automatically when you activate or update the theme.</p>';
 	echo '</div>';
 }
+
+/**
+ * Performance: Auto-flush theme cache when deployed version changes.
+ *
+ * CI/CD deploys bypass WordPress's upgrader hooks, so the cached theme
+ * header (version, description, etc.) goes stale. This detects the
+ * mismatch on the first admin page load after deploy and flushes it.
+ * Zero cost on subsequent loads — only fires when the version changes.
+ */
+add_action( 'admin_init', function() {
+	$theme          = wp_get_theme();
+	$current        = $theme->get( 'Version' );
+	$cached_version = get_option( 'sn_deployed_version' );
+
+	if ( $cached_version !== $current ) {
+		// Clear theme-related caches.
+		delete_site_transient( 'update_themes' );
+		wp_clean_themes_cache();
+		wp_cache_flush();
+
+		// Store new version so this only runs once per deploy.
+		update_option( 'sn_deployed_version', $current, true );
+	}
+} );
