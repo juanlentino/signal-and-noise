@@ -29,8 +29,8 @@
 		<!-- Tab Bar -->
 		<!-- wp:html -->
 		<div id="sn-tabs" style="display:flex;border-bottom:1px solid #d9d9d9;margin-bottom:1.5rem;">
-			<div id="t30" onclick="snTab('30')" style="flex:1;text-align:center;padding:12px 0;cursor:pointer;border-bottom:2px solid #e00404;margin-bottom:-1px;color:#000;font-family:'Bebas Neue',Impact,sans-serif;font-size:15px;text-transform:uppercase;letter-spacing:0.05em;">30 min · $50</div>
-			<div id="t60" onclick="snTab('60')" style="flex:1;text-align:center;padding:12px 0;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;color:#999;font-family:'Bebas Neue',Impact,sans-serif;font-size:15px;text-transform:uppercase;letter-spacing:0.05em;">60 min · $100</div>
+			<div id="t30" onclick="snTab('30')" style="flex:1;text-align:center;padding:12px 0;cursor:pointer;border-bottom:2px solid #e00404;margin-bottom:-1px;color:#000;font-family:'Bebas Neue',Impact,sans-serif;font-size:15px;text-transform:uppercase;letter-spacing:0.05em;">30 Minutes</div>
+			<div id="t60" onclick="snTab('60')" style="flex:1;text-align:center;padding:12px 0;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;color:#999;font-family:'Bebas Neue',Impact,sans-serif;font-size:15px;text-transform:uppercase;letter-spacing:0.05em;">60 Minutes</div>
 		</div>
 		<!-- /wp:html -->
 
@@ -57,9 +57,9 @@
 		</div>
 		<!-- /wp:group -->
 
-		<!-- 60-Minute Panel -->
-		<!-- wp:group {"anchor":"p60","className":"sn-hidden"} -->
-		<div class="wp-block-group sn-hidden" id="p60">
+		<!-- 60-Minute Panel (hidden by inline style, not CSS class) -->
+		<!-- wp:group {"anchor":"p60"} -->
+		<div class="wp-block-group" id="p60" style="display:none;">
 
 			<!-- wp:heading {"level":3,"style":{"typography":{"fontSize":"clamp(1.5rem, 3vw, 2rem)"}}} -->
 			<h3 class="wp-block-heading" style="font-size:clamp(1.5rem, 3vw, 2rem)">60-MINUTE STRATEGY SESSION</h3>
@@ -82,8 +82,8 @@
 
 		<!-- Tab Switching JS + Cal.com Inline Embeds -->
 		<!-- wp:html -->
-		<style>.sn-hidden{display:none}</style>
 		<script>
+		var cal60init=false;
 		function snTab(t){
 			document.getElementById('p30').style.display=t==='30'?'':'none';
 			document.getElementById('p60').style.display=t==='60'?'':'none';
@@ -91,6 +91,12 @@
 			document.getElementById('t30').style.color=t==='30'?'#000':'#999';
 			document.getElementById('t60').style.borderBottomColor=t==='60'?'#e00404':'transparent';
 			document.getElementById('t60').style.color=t==='60'?'#000':'#999';
+			if(t==='60'&&!cal60init){
+				cal60init=true;
+				Cal("init","60min",{origin:"https://cal.com"});
+				Cal.ns["60min"]("inline",{elementOrSelector:"#cal-60",calLink:"juanlentino/60min",layout:"month_view",config:{layout:"month_view"}});
+				Cal.ns["60min"]("ui",{"theme":"light","cssVarsPerTheme":{"light":{"cal-brand":"#e00404"}},"hideEventTypeDetails":true,"layout":"month_view"});
+			}
 		}
 		</script>
 		<script type="text/javascript">
@@ -98,9 +104,6 @@
 		Cal("init","30min",{origin:"https://cal.com"});
 		Cal.ns["30min"]("inline",{elementOrSelector:"#cal-30",calLink:"juanlentino/30min",layout:"month_view",config:{layout:"month_view"}});
 		Cal.ns["30min"]("ui",{"theme":"light","cssVarsPerTheme":{"light":{"cal-brand":"#e00404"}},"hideEventTypeDetails":true,"layout":"month_view"});
-		Cal("init","60min",{origin:"https://cal.com"});
-		Cal.ns["60min"]("inline",{elementOrSelector:"#cal-60",calLink:"juanlentino/60min",layout:"month_view",config:{layout:"month_view"}});
-		Cal.ns["60min"]("ui",{"theme":"light","cssVarsPerTheme":{"light":{"cal-brand":"#e00404"}},"hideEventTypeDetails":true,"layout":"month_view"});
 		</script>
 		<!-- /wp:html -->
 
