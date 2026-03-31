@@ -628,6 +628,16 @@ main.wp-block-group {
 	color: #000000;
 }
 
+.wpcf7-form p.form-label {
+	font-family: var(--wp--preset--font-family--body) !important;
+	font-size: 0.75rem !important;
+	font-weight: 500 !important;
+	letter-spacing: 0.2em !important;
+	text-transform: uppercase !important;
+	color: #000000 !important;
+	margin-bottom: 0.5rem;
+}
+
 .wpcf7-form label br {
 	display: none;
 }
