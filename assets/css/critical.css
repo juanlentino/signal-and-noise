@@ -247,9 +247,10 @@ body {
 	z-index: 2;
 }
 
-/* Left-align hero children — override WP constrained layout auto-margins */
-.sn-hero.is-layout-constrained > :where(:not(.alignleft):not(.alignright):not(.alignfull)) {
-	margin-left: 0;
+/* Left-align hero children — override WP constrained layout inline auto-margins */
+.sn-hero.is-layout-constrained > * {
+	margin-left: 0 !important;
+	margin-right: auto !important;
 }
 
 .sn-hero .sn-hero-title {

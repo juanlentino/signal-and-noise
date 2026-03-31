@@ -2,6 +2,10 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [4.3.2] — 2026-03-31
+
+- Fixed hero left-alignment: WP constrained layout applies margin-left:auto as inline styles on children, so :where() selector (v4.3.0) couldn't override them. Switched to scoped !important on .sn-hero.is-layout-constrained > *
+
 ## [4.3.1] — 2026-03-31
 
 - Version bump to trigger self-updater (4.3.0 was already on server)

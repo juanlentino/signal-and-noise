@@ -1,7 +1,7 @@
 /* ============================================
    SIGNAL & NOISE — Custom Styles
    Light Industrial — NIN Aesthetic
-   v4.3.1 — Sizing & Polish Pass
+   v4.3.2 — Sizing & Polish Pass
    ============================================ */
 
 /* Fonts: Bebas Neue + DM Mono are declared in functions.php (inline critical)
@@ -356,11 +356,12 @@ body {
 	z-index: 2;
 }
 
-/* Left-align hero children — override WP constrained layout auto-margins.
-   :where() keeps specificity at 0 so WP .alignwide/.alignfull still work.
-   max-width: none lets h1 use the full container width. */
-.sn-hero.is-layout-constrained > :where(:not(.alignleft):not(.alignright):not(.alignfull)) {
-	margin-left: 0;
+/* Left-align hero children — override WP constrained layout inline auto-margins.
+   WP adds margin-left:auto as an inline style on children of is-layout-constrained,
+   so !important is required. Scoped to .sn-hero only. */
+.sn-hero.is-layout-constrained > * {
+	margin-left: 0 !important;
+	margin-right: auto !important;
 }
 
 .sn-hero .sn-hero-title {
