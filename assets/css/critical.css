@@ -248,6 +248,10 @@ body {
 }
 
 /* Left-align hero children — override WP constrained layout inline auto-margins */
+.sn-hero {
+	padding-left: max(var(--wp--preset--spacing--40), calc((100vw - 1100px) / 2)) !important;
+}
+
 .sn-hero.is-layout-constrained > * {
 	margin-left: 0 !important;
 	margin-right: auto !important;
