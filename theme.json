@@ -279,6 +279,7 @@
 		{ "name": "page-services", "title": "Services", "postTypes": ["page"] },
 		{ "name": "page-music", "title": "Music", "postTypes": ["page"] },
 		{ "name": "page-contact", "title": "Contact", "postTypes": ["page"] },
-		{ "name": "page-resume", "title": "Resume / CV", "postTypes": ["page"] }
+		{ "name": "page-resume", "title": "Resume / CV", "postTypes": ["page"] },
+		{ "name": "page-work-with-me", "title": "Work With Me", "postTypes": ["page"] }
 	]
 }

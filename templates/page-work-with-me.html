@@ -1,0 +1,104 @@
+<!-- wp:template-part {"slug":"header","area":"header"} /-->
+
+<!-- wp:group {"tagName":"main","layout":{"type":"default"}} -->
+<main class="wp-block-group">
+
+	<!-- Page Title -->
+	<!-- wp:group {"style":{"spacing":{"padding":{"top":"var:preset|spacing|60","bottom":"var:preset|spacing|30","left":"var:preset|spacing|40","right":"var:preset|spacing|40"}}},"backgroundColor":"void","layout":{"type":"constrained","contentSize":"800px"}} -->
+	<div class="wp-block-group has-void-background-color has-background" style="padding-top:var(--wp--preset--spacing--60);padding-right:var(--wp--preset--spacing--40);padding-bottom:var(--wp--preset--spacing--30);padding-left:var(--wp--preset--spacing--40)">
+
+		<!-- wp:paragraph {"style":{"typography":{"fontSize":"0.75rem","letterSpacing":"0.3em","textTransform":"uppercase"}},"textColor":"blood","fontFamily":"body"} -->
+		<p class="has-blood-color has-text-color has-body-font-family" style="font-size:0.75rem;letter-spacing:0.3em;text-transform:uppercase">Consulting</p>
+		<!-- /wp:paragraph -->
+
+		<!-- wp:heading {"level":1,"style":{"typography":{"fontSize":"clamp(3rem, 7vw, 5.5rem)","lineHeight":"1"}}} -->
+		<h1 class="wp-block-heading" style="font-size:clamp(3rem, 7vw, 5.5rem);line-height:1">WORK WITH ME</h1>
+		<!-- /wp:heading -->
+
+		<!-- wp:paragraph {"align":"center","style":{"typography":{"fontSize":"1rem","lineHeight":"1.8"}},"textColor":"rust","fontFamily":"body"} -->
+		<p class="has-text-align-center has-rust-color has-text-color has-body-font-family" style="font-size:1rem;line-height:1.8">20+ years building music businesses across the U.S. and Latin America. Book a session below.</p>
+		<!-- /wp:paragraph -->
+
+	</div>
+	<!-- /wp:group -->
+
+	<!-- Tab Bar + Booking Area -->
+	<!-- wp:group {"style":{"spacing":{"padding":{"top":"var:preset|spacing|20","bottom":"var:preset|spacing|50","left":"var:preset|spacing|40","right":"var:preset|spacing|40"}}},"backgroundColor":"void","layout":{"type":"constrained","contentSize":"800px"}} -->
+	<div class="wp-block-group has-void-background-color has-background" style="padding-top:var(--wp--preset--spacing--20);padding-right:var(--wp--preset--spacing--40);padding-bottom:var(--wp--preset--spacing--50);padding-left:var(--wp--preset--spacing--40)">
+
+		<!-- Tab Bar -->
+		<!-- wp:html -->
+		<div id="sn-tabs" style="display:flex;border-bottom:1px solid #d9d9d9;margin-bottom:1.5rem;">
+			<div id="t30" onclick="snTab('30')" style="flex:1;text-align:center;padding:12px 0;cursor:pointer;border-bottom:2px solid #e00404;margin-bottom:-1px;color:#000;font-family:'Bebas Neue',Impact,sans-serif;font-size:15px;text-transform:uppercase;letter-spacing:0.05em;">30 min · $50</div>
+			<div id="t60" onclick="snTab('60')" style="flex:1;text-align:center;padding:12px 0;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;color:#999;font-family:'Bebas Neue',Impact,sans-serif;font-size:15px;text-transform:uppercase;letter-spacing:0.05em;">60 min · $100</div>
+		</div>
+		<!-- /wp:html -->
+
+		<!-- 30-Minute Panel -->
+		<!-- wp:group {"anchor":"p30"} -->
+		<div class="wp-block-group" id="p30">
+
+			<!-- wp:heading {"level":3,"style":{"typography":{"fontSize":"clamp(1.5rem, 3vw, 2rem)"}}} -->
+			<h3 class="wp-block-heading" style="font-size:clamp(1.5rem, 3vw, 2rem)">30-MINUTE STRATEGY SESSION</h3>
+			<!-- /wp:heading -->
+
+			<!-- wp:paragraph {"style":{"typography":{"fontSize":"0.95rem","lineHeight":"1.8"}},"textColor":"rust","fontFamily":"body"} -->
+			<p class="has-rust-color has-text-color has-body-font-family" style="font-size:0.95rem;line-height:1.8">Focused, one-on-one. Bring a specific question or challenge about your music business.</p>
+			<!-- /wp:paragraph -->
+
+			<!-- wp:paragraph {"style":{"typography":{"fontSize":"0.75rem","letterSpacing":"0.15em","textTransform":"uppercase"}},"textColor":"steel","fontFamily":"body"} -->
+			<p class="has-steel-color has-text-color has-body-font-family" style="font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase">Paid at booking · Non-refundable</p>
+			<!-- /wp:paragraph -->
+
+			<!-- wp:shortcode -->
+			[cal_custom url="/juanlentino/30min" type=1 prefill="true" utm="source:website" ui='{"theme":"light","cssVarsPerTheme":{"light":{"cal-brand":"#e00404"}},"hideEventTypeDetails":true,"layout":"week_view"}' config='{"layout":"week_view","useSlotsViewOnSmallScreen":true,"disableMobileScroll":true}']
+			<!-- /wp:shortcode -->
+
+		</div>
+		<!-- /wp:group -->
+
+		<!-- 60-Minute Panel -->
+		<!-- wp:group {"anchor":"p60","className":"sn-hidden"} -->
+		<div class="wp-block-group sn-hidden" id="p60">
+
+			<!-- wp:heading {"level":3,"style":{"typography":{"fontSize":"clamp(1.5rem, 3vw, 2rem)"}}} -->
+			<h3 class="wp-block-heading" style="font-size:clamp(1.5rem, 3vw, 2rem)">60-MINUTE STRATEGY SESSION</h3>
+			<!-- /wp:heading -->
+
+			<!-- wp:paragraph {"style":{"typography":{"fontSize":"0.95rem","lineHeight":"1.8"}},"textColor":"rust","fontFamily":"body"} -->
+			<p class="has-rust-color has-text-color has-body-font-family" style="font-size:0.95rem;line-height:1.8">Deep-dive when you need more than a quick answer. Come prepared with context and questions.</p>
+			<!-- /wp:paragraph -->
+
+			<!-- wp:paragraph {"style":{"typography":{"fontSize":"0.75rem","letterSpacing":"0.15em","textTransform":"uppercase"}},"textColor":"steel","fontFamily":"body"} -->
+			<p class="has-steel-color has-text-color has-body-font-family" style="font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase">Paid at booking · Non-refundable</p>
+			<!-- /wp:paragraph -->
+
+			<!-- wp:shortcode -->
+			[cal_custom url="/juanlentino/60min" type=1 prefill="true" utm="source:website" ui='{"theme":"light","cssVarsPerTheme":{"light":{"cal-brand":"#e00404"}},"hideEventTypeDetails":true,"layout":"week_view"}' config='{"layout":"week_view","useSlotsViewOnSmallScreen":true,"disableMobileScroll":true}']
+			<!-- /wp:shortcode -->
+
+		</div>
+		<!-- /wp:group -->
+
+		<!-- Tab Switching JS -->
+		<!-- wp:html -->
+		<style>.sn-hidden{display:none}</style>
+		<script>
+		function snTab(t){
+			document.getElementById('p30').style.display=t==='30'?'':'none';
+			document.getElementById('p60').style.display=t==='60'?'':'none';
+			document.getElementById('t30').style.borderBottomColor=t==='30'?'#e00404':'transparent';
+			document.getElementById('t30').style.color=t==='30'?'#000':'#999';
+			document.getElementById('t60').style.borderBottomColor=t==='60'?'#e00404':'transparent';
+			document.getElementById('t60').style.color=t==='60'?'#000':'#999';
+		}
+		</script>
+		<!-- /wp:html -->
+
+	</div>
+	<!-- /wp:group -->
+
+</main>
+<!-- /wp:group -->
+
+<!-- wp:template-part {"slug":"footer","area":"footer"} /-->

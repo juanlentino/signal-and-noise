@@ -51,6 +51,7 @@ signal-and-noise/
 │   ├── page-music.html           # Spotify embeds + Muso.AI verified credits
 │   ├── page-resume.html          # Professional resume with PDF download
 │   ├── page-contact.html         # Contact Form 7 integration
+│   ├── page-work-with-me.html    # Consulting sessions with Cal.com booking
 │   ├── page.html                 # Default page
 │   ├── single.html               # Single post
 │   ├── index.html                # Blog index
@@ -72,6 +73,7 @@ signal-and-noise/
 | Music | `page-music` | Public | Spotify embeds + Muso.AI verified credits section |
 | Resume | `page-resume` | Public | Professional summary with PDF download |
 | Contact | `page-contact` | Public | Contact Form 7 with theme-matched styling |
+| Work With Me | `page-work-with-me` | Public | Tabbed consulting session booking via Cal.com |
 | 404 | `404` | Public | Custom not-found page |
 
 ## Performance

@@ -3,7 +3,7 @@ Contributors: Juan Lentino
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.0
-Stable tag: 3.8.5
+Stable tag: 3.9.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -14,7 +14,7 @@ Signal & Noise is a white, clinical, brutalist WordPress block theme designed fo
 Features:
 * Full Site Editing (FSE) support
 * Dark industrial design with film grain and scanline overlays
-* Custom page templates for About, Services, Music, Resume, and Contact
+* Custom page templates for About, Services, Music, Resume, Contact, and Work With Me
 * Bebas Neue + DM Mono typography pairing
 * Subtle animations, glitch effects, and hover states
 * Responsive and mobile-first
@@ -57,6 +57,13 @@ Modify in the Site Editor under Styles → Colors.
 * Yoast SEO — for search engine optimization
 
 == Changelog ==
+
+= 3.9.0 =
+* Work With Me consulting page with tabbed 30/60-minute session booking via Cal.com
+* Registered page-work-with-me template in theme.json
+
+= 3.8.5 =
+* Auto-flush theme cache on deploy: detects version mismatch on first admin page load
 
 = 3.8.4 =
 * Left-aligned hero section (constrained → default layout)
