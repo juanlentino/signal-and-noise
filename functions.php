@@ -4,7 +4,7 @@
  *
  * @package SignalNoise
  * @since 1.0.0
- * @version 4.2.0
+ * @version 4.2.1
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -557,31 +557,28 @@ function sn_theme_options_page() {
 
 		if ( 'purge_caches' === $action ) {
 			wp_cache_flush();
-			global $wpdb;
-			$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_%'" );
 			delete_site_transient( 'update_themes' );
 			wp_clean_themes_cache();
-			$breeze_dirs = array(
-				ABSPATH . 'wp-content/cache/breeze-minification/',
-				ABSPATH . 'wp-content/cache/breeze/',
-			);
-			foreach ( $breeze_dirs as $dir ) {
-				if ( is_dir( $dir ) ) {
-					$it = new RecursiveIteratorIterator(
-						new RecursiveDirectoryIterator( $dir, FilesystemIterator::SKIP_DOTS ),
-						RecursiveIteratorIterator::CHILD_FIRST
-					);
-					foreach ( $it as $file ) {
-						$file->isDir() ? @rmdir( $file->getPathname() ) : @unlink( $file->getPathname() );
-					}
+
+			// Delete transients via DB.
+			global $wpdb;
+			if ( $wpdb ) {
+				$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_%'" );
+			}
+
+			// Breeze file caches.
+			$cache_base = ABSPATH . 'wp-content/cache/';
+			foreach ( array( 'breeze-minification', 'breeze' ) as $subdir ) {
+				$path = $cache_base . $subdir;
+				if ( is_dir( $path ) ) {
+					exec( 'rm -rf ' . escapeshellarg( $path ) . '/*' );
 				}
 			}
-			if ( class_exists( 'Breeze_PurgeVarnish' ) ) {
-				Breeze_PurgeVarnish::purge_cache();
-			} elseif ( function_exists( 'breeze_varnish_purge_all' ) ) {
-				breeze_varnish_purge_all();
-			}
-			$notices[] = array( 'success', 'All caches purged: WP object cache, transients, Breeze page/minification, Varnish.' );
+
+			// Breeze Varnish via WP CLI (most reliable on Cloudways).
+			exec( 'cd ' . escapeshellarg( ABSPATH ) . ' && wp breeze purge --all --path=. 2>/dev/null' );
+
+			$notices[] = array( 'success', 'All caches purged.' );
 		}
 
 		if ( 'check_updates' === $action ) {
@@ -594,31 +591,25 @@ function sn_theme_options_page() {
 		if ( 'full_reset' === $action ) {
 			$count = sn_clear_template_overrides();
 			wp_cache_flush();
-			global $wpdb;
-			$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_%'" );
 			delete_site_transient( 'update_themes' );
 			delete_transient( 'sn_github_release' );
 			wp_clean_themes_cache();
-			$breeze_dirs = array(
-				ABSPATH . 'wp-content/cache/breeze-minification/',
-				ABSPATH . 'wp-content/cache/breeze/',
-			);
-			foreach ( $breeze_dirs as $dir ) {
-				if ( is_dir( $dir ) ) {
-					$it = new RecursiveIteratorIterator(
-						new RecursiveDirectoryIterator( $dir, FilesystemIterator::SKIP_DOTS ),
-						RecursiveIteratorIterator::CHILD_FIRST
-					);
-					foreach ( $it as $file ) {
-						$file->isDir() ? @rmdir( $file->getPathname() ) : @unlink( $file->getPathname() );
-					}
+
+			global $wpdb;
+			if ( $wpdb ) {
+				$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_%'" );
+			}
+
+			$cache_base = ABSPATH . 'wp-content/cache/';
+			foreach ( array( 'breeze-minification', 'breeze' ) as $subdir ) {
+				$path = $cache_base . $subdir;
+				if ( is_dir( $path ) ) {
+					exec( 'rm -rf ' . escapeshellarg( $path ) . '/*' );
 				}
 			}
-			if ( class_exists( 'Breeze_PurgeVarnish' ) ) {
-				Breeze_PurgeVarnish::purge_cache();
-			} elseif ( function_exists( 'breeze_varnish_purge_all' ) ) {
-				breeze_varnish_purge_all();
-			}
+
+			exec( 'cd ' . escapeshellarg( ABSPATH ) . ' && wp breeze purge --all --path=. 2>/dev/null' );
+
 			$notices[] = array( 'success', 'Full reset: ' . $count . ' override(s) cleared + all caches purged.' );
 		}
 	}
