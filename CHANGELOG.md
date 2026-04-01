@@ -2,6 +2,14 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [5.1.0] — 2026-03-31
+
+### QA cleanup
+- Removed dead CSS: .sn-line-accent, .sn-hero-image, .sn-accent-line, .sn-service-card (4 classes, ~30 lines across custom.css and critical.css)
+- Removed dead @keyframes lineExpand (no longer referenced after accent-line removal)
+- Footer copyright: hardcoded "2026" replaced with [current_year] shortcode (shortcode + block processor already existed)
+- Services CTA: "Get In Touch →" now links to /work-with-me instead of /contact
+
 ## [5.0.3] — 2026-03-31
 
 - Removed redundant "Book a session below." from Work With Me subtitle

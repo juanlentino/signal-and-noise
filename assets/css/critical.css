@@ -113,11 +113,6 @@ body::after {
 	50% { text-shadow: 0 0 20px rgba(224, 4, 4, 0.4), 0 0 40px rgba(224, 4, 4, 0.1); }
 }
 
-@keyframes lineExpand {
-	from { width: 0; }
-	to { width: 60px; }
-}
-
 @media (prefers-reduced-motion: no-preference) {
 	.wp-block-group,
 	.wp-block-columns,
@@ -278,20 +273,6 @@ body {
 }
 
 /* ============================================
-   ACCENT LINE
-   ============================================ */
-
-.sn-accent-line::before {
-	content: "";
-	display: block;
-	width: 60px;
-	height: 2px;
-	background: var(--wp--preset--color--blood);
-	margin-bottom: 1.5rem;
-	animation: lineExpand 0.8s ease-out both;
-}
-
-/* ============================================
    BUTTONS
    ============================================ */
 
@@ -332,9 +313,6 @@ body {
 	.sn-hero-cta {
 		animation-duration: 0.3s !important;
 		animation-delay: 0.1s !important;
-	}
-	.sn-hero .sn-line-accent {
-		animation-duration: 0.3s !important;
 	}
 	body::before {
 		opacity: 0.015;

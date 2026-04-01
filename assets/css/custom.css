@@ -1,7 +1,7 @@
 /* ============================================
    SIGNAL & NOISE — Custom Styles
    Light Industrial — NIN Aesthetic
-   v5.0.3 — Full Analytics Dashboard
+   v5.1.0 — QA Cleanup
    ============================================ */
 
 /* Fonts: Bebas Neue + DM Mono are declared in functions.php (inline critical)
@@ -119,11 +119,6 @@ body::after {
 @keyframes pulseGlow {
 	0%, 100% { text-shadow: 0 0 8px rgba(224, 4, 4, 0.2); }
 	50% { text-shadow: 0 0 20px rgba(224, 4, 4, 0.4), 0 0 40px rgba(224, 4, 4, 0.1); }
-}
-
-@keyframes lineExpand {
-	from { width: 0; }
-	to { width: 60px; }
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -397,31 +392,8 @@ body {
 }
 
 /* ============================================
-   ACCENT LINE
+   ABOUT PORTRAIT
    ============================================ */
-
-.sn-accent-line::before {
-	content: "";
-	display: block;
-	width: 60px;
-	height: 2px;
-	background: var(--wp--preset--color--blood);
-	margin-bottom: 1.5rem;
-	animation: lineExpand 0.8s ease-out both;
-}
-
-/* ============================================
-   HERO / ABOUT IMAGES
-   ============================================ */
-
-.sn-hero-image img {
-	filter: grayscale(30%) contrast(1.1);
-	transition: filter 0.6s ease;
-}
-
-.sn-hero-image:hover img {
-	filter: grayscale(0%) contrast(1.05);
-}
 
 .sn-about-portrait img {
 	filter: grayscale(20%) contrast(1.1);
@@ -437,7 +409,6 @@ body {
    ============================================ */
 
 /* Service columns act as cards — target wp-block-column inside services sections */
-.sn-service-card,
 .wp-block-columns .wp-block-column:has(.sn-service-image) {
 	transition: transform 0.3s ease;
 }
@@ -447,7 +418,6 @@ body {
 	transition: filter 0.5s ease, transform 0.5s ease;
 }
 
-.sn-service-card:hover .sn-service-image img,
 .wp-block-column:hover .sn-service-image img {
 	filter: grayscale(0%) contrast(1.05);
 	transform: scale(1.02);
@@ -826,9 +796,6 @@ main.wp-block-group {
 		animation-duration: 0.3s !important;
 		animation-delay: 0.1s !important;
 	}
-	.sn-hero .sn-line-accent {
-		animation-duration: 0.3s !important;
-	}
 
 	/* Reduce grain on smaller screens */
 	body::before {
@@ -889,13 +856,11 @@ main.wp-block-group {
 	}
 
 	/* Services section spacing */
-	.sn-service-card,
 	.wp-block-columns .wp-block-column:has(.sn-service-image) {
 		padding-bottom: 2rem !important;
 	}
 
 	/* Disable hover transforms on touch */
-	.sn-service-card:hover,
 	.wp-block-column:hover {
 		transform: none;
 	}
@@ -1016,7 +981,6 @@ main.wp-block-group {
 	}
 
 	/* Service headings — smaller on phone */
-	.sn-service-card h3,
 	.wp-block-column:has(.sn-service-image) h3,
 	.wp-block-group h3 {
 		font-size: 1.3rem !important;
@@ -1085,7 +1049,6 @@ main.wp-block-group {
 @media (min-width: 1200px) {
 
 	/* Hover effects only on desktop (pointer device) */
-	.sn-service-card:hover,
 	.wp-block-column:has(.sn-service-image):hover {
 		transform: translateX(4px);
 	}
@@ -1103,7 +1066,6 @@ main.wp-block-group {
 	}
 
 	/* Service card body text */
-	.sn-service-card p,
 	.wp-block-column:has(.sn-service-image) p {
 		font-size: 0.95rem;
 	}
@@ -1125,7 +1087,6 @@ main.wp-block-group {
 
 @media (hover: none) and (pointer: coarse) {
 	/* Disable hover transforms on touch devices */
-	.sn-service-card:hover,
 	.wp-block-column:has(.sn-service-image):hover {
 		transform: none !important;
 	}
