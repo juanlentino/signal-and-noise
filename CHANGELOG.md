@@ -2,7 +2,7 @@
 
 All notable changes to Signal & Noise are documented here.
 
-## [5.2.0] — 2026-04-13
+## [6.0.0] — 2026-04-13
 
 ### Architecture
 - `functions.php` split from 1267 lines into a 40-line bootstrap + 10 `inc/*.php` modules (setup, assets-frontend, seo, frontend-filters, plausible-api, admin-assets, dashboard-widgets, template-maintenance, admin-page, updater).
