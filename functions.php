@@ -149,9 +149,18 @@ function sn_plausible_api( $endpoint, $params = array(), $cache_minutes = 15 ) {
 		'headers' => array( 'Authorization' => 'Bearer ' . SN_PLAUSIBLE_KEY ),
 		'timeout' => 10,
 	) );
-	if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) return null;
+	if ( is_wp_error( $response ) ) {
+		set_transient( 'sn_plausible_error', $response->get_error_message(), HOUR_IN_SECONDS );
+		return null;
+	}
+	$code = wp_remote_retrieve_response_code( $response );
+	if ( 200 !== $code ) {
+		set_transient( 'sn_plausible_error', 'HTTP ' . (int) $code . ' from Plausible API', HOUR_IN_SECONDS );
+		return null;
+	}
 	$data = json_decode( wp_remote_retrieve_body( $response ), true );
 	set_transient( $cache_key, $data, $cache_minutes * MINUTE_IN_SECONDS );
+	delete_transient( 'sn_plausible_error' );
 	return $data;
 }
 
@@ -194,6 +203,118 @@ function sn_ranked_list( $items, $key, $metric = 'visitors' ) {
 	echo '</table>';
 }
 
+/**
+ * Register and enqueue admin assets used by the dashboard widgets and the
+ * Signal & Noise theme options page.
+ *
+ * Vendor scripts (jsvectormap, Chart.js) are pinned to specific versions and
+ * get SRI integrity + crossorigin attributes attached via the *_loader_tag
+ * filters below. If you bump a CDN version, regenerate the hash with:
+ *
+ *   openssl dgst -sha384 -binary FILE | openssl base64 -A
+ */
+add_action( 'admin_enqueue_scripts', function( $hook ) {
+	$is_dashboard = ( 'index.php' === $hook ) && defined( 'SN_PLAUSIBLE_KEY' );
+	$is_options   = ( 'appearance_page_sn-theme-options' === $hook );
+	if ( ! $is_dashboard && ! $is_options ) {
+		return;
+	}
+
+	$ver = wp_get_theme()->get( 'Version' );
+
+	// Vendor — jsvectormap 1.6.0
+	wp_register_style(
+		'sn-jsvectormap-css',
+		'https://cdn.jsdelivr.net/npm/jsvectormap@1.6.0/dist/jsvectormap.min.css',
+		array(),
+		'1.6.0'
+	);
+	wp_register_script(
+		'sn-jsvectormap',
+		'https://cdn.jsdelivr.net/npm/jsvectormap@1.6.0/dist/jsvectormap.min.js',
+		array(),
+		'1.6.0',
+		true
+	);
+	wp_register_script(
+		'sn-jsvectormap-world',
+		'https://cdn.jsdelivr.net/npm/jsvectormap@1.6.0/dist/maps/world.js',
+		array( 'sn-jsvectormap' ),
+		'1.6.0',
+		true
+	);
+	// Vendor — Chart.js 4.4.4
+	wp_register_script(
+		'sn-chartjs',
+		'https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js',
+		array(),
+		'4.4.4',
+		true
+	);
+
+	// Theme-owned admin JS
+	wp_register_script(
+		'sn-admin-map',
+		get_theme_file_uri( 'assets/js/admin-map.js' ),
+		array( 'sn-jsvectormap-world' ),
+		$ver,
+		true
+	);
+	wp_register_script(
+		'sn-admin-tabs',
+		get_theme_file_uri( 'assets/js/admin-tabs.js' ),
+		array(),
+		$ver,
+		true
+	);
+	wp_register_script(
+		'sn-admin-chart',
+		get_theme_file_uri( 'assets/js/admin-chart.js' ),
+		array( 'sn-chartjs' ),
+		$ver,
+		true
+	);
+
+	if ( $is_dashboard ) {
+		wp_enqueue_style(  'sn-jsvectormap-css' );
+		wp_enqueue_script( 'sn-admin-map' );
+		wp_enqueue_script( 'sn-admin-tabs' );
+	}
+	if ( $is_options ) {
+		wp_enqueue_style(  'sn-jsvectormap-css' );
+		wp_enqueue_script( 'sn-admin-map' );
+		wp_enqueue_script( 'sn-admin-chart' );
+	}
+} );
+
+/**
+ * SRI integrity + crossorigin on vendor scripts pinned above.
+ * Regenerate hashes if versions change.
+ */
+add_filter( 'script_loader_tag', function( $tag, $handle ) {
+	$hashes = array(
+		'sn-jsvectormap'       => 'sha384-BEJncmOheJY/jyZrAd3+piL709jKDBV0+sZY3wDAfoj3Q7nxojiTAIu+R9+i6+tE',
+		'sn-jsvectormap-world' => 'sha384-sGlkSOVF9H+QNNQrLV9xrMIyghEgioD3M3gPd9/tV0mh9qJX75AyCl0l7+OVJ3CD',
+		'sn-chartjs'           => 'sha384-NrKB+u6Ts6AtkIhwPixiKTzgSKNblyhlk0Sohlgar9UHUBzai/sgnNNWWd291xqt',
+	);
+	if ( ! isset( $hashes[ $handle ] ) ) {
+		return $tag;
+	}
+	$attrs = ' integrity="' . esc_attr( $hashes[ $handle ] ) . '" crossorigin="anonymous"';
+	return preg_replace( '#(<script\b)#', '$1' . $attrs, $tag, 1 );
+}, 10, 2 );
+
+add_filter( 'style_loader_tag', function( $tag, $handle ) {
+	$hashes = array(
+		'sn-jsvectormap-css' => 'sha384-MrwTqJxj6y8ZHkNV+BHWg1mH0FyrEsFczIkX+QL81NLXjYCH74i1lwh4BbSUEj6a',
+	);
+	if ( ! isset( $hashes[ $handle ] ) ) {
+		return $tag;
+	}
+	$attrs = ' integrity="' . esc_attr( $hashes[ $handle ] ) . '" crossorigin="anonymous"';
+	return preg_replace( '#(<link\b)#', '$1' . $attrs, $tag, 1 );
+}, 10, 2 );
+
 add_action( 'wp_dashboard_setup', function() {
 	if ( ! defined( 'SN_PLAUSIBLE_KEY' ) ) return;
 
@@ -223,7 +344,7 @@ add_action( 'wp_dashboard_setup', function() {
 			sn_metric_card( 'Duration', sn_duration($r['visit_duration']['value'] ?? 0) );
 			echo '</div>';
 		}
-		echo '<p style="margin:10px 0 0;font-size:0.8em;text-align:right;"><a href="' . SN_PLAUSIBLE_URL . '/' . SN_PLAUSIBLE_SITE . '" target="_blank">Full dashboard &rarr;</a></p>';
+		echo '<p style="margin:10px 0 0;font-size:0.8em;text-align:right;"><a href="' . esc_url( SN_PLAUSIBLE_URL . '/' . SN_PLAUSIBLE_SITE ) . '" target="_blank" rel="noopener">Full dashboard &rarr;</a></p>';
 	} );
 
 	// ── 30-DAY TREND ──
@@ -269,28 +390,39 @@ add_action( 'wp_dashboard_setup', function() {
 		);
 
 		$uid = 'sn_ts_' . wp_rand();
-		echo '<div style="display:flex;border-bottom:1px solid #c3c4c7;margin-bottom:12px;">';
+		echo '<div class="sn-tabs" role="tablist" style="display:flex;border-bottom:1px solid #c3c4c7;margin-bottom:12px;">';
 		$first = true;
 		foreach ( $tabs as $id => $tab ) {
-			$active = $first ? 'border-bottom:2px solid #e00404;color:#1d2327;' : 'border-bottom:2px solid transparent;color:#787c82;';
-			echo '<div onclick="snTopTab(\'' . $uid . '\',\'' . $id . '\')" style="flex:1;text-align:center;padding:8px 4px;cursor:pointer;font-size:0.8em;font-weight:500;' . $active . '" id="' . $uid . '_tab_' . $id . '">' . $tab['label'] . '</div>';
+			$tab_id   = $uid . '_tab_' . $id;
+			$panel_id = $uid . '_panel_' . $id;
+			$style    = 'flex:1;text-align:center;padding:8px 4px;cursor:pointer;font-size:0.8em;font-weight:500;font-family:inherit;background:transparent;border:0;border-bottom:2px solid ' . ( $first ? '#e00404' : 'transparent' ) . ';color:' . ( $first ? '#1d2327' : '#787c82' ) . ';';
+			printf(
+				'<button type="button" role="tab" id="%s" aria-controls="%s" aria-selected="%s" tabindex="%s" style="%s">%s</button>',
+				esc_attr( $tab_id ),
+				esc_attr( $panel_id ),
+				$first ? 'true' : 'false',
+				$first ? '0' : '-1',
+				esc_attr( $style ),
+				esc_html( $tab['label'] )
+			);
 			$first = false;
 		}
 		echo '</div>';
 
 		$first = true;
 		foreach ( $tabs as $id => $tab ) {
-			echo '<div id="' . $uid . '_panel_' . $id . '" style="' . ( $first ? '' : 'display:none;' ) . '">';
+			$tab_id   = $uid . '_tab_' . $id;
+			$panel_id = $uid . '_panel_' . $id;
+			printf(
+				'<div id="%s" role="tabpanel" aria-labelledby="%s"%s>',
+				esc_attr( $panel_id ),
+				esc_attr( $tab_id ),
+				$first ? '' : ' hidden'
+			);
 			sn_ranked_list( $tab['data'], $tab['key'] );
 			echo '</div>';
 			$first = false;
 		}
-
-		echo '<script>function snTopTab(u,t){["pages","sources","countries","devices","browsers"].forEach(function(i){';
-		echo 'var p=document.getElementById(u+"_panel_"+i);var b=document.getElementById(u+"_tab_"+i);';
-		echo 'if(p)p.style.display=i===t?"":"none";';
-		echo 'if(b){b.style.borderBottomColor=i===t?"#e00404":"transparent";b.style.color=i===t?"#1d2327":"#787c82";}';
-		echo '});}</script>';
 	} );
 
 	// ── VISITOR MAP ──
@@ -306,26 +438,10 @@ add_action( 'wp_dashboard_setup', function() {
 			if ( $code ) $map_data[ $code ] = $c['visitors'];
 		}
 
-		$map_id = 'sn_map_' . wp_rand();
-		echo '<div id="' . $map_id . '" style="width:100%;height:300px;"></div>';
-		echo '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsvectormap@1.6.0/dist/css/jsvectormap.min.css">';
-		echo '<script src="https://cdn.jsdelivr.net/npm/jsvectormap@1.6.0/dist/jsvectormap.min.js"></script>';
-		echo '<script src="https://cdn.jsdelivr.net/npm/jsvectormap@1.6.0/dist/maps/world.js" id="sn-map-world"></script>';
-		echo '<script>';
-		echo 'var d=' . wp_json_encode( $map_data ) . ';';
-		echo 'function snInitMap(){';
-		echo 'if(typeof jsVectorMap==="undefined"){setTimeout(snInitMap,100);return;}';
-		echo 'var vals=Object.values(d);var mx=Math.max.apply(null,vals)||1;';
-		echo 'var colors={};Object.keys(d).forEach(function(k){var p=d[k]/mx;colors[k]="rgba(224,4,4,"+Math.max(0.15,p)+")";});';
-		echo 'new jsVectorMap({selector:"#' . $map_id . '",map:"world",';
-		echo 'backgroundColor:"transparent",';
-		echo 'regionStyle:{initial:{fill:"#e8e8e8",stroke:"#fff",strokeWidth:0.5},hover:{fill:"#e00404"}},';
-		echo 'series:{regions:[{values:colors,attribute:"fill"}]},';
-		echo 'showTooltip:true,';
-		echo 'onRegionTooltipShow:function(e,el,code){var v=d[code]||0;el.html(el.html()+(v?" — "+v+" visitors":""));}';
-		echo '});}';
-		echo 'if(document.readyState==="complete"){snInitMap();}else{window.addEventListener("load",snInitMap);}';
-		echo '</script>';
+		printf(
+			'<div class="sn-map-widget" data-sn-map="%s" style="width:100%%;height:300px;overflow:hidden;position:relative;"></div>',
+			esc_attr( wp_json_encode( $map_data ) )
+		);
 	} );
 } );
 
@@ -539,7 +655,11 @@ function sn_theme_options_page() {
 	$theme         = wp_get_theme( 'signal-and-noise' );
 	$local_version = $theme->get( 'Version' );
 	$notices       = array();
-	$active_tab    = isset( $_GET['tab'] ) ? sanitize_text_field( $_GET['tab'] ) : 'dashboard';
+	$valid_tabs    = array( 'dashboard', 'analytics', 'system' );
+	$active_tab    = isset( $_GET['tab'] ) ? sanitize_text_field( wp_unslash( $_GET['tab'] ) ) : 'dashboard';
+	if ( ! in_array( $active_tab, $valid_tabs, true ) ) {
+		$active_tab = 'dashboard';
+	}
 
 	// Handle form actions.
 	if ( isset( $_POST['sn_action'] ) && check_admin_referer( 'sn_theme_options_nonce' ) ) {
@@ -556,9 +676,10 @@ function sn_theme_options_page() {
 			wp_clean_themes_cache();
 
 			// Delete transients via DB.
+			// Only purge transients we own (sn_*) — leaves plugin transients alone.
 			global $wpdb;
 			if ( $wpdb ) {
-				$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_%'" );
+				$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '\\_transient\\_sn\\_%' OR option_name LIKE '\\_transient\\_timeout\\_sn\\_%'" );
 			}
 
 			// Trigger Breeze purge via its own action hooks.
@@ -570,9 +691,10 @@ function sn_theme_options_page() {
 
 		if ( 'check_updates' === $action ) {
 			delete_transient( 'sn_github_release' );
+			delete_transient( 'sn_github_error' );
 			delete_site_transient( 'update_themes' );
 			wp_clean_themes_cache();
-			$notices[] = array( 'info', 'Update cache cleared. Visit <a href="' . admin_url( 'update-core.php' ) . '">Dashboard &rarr; Updates</a> to check for new versions.' );
+			$notices[] = array( 'info', 'Update cache cleared. Visit <a href="' . esc_url( admin_url( 'update-core.php' ) ) . '">Dashboard &rarr; Updates</a> to check for new versions.' );
 		}
 
 		if ( 'full_reset' === $action ) {
@@ -580,11 +702,13 @@ function sn_theme_options_page() {
 			wp_cache_flush();
 			delete_site_transient( 'update_themes' );
 			delete_transient( 'sn_github_release' );
+			delete_transient( 'sn_github_error' );
 			wp_clean_themes_cache();
 
+			// Only purge transients we own (sn_*) — leaves plugin transients alone.
 			global $wpdb;
 			if ( $wpdb ) {
-				$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_%'" );
+				$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '\\_transient\\_sn\\_%' OR option_name LIKE '\\_transient\\_timeout\\_sn\\_%'" );
 			}
 
 			do_action( 'breeze_clear_all_cache' );
@@ -739,7 +863,7 @@ function sn_theme_options_page() {
 				: 'background:#fff;color:#1d2327;';
 			echo '<a href="' . esc_url( add_query_arg( 'sn_period', $p, $base_url . '&tab=analytics' ) ) . '" class="button" style="' . $style . '">' . $l . '</a>';
 		}
-		echo '<span style="margin-left:auto;font-size:0.8em;color:#787c82;">Cached ' . $cache_min . ' min &middot; <a href="' . SN_PLAUSIBLE_URL . '/' . SN_PLAUSIBLE_SITE . '" target="_blank">Open Plausible &rarr;</a></span>';
+		echo '<span style="margin-left:auto;font-size:0.8em;color:#787c82;">Cached ' . $cache_min . ' min &middot; <a href="' . esc_url( SN_PLAUSIBLE_URL . '/' . SN_PLAUSIBLE_SITE ) . '" target="_blank" rel="noopener">Open Plausible &rarr;</a></span>';
 		echo '</div>';
 
 		// ── Aggregate metrics ──
@@ -798,8 +922,6 @@ function sn_theme_options_page() {
 		// Chart
 		echo '<div style="flex:2;min-width:400px;background:#fff;border:1px solid #c3c4c7;border-radius:4px;padding:16px;">';
 		echo '<h3 style="margin:0 0 12px;font-size:0.9em;color:#1d2327;">Visitor Trend</h3>';
-		$chart_id = 'sn_trend_' . wp_rand();
-		echo '<div style="height:260px;"><canvas id="' . $chart_id . '"></canvas></div>';
 
 		$ts_labels = array();
 		$ts_visitors = array();
@@ -810,23 +932,14 @@ function sn_theme_options_page() {
 			$ts_pageviews[] = $point['pageviews'] ?? 0;
 		}
 
-		echo '<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>';
-		echo '<script>';
-		echo 'function snInitChart(){';
-		echo 'if(typeof Chart==="undefined"){setTimeout(snInitChart,100);return;}';
-		echo 'var ctx=document.getElementById("' . $chart_id . '");';
-		echo 'new Chart(ctx,{type:"line",data:{';
-		echo 'labels:' . wp_json_encode( $ts_labels ) . ',';
-		echo 'datasets:[';
-		echo '{label:"Visitors",data:' . wp_json_encode( $ts_visitors ) . ',borderColor:"#e00404",backgroundColor:"rgba(224,4,4,0.05)",fill:true,tension:0.3,pointRadius:' . ( count($ts_visitors) > 60 ? '0' : '3' ) . ',borderWidth:2},';
-		echo '{label:"Pageviews",data:' . wp_json_encode( $ts_pageviews ) . ',borderColor:"#1d2327",backgroundColor:"transparent",fill:false,tension:0.3,pointRadius:' . ( count($ts_pageviews) > 60 ? '0' : '2' ) . ',borderWidth:1.5,borderDash:[4,4]}';
-		echo ']},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},';
-		echo 'plugins:{legend:{position:"bottom",labels:{usePointStyle:true,padding:16,font:{size:11}}}},';
-		echo 'scales:{x:{display:true,ticks:{maxTicksLimit:8,font:{size:10},color:"#787c82"},grid:{display:false}},';
-		echo 'y:{display:true,beginAtZero:true,ticks:{font:{size:10},color:"#787c82"},grid:{color:"rgba(0,0,0,0.04)"}}}';
-		echo '}});};';
-		echo 'if(document.readyState==="complete"){snInitChart();}else{window.addEventListener("load",snInitChart);}';
-		echo '</script>';
+		printf(
+			'<div class="sn-chart-widget" data-sn-chart="%s" style="height:260px;"><canvas></canvas></div>',
+			esc_attr( wp_json_encode( array(
+				'labels'    => $ts_labels,
+				'visitors'  => $ts_visitors,
+				'pageviews' => $ts_pageviews,
+			) ) )
+		);
 		echo '</div>';
 
 		// Map
@@ -844,26 +957,10 @@ function sn_theme_options_page() {
 				$code = $c['country'] ?? '';
 				if ( $code ) $map_data[ $code ] = $c['visitors'];
 			}
-			$map_id = 'sn_amap_' . wp_rand();
-			echo '<div id="' . $map_id . '" style="width:100%;height:220px;"></div>';
-			echo '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsvectormap@1.6.0/dist/css/jsvectormap.min.css">';
-			echo '<script src="https://cdn.jsdelivr.net/npm/jsvectormap@1.6.0/dist/jsvectormap.min.js"></script>';
-			echo '<script src="https://cdn.jsdelivr.net/npm/jsvectormap@1.6.0/dist/maps/world.js"></script>';
-			echo '<script>';
-			echo 'var md=' . wp_json_encode( $map_data ) . ';';
-			echo 'function snInitAMap(){';
-			echo 'if(typeof jsVectorMap==="undefined"){setTimeout(snInitAMap,100);return;}';
-			echo 'var vals=Object.values(md);var mx=Math.max.apply(null,vals)||1;';
-			echo 'var colors={};Object.keys(md).forEach(function(k){var p=md[k]/mx;colors[k]="rgba(224,4,4,"+Math.max(0.15,p)+")";});';
-			echo 'new jsVectorMap({selector:"#' . $map_id . '",map:"world",';
-			echo 'backgroundColor:"transparent",';
-			echo 'regionStyle:{initial:{fill:"#e8e8e8",stroke:"#fff",strokeWidth:0.5},hover:{fill:"#e00404"}},';
-			echo 'series:{regions:[{values:colors,attribute:"fill"}]},';
-			echo 'showTooltip:true,zoomButtons:false,';
-			echo 'onRegionTooltipShow:function(e,el,code){var v=md[code]||0;el.html(el.html()+(v?" — "+v+" visitors":""));}';
-			echo '});}';
-			echo 'if(document.readyState==="complete"){snInitAMap();}else{window.addEventListener("load",snInitAMap);}';
-			echo '</script>';
+			printf(
+				'<div class="sn-map-widget" data-sn-map="%s" style="width:100%%;height:220px;overflow:hidden;position:relative;"></div>',
+				esc_attr( wp_json_encode( $map_data ) )
+			);
 		}
 		echo '</div>';
 		echo '</div>';
@@ -1017,12 +1114,20 @@ add_filter( 'pre_set_site_transient_update_themes', function( $transient ) {
 			)
 		);
 
-		if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
+		if ( is_wp_error( $response ) ) {
+			set_transient( 'sn_github_error', $response->get_error_message(), HOUR_IN_SECONDS );
+			return $transient;
+		}
+
+		$code = wp_remote_retrieve_response_code( $response );
+		if ( 200 !== $code ) {
+			set_transient( 'sn_github_error', 'HTTP ' . (int) $code . ' from GitHub API', HOUR_IN_SECONDS );
 			return $transient;
 		}
 
 		$cached = json_decode( wp_remote_retrieve_body( $response ), true );
 		set_transient( 'sn_github_release', $cached, 12 * HOUR_IN_SECONDS );
+		delete_transient( 'sn_github_error' );
 	}
 
 	$remote_version = ltrim( $cached['tag_name'] ?? '', 'v' );
@@ -1091,4 +1196,66 @@ add_filter( 'upgrader_source_selection', function( $source, $remote_source, $upg
  */
 add_action( 'load-update-core.php', function() {
 	delete_transient( 'sn_github_release' );
+	delete_transient( 'sn_github_error' );
+} );
+
+/**
+ * Surface GitHub auto-updater problems in the admin UI.
+ *
+ * Shown only to users who can update themes, only on Dashboard / Updates /
+ * Themes screens so it lands where someone would look for an update.
+ *
+ * Two states:
+ *   - Missing token: warning notice telling you to add SN_GITHUB_TOKEN.
+ *   - Last API call failed: error notice with the HTTP/WP_Error message
+ *     (captured in the updater transient hook above).
+ */
+add_action( 'admin_notices', function() {
+	if ( ! current_user_can( 'update_themes' ) ) {
+		return;
+	}
+
+	$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+	if ( ! $screen || ! in_array( $screen->id, array( 'dashboard', 'update-core', 'themes' ), true ) ) {
+		return;
+	}
+
+	$has_token = defined( 'SN_GITHUB_TOKEN' ) && ! empty( SN_GITHUB_TOKEN );
+
+	if ( ! $has_token ) {
+		echo '<div class="notice notice-warning"><p><strong>Signal &amp; Noise:</strong> Theme auto-updates are disabled. Define <code>SN_GITHUB_TOKEN</code> in <code>wp-config.php</code> (fine-grained PAT with <em>contents: read</em> on <code>' . esc_html( SN_GITHUB_REPO ) . '</code>) to re-enable.</p></div>';
+		return;
+	}
+
+	$last_error = get_transient( 'sn_github_error' );
+	if ( $last_error ) {
+		echo '<div class="notice notice-error"><p><strong>Signal &amp; Noise:</strong> GitHub release check failed — ' . esc_html( $last_error ) . '. Token may have expired, lost access to the repo, or GitHub is rate-limiting.</p></div>';
+	}
+} );
+
+/**
+ * Surface Plausible API failures in the admin UI.
+ *
+ * Shown to manage_options users on Dashboard and the theme options page —
+ * the two places where our Plausible widgets actually render.
+ */
+add_action( 'admin_notices', function() {
+	if ( ! current_user_can( 'manage_options' ) ) {
+		return;
+	}
+
+	$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+	if ( ! $screen || ! in_array( $screen->id, array( 'dashboard', 'appearance_page_sn-theme-options' ), true ) ) {
+		return;
+	}
+
+	if ( ! defined( 'SN_PLAUSIBLE_KEY' ) ) {
+		// Missing key is not an error — the widgets just don't appear. No notice needed.
+		return;
+	}
+
+	$last_error = get_transient( 'sn_plausible_error' );
+	if ( $last_error ) {
+		echo '<div class="notice notice-warning"><p><strong>Signal &amp; Noise:</strong> Plausible analytics request failed — ' . esc_html( $last_error ) . '. Check <code>SN_PLAUSIBLE_KEY</code> and that the Plausible instance is reachable.</p></div>';
+	}
 } );
