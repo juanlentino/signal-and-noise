@@ -2,6 +2,38 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [5.2.0] — 2026-04-13
+
+### Architecture
+- `functions.php` split from 1267 lines into a 40-line bootstrap + 10 `inc/*.php` modules (setup, assets-frontend, seo, frontend-filters, plausible-api, admin-assets, dashboard-widgets, template-maintenance, admin-page, updater).
+- `assets/css/custom.css` split from 1125 lines into 5 modules (base, layout, components, forms, responsive) loaded in a dependency chain so `responsive.css` always prints last. `add_editor_style()` receives the same five paths so the Site Editor matches the front end.
+
+### Security
+- Pinned CDN assets (jsvectormap 1.6.0, Chart.js 4.4.4) now carry `integrity="sha384-..."` and `crossorigin="anonymous"` via `script_loader_tag` / `style_loader_tag` filters.
+- Scoped transient purges: `Purge All Caches` and `Full Reset` now delete only `_transient_sn_*` rows instead of wiping every plugin transient on the site.
+- Fixed a latent CDN 404: old inline `<link>` referenced `/dist/css/jsvectormap.min.css`, which does not exist in 1.6.0. Correct path is `/dist/jsvectormap.min.css`. The visitor map had been rendering unstyled, which contributed to the zoom overflow symptoms.
+
+### Admin UX
+- **Visitor map zoom no longer escapes the card.** `overflow:hidden` + `position:relative` on the container; `zoomOnScroll`/`zoomButtons`/`panOnDrag` disabled (map is hover-tooltip only).
+- Top Stats and Breakdowns tabs rewritten as `<button role="tab">` with full ARIA semantics (`aria-selected`, `aria-controls`, `aria-labelledby`, `hidden` panels) and arrow-key / Home / End keyboard navigation.
+- GitHub updater surfaces failures: missing `SN_GITHUB_TOKEN` shows a warning notice; WP_Error or non-200 responses capture into `sn_github_error` and show an error notice on Dashboard / Updates / Themes screens.
+- Plausible API mirrors the pattern: WP_Error and non-200 captured into `sn_plausible_error` with a matching admin notice on Dashboard and the theme options page.
+- `check_updates` and `full_reset` handlers now also clear `sn_github_error` so the notice self-heals after a manual retry.
+- `$_GET['tab']` on the theme options page is validated against `[dashboard, analytics, links]` with a fallback to `dashboard`.
+
+### Code cleanup
+- Four echoed inline `<script>` blocks (two map widgets, chart widget, Top Stats tabs) extracted to `assets/js/admin-map.js`, `admin-tabs.js`, `admin-chart.js`. Vendor + theme JS registered once and enqueued per screen via `admin_enqueue_scripts`.
+- Two visitor-map implementations collapsed: both widgets now emit `<div class="sn-map-widget" data-sn-map="...">` and `admin-map.js` auto-inits any element with that attribute.
+- 44 hardcoded hex colours in `custom.css` → `var(--wp--preset--color--*)` tokens from `theme.json`. Remaining two are `#999999` (neutral placeholder, not a brand colour).
+- `SN_PLAUSIBLE_URL` outputs now wrapped in `esc_url()` and carry `rel="noopener"` alongside `target="_blank"`.
+- `Tested up to:` corrected from `6.9` (unreleased) to `6.8`.
+
+### Known deferred
+- 181 `!important` rules remain across the stylesheets. Most override WP block-editor inline styles and can't be pruned without browser-side verification. Splitting the file has at least made the clusters easier to locate for a future dedicated pass.
+- `inc/admin-page.php` is 437 lines — a single feature (three-tab options UI). Further sub-splitting would fragment an `elseif` chain across files.
+- `assets/css/critical.css` at 501 lines hasn't been touched; flagged for a future audit.
+- Dark mode (`data-theme="dark"`) is not implemented. The theme is intentionally light-only per the NIN/brutalist aesthetic; noting the deviation from the global rule for a future decision.
+
 ## [5.1.0] — 2026-03-31
 
 ### QA cleanup
