@@ -1,0 +1,294 @@
+/* ============================================
+   SIGNAL & NOISE — Layout
+   Logo, header, mobile nav overlay, hero, footer.
+   Page-level structure and fixed-position chrome.
+   ============================================ */
+
+/* ============================================
+   LOGO
+   ============================================ */
+
+.sn-logo-link {
+	display: flex;
+	align-items: center;
+	text-decoration: none;
+	flex-shrink: 0;
+}
+
+.sn-logo-img {
+	display: block;
+	width: 80px;
+	height: 80px;
+	object-fit: contain;
+	transition: opacity 0.3s ease, width 0.3s ease, height 0.3s ease;
+}
+
+.sn-logo-link:hover .sn-logo-img {
+	opacity: 0.7;
+}
+
+/* ============================================
+   HEADER
+   ============================================ */
+
+.sn-header {
+	animation: fadeIn 0.8s ease-out;
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 10000;
+	transition: padding 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+	border-bottom: none !important;
+	background-color: rgba(255, 255, 255, 0.72) !important;
+	-webkit-backdrop-filter: blur(12px) saturate(1.2);
+	backdrop-filter: blur(12px) saturate(1.2);
+}
+
+/* Shrunk state on scroll */
+.sn-header.is-scrolled {
+	padding-top: 0.4rem !important;
+	padding-bottom: 0.4rem !important;
+	background-color: rgba(255, 255, 255, 0.85) !important;
+	box-shadow: 0 1px 8px rgba(0, 0, 0, 0.06);
+}
+
+.sn-header.is-scrolled .sn-logo-img {
+	width: 48px;
+	height: 48px;
+}
+
+/* Push page content below fixed header */
+body {
+	padding-top: 108px;
+}
+
+/* Navigation links — desktop underline effect */
+.wp-block-navigation a {
+	position: relative;
+	text-decoration: none !important;
+	transition: color 0.3s ease;
+}
+
+.wp-block-navigation a::after {
+	content: "";
+	position: absolute;
+	bottom: -4px;
+	left: 0;
+	width: 0;
+	height: 2px;
+	background-color: var(--wp--preset--color--blood);
+	transition: width 0.3s ease;
+}
+
+.wp-block-navigation a:hover::after {
+	width: 100%;
+}
+
+/* ============================================
+   MOBILE NAV OVERLAY — Editorial Left
+   ============================================ */
+
+.wp-block-navigation__responsive-container-open {
+	z-index: 99999 !important;
+}
+
+.wp-block-navigation__responsive-container-close svg,
+.wp-block-navigation__responsive-container-open svg {
+	fill: var(--wp--preset--color--bone) !important;
+	width: 28px !important;
+	height: 28px !important;
+}
+
+/* Full-screen overlay */
+.wp-block-navigation__responsive-container.is-menu-open {
+	position: fixed !important;
+	top: 0 !important;
+	left: 0 !important;
+	right: 0 !important;
+	bottom: 0 !important;
+	width: 100% !important;
+	height: 100vh !important;
+	height: 100dvh !important;
+	z-index: 100000 !important;
+	background-color: var(--wp--preset--color--void) !important;
+	display: flex !important;
+	flex-direction: column !important;
+	align-items: center !important;
+	justify-content: center !important;
+	padding: 0 !important;
+	overflow-y: auto !important;
+}
+
+/* Close button — top right, matching header position */
+.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation__responsive-container-close {
+	position: absolute !important;
+	top: 1rem !important;
+	right: 1.25rem !important;
+	z-index: 100001 !important;
+}
+
+/* Content wrapper */
+.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation__responsive-container-content {
+	display: flex !important;
+	flex-direction: column !important;
+	align-items: center !important;
+	justify-content: center !important;
+	gap: 0 !important;
+	width: 100% !important;
+	height: 100% !important;
+	padding: 4rem 2rem 2rem !important;
+}
+
+/* Red accent line above the nav links */
+.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation__responsive-container-content::before {
+	content: "" !important;
+	display: block !important;
+	width: 40px !important;
+	height: 3px !important;
+	background: var(--wp--preset--color--blood) !important;
+	margin-bottom: 2rem !important;
+}
+
+/* Override WP's right-justification on the inner <ul> */
+.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation__container,
+.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation__container.is-content-justification-right,
+.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation__container.items-justified-right {
+	display: flex !important;
+	flex-direction: column !important;
+	align-items: center !important;
+	justify-content: center !important;
+	width: 100% !important;
+	gap: 0 !important;
+}
+
+/* Each nav item */
+.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation-item {
+	width: auto !important;
+	border-bottom: none !important;
+}
+
+/* Nav links */
+.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation-item a {
+	font-size: 2.4rem !important;
+	font-family: var(--wp--preset--font-family--heading) !important;
+	letter-spacing: 0.04em !important;
+	text-transform: uppercase !important;
+	padding: 0.6rem 0 !important;
+	color: var(--wp--preset--color--bone) !important;
+	text-decoration: none !important;
+	display: block !important;
+	line-height: 1.1 !important;
+	text-align: center !important;
+	transition: color 0.2s ease !important;
+}
+
+/* Hover/active — red */
+.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation-item a:hover,
+.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation-item a:active {
+	color: var(--wp--preset--color--blood) !important;
+}
+
+/* Remove desktop underline effect inside overlay */
+.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation-item a::after {
+	display: none !important;
+}
+
+/* ============================================
+   HERO SECTION
+   ============================================ */
+
+.sn-hero {
+	position: relative;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: flex-start;
+	min-height: calc(100vh - 108px - 90px) !important;
+	min-height: calc(100dvh - 108px - 90px) !important;
+}
+
+.sn-hero::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(
+		180deg,
+		rgba(255, 255, 255, 0.2) 0%,
+		rgba(255, 255, 255, 0.95) 100%
+	);
+	z-index: 1;
+	pointer-events: none;
+}
+
+.sn-hero > * {
+	position: relative;
+	z-index: 2;
+}
+
+/* Left-align hero children — override WP constrained layout inline auto-margins.
+   Dynamic padding-left positions content at golden-ratio offset (~15vw on wide screens). */
+.sn-hero {
+	padding-left: max(var(--wp--preset--spacing--40), 15vw) !important;
+}
+
+.sn-hero.is-layout-constrained > * {
+	margin-left: 0 !important;
+	margin-right: auto !important;
+}
+
+.sn-hero .sn-hero-title {
+	max-width: none;
+}
+
+.sn-hero .sn-hero-subtitle {
+	max-width: 640px;
+}
+
+.sn-hero-title {
+	animation: fadeInUp 1s ease-out 0.2s both;
+}
+
+.sn-hero-subtitle {
+	animation: fadeInUp 1s ease-out 0.5s both;
+}
+
+.sn-hero-cta {
+	animation: fadeInUp 1s ease-out 0.8s both;
+}
+
+.sn-hero-accent {
+	animation: fadeInUp 1s ease-out 0.65s both;
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+
+.sn-footer {
+	border-top: none;
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	z-index: 9990;
+}
+
+.sn-footer a {
+	transition: color 0.3s ease;
+}
+
+/* Social icons — minimum 44x44 touch target (WCAG) */
+.sn-footer .wp-block-social-link-anchor {
+	min-width: 44px;
+	min-height: 44px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+/* Push main content above fixed footer */
+main.wp-block-group {
+	padding-bottom: 90px;
+}

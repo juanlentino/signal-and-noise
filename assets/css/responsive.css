@@ -1,0 +1,330 @@
+/* ============================================
+   SIGNAL & NOISE — Responsive
+   All @media queries: tablet, mobile, large + xl desktop, and touch
+   device overrides. Keep layout/component rules in their own files —
+   overrides that depend on viewport or pointer type live here.
+   ============================================ */
+
+/* ============================================
+   RESPONSIVE — TABLET (max-width: 781px)
+   ============================================ */
+
+@media (max-width: 781px) {
+
+	/* Performance: Fast hero reveal for mobile Speed Index */
+	.sn-hero-title {
+		animation-duration: 0.3s !important;
+		animation-delay: 0s !important;
+	}
+	.sn-hero-subtitle {
+		animation-duration: 0.3s !important;
+		animation-delay: 0.05s !important;
+	}
+	.sn-hero-cta {
+		animation-duration: 0.3s !important;
+		animation-delay: 0.1s !important;
+	}
+
+	/* Reduce grain on smaller screens */
+	body::before {
+		opacity: 0.015;
+	}
+
+	body::after {
+		display: none;
+	}
+
+	/* Logo */
+	.sn-logo-img {
+		width: 56px;
+		height: 56px;
+	}
+
+	.sn-header.is-scrolled .sn-logo-img {
+		width: 38px;
+		height: 38px;
+	}
+
+	/* Body offset for fixed header */
+	body {
+		padding-top: 80px;
+	}
+
+	/* Header padding */
+	.sn-header {
+		padding-left: 1.25rem !important;
+		padding-right: 1.25rem !important;
+	}
+
+	/* Hero */
+	.sn-hero {
+		min-height: calc(100vh - 80px - 90px) !important;
+		min-height: calc(100dvh - 80px - 90px) !important;
+		padding-top: 4rem !important;
+		padding-bottom: 4rem !important;
+		padding-left: 1.5rem !important;
+		padding-right: 1.5rem !important;
+	}
+
+	/* All WP columns stack on tablet */
+	.wp-block-columns {
+		flex-direction: column !important;
+		gap: 2rem !important;
+	}
+
+	.wp-block-column {
+		flex-basis: 100% !important;
+		width: 100% !important;
+	}
+
+	/* Content group padding */
+	.wp-block-group.has-background {
+		padding-left: 1.5rem !important;
+		padding-right: 1.5rem !important;
+	}
+
+	/* Services section spacing */
+	.wp-block-columns .wp-block-column:has(.sn-service-image) {
+		padding-bottom: 2rem !important;
+	}
+
+	/* Disable hover transforms on touch */
+	.wp-block-column:hover {
+		transform: none;
+	}
+
+	/* Credibility strip stacks */
+	.sn-credibility-strip {
+		flex-direction: column !important;
+		gap: 1rem !important;
+	}
+
+	.sn-credibility-strip .wp-block-column {
+		padding: 0.25rem 0 !important;
+	}
+
+	/* Process strip stacks on tablet */
+	.sn-process-strip {
+		flex-direction: column !important;
+		gap: 2rem !important;
+	}
+
+	.sn-process-strip .wp-block-column {
+		border-right: none !important;
+		border-bottom: 1px solid var(--wp--preset--color--concrete);
+		padding: 0 0 1.5rem 0 !important;
+	}
+
+	.sn-process-strip .wp-block-column:last-child {
+		border-bottom: none;
+		padding-bottom: 0 !important;
+	}
+
+	/* PDF viewer shorter on tablet */
+	.wp-block-file .wp-block-file__embed {
+		min-height: 60vh;
+	}
+
+	/* Spotify embed */
+	.wp-block-embed-spotify.wp-has-aspect-ratio .wp-block-embed__wrapper iframe {
+		height: 500px;
+	}
+
+	/* Buttons — full width on tablet */
+	.wp-block-buttons {
+		flex-direction: column !important;
+		width: 100%;
+	}
+
+	.wp-block-button {
+		width: 100%;
+	}
+
+	.wp-block-button__link {
+		width: 100%;
+		text-align: center !important;
+		display: block !important;
+	}
+
+	/* Hero buttons exception — keep side by side */
+	.sn-hero-cta.wp-block-buttons {
+		flex-direction: row !important;
+		width: auto;
+	}
+
+	.sn-hero-cta .wp-block-button {
+		width: auto;
+	}
+
+	.sn-hero-cta .wp-block-button__link {
+		width: auto;
+		display: inline-block !important;
+	}
+}
+
+/* ============================================
+   RESPONSIVE — MOBILE (max-width: 480px)
+   ============================================ */
+
+@media (max-width: 480px) {
+
+	/* Header tighter */
+	.sn-header {
+		padding-left: 1rem !important;
+		padding-right: 1rem !important;
+		padding-top: 0.75rem !important;
+		padding-bottom: 0.75rem !important;
+	}
+
+	/* Smaller logo */
+	.sn-logo-img {
+		width: 44px;
+		height: 44px;
+	}
+
+	.sn-header.is-scrolled .sn-logo-img {
+		width: 34px;
+		height: 34px;
+	}
+
+	/* Body offset for fixed header */
+	body {
+		padding-top: 65px;
+	}
+
+	/* Hero */
+	.sn-hero {
+		min-height: calc(100vh - 65px - 70px) !important;
+		min-height: calc(100dvh - 65px - 70px) !important;
+		padding-top: 3rem !important;
+		padding-bottom: 3rem !important;
+		padding-left: 1.25rem !important;
+		padding-right: 1.25rem !important;
+	}
+
+	/* Content padding */
+	.wp-block-group.has-background {
+		padding-left: 1.25rem !important;
+		padding-right: 1.25rem !important;
+	}
+
+	/* Service headings — smaller on phone */
+	.wp-block-column:has(.sn-service-image) h3,
+	.wp-block-group h3 {
+		font-size: 1.3rem !important;
+	}
+
+	/* Section headings */
+	.wp-block-heading[style*="clamp(3rem"] {
+		font-size: clamp(2.2rem, 10vw, 3rem) !important;
+	}
+
+	/* Credibility strip — left align on phone */
+	.sn-credibility-strip p {
+		text-align: left !important;
+	}
+
+	/* PDF viewer even shorter */
+	.wp-block-file .wp-block-file__embed {
+		min-height: 50vh;
+	}
+
+	/* Spotify iframe */
+	.wp-block-embed-spotify.wp-has-aspect-ratio .wp-block-embed__wrapper iframe {
+		height: 400px;
+	}
+
+	/* Hero buttons stack on small phones */
+	.sn-hero-cta.wp-block-buttons {
+		flex-direction: column !important;
+		width: 100%;
+	}
+
+	.sn-hero-cta .wp-block-button {
+		width: 100%;
+	}
+
+	.sn-hero-cta .wp-block-button__link {
+		width: 100%;
+		display: block !important;
+		text-align: center !important;
+	}
+
+	/* Nav overlay links on small screens */
+	.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation-item a {
+		font-size: 2rem !important;
+	}
+	.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation__responsive-container-content {
+		padding: 4.5rem 1.5rem 2rem !important;
+	}
+
+	/* Footer */
+	.sn-footer {
+		padding-left: 1.25rem !important;
+		padding-right: 1.25rem !important;
+	}
+
+	/* Social icons */
+	.wp-block-social-links {
+		justify-content: center;
+	}
+}
+
+/* ============================================
+   RESPONSIVE — LARGE DESKTOP (min-width: 1200px)
+   ============================================ */
+
+@media (min-width: 1200px) {
+
+	/* Hover effects only on desktop (pointer device) */
+	.wp-block-column:has(.sn-service-image):hover {
+		transform: translateX(4px);
+	}
+}
+
+/* ============================================
+   RESPONSIVE — XL DESKTOP (min-width: 1440px)
+   ============================================ */
+
+@media (min-width: 1440px) {
+
+	/* Slightly larger body text on big screens */
+	body {
+		font-size: 1.05rem;
+	}
+
+	/* Service card body text */
+	.wp-block-column:has(.sn-service-image) p {
+		font-size: 0.95rem;
+	}
+
+	/* Button padding scales up */
+	.wp-block-button__link {
+		padding: 1rem 2.25rem;
+	}
+
+	/* Hero subtitle breathes more */
+	.sn-hero-subtitle {
+		font-size: 1.2rem !important;
+	}
+}
+
+/* ============================================
+   TOUCH DEVICE OVERRIDES
+   ============================================ */
+
+@media (hover: none) and (pointer: coarse) {
+	/* Disable hover transforms on touch devices */
+	.wp-block-column:has(.sn-service-image):hover {
+		transform: none !important;
+	}
+
+	.wp-block-button__link:hover {
+		transform: none !important;
+		box-shadow: none !important;
+	}
+
+	.sn-logo-link:hover .sn-logo-img {
+		opacity: 1;
+	}
+}

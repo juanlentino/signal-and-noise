@@ -1,0 +1,205 @@
+/* ============================================
+   SIGNAL & NOISE — Contact Form 7
+   All CF7-specific styles: labels, inputs, submit, Akismet notice,
+   Cloudflare Turnstile, validation states, and the CF7 block wrapper
+   override that strips the default double-border.
+   ============================================ */
+
+.wpcf7-form p {
+	margin-bottom: 1.25rem;
+}
+
+.wpcf7-form label {
+	display: block;
+	font-family: var(--wp--preset--font-family--body) !important;
+	font-size: 0.75rem !important;
+	font-weight: 500 !important;
+	letter-spacing: 0.2em !important;
+	text-transform: uppercase !important;
+	color: var(--wp--preset--color--bone) !important;
+	margin-bottom: 0.5rem;
+}
+
+.wpcf7-form > p > label {
+	font-family: var(--wp--preset--font-family--body) !important;
+	font-size: 0.75rem !important;
+	font-weight: 500 !important;
+	letter-spacing: 0.2em !important;
+	text-transform: uppercase !important;
+	color: var(--wp--preset--color--bone) !important;
+}
+
+.wpcf7 label {
+	font-family: var(--wp--preset--font-family--body) !important;
+	font-size: 0.75rem !important;
+	font-weight: 500 !important;
+	letter-spacing: 0.2em !important;
+	text-transform: uppercase !important;
+	color: var(--wp--preset--color--bone) !important;
+}
+
+.wpcf7-form .wpcf7-radio .wpcf7-list-item-label {
+	font-family: var(--wp--preset--font-family--body);
+	font-size: 0.75rem;
+	font-weight: 500;
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--bone);
+}
+
+.wpcf7-form p.form-label {
+	font-family: var(--wp--preset--font-family--body) !important;
+	font-size: 0.75rem !important;
+	font-weight: 500 !important;
+	letter-spacing: 0.2em !important;
+	text-transform: uppercase !important;
+	color: var(--wp--preset--color--bone) !important;
+	margin-bottom: 0.5rem;
+}
+
+.wpcf7-form label br {
+	display: none;
+}
+
+.wpcf7-form input[type="text"],
+.wpcf7-form input[type="email"],
+.wpcf7-form textarea {
+	display: block;
+	width: 100%;
+	margin-top: 0.4rem;
+	padding: 0.75rem 1rem;
+	background: var(--wp--preset--color--void);
+	border: 1px solid var(--wp--preset--color--concrete);
+	border-radius: 0;
+	font-family: var(--wp--preset--font-family--body);
+	font-size: 0.9rem;
+	color: var(--wp--preset--color--bone);
+	transition: border-color 0.3s ease;
+	-webkit-appearance: none;
+	appearance: none;
+	box-sizing: border-box;
+}
+
+.wpcf7-form input[type="text"]:focus,
+.wpcf7-form input[type="email"]:focus,
+.wpcf7-form textarea:focus {
+	outline: none;
+	border-color: var(--wp--preset--color--blood);
+}
+
+.wpcf7-form input[type="text"]::placeholder,
+.wpcf7-form input[type="email"]::placeholder,
+.wpcf7-form textarea::placeholder {
+	color: #999999;
+}
+
+.wpcf7-form textarea {
+	min-height: 160px;
+	resize: vertical;
+}
+
+.wpcf7-form input[type="submit"] {
+	display: inline-block;
+	background: var(--wp--preset--color--bone);
+	color: var(--wp--preset--color--void);
+	font-family: var(--wp--preset--font-family--heading);
+	font-size: 1rem;
+	text-transform: uppercase;
+	letter-spacing: 0.15em;
+	padding: 0.9rem 2.5rem;
+	border: none;
+	border-radius: 0;
+	cursor: pointer;
+	transition: all 0.3s ease;
+	-webkit-appearance: none;
+	appearance: none;
+}
+
+.wpcf7-form input[type="submit"]:hover {
+	background: var(--wp--preset--color--blood);
+}
+
+/* Akismet notice */
+.wpcf7-form p:has(a[href*="akismet"]) {
+	font-size: 0.7rem;
+	color: #999999;
+	margin-top: 1rem;
+}
+
+.wpcf7-form p:has(a[href*="akismet"]) a {
+	color: var(--wp--preset--color--rust);
+}
+
+/* Turnstile CAPTCHA */
+.wpcf7-turnstile {
+	margin-bottom: 1.25rem;
+}
+.wpcf7-turnstile iframe,
+.wpcf7-turnstile > div,
+.cf-turnstile,
+.cf-turnstile iframe,
+.cf-turnstile > div {
+	border: none !important;
+	outline: none !important;
+	box-shadow: none !important;
+}
+
+/* Validation states */
+.wpcf7-not-valid {
+	border-color: var(--wp--preset--color--blood) !important;
+}
+
+.wpcf7-not-valid-tip {
+	font-family: var(--wp--preset--font-family--body);
+	font-size: 0.75rem;
+	color: var(--wp--preset--color--blood);
+	margin-top: 0.35rem;
+}
+
+.wpcf7-response-output {
+	font-family: var(--wp--preset--font-family--body);
+	font-size: 0.85rem;
+	padding: 0.75rem 1rem;
+	margin: 1rem 0 0;
+	border: 1px solid var(--wp--preset--color--concrete);
+}
+
+.wpcf7-form.sent .wpcf7-response-output {
+	border-color: var(--wp--preset--color--bone);
+	color: var(--wp--preset--color--bone);
+}
+
+.wpcf7-form.failed .wpcf7-response-output,
+.wpcf7-form.aborted .wpcf7-response-output,
+.wpcf7-form.spam .wpcf7-response-output {
+	border-color: var(--wp--preset--color--blood);
+	color: var(--wp--preset--color--blood);
+}
+
+/* Spinner */
+.wpcf7-spinner {
+	display: none;
+}
+
+/* Remove CF7 block wrapper border */
+.wp-block-contact-form-7-contact-form-selector {
+	border: none !important;
+	outline: none !important;
+	box-shadow: none !important;
+	-webkit-appearance: none !important;
+}
+.wp-block-contact-form-7-contact-form-selector > div {
+	border: none !important;
+	outline: none !important;
+	box-shadow: none !important;
+}
+.wpcf7 {
+	border: none !important;
+	outline: none !important;
+	box-shadow: none !important;
+}
+.wpcf7-form {
+	border: none !important;
+	outline: none !important;
+	box-shadow: none !important;
+}

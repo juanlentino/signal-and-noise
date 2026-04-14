@@ -14,9 +14,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * Enqueue editor styles so the Site Editor matches the front end.
+ *
+ * Passes the same five modular stylesheets used on the public side, in
+ * the same cascade order. Keep this list in sync with the wp_enqueue
+ * chain in inc/assets-frontend.php.
  */
 function signal_noise_editor_styles() {
-	add_editor_style( 'assets/css/custom.css' );
+	add_editor_style( array(
+		'assets/css/base.css',
+		'assets/css/layout.css',
+		'assets/css/components.css',
+		'assets/css/forms.css',
+		'assets/css/responsive.css',
+	) );
 }
 add_action( 'after_setup_theme', 'signal_noise_editor_styles' );
 

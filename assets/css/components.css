@@ -1,0 +1,159 @@
+/* ============================================
+   SIGNAL & NOISE — Components
+   About portrait, service cards, process strip, buttons, separators,
+   images, embeds, PDF viewer. Discrete UI components.
+   ============================================ */
+
+/* ============================================
+   ABOUT PORTRAIT
+   ============================================ */
+
+.sn-about-portrait img {
+	filter: grayscale(20%) contrast(1.1);
+	transition: filter 0.6s ease;
+}
+
+.sn-about-portrait:hover img {
+	filter: grayscale(0%) contrast(1);
+}
+
+/* ============================================
+   SERVICE CARDS
+   ============================================ */
+
+/* Service columns act as cards — target wp-block-column inside services sections */
+.wp-block-columns .wp-block-column:has(.sn-service-image) {
+	transition: transform 0.3s ease;
+}
+
+.sn-service-image img {
+	filter: grayscale(40%) contrast(1.1);
+	transition: filter 0.5s ease, transform 0.5s ease;
+}
+
+.wp-block-column:hover .sn-service-image img {
+	filter: grayscale(0%) contrast(1.05);
+	transform: scale(1.02);
+}
+
+/* ============================================
+   PROCESS STRIP (How It Works)
+   ============================================ */
+
+.sn-process-strip .wp-block-column {
+	padding: 0 1rem 0 0;
+	border-right: 1px solid var(--wp--preset--color--concrete);
+}
+
+.sn-process-strip .wp-block-column:last-child {
+	border-right: none;
+	padding-right: 0;
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+
+.wp-block-button__link {
+	position: relative;
+	overflow: hidden;
+	transition: all 0.3s ease;
+	border: 1px solid transparent;
+}
+
+.wp-block-button__link:hover {
+	transform: translateY(-1px);
+	box-shadow: 0 4px 20px rgba(224, 4, 4, 0.2);
+}
+
+.is-style-outline .wp-block-button__link {
+	background: transparent !important;
+	border: 1px solid var(--wp--preset--color--bone);
+	color: var(--wp--preset--color--bone) !important;
+}
+
+.is-style-outline .wp-block-button__link:hover {
+	background: var(--wp--preset--color--bone) !important;
+	color: var(--wp--preset--color--void) !important;
+}
+
+/* ============================================
+   SEPARATORS
+   ============================================ */
+
+.wp-block-separator {
+	border-color: var(--wp--preset--color--concrete) !important;
+	opacity: 0.6;
+}
+
+/* ============================================
+   IMAGES
+   ============================================ */
+
+.wp-block-image img {
+	filter: contrast(1.02);
+	transition: filter 0.4s ease;
+	max-width: 100%;
+	height: auto;
+}
+
+.wp-block-image:hover img {
+	filter: contrast(1.06) brightness(1.01);
+}
+
+/* ============================================
+   EMBEDS (Spotify, etc.)
+   ============================================ */
+
+.wp-block-embed,
+.wp-block-embed .wp-block-embed__wrapper {
+	background: var(--wp--preset--color--bone);
+}
+
+.wp-block-embed-spotify,
+.wp-block-embed-spotify .wp-block-embed__wrapper {
+	background: var(--wp--preset--color--bone) !important;
+}
+
+.wp-block-embed-spotify iframe {
+	border-radius: 0 !important;
+	background: var(--wp--preset--color--bone);
+}
+
+.wp-block-embed-spotify.wp-has-aspect-ratio .wp-block-embed__wrapper::before {
+	padding-top: 0 !important;
+}
+
+.wp-block-embed-spotify.wp-has-aspect-ratio .wp-block-embed__wrapper {
+	position: relative;
+	padding-bottom: 0 !important;
+}
+
+.wp-block-embed-spotify.wp-has-aspect-ratio .wp-block-embed__wrapper iframe {
+	position: relative !important;
+	height: 600px;
+}
+
+/* ============================================
+   PDF VIEWER
+   ============================================ */
+
+.wp-block-file .wp-block-file__embed {
+	min-height: 80vh;
+	border: 1px solid var(--wp--preset--color--concrete);
+}
+
+.wp-block-file a.wp-block-file__button {
+	background: var(--wp--preset--color--bone);
+	color: var(--wp--preset--color--void);
+	font-family: var(--wp--preset--font-family--heading);
+	text-transform: uppercase;
+	letter-spacing: 0.15em;
+	border-radius: 0;
+	padding: 0.9rem 2rem;
+	transition: all 0.3s ease;
+}
+
+.wp-block-file a.wp-block-file__button:hover {
+	background: var(--wp--preset--color--blood);
+}

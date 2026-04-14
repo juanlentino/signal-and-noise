@@ -52,18 +52,24 @@ add_action( 'wp_head', function() {
 }, 50 );
 
 /**
- * Performance: Load full custom.css.
- * Critical CSS above covers first paint; this fills in the rest.
+ * Performance: Load the five modular stylesheets in cascade order.
+ * Critical CSS (above) covers first paint; these fill in the rest.
+ *
  * Loaded normally (not deferred) because Breeze minification strips
- * the onload handler from deferred stylesheets.
+ * the onload handler from deferred stylesheets, and Breeze will
+ * concatenate them in production anyway.
+ *
+ * Dependency chain enforces load order: base → layout → components
+ * → forms → responsive. Responsive @media rules must come last so
+ * they can override the earlier layout/component defaults.
  */
 add_action( 'wp_enqueue_scripts', function() {
-	wp_enqueue_style(
-		'sn-custom',
-		get_theme_file_uri( 'assets/css/custom.css' ),
-		array(),
-		wp_get_theme()->get( 'Version' )
-	);
+	$ver = wp_get_theme()->get( 'Version' );
+	wp_enqueue_style( 'sn-base',       get_theme_file_uri( 'assets/css/base.css' ),       array(),                  $ver );
+	wp_enqueue_style( 'sn-layout',     get_theme_file_uri( 'assets/css/layout.css' ),     array( 'sn-base' ),       $ver );
+	wp_enqueue_style( 'sn-components', get_theme_file_uri( 'assets/css/components.css' ), array( 'sn-layout' ),     $ver );
+	wp_enqueue_style( 'sn-forms',      get_theme_file_uri( 'assets/css/forms.css' ),      array( 'sn-components' ), $ver );
+	wp_enqueue_style( 'sn-responsive', get_theme_file_uri( 'assets/css/responsive.css' ), array( 'sn-forms' ),      $ver );
 }, 10 );
 
 /**
