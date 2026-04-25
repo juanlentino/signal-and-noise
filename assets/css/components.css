@@ -159,14 +159,12 @@
 }
 
 /* ============================================
-   NOTES INDEX — inline pillar link
    PROVENANCE — inline TOC at top of pillar essay
-   Both are muted italic single-line links. Use a hairline-grey
-   underline that strengthens to red on hover so they read as quiet
-   navigation rather than primary CTAs.
+   Muted italic single-line link strip. Hairline-grey underline that
+   strengthens to red on hover so it reads as quiet navigation rather
+   than a primary CTA.
    ============================================ */
 
-.sn-notes-pillar-link a,
 .sn-provenance-toc a {
 	color: var(--wp--preset--color--bone);
 	text-decoration: underline;
@@ -175,7 +173,6 @@
 	transition: color 0.2s ease, text-decoration-color 0.2s ease;
 }
 
-.sn-notes-pillar-link a:hover,
 .sn-provenance-toc a:hover {
 	color: var(--wp--preset--color--blood);
 	text-decoration-color: currentColor;
@@ -189,6 +186,28 @@
 	letter-spacing: -0.02em;
 }
 
+/* Pillar essay card — promoted from a one-liner link to a featured
+   module above the Notes list. Reuses the asphalt+concrete panel
+   treatment from .sn-provenance-panel — no new tokens. */
+.sn-pillar-card {
+	border-color: var(--wp--preset--color--concrete);
+}
+
+.sn-pillar-card-title {
+	letter-spacing: -0.01em;
+}
+
+.sn-pillar-card-cta a {
+	color: var(--wp--preset--color--blood);
+	text-decoration: none;
+	transition: color 0.2s ease;
+}
+
+.sn-pillar-card-cta a:hover {
+	color: var(--wp--preset--color--signal);
+	text-decoration: underline;
+}
+
 .sn-notes-list .sn-note-card {
 	border-bottom: 1px solid var(--wp--preset--color--concrete);
 }
@@ -199,6 +218,28 @@
 
 .sn-notes-list .sn-note-card-title a {
 	transition: color 0.2s ease;
+}
+
+/* Index-only excerpt density: clamp the dek to a single line so the
+   list scans cleanly with 6+ entries. Single-Note pages render the
+   full body via wp:post-content and are unaffected. The wp:post-excerpt
+   block wraps content in <p class="wp-block-post-excerpt__excerpt">
+   so we target both the wrapper and the inner <p> to be safe across
+   WP versions. */
+.sn-notes-list .sn-note-card-excerpt,
+.sn-notes-list .sn-note-card-excerpt p {
+	display: -webkit-box;
+	-webkit-line-clamp: 1;
+	line-clamp: 1;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+/* RSS footer line — caption-size, muted. The "RSS" word inherits the
+   theme link colour by default; opacity dims the whole line so it
+   reads as a quiet footnote. */
+.sn-notes-rss {
+	opacity: 0.55;
 }
 
 .sn-notes-empty {

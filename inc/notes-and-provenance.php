@@ -90,7 +90,7 @@ function sn_ensure_notes_page() {
 		'post_status'   => 'publish',
 		'post_type'     => 'page',
 		'post_content'  => '',
-		'post_excerpt'  => 'Short essays on music, AI, and the systems behind both.',
+		'post_excerpt'  => 'Working notes on music, AI, and the infrastructure underneath. Written when there\'s something worth writing.',
 		'page_template' => 'page-notes',
 	), false );
 }

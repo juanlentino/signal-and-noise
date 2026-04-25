@@ -41,7 +41,7 @@ function sn_seo_meta_for_current_view() {
 		$url         = home_url( '/' );
 	} elseif ( is_page( 'notes' ) || is_home() ) {
 		$title       = 'Notes — Juan Lentino';
-		$description = 'Short essays on music, AI, and the systems behind both.';
+		$description = 'Working notes on music, AI, and the infrastructure underneath. Written when there\'s something worth writing.';
 		$url         = home_url( '/notes/' );
 	} elseif ( is_page( 'provenance' ) ) {
 		$title       = 'Music has a verification problem. Detection isn\'t the answer.';

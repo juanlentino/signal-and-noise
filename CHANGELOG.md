@@ -2,6 +2,21 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [6.2.7] — 2026-04-25
+
+### Changed
+- **`/notes` index — pillar essay promoted from inline link to featured card.** The italic one-liner above the page H1 ("The pillar essay: Provenance Over Detection →") is replaced by a visually distinct card sitting between the page header and the Notes list. The card uses the existing asphalt-background + concrete-border treatment from `.sn-provenance-panel` — no new tokens — and contains a `PILLAR ESSAY` eyebrow, an `<h2>` title in `font-display`, the dek "A short read on why the industry needs to prove what's human, not chase what isn't.", and a `Read essay →` CTA in the heading font (uppercase, 0.15em letter-spacing, blood-on-signal hover). When a second pillar essay ever exists this section will be generalised into a list — for now it's hardcoded.
+- **`/notes` index — Notes list tightened to one-line deks.** Each card's excerpt is now CSS-clamped to a single line via `-webkit-line-clamp: 1` on `.sn-note-card-excerpt` (and its inner `<p>`). Single-Note pages render the full body via `wp:post-content` and are unaffected. Per-entry density goes down without changing the existing list rhythm.
+- **`/notes` page subtitle copy.** Replaced "Short essays on music, AI, and the systems behind both." with "Working notes on music, AI, and the infrastructure underneath. Written when there's something worth writing." Same position, same type style. Updated in three places that must stay in lockstep: the visible markup in `templates/page-notes.html` and `templates/home.html`, the seed `post_excerpt` in `inc/notes-and-provenance.php`, and the hardcoded SEO description in `inc/seo.php` (which feeds the `<meta name="description">` tag and OG/Twitter cards on `/notes`).
+
+### Added
+- **`/notes` index — RSS footer line.** A caption-size, opacity-dimmed line below the Notes list, separated by a hairline rule and a `spacing-40` spacer: "No subscription form, no schedule. Notes available via RSS." The "RSS" word links to `/notes/feed/` (the WordPress-generated feed for the Notes category). New `.sn-notes-rss` selector in `assets/css/components.css`.
+
+### Notes
+- All four changes use existing theme tokens — no new entries in `theme.json`. The pillar card reuses the asphalt+concrete panel pattern; the eyebrow reuses the `.sn-provenance-eyebrow` size/weight/colour treatment; the CTA reuses the heading-font uppercase pattern from `.sn-note-pillar-link` on the single-Note template.
+- The dropped `.sn-notes-pillar-link` selector in `assets/css/components.css` previously shared a rule with `.sn-provenance-toc`. The rule is preserved for the TOC; the unused first selector is removed.
+- This consumes the seventh patch in 6.2.x. Per project versioning, the next change must bump to 6.3.0.
+
 ## [6.2.6] — 2026-04-25
 
 ### Added
