@@ -31,6 +31,7 @@ const SN_PROVENANCE_SLUG        = 'provenance';
 const SN_PERMALINK_STRUCTURE    = '/notes/%postname%/';
 const SN_SEED_FLAG_OPTION       = 'sn_content_surfaces_seeded_v1';
 const SN_PROV_BODY_MIGRATED_OPT = 'sn_provenance_body_migrated_v1';
+const SN_PROV_REFINE_MIGR_OPT   = 'sn_provenance_refine_migrated_v1';
 const SN_NOTES_QUERY_ID         = 42;
 
 /**
@@ -176,6 +177,83 @@ function sn_migrate_provenance_body() {
 	) );
 
 	update_option( SN_PROV_BODY_MIGRATED_OPT, time(), true );
+}
+
+/**
+ * One-time refinements migration for the Provenance pillar:
+ *
+ *   1. Inject the inline TOC paragraph (between the hero and the first
+ *      separator) if it isn't already present.
+ *   2. Add `displayType: "modified"` to the byline's wp:post-date block
+ *      so the date reads "last updated" rather than "first published" —
+ *      more honest for a permanent reference essay that gets iterated on.
+ *
+ * Both edits are surgical, defensive, and idempotent: each is skipped
+ * when the marker is missing or the change is already applied. Prose
+ * paragraphs are never touched. Safe to re-run; in practice runs once
+ * per site (guarded by SN_PROV_REFINE_MIGR_OPT).
+ */
+add_action( 'admin_init', 'sn_migrate_provenance_refinements' );
+
+function sn_migrate_provenance_refinements() {
+	if ( get_option( SN_PROV_REFINE_MIGR_OPT ) ) {
+		return;
+	}
+
+	$page = get_page_by_path( SN_PROVENANCE_SLUG );
+	if ( ! $page ) {
+		// Page doesn't exist yet — nothing to migrate. Mark done so we
+		// don't keep scanning on every admin_init.
+		update_option( SN_PROV_REFINE_MIGR_OPT, time(), true );
+		return;
+	}
+
+	$body     = $page->post_content;
+	$original = $body;
+
+	// 1. Inject TOC after the hero group close, before the first separator.
+	if ( false === strpos( $body, 'sn-provenance-toc' ) ) {
+		$hero_start = strpos( $body, '<!-- wp:group {"className":"sn-provenance-hero"' );
+		if ( false !== $hero_start ) {
+			$hero_close_marker = '<!-- /wp:group -->';
+			$hero_close        = strpos( $body, $hero_close_marker, $hero_start );
+			if ( false !== $hero_close ) {
+				$insert_at = $hero_close + strlen( $hero_close_marker );
+				$body      = substr( $body, 0, $insert_at )
+					. "\n\n" . sn_provenance_toc_block_markup() . "\n"
+					. substr( $body, $insert_at );
+			}
+		}
+	}
+
+	// 2. Add displayType:"modified" to the byline's wp:post-date.
+	if ( false === strpos( $body, '"displayType":"modified"' ) ) {
+		$body = preg_replace(
+			'/<!-- wp:post-date \{"format":"F j, Y",/',
+			'<!-- wp:post-date {"format":"F j, Y","displayType":"modified",',
+			$body,
+			1
+		);
+	}
+
+	if ( $body !== $original ) {
+		wp_update_post( array(
+			'ID'           => $page->ID,
+			'post_content' => $body,
+		) );
+	}
+
+	update_option( SN_PROV_REFINE_MIGR_OPT, time(), true );
+}
+
+/**
+ * The TOC block markup, factored out so the seed file and the migration
+ * stay in lockstep. If the TOC ever changes shape, change it here.
+ */
+function sn_provenance_toc_block_markup() {
+	return '<!-- wp:paragraph {"className":"sn-provenance-toc","style":{"typography":{"fontSize":"0.95rem","fontStyle":"italic"},"spacing":{"margin":{"top":"0","bottom":"var:preset|spacing|50"}}},"textColor":"rust"} -->' . "\n"
+		. '<p class="sn-provenance-toc has-rust-color has-text-color" style="margin-top:0;margin-bottom:var(--wp--preset--spacing--50);font-size:0.95rem;font-style:italic">Jump to: <a href="#setup">The setup</a> · <a href="#analogy">The analogy</a> · <a href="#what-it-means">What provenance means</a> · <a href="#why-it-matters">Why this matters</a> · <a href="#the-shift">The shift</a></p>' . "\n"
+		. '<!-- /wp:paragraph -->';
 }
 
 /**

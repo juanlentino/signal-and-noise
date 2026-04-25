@@ -2,6 +2,20 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [6.2.6] — 2026-04-25
+
+### Added
+- **One-time migration** `sn_migrate_provenance_refinements()` in `inc/notes-and-provenance.php` that runs on next `admin_init` and surgically:
+  - Injects the inline TOC paragraph between the Provenance hero and the first separator (skipped if `.sn-provenance-toc` is already present in the body — defensive against the case where the snippet was already pasted manually).
+  - Adds `displayType: "modified"` to the byline's `wp:post-date` block so the date reads as "last updated" rather than "first published" — more honest semantics for a permanent reference essay that gets iterated on.
+- New TOC block markup factored into `sn_provenance_toc_block_markup()` so the seed file (`inc/seed-content/provenance-body.html`) and the migration share a single source of truth.
+- Updated the seed file itself (TOC + `displayType: "modified"`) so future installs ship with both refinements baked in.
+
+### Notes
+- Migration is gated by `sn_provenance_refine_migrated_v1` option flag — runs once per site, never re-runs. Both edits are idempotent (skip if already applied), so manual snippet-paste before the update doesn't cause double-injection.
+- Prose paragraphs are never touched. Migration only inserts net-new content (TOC) and modifies one block attribute (post-date display type).
+- This is the sixth patch in 6.2.x — one more remaining (6.2.7) before the next change must bump to 6.3.0 per project versioning.
+
 ## [6.2.5] — 2026-04-25
 
 ### Fixed
