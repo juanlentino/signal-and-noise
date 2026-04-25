@@ -2,6 +2,16 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [6.2.2] — 2026-04-25
+
+### Fixed
+- **`/notes` index pillar link wasn't rendering.** When `/notes` is wired as the WP **Posts page** (Settings → Reading), WordPress routes the URL through `home.html` → `index.html` instead of the Page's custom template (`page-notes.html`). The pillar link, the page title, the dek, and the separator all live in `page-notes.html`, so none of them surfaced — only the bare query loop from the v6.0.0 inherited `index.html` did.
+- Added `templates/home.html` mirroring `page-notes.html` exactly. WP picks `home.html` over `index.html` for the Posts page, so the pillar link and chrome now render regardless of how `/notes` is wired in the install (custom Page template OR WP Posts page).
+
+### Notes
+- No changes to `index.html` — it stays as the generic fallback for other archive contexts (search, dates, etc.) so the pillar link doesn't pollute unrelated pages.
+- If you'd rather route `/notes` through `page-notes.html` (Page template) and remove the Posts-page setting, that's still valid — the new `home.html` just makes the rendering consistent regardless of the route.
+
 ## [6.2.1] — 2026-04-25
 
 ### Removed
