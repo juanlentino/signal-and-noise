@@ -25,12 +25,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-const SN_NOTES_CATEGORY_SLUG = 'notes';
-const SN_NOTES_PAGE_SLUG     = 'notes';
-const SN_PROVENANCE_SLUG     = 'provenance';
-const SN_PERMALINK_STRUCTURE = '/notes/%postname%/';
-const SN_SEED_FLAG_OPTION    = 'sn_content_surfaces_seeded_v1';
-const SN_NOTES_QUERY_ID      = 42;
+const SN_NOTES_CATEGORY_SLUG    = 'notes';
+const SN_NOTES_PAGE_SLUG        = 'notes';
+const SN_PROVENANCE_SLUG        = 'provenance';
+const SN_PERMALINK_STRUCTURE    = '/notes/%postname%/';
+const SN_SEED_FLAG_OPTION       = 'sn_content_surfaces_seeded_v1';
+const SN_PROV_BODY_MIGRATED_OPT = 'sn_provenance_body_migrated_v1';
+const SN_NOTES_QUERY_ID         = 42;
 
 /**
  * Activation: seed category, pages, and permalink once per theme install.
@@ -95,9 +96,10 @@ function sn_ensure_notes_page() {
 
 /**
  * Create the Provenance pillar as a static Page, assigned to the
- * page-provenance.html custom template. Page body stays empty — the
- * hero / sections / SVG / byline / footer CTA all live in the template,
- * so the Site Editor is the surface for any structural change.
+ * page-provenance.html custom template. Body is pre-populated from
+ * inc/seed-content/provenance-body.html so the Page is editable from
+ * Pages → Provenance like any other page (no Site Editor required for
+ * prose changes).
  *
  * Idempotent: leave any existing /provenance page untouched.
  */
@@ -112,10 +114,68 @@ function sn_ensure_provenance_page() {
 		'post_name'     => SN_PROVENANCE_SLUG,
 		'post_status'   => 'publish',
 		'post_type'     => 'page',
-		'post_content'  => '',
+		'post_content'  => sn_load_provenance_body(),
 		'post_excerpt'  => "A short read on why the industry needs to prove what's human, not chase what isn't.",
 		'page_template' => 'page-provenance',
 	), false );
+}
+
+/**
+ * Load the seeded Provenance body markup from disk.
+ * Empty string fallback if the seed file is missing — the template will
+ * just render an empty post-content area, no fatal.
+ */
+function sn_load_provenance_body() {
+	$body_file = __DIR__ . '/seed-content/provenance-body.html';
+	return file_exists( $body_file ) ? file_get_contents( $body_file ) : '';
+}
+
+/**
+ * One-time migration for sites upgrading from v6.1.0 (where the
+ * Provenance Page was created with an empty body and all visible content
+ * lived in the template). Populates the existing Page's body from the
+ * seed file so it becomes editable from Pages → Provenance.
+ *
+ * Safety:
+ *   - Runs at most once per site (guarded by a dedicated option flag).
+ *   - Only writes when the existing body is genuinely empty — never
+ *     overwrites prose someone has already added.
+ *   - The flag is set even on no-op paths so we don't keep checking.
+ */
+add_action( 'admin_init', 'sn_migrate_provenance_body' );
+
+function sn_migrate_provenance_body() {
+	if ( get_option( SN_PROV_BODY_MIGRATED_OPT ) ) {
+		return;
+	}
+
+	$page = get_page_by_path( SN_PROVENANCE_SLUG );
+	if ( ! $page ) {
+		// Page doesn't exist yet — sn_ensure_provenance_page() will seed
+		// the body when it runs. Mark migrated so we don't keep checking.
+		update_option( SN_PROV_BODY_MIGRATED_OPT, time(), true );
+		return;
+	}
+
+	if ( '' !== trim( $page->post_content ) ) {
+		// Body already has content — could be edits we shouldn't touch.
+		update_option( SN_PROV_BODY_MIGRATED_OPT, time(), true );
+		return;
+	}
+
+	$body = sn_load_provenance_body();
+	if ( '' === $body ) {
+		// Seed file missing — leave the Page alone, do not mark migrated
+		// so we retry on next admin_init in case the file lands later.
+		return;
+	}
+
+	wp_update_post( array(
+		'ID'           => $page->ID,
+		'post_content' => $body,
+	) );
+
+	update_option( SN_PROV_BODY_MIGRATED_OPT, time(), true );
 }
 
 /**

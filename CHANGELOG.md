@@ -2,6 +2,15 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [6.1.1] — 2026-04-24
+
+### Changed
+- **Provenance pillar content moved from template to Page body.** All visible content (hero, five anchored sections, Section 2 SVG diagram, footer CTA, dynamic byline) now lives in the `/provenance` Page itself instead of `templates/page-provenance.html`. The template is now a thin shell: header part, `wp:post-content`, footer part. Editing prose is now a Pages → Provenance click — no more Site Editor required, and edits survive theme updates (Page bodies aren't purged by the existing `template-maintenance.php` version-bump auto-clear, which only targets `wp_template`/`wp_template_part`/`wp_navigation` post types).
+- `sn_ensure_provenance_page()` now seeds the body from `inc/seed-content/provenance-body.html` on fresh installs.
+
+### Migration
+- `sn_migrate_provenance_body()` runs once per site on `admin_init`, guarded by `sn_provenance_body_migrated_v1`. Sites upgrading from v6.1.0 (where the Provenance Page body was empty) get the seed content auto-installed into the existing Page. Never overwrites a non-empty body.
+
 ## [6.1.0] — 2026-04-24
 
 ### Added
