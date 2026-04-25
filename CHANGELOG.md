@@ -2,6 +2,11 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [6.1.3] — 2026-04-25
+
+### Fixed
+- **"← All Notes" footer link no longer cramped against the fixed footer.** Bumped `main` bottom padding on `templates/single.html` and `templates/page-provenance.html` from `spacing--60` (96px) to `spacing--70` (128px). The fixed footer chrome (social icons + language toggle + copyright) is ~76–90px tall and overlays the bottom of the viewport; the previous 96px padding only bought ~6px of breathing room above the link when scrolled to the bottom. 128px gives a comfortable ~38px clearance.
+
 ## [6.1.2] — 2026-04-25
 
 ### Changed
