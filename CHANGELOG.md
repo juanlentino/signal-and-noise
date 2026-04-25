@@ -2,6 +2,23 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [6.2.4] — 2026-04-25
+
+### Added
+- **Reading time on `/notes` index cards.** Each Note card now shows date · reading time (matching the meta strip on the single-Note template). Uses the existing `[sn_reading_time]` shortcode inside the query loop's post-template — resolves per-post automatically. Applied to both `templates/page-notes.html` (Page route) and `templates/home.html` (Posts-page route).
+- **Open Graph + Twitter card meta** for the front page, the Notes index, and every singular post/page. Emits `og:type` (article for posts, website otherwise), `og:title`, `og:description`, `og:url`, `og:site_name`, `og:image`, plus the matching `twitter:*` set.
+- **`sn_seo_meta_for_current_view()` helper** in `inc/seo.php` — returns the active page's `[ $title, $description, $url ]` so the description tag and OG/Twitter tags share one source of truth.
+- **`sn_og_image_url` filter** so the OG image can be overridden per-route or globally without touching theme code. Default is the site logo (`/wp-content/uploads/2026/02/cropped-jl_logo-min-300x300.png`); `summary_large_image` Twitter card is emitted when an image is present, falling back to `summary` when filtered to empty.
+
+### Notes
+- No new design tokens. Reading time on cards uses the same `0.75rem / uppercase / letter-spacing 0.15em / rust` treatment as the existing card date — visually it just becomes "DATE · 3 MIN READ".
+- The OG image default is square (300×300, the site logo); for richer previews on social, set a 1200×630 image via the filter:
+  ```php
+  add_filter( 'sn_og_image_url', function() {
+      return 'https://juanlentino.com/path/to/og-1200x630.jpg';
+  } );
+  ```
+
 ## [6.2.3] — 2026-04-25
 
 ### Fixed

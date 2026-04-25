@@ -30,7 +30,19 @@
 			<!-- wp:group {"className":"sn-note-card","style":{"spacing":{"padding":{"bottom":"var:preset|spacing|40"},"margin":{"bottom":"var:preset|spacing|40"}}},"layout":{"type":"constrained"}} -->
 			<div class="wp-block-group sn-note-card" style="margin-bottom:var(--wp--preset--spacing--40);padding-bottom:var(--wp--preset--spacing--40)">
 
-				<!-- wp:post-date {"className":"sn-note-card-date","style":{"typography":{"fontSize":"0.75rem","letterSpacing":"0.15em","textTransform":"uppercase"},"spacing":{"margin":{"bottom":"var:preset|spacing|10"}}},"textColor":"rust","fontFamily":"body"} /-->
+				<!-- wp:group {"className":"sn-note-card-meta","style":{"spacing":{"blockGap":"var:preset|spacing|20","margin":{"bottom":"var:preset|spacing|10"}}},"layout":{"type":"flex","flexWrap":"wrap","verticalAlignment":"center"}} -->
+				<div class="wp-block-group sn-note-card-meta" style="margin-bottom:var(--wp--preset--spacing--10)">
+					<!-- wp:post-date {"className":"sn-note-card-date","style":{"typography":{"fontSize":"0.75rem","letterSpacing":"0.15em","textTransform":"uppercase"},"spacing":{"margin":{"top":"0","bottom":"0"}}},"textColor":"rust","fontFamily":"body"} /-->
+
+					<!-- wp:paragraph {"className":"sn-note-card-divider","style":{"typography":{"fontSize":"0.75rem","letterSpacing":"0.15em","textTransform":"uppercase"},"spacing":{"margin":{"top":"0","bottom":"0"}}},"textColor":"rust","fontFamily":"body"} -->
+					<p class="sn-note-card-divider has-rust-color has-text-color has-body-font-family" style="margin-top:0;margin-bottom:0;font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase">·</p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:paragraph {"className":"sn-note-card-reading-time","style":{"typography":{"fontSize":"0.75rem","letterSpacing":"0.15em","textTransform":"uppercase"},"spacing":{"margin":{"top":"0","bottom":"0"}}},"textColor":"rust","fontFamily":"body"} -->
+					<p class="sn-note-card-reading-time has-rust-color has-text-color has-body-font-family" style="margin-top:0;margin-bottom:0;font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase">[sn_reading_time]</p>
+					<!-- /wp:paragraph -->
+				</div>
+				<!-- /wp:group -->
 
 				<!-- wp:post-title {"level":2,"isLink":true,"className":"font-display sn-note-card-title","style":{"typography":{"fontSize":"clamp(1.8rem, 3vw, 2.5rem)"},"elements":{"link":{"color":{"text":"var:preset|color|bone"},":hover":{"color":{"text":"var:preset|color|blood"}}}},"spacing":{"margin":{"top":"0","bottom":"var:preset|spacing|10"}}}} /-->
 
