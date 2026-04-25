@@ -2,6 +2,24 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [6.2.0] — 2026-04-25
+
+### Added
+- **`/provenance` pillar surfaced in three places, with three distinct visual treatments calibrated to each surface:**
+  1. **Homepage** (`templates/front-page.html`) — full Apple-style card directly below the hero, on an asphalt-tinted section. White card with eyebrow ("Featured Essay"), title (links to `/provenance`), dek, and "Read essay →" CTA. Subtle dual-layer shadow; hover lifts the card 2px and deepens the shadow. The card is the front door for someone who's never visited before.
+  2. **`/notes` index** (`templates/page-notes.html`) — single muted italic line above the "NOTES" page title: *"The pillar essay: [Provenance Over Detection →]"*. Link uses a hairline-grey underline that strengthens on hover and the text turns red. No card, no eyebrow, no section background — reads as "by the way…", appropriate to a list page where the chronological notes themselves are the main affordance.
+  3. **Every Note** (`templates/single.html`) — a "Start with the pillar →" footer link automatically rendered above the existing "← All Notes" link. Same heading-font / underline-on-hover treatment, so the two read as a coherent pair.
+- New CSS classes in `assets/css/components.css`:
+  - `.sn-featured-essay` (homepage card) — Apple-card style using only existing theme tokens.
+  - `.sn-notes-pillar-link` (notes-index inline link) — bone-coloured link with hairline-grey underline.
+  - `.sn-note-pillar-link` (single-Note footer) — folded into the existing `.sn-note-back` selector group for consistent treatment.
+- Mobile padding tightening for the homepage card and its section wrapper at `max-width: 640px`. Hover transform on the card is disabled on touch devices via the existing `(hover: none)` block in `assets/css/responsive.css`.
+
+### Notes
+- No new design tokens. All surfaces use `var(--wp--preset--color--*)`, `var(--wp--preset--font-family--*)`, and the existing `--wp--preset--spacing--*` scale. Shadow values are CSS rules using rgba black, not new colour tokens.
+- No new components, no new dependencies, no new plugins.
+- Title sizing on the homepage card matches the existing Notes-list post-title clamp (`clamp(1.8rem, 3vw, 2.5rem)`), so the two surfaces feel related at a glance.
+
 ## [6.1.3] — 2026-04-25
 
 ### Fixed
