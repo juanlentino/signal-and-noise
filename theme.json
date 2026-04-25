@@ -282,7 +282,6 @@
 		{ "name": "page-resume", "title": "Resume / CV", "postTypes": ["page"] },
 		{ "name": "page-work-with-me", "title": "Work With Me", "postTypes": ["page"] },
 		{ "name": "page-notes", "title": "Notes Index", "postTypes": ["page"] },
-		{ "name": "page-provenance", "title": "Provenance Pillar", "postTypes": ["page"] },
-		{ "name": "single-note", "title": "Note", "postTypes": ["post"] }
+		{ "name": "page-provenance", "title": "Provenance Pillar", "postTypes": ["page"] }
 	]
 }

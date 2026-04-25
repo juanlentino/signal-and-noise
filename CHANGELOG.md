@@ -2,6 +2,18 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [6.1.2] — 2026-04-25
+
+### Changed
+- **Note layout is now the default for any single post.** Replaced `templates/single.html` with the Note layout (date · reading time, title, body, "← All Notes" footer link). Deleted the redundant `templates/single-note.html`. Removed the `single_template_hierarchy` filter from `inc/notes-and-provenance.php` — no longer needed now that there's a single source of truth.
+- **New posts are now in the Notes category by default.** `sn_sync_default_category()` runs cheaply on every `admin_init` and points WordPress's `default_category` option at the Notes category term. Self-healing if the option ever drifts.
+- Net effect: **Posts → Add New → write → Publish** produces a fully-formed Note. No template dropdown to find, no category checkbox to remember, no Site Editor visit. The post renders with the Note layout AND appears at `/notes` immediately.
+
+### Removed
+- `templates/single-note.html` (collapsed into `single.html`)
+- `single_template_hierarchy` filter (no longer needed — there's only one single-post template now)
+- `single-note` entry from `theme.json` `customTemplates` (already gone in this release; the dropdown surface was the wrong UX anyway)
+
 ## [6.1.1] — 2026-04-24
 
 ### Changed

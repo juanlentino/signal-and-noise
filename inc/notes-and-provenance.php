@@ -201,21 +201,34 @@ function sn_ensure_permalink_structure() {
 }
 
 /**
- * Auto-route posts in the Notes category to single-note.html. Editors
- * can still pick a different template explicitly via the post sidebar;
- * this only kicks in when no template is assigned.
+ * Default Post Category sync.
+ *
+ * WordPress's `default_category` option controls which category a new
+ * post is assigned when the editor doesn't tick anything explicitly.
+ * Pointing it at the Notes category means: any post created from the
+ * editor lands in `Notes` automatically, which is what makes them show
+ * up at /notes (the index query is filtered by the Notes category).
+ *
+ * Combined with the Note layout being the default `single.html`
+ * template, this makes "Posts → Add New → write → Publish" produce a
+ * fully-formed Note with no template dropdown, no category checkbox,
+ * no manual setup.
+ *
+ * Self-healing: runs cheaply on every admin_init and only writes when
+ * the option drifts. Safe to call before sn_seed_content_surfaces() has
+ * created the category — it just no-ops in that case.
  */
-add_filter( 'single_template_hierarchy', function( $templates ) {
-	if ( ! is_singular( 'post' ) ) {
-		return $templates;
+add_action( 'admin_init', 'sn_sync_default_category' );
+
+function sn_sync_default_category() {
+	$cat = get_term_by( 'slug', SN_NOTES_CATEGORY_SLUG, 'category' );
+	if ( ! $cat ) {
+		return;
 	}
-	$post = get_queried_object();
-	if ( ! $post || ! has_category( SN_NOTES_CATEGORY_SLUG, $post ) ) {
-		return $templates;
+	if ( (int) get_option( 'default_category' ) !== (int) $cat->term_id ) {
+		update_option( 'default_category', (int) $cat->term_id );
 	}
-	array_unshift( $templates, 'single-note' );
-	return $templates;
-} );
+}
 
 /**
  * Filter the Notes index query loop (queryId 42 in templates/page-notes.html)
