@@ -2,6 +2,17 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [6.2.3] — 2026-04-25
+
+### Fixed
+- **`/notes` was rendering the first Note inside the index chrome.** When `/notes` is wired as the WP Posts page (`is_home()` context), `wp:post-title` and `wp:post-content` outside a query loop both resolve to the first post in the loop — not to the `page_for_posts` Page — because `get_the_ID()` inside the template returns the loop's first post ID. So the v6.2.2 `home.html` rendered: pillar link → first post's title (as a giant H1) → dek → separator → query loop → first post's full body dumped underneath.
+- Replaced `wp:post-title` with a hardcoded `<h1>NOTES</h1>` in `templates/home.html`. The Page is always called "Notes"; a hardcoded heading is the simplest correct answer for this template's only context.
+- Removed the trailing `wp:post-content` block from `templates/home.html`. It had no purpose in `is_home()` context — the query loop above already shows the posts.
+- Both fixes are scoped to `home.html` only. `page-notes.html` (the regular Page route) still uses `wp:post-title` and `wp:post-content` correctly because in that context `get_the_ID()` returns the queried Page.
+
+### Note on patch ceiling
+- This is the third patch in 6.2.x (6.2.1, 6.2.2, 6.2.3) — the project's Apple-style versioning rule caps patches at 3/minor. Any further changes in this area will need to bump to 6.3.0.
+
 ## [6.2.2] — 2026-04-25
 
 ### Fixed

@@ -8,7 +8,15 @@
 	<p class="sn-notes-pillar-link has-rust-color has-text-color" style="margin-top:0;margin-bottom:var(--wp--preset--spacing--40);font-size:0.95rem;font-style:italic">The pillar essay: <a href="/provenance">Provenance Over Detection →</a></p>
 	<!-- /wp:paragraph -->
 
-	<!-- wp:post-title {"level":1,"className":"font-display sn-notes-heading","style":{"typography":{"fontSize":"clamp(2.5rem, 6vw, 5rem)"},"spacing":{"margin":{"bottom":"var:preset|spacing|20"}}}} /-->
+	<!-- HARDCODED H1 — wp:post-title in is_home() context resolves to the
+	     first post in the loop (because get_the_ID() inside the template
+	     returns the loop's first post ID, not the page_for_posts Page).
+	     The Page is always called "Notes", so a hardcoded heading is the
+	     simplest correct answer. page-notes.html (the Page-route variant)
+	     uses wp:post-title because that route DOES have the right context. -->
+	<!-- wp:heading {"level":1,"className":"font-display sn-notes-heading","style":{"typography":{"fontSize":"clamp(2.5rem, 6vw, 5rem)"},"spacing":{"margin":{"top":"0","bottom":"var:preset|spacing|20"}}}} -->
+	<h1 class="wp-block-heading font-display sn-notes-heading" style="margin-top:0;margin-bottom:var(--wp--preset--spacing--20);font-size:clamp(2.5rem, 6vw, 5rem)">Notes</h1>
+	<!-- /wp:heading -->
 
 	<!-- wp:paragraph {"className":"sn-notes-dek","style":{"typography":{"fontSize":"1rem","lineHeight":"1.6"},"spacing":{"margin":{"top":"0","bottom":"var:preset|spacing|40"}}},"textColor":"rust"} -->
 	<p class="sn-notes-dek has-rust-color has-text-color" style="margin-top:0;margin-bottom:var(--wp--preset--spacing--40);font-size:1rem;line-height:1.6">Short essays on music, AI, and the systems behind both.</p>
@@ -49,8 +57,6 @@
 
 	</div>
 	<!-- /wp:query -->
-
-	<!-- wp:post-content {"layout":{"type":"constrained"}} /-->
 
 </main>
 <!-- /wp:group -->
