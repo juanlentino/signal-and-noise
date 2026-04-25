@@ -2,6 +2,16 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [6.2.1] — 2026-04-25
+
+### Removed
+- **Homepage Featured Essay card.** Reverted `templates/front-page.html` to its v6.1.3 state — the asphalt-tinted section + Apple-style card below the hero is gone. Didn't fit the homepage's voice.
+- **`.sn-featured-essay*` CSS** in `assets/css/components.css` and `assets/css/responsive.css` (all base, hover, link, mobile-padding, and touch-device-override rules). The card was the only consumer; removing it now keeps the stylesheet honest.
+
+### Kept (unchanged from v6.2.0)
+- `/notes` index inline pillar link (`.sn-notes-pillar-link`) — *"The pillar essay: Provenance Over Detection →"* above the page title.
+- Single Note footer pillar link (`.sn-note-pillar-link`) — "Start with the pillar →" above "← All Notes".
+
 ## [6.2.0] — 2026-04-25
 
 ### Added

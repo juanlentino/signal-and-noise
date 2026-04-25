@@ -360,24 +360,6 @@
 }
 
 /* ============================================
-   FEATURED ESSAY CARD — MOBILE
-   Tighter padding on phones so the card doesn't dwarf the surrounding
-   content. Hover-lift transform disabled at the touch-device override
-   block further down (alongside the existing service-card hover rule).
-   ============================================ */
-
-@media (max-width: 640px) {
-	.sn-featured-essay {
-		padding: var(--wp--preset--spacing--30) !important;
-	}
-
-	.sn-featured-essay-section {
-		padding-left: var(--wp--preset--spacing--20) !important;
-		padding-right: var(--wp--preset--spacing--20) !important;
-	}
-}
-
-/* ============================================
    TOUCH DEVICE OVERRIDES
    ============================================ */
 
@@ -385,11 +367,6 @@
 	/* Disable hover transforms on touch devices */
 	.wp-block-column:has(.sn-service-image):hover {
 		transform: none !important;
-	}
-
-	.sn-featured-essay:hover {
-		transform: none !important;
-		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.04) !important;
 	}
 
 	.wp-block-button__link:hover {

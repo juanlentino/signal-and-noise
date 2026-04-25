@@ -159,57 +159,6 @@
 }
 
 /* ============================================
-   FEATURED ESSAY CARD
-   Apple-card style for surfacing the /provenance pillar in three
-   places: homepage (below hero), /notes index (above the list), and
-   single Note footer (text-link variant only — see .sn-note-pillar-link
-   further down in this file's NOTE-SINGLE block).
-
-   Uses existing theme tokens. The shadow values are CSS rules, not
-   design tokens — they implement the "shadows on cards" guidance from
-   the project's typography rules without introducing new colour or
-   sizing tokens. Shadow colour is rgba black for portability across
-   future palette shifts.
-   ============================================ */
-
-.sn-featured-essay {
-	border: 1px solid var(--wp--preset--color--concrete);
-	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.04);
-	transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.sn-featured-essay:hover {
-	transform: translateY(-2px);
-	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.06);
-}
-
-/* Title is a link — keep it inheriting the heading colour, only flip
-   on hover so the card-hover lift is the primary affordance. */
-.sn-featured-essay-title a {
-	color: var(--wp--preset--color--bone);
-	text-decoration: none;
-	transition: color 0.2s ease;
-}
-
-.sn-featured-essay:hover .sn-featured-essay-title a,
-.sn-featured-essay-title a:hover {
-	color: var(--wp--preset--color--blood);
-	text-decoration: none;
-}
-
-/* CTA link gets the same border-bottom-on-hover treatment used by the
-   other heading-font links in the theme. */
-.sn-featured-essay-link a {
-	border-bottom: 1px solid transparent;
-	transition: border-color 0.2s ease;
-}
-
-.sn-featured-essay-link a:hover {
-	border-bottom-color: currentColor;
-	text-decoration: none;
-}
-
-/* ============================================
    NOTES INDEX — inline pillar link
    Single muted italic line that surfaces /provenance above the Notes
    list. Intentionally NOT a card — uses an underline that strengthens
