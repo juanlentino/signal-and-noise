@@ -17,12 +17,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * SEO: Output meta description tag.
+ *
+ * Notes index (`/notes`) and the Provenance pillar (`/provenance`) get
+ * dedicated copy — for everything else we fall back to the post excerpt
+ * (set by the editor when publishing).
  */
 add_action( 'wp_head', function() {
 	$description = '';
 
 	if ( is_front_page() ) {
 		$description = 'Music producer, mix engineer, and creative strategist based in Buenos Aires. Founder of Panacea recording studio.';
+	} elseif ( is_page( 'notes' ) ) {
+		$description = 'Short essays on music, AI, and the systems behind both.';
+	} elseif ( is_page( 'provenance' ) ) {
+		$description = "A short read on why the industry needs to prove what's human, not chase what isn't.";
 	} elseif ( is_singular() ) {
 		$post = get_queried_object();
 		if ( ! empty( $post->post_excerpt ) ) {

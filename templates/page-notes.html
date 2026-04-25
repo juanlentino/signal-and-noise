@@ -1,0 +1,53 @@
+<!-- wp:template-part {"slug":"header","area":"header"} /-->
+
+<!-- wp:group {"tagName":"main","className":"sn-notes-index","style":{"spacing":{"padding":{"top":"var:preset|spacing|60","bottom":"var:preset|spacing|60","left":"var:preset|spacing|40","right":"var:preset|spacing|40"}}},"layout":{"type":"constrained"}} -->
+<main class="wp-block-group sn-notes-index" style="padding-top:var(--wp--preset--spacing--60);padding-right:var(--wp--preset--spacing--40);padding-bottom:var(--wp--preset--spacing--60);padding-left:var(--wp--preset--spacing--40)">
+
+	<!-- wp:post-title {"level":1,"className":"font-display sn-notes-heading","style":{"typography":{"fontSize":"clamp(2.5rem, 6vw, 5rem)"},"spacing":{"margin":{"bottom":"var:preset|spacing|20"}}}} /-->
+
+	<!-- wp:paragraph {"className":"sn-notes-dek","style":{"typography":{"fontSize":"1rem","lineHeight":"1.6"},"spacing":{"margin":{"top":"0","bottom":"var:preset|spacing|40"}}},"textColor":"rust"} -->
+	<p class="sn-notes-dek has-rust-color has-text-color" style="margin-top:0;margin-bottom:var(--wp--preset--spacing--40);font-size:1rem;line-height:1.6">Short essays on music, AI, and the systems behind both.</p>
+	<!-- /wp:paragraph -->
+
+	<!-- wp:separator {"backgroundColor":"concrete","className":"is-style-wide"} -->
+	<hr class="wp-block-separator has-text-color has-concrete-color has-alpha-channel-opacity has-concrete-background-color has-background is-style-wide"/>
+	<!-- /wp:separator -->
+
+	<!-- wp:spacer {"height":"var:preset|spacing|40"} -->
+	<div style="height:var(--wp--preset--spacing--40)" aria-hidden="true" class="wp-block-spacer"></div>
+	<!-- /wp:spacer -->
+
+	<!-- wp:query {"queryId":42,"query":{"perPage":50,"pages":0,"offset":0,"postType":"post","order":"desc","orderBy":"date","author":"","search":"","exclude":[],"sticky":"","inherit":false,"taxQuery":{"category":[]},"format":[]},"className":"sn-notes-list"} -->
+	<div class="wp-block-query sn-notes-list">
+
+		<!-- wp:post-template {"className":"sn-notes-list-template","layout":{"type":"default"}} -->
+
+			<!-- wp:group {"className":"sn-note-card","style":{"spacing":{"padding":{"bottom":"var:preset|spacing|40"},"margin":{"bottom":"var:preset|spacing|40"}}},"layout":{"type":"constrained"}} -->
+			<div class="wp-block-group sn-note-card" style="margin-bottom:var(--wp--preset--spacing--40);padding-bottom:var(--wp--preset--spacing--40)">
+
+				<!-- wp:post-date {"className":"sn-note-card-date","style":{"typography":{"fontSize":"0.75rem","letterSpacing":"0.15em","textTransform":"uppercase"},"spacing":{"margin":{"bottom":"var:preset|spacing|10"}}},"textColor":"rust","fontFamily":"body"} /-->
+
+				<!-- wp:post-title {"level":2,"isLink":true,"className":"font-display sn-note-card-title","style":{"typography":{"fontSize":"clamp(1.8rem, 3vw, 2.5rem)"},"elements":{"link":{"color":{"text":"var:preset|color|bone"},":hover":{"color":{"text":"var:preset|color|blood"}}}},"spacing":{"margin":{"top":"0","bottom":"var:preset|spacing|10"}}}} /-->
+
+				<!-- wp:post-excerpt {"moreText":"","showMoreOnNewLine":false,"excerptLength":24,"className":"sn-note-card-excerpt","style":{"typography":{"fontSize":"0.9rem","lineHeight":"1.6"},"spacing":{"margin":{"top":"0","bottom":"0"}}},"textColor":"rust"} /-->
+
+			</div>
+			<!-- /wp:group -->
+
+		<!-- /wp:post-template -->
+
+		<!-- wp:query-no-results -->
+			<!-- wp:paragraph {"className":"sn-notes-empty","style":{"typography":{"fontSize":"0.9rem","fontStyle":"italic"}},"textColor":"rust"} -->
+			<p class="sn-notes-empty has-rust-color has-text-color" style="font-size:0.9rem;font-style:italic">No notes published yet. Check back soon.</p>
+			<!-- /wp:paragraph -->
+		<!-- /wp:query-no-results -->
+
+	</div>
+	<!-- /wp:query -->
+
+	<!-- wp:post-content {"layout":{"type":"constrained"}} /-->
+
+</main>
+<!-- /wp:group -->
+
+<!-- wp:template-part {"slug":"footer","area":"footer"} /-->

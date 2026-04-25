@@ -157,3 +157,154 @@
 .wp-block-file a.wp-block-file__button:hover {
 	background: var(--wp--preset--color--blood);
 }
+
+/* ============================================
+   NOTES INDEX
+   ============================================ */
+
+.sn-notes-index .sn-notes-heading {
+	letter-spacing: -0.02em;
+}
+
+.sn-notes-list .sn-note-card {
+	border-bottom: 1px solid var(--wp--preset--color--concrete);
+}
+
+.sn-notes-list .sn-note-card:last-child {
+	border-bottom: 0;
+}
+
+.sn-notes-list .sn-note-card-title a {
+	transition: color 0.2s ease;
+}
+
+.sn-notes-empty {
+	padding: var(--wp--preset--spacing--40) 0;
+}
+
+/* ============================================
+   NOTE — SINGLE
+   ============================================ */
+
+.sn-note-single .sn-note-meta-divider {
+	opacity: 0.6;
+}
+
+.sn-note-single .sn-note-back a {
+	border-bottom: 1px solid transparent;
+	transition: border-color 0.2s ease;
+}
+
+.sn-note-single .sn-note-back a:hover {
+	border-bottom-color: currentColor;
+	text-decoration: none;
+}
+
+/* Ensure prose body text inside a Note never falls below the 11px floor. */
+.sn-note-single .wp-block-post-content p,
+.sn-note-single .wp-block-post-content li {
+	font-size: max(0.9rem, 11px);
+	line-height: var(--wp--custom--line-height--normal, 1.7);
+}
+
+/* ============================================
+   PROVENANCE — PILLAR
+   Hero, sections, footer CTA, byline.
+   The detection-vs-provenance diagram lives further down.
+   ============================================ */
+
+.sn-provenance-eyebrow,
+.sn-provenance-section-eyebrow {
+	font-weight: 400;
+}
+
+.sn-provenance-title {
+	letter-spacing: -0.02em;
+}
+
+.sn-provenance-section h2 {
+	letter-spacing: -0.01em;
+}
+
+.sn-provenance-cta-secondary a,
+.sn-provenance-footer-link a {
+	border-bottom: 1px solid transparent;
+	transition: border-color 0.2s ease;
+}
+
+.sn-provenance-cta-secondary a:hover,
+.sn-provenance-footer-link a:hover {
+	border-bottom-color: currentColor;
+	text-decoration: none;
+}
+
+.sn-provenance-byline {
+	font-style: italic;
+}
+
+/* ============================================
+   PROVENANCE DIAGRAM (Section 2)
+   Two side-by-side panels. Stacks below 640px (see responsive.css).
+   Colours pulled from the theme palette via currentColor + accent class.
+   ============================================ */
+
+.sn-provenance-diagram-wrap {
+	margin: var(--wp--preset--spacing--40) 0;
+}
+
+.sn-provenance-diagram {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: var(--wp--preset--spacing--40);
+	align-items: stretch;
+	color: var(--wp--preset--color--bone);
+}
+
+.sn-provenance-panel {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--wp--preset--spacing--20);
+	margin: 0;
+	padding: var(--wp--preset--spacing--30);
+	background: var(--wp--preset--color--asphalt);
+	border: 1px solid var(--wp--preset--color--concrete);
+}
+
+.sn-provenance-svg {
+	display: block;
+	width: 100%;
+	max-width: 240px;
+	height: auto;
+	color: var(--wp--preset--color--bone);
+}
+
+/* Accent fill — uses the theme red token. */
+.sn-provenance-svg-accent circle,
+.sn-provenance-svg-accent line {
+	fill: var(--wp--preset--color--blood);
+	stroke: var(--wp--preset--color--blood);
+}
+
+.sn-provenance-caption {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 2px;
+	text-align: center;
+}
+
+.sn-provenance-caption-label {
+	font-family: var(--wp--preset--font-family--heading);
+	font-size: 1rem;
+	letter-spacing: 0.15em;
+	text-transform: uppercase;
+}
+
+.sn-provenance-caption-sub {
+	font-family: var(--wp--preset--font-family--body);
+	font-size: max(0.75rem, 11px);
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--rust);
+}

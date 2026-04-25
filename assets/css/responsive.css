@@ -310,6 +310,56 @@
 }
 
 /* ============================================
+   PROVENANCE DIAGRAM — STACK BELOW 640px
+   The detection-vs-provenance panels render side-by-side at >640px and
+   stack vertically on phones. Viewport breakpoint chosen to match the
+   spec, not the theme's tablet (781px) breakpoint.
+   ============================================ */
+
+@media (max-width: 640px) {
+	.sn-provenance-diagram {
+		grid-template-columns: 1fr;
+	}
+
+	.sn-provenance-panel {
+		padding: var(--wp--preset--spacing--20);
+	}
+
+	/* Subhead & body sizes ease back so 11px floor still has breathing room. */
+	.sn-provenance-subhead {
+		font-size: 1.05rem !important;
+	}
+
+	.sn-provenance-section p {
+		font-size: 0.95rem;
+	}
+
+	/* Footer CTAs become a stacked column instead of a wrapping row. */
+	.sn-provenance-footer-cta {
+		flex-direction: column;
+		gap: var(--wp--preset--spacing--20) !important;
+	}
+}
+
+/* ============================================
+   NOTES INDEX + NOTE SINGLE — MOBILE
+   ============================================ */
+
+@media (max-width: 640px) {
+	.sn-notes-index .sn-notes-dek {
+		font-size: 0.95rem;
+	}
+
+	.sn-notes-list .sn-note-card-excerpt {
+		font-size: max(0.85rem, 11px);
+	}
+
+	.sn-note-single .sn-note-meta {
+		gap: var(--wp--preset--spacing--10) !important;
+	}
+}
+
+/* ============================================
    TOUCH DEVICE OVERRIDES
    ============================================ */
 

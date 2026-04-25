@@ -2,6 +2,28 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [6.1.0] — 2026-04-24
+
+### Added
+- **Notes content surface.** WordPress Posts re-enabled with a single `Notes` category (slug `notes`). Permalink structure set to `/notes/%postname%/` on first activation, guarded so it only fires when the current structure is different AND no existing posts would have their URLs broken.
+- **`/notes` index** rendered via the `page-notes.html` custom Page template. Query loop is scoped to the Notes category at runtime via the `query_loop_block_query_vars` filter (queryId `42`) — keeps the markup independent of any specific category-term ID. No sidebar, no thumbnails, no pagination UI; empty/low-count state renders a graceful "No notes published yet" message via `wp:query-no-results`.
+- **`single-note.html` template** for individual Notes — date, reading time, title, body, footer "← All Notes" link. No comments, pings, share buttons, related posts, or author bio markup. Auto-routed for posts in the Notes category via the `single_template_hierarchy` filter; editors can still pick a different template explicitly.
+- **`/provenance` static Page** rendered via `page-provenance.html`: hero (title, subhead, "4 min read", SSRN secondary CTA), five anchored sections (`#setup`, `#analogy`, `#what-it-means`, `#why-it-matters`, `#the-shift`), the Detection-vs-Provenance SVG visual in Section 2, footer CTA with two equal-weight links (SSRN paper + `/notes`), and a dynamic byline using the page's published date via `wp:post-date`.
+- **Detection-vs-Provenance SVG diagram** (Section 2): two side-by-side panels using `currentColor` plus a single `--wp--preset--color--blood` accent token. Accessible via `role="img"`, `aria-labelledby`, `<title>`, `<desc>`. Stacks vertically below 640px.
+- **Meta description** dedicated copy for `/notes` ("Short essays on music, AI, and the systems behind both.") and `/provenance` (mirrors the subhead). Other singular pages continue to fall back to the post excerpt.
+- **`Notes` link** added to the main nav between `Resume` and `Contact`. `Provenance` is intentionally NOT added to the main nav (it's reserved for a future homepage essay teaser).
+- **`[sn_reading_time]` shortcode** — 200 wpm calculation with a one-minute floor — wired into the existing `render_block` shortcode resolver pattern (mirror of `[current_year]`).
+
+### Architecture
+- New module `inc/notes-and-provenance.php` (idempotent activation seeder for the Notes category, the `/notes` Page, and the `/provenance` Page; permalink structure guard; query/template filters; the reading-time shortcode). Module map in `functions.php` updated.
+- `inc/seo.php` extended (no breaking changes) with `is_page('notes')` and `is_page('provenance')` branches in the existing meta-description handler. No SEO plugin work, no Open Graph / Twitter card additions (no existing theme OG defaults to mirror — left to the installed SEO plugin).
+- Three new custom templates registered in `theme.json`: `page-notes`, `page-provenance`, `single-note`. No new colour tokens, font families, font sizes, font weights, or spacing values introduced — all new CSS references existing `theme.json` tokens.
+
+### Notes
+- Discussion features (comments, pings, trackbacks, XML-RPC) untouched — they remain disabled at the WordPress + infrastructure layer per project policy. New templates ship with no comment / ping / trackback markup.
+- Provenance section bodies are marked `[DRAFT — replace with final prose]` for the user to fill in. Section copy lives in the template; the Page itself is created empty.
+- No new plugins. No taxonomy work beyond the single `Notes` category (no tags).
+
 ## [6.0.0] — 2026-04-13
 
 ### Architecture
