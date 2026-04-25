@@ -19,6 +19,12 @@
 
 html {
 	scroll-behavior: smooth;
+	/* Offset in-page anchor jumps so the section heading lands BELOW the
+	   fixed header instead of behind it. 108px matches the body's
+	   padding-top for the fixed header at desktop sizes; the extra 16px
+	   gives the heading breathing room. Per-breakpoint overrides for
+	   tablet (80px header) and mobile (65px header) live in responsive.css. */
+	scroll-padding-top: 124px;
 	scrollbar-width: thin;
 	scrollbar-color: var(--wp--preset--color--concrete) var(--wp--preset--color--void);
 	overflow-x: hidden;

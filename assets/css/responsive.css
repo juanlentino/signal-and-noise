@@ -56,6 +56,12 @@
 		padding-right: 1.25rem !important;
 	}
 
+	/* Anchor-jump offset matches the tablet header height (80px) + 16px
+	   buffer. Keeps in-page links landing below the header, not behind it. */
+	html {
+		scroll-padding-top: 96px;
+	}
+
 	/* Hero */
 	.sn-hero {
 		min-height: calc(100vh - 80px - 90px) !important;
@@ -190,6 +196,11 @@
 	/* Body offset for fixed header */
 	body {
 		padding-top: 65px;
+	}
+
+	/* Anchor-jump offset matches the mobile header height (65px) + 16px buffer. */
+	html {
+		scroll-padding-top: 81px;
 	}
 
 	/* Hero */

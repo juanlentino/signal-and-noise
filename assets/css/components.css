@@ -160,12 +160,14 @@
 
 /* ============================================
    NOTES INDEX — inline pillar link
-   Single muted italic line that surfaces /provenance above the Notes
-   list. Intentionally NOT a card — uses an underline that strengthens
-   on hover so it reads as "by the way..." rather than a primary CTA.
+   PROVENANCE — inline TOC at top of pillar essay
+   Both are muted italic single-line links. Use a hairline-grey
+   underline that strengthens to red on hover so they read as quiet
+   navigation rather than primary CTAs.
    ============================================ */
 
-.sn-notes-pillar-link a {
+.sn-notes-pillar-link a,
+.sn-provenance-toc a {
 	color: var(--wp--preset--color--bone);
 	text-decoration: underline;
 	text-decoration-color: var(--wp--preset--color--concrete);
@@ -173,7 +175,8 @@
 	transition: color 0.2s ease, text-decoration-color 0.2s ease;
 }
 
-.sn-notes-pillar-link a:hover {
+.sn-notes-pillar-link a:hover,
+.sn-provenance-toc a:hover {
 	color: var(--wp--preset--color--blood);
 	text-decoration-color: currentColor;
 }

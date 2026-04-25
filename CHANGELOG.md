@@ -2,6 +2,17 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [6.2.5] — 2026-04-25
+
+### Fixed
+- **In-page anchor jumps no longer hide the section heading behind the fixed header.** Added `scroll-padding-top` on `html` matched to the body's `padding-top` for the fixed header at each breakpoint (124px desktop, 96px tablet, 81px mobile — header height plus a 16px breathing buffer). Site-wide fix, not just for the Provenance TOC.
+
+### Added
+- **`.sn-provenance-toc` link styling** in `assets/css/components.css` — bone-coloured links with concrete-grey hairline underline that strengthens to red on hover. Folded into the existing `.sn-notes-pillar-link` selector group so the TOC links read as the same understated treatment used by the inline pillar link on `/notes`.
+
+### Notes
+- The TOC itself is editorial content (lives in the Provenance Page body, not in any template). If you've already pasted the TOC snippet from earlier into the page, the links pick up the hairline-grey treatment automatically once this version lands.
+
 ## [6.2.4] — 2026-04-25
 
 ### Added
