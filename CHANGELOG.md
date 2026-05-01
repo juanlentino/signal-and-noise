@@ -2,6 +2,23 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [6.3.0] — 2026-05-01
+
+### Added
+- **`inc/reading-time.php` — Cached reading-time module.** New module owning calculation, caching, and legacy cleanup. The `[sn_reading_time]` shortcode (previously living at the bottom of `inc/notes-and-provenance.php` at 200 WPM with no cache) is rebuilt here at **225 WPM** default with the result stored in the private `_sn_reading_time_minutes` post meta. The cache is rebuilt automatically on every post save via `wp_after_insert_post`, populated lazily on first render for any pre-existing posts, and recomputed after the cleanup tool runs. WPM is filterable via `sn_reading_time_wpm`; output format via `sn_reading_time_format` (default `"{minutes} min read"`, supports `"{minutes}-minute read"` for the long form).
+- **Calculation strips block delimiters before counting.** `sn_calculate_reading_time()` runs `<!-- wp:* -->` removal → `strip_shortcodes()` → `wp_strip_all_tags()` → `str_word_count()` so Gutenberg block markup, our own shortcodes, and embedded HTML don't inflate the word total. One-minute floor preserved so a haiku still renders "1 min read".
+- **Legacy reading-time cleanup tool — Appearance → Signal & Noise → Dashboard.** Two-step Preview / Apply pair gated behind the existing `sn_theme_options_nonce`. The Preview button runs `sn_find_legacy_reading_time()`, which scans every `post`/`page` (any status) for the regex `/~?\s*\d+\s*[-\s]\s*(?:minutes?|mins?)\s+read\b/i` across `post_content`, `post_excerpt`, and public custom fields, then renders a table of every match with a 50-char-per-side context snippet (the match itself wrapped in `<<…>>` markers) and a link to edit each post. Apply removes the matched substrings, collapses any `<p></p>` / `<span></span>` / `<small></small>` / `<em></em>` / `<strong></strong>` / `<i></i>` / `<b></b>` shells the removal leaves behind, then deletes the cached reading-time meta and re-derives it from the now-clean content. Private meta keys (any starting with `_`, including our own `_sn_reading_time_minutes`) are excluded from the scan by design.
+- **`do_action( 'sn_admin_dashboard_extras' )` extension point.** New action fired in `inc/admin-page.php` at the end of the Dashboard tab so future modules can inject cards without editing the admin page directly. The reading-time cleanup card is the first consumer.
+
+### Changed
+- **Default words-per-minute raised from 200 to 225.** Closer to the median adult silent reading pace cited in the literature; lines up with the Medium/Substack defaults. Existing posts will reflect the new pace on next save (or on first cache miss for posts never edited under the new module).
+- **`inc/notes-and-provenance.php` — shortcode + render_block bridge removed.** Both moved to `inc/reading-time.php`. The file now ends at the `restrict_main_query_for_notes_page` hook; a one-line stub comment marks where the old shortcode lived.
+
+### Notes
+- Versioning: per the project rule, the patch cap of 7 was hit at 6.2.7, so this lands as **6.3.0** (next minor) rather than 6.2.8. Code-and-functional change, so a version bump is warranted.
+- Templates (`single.html`, `home.html`, `page-notes.html`) continue to embed `[sn_reading_time]` literally — no markup change needed; they automatically pick up the cached/upgraded behaviour.
+- Cleanup is intentionally additive-safe: the regex is anchored on the literal word `read` and tolerates `min`/`mins`/`minute`/`minutes`, optional hyphens, and an optional leading `~`. It will not match the shortcode token `[sn_reading_time]`, nor will it touch private (`_`-prefixed) meta. Always run **Preview** first; the Apply button shows the affected post count next to its label so there's no chance of running it blind.
+
 ## [6.2.7] — 2026-04-25
 
 ### Changed

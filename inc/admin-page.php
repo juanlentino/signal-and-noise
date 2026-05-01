@@ -223,6 +223,9 @@ function sn_theme_options_page() {
 		echo '</div>';
 		echo '</form>';
 
+		/** Allow modules (e.g. inc/reading-time.php) to inject extra dashboard cards. */
+		do_action( 'sn_admin_dashboard_extras' );
+
 	// ════════════════════════════════════════
 	// TAB: ANALYTICS
 	// ════════════════════════════════════════

@@ -323,30 +323,5 @@ add_filter( 'query_loop_block_query_vars', function( $query, $block ) {
 	return $query;
 }, 10, 2 );
 
-/**
- * Shortcode: [sn_reading_time] — outputs e.g. "3 min read".
- *
- * Calculates from the current post body at ~200 words per minute, with
- * a one-minute floor so very short notes don't render "0 min read".
- */
-function sn_reading_time_shortcode() {
-	$post = get_post();
-	if ( ! $post ) {
-		return '';
-	}
-	$word_count = str_word_count( wp_strip_all_tags( $post->post_content ) );
-	$minutes    = max( 1, (int) ceil( $word_count / 200 ) );
-	return esc_html( $minutes . ' min read' );
-}
-add_shortcode( 'sn_reading_time', 'sn_reading_time_shortcode' );
-
-/**
- * Process the [sn_reading_time] shortcode inside block template parts
- * (mirror of the pattern in inc/setup.php for [current_year]).
- */
-add_filter( 'render_block', function( $block_content, $block ) {
-	if ( strpos( $block_content, '[sn_reading_time]' ) !== false ) {
-		$block_content = do_shortcode( $block_content );
-	}
-	return $block_content;
-}, 10, 2 );
+/* The [sn_reading_time] shortcode and its render_block bridge moved to
+ * inc/reading-time.php in 6.3.0 (cached + 225 WPM + cleanup tooling). */
