@@ -12,6 +12,7 @@
  *   inc/frontend-filters.php     — skip link, oEmbed, generator-tag stripping, output buffer
  *   inc/notes-and-provenance.php — Notes content surface + Provenance pillar page
  *   inc/reading-time.php         — Cached reading-time calc + [sn_reading_time] + cleanup
+ *   inc/og-image.php             — Per-post OG/Twitter card generator (GD, Bebas + DM Mono)
  *   inc/plausible-api.php        — Plausible Stats API client + admin error notice
  *   inc/admin-assets.php         — admin-only script/style registration + SRI hashes
  *   inc/dashboard-widgets.php    — WP Dashboard widgets (Plausible-backed)
@@ -21,7 +22,7 @@
  *
  * @package SignalNoise
  * @since 1.0.0
- * @version 6.3.1
+ * @version 6.3.2
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -34,6 +35,7 @@ require_once __DIR__ . '/inc/seo.php';
 require_once __DIR__ . '/inc/frontend-filters.php';
 require_once __DIR__ . '/inc/notes-and-provenance.php';
 require_once __DIR__ . '/inc/reading-time.php';
+require_once __DIR__ . '/inc/og-image.php';
 
 require_once __DIR__ . '/inc/plausible-api.php';
 

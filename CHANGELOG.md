@@ -2,6 +2,22 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [6.3.2] — 2026-05-01
+
+### Added
+- **`inc/og-image.php` — per-post OG/Twitter card generator.** Every post and page now ships its own 1200×630 brutalist text card on Twitter / iMessage / Slack / LinkedIn unfurls. Cards are rendered server-side with PHP GD using the brand's own typefaces (Bebas Neue Regular for the title, DM Mono Light for the eyebrow / dek / footer), cached as PNGs in `wp-content/uploads/sn-og/post-{ID}.png`, and rebuilt automatically on every `wp_after_insert_post`. Layout: red 60×4px accent bar top-left, "JUANLENTINO.COM" eyebrow in DM Mono, post title in Bebas Neue at 88pt wrapped to 3 lines, 3-line dek (post excerpt or first ~36 words of cleaned content), and "X MIN READ" in red as the footer. Cache-busted via `?v={post-modified-time}` so re-shares pick up edits without manual invalidation.
+- **TTF fonts for server-side rendering** — `assets/fonts/og/BebasNeue-Regular.ttf` (61 KB, fetched from `dharmatype/Bebas-Neue` 2018 release) and `assets/fonts/og/DMMono-Light.ttf` (49 KB, from `googlefonts/dm-mono`). Both files are SIL OFL and are loaded only by `imagettftext()` — they're never referenced from CSS, so the existing WOFF2 preload pipeline is unaffected.
+- **Lazy backfill — no migration needed.** The URL helper `sn_og_image_url_for_post()` checks for the cached PNG on every request and generates it on miss. Existing posts will get cards on their first social share without any one-time admin button or scheduled job.
+- **Yoast SEO integration.** Yoast emits OG/Twitter tags first in `<head>` and wins the social-card scrape race, so we hook `wpseo_opengraph_image`, `wpseo_twitter_image`, and `wpseo_opengraph_image_size` to feed Yoast the same generated card URL the theme uses. If Yoast isn't installed the filters never fire — the module is degradation-safe.
+
+### Changed
+- **Resolution order for `<meta property="og:image">` is now**: (1) post's featured image, if set — never overridden; (2) generated card from `inc/og-image.php`; (3) theme default (the existing site-icon URL). The theme's own emitter in [inc/seo.php](inc/seo.php) reads through the existing `sn_og_image_url` filter, so it picks up the generated card automatically alongside Yoast.
+
+### Notes
+- **Robustness**: every code path that touches GD is gated behind `function_exists('imagettftext')`, every font path is `file_exists()`-checked, and the upload dir is `wp_mkdir_p()`-ensured. On any failure (GD missing, FreeType missing, fonts missing, dir unwriteable) the helper returns `null` and callers cascade to the previous default — OG cards aren't user-blocking and shouldn't take down a request if something is misconfigured.
+- **Why GD, not Imagick or `@vercel/og`**: GD ships with the standard Cloudways PHP build and needs no external service or Edge Worker; the brand's typography is plain TTF; the cards are static once written. Adding a Worker for this would be operational overkill given the target audience (a personal site that publishes Notes weekly, not at fan-out scale).
+- **Why not a Yoast-only site icon override**: Yoast's per-post default image comes from a single global setting in admin, not a per-post programmatic value — there's no "URL function" hook in Yoast's UI. Filtering at the PHP level is the supported route.
+
 ## [6.3.1] — 2026-05-01
 
 ### Added
