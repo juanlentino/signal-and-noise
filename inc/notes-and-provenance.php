@@ -32,6 +32,7 @@ const SN_PERMALINK_STRUCTURE    = '/notes/%postname%/';
 const SN_SEED_FLAG_OPTION       = 'sn_content_surfaces_seeded_v1';
 const SN_PROV_BODY_MIGRATED_OPT = 'sn_provenance_body_migrated_v1';
 const SN_PROV_REFINE_MIGR_OPT   = 'sn_provenance_refine_migrated_v1';
+const SN_PROV_BYLINE_RT_MIGR_OPT = 'sn_provenance_byline_reading_time_migrated_v1';
 const SN_NOTES_QUERY_ID         = 42;
 
 /**
@@ -244,6 +245,73 @@ function sn_migrate_provenance_refinements() {
 	}
 
 	update_option( SN_PROV_REFINE_MIGR_OPT, time(), true );
+}
+
+/**
+ * One-time migration that injects the reading-time block into the
+ * existing Provenance byline. Mirrors the seed file change in 6.3.1.
+ *
+ * Idempotent — bails if the byline already contains the reading-time
+ * marker (paste-by-hand defensive). Gated by SN_PROV_BYLINE_RT_MIGR_OPT
+ * so it only runs once per install.
+ */
+add_action( 'admin_init', 'sn_migrate_provenance_byline_reading_time' );
+
+function sn_migrate_provenance_byline_reading_time() {
+	if ( get_option( SN_PROV_BYLINE_RT_MIGR_OPT ) ) {
+		return;
+	}
+
+	$page = get_page_by_path( SN_PROVENANCE_SLUG );
+	if ( ! $page ) {
+		update_option( SN_PROV_BYLINE_RT_MIGR_OPT, time(), true );
+		return;
+	}
+
+	$body     = $page->post_content;
+	$original = $body;
+
+	// Skip if the reading-time block is already present (paste-by-hand defensive).
+	if ( false === strpos( $body, 'sn-provenance-byline-reading-time' ) ) {
+		// Anchor on the byline's wp:post-date opener and the next ` /-->`
+		// (the tag is self-closing). strpos avoids the nested-{} pitfall
+		// the regex form hits once the 6.2.6 migration adds a style object.
+		$start = strpos( $body, '<!-- wp:post-date {"format":"F j, Y"' );
+		if ( false !== $start ) {
+			$end_marker = ' /-->';
+			$end        = strpos( $body, $end_marker, $start );
+			if ( false !== $end ) {
+				$insert_at = $end + strlen( $end_marker );
+				$body      = substr( $body, 0, $insert_at )
+					. "\n\n\t" . sn_provenance_byline_reading_time_markup()
+					. substr( $body, $insert_at );
+			}
+		}
+	}
+
+	if ( $body !== $original ) {
+		wp_update_post( array(
+			'ID'           => $page->ID,
+			'post_content' => $body,
+		) );
+	}
+
+	update_option( SN_PROV_BYLINE_RT_MIGR_OPT, time(), true );
+}
+
+/**
+ * Reading-time block markup for the Provenance byline. Factored out so
+ * the seed file (inc/seed-content/provenance-body.html) and the
+ * migration above share a single source of truth — change the markup
+ * here and both ship the same shape.
+ */
+function sn_provenance_byline_reading_time_markup() {
+	return '<!-- wp:paragraph {"className":"sn-provenance-byline-divider","style":{"spacing":{"margin":{"top":"0","bottom":"0"}}}} -->' . "\n"
+		. "\t" . '<p class="sn-provenance-byline-divider" style="margin-top:0;margin-bottom:0">·</p>' . "\n"
+		. "\t" . '<!-- /wp:paragraph -->' . "\n\n"
+		. "\t" . '<!-- wp:paragraph {"className":"sn-provenance-byline-reading-time","style":{"spacing":{"margin":{"top":"0","bottom":"0"}}},"textColor":"blood"} -->' . "\n"
+		. "\t" . '<p class="sn-provenance-byline-reading-time has-blood-color has-text-color" style="margin-top:0;margin-bottom:0">[sn_reading_time]</p>' . "\n"
+		. "\t" . '<!-- /wp:paragraph -->';
 }
 
 /**

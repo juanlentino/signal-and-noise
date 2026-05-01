@@ -2,6 +2,20 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [6.3.1] — 2026-05-01
+
+### Added
+- **Reading time on the Provenance byline.** `[sn_reading_time]` now renders inside the `sn-provenance-byline` flex group on `/provenance/`, sitting after the (modified) post-date with a `·` divider in between. Coloured `blood` (`#e00404`) so it reads as an accent, overriding the byline group's parent `rust` (gray) inheritance. New `.sn-provenance-byline-reading-time` and `.sn-provenance-byline-divider` selectors are referenced from the markup but the classes carry no extra CSS rules — they're hooks for future styling if needed.
+- **`inc/seed-content/provenance-body.html` updated** so fresh installs ship with the reading-time byline baked in. Migration `sn_migrate_provenance_byline_reading_time()` (gated by the new `sn_provenance_byline_reading_time_migrated_v1` option flag) injects the same markup into the existing live page on next `admin_init`. New helper `sn_provenance_byline_reading_time_markup()` keeps the seed and the migration in lockstep — change the markup once, both ship the same shape. The migration is idempotent (skips if the marker class is already present in the body, defending against manual paste).
+- **`displayType:"modified"` on the Provenance byline post-date** is now part of the seed (it had been added by the 6.2.6 refinements migration but the seed file still carried the original markup). Fresh installs and the live page now match.
+
+### Changed
+- **Single-Note reading time → red.** `templates/single.html` reading-time block switched from `textColor:"rust"` (gray `#666666`) to `textColor:"blood"` (`#e00404`) so it matches the red post-date next to it. The previous gray-next-to-red mismatch was a visible inconsistency on every Note. `/notes` index cards and `/` home cards stay gray on purpose — their dates are gray, so the meta strip is internally consistent and switching reading time alone would unbalance it.
+
+### Notes
+- The `rust` colour slug in `theme.json` is named "Steel" with hex `#666666` — historical mis-naming of the slug; the value is correct for its actual role (secondary/dim text on deks, excerpts, post-meta). The fix in this release uses the `blood` slug rather than redefining `rust`, so existing usages across `/services`, `/work-with-me`, `/contact`, etc. are untouched.
+- Version: first patch on 6.3.x. Patch cap is 7 per minor.
+
 ## [6.3.0] — 2026-05-01
 
 ### Added
