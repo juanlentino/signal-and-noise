@@ -2,6 +2,18 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [6.3.5] — 2026-05-02
+
+### Fixed
+- **Real fix for the `/notes` excerpt indent** that v6.3.4 missed. The actual culprit was the `max-width: 65ch` introduced in v6.3.3, not horizontal margin/padding bleed-through as v6.3.4 assumed. WordPress' generated layout CSS includes `.is-layout-constrained > :where(:not(.alignleft):not(.alignright):not(.alignfull)) { margin-left: auto !important; margin-right: auto !important }`, which auto-centres every direct child of a constrained group (`.sn-note-card` is one). Setting `max-width: 65ch` made the excerpt narrower than the sibling title (which uses the layout's 720px content-size), and the `!important` auto-margins centred the narrower box — what looked like a left-indent in the rendered page was actually horizontal centring. v6.3.4's `margin-left: 0` lost the cascade fight against `!important` and didn't reach the page. Removed `max-width: 65ch` (along with the now-unneeded margin/padding-left/right resets) in [assets/css/components.css](assets/css/components.css) — the constrained layout's 720px is already a sensible reading measure (~50ch at 0.9rem), and dropping the override lets the excerpt and title share the same width and the same auto-centring, so they align at the same x-position.
+
+### Changed
+- **`/notes` and `/` (home) post-card meta strip is now red.** Date, divider (`·`), and reading time on each card switched from `textColor:"rust"` (gray `#666666`) to `textColor:"blood"` (red `#e00404`) in [templates/page-notes.html](templates/page-notes.html) and [templates/home.html](templates/home.html). Brings the index meta strip in line with the red-accent treatment used on the Single-Note reading time (v6.3.1), the Provenance byline reading time (v6.3.1), and the Pillar Essay eyebrow on `/notes`. The previous v6.3.1 note arguing for keeping the meta strip gray ("internally consistent with gray dates") is now superseded — the user explicitly asked for red, and the brand's red-accent vocabulary is consistent across every other meta strip in the theme.
+
+### Notes
+- The general lesson from the indent regression: when introducing a `max-width` on a block inside an `is-layout-constrained` group, remember that core's `margin-left: auto !important; margin-right: auto !important` will *centre* the narrower box. To keep it left-aligned, either (a) match the parent's `--wp--style--global--content-size`, or (b) override with `margin-left: 0 !important` (specificity won't beat `!important` without it). Easiest is to not set `max-width` at all and rely on the constrained layout's content-size.
+- Both home.html and page-notes.html were updated together because they render the same Notes list with identical card markup. Keeping them in sync is what readers expect — `/` and `/notes` should look the same.
+
 ## [6.3.4] — 2026-05-02
 
 ### Fixed
