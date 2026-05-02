@@ -2,6 +2,17 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [6.3.3] — 2026-05-02
+
+### Changed
+- **`/notes` excerpts now render in full.** Removed the `-webkit-line-clamp: 1` rule on `.sn-notes-list .sn-note-card-excerpt` (and its inner `<p>`) in [assets/css/components.css](assets/css/components.css). Excerpts were being visually truncated to a single line with a `…` ellipsis regardless of how much text the dek actually contained, which defeated the point of writing a dek at all — they exist to be read, not teased. Excerpts now wrap to their natural height; card rhythm is still handled by `.sn-note-card`'s margin- and padding-bottom, so the index continues to scan cleanly with multiple entries.
+- **Auto-excerpt word cap raised from 24 → 55.** In [templates/page-notes.html](templates/page-notes.html) the `wp:post-excerpt` block's `excerptLength` attribute moved to WordPress' default. This only affects posts published *without* a manually-authored excerpt — when a dek is written in the editor, WP shows it verbatim and the cap doesn't apply. The previous 24 was paired with the CSS clamp; with the clamp gone, 24 was leaving auto-fallback excerpts mid-sentence.
+- **`.sn-note-card-excerpt` gets `max-width: 65ch`** so excerpts that wrap stay inside a comfortable reading measure and don't run the full content width on wide screens.
+
+### Notes
+- This reverses the "one-line deks" half of v6.2.7 (the pillar card and RSS footer changes from that release stay). The v6.2.7 design choice optimised for index density on a list with 6+ entries; the new behaviour optimises for reading the deks as standalone sentences, which is closer to how they're actually written.
+- No CSS for the single-Note view changed. `single.html` continues to render the full post body via `wp:post-content`.
+
 ## [6.3.2] — 2026-05-01
 
 ### Added

@@ -66,10 +66,12 @@
 
 				<!-- wp:post-title {"level":2,"isLink":true,"className":"font-display sn-note-card-title","style":{"typography":{"fontSize":"clamp(1.8rem, 3vw, 2.5rem)"},"elements":{"link":{"color":{"text":"var:preset|color|bone"},":hover":{"color":{"text":"var:preset|color|blood"}}}},"spacing":{"margin":{"top":"0","bottom":"var:preset|spacing|10"}}}} /-->
 
-				<!-- Excerpt is single-line clamped on the index via .sn-note-card-excerpt
-				     in components.css. Single-Note pages render the full body via
+				<!-- Excerpts on /notes render in full — manual deks written in the
+				     editor are shown verbatim; auto-fallback excerpts are capped at
+				     55 words (WP default) so they read as a complete thought rather
+				     than a teaser. Single-Note pages render the full body via
 				     wp:post-content and are unaffected. -->
-				<!-- wp:post-excerpt {"moreText":"","showMoreOnNewLine":false,"excerptLength":24,"className":"sn-note-card-excerpt","style":{"typography":{"fontSize":"0.9rem","lineHeight":"1.6"},"spacing":{"margin":{"top":"0","bottom":"0"}}},"textColor":"rust"} /-->
+				<!-- wp:post-excerpt {"moreText":"","showMoreOnNewLine":false,"excerptLength":55,"className":"sn-note-card-excerpt","style":{"typography":{"fontSize":"0.9rem","lineHeight":"1.6"},"spacing":{"margin":{"top":"0","bottom":"0"}}},"textColor":"rust"} /-->
 
 			</div>
 			<!-- /wp:group -->

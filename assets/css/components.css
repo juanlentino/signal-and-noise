@@ -220,19 +220,14 @@
 	transition: color 0.2s ease;
 }
 
-/* Index-only excerpt density: clamp the dek to a single line so the
-   list scans cleanly with 6+ entries. Single-Note pages render the
-   full body via wp:post-content and are unaffected. The wp:post-excerpt
-   block wraps content in <p class="wp-block-post-excerpt__excerpt">
-   so we target both the wrapper and the inner <p> to be safe across
-   WP versions. */
+/* Excerpts on /notes wrap to their full natural height — they exist
+   to be read in entirety on the index, not teased. Card spacing
+   (margin-bottom + padding-bottom on .sn-note-card) handles rhythm
+   between entries. Single-Note pages render the full body via
+   wp:post-content and are unaffected. */
 .sn-notes-list .sn-note-card-excerpt,
 .sn-notes-list .sn-note-card-excerpt p {
-	display: -webkit-box;
-	-webkit-line-clamp: 1;
-	line-clamp: 1;
-	-webkit-box-orient: vertical;
-	overflow: hidden;
+	max-width: 65ch;
 }
 
 /* RSS footer line — caption-size, muted. The "RSS" word inherits the
