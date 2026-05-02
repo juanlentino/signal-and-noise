@@ -223,10 +223,17 @@
 /* Excerpts on /notes wrap to their full natural height — they exist
    to be read in entirety on the index, not teased. Card spacing
    (margin-bottom + padding-bottom on .sn-note-card) handles rhythm
-   between entries. Single-Note pages render the full body via
-   wp:post-content and are unaffected. */
+   between entries. We explicitly zero horizontal margin/padding on
+   both the wp-block-post-excerpt wrapper and its inner <p> so core
+   block defaults can't push the excerpt rightward and break alignment
+   with the title and meta above it. Single-Note pages render the
+   full body via wp:post-content and are unaffected. */
 .sn-notes-list .sn-note-card-excerpt,
 .sn-notes-list .sn-note-card-excerpt p {
+	margin-left: 0;
+	margin-right: 0;
+	padding-left: 0;
+	padding-right: 0;
 	max-width: 65ch;
 }
 

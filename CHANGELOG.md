@@ -2,6 +2,14 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [6.3.4] — 2026-05-02
+
+### Fixed
+- **`/notes` excerpt left-alignment.** After v6.3.3 removed the `-webkit-line-clamp: 1` rule, `.sn-note-card-excerpt` was rendering visibly indented from its sibling title and meta — `display: -webkit-box` had been masking horizontal margin/padding bleed-through from WordPress core's `wp-block-post-excerpt` defaults, and removing it let those defaults push the excerpt rightward. Fix in [assets/css/components.css](assets/css/components.css): explicitly zero `margin-left` / `margin-right` / `padding-left` / `padding-right` on both the `.sn-note-card-excerpt` wrapper and its inner `<p>`. Excerpt now sits flush at the same x-position as the title.
+
+### Notes
+- The general lesson: when overriding core block CSS in a theme, be explicit about horizontal spacing rather than relying on browser/core defaults — `display` mode changes can mask bugs that resurface when you switch back to flow layout.
+
 ## [6.3.3] — 2026-05-02
 
 ### Changed
