@@ -4,7 +4,6 @@
  *
  * - Meta description on front page and singular posts
  * - Google Tag (gtag.js) delayed until first user interaction
- * - Plausible CE tracking script on the self-hosted Railway instance
  * - Breeze excludes so our perf-critical bundles aren't re-ordered by
  *   the Breeze cache plugin
  *
@@ -127,17 +126,6 @@ add_action( 'wp_head', function() {
 	</script>
 	<?php
 }, 10 );
-
-/**
- * Analytics: Plausible CE tracking script.
- * Self-hosted instance on Railway. Lightweight (~1 KiB), no cookies, GDPR-compliant.
- */
-add_action( 'wp_head', function() {
-	if ( is_admin() || is_preview() ) return;
-	?>
-	<script defer data-domain="juanlentino.com" src="https://plausible-analytics-ce-production-fcb9.up.railway.app/js/script.js"></script>
-	<?php
-}, 11 );
 
 /**
  * Prevent Breeze from deferring the block navigation script.

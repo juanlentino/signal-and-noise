@@ -2,6 +2,27 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [6.4.0] — 2026-05-03
+
+### Removed
+- **All in-theme Plausible analytics — replaced by the official Plausible WP plugin.** Removed because the plugin is a better-supported home for tracking and admin reporting, and keeping a parallel implementation in the theme was duplicating responsibility (and dragging two CDN-loaded vendor libs into wp-admin for a feature the plugin already covers). Concretely:
+  - **Frontend tracking script** (`<script defer data-domain=…>`) deleted from [inc/seo.php](inc/seo.php). The plugin will inject its own once activated.
+  - **`inc/plausible-api.php` deleted** — the Plausible Stats API client (`sn_plausible_api()`), the `SN_PLAUSIBLE_URL` / `SN_PLAUSIBLE_SITE` constants, the `sn_plausible_error` admin notice, and the helper formatters (`sn_fmt`, `sn_duration`, `sn_metric_card`, `sn_ranked_list`) all go with it. `SN_PLAUSIBLE_KEY` in `wp-config.php` is now ignored by the theme — it can be removed at the user's leisure (the plugin uses its own settings UI, not that constant).
+  - **`inc/dashboard-widgets.php` deleted** — the four WP Dashboard widgets (Visitors Today, 30-Day Trend, Top Stats tabbed, Visitor Map). The plugin ships its own dashboard widgets.
+  - **Analytics tab on `Appearance → Signal & Noise` deleted** — the date-range bar, six aggregate metric cards, time-series chart, world map, and 13 tabbed breakdowns. The options page is now two tabs (Dashboard / Links) instead of three. The "Plausible Dashboard" external link in the Links tab is also gone.
+  - **`inc/admin-assets.php` deleted** — the entire admin asset registration layer was scaffolding for the analytics surfaces above (jsvectormap 1.6.0 + Chart.js 4.4.4 vendor libs with SRI hashes, plus the three theme-owned admin JS files). With nothing left to register, the file has no purpose.
+  - **`assets/js/admin-map.js`, `assets/js/admin-tabs.js`, `assets/js/admin-chart.js` deleted** — the client-side renderers for the map, tab switcher, and visitor-trend chart respectively. All three were Plausible-only.
+  - **`functions.php` bootstrap pruned** — three `require_once` lines (`plausible-api`, `dashboard-widgets`, `admin-assets`) and their references in the module map docblock removed.
+  - **Header doc on [inc/admin-page.php](inc/admin-page.php)** updated from "three-tab interface (Dashboard / Analytics / Links)" → "two-tab interface (Dashboard / Links)" and the page subtitle from "Theme management, maintenance, and analytics" → "Theme management and maintenance".
+- **Net diff:** ~860 lines of PHP + ~3 standalone JS files removed. The frontend now ships zero analytics requests until the Plausible plugin is installed and activated; wp-admin loads no admin-only vendor JS at all.
+
+### Notes
+- **Why a minor bump (6.3 → 6.4) and not a patch.** Removing a whole feature surface (Analytics admin tab, four dashboard widgets, the entire `plausible-api.php` module) is more than the patch lane is meant to carry — minor bumps are the right place for "feature added or removed". Patch cap of 7 wasn't the constraint; semantic intent was.
+- **`SN_PLAUSIBLE_KEY` in `wp-config.php`** is now dead. Safe to leave or delete. The Plausible WP plugin doesn't read it.
+- **The delayed `gtag.js` loader stays.** v6.4 only removes Plausible — Google Tag is independent and untouched in [inc/seo.php](inc/seo.php).
+- **The `sn_admin_dashboard_extras` action** on the options-page Dashboard tab is preserved. It's still emitted on line 218 of [inc/admin-page.php](inc/admin-page.php) and consumed by [inc/reading-time.php](inc/reading-time.php) — unrelated to analytics, kept as-is.
+- **Activation step (manual)**: install the official Plausible Analytics plugin from wp-admin → Plugins → Add New, point it at `juanlentino.com`, and activate. No theme code change is required to plug it in — the plugin self-injects its tracking script via its own `wp_head` hook.
+
 ## [6.3.5] — 2026-05-02
 
 ### Fixed

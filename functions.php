@@ -8,21 +8,18 @@
  * Module map:
  *   inc/setup.php                — editor styles, shortcodes
  *   inc/assets-frontend.php      — frontend CSS/JS/fonts/favicons + defer filters
- *   inc/seo.php                  — meta description, analytics loaders, Breeze excludes
+ *   inc/seo.php                  — meta description + Breeze excludes
  *   inc/frontend-filters.php     — skip link, oEmbed, generator-tag stripping, output buffer
  *   inc/notes-and-provenance.php — Notes content surface + Provenance pillar page
  *   inc/reading-time.php         — Cached reading-time calc + [sn_reading_time] + cleanup
  *   inc/og-image.php             — Per-post OG/Twitter card generator (GD, Bebas + DM Mono)
- *   inc/plausible-api.php        — Plausible Stats API client + admin error notice
- *   inc/admin-assets.php         — admin-only script/style registration + SRI hashes
- *   inc/dashboard-widgets.php    — WP Dashboard widgets (Plausible-backed)
  *   inc/template-maintenance.php — FSE template-override purge + version sync
  *   inc/admin-page.php           — Appearance → Signal & Noise options page
  *   inc/updater.php              — GitHub self-updater + admin notice
  *
  * @package SignalNoise
  * @since 1.0.0
- * @version 6.3.2
+ * @version 6.4.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -37,10 +34,6 @@ require_once __DIR__ . '/inc/notes-and-provenance.php';
 require_once __DIR__ . '/inc/reading-time.php';
 require_once __DIR__ . '/inc/og-image.php';
 
-require_once __DIR__ . '/inc/plausible-api.php';
-
-require_once __DIR__ . '/inc/admin-assets.php';
-require_once __DIR__ . '/inc/dashboard-widgets.php';
 require_once __DIR__ . '/inc/template-maintenance.php';
 require_once __DIR__ . '/inc/admin-page.php';
 require_once __DIR__ . '/inc/updater.php';

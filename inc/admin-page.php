@@ -2,19 +2,11 @@
 /**
  * Signal & Noise — Theme options admin page.
  *
- * Registers the Appearance → Signal & Noise submenu and renders a three-tab
- * interface (Dashboard / Analytics / Links) that covers:
+ * Registers the Appearance → Signal & Noise submenu and renders a two-tab
+ * interface (Dashboard / Links) that covers:
  *   - Status & maintenance actions (clear overrides, purge caches, check
  *     for updates, full reset) — all form-posted with WP nonces.
- *   - Self-hosted Plausible analytics (aggregate metrics, time series
- *     chart, visitor map, 13 ranked breakdowns).
- *   - External service links (GitHub repo/releases, Plausible, Cloudflare,
- *     Cloudways).
- *
- * Assets are registered in inc/admin-assets.php and are auto-enqueued on
- * the 'appearance_page_sn-theme-options' screen. Chart/map rendering is
- * handled entirely client-side via the admin JS layer — PHP emits
- * containers carrying JSON payloads in data attributes.
+ *   - External service links (GitHub repo/releases, Cloudflare, Cloudways).
  *
  * @package SignalNoise
  */
@@ -40,7 +32,7 @@ function sn_theme_options_page() {
 	$theme         = wp_get_theme( 'signal-and-noise' );
 	$local_version = $theme->get( 'Version' );
 	$notices       = array();
-	$valid_tabs    = array( 'dashboard', 'analytics', 'links' );
+	$valid_tabs    = array( 'dashboard', 'links' );
 	$active_tab    = isset( $_GET['tab'] ) ? sanitize_text_field( wp_unslash( $_GET['tab'] ) ) : 'dashboard';
 	if ( ! in_array( $active_tab, $valid_tabs, true ) ) {
 		$active_tab = 'dashboard';
@@ -137,7 +129,7 @@ function sn_theme_options_page() {
 	// ── PAGE SHELL ──
 	echo '<div class="wrap">';
 	echo '<h1 style="font-size:1.6em;margin-bottom:0.2em;">Signal &amp; Noise</h1>';
-	echo '<p style="color:#666;margin-top:0;margin-bottom:1em;">Theme management, maintenance, and analytics.</p>';
+	echo '<p style="color:#666;margin-top:0;margin-bottom:1em;">Theme management and maintenance.</p>';
 
 	// Notices.
 	foreach ( $notices as $n ) {
@@ -147,7 +139,6 @@ function sn_theme_options_page() {
 	// ── TABS ──
 	echo '<nav class="nav-tab-wrapper" style="margin-bottom:1.5em;">';
 	echo '<a href="' . esc_url( $base_url . '&tab=dashboard' ) . '" class="nav-tab' . ( 'dashboard' === $active_tab ? ' nav-tab-active' : '' ) . '">Dashboard</a>';
-	echo '<a href="' . esc_url( $base_url . '&tab=analytics' ) . '" class="nav-tab' . ( 'analytics' === $active_tab ? ' nav-tab-active' : '' ) . '">Analytics</a>';
 	echo '<a href="' . esc_url( $base_url . '&tab=links' ) . '" class="nav-tab' . ( 'links' === $active_tab ? ' nav-tab-active' : '' ) . '">Links</a>';
 	echo '</nav>';
 
@@ -227,198 +218,6 @@ function sn_theme_options_page() {
 		do_action( 'sn_admin_dashboard_extras' );
 
 	// ════════════════════════════════════════
-	// TAB: ANALYTICS
-	// ════════════════════════════════════════
-	} elseif ( 'analytics' === $active_tab ) {
-
-		if ( ! defined( 'SN_PLAUSIBLE_KEY' ) ) {
-			echo '<p style="color:#d63638;">SN_PLAUSIBLE_KEY not defined in wp-config.php. Analytics requires a Plausible API key.</p>';
-		} else {
-
-		// ── Date range ──
-		$period     = isset( $_GET['sn_period'] ) ? sanitize_text_field( $_GET['sn_period'] ) : '30d';
-		$valid      = array( '7d', '30d', '6mo', '12mo' );
-		if ( ! in_array( $period, $valid, true ) ) $period = '30d';
-		$labels     = array( '7d' => '7 Days', '30d' => '30 Days', '6mo' => '6 Months', '12mo' => '12 Months' );
-		$cache_min  = ( $period === '7d' ) ? 5 : 15;
-
-		echo '<div style="display:flex;align-items:center;gap:8px;margin-bottom:1.5em;">';
-		foreach ( $labels as $p => $l ) {
-			$is_active = ( $p === $period );
-			$style = $is_active
-				? 'background:#1d2327;color:#fff;border-color:#1d2327;'
-				: 'background:#fff;color:#1d2327;';
-			echo '<a href="' . esc_url( add_query_arg( 'sn_period', $p, $base_url . '&tab=analytics' ) ) . '" class="button" style="' . $style . '">' . $l . '</a>';
-		}
-		echo '<span style="margin-left:auto;font-size:0.8em;color:#787c82;">Cached ' . $cache_min . ' min &middot; <a href="' . esc_url( SN_PLAUSIBLE_URL . '/' . SN_PLAUSIBLE_SITE ) . '" target="_blank" rel="noopener">Open Plausible &rarr;</a></span>';
-		echo '</div>';
-
-		// ── Aggregate metrics ──
-		$agg = sn_plausible_api( 'aggregate', array(
-			'period'  => $period,
-			'metrics' => 'visitors,visits,pageviews,views_per_visit,bounce_rate,visit_duration',
-			'compare' => 'previous_period',
-		), $cache_min );
-		$r = $agg['results'] ?? array();
-
-		echo '<div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:1.5em;">';
-		$metrics = array(
-			array( 'Visitors',        'visitors',        'number' ),
-			array( 'Visits',          'visits',           'number' ),
-			array( 'Pageviews',       'pageviews',        'number' ),
-			array( 'Views / Visit',   'views_per_visit',  'decimal' ),
-			array( 'Bounce Rate',     'bounce_rate',      'percent' ),
-			array( 'Visit Duration',  'visit_duration',   'duration' ),
-		);
-		foreach ( $metrics as $m ) {
-			$val    = $r[ $m[1] ]['value'] ?? 0;
-			$change = $r[ $m[1] ]['change'] ?? null;
-			switch ( $m[2] ) {
-				case 'number':   $display = sn_fmt( $val ); break;
-				case 'decimal':  $display = number_format( $val, 1 ); break;
-				case 'percent':  $display = $val . '%'; break;
-				case 'duration': $display = sn_duration( $val ); break;
-				default:         $display = $val;
-			}
-			$invert = ( $m[1] === 'bounce_rate' );
-			$ch     = $change;
-			if ( $invert && null !== $ch ) $ch = -$ch;
-			$color  = '#787c82';
-			$arrow  = '&#8212;';
-			if ( null !== $ch && $ch > 0 ) { $color = '#00a32a'; $arrow = '&#9650;'; }
-			if ( null !== $ch && $ch < 0 ) { $color = '#d63638'; $arrow = '&#9660;'; }
-			echo '<div style="flex:1;min-width:120px;background:#fff;border:1px solid #c3c4c7;border-radius:4px;padding:16px;text-align:center;">';
-			echo '<div style="font-size:1.6em;font-weight:700;color:#1d2327;">' . esc_html( $display ) . '</div>';
-			echo '<div style="font-size:0.75em;color:#787c82;margin-top:4px;">' . esc_html( $m[0] ) . '</div>';
-			if ( null !== $change ) {
-				echo '<div style="font-size:0.7em;color:' . $color . ';margin-top:4px;">' . $arrow . ' ' . abs( $change ) . '%</div>';
-			}
-			echo '</div>';
-		}
-		echo '</div>';
-
-		// ── Time series + Map row ──
-		$ts = sn_plausible_api( 'timeseries', array(
-			'period'  => $period,
-			'metrics' => 'visitors,pageviews',
-		), $cache_min );
-		$ts_results = $ts['results'] ?? array();
-
-		echo '<div style="display:flex;gap:16px;margin-bottom:1.5em;flex-wrap:wrap;">';
-
-		// Chart
-		echo '<div style="flex:2;min-width:400px;background:#fff;border:1px solid #c3c4c7;border-radius:4px;padding:16px;">';
-		echo '<h3 style="margin:0 0 12px;font-size:0.9em;color:#1d2327;">Visitor Trend</h3>';
-
-		$ts_labels = array();
-		$ts_visitors = array();
-		$ts_pageviews = array();
-		foreach ( $ts_results as $point ) {
-			$ts_labels[]    = $point['date'] ?? '';
-			$ts_visitors[]  = $point['visitors'] ?? 0;
-			$ts_pageviews[] = $point['pageviews'] ?? 0;
-		}
-
-		printf(
-			'<div class="sn-chart-widget" data-sn-chart="%s" style="height:260px;"><canvas></canvas></div>',
-			esc_attr( wp_json_encode( array(
-				'labels'    => $ts_labels,
-				'visitors'  => $ts_visitors,
-				'pageviews' => $ts_pageviews,
-			) ) )
-		);
-		echo '</div>';
-
-		// Map
-		$countries_map = sn_plausible_api( 'breakdown', array( 'period' => $period, 'property' => 'visit:country', 'metrics' => 'visitors', 'limit' => '100' ), $cache_min );
-		$map_results   = $countries_map['results'] ?? array();
-
-		echo '<div style="flex:1;min-width:300px;background:#fff;border:1px solid #c3c4c7;border-radius:4px;padding:16px;">';
-		echo '<h3 style="margin:0 0 12px;font-size:0.9em;color:#1d2327;">Visitor Map</h3>';
-
-		if ( empty( $map_results ) ) {
-			echo '<p style="color:#787c82;font-size:0.85em;">No data yet.</p>';
-		} else {
-			$map_data = array();
-			foreach ( $map_results as $c ) {
-				$code = $c['country'] ?? '';
-				if ( $code ) $map_data[ $code ] = $c['visitors'];
-			}
-			printf(
-				'<div class="sn-map-widget" data-sn-map="%s" style="width:100%%;height:220px;overflow:hidden;position:relative;"></div>',
-				esc_attr( wp_json_encode( $map_data ) )
-			);
-		}
-		echo '</div>';
-		echo '</div>';
-
-		// ── Breakdowns ──
-		$breakdowns = array(
-			'pages'       => array( 'label' => 'Pages',        'property' => 'event:page',         'key' => 'page' ),
-			'entry'       => array( 'label' => 'Entry Pages',  'property' => 'visit:entry_page',   'key' => 'entry_page' ),
-			'exit'        => array( 'label' => 'Exit Pages',   'property' => 'visit:exit_page',    'key' => 'exit_page' ),
-			'sources'     => array( 'label' => 'Sources',      'property' => 'visit:source',       'key' => 'source' ),
-			'referrers'   => array( 'label' => 'Referrers',    'property' => 'visit:referrer',     'key' => 'referrer' ),
-			'utm_medium'  => array( 'label' => 'UTM Medium',   'property' => 'visit:utm_medium',   'key' => 'utm_medium' ),
-			'utm_source'  => array( 'label' => 'UTM Source',   'property' => 'visit:utm_source',   'key' => 'utm_source' ),
-			'utm_campaign'=> array( 'label' => 'UTM Campaign', 'property' => 'visit:utm_campaign', 'key' => 'utm_campaign' ),
-			'countries'   => array( 'label' => 'Countries',    'property' => 'visit:country',      'key' => 'country' ),
-			'cities'      => array( 'label' => 'Cities',       'property' => 'visit:city',         'key' => 'city' ),
-			'devices'     => array( 'label' => 'Devices',      'property' => 'visit:device',       'key' => 'device' ),
-			'browsers'    => array( 'label' => 'Browsers',     'property' => 'visit:browser',      'key' => 'browser' ),
-			'os'          => array( 'label' => 'OS',           'property' => 'visit:os',           'key' => 'os' ),
-		);
-
-		echo '<div style="background:#fff;border:1px solid #c3c4c7;border-radius:4px;padding:16px;">';
-		echo '<h3 style="margin:0 0 12px;font-size:0.9em;color:#1d2327;">Breakdowns</h3>';
-
-		$bd_uid = 'sn_bd_' . wp_rand();
-
-		echo '<div class="sn-tabs" role="tablist" style="display:flex;flex-wrap:wrap;border-bottom:1px solid #c3c4c7;margin-bottom:12px;gap:0;">';
-		$first = true;
-		foreach ( $breakdowns as $id => $bd ) {
-			$tab_id   = $bd_uid . '_tab_' . $id;
-			$panel_id = $bd_uid . '_panel_' . $id;
-			$style    = 'padding:8px 12px;cursor:pointer;font-size:0.8em;font-weight:500;white-space:nowrap;font-family:inherit;background:transparent;border:0;border-bottom:2px solid ' . ( $first ? '#e00404' : 'transparent' ) . ';color:' . ( $first ? '#1d2327' : '#787c82' ) . ';';
-			printf(
-				'<button type="button" role="tab" id="%s" aria-controls="%s" aria-selected="%s" tabindex="%s" style="%s">%s</button>',
-				esc_attr( $tab_id ),
-				esc_attr( $panel_id ),
-				$first ? 'true' : 'false',
-				$first ? '0' : '-1',
-				esc_attr( $style ),
-				esc_html( $bd['label'] )
-			);
-			$first = false;
-		}
-		echo '</div>';
-
-		$first = true;
-		foreach ( $breakdowns as $id => $bd ) {
-			$tab_id   = $bd_uid . '_tab_' . $id;
-			$panel_id = $bd_uid . '_panel_' . $id;
-			$data = sn_plausible_api( 'breakdown', array(
-				'period'   => $period,
-				'property' => $bd['property'],
-				'metrics'  => 'visitors',
-				'limit'    => '15',
-			), $cache_min );
-			printf(
-				'<div id="%s" role="tabpanel" aria-labelledby="%s"%s>',
-				esc_attr( $panel_id ),
-				esc_attr( $tab_id ),
-				$first ? '' : ' hidden'
-			);
-			sn_ranked_list( $data['results'] ?? array(), $bd['key'] );
-			echo '</div>';
-			$first = false;
-		}
-
-		echo '</div>';
-
-		} // end SN_PLAUSIBLE_KEY check
-
-	// ════════════════════════════════════════
 	// TAB: LINKS
 	// ════════════════════════════════════════
 	} elseif ( 'links' === $active_tab ) {
@@ -429,7 +228,6 @@ function sn_theme_options_page() {
 		if ( '#' !== $github_url && ! $is_up_to_date ) {
 			echo '<tr><th style="padding:8px 10px 8px 0;">Latest Release</th><td style="padding:8px 0;"><a href="' . esc_url( $github_url ) . '" target="_blank" rel="noopener">v' . esc_html( $github_version ) . ' release notes</a></td></tr>';
 		}
-		echo '<tr><th style="padding:8px 10px 8px 0;">Plausible Dashboard</th><td style="padding:8px 0;"><a href="' . esc_url( SN_PLAUSIBLE_URL . '/' . SN_PLAUSIBLE_SITE ) . '" target="_blank" rel="noopener">Open in Plausible</a></td></tr>';
 		echo '<tr><th style="padding:8px 10px 8px 0;">Cloudflare</th><td style="padding:8px 0;"><a href="https://dash.cloudflare.com" target="_blank" rel="noopener">Cloudflare Dashboard</a></td></tr>';
 		echo '<tr><th style="padding:8px 10px 8px 0;">Cloudways</th><td style="padding:8px 0;"><a href="https://platform.cloudways.com" target="_blank" rel="noopener">Cloudways Platform</a></td></tr>';
 		echo '</table>';
