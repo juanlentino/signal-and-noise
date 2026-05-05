@@ -246,23 +246,12 @@ body {
 	animation: fadeInUp 1s ease-out 0.65s both;
 }
 
-/* Hero centring via inner markup wrapper + text-align: center.
-   See critical.css for rationale. */
+/* Hero centring via inner markup wrapper. See critical.css for rationale. */
 .sn-hero-inner {
 	width: 100%;
 	max-width: 1100px;
 	margin-left: auto;
 	margin-right: auto;
-	text-align: center;
-}
-
-.sn-hero-inner .sn-hero-accent {
-	margin-left: auto;
-	margin-right: auto;
-}
-
-.sn-hero-inner .sn-hero-cta {
-	justify-content: center !important;
 }
 
 /* ============================================

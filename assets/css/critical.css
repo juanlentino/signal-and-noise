@@ -257,29 +257,15 @@ body {
 	animation: fadeInUp 1s ease-out 0.8s both;
 }
 
-/* Hero centring: the inner markup wrapper (.sn-hero-inner) caps the column at
-   1100px and centres it via auto margins. text-align: center then centres the
-   visible text within the column — without this, the H1's natural text width
-   (~575px at desktop fonts) would sit at the column-left of a 1100px block
-   and read as left-pinned despite the column being mathematically centred.
-   The 120px accent bar uses margin: 0 auto so it also centres. The buttons
-   row gets justify-content: center to override its block markup
-   `justifyContent: "left"` setting at desktop. */
+/* Hero centring via inner markup wrapper. Column is 1100px max, centred via
+   auto margins. Content inside reads left-aligned (editorial) — H1, subtitle,
+   accent, and buttons all share the column's left edge as their natural
+   block-flow start position, no overrides needed. */
 .sn-hero-inner {
 	width: 100%;
 	max-width: 1100px;
 	margin-left: auto;
 	margin-right: auto;
-	text-align: center;
-}
-
-.sn-hero-inner .sn-hero-accent {
-	margin-left: auto;
-	margin-right: auto;
-}
-
-.sn-hero-inner .sn-hero-cta {
-	justify-content: center !important;
 }
 
 /* ============================================

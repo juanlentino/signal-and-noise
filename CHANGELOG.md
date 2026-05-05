@@ -2,6 +2,20 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [6.4.7] — 2026-05-05
+
+Revert v6.4.6's text-align: center on the home hero. User feedback: "I don't like everything centered like that". Going back to the v6.4.5 state — wrapper at 1100px max-width centred via auto margins, content inside left-aligned (editorial). Patch cap reached for the 6.4 minor (project rule: 7 patches per minor).
+
+### Changed
+- **Home hero — remove `text-align: center` from `.sn-hero-inner` and remove the accent's `margin: auto` and the buttons row's `justify-content: center !important` overrides.** [assets/css/critical.css](assets/css/critical.css) and [assets/css/layout.css](assets/css/layout.css) reduce `.sn-hero-inner` back to four declarations: `width: 100%; max-width: 1100px; margin-left: auto; margin-right: auto`. Inside the wrapper, all children flow with default block layout — H1 fills the column, subtitle is constrained to its `max-width: 640px` at the column's left, accent stays 120px at column-left, buttons row's flex layout uses its block-markup `justifyContent: "left"` so buttons cluster at column-left.
+
+### Notes
+- **The visible asymmetry tradeoff is real and unavoidable without changing typography.** H1's `clamp(3rem, 9vw, 7rem)` font means line 2 ("THAT SOUND RIGHT.") naturally renders at ~1100px wide on desktop. The column max-width can't drop below 1100 without forcing H1 to wrap to 3+ lines. With H1 line 1 ("I BUILD THINGS") at only ~575px wide and the column at 1100px, there will always be empty space to the right of H1 line 1 in editorial left-aligned mode. That's the cost of preserving the existing typography untouched, which is in the original spec.
+- **Patch cap reached.** Per project CLAUDE.md, this minor allows up to 7 patches (6.4.0 → 6.4.7). The next change to the 6.4 line forces a minor bump to 6.5.0. Recommend that the next iteration on this hero — if any — bundle related work and ship as 6.5.0.
+
+### Deploy
+Update via WP admin → **Dashboard → Updates** (6.4.6 → 6.4.7), then **Breeze → Purge All Cache**, then **Cloudflare → Caching → Purge Everything**, then hard-refresh on the home page.
+
 ## [6.4.6] — 2026-05-05
 
 Follow-up to v6.4.5. The wrapper-based centring landed structurally — verified via curl that the hero column was mathematically centred at 1100px wide with auto margins — but the user's screenshot still read as "not centred" because the H1's natural text width (~575px at desktop fonts) is smaller than the 1100px column it lives in. With `text-align: left` on the H1, that 575px of text sits at the column's left edge, leaving ~525px of empty space on the column's right. Across the viewport, the visible content reads as "left half full, right half empty" — uncentred to the eye, even though the column is mathematically centred.
