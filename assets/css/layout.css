@@ -230,7 +230,9 @@ body {
 	max-width: 640px;
 }
 
+/* Reset UA default margin-block. See critical.css for rationale. */
 .sn-hero-title {
+	margin-block: 0 !important;
 	animation: fadeInUp 1s ease-out 0.2s both;
 }
 

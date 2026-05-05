@@ -245,7 +245,13 @@ body {
 	max-width: 640px;
 }
 
+/* Reset UA default margin-block on the display-size H1. Bebas Neue at 7rem
+   inherits 0.67em margin-block from the UA stylesheet (~75px above and below
+   at desktop), which scales with font-size and creates a huge dead band
+   between the H1 and the subtitle. The subtitle's own margin-top (1.5rem)
+   becomes the actual visible gap. */
 .sn-hero-title {
+	margin-block: 0 !important;
 	animation: fadeInUp 1s ease-out 0.2s both;
 }
 

@@ -2,6 +2,19 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [6.5.0] — 2026-05-05
+
+Patch cap reached on 6.4 — minor bump. The work is small (one CSS rule) but the 6.4 lane is full at 6.4.7.
+
+### Fixed
+- **Home hero — close the dead band between H1 and subtitle.** The H1 was inheriting the UA stylesheet's `h1 { margin-block: 0.67em }` default, which scales with font-size — at the hero's `clamp(3rem, 9vw, 7rem)` font (= 112px on desktop) that's ~75px above and below the H1 block. Combined with the subtitle's own `margin-top: 1.5rem` (24px), the visible gap from H1 baseline to subtitle was reading as a 100px+ empty band where it should be ~24px. WP block-library normally resets heading margins, but in this case the reset doesn't reach `.sn-hero-title` because it's inline-styled with a custom font-size inside a constrained group, and the cascade lets the UA `h1` rule win on `margin-block`. Fix: explicit `margin-block: 0 !important` on `.sn-hero-title` in [assets/css/critical.css](assets/css/critical.css) and [assets/css/layout.css](assets/css/layout.css). Subtitle's existing `margin-top: 1.5rem` becomes the actual visible gap.
+
+### Notes
+- **Why a minor bump for one rule?** The 6.4 patch cap (project rule: 7 patches per minor) was reached at v6.4.7. Any further change to this minor forces a 6.5.0 bump regardless of size. Bundling the H1 reset alone here is the right call — the next hero adjustment (if any) can land in 6.5.x.
+
+### Deploy
+Update via WP admin → **Dashboard → Updates** (6.4.7 → 6.5.0), then **Breeze → Purge All Cache**, then **Cloudflare → Caching → Purge Everything**, then hard-refresh on the home page (Cmd+Shift+R).
+
 ## [6.4.7] — 2026-05-05
 
 Revert v6.4.6's text-align: center on the home hero. User feedback: "I don't like everything centered like that". Going back to the v6.4.5 state — wrapper at 1100px max-width centred via auto margins, content inside left-aligned (editorial). Patch cap reached for the 6.4 minor (project rule: 7 patches per minor).
