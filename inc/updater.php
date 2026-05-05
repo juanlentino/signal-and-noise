@@ -2,22 +2,23 @@
 /**
  * Signal & Noise — GitHub self-updater.
  *
- * Two modes:
+ * Two modes — picked automatically with no config change required.
  *
- * 1. RELEASE MODE (default).
- *    Polls GitHub releases for new tags. Click "Update" in Appearance → Themes
- *    and it behaves like any other theme update — no manual zip uploads.
+ * 1. AUTO DEV MODE.
+ *    If a `dev` branch exists on the remote, the updater tracks its HEAD
+ *    commit SHA instead of tracking release tags. Push commits to `dev`
+ *    freely; WP polls every 5 minutes; "Update" pulls the branch zipball —
+ *    no version bump, no GitHub release per iteration. When work is final,
+ *    merge `dev` → `main` and DELETE the dev branch; the next poll detects
+ *    the absence of `dev` and falls back to release mode automatically.
  *
- * 2. DEV MODE (opt-in via SN_GITHUB_BRANCH constant in wp-config.php).
- *    Tracks a branch HEAD by commit SHA instead of tracking releases by tag.
- *    Push commits to the branch freely; WP polls the branch's HEAD every five
- *    minutes; "Update" pulls the branch zipball — no version bump, no GitHub
- *    release. Designed to stop "version-bump-happy" iteration during a single
- *    debugging session: bundle work on the branch, ship one final release at
- *    the end, remove the constant.
+ * 2. RELEASE MODE (fallback).
+ *    No `dev` branch on the remote → polls `/releases/latest` for new tags
+ *    and behaves like any other theme update.
  *
- *    Enable: define( 'SN_GITHUB_BRANCH', 'dev' );
- *    Disable: remove the constant from wp-config.php.
+ * The legacy `SN_GITHUB_BRANCH` constant in wp-config.php still works as an
+ * explicit override (track an arbitrary branch by name), but is no longer
+ * required to enable dev mode. Most users should leave it undefined.
  *
  * Requires: SN_GITHUB_TOKEN constant in wp-config.php
  *   define( 'SN_GITHUB_TOKEN', 'github_pat_...' );
@@ -53,6 +54,32 @@ add_filter( 'pre_set_site_transient_update_themes', function( $transient ) {
 	}
 
 	$branch = defined( 'SN_GITHUB_BRANCH' ) && SN_GITHUB_BRANCH ? SN_GITHUB_BRANCH : null;
+
+	// Auto-detect: if no explicit override, check whether a `dev` branch
+	// exists on the remote. If yes, track it; if no, fall through to
+	// release-tag mode below. The detection is cached for 5 min to keep
+	// API hits low, and times out automatically when the branch is
+	// deleted at ship time.
+	if ( ! $branch ) {
+		$auto_dev = get_transient( 'sn_github_dev_exists' );
+		if ( false === $auto_dev ) {
+			$check = wp_remote_get(
+				'https://api.github.com/repos/' . SN_GITHUB_REPO . '/branches/dev',
+				array(
+					'headers' => array(
+						'Authorization' => 'token ' . SN_GITHUB_TOKEN,
+						'Accept'        => 'application/vnd.github.v3+json',
+					),
+					'timeout' => 10,
+				)
+			);
+			$auto_dev = ( ! is_wp_error( $check ) && 200 === wp_remote_retrieve_response_code( $check ) ) ? '1' : '0';
+			set_transient( 'sn_github_dev_exists', $auto_dev, 5 * MINUTE_IN_SECONDS );
+		}
+		if ( '1' === $auto_dev ) {
+			$branch = 'dev';
+		}
+	}
 
 	// === DEV MODE — track branch HEAD by commit SHA ===
 	if ( $branch ) {
@@ -220,6 +247,8 @@ add_filter( 'upgrader_source_selection', function( $source, $remote_source, $upg
 add_action( 'load-update-core.php', function() {
 	delete_transient( 'sn_github_release' );
 	delete_transient( 'sn_github_error' );
+	delete_transient( 'sn_github_dev_exists' );
+	delete_transient( 'sn_github_branch_dev' );
 	if ( defined( 'SN_GITHUB_BRANCH' ) && SN_GITHUB_BRANCH ) {
 		delete_transient( 'sn_github_branch_' . sanitize_key( SN_GITHUB_BRANCH ) );
 	}
@@ -254,11 +283,15 @@ add_action( 'admin_notices', function() {
 		return;
 	}
 
-	if ( defined( 'SN_GITHUB_BRANCH' ) && SN_GITHUB_BRANCH ) {
-		$branch    = SN_GITHUB_BRANCH;
+	$explicit_branch = defined( 'SN_GITHUB_BRANCH' ) && SN_GITHUB_BRANCH ? SN_GITHUB_BRANCH : null;
+	$auto_dev_active = ( ! $explicit_branch ) && '1' === get_transient( 'sn_github_dev_exists' );
+
+	if ( $explicit_branch || $auto_dev_active ) {
+		$branch    = $explicit_branch ?: 'dev';
 		$local_sha = (string) get_option( 'sn_github_local_sha', '' );
-		$sha_label = $local_sha ? ' (currently at <code>' . esc_html( $local_sha ) . '</code>)' : '';
-		echo '<div class="notice notice-info"><p><strong>Signal &amp; Noise — Dev Mode:</strong> Tracking branch <code>' . esc_html( $branch ) . '</code>' . $sha_label . '. Updates check the branch HEAD every 5 minutes. Remove <code>SN_GITHUB_BRANCH</code> from <code>wp-config.php</code> to switch back to release tracking.</p></div>';
+		$sha_label = $local_sha ? ' at <code>' . esc_html( $local_sha ) . '</code>' : '';
+		$mode      = $explicit_branch ? 'explicit override' : 'auto-detected — branch will disappear when merged + deleted';
+		echo '<div class="notice notice-info"><p><strong>Signal &amp; Noise — Dev Mode:</strong> Tracking branch <code>' . esc_html( $branch ) . '</code>' . $sha_label . ' (' . $mode . '). Updates check the branch HEAD every 5 minutes.</p></div>';
 	}
 
 	$last_error = get_transient( 'sn_github_error' );

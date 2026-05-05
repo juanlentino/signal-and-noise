@@ -2,6 +2,28 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [6.5.2] — 2026-05-05
+
+Make dev mode fully automatic — no `wp-config.php` constant needed.
+
+### Changed
+- **Updater auto-detects a `dev` branch on the remote.** [inc/updater.php](inc/updater.php) now polls GitHub once every 5 minutes (cached transient) for the existence of a `dev` branch. When `dev` exists, the updater silently switches to SHA-tracking on that branch — no `SN_GITHUB_BRANCH` constant required. When `dev` is deleted (after a merge to `main` at ship time), the next poll's 404 expires the cache, and the updater falls back to release-tag tracking. The `SN_GITHUB_BRANCH` constant still works as an explicit override (e.g., to track `staging` instead), but is no longer needed for the standard iterate-on-dev workflow.
+- **Admin notice updated to label the mode.** Dashboard / Updates / Themes screens now show a notice that distinguishes "explicit override" (constant set) from "auto-detected" (constant absent, dev branch exists), so it's obvious why dev mode is active.
+- **`load-update-core.php` cache-bust hook clears the dev-detection transient too**, so visiting the Updates page forces a fresh check of whether `dev` still exists. This makes ship-time transitions (delete dev → fall back to releases) feel instant rather than waiting 5 minutes for the cache to expire.
+
+### Notes
+- **The user's flow is now genuinely "talk to Claude → click Update":**
+  1. I create a `dev` branch with the iteration commits.
+  2. WP admin shows "Update available" within 5 min, OR immediately on visiting Dashboard → Updates.
+  3. User clicks Update + purges cache.
+  4. Repeat until satisfied.
+  5. Ship: I squash-merge `dev` → `main`, bump version, tag, create one GitHub release, **delete the `dev` branch**.
+  6. Next user poll detects no `dev`, falls back to release mode automatically. Site is on the new tagged version.
+- **Backwards-compatible.** If the user kept the `define( 'SN_GITHUB_BRANCH', 'dev' );` from v6.5.1, it still works (explicit override path). It can be safely removed from `wp-config.php` after this update — but doesn't have to be.
+
+### Deploy
+This is the **last manual update** the user has to think about. After v6.5.2, future iterations land via dev-branch auto-detection — no constants, no settings, no UI. Update via WP admin (6.5.1 → 6.5.2), purge Breeze, purge Cloudflare, hard-refresh.
+
 ## [6.5.1] — 2026-05-05
 
 Two changes bundled to demonstrate the discipline introduced by the second one — bump the nav size, AND add a dev-mode updater that lets future iteration sessions skip version bumps entirely.
