@@ -2,6 +2,24 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [6.4.1] — 2026-05-05
+
+### Fixed
+- **Home hero — center the content column horizontally.** Removed the `.sn-hero` `padding-left: max(40px, 15vw) !important` rule (originally added in v3.9.4 as an "Apple-style golden-ratio offset") together with the matching `margin-left: 0 !important; margin-right: auto !important` override on `.sn-hero.is-layout-constrained > *`. Both rules were duplicated in [assets/css/critical.css](assets/css/critical.css) (inline) and [assets/css/layout.css](assets/css/layout.css) (deferred); both copies removed. WordPress's stock per-block constrained-layout rule (`max-width: 1100px; margin-left: auto !important; margin-right: auto !important`) now centres the hero column. Also dropped `align-items: flex-start` from the `.sn-hero` flex container so default cross-axis behaviour applies.
+- **Home hero — keep the 120px red accent bar and the buttons row aligned with the H1's column-left edge.** Added a desktop-only (`min-width: 782px`) block in [assets/css/layout.css](assets/css/layout.css) that sets `width: 100%` on `.sn-hero-cta` (so the buttons-row block expands to the full 1100px column width and `justifyContent: "left"` actually puts buttons at the column's left edge instead of the hero's centre) and overrides the auto-margins on `.sn-hero-accent` to `margin-left: max(0, calc(50% - 550px)); margin-right: auto` so the 120px accent line sits at the column's left edge instead of being centred inside the column. Tablet/mobile (`max-width: 781px` + `max-width: 480px`) preserved exactly — `responsive.css` already owns those breakpoints with explicit symmetric paddings and stack/row direction overrides.
+
+### Changed
+- **Services — wider stat row and Music & Production image grid.** Bumped `contentSize` on two `<wp:group>` sections in [templates/page-services.html](templates/page-services.html) from `1000px` → `1400px`: the `.sn-credibility-strip` panel (20+ YEARS / 50+ ARTISTS / GRAMMY / MBA) and the Music & Production image-card grid (production / mixing / mastering rows). Page header (eyebrow + H1 SERVICES + intro) and the Business & Strategy panel below stay at 1000px so prose continues to read at a comfortable measure.
+- **Music — wider Spotify embed.** Bumped `contentSize` on the Spotify-embed `<wp:group>` (which wraps `<wp:post-content>` for the page body) in [templates/page-music.html](templates/page-music.html) from `900px` → `1400px`. Page header (eyebrow + H1 MUSIC + intro) and the Muso.AI credits section below stay at 900px.
+- **Resume — wider PDF viewer.** Bumped `contentSize` on the `#resume-viewer` `<wp:group>` in [templates/page-resume.html](templates/page-resume.html) from `900px` → `1400px`. Page header section stays at 900px. The PDF embed itself (rendered via `<wp:post-content>`) is unchanged in this session — replacing the embed with native HTML is flagged as a follow-up decision.
+- **Work With Me — wider HOW IT WORKS process strip and booking calendar.** Bumped `contentSize` on two `<wp:group>` sections in [templates/page-work-with-me.html](templates/page-work-with-me.html) from `800px` → `1400px`: the asphalt-background HOW IT WORKS three-column strip (01/02/03) and the Tab Bar + Cal.com booking-area panel (30-min / 60-min embeds). Page header section stays at 800px.
+
+### Notes
+- **About / Contact / Notes templates untouched.** All three were already correctly centred via WordPress's stock constrained-layout rules — verified by curling the live About page and confirming `<style id='core-block-supports-inline-css'>` emits `margin-left: auto !important; margin-right: auto !important` per section. The "every page" right-pin perception was driven entirely by the home hero. No template edits needed.
+- **theme.json untouched.** Global `contentSize: 720px` and `wideSize: 1200px` left as-is. Wider sections express themselves at the per-section level via `contentSize` overrides on their own `<wp:group>` blocks rather than via `align: "wide"` (which would only widen children to `wideSize: 1200px` — barely a step up from the 1000px baseline).
+- **Mobile preserved exactly.** No edits to existing `@media (max-width: 781px)` or `@media (max-width: 480px)` blocks. The wider `contentSize: 1400px` on desktop sections has no effect under 1400px-viewport since the constrained `max-width` simply caps at the available width inside the section's 40px horizontal padding.
+- **One commit per page.** Five commits in this release (home / services / music / resume / work-with-me) so any single page can be reverted independently. Versioning, changelog, and release tag in a sixth commit on top.
+
 ## [6.4.0] — 2026-05-03
 
 ### Removed
