@@ -204,7 +204,6 @@ body {
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
-	align-items: flex-start;
 	min-height: calc(100vh - 108px - 90px) !important;
 	min-height: calc(100dvh - 108px - 90px) !important;
 }
@@ -227,21 +226,6 @@ body {
 	z-index: 2;
 }
 
-/* Left-align hero children — override WP constrained layout inline auto-margins.
-   Dynamic padding-left positions content at golden-ratio offset (~15vw on wide screens). */
-.sn-hero {
-	padding-left: max(var(--wp--preset--spacing--40), 15vw) !important;
-}
-
-.sn-hero.is-layout-constrained > * {
-	margin-left: 0 !important;
-	margin-right: auto !important;
-}
-
-.sn-hero .sn-hero-title {
-	max-width: none;
-}
-
 .sn-hero .sn-hero-subtitle {
 	max-width: 640px;
 }
@@ -260,6 +244,20 @@ body {
 
 .sn-hero-accent {
 	animation: fadeInUp 1s ease-out 0.65s both;
+}
+
+/* Desktop only — keep the 120px accent bar and the buttons row aligned with
+   the H1 text's column-left edge instead of auto-centering inside the 1100px
+   constrained column. Tablet/mobile preserve their existing responsive.css
+   sizing (width: auto / 100% with stack direction). */
+@media (min-width: 782px) {
+	.sn-hero .sn-hero-cta {
+		width: 100%;
+	}
+	.sn-hero .sn-hero-accent {
+		margin-left: max(0px, calc(50% - 550px)) !important;
+		margin-right: auto !important;
+	}
 }
 
 /* ============================================

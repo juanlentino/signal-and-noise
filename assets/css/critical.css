@@ -219,7 +219,6 @@ body {
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
-	align-items: flex-start;
 	min-height: calc(100vh - 108px - 90px) !important;
 	min-height: calc(100dvh - 108px - 90px) !important;
 }
@@ -240,20 +239,6 @@ body {
 .sn-hero > * {
 	position: relative;
 	z-index: 2;
-}
-
-/* Left-align hero children — override WP constrained layout inline auto-margins */
-.sn-hero {
-	padding-left: max(var(--wp--preset--spacing--40), 15vw) !important;
-}
-
-.sn-hero.is-layout-constrained > * {
-	margin-left: 0 !important;
-	margin-right: auto !important;
-}
-
-.sn-hero .sn-hero-title {
-	max-width: none;
 }
 
 .sn-hero .sn-hero-subtitle {
