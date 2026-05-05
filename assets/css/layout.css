@@ -246,16 +246,12 @@ body {
 	animation: fadeInUp 1s ease-out 0.65s both;
 }
 
-/* Centre the hero's content column at desktop, with all children pinned to
-   the inner-left edge of that column. See critical.css for the rationale. */
-.sn-hero {
-	padding-left: max(var(--wp--preset--spacing--40), calc((100% - 1100px) / 2)) !important;
-	padding-right: max(var(--wp--preset--spacing--40), calc((100% - 1100px) / 2)) !important;
-}
-
-.sn-hero.is-layout-constrained > * {
-	margin-left: 0 !important;
-	margin-right: auto !important;
+/* Hero centring via inner markup wrapper. See critical.css for rationale. */
+.sn-hero-inner {
+	width: 100%;
+	max-width: 1100px;
+	margin-left: auto;
+	margin-right: auto;
 }
 
 /* ============================================

@@ -2,6 +2,21 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [6.4.5] — 2026-05-05
+
+Third (and last) follow-up to v6.4.1 hero centring. The CSS-only path through v6.4.1 → v6.4.4 successively tried `width: 100%` + `margin: auto` on `.sn-hero-cta`, calc-based `margin-left` on `.sn-hero-accent`, and column-padding via `padding-left: max(40px, calc((100% - 1100px) / 2))`. Each variant was inlined into `<style id="sn-critical-inline">` correctly (verified via Python on the live HTML), and yet the rendered output kept showing the hero column drifted into the viewport's left half, with significantly more empty space on the right than the left. Three independent CSS attempts not landing the visible result is the signal: switch from CSS-only to a markup wrapper.
+
+### Changed
+- **Home hero — wrap children in an inner `<div class="sn-hero-inner">` and centre that.** [templates/front-page.html](templates/front-page.html) now wraps the H1, subtitle, accent bar, and buttons row inside a single `sn-hero-inner` div (emitted as raw HTML around the existing block markup). [assets/css/critical.css](assets/css/critical.css) and [assets/css/layout.css](assets/css/layout.css) replace the prior `.sn-hero { padding: max(...) }` + `.sn-hero.is-layout-constrained > * { margin-left: 0 }` rules with a single rule on the wrapper: `.sn-hero-inner { width: 100%; max-width: 1100px; margin-left: auto; margin-right: auto }`. The wrapper is the centred 1100px column; children inside flow with default block layout (margin-left: 0 by default) so they all share the same column-left x-coordinate by construction. No selector battles with WP's per-block `margin: auto !important` rule, no calc gymnastics, no cache-sensitivity. The outer `.sn-hero` keeps its full-width gradient `::before` and its `display: flex` vertical centring; the wrapper is the only flex item, so `justify-content: center` (vertical, since `flex-direction: column`) still vertically centres the whole hero block.
+
+### Notes
+- **Why a markup change now and not earlier.** v6.4.1 deliberately tried to fix this with CSS only because the original spec said "do not modify mobile layout" and "do not change typography". Both are still respected — the wrapper is invisible to layout flow at <782px (responsive.css owns those breakpoints with explicit symmetric paddings on `.sn-hero` itself; the wrapper inherits its width from the hero's content area, which mobile padding already constrains). Typography untouched. The wrapper is just a structural shim.
+- **Class-based selectors still apply.** `.sn-hero .sn-hero-subtitle { max-width: 640px }` keeps working because it uses a descendant combinator — the subtitle is a descendant of the hero whether the wrapper is there or not. Same for `.sn-hero-title`, `.sn-hero-cta`, `.sn-hero-accent` animation rules.
+- **`.sn-hero > * { z-index: 2; position: relative }` now applies to the wrapper instead of each child individually.** Functional behaviour is the same: wrapper sits above the gradient `::before` overlay, and so does everything inside it (the wrapper establishes its own stacking context).
+
+### Deploy
+After Update in WP, **purge Breeze + Cloudflare** caches one more time. The markup change means the rendered HTML structure itself differs, so any cached HTML page-output from v6.4.4 won't include `.sn-hero-inner` and the wrapper's centring rule will have nothing to attach to. Hard-refresh (Cmd+Shift+R) on the home page to be sure.
+
 ## [6.4.4] — 2026-05-05
 
 ### Removed
