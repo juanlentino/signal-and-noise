@@ -179,19 +179,51 @@ add_filter( 'pre_set_site_transient_update_themes', function( $transient ) {
  * same update.
  */
 add_action( 'upgrader_process_complete', function( $upgrader, $hook_extra ) {
-	if ( ! defined( 'SN_GITHUB_BRANCH' ) || ! SN_GITHUB_BRANCH ) {
+	if ( ! defined( 'SN_GITHUB_TOKEN' ) || empty( SN_GITHUB_TOKEN ) ) {
 		return;
 	}
 	if ( empty( $hook_extra['type'] ) || 'theme' !== $hook_extra['type'] ) {
 		return;
 	}
-	if ( empty( $hook_extra['themes'] ) || ! in_array( SN_THEME_SLUG, (array) $hook_extra['themes'], true ) ) {
+	// WP passes either `themes` (bulk) or `theme` (single) — handle both.
+	$themes = ! empty( $hook_extra['themes'] )
+		? (array) $hook_extra['themes']
+		: ( ! empty( $hook_extra['theme'] ) ? array( $hook_extra['theme'] ) : array() );
+	if ( ! in_array( SN_THEME_SLUG, $themes, true ) ) {
 		return;
 	}
 
-	$cached = get_transient( 'sn_github_branch_' . sanitize_key( SN_GITHUB_BRANCH ) );
-	if ( $cached && ! empty( $cached['sha'] ) ) {
-		update_option( 'sn_github_local_sha', substr( $cached['sha'], 0, 7 ) );
+	// Determine the active branch — explicit constant first, then auto-detected dev.
+	$branch = null;
+	if ( defined( 'SN_GITHUB_BRANCH' ) && SN_GITHUB_BRANCH ) {
+		$branch = SN_GITHUB_BRANCH;
+	} elseif ( '1' === get_transient( 'sn_github_dev_exists' ) ) {
+		$branch = 'dev';
+	}
+	if ( ! $branch ) {
+		return;
+	}
+
+	// Re-fetch the branch HEAD instead of trusting the transient (which may be
+	// 5 min stale or pre-date this install). Stash the resulting SHA so the
+	// next poll knows we're in sync.
+	$response = wp_remote_get(
+		'https://api.github.com/repos/' . SN_GITHUB_REPO . '/commits/' . rawurlencode( $branch ),
+		array(
+			'headers' => array(
+				'Authorization' => 'token ' . SN_GITHUB_TOKEN,
+				'Accept'        => 'application/vnd.github.v3+json',
+			),
+			'timeout' => 10,
+		)
+	);
+	if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
+		return;
+	}
+	$body = json_decode( wp_remote_retrieve_body( $response ), true );
+	if ( ! empty( $body['sha'] ) ) {
+		update_option( 'sn_github_local_sha', substr( $body['sha'], 0, 7 ) );
+		set_transient( 'sn_github_branch_' . sanitize_key( $branch ), $body, 5 * MINUTE_IN_SECONDS );
 	}
 }, 10, 2 );
 
@@ -252,6 +284,11 @@ add_action( 'load-update-core.php', function() {
 	if ( defined( 'SN_GITHUB_BRANCH' ) && SN_GITHUB_BRANCH ) {
 		delete_transient( 'sn_github_branch_' . sanitize_key( SN_GITHUB_BRANCH ) );
 	}
+	// Clear WP's own theme-update site transient too — without this, WP keeps
+	// serving frozen update info from a previous filter run and never re-runs
+	// our pre_set_site_transient_update_themes filter, so the displayed SHA
+	// stays stale even after our custom transients are cleared.
+	delete_site_transient( 'update_themes' );
 } );
 
 /**

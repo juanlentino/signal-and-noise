@@ -2,6 +2,24 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [6.5.3] — 2026-05-05
+
+First release shipped via the dev-mode workflow proven by the v6.5.2 sanity check. Two iteration commits (`2718eb4` nav-underline tweak + `7f1ac3e` two updater fixes) were squashed into this single ship commit. The dev branch is deleted as part of this release; the auto-detect logic falls back to release-tag mode for the next user poll.
+
+### Fixed
+- **Updater `upgrader_process_complete` hook now handles auto-detect mode** in addition to the explicit `SN_GITHUB_BRANCH` constant case. Previously the hook early-returned if the constant wasn't defined, meaning in auto-detect mode the local branch SHA was never stored after install — every subsequent poll re-offered the same commit as a "new update", an infinite loop. The hook in [inc/updater.php](inc/updater.php) now resolves the active branch from constant OR auto-detect transient, fetches the branch HEAD live (instead of trusting a possibly-stale 5-min cache), and stores the SHA in `sn_github_local_sha` after a successful theme upgrade. Also accepts both `themes` (bulk) and `theme` (single) hook payload shapes for robustness.
+- **`load-update-core.php` cache-bust hook now also flushes WP's own `update_themes` site transient.** Without this, WP serves frozen update info from its standard cache and never re-runs `pre_set_site_transient_update_themes`, so the displayed dev branch SHA stays stale even after the theme's custom transients are cleared. Adding `delete_site_transient( 'update_themes' )` forces a fresh poll on every Updates page load. (This is what was producing the "f5a884b" stale-SHA display during the sanity check despite my custom transients being cleared correctly.)
+
+### Changed
+- **Nav hover-underline thickness `1px` → `2px` in [assets/css/critical.css](assets/css/critical.css).** Aligns with [assets/css/layout.css](assets/css/layout.css), which was already at 2px. Eliminates a brief first-paint flash where the nav hover indicator was 1px before the deferred layout.css loaded and overrode it. At the v6.5.1 nav font size of 1.125rem, 2px reads better as an interactive affordance than the hairline 1px.
+
+### Notes
+- **Dev branch deleted at ship time.** The branch's existence on the remote is the auto-detect's signal; deleting it triggers fallback to release-tag mode. Next session, I'll create dev again from main and the cycle repeats — no `wp-config.php` edits, no admin UI clicks.
+- **The sanity check served its purpose.** Two real bugs in v6.5.2's dev-mode plumbing surfaced only when actually exercised end-to-end. Both fixes ship in this release. Future iteration cycles won't loop or display stale SHAs.
+
+### Deploy
+After Update in WP admin (6.5.2 → 6.5.3), purge Breeze + Cloudflare, hard-refresh. The dev-mode banner on the Dashboard / Updates / Themes screens disappears once the dev branch is deleted (it's already gone as of this release) — that's the visual confirmation you've fallen back to release-tag mode.
+
 ## [6.5.2] — 2026-05-05
 
 Make dev mode fully automatic — no `wp-config.php` constant needed.
