@@ -2,6 +2,23 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [6.4.6] — 2026-05-05
+
+Follow-up to v6.4.5. The wrapper-based centring landed structurally — verified via curl that the hero column was mathematically centred at 1100px wide with auto margins — but the user's screenshot still read as "not centred" because the H1's natural text width (~575px at desktop fonts) is smaller than the 1100px column it lives in. With `text-align: left` on the H1, that 575px of text sits at the column's left edge, leaving ~525px of empty space on the column's right. Across the viewport, the visible content reads as "left half full, right half empty" — uncentred to the eye, even though the column is mathematically centred.
+
+This is the standard editorial pattern (Apple, Stripe, etc), but it doesn't match the user's spec, which was "centred" in the visual sense. Fixing by centring the text within the column.
+
+### Changed
+- **Home hero — text-align: center on the inner wrapper.** [assets/css/critical.css](assets/css/critical.css) and [assets/css/layout.css](assets/css/layout.css) add `text-align: center` to `.sn-hero-inner`. H1 lines, subtitle text, and the accent (which centres via `margin: 0 auto`) all now visibly centre within the 1100px column. Buttons row gets `justify-content: center !important` to override its block-markup `justifyContent: "left"` setting (the markup attribute can't be removed without a template edit, and `!important` cleanly overrides at runtime).
+- **Accent bar — explicit `margin: 0 auto` to centre under the centred text.** With `text-align: center` on the wrapper, inline-block content centres, but the accent is a `<div style="width: 120px">` block element — `text-align` doesn't centre block children. Adding `margin-left: auto; margin-right: auto` to `.sn-hero-inner .sn-hero-accent` does.
+
+### Notes
+- **Same column width (1100px), same wrapper, no markup change from v6.4.5.** Just the text-alignment within the wrapper changes. If you decide later you want left-aligned editorial-style text inside a centred column instead, removing the `text-align: center` and `justify-content: center` rules on `.sn-hero-inner` reverts to that mode without touching markup.
+- **Mobile/tablet inherit** the centring — `text-align: center` on `.sn-hero-inner` applies at every viewport since it's not inside a media query. Responsive.css owns the hero's outer paddings and animation timings at narrow widths but doesn't touch text-alignment, so mobile gets centred text too. (If that's wrong for mobile, easy to add a `@media (max-width: 781px) { .sn-hero-inner { text-align: left } }` override in a follow-up.)
+
+### Deploy
+Update via WP admin → **Dashboard → Updates** (6.4.5 → 6.4.6), then **Breeze → Purge All Cache**, then **Cloudflare → Caching → Purge Everything**, then hard-refresh (Cmd+Shift+R) on the home page.
+
 ## [6.4.5] — 2026-05-05
 
 Third (and last) follow-up to v6.4.1 hero centring. The CSS-only path through v6.4.1 → v6.4.4 successively tried `width: 100%` + `margin: auto` on `.sn-hero-cta`, calc-based `margin-left` on `.sn-hero-accent`, and column-padding via `padding-left: max(40px, calc((100% - 1100px) / 2))`. Each variant was inlined into `<style id="sn-critical-inline">` correctly (verified via Python on the live HTML), and yet the rendered output kept showing the hero column drifted into the viewport's left half, with significantly more empty space on the right than the left. Three independent CSS attempts not landing the visible result is the signal: switch from CSS-only to a markup wrapper.

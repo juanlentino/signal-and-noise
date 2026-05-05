@@ -257,16 +257,29 @@ body {
 	animation: fadeInUp 1s ease-out 0.8s both;
 }
 
-/* Hero centring is handled by an inner markup wrapper (.sn-hero-inner) added
-   in front-page.html. The wrapper is capped at 1100px and centred via auto
-   margins; children inside flow with default block layout (margin-left: 0),
-   so H1, subtitle, accent bar, and buttons row all share the same column-
-   left x-coordinate without fighting WP's per-block auto-margin rules. */
+/* Hero centring: the inner markup wrapper (.sn-hero-inner) caps the column at
+   1100px and centres it via auto margins. text-align: center then centres the
+   visible text within the column — without this, the H1's natural text width
+   (~575px at desktop fonts) would sit at the column-left of a 1100px block
+   and read as left-pinned despite the column being mathematically centred.
+   The 120px accent bar uses margin: 0 auto so it also centres. The buttons
+   row gets justify-content: center to override its block markup
+   `justifyContent: "left"` setting at desktop. */
 .sn-hero-inner {
 	width: 100%;
 	max-width: 1100px;
 	margin-left: auto;
 	margin-right: auto;
+	text-align: center;
+}
+
+.sn-hero-inner .sn-hero-accent {
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.sn-hero-inner .sn-hero-cta {
+	justify-content: center !important;
 }
 
 /* ============================================
