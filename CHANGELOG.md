@@ -2,6 +2,32 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [6.5.1] — 2026-05-05
+
+Two changes bundled to demonstrate the discipline introduced by the second one — bump the nav size, AND add a dev-mode updater that lets future iteration sessions skip version bumps entirely.
+
+### Added
+- **Dev mode for the GitHub self-updater.** [inc/updater.php](inc/updater.php) now supports a new `SN_GITHUB_BRANCH` constant. When set in `wp-config.php` (e.g., `define( 'SN_GITHUB_BRANCH', 'dev' );`), the updater stops polling `/releases/latest` and instead polls `/commits/{branch}` every 5 minutes, comparing the branch's HEAD commit SHA against the SHA stored in the `sn_github_local_sha` WP option. When SHAs differ, WP shows "Update available" with a synthetic version label like `6.5.1+dev.a1b2c3d` (the SHA-vs-stored check is the real gate; the synthetic version is just for the admin UI). On successful upgrade, the new SHA is stored via `upgrader_process_complete`, so the next poll skips the same commit. Net effect: push commits to the `dev` branch freely, click Update in WP admin, no version bump, no GitHub release. Remove the constant when work is final and resume normal release-tracking.
+  - Admin notice on Dashboard / Updates / Themes screens names the branch and current SHA so it's obvious when dev mode is on.
+  - The `load-update-core.php` cache-bust hook clears the branch transient too, matching existing behaviour for the release transient.
+  - Branch zipballs go through the same `upgrader_source_selection` folder-rename hook as release zipballs, so the extracted directory ends up at `signal-and-noise/` correctly.
+  - Why this exists: the v6.4.0 → v6.5.0 hero-centring debug session burned 8 versions on a single feature, because every iteration needed a tag for WP to pick up the change. With dev mode, that same session would have shipped exactly one release at the end.
+
+### Changed
+- **Nav font-size 1rem → 1.125rem.** [parts/header.html](parts/header.html) bumps the nav typography fontSize attribute to compensate for Bebas Neue's condensed weight. At the previous 1rem, the nav read visually smaller than other 1rem-equivalent elements (buttons, body) because Bebas Neue's narrower letterforms reduce optical mass at the same nominal pixel size. 1.125rem (18px) restores parity without pushing the 8-item nav into wrap territory at 1200px+ viewports.
+
+### Notes
+- **Dev-mode workflow.**
+  1. In `wp-config.php`: `define( 'SN_GITHUB_BRANCH', 'dev' );`
+  2. Push commits to `dev` branch as work progresses. No version bump, no tag, no release.
+  3. WP admin shows "Update available" within 5 minutes (or immediately if you visit Dashboard → Updates, which clears the cache).
+  4. Click Update; the branch zipball replaces theme files; the SHA is stored.
+  5. When work is final: merge `dev` → `main`, bump version once, tag, create one GitHub release. Remove the `SN_GITHUB_BRANCH` constant from `wp-config.php`.
+- **Patch bump because both changes are additive and non-breaking.** Dev mode is opt-in (gated on the constant); without the constant, the updater behaves identically to v6.5.0. Nav size goes up by ~2px which is a visual refinement, not a behavioural change.
+
+### Deploy
+Update via WP admin → **Dashboard → Updates** (6.5.0 → 6.5.1), then **Breeze → Purge All Cache**, then **Cloudflare → Caching → Purge Everything**, then hard-refresh.
+
 ## [6.5.0] — 2026-05-05
 
 Patch cap reached on 6.4 — minor bump. The work is small (one CSS rule) but the 6.4 lane is full at 6.4.7.
