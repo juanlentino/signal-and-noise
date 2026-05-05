@@ -250,6 +250,7 @@ body {
    the inner-left edge of that column. See critical.css for the rationale. */
 .sn-hero {
 	padding-left: max(var(--wp--preset--spacing--40), calc((100% - 1100px) / 2)) !important;
+	padding-right: max(var(--wp--preset--spacing--40), calc((100% - 1100px) / 2)) !important;
 }
 
 .sn-hero.is-layout-constrained > * {

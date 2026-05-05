@@ -2,6 +2,27 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [6.4.4] — 2026-05-05
+
+### Removed
+- **All biblical / Scripture content stripped from theme files.** Five references gone:
+  - [templates/front-page.html](templates/front-page.html) — `<!-- "Work willingly at whatever you do, as though you were working for the Lord rather than for people." -->` (Colossians 3:23, hidden HTML comment in the hero section).
+  - [templates/page-services.html](templates/page-services.html) — `<!-- "Do you see any truly competent workers? They will serve kings rather than working for ordinary people." -->` (Proverbs 22:29, hidden comment above the page-title group).
+  - [templates/page-music.html](templates/page-music.html) — `<!-- "Sing a new song of praise to him; play skillfully on the harp, and sing with joy." -->` (Psalm 33:3, hidden comment between the page-title group and the Spotify-embed group).
+  - [templates/page-about.html](templates/page-about.html) — visible italic right-aligned quote `"As iron sharpens iron, so a friend sharpens a friend."` (Proverbs 27:17) plus its preceding `<wp:spacer>` block, removed from the Education & Mentorship group.
+  - [parts/footer.html](parts/footer.html) — visible footer line `Soli Deo Gloria` (concrete-grey 0.6rem italic paragraph). The right-side group wrapper that contained it is also gone, since with only the copyright line left there's no need for the inner two-paragraph flex group; the copyright `<wp:paragraph>` is now a direct child of the footer's flex container, which lets the existing `space-between` justification continue placing copyright at the right edge alongside the social icons on the left.
+- The Aug-2025 v3.5.1 patch (`Removed book/chapter/verse references from all Scripture quotes across six templates`) explicitly kept the verses themselves; this release removes them entirely.
+
+### Changed
+- **Home hero — also force `padding-right` to the centring calc.** Belt-and-suspenders: v6.4.3 set `.sn-hero { padding-left: max(40px, (100% - 1100px) / 2) !important }` but left `padding-right` inheriting from the inline `style="padding-right: var(--wp--preset--spacing--40)"` on the `<wp:group>` markup (40px). With children at `margin-left: 0; margin-right: auto`, the auto right-margin already absorbs the asymmetric inner-content space, so output IS centred — but if cache or minification ever truncates the auto-margin override, the fallback would silently land non-centred. Setting both paddings to the same calc means the hero's content area is symmetric independent of the child margin override.
+
+### Notes
+- **About page Education & Mentorship section now ends on the two-column paragraph block** (mentor-bridge-the-gap text on left, mix-critiques-with-context text on right). Previous trailing italic Scripture quote and its spacer are gone, so the section closes cleanly with the columns.
+- **Footer markup simplified.** Right-side wrapper `<wp:group>` removed since it only had to host two `<wp:paragraph>` siblings (Scripture line + copyright). Copyright paragraph now sits directly inside the footer's flex layout container.
+
+### Deploy
+After Update in WP, **purge Breeze + Cloudflare** caches one more time. The previous v6.4.3 fix landed CSS-side — verified the deployed `critical.css` file content matches the spec — but the page-output cache that ships the inlined critical CSS in `<head>` had not regenerated yet at the time of the post-deploy screenshot. v6.4.4's templates-and-CSS combo should produce a clean centred hero plus the biblical removals after one cache purge cycle.
+
 ## [6.4.3] — 2026-05-05
 
 Second follow-up to the v6.4.1 layout fix. The accent bar and buttons row on the home hero were still rendering at the section's left edge after v6.4.2 even though the inline critical CSS contained the desktop-only `@media (min-width: 782px)` rules — verified via Python on the live HTML, the rules were present in the rendered `<style id="sn-critical-inline">` block, but the visible result didn't match. Switching CSS strategy.
