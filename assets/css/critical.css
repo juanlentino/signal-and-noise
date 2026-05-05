@@ -257,18 +257,25 @@ body {
 	animation: fadeInUp 1s ease-out 0.8s both;
 }
 
-/* Desktop only — keep the 120px accent bar and the buttons row aligned with
-   the H1 text's column-left edge instead of auto-centering inside the 1100px
-   constrained column. Inlined here (not just in layout.css) so the rules
-   survive a stale CDN copy of layout.css. */
-@media (min-width: 782px) {
-	.sn-hero .sn-hero-cta {
-		width: 100%;
-	}
-	.sn-hero .sn-hero-accent {
-		margin-left: max(0px, calc(50% - 550px)) !important;
-		margin-right: auto !important;
-	}
+/* Centre the hero's content column at desktop, with all children pinned to
+   the inner-left edge of that column.
+
+   The hero's padding-left expands on wide viewports so the inner content area
+   starts at exactly the centred column's left edge — i.e., (viewport - 1100) / 2
+   from the viewport's left. Children then override WP's constrained-layout
+   auto-margins to stay flush-left within that inner content area, instead of
+   each becoming its own separately-centred 1100px block.
+
+   Net effect: H1 text, subtitle, accent bar, and buttons row all share the
+   same column-left x-coordinate. Tablet/mobile (<782px) fall through to
+   responsive.css overrides which set fixed symmetric paddings. */
+.sn-hero {
+	padding-left: max(var(--wp--preset--spacing--40), calc((100% - 1100px) / 2)) !important;
+}
+
+.sn-hero.is-layout-constrained > * {
+	margin-left: 0 !important;
+	margin-right: auto !important;
 }
 
 /* ============================================

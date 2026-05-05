@@ -246,18 +246,15 @@ body {
 	animation: fadeInUp 1s ease-out 0.65s both;
 }
 
-/* Desktop only — keep the 120px accent bar and the buttons row aligned with
-   the H1 text's column-left edge instead of auto-centering inside the 1100px
-   constrained column. Tablet/mobile preserve their existing responsive.css
-   sizing (width: auto / 100% with stack direction). */
-@media (min-width: 782px) {
-	.sn-hero .sn-hero-cta {
-		width: 100%;
-	}
-	.sn-hero .sn-hero-accent {
-		margin-left: max(0px, calc(50% - 550px)) !important;
-		margin-right: auto !important;
-	}
+/* Centre the hero's content column at desktop, with all children pinned to
+   the inner-left edge of that column. See critical.css for the rationale. */
+.sn-hero {
+	padding-left: max(var(--wp--preset--spacing--40), calc((100% - 1100px) / 2)) !important;
+}
+
+.sn-hero.is-layout-constrained > * {
+	margin-left: 0 !important;
+	margin-right: auto !important;
 }
 
 /* ============================================

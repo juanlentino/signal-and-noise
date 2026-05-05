@@ -2,6 +2,20 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [6.4.3] — 2026-05-05
+
+Second follow-up to the v6.4.1 layout fix. The accent bar and buttons row on the home hero were still rendering at the section's left edge after v6.4.2 even though the inline critical CSS contained the desktop-only `@media (min-width: 782px)` rules — verified via Python on the live HTML, the rules were present in the rendered `<style id="sn-critical-inline">` block, but the visible result didn't match. Switching CSS strategy.
+
+### Changed
+- **Home hero — replace the per-element `@media` overrides with a column-padding approach.** Both [assets/css/critical.css](assets/css/critical.css) and [assets/css/layout.css](assets/css/layout.css) now centre the hero column by setting the `.sn-hero` container's `padding-left` to `max(var(--wp--preset--spacing--40), calc((100% - 1100px) / 2))` and forcing all `.sn-hero.is-layout-constrained > *` children to `margin-left: 0 !important; margin-right: auto !important`. This is the same shape as the original v6.4.0 hero (children flush-left within an offset inner-content area), with the offset switched from the over-aggressive `15vw` to a calc that *exactly* centres a 1100px column. By construction every child — H1, subtitle, accent bar, buttons row — shares the same column-left x-coordinate, so the accent and buttons can no longer drift relative to the H1. Removed the `width: 100% / margin: max(...) / margin-right: auto` overrides on `.sn-hero-cta` and `.sn-hero-accent` from v6.4.1/v6.4.2 — they were the speculative mechanism that didn't actually take effect in production.
+- **Tablet/mobile preserved exactly.** [assets/css/responsive.css](assets/css/responsive.css) keeps owning `padding-left: 1.5rem` (≤781px) and `padding-left: 1.25rem` (≤480px) with `!important` and a later cascade position, so under-782px viewports drop straight to the symmetric mobile padding regardless of what the desktop calc evaluates to.
+
+### Fixed
+- **`readme.txt` — bumped `Stable tag` from `4.2.3` to `6.4.3`.** Out-of-date by ~2 major versions; the WordPress.org plugin/theme directory uses this header to identify the current stable release. Caught while editing `readme.txt` for v6.4.3.
+
+### Deploy
+After clicking Update in WP, **purge Breeze + Cloudflare** caches again (same instructions as v6.4.2). Hard-refresh with Cmd+Shift+R on the home page to drop browser-side cache too.
+
 ## [6.4.2] — 2026-05-05
 
 Follow-up to v6.4.1 to address two issues raised after deploy.
