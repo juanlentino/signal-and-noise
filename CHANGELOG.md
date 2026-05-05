@@ -2,6 +2,19 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [6.4.2] — 2026-05-05
+
+Follow-up to v6.4.1 to address two issues raised after deploy.
+
+### Changed
+- **Services — Business & Strategy section now matches Music & Production width.** Bumped `contentSize` on the Business & Strategy `<wp:group>` in [templates/page-services.html](templates/page-services.html) from `1000px` → `1400px`. v6.4.1 widened only the Music & Production grid; this leaves both image-card grids on the page at the same width, which is the correct read since they're the same content type. Page header and the LET'S TALK closing CTA stay at their existing narrower widths (1000px and 680px respectively) — those are prose, not media grids.
+
+### Fixed
+- **Home hero — duplicate the desktop accent/buttons rules into critical.css.** v6.4.1 placed the `@media (min-width: 782px)` block (which keeps the 120px accent bar and the buttons row aligned with the H1's column-left edge) only in `assets/css/layout.css`. Because [inc/assets-frontend.php](inc/assets-frontend.php) loads `layout.css` as an external `<link rel="stylesheet">` with a `?ver=` query string, a stale Cloudflare CDN copy under the previous `?ver=6.4.0` URL kept serving the pre-v6.4.1 file (verified live: `cf-cache-status: HIT, age: 133145`, ~1.5 days old). The rules never reached the browser. Now duplicated into [assets/css/critical.css](assets/css/critical.css), which is **inlined** in `<head>` on every render via `wp_head` priority 50 — no CDN cache, no `?ver=` URL, can't go stale relative to the surrounding HTML. Both copies are kept (critical.css for cache-resilience, layout.css for editor parity); they're identical.
+
+### Deploy notes
+- **After clicking Update in WP admin, purge the page cache.** Breeze (WP page cache) and Cloudflare (HTML edge cache) both need a flush to actually emit the new template `contentSize` values and the new critical CSS. Without a flush, page output stays cached as v6.4.0/v6.4.1 HTML even after the theme files swap. Quickest path: **Breeze → Settings → Purge All Cache**, then **Cloudflare → Caching → Purge Everything** (or purge by URL: `https://juanlentino.com/`, `/services/`, `/music/`, `/resume/`, `/work-with-me/`).
+
 ## [6.4.1] — 2026-05-05
 
 ### Fixed

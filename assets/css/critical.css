@@ -257,6 +257,20 @@ body {
 	animation: fadeInUp 1s ease-out 0.8s both;
 }
 
+/* Desktop only — keep the 120px accent bar and the buttons row aligned with
+   the H1 text's column-left edge instead of auto-centering inside the 1100px
+   constrained column. Inlined here (not just in layout.css) so the rules
+   survive a stale CDN copy of layout.css. */
+@media (min-width: 782px) {
+	.sn-hero .sn-hero-cta {
+		width: 100%;
+	}
+	.sn-hero .sn-hero-accent {
+		margin-left: max(0px, calc(50% - 550px)) !important;
+		margin-right: auto !important;
+	}
+}
+
 /* ============================================
    BUTTONS
    ============================================ */
