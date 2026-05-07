@@ -15,6 +15,7 @@
  *   inc/og-image.php             — Per-post OG/Twitter card generator (GD, Bebas + DM Mono)
  *   inc/cloudflare-purge.php     — Auto-purge CF edge cache on post save / theme update
  *   inc/template-maintenance.php — FSE template-override purge + version sync
+ *   inc/template-self-heal.php   — Detect file-on-disk drift vs GitHub main + auto-fix
  *   inc/admin-page.php           — Appearance → Signal & Noise options page
  *   inc/admin-bar.php            — Top-bar quick-action dropdown (purge, etc.)
  *   inc/updater.php              — GitHub self-updater + admin notice
@@ -38,6 +39,7 @@ require_once __DIR__ . '/inc/og-image.php';
 require_once __DIR__ . '/inc/cloudflare-purge.php';
 
 require_once __DIR__ . '/inc/template-maintenance.php';
+require_once __DIR__ . '/inc/template-self-heal.php';
 require_once __DIR__ . '/inc/admin-page.php';
 require_once __DIR__ . '/inc/admin-bar.php';
 require_once __DIR__ . '/inc/updater.php';
