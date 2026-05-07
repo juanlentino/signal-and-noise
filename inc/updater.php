@@ -288,14 +288,16 @@ add_action( 'load-update-core.php', function() {
 /**
  * Surface GitHub auto-updater state in the admin UI.
  *
- * Shown only to users who can update themes, only on Dashboard / Updates
- * / Themes screens so it lands where someone would look for an update.
+ * Two notice classes with different visibility rules:
  *
- * Three states:
- *   - Missing token: warning notice telling you to add SN_GITHUB_TOKEN.
- *   - Active: info notice naming the branch + SHA being tracked.
- *   - Last API call failed: error notice with the HTTP/WP_Error message
- *     (captured in the updater transient hook above).
+ *   1. Actionable problems (missing token, last API error) — shown on
+ *      Dashboard / Updates / Themes screens, anywhere the maintainer
+ *      might land while looking for what's wrong.
+ *
+ *   2. Persistent tracking-state info (branch, SHA, rev count) —
+ *      shown only on the Updates screen. Dashboard and Themes don't
+ *      need this on every page load; you go to Updates when you want
+ *      to know what's pending.
  */
 add_action( 'admin_notices', function() {
 	if ( ! current_user_can( 'update_themes' ) ) {
@@ -314,6 +316,17 @@ add_action( 'admin_notices', function() {
 		return;
 	}
 
+	// Last error is actionable — surface it on every screen we run on.
+	$last_error = get_transient( 'sn_github_error' );
+	if ( $last_error ) {
+		echo '<div class="notice notice-error"><p><strong>Signal &amp; Noise:</strong> GitHub check failed — ' . esc_html( $last_error ) . '. Token may have expired, lost access to the repo, or GitHub is rate-limiting.</p></div>';
+	}
+
+	// Persistent tracking-state info — only on the Updates screen.
+	if ( 'update-core' !== $screen->id ) {
+		return;
+	}
+
 	$branch    = sn_updater_branch();
 	$local_sha = (string) get_option( 'sn_github_local_sha', '' );
 	$sha_label = $local_sha ? ' at <code>' . esc_html( $local_sha ) . '</code>' : '';
@@ -321,9 +334,4 @@ add_action( 'admin_notices', function() {
 	$rev       = sn_updater_revcount( $branch );
 	$rev_label = $rev > 0 ? ' · <code>r' . (int) $rev . '</code> commits since the last tag' : '';
 	echo '<div class="notice notice-info"><p><strong>Signal &amp; Noise:</strong> Tracking branch <code>' . esc_html( $branch ) . '</code>' . $sha_label . ' (' . $mode . ')' . $rev_label . '. Updates check the branch HEAD every 5 minutes; visit Dashboard → Updates to force a fresh poll.</p></div>';
-
-	$last_error = get_transient( 'sn_github_error' );
-	if ( $last_error ) {
-		echo '<div class="notice notice-error"><p><strong>Signal &amp; Noise:</strong> GitHub check failed — ' . esc_html( $last_error ) . '. Token may have expired, lost access to the repo, or GitHub is rate-limiting.</p></div>';
-	}
 } );
