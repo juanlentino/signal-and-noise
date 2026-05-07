@@ -68,6 +68,35 @@ function sn_og_upload_dir() {
  * generated card; null if neither is available so callers can fall
  * back to their default.
  *
+ * NON-BLOCKING CONTRACT (architectural, post-incident):
+ *
+ * This function is called inside `wp_head` for every singular page
+ * render. It MUST NOT do any unbounded synchronous work — no GD
+ * rendering, no network calls, no large file I/O. On cache miss it
+ * returns `null` and lets the caller fall back to the site default.
+ * That's a fine fallback (the site logo card is perfectly serviceable
+ * for social shares).
+ *
+ * Why: prior versions of this function called `sn_generate_og_card()`
+ * synchronously on cache miss. A latent UTF-8 truncation bug in the
+ * generator caused infinite loops on certain post excerpts, which
+ * blocked the request path, pinned a PHP-FPM worker at 100% CPU, and
+ * cascaded across the worker pool until the entire site was
+ * unresponsive (incident 2026-05-07, see CHANGELOG entry of the same
+ * date). The fix to the truncation bug shipped as `e006841` — but the
+ * deeper lesson was structural: an OG card is decorative, and
+ * decorative work must never block essential work. This function now
+ * encodes that as a contract.
+ *
+ * Cards are generated via two non-blocking paths instead:
+ *   1. `wp_after_insert_post` hook (admin save context, well-bounded)
+ *   2. `sn_migrate_backfill_og_cards()` one-time admin_init migration
+ *      that proactively fills any missing cards
+ *
+ * If something slips past both — a post that pre-dates the og-image
+ * module and hasn't been re-saved since — the page just shows the
+ * site default OG. Acceptable degradation; no hangs possible.
+ *
  * @param int|WP_Post $post
  * @return string|null
  */
@@ -91,9 +120,12 @@ function sn_og_image_url_for_post( $post ) {
 
 	$filename = 'post-' . $post->ID . '.png';
 	$path     = $dir['path'] . '/' . $filename;
-	if ( ! file_exists( $path ) ) {
-		sn_generate_og_card( $post->ID );
-	}
+
+	// NO synchronous generation here — see the function header.
+	// On cache miss we fall through and return null so the caller can
+	// use the default OG image. The backfill migration handles
+	// pre-existing posts; the wp_after_insert_post hook handles new
+	// content; both run outside the request path.
 	if ( ! file_exists( $path ) ) {
 		return null;
 	}
@@ -267,6 +299,69 @@ add_action( 'wp_after_insert_post', function( $post_id, $post, $update, $post_be
 	}
 	sn_generate_og_card( $post_id );
 }, 20, 4 );
+
+/**
+ * Backfill option flag — set to a unix timestamp once the migration
+ * has scanned all published posts/pages and generated any missing
+ * cards. Pre-existing content (posts that pre-date this module, or
+ * posts that have never been re-saved since v6.3.2) gets cards via
+ * this migration so the front-end never has to fall back to the site
+ * default OG image for known content.
+ */
+const SN_OG_BACKFILL_OPT = 'sn_og_backfill_completed_v1';
+
+/**
+ * One-time backfill: scan published posts/pages, generate any missing
+ * OG cards. Replaces the previous lazy-on-request path that used to
+ * sit inside `sn_og_image_url_for_post()` and could block the request
+ * if the generator hit a bug.
+ *
+ * Runs on admin_init at priority 5 (early, before other migrations
+ * that might rely on cards). Idempotent: gated by SN_OG_BACKFILL_OPT,
+ * runs at most once per install. Sets the flag whether or not any
+ * specific generation succeeded — the wp_after_insert_post hook will
+ * retry per-post on next save, and we'd rather not re-scan every
+ * admin pageload forever.
+ *
+ * Robustness: each `sn_generate_og_card()` call is independent; a
+ * failure on one post (returns false) doesn't abort the rest.
+ * `sn_generate_og_card()` itself is best-effort and quiet on failure.
+ */
+add_action( 'admin_init', 'sn_migrate_backfill_og_cards', 5 );
+
+function sn_migrate_backfill_og_cards() {
+	if ( get_option( SN_OG_BACKFILL_OPT ) ) {
+		return;
+	}
+
+	$dir = sn_og_upload_dir();
+	if ( ! $dir ) {
+		// Uploads dir unavailable — mark done so we don't loop forever.
+		// If the dir becomes available later, new content gets cards via
+		// wp_after_insert_post anyway.
+		update_option( SN_OG_BACKFILL_OPT, time(), true );
+		return;
+	}
+
+	$post_ids = get_posts( array(
+		'post_type'      => array( 'post', 'page' ),
+		'post_status'    => 'publish',
+		'posts_per_page' => -1,
+		'fields'         => 'ids',
+		'no_found_rows'  => true, // skip SQL_CALC_FOUND_ROWS for speed
+	) );
+
+	foreach ( $post_ids as $post_id ) {
+		$path = $dir['path'] . '/post-' . (int) $post_id . '.png';
+		if ( file_exists( $path ) ) {
+			continue;
+		}
+		// Best-effort. Failures are silent and naturally retry on save.
+		sn_generate_og_card( $post_id );
+	}
+
+	update_option( SN_OG_BACKFILL_OPT, time(), true );
+}
 
 /**
  * Theme's own OG emitter (inc/seo.php) reads through this filter.
