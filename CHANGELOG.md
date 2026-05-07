@@ -35,14 +35,27 @@ After the `/notes` hang incident, the actual fix to the truncation bug is necess
 - **`sn_migrate_backfill_og_cards()`** + `SN_OG_BACKFILL_OPT` flag. One-time `admin_init` (priority 5) migration that scans every published post and page and generates any missing OG cards. Replaces the lazy-on-request path with a proactive backfill that runs in the admin context (where slowness is acceptable). After this runs, the wp_after_insert_post hook handles cards for new content, and the request path never has a reason to attempt generation. Each generation is independent and best-effort — a failure on one post doesn't abort the rest.
 - **Net effect on the architecture.** Three independent paths now create OG cards, none of them on the request path: (1) `wp_after_insert_post` for new content (admin save context), (2) `sn_migrate_backfill_og_cards` for pre-existing content (one-time admin migration), (3) explicit re-saves for content edits. The front-end render path only *reads* cached cards. Even if the generator hits a future bug, no front-end request can hang on it. If a card is missing for any reason, the page falls back to the site default OG image — a graceful degradation, not a hang.
 
-### Operational — followups not in this commit
+### Operational — Tier 2 hardening (shipped)
 
-The following are flagged for future iterations but not shipped here:
+After confirming the architectural fix held, layered the rest of the
+post-incident defenses so the next regression has multiple chances
+to be caught before it reaches a user-visible failure.
 
-- **Smoke tests on push.** A GitHub Action that hits `/`, `/notes/`, `/provenance/`, `/provenance/over-detection/`, `/provenance/as-substrate/`, and the most-recent two notes after every push to main, failing the workflow if any returns 5xx or >5s. Would have caught the `/notes` hang within minutes of the deploy that introduced it (or the latent v6.3.2 bug, when content first triggered it) instead of waiting for the user to notice.
-- **Uptime Kuma probes** on the same six routes (Uptime Kuma is already running on Railway).
-- **Local PHP runtime** (or `wp-env`) so changes to PHP files can be exercised before pushing. The fact that a UTF-8 byte-vs-char bug shipped without a runtime check is a structural gap.
-- **Production error log access** — Cloudways → Loggly forward, or just SSH to read the WP debug.log. Would have shown the truncation loop firing repeatedly before user noticed performance impact.
+- **GitHub Actions smoke test workflow** at [.github/workflows/smoke-test.yml](.github/workflows/smoke-test.yml). Two jobs: (1) `lint` runs `php -l` on every `.php` file in the repo on every push — catches parse errors before they can deploy. (2) `smoke` runs against the live site, hitting six key routes (`/`, `/notes/`, `/provenance/`, `/provenance/over-detection/`, `/provenance/as-substrate/`, `/notes/feed/`) and asserting per-route HTTP 200, response time under 5 s, body over 1 KB, and the presence of an expected content marker (e.g., `On Provenance` for the pillar). Marker checks defeat false-positive 200s from cached error pages or empty shells. Triggers on `push: main`, `schedule: */15 * * * *`, and `workflow_dispatch`. The 15-minute schedule bounds detection latency for issues that emerge between pushes — content edits, plugin/WP updates, server-side drift. Failure surfaces as a red ❌ on the commit, an email to the committer, and annotated `::error::` lines in the Actions UI.
+
+- **Workflow security:** the `run:` blocks consume only hardcoded URLs and never interpolate `github.event.*` fields (commit messages, PR titles, branch names) into shell, so there is no command-injection surface. Documented as a top-of-file comment so future edits don't introduce one.
+
+- **Documented monitoring playbook** at [docs/MONITORING.md](docs/MONITORING.md). Covers the four tiers (architectural, smoke tests, Uptime Kuma, future), step-by-step Uptime Kuma monitor setup with copy-pasteable URL/keyword/interval table for the six routes, notification routing recommendations, and an incident response checklist that points back to the `superpowers:systematic-debugging` skill so the next incident gets diagnosed before being patched.
+
+- **Uptime Kuma monitors** are documented in `docs/MONITORING.md` for the user to add via the UK web UI on the existing Railway instance. UK doesn't have a public API for programmatic monitor creation, so this step requires manual UI entry — but the guide has the table ready to paste.
+
+### Operational — Tier 3 (still not in this commit)
+
+Flagged for future iterations:
+
+- **Local PHP runtime** (or `wp-env`) so PHP changes can be exercised end-to-end before pushing. The structural gap that allowed the byte-vs-char UTF-8 bug to ship.
+- **Production error log access** — Cloudways → Loggly/BetterStack forward, or just SSH access to the WP debug.log. Would have shown the truncation loop firing repeatedly before user-visible impact.
+- **Local pre-commit hook** running `php -l` on staged files. Belt-and-suspenders alongside the CI lint, but only useful once local PHP is set up.
 
 ### Notes
 - **No theme version bump.** Per maintainer directive and the project's "Only bump version for code/functional changes. Never for content-only template edits" rule. The PHP scaffolding here is wiring for a content asset — the substantive change is the new prose. Cache-busting still works (mtime-driven, v6.5.4).

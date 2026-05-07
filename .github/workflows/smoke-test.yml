@@ -1,0 +1,146 @@
+name: Smoke Test
+
+# Triggers (defense in depth):
+#   - push to main: sanity-check the live site at the moment we ship.
+#     Deploys are manual via the WP self-updater so this verifies the
+#     CURRENTLY-LIVE state isn't broken; it doesn't catch regressions
+#     that only manifest after the user clicks Update.
+#   - schedule every 15 min: catches regressions that emerge between
+#     deploys (content edits, plugin/WP updates, server-side drift).
+#     Bounds detection latency for a manual deploy to ~7.5 min after
+#     the user clicks Update.
+#   - workflow_dispatch: ad-hoc trigger from the GitHub UI.
+#
+# Security note: this workflow only consumes hardcoded URLs in
+# `run:` steps. It deliberately does not interpolate any
+# github.event.* fields (commit messages, PR titles, branch names)
+# into shell, so there is no command-injection surface.
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+jobs:
+  lint:
+    name: PHP syntax check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+          tools: none
+
+      - name: Lint all .php files
+        run: |
+          set -e
+          fail=0
+          while IFS= read -r f; do
+            if ! php -l "$f" > /dev/null; then
+              echo "::error file=$f::PHP parse error"
+              fail=1
+            fi
+          done < <(find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*')
+          exit $fail
+
+  smoke:
+    name: Smoke test live site
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Run checks
+        run: |
+          set +e
+          fail=0
+
+          check() {
+            local desc="$1"
+            local url="$2"
+            local marker="$3"
+
+            local body_file
+            body_file=$(mktemp)
+            local result
+            result=$(curl -sL \
+              -H 'User-Agent: SignalNoise-SmokeTest/1.0 (GitHub Actions)' \
+              -H 'Cache-Control: no-cache' \
+              -w 'HTTP=%{http_code} TIME=%{time_total} BYTES=%{size_download}' \
+              -o "$body_file" \
+              --max-time 15 \
+              "$url" 2>&1) || true
+
+            local code time bytes
+            code=$(echo "$result" | grep -oE 'HTTP=[0-9]+' | tail -1 | cut -d= -f2)
+            time=$(echo "$result" | grep -oE 'TIME=[0-9.]+' | tail -1 | cut -d= -f2)
+            bytes=$(echo "$result" | grep -oE 'BYTES=[0-9]+' | tail -1 | cut -d= -f2)
+
+            echo ""
+            echo "=== $desc ==="
+            echo "URL:   $url"
+            echo "HTTP:  ${code:-(none)}"
+            echo "Time:  ${time:-(none)}s"
+            echo "Bytes: ${bytes:-(none)}"
+
+            local route_fail=0
+            if [ "${code:-0}" != "200" ]; then
+              echo "::error::$desc — expected HTTP 200, got ${code:-(no response)}"
+              route_fail=1
+            fi
+            if [ -n "$time" ] && awk "BEGIN { exit !(${time} > 5) }"; then
+              echo "::error::$desc — response took ${time}s (over 5s budget)"
+              route_fail=1
+            fi
+            if [ "${bytes:-0}" -lt 1000 ]; then
+              echo "::error::$desc — response body suspiciously small (${bytes:-0} bytes)"
+              route_fail=1
+            fi
+            if ! grep -q -F "$marker" "$body_file"; then
+              echo "::error::$desc — expected marker '$marker' not found in response body"
+              route_fail=1
+            fi
+
+            rm -f "$body_file"
+            if [ $route_fail -eq 0 ]; then
+              echo "Result: OK"
+            else
+              echo "Result: FAIL"
+              fail=1
+            fi
+          }
+
+          check 'Homepage' \
+            'https://juanlentino.com/' \
+            'Juan Lentino'
+
+          check 'Notes index' \
+            'https://juanlentino.com/notes/' \
+            'Notes'
+
+          check 'Provenance pillar' \
+            'https://juanlentino.com/provenance/' \
+            'On Provenance'
+
+          check 'Provenance / over-detection long-form' \
+            'https://juanlentino.com/provenance/over-detection/' \
+            'verification problem'
+
+          check 'Provenance / as-substrate long-form' \
+            'https://juanlentino.com/provenance/as-substrate/' \
+            'identification problem'
+
+          check 'Notes RSS feed' \
+            'https://juanlentino.com/notes/feed/' \
+            '<rss'
+
+          echo ""
+          if [ $fail -eq 0 ]; then
+            echo "All routes healthy."
+          else
+            echo "::error::One or more routes failed health check."
+          fi
+          exit $fail
