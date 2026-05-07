@@ -22,6 +22,32 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
+ * Asset cache-busting via file mtime.
+ *
+ * Returns a stable version string for an asset that auto-changes whenever
+ * the file is modified on disk. Used as the `$ver` argument to
+ * wp_enqueue_style / wp_enqueue_script so that browsers, Cloudflare, and
+ * Breeze all see a fresh URL the moment a CSS or JS file changes — no
+ * theme Version: bump required.
+ *
+ * Falls back to the theme Version if the file is missing or filemtime()
+ * fails, so we never emit a versionless URL.
+ *
+ * @param string $relative_path Path relative to theme root, e.g. 'assets/css/components.css'.
+ * @return string Cache-bust token.
+ */
+function sn_asset_ver( $relative_path ) {
+	$file = get_theme_file_path( $relative_path );
+	if ( file_exists( $file ) ) {
+		$mtime = filemtime( $file );
+		if ( $mtime ) {
+			return (string) $mtime;
+		}
+	}
+	return wp_get_theme()->get( 'Version' );
+}
+
+/**
  * Enqueue custom front-end assets.
  *
  * custom.css is inlined (below) to eliminate render-blocking external CSS.
@@ -32,7 +58,7 @@ function signal_noise_enqueue_styles() {
 		'signal-noise-sticky-header',
 		get_theme_file_uri( 'assets/js/sticky-header.js' ),
 		array(),
-		wp_get_theme()->get( 'Version' ),
+		sn_asset_ver( 'assets/js/sticky-header.js' ),
 		true
 	);
 }
@@ -64,12 +90,11 @@ add_action( 'wp_head', function() {
  * they can override the earlier layout/component defaults.
  */
 add_action( 'wp_enqueue_scripts', function() {
-	$ver = wp_get_theme()->get( 'Version' );
-	wp_enqueue_style( 'sn-base',       get_theme_file_uri( 'assets/css/base.css' ),       array(),                  $ver );
-	wp_enqueue_style( 'sn-layout',     get_theme_file_uri( 'assets/css/layout.css' ),     array( 'sn-base' ),       $ver );
-	wp_enqueue_style( 'sn-components', get_theme_file_uri( 'assets/css/components.css' ), array( 'sn-layout' ),     $ver );
-	wp_enqueue_style( 'sn-forms',      get_theme_file_uri( 'assets/css/forms.css' ),      array( 'sn-components' ), $ver );
-	wp_enqueue_style( 'sn-responsive', get_theme_file_uri( 'assets/css/responsive.css' ), array( 'sn-forms' ),      $ver );
+	wp_enqueue_style( 'sn-base',       get_theme_file_uri( 'assets/css/base.css' ),       array(),                  sn_asset_ver( 'assets/css/base.css' ) );
+	wp_enqueue_style( 'sn-layout',     get_theme_file_uri( 'assets/css/layout.css' ),     array( 'sn-base' ),       sn_asset_ver( 'assets/css/layout.css' ) );
+	wp_enqueue_style( 'sn-components', get_theme_file_uri( 'assets/css/components.css' ), array( 'sn-layout' ),     sn_asset_ver( 'assets/css/components.css' ) );
+	wp_enqueue_style( 'sn-forms',      get_theme_file_uri( 'assets/css/forms.css' ),      array( 'sn-components' ), sn_asset_ver( 'assets/css/forms.css' ) );
+	wp_enqueue_style( 'sn-responsive', get_theme_file_uri( 'assets/css/responsive.css' ), array( 'sn-forms' ),      sn_asset_ver( 'assets/css/responsive.css' ) );
 }, 10 );
 
 /**

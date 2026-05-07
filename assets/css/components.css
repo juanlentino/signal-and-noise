@@ -159,6 +159,111 @@
 }
 
 /* ============================================
+   PROVENANCE — PAPER SERIES (typographic list)
+   Two papers presented as equal entries above the long-form essay.
+   Treatment matches the .sn-notes-list pattern: hairline divider
+   between entries, no fill, no border-all-around, no shadow. Each
+   entry is a meta + title + blurb stack — no per-entry CTA, since
+   the title itself links to the paper on SSRN.
+   ============================================ */
+
+.sn-prov-series-heading {
+	letter-spacing: -0.01em;
+}
+
+.sn-prov-papers {
+	display: flex;
+	flex-direction: column;
+}
+
+.sn-prov-paper-card {
+	padding: var(--wp--preset--spacing--40) 0;
+	border-top: 1px solid var(--wp--preset--color--concrete);
+}
+
+.sn-prov-paper-card:last-child {
+	border-bottom: 1px solid var(--wp--preset--color--concrete);
+}
+
+.sn-prov-paper-meta {
+	font-weight: 400;
+}
+
+/* Title color: explicit (not `inherit`) so we win cleanly over theme.json's
+   global link color even on equal-specificity cascade order. WP core's
+   default `overflow-wrap: break-word` on .wp-block-heading was producing
+   mid-word breaks ("DISTRIB / UTION") on long academic titles — disabled
+   here in favour of clean word-boundary wraps. */
+.sn-prov-paper-title,
+.sn-prov-paper-title a {
+	color: var(--wp--preset--color--bone);
+	hyphens: none;
+	word-break: normal;
+	overflow-wrap: normal;
+}
+
+.sn-prov-paper-title a {
+	text-decoration: none;
+	border-bottom: 1px solid transparent;
+	transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.sn-prov-paper-title a:hover {
+	color: var(--wp--preset--color--blood);
+	border-bottom-color: currentColor;
+}
+
+/* Academic full-form subtitle below the short title. DM Mono, sentence
+   case (no text-transform), rust for secondary visual weight. Lets the
+   card's primary title carry the recognisable name; the subtitle gives
+   the formal paper title without shouting. */
+.sn-prov-paper-subtitle {
+	font-family: var(--wp--preset--font-family--body);
+}
+
+.sn-prov-paper-blurb {
+	line-height: var(--wp--custom--line-height--normal, 1.7);
+}
+
+/* Discreet "Read the long-form on this site →" affordance under Card 1's
+   blurb. Italic + rust = secondary action, not a primary CTA. Explicit
+   colour on the anchor (not `inherit`) for the same theme.json-cascade
+   reason as the title above. */
+.sn-prov-paper-longform,
+.sn-prov-paper-longform a {
+	color: var(--wp--preset--color--rust);
+}
+
+.sn-prov-paper-longform a {
+	text-decoration: none;
+	border-bottom: 1px solid transparent;
+	transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.sn-prov-paper-longform a:hover {
+	color: var(--wp--preset--color--blood);
+	border-bottom-color: currentColor;
+}
+
+/* Bottom-of-index "Read more notes →" link. Mirrors the existing
+   .sn-provenance-footer-link / .sn-notes-rss treatment — small, tracked-
+   out uppercase, blood with hover underline. */
+.sn-prov-series-footer {
+	margin-top: var(--wp--preset--spacing--40);
+}
+
+.sn-prov-series-footer a {
+	color: var(--wp--preset--color--blood);
+	text-decoration: none;
+	border-bottom: 1px solid transparent;
+	transition: border-color 0.2s ease;
+}
+
+.sn-prov-series-footer a:hover {
+	border-bottom-color: currentColor;
+}
+
+/* ============================================
    PROVENANCE — inline TOC at top of pillar essay
    Muted italic single-line link strip. Hairline-grey underline that
    strengthens to red on hover so it reads as quiet navigation rather

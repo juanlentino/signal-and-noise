@@ -321,6 +321,25 @@
 }
 
 /* ============================================
+   PROVENANCE PAPER SERIES — STACK BELOW 781px
+   Two-card paper index renders side-by-side on tablet+ and stacks
+   vertically on phones. Breakpoint chosen at the theme's tablet
+   threshold so the cards never compress into an unreadable two-column
+   strip on narrower viewports.
+   ============================================ */
+
+@media (max-width: 781px) {
+	.sn-prov-papers {
+		grid-template-columns: 1fr;
+		gap: var(--wp--preset--spacing--30);
+	}
+
+	.sn-prov-paper-card {
+		padding: var(--wp--preset--spacing--20);
+	}
+}
+
+/* ============================================
    PROVENANCE DIAGRAM — STACK BELOW 640px
    The detection-vs-provenance panels render side-by-side at >640px and
    stack vertically on phones. Viewport breakpoint chosen to match the
