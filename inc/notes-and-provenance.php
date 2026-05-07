@@ -39,6 +39,8 @@ const SN_PROV_SPLIT_MIGR_OPT    = 'sn_provenance_split_migrated_v1';
 const SN_AS_SUBSTRATE_SEED_OPT  = 'sn_provenance_as_substrate_seeded_v1';
 const SN_PROV_CARD2_LF_MIGR_OPT = 'sn_provenance_card2_longform_migrated_v1';
 const SN_PROV_RT_DYNAMIC_OPT    = 'sn_provenance_card_readtimes_dynamic_v1';
+const SN_AS_DATE_DISPLAYTYPE_OPT = 'sn_provenance_as_substrate_date_displaytype_v1';
+const SN_OD_EYEBROW_DYN_OPT     = 'sn_provenance_over_detection_eyebrow_dynamic_v1';
 const SN_NOTES_QUERY_ID         = 42;
 
 /**
@@ -782,6 +784,132 @@ function sn_migrate_provenance_card_readtimes_dynamic() {
 	) );
 
 	update_option( SN_PROV_RT_DYNAMIC_OPT, time(), true );
+}
+
+/**
+ * One-time migration that strips `displayType:"modified"` from the
+ * as-substrate page's wp:post-date block, defaulting it to publish-
+ * date display.
+ *
+ * Why: WordPress core's render_block_core_post_date() returns null
+ * when displayType is "modified" AND post_modified equals post_date.
+ * Newly-inserted posts have those equal, so the byline date renders
+ * empty until the first edit. As-substrate is evergreen — by maintainer
+ * convention it never gets edited — so under "modified" it would
+ * permanently show no date. Switching to publish-date display (the
+ * block default) always renders the post_date set at creation.
+ *
+ * Idempotent: bails (and flags) if the body already lacks
+ * `displayType":"modified` — the only marker the migration needs to
+ * detect previous completion. Defensive: if the str_replace finds no
+ * match (e.g., admin edited the post-date block separately), bails
+ * WITHOUT flagging so the migration can complete after recovery.
+ */
+add_action( 'admin_init', 'sn_migrate_as_substrate_post_date_displaytype' );
+
+function sn_migrate_as_substrate_post_date_displaytype() {
+	if ( get_option( SN_AS_DATE_DISPLAYTYPE_OPT ) ) {
+		return;
+	}
+
+	$page = get_page_by_path( SN_PROVENANCE_SLUG . '/' . SN_AS_SUBSTRATE_SLUG );
+	if ( ! $page ) {
+		update_option( SN_AS_DATE_DISPLAYTYPE_OPT, time(), true );
+		return;
+	}
+
+	$body = $page->post_content;
+
+	// Already migrated — no displayType:"modified" left in the body.
+	if ( false === strpos( $body, '"displayType":"modified"' ) ) {
+		update_option( SN_AS_DATE_DISPLAYTYPE_OPT, time(), true );
+		return;
+	}
+
+	// Strip the displayType attribute precisely (it sits between the
+	// `format` attribute and `style`, which is the seeded order).
+	$new = str_replace(
+		'"format":"F j, Y","displayType":"modified",',
+		'"format":"F j, Y",',
+		$body
+	);
+
+	if ( $new === $body ) {
+		// Pattern didn't match — admin has touched the post-date block.
+		// Bail without flagging so a future run can complete after recovery.
+		return;
+	}
+
+	wp_update_post( array(
+		'ID'           => $page->ID,
+		'post_content' => $new,
+	) );
+
+	update_option( SN_AS_DATE_DISPLAYTYPE_OPT, time(), true );
+}
+
+/**
+ * One-time migration that replaces the over-detection page's hardcoded
+ * eyebrow read-time (`A short read · 4 min`) with the dynamic
+ * `[sn_reading_time]` shortcode, eliminating the within-page drift
+ * between the eyebrow and the byline.
+ *
+ * Background: v6.5.3 introduced the eyebrow with a hardcoded "4 min"
+ * estimate. v6.5.4's seed simplified it to "A short read" only — but
+ * the live page wasn't migrated, so production still shows the stale
+ * value. The over-detection page's prose has grown since then; the
+ * byline (dynamic shortcode) reads "5 min read" while the eyebrow
+ * still reads "4 min". This migration syncs the live eyebrow to the
+ * shortcode form (matching the as-substrate seed shape).
+ *
+ * Idempotent: bails (and flags) if the body already contains the
+ * literal `A short read · [sn_reading_time]` token. Defensive: if the
+ * regex finds no `A short read · N min` pattern (admin already
+ * customised the eyebrow), bails WITHOUT flagging.
+ */
+add_action( 'admin_init', 'sn_migrate_over_detection_eyebrow_dynamic' );
+
+function sn_migrate_over_detection_eyebrow_dynamic() {
+	if ( get_option( SN_OD_EYEBROW_DYN_OPT ) ) {
+		return;
+	}
+
+	$page = get_page_by_path( SN_PROVENANCE_SLUG . '/' . SN_OVER_DETECTION_SLUG );
+	if ( ! $page ) {
+		update_option( SN_OD_EYEBROW_DYN_OPT, time(), true );
+		return;
+	}
+
+	$body = $page->post_content;
+
+	// Already migrated — eyebrow uses the shortcode form.
+	if ( false !== strpos( $body, 'A short read · [sn_reading_time]' ) ) {
+		update_option( SN_OD_EYEBROW_DYN_OPT, time(), true );
+		return;
+	}
+
+	// Replace `A short read · N min[ read]` (case-insensitive on min/read,
+	// `/u` for the literal middot). Limit to 1 replacement — the eyebrow
+	// is the only place this pattern appears.
+	$new = preg_replace(
+		'/A short read\s*·\s*\d+\s*min(\s*read)?/u',
+		'A short read · [sn_reading_time]',
+		$body,
+		1
+	);
+
+	if ( $new === $body || null === $new ) {
+		// Pattern didn't match — admin has already changed the eyebrow.
+		// Bail without flagging so a future run can complete after recovery.
+		return;
+	}
+
+	wp_update_post( array(
+		'ID'           => $page->ID,
+		'post_content' => $new,
+	) );
+
+	update_option( SN_OD_EYEBROW_DYN_OPT, time(), true );
 }
 
 /* The [sn_reading_time] shortcode and its render_block bridge moved to
