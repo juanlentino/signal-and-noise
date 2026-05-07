@@ -211,12 +211,33 @@ function sn_og_wrap_lines( $text, $size, $font, $max_width, $max_lines ) {
 			$lines[] = $current;
 			if ( count( $lines ) >= $max_lines - 1 ) {
 				// Last allowed line: pack remaining words and ellipsize.
-				$rest = implode( ' ', array_slice( $words, $i ) );
-				$bbox = imagettfbbox( $size, 0, $font, $rest );
-				while ( ( $bbox[2] - $bbox[0] ) > $max_width && strlen( $rest ) > 1 ) {
-					$rest = rtrim( substr( $rest, 0, -1 ) );
-					$rest = rtrim( $rest, ".,;:!? \t" ) . '…';
+				//
+				// UTF-8 SAFETY: track $core (text without trailing ellipsis)
+				// separately and only construct $rest = $core . '…' for the
+				// width measurement. The previous form did
+				// `substr($rest, 0, -1)` after appending '…', which is
+				// byte-based and stripped only the last byte of the 3-byte
+				// UTF-8 ellipsis (E2 80 A6). Each iteration left dangling
+				// bytes (E2 80) that rtrim couldn't remove, then re-appended
+				// a fresh ellipsis — net effect was the string GREW by 2
+				// bytes per iteration, the loop never terminated, and any
+				// post whose excerpt needed truncation hung the OG card
+				// generator (and therefore the page render) until PHP's
+				// max_execution_time killed the process. Using mb_substr on
+				// $core keeps the operation character-aware, and rebuilding
+				// $rest each iteration prevents any encoding carry-over.
+				$core  = implode( ' ', array_slice( $words, $i ) );
+				$rest  = $core . '…';
+				$bbox  = imagettfbbox( $size, 0, $font, $rest );
+				$guard = 0;
+				while ( ( $bbox[2] - $bbox[0] ) > $max_width
+					&& mb_strlen( $core, 'UTF-8' ) > 1
+					&& $guard < 1000 ) {
+					$core = mb_substr( $core, 0, -1, 'UTF-8' );
+					$core = rtrim( $core, ".,;:!? \t" );
+					$rest = $core . '…';
 					$bbox = imagettfbbox( $size, 0, $font, $rest );
+					$guard++;
 				}
 				$lines[] = $rest;
 				return $lines;
