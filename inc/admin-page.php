@@ -62,22 +62,36 @@ function sn_theme_options_page() {
 			do_action( 'breeze_clear_all_cache' );
 			do_action( 'breeze_clear_varnish' );
 
+			// Repopulate update_themes via our filter so subsequent visits to
+			// Dashboard → Updates render the correct state instead of the empty
+			// "all up to date" message that an unpopulated transient produces.
+			wp_update_themes();
+
 			$notices[] = array( 'success', 'All caches purged.' );
 		}
 
 		if ( 'check_updates' === $action ) {
-			delete_transient( 'sn_github_release' );
 			delete_transient( 'sn_github_error' );
+			$branch = function_exists( 'sn_updater_branch' ) ? sanitize_key( sn_updater_branch() ) : 'main';
+			delete_transient( 'sn_github_branch_' . $branch );
+			delete_transient( 'sn_github_revcount_' . $branch );
 			delete_site_transient( 'update_themes' );
 			wp_clean_themes_cache();
-			$notices[] = array( 'info', 'Update cache cleared. Visit <a href="' . esc_url( admin_url( 'update-core.php' ) ) . '">Dashboard &rarr; Updates</a> to check for new versions.' );
+
+			// Repopulate update_themes immediately. wp_update_themes() will run
+			// our pre_set_site_transient_update_themes filter, which fetches the
+			// fresh main HEAD and sets $transient->response if there's drift.
+			// Without this call, Dashboard → Updates renders an empty transient
+			// and falsely reports "all up to date" until the next cron run.
+			wp_update_themes();
+
+			$notices[] = array( 'info', 'Update check complete. Visit <a href="' . esc_url( admin_url( 'update-core.php' ) ) . '">Dashboard &rarr; Updates</a> to install pending updates.' );
 		}
 
 		if ( 'full_reset' === $action ) {
 			$count = sn_clear_template_overrides();
 			wp_cache_flush();
 			delete_site_transient( 'update_themes' );
-			delete_transient( 'sn_github_release' );
 			delete_transient( 'sn_github_error' );
 			wp_clean_themes_cache();
 
@@ -90,21 +104,32 @@ function sn_theme_options_page() {
 			do_action( 'breeze_clear_all_cache' );
 			do_action( 'breeze_clear_varnish' );
 
+			// Same rationale as purge_caches/check_updates above: repopulate so
+			// the Updates page shows the real state rather than an empty one.
+			wp_update_themes();
+
 			$notices[] = array( 'success', 'Full reset: ' . $count . ' override(s) cleared + all caches purged.' );
 		}
 	}
 
-	// Get GitHub latest release.
-	$github_version = 'Unknown';
-	$github_url     = '#';
-	if ( defined( 'SN_GITHUB_TOKEN' ) ) {
-		$cached = get_transient( 'sn_github_release' );
-		if ( $cached ) {
-			$github_version = ltrim( $cached['tag_name'] ?? 'Unknown', 'v' );
-			$github_url     = $cached['html_url'] ?? '#';
-		} else {
+	// Resolve "what's on GitHub" against the *tracked branch HEAD*, not the
+	// latest release tag. The updater tracks main directly (since v6.5.4),
+	// so the meaningful comparison is local_sha vs main HEAD. The previous
+	// release-tag check produced stale "Up to date" results whenever the
+	// maintainer iterated past a tag without bumping Version: — exactly
+	// the workflow the architecture was redesigned to support.
+	$branch       = function_exists( 'sn_updater_branch' ) ? sn_updater_branch() : 'main';
+	$local_sha    = (string) get_option( 'sn_github_local_sha', '' );
+	$remote_sha   = '';
+	$github_url   = 'https://github.com/' . SN_GITHUB_REPO . '/tree/' . rawurlencode( $branch );
+	$rev          = function_exists( 'sn_updater_revcount' ) ? (int) sn_updater_revcount( $branch ) : 0;
+
+	if ( defined( 'SN_GITHUB_TOKEN' ) && ! empty( SN_GITHUB_TOKEN ) ) {
+		$cache_key = 'sn_github_branch_' . sanitize_key( $branch );
+		$cached    = get_transient( $cache_key );
+		if ( ! $cached ) {
 			$response = wp_remote_get(
-				'https://api.github.com/repos/' . SN_GITHUB_REPO . '/releases/latest',
+				'https://api.github.com/repos/' . SN_GITHUB_REPO . '/commits/' . rawurlencode( $branch ),
 				array(
 					'headers' => array(
 						'Authorization' => 'token ' . SN_GITHUB_TOKEN,
@@ -114,17 +139,21 @@ function sn_theme_options_page() {
 				)
 			);
 			if ( ! is_wp_error( $response ) && 200 === wp_remote_retrieve_response_code( $response ) ) {
-				$data = json_decode( wp_remote_retrieve_body( $response ), true );
-				set_transient( 'sn_github_release', $data, 12 * HOUR_IN_SECONDS );
-				$github_version = ltrim( $data['tag_name'] ?? 'Unknown', 'v' );
-				$github_url     = $data['html_url'] ?? '#';
+				$cached = json_decode( wp_remote_retrieve_body( $response ), true );
+				set_transient( $cache_key, $cached, 5 * MINUTE_IN_SECONDS );
 			}
+		}
+		if ( is_array( $cached ) && ! empty( $cached['sha'] ) ) {
+			$remote_sha = substr( $cached['sha'], 0, 7 );
 		}
 	}
 
-	$overrides     = get_posts( array( 'post_type' => array( 'wp_template', 'wp_template_part', 'wp_navigation' ), 'posts_per_page' => -1, 'post_status' => 'any' ) );
-	$is_up_to_date = version_compare( $local_version, $github_version, '>=' );
-	$base_url      = admin_url( 'themes.php?page=sn-theme-options' );
+	$rev_suffix     = $rev > 0 ? '-r' . $rev : '';
+	$github_version = $local_version . $rev_suffix . ( $remote_sha ? '+' . $branch . '.' . $remote_sha : '' );
+	$is_up_to_date  = ! $remote_sha || ( $local_sha && $local_sha === $remote_sha );
+
+	$overrides = get_posts( array( 'post_type' => array( 'wp_template', 'wp_template_part', 'wp_navigation' ), 'posts_per_page' => -1, 'post_status' => 'any' ) );
+	$base_url  = admin_url( 'themes.php?page=sn-theme-options' );
 
 	// ── PAGE SHELL ──
 	echo '<div class="wrap">';
@@ -150,12 +179,14 @@ function sn_theme_options_page() {
 		// ── STATUS ──
 		echo '<h2 style="font-size:1.1em;margin-bottom:0.8em;">Status</h2>';
 		echo '<table class="form-table" style="max-width:500px;">';
-		echo '<tr><th style="width:180px;padding:8px 10px 8px 0;">Installed version</th><td style="padding:8px 0;"><code>' . esc_html( $local_version ) . '</code></td></tr>';
+		$installed_label = $local_version . ( $local_sha ? ' <span style="color:#666;">at ' . esc_html( $local_sha ) . '</span>' : '' );
+		echo '<tr><th style="width:180px;padding:8px 10px 8px 0;">Installed version</th><td style="padding:8px 0;"><code>' . $installed_label . '</code></td></tr>';
 		echo '<tr><th style="padding:8px 10px 8px 0;">Latest on GitHub</th><td style="padding:8px 0;"><code>' . esc_html( $github_version ) . '</code>';
 		if ( $is_up_to_date ) {
 			echo ' <span style="color:#00a32a;">&#10003; Up to date</span>';
 		} else {
-			echo ' <span style="color:#d63638;">&#9650; Update available</span>';
+			$gap_label = $rev > 0 ? ' (' . (int) $rev . ' commit' . ( $rev === 1 ? '' : 's' ) . ' on main since the last tag)' : '';
+			echo ' <span style="color:#d63638;">&#9650; Update available</span>' . $gap_label;
 		}
 		echo '</td></tr>';
 		echo '<tr><th style="padding:8px 10px 8px 0;">DB overrides</th><td style="padding:8px 0;">' . count( $overrides );
