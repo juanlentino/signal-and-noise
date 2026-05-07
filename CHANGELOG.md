@@ -63,6 +63,21 @@ Flagged for future iterations:
 
 - **`render_block` filter in [inc/reading-time.php](inc/reading-time.php) extended** to handle the slug-attributed shortcode form (`[sn_reading_time slug="..."]`) in addition to the no-args form. Two specific `strpos` checks rather than a prefix-match — catches both forms but doesn't false-positive on lookalikes like `[sn_reading_timex]`. This is the targeted version of what 949007e tried with the loose prefix-match. Why both forms need this hook: post_content shortcodes resolve via WP core's `the_content` filter chain, but template files (page-notes.html) aren't post_content and don't get `the_content`, so any shortcode in template markup needs this render_block bridge. The OG-truncation root-cause investigation (e006841) confirmed this filter was unrelated to the `/notes` hang; the targeted form here is correct by design.
 
+### Fixed — `/notes` was still showing the old single pillar card after deploy
+
+After cbe3ee5 deployed and the user clicked Update in WP admin, `/notes` continued to render the prior single-card layout despite the theme file changing. Diagnosis:
+
+- `git show origin/main:templates/page-notes.html` confirmed the new two-card markup IS in the deployed branch.
+- Cloudflare reported `cf-cache-status: DYNAMIC` and `x-cache: MISS` on `/notes` — origin response, no edge caching.
+- `/provenance/` correctly served the new dynamic content. So PHP execution and the recent template-related changes were working, just not on `/notes`.
+- Asset mtimes (`components.css?ver=…`) were recent, confirming the theme files were physically replaced on the server.
+
+**Root cause:** a `wp_template` database override for the `page-notes` template, scoped to the `signal-and-noise` theme. WordPress 6.x's Site Editor (Appearance → Editor) creates these whenever an admin opens or edits a template; from that point on, WP serves the DB version and ignores the .html file in the theme directory — even across theme updates. This is intentional WP behavior to preserve admin customizations, but it's a silent footgun when a theme author iterates on the file expecting changes to take effect.
+
+**Fix:** new one-time migration `sn_migrate_clear_notes_template_override()` + `SN_NOTES_TPL_OVERRIDE_CLEARED_OPT` flag in [inc/notes-and-provenance.php](inc/notes-and-provenance.php). Runs on `admin_init`, queries for any `wp_template` post with `post_name = 'page-notes'` AND `wp_theme` taxonomy term `signal-and-noise`, and force-deletes them. After deletion, WP falls back to the theme file, which carries the new two-card layout. Defensive: bails (and flags) if `wp_template` post type isn't registered (e.g., some WP setups without block-theme support active at this hook timing). Idempotent: runs at most once per install. Future admin edits via Site Editor would create new DB records, which this migration deliberately won't clear — admin customizations stay opt-in.
+
+**Lesson:** when a theme file change deploys cleanly but the live page still shows old content AND Cloudflare confirms it's not edge-cached, suspect a WP-level template/block override. The signature is per-template asymmetry: some template-backed pages render new code (their templates haven't been overridden in DB) while specific routes don't.
+
 ### Notes
 - **No theme version bump.** Per maintainer directive and the project's "Only bump version for code/functional changes. Never for content-only template edits" rule. The PHP scaffolding here is wiring for a content asset — the substantive change is the new prose. Cache-busting still works (mtime-driven, v6.5.4).
 - **The pillar-page index card for this paper already exists** as Card 2 in `sn_provenance_papers_index_markup()` (shipped in v6.5.4). That card currently has no `Read the long-form on this site →` affordance because the long-form didn't exist yet; updating the pillar to link to this page is a separate task that runs after this page is live (per the original task's scope boundary).
