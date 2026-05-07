@@ -2,7 +2,30 @@
 
 All notable changes to Signal & Noise are documented here.
 
-## [Unreleased] — Content addition (2026-05-07)
+## [7.0.0] — 2026-05-07
+
+**Post-incident hardening + new capabilities.** Marks the architectural shift to *"decorative work never blocks essential rendering"* after a `/notes` outage on 2026-05-07 was traced to a UTF-8 truncation loop in the OG card generator that pinned PHP-FPM workers at 100% CPU. The fix to that specific bug is necessary but not sufficient — the deeper change is structural: lazy-on-request synchronous OG generation is gone, replaced with proactive backfill in admin contexts; CI smoke tests catch regressions before users notice; Cloudflare HTML caching with auto-purge reduces origin load and improves global TTFB; mtime-based template-override clear self-heals on every deploy regardless of `Version:` bump policy.
+
+Plus the second long-form companion essay landed at `/provenance/as-substrate/`, both pillar essays now surface directly on `/notes`, and assorted bug fixes (eyebrow drift, byline date `displayType` bug, pillar Card 2 longform link, render_block filter for slug-attributed shortcode in templates).
+
+**Why a major bump.** Per `CLAUDE.md`: minor cap is `.5` per major; we were at `6.5`. The accumulated user-visible capabilities (Cloudflare admin UI, CI/monitoring infrastructure, smoke test workflow, two pillar essays surfaced on `/notes`) plus the architectural shift in defensive posture make a coherent v7.0.0 milestone. No public API was removed or renamed — this isn't a SemVer-MAJOR-by-breakage; it's the project's own minor-cap rule rolling at the natural milestone.
+
+### Highlights
+
+- **`/notes` hang root-caused, fixed, and architecturally hardened.** UTF-8 byte-vs-character bug in `sn_og_wrap_lines()` truncation loop fixed with `mb_substr` + `$guard` ceiling. OG card generation is now non-blocking on the request path; cards generate proactively via `wp_after_insert_post` and one-time backfill, never lazily on cache-miss. (`e006841`, `3645cc3`)
+- **CI smoke test workflow** at [.github/workflows/smoke-test.yml](.github/workflows/smoke-test.yml). PHP lint + 6-route live check on every push and 15-min schedule. Catches regressions within 15 seconds. (`38cc5b0`)
+- **Cloudflare HTML caching support.** New [inc/cloudflare-purge.php](inc/cloudflare-purge.php) module: configurable token + zone (constants or admin UI), auto-purge on post save and theme update, manual purge button, last-purge timestamp display. New [docs/CACHING.md](docs/CACHING.md) with full Cache Rule setup. (`0e9518a`)
+- **Two pillar essays surfaced on `/notes`.** Cards link to on-site long-forms (not SSRN); read-times pulled dynamically via `[sn_reading_time slug="..."]` so figures stay in sync with the cached value on each long-form post. (`cbe3ee5`)
+- **`/provenance/as-substrate/` long-form** — companion to SSRN paper 2 ("Provenance as Substrate: A Cryptographic Identifier Framework for Music Rights and Royalty Infrastructure", Abstract 6730343). Six anchored sections, paired SVG analogy diagram (envelopes-with-tags ↔ file-with-fingerprint), cost-scaling SVG in Section 6. (`73082e6` + `b841daf` + `28a0cde` + `2ca4d1c`)
+- **Self-healing template-override clear.** mtime-based detection in [inc/template-maintenance.php](inc/template-maintenance.php) closes the gap where template-only deploys (no `Version:` bump) didn't trigger `wp_template` DB override clears, leading to silent stale-template rendering on `/notes`. Now self-heals on every admin pageview after any `templates/*.html` or `parts/*.html` change. (`0e9518a`)
+- **Pillar card read-times made dynamic** via new `slug` attribute on `[sn_reading_time]`. Single source of truth across `/provenance`, `/notes`, and each long-form's byline. (`949007e`, `cbe3ee5`)
+- **Operational documentation.** New [docs/MONITORING.md](docs/MONITORING.md) covers all four monitoring tiers (architectural, CI smoke, Uptime Kuma, future) with copy-pasteable Uptime Kuma monitor config and incident-response checklist that routes through the `superpowers:systematic-debugging` skill.
+
+### Original detailed entries follow
+
+The original commit-by-commit entries are preserved below in the order they were written during the 2026-05-07 session. They remain useful as audit trail and cross-reference for the migration option flags introduced.
+
+---
 
 Ship the second long-form companion essay at `/provenance/as-substrate/` — the web-adapted, jargon-free version of SSRN paper 2 ("Provenance as Substrate: A Cryptographic Identifier Framework for Music Rights and Royalty Infrastructure", Abstract 6730343). Mirrors `/provenance/over-detection/` block-for-block: same hero/eyebrow/TOC/section/byline structure, same diagram block treatment, same footer CTA pair, same dynamic byline + reading-time block. Six anchored sections (`#setup`, `#analogy`, `#what-it-is`, `#why-it-matters`, `#the-shift`, `#economics`) match the first long-form's pattern.
 
