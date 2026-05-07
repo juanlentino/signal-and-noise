@@ -38,6 +38,7 @@ const SN_PROV_BYLINE_RT_MIGR_OPT = 'sn_provenance_byline_reading_time_migrated_v
 const SN_PROV_SPLIT_MIGR_OPT    = 'sn_provenance_split_migrated_v1';
 const SN_AS_SUBSTRATE_SEED_OPT  = 'sn_provenance_as_substrate_seeded_v1';
 const SN_PROV_CARD2_LF_MIGR_OPT = 'sn_provenance_card2_longform_migrated_v1';
+const SN_PROV_RT_DYNAMIC_OPT    = 'sn_provenance_card_readtimes_dynamic_v1';
 const SN_NOTES_QUERY_ID         = 42;
 
 /**
@@ -580,7 +581,7 @@ function sn_provenance_papers_index_markup() {
 		<article class="wp-block-group sn-prov-paper-card">
 
 			<!-- wp:paragraph {"className":"sn-prov-paper-meta","style":{"typography":{"fontSize":"0.75rem","letterSpacing":"0.15em","textTransform":"uppercase"},"spacing":{"margin":{"top":"0","bottom":"var:preset|spacing|20"}}},"textColor":"blood","fontFamily":"body"} -->
-			<p class="sn-prov-paper-meta has-blood-color has-text-color has-body-font-family" style="margin-top:0;margin-bottom:var(--wp--preset--spacing--20);font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase">March 2026 · 4 min read</p>
+			<p class="sn-prov-paper-meta has-blood-color has-text-color has-body-font-family" style="margin-top:0;margin-bottom:var(--wp--preset--spacing--20);font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase">March 2026 · [sn_reading_time slug="provenance/over-detection"]</p>
 			<!-- /wp:paragraph -->
 
 			<!-- wp:heading {"level":3,"className":"font-display sn-prov-paper-title","style":{"typography":{"fontSize":"1.5rem","lineHeight":"1.15"},"spacing":{"margin":{"top":"0","bottom":"var:preset|spacing|10"}}}} -->
@@ -606,7 +607,7 @@ function sn_provenance_papers_index_markup() {
 		<article class="wp-block-group sn-prov-paper-card">
 
 			<!-- wp:paragraph {"className":"sn-prov-paper-meta","style":{"typography":{"fontSize":"0.75rem","letterSpacing":"0.15em","textTransform":"uppercase"},"spacing":{"margin":{"top":"0","bottom":"var:preset|spacing|20"}}},"textColor":"blood","fontFamily":"body"} -->
-			<p class="sn-prov-paper-meta has-blood-color has-text-color has-body-font-family" style="margin-top:0;margin-bottom:var(--wp--preset--spacing--20);font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase">May 2026 · 5 min read</p>
+			<p class="sn-prov-paper-meta has-blood-color has-text-color has-body-font-family" style="margin-top:0;margin-bottom:var(--wp--preset--spacing--20);font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase">May 2026 · [sn_reading_time slug="provenance/as-substrate"]</p>
 			<!-- /wp:paragraph -->
 
 			<!-- wp:heading {"level":3,"className":"font-display sn-prov-paper-title","style":{"typography":{"fontSize":"1.5rem","lineHeight":"1.15"},"spacing":{"margin":{"top":"0","bottom":"var:preset|spacing|10"}}}} -->
@@ -729,5 +730,61 @@ function sn_migrate_provenance_card2_longform() {
 	update_option( SN_PROV_CARD2_LF_MIGR_OPT, time(), true );
 }
 
+/**
+ * One-time migration that switches the /provenance pillar's two card
+ * meta lines from hardcoded reading times ("4 min read" / "5 min read")
+ * to dynamic `[sn_reading_time slug="..."]` shortcodes pointing at the
+ * respective child long-forms. Without this, the pillar drifts every
+ * time the prose evolves — the live drift between the pillar's "4 min"
+ * and the over-detection byline's "5 min" was the trigger for this
+ * migration.
+ *
+ * Strategy mirrors `sn_migrate_provenance_card2_longform()`: full-body
+ * rewrite via `sn_provenance_papers_index_markup()`, gated on a unique
+ * marker (the SSRN abstract_id 6730343 anchor on Card 2). If the
+ * pillar body has been hand-edited away from seed shape, bail WITHOUT
+ * setting the flag so a future run can complete after recovery.
+ *
+ * Self-idempotent: bails (and flags) if the body already contains the
+ * shortcode token `[sn_reading_time slug=` — the unique marker for the
+ * post-migration shape.
+ */
+add_action( 'admin_init', 'sn_migrate_provenance_card_readtimes_dynamic' );
+
+function sn_migrate_provenance_card_readtimes_dynamic() {
+	if ( get_option( SN_PROV_RT_DYNAMIC_OPT ) ) {
+		return;
+	}
+
+	$page = get_page_by_path( SN_PROVENANCE_SLUG );
+	if ( ! $page ) {
+		update_option( SN_PROV_RT_DYNAMIC_OPT, time(), true );
+		return;
+	}
+
+	$body = $page->post_content;
+
+	// Already migrated — body uses the dynamic shortcode form.
+	if ( false !== strpos( $body, '[sn_reading_time slug=' ) ) {
+		update_option( SN_PROV_RT_DYNAMIC_OPT, time(), true );
+		return;
+	}
+
+	// Defensive: only proceed if the v6.5.4 / Card-2-longform-migration
+	// shape is present (SSRN abstract_id 6730343 anchor for Card 2).
+	if ( false === strpos( $body, 'abstract_id=6730343' ) ) {
+		return;
+	}
+
+	wp_update_post( array(
+		'ID'           => $page->ID,
+		'post_content' => sn_provenance_papers_index_markup(),
+	) );
+
+	update_option( SN_PROV_RT_DYNAMIC_OPT, time(), true );
+}
+
 /* The [sn_reading_time] shortcode and its render_block bridge moved to
- * inc/reading-time.php in 6.3.0 (cached + 225 WPM + cleanup tooling). */
+ * inc/reading-time.php in 6.3.0 (cached + 225 WPM + cleanup tooling).
+ * The shortcode gained an optional `slug` attribute in this iteration
+ * to support cross-post reading-time lookups from the pillar index. */

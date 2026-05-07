@@ -115,25 +115,50 @@ add_action( 'wp_after_insert_post', function( $post_id, $post, $update, $post_be
 /**
  * Shortcode: [sn_reading_time] → "X min read".
  *
+ * No-args form operates on the current post (the legacy pre-6.5.5
+ * behaviour preserved unchanged). With `slug="path/to/page"` the
+ * shortcode resolves a different post via `get_page_by_path()` and
+ * reports its cached reading time — used by the /provenance pillar
+ * index to surface the live read-time of each child long-form rather
+ * than hardcoded values that drift when the prose evolves.
+ *
+ * Returns empty string when the slug-targeted post doesn't exist
+ * (e.g., during the brief window after a deploy but before seed
+ * migrations have run). The empty fallback is visually graceful enough
+ * — the migration window is short and self-heals.
+ *
  * Format is filterable via `sn_reading_time_format`. The default uses
  * "{minutes} min read"; pass "{minutes}-minute read" for the long form.
  */
-add_shortcode( 'sn_reading_time', function() {
-	$post = get_post();
-	if ( ! $post ) {
-		return '';
+add_shortcode( 'sn_reading_time', function( $atts ) {
+	$atts = shortcode_atts( array(
+		'slug' => '',
+	), $atts, 'sn_reading_time' );
+
+	if ( '' !== $atts['slug'] ) {
+		$post = get_page_by_path( $atts['slug'] );
+		if ( ! $post ) {
+			return '';
+		}
+	} else {
+		$post = get_post();
+		if ( ! $post ) {
+			return '';
+		}
 	}
+
 	$minutes = sn_get_reading_time( $post );
 	$format  = (string) apply_filters( 'sn_reading_time_format', '{minutes} min read', $post, $minutes );
 	return esc_html( str_replace( '{minutes}', (string) $minutes, $format ) );
 } );
 
 /**
- * Process [sn_reading_time] inside block template parts (mirror of the
- * pattern used for [current_year] in inc/setup.php).
+ * Process [sn_reading_time] (with or without attributes) inside block
+ * template parts. Prefix-match so `[sn_reading_time]` and
+ * `[sn_reading_time slug="..."]` both trigger do_shortcode.
  */
 add_filter( 'render_block', function( $block_content, $block ) {
-	if ( strpos( $block_content, '[sn_reading_time]' ) !== false ) {
+	if ( strpos( $block_content, '[sn_reading_time' ) !== false ) {
 		$block_content = do_shortcode( $block_content );
 	}
 	return $block_content;
