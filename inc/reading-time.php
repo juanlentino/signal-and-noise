@@ -153,12 +153,22 @@ add_shortcode( 'sn_reading_time', function( $atts ) {
 } );
 
 /**
- * Process [sn_reading_time] (with or without attributes) inside block
- * template parts. Prefix-match so `[sn_reading_time]` and
- * `[sn_reading_time slug="..."]` both trigger do_shortcode.
+ * Process [sn_reading_time] inside block template parts (mirror of the
+ * pattern used for [current_year] in inc/setup.php).
+ *
+ * Exact-match the no-args token only. The slug-attributed form
+ * `[sn_reading_time slug="..."]` lives inside post_content (pillar
+ * cards) and is resolved by WordPress core's `the_content` filter
+ * chain (do_shortcode at priority 11), so it doesn't need this hook.
+ *
+ * The earlier prefix-match variant (`[sn_reading_time` without the
+ * closing bracket) was reverted after triggering a hang on /notes —
+ * the precise mechanism wasn't fully diagnosed, but the prefix change
+ * was the only render-path delta in commit 949007e and the revert
+ * restored /notes to its pre-iteration response time.
  */
 add_filter( 'render_block', function( $block_content, $block ) {
-	if ( strpos( $block_content, '[sn_reading_time' ) !== false ) {
+	if ( strpos( $block_content, '[sn_reading_time]' ) !== false ) {
 		$block_content = do_shortcode( $block_content );
 	}
 	return $block_content;
