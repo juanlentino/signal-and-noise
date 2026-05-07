@@ -13,6 +13,7 @@
  *   inc/notes-and-provenance.php — Notes content surface + Provenance pillar page
  *   inc/reading-time.php         — Cached reading-time calc + [sn_reading_time] + cleanup
  *   inc/og-image.php             — Per-post OG/Twitter card generator (GD, Bebas + DM Mono)
+ *   inc/cloudflare-purge.php     — Auto-purge CF edge cache on post save / theme update
  *   inc/template-maintenance.php — FSE template-override purge + version sync
  *   inc/admin-page.php           — Appearance → Signal & Noise options page
  *   inc/updater.php              — GitHub self-updater + admin notice
@@ -33,6 +34,7 @@ require_once __DIR__ . '/inc/frontend-filters.php';
 require_once __DIR__ . '/inc/notes-and-provenance.php';
 require_once __DIR__ . '/inc/reading-time.php';
 require_once __DIR__ . '/inc/og-image.php';
+require_once __DIR__ . '/inc/cloudflare-purge.php';
 
 require_once __DIR__ . '/inc/template-maintenance.php';
 require_once __DIR__ . '/inc/admin-page.php';

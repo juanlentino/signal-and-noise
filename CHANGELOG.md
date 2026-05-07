@@ -78,6 +78,24 @@ After cbe3ee5 deployed and the user clicked Update in WP admin, `/notes` continu
 
 **Lesson:** when a theme file change deploys cleanly but the live page still shows old content AND Cloudflare confirms it's not edge-cached, suspect a WP-level template/block override. The signature is per-template asymmetry: some template-backed pages render new code (their templates haven't been overridden in DB) while specific routes don't.
 
+### Self-healing: file-mtime-based template override clear
+
+The structural reason the existing `sn_clear_template_overrides()` mechanism didn't fire on the `/notes` template change: it's gated on the style.css `Version:` header changing, but project policy reserves Version: bumps for code/functional changes (not template/content edits). So a template-only push went out without bumping Version, the version-compare check returned false, and overrides were never cleared.
+
+**Fix:** added a parallel detection mechanism in [inc/template-maintenance.php](inc/template-maintenance.php) that tracks the most-recent mtime among `templates/*.html` and `parts/*.html` files. When the latest mtime advances past the cached value, `sn_clear_template_overrides()` fires and the cached value updates. Self-healing on every deploy that touches templates, regardless of Version bump policy. Cost: cheap glob + filemtime per admin_init (<1ms when no change). The original Version-compare logic is preserved unchanged so existing self-healing behavior on Version bumps still works — the two mechanisms are complementary.
+
+### Cloudflare HTML caching + auto-purge
+
+The existing CF default profile caches static assets only — CSS, JS, images. HTML responses returned `cf-cache-status: DYNAMIC` (every visitor request hit origin PHP). For a content-heavy site this leaves a lot of CDN performance and origin-load reduction on the table. New module enables HTML caching at the edge with event-driven invalidation.
+
+- **`inc/cloudflare-purge.php`** — auto-purges CF edge cache on post saves and theme updates. Configurable via either `wp-config.php` constants (`SN_CLOUDFLARE_API_TOKEN`, `SN_CLOUDFLARE_ZONE_ID`) or via the admin UI card on the Signal & Noise dashboard. Constant takes precedence when both are set so `wp-config` can lock the value against accidental admin edits. All API calls are non-blocking (`'blocking' => false` on `wp_remote_post`) so a slow CF response never delays an admin save. Without configuration, all hooks no-op silently — fail-safe by default.
+
+  Two automatic purge triggers: (1) `wp_after_insert_post` on `publish` status purges the post URL + homepage + `/notes/` + `/provenance/` + `/notes/feed/` + parent permalink if any (filterable via `sn_cf_purge_urls_for_post`); (2) `upgrader_process_complete` on theme updates purges the entire zone (theme updates can change global elements). Plus a manual "Purge Cloudflare" button on the admin dashboard for ad-hoc purges. Last-purge timestamp displayed in the admin UI for verification.
+
+  Security: API token stored as a non-autoloaded option (loaded only when needed); admin UI obscures saved value (`••••` + last 4 chars); all admin POST actions nonce-protected.
+
+- **`docs/CACHING.md`** — full dashboard-side setup guide. Covers the four caching layers (browser, CF edge, Varnish, WP object cache), why CF doesn't cache HTML by default, two configuration paths (Cloudflare APO at $5/mo for the simplest setup, OR free Cache Rule + this theme's purge module), step-by-step Cache Rule expression with cookie bypass for logged-in users, API token generation, verification curl commands, and a troubleshooting section. The Cache Rule expression specifically excludes `/wp-admin/`, `/wp-login.php`, `/wp-cron.php`, `/wp-json/`, `/feed/`, and any request carrying a `wordpress_logged_in_*` / `wp-postpass_*` / `comment_author_*` cookie — so admin views and feeds always hit origin.
+
 ### Notes
 - **No theme version bump.** Per maintainer directive and the project's "Only bump version for code/functional changes. Never for content-only template edits" rule. The PHP scaffolding here is wiring for a content asset — the substantive change is the new prose. Cache-busting still works (mtime-driven, v6.5.4).
 - **The pillar-page index card for this paper already exists** as Card 2 in `sn_provenance_papers_index_markup()` (shipped in v6.5.4). That card currently has no `Read the long-form on this site →` affordance because the long-form didn't exist yet; updating the pillar to link to this page is a separate task that runs after this page is live (per the original task's scope boundary).

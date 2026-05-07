@@ -90,3 +90,56 @@ add_action( 'admin_init', function() {
 		update_option( 'sn_deployed_version', $current, true );
 	}
 } );
+
+/**
+ * Robustness: detect template-file changes between deploys even when
+ * the style.css Version: header doesn't change.
+ *
+ * Why this exists: project policy (per CLAUDE.md) reserves Version:
+ * bumps for code/functional changes and discourages bumping for
+ * "content-only template edits". But the Version-compare check above
+ * is the trigger that clears wp_template DB overrides (Site Editor
+ * customizations that mask theme-file updates). Result was a silent
+ * footgun: a template file change without a Version bump deployed
+ * cleanly to disk but didn't take effect on routes whose template had
+ * been opened in Site Editor at any point — WP kept serving the DB
+ * override version.
+ *
+ * Fix: track the most-recent mtime among template files and clear
+ * overrides whenever it advances. Self-healing on every deploy that
+ * touches templates, regardless of Version bump policy.
+ *
+ * Implementation notes: glob() of templates/*.html is cheap (<10
+ * files); filemtime() is a single stat per file. Total cost on every
+ * admin_init when no change has occurred is microseconds. Only fires
+ * `sn_clear_template_overrides()` when a real change is detected, so
+ * admin Site Editor edits made between deploys aren't repeatedly
+ * nuked — they survive until the next theme-file change.
+ */
+add_action( 'admin_init', function() {
+	$templates_dir = get_theme_file_path( 'templates' );
+	$parts_dir     = get_theme_file_path( 'parts' );
+
+	$latest_mtime = 0;
+	foreach ( array( $templates_dir, $parts_dir ) as $dir ) {
+		if ( ! is_dir( $dir ) ) {
+			continue;
+		}
+		foreach ( (array) glob( $dir . '/*.html' ) as $file ) {
+			$mtime = (int) @filemtime( $file );
+			if ( $mtime > $latest_mtime ) {
+				$latest_mtime = $mtime;
+			}
+		}
+	}
+
+	if ( 0 === $latest_mtime ) {
+		return; // No template files found or unreadable; nothing to do.
+	}
+
+	$cached_mtime = (int) get_option( 'sn_templates_latest_mtime', 0 );
+	if ( $latest_mtime > $cached_mtime ) {
+		sn_clear_template_overrides();
+		update_option( 'sn_templates_latest_mtime', $latest_mtime, true );
+	}
+} );
