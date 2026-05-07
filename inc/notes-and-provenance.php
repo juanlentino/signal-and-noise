@@ -37,6 +37,7 @@ const SN_PROV_REFINE_MIGR_OPT   = 'sn_provenance_refine_migrated_v1';
 const SN_PROV_BYLINE_RT_MIGR_OPT = 'sn_provenance_byline_reading_time_migrated_v1';
 const SN_PROV_SPLIT_MIGR_OPT    = 'sn_provenance_split_migrated_v1';
 const SN_AS_SUBSTRATE_SEED_OPT  = 'sn_provenance_as_substrate_seeded_v1';
+const SN_PROV_CARD2_LF_MIGR_OPT = 'sn_provenance_card2_longform_migrated_v1';
 const SN_NOTES_QUERY_ID         = 42;
 
 /**
@@ -605,7 +606,7 @@ function sn_provenance_papers_index_markup() {
 		<article class="wp-block-group sn-prov-paper-card">
 
 			<!-- wp:paragraph {"className":"sn-prov-paper-meta","style":{"typography":{"fontSize":"0.75rem","letterSpacing":"0.15em","textTransform":"uppercase"},"spacing":{"margin":{"top":"0","bottom":"var:preset|spacing|20"}}},"textColor":"blood","fontFamily":"body"} -->
-			<p class="sn-prov-paper-meta has-blood-color has-text-color has-body-font-family" style="margin-top:0;margin-bottom:var(--wp--preset--spacing--20);font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase">May 2026</p>
+			<p class="sn-prov-paper-meta has-blood-color has-text-color has-body-font-family" style="margin-top:0;margin-bottom:var(--wp--preset--spacing--20);font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase">May 2026 · 5 min read</p>
 			<!-- /wp:paragraph -->
 
 			<!-- wp:heading {"level":3,"className":"font-display sn-prov-paper-title","style":{"typography":{"fontSize":"1.5rem","lineHeight":"1.15"},"spacing":{"margin":{"top":"0","bottom":"var:preset|spacing|10"}}}} -->
@@ -616,8 +617,12 @@ function sn_provenance_papers_index_markup() {
 			<p class="sn-prov-paper-subtitle has-rust-color has-text-color" style="margin-top:0;margin-bottom:var(--wp--preset--spacing--30);font-size:0.85rem;line-height:1.4">A Cryptographic Identifier Framework for Music Rights and Royalty Infrastructure</p>
 			<!-- /wp:paragraph -->
 
-			<!-- wp:paragraph {"className":"sn-prov-paper-blurb","style":{"typography":{"fontSize":"0.875rem"},"spacing":{"margin":{"top":"0","bottom":"0"}}}} -->
-			<p class="sn-prov-paper-blurb" style="margin-top:0;margin-bottom:0;font-size:0.875rem">Extends the provenance argument from authorship verification to identifier infrastructure. The proposal is cryptographic provenance as a substrate beneath ISRC, ISWC, and the rest of the music industry's identifier stack — self-issuing, collision-resistant, signed at creation, with legacy identifiers continuing to function as aliases. The unmatched royalty pool, hundreds of millions at the MLC alone, is a downstream consequence of identifier failure.</p>
+			<!-- wp:paragraph {"className":"sn-prov-paper-blurb","style":{"typography":{"fontSize":"0.875rem"},"spacing":{"margin":{"top":"0","bottom":"var:preset|spacing|30"}}}} -->
+			<p class="sn-prov-paper-blurb" style="margin-top:0;margin-bottom:var(--wp--preset--spacing--30);font-size:0.875rem">Extends the provenance argument from authorship verification to identifier infrastructure. The proposal is cryptographic provenance as a substrate beneath ISRC, ISWC, and the rest of the music industry's identifier stack — self-issuing, collision-resistant, signed at creation, with legacy identifiers continuing to function as aliases. The unmatched royalty pool, hundreds of millions at the MLC alone, is a downstream consequence of identifier failure.</p>
+			<!-- /wp:paragraph -->
+
+			<!-- wp:paragraph {"className":"sn-prov-paper-longform","style":{"typography":{"fontSize":"0.8rem","fontStyle":"italic"},"spacing":{"margin":{"top":"0","bottom":"0"}}},"textColor":"rust"} -->
+			<p class="sn-prov-paper-longform has-rust-color has-text-color" style="margin-top:0;margin-bottom:0;font-size:0.8rem;font-style:italic"><a href="/provenance/as-substrate/">Read the long-form on this site →</a></p>
 			<!-- /wp:paragraph -->
 
 		</article>
@@ -662,6 +667,66 @@ function sn_migrate_as_substrate_seed() {
 
 	sn_ensure_as_substrate_page();
 	update_option( SN_AS_SUBSTRATE_SEED_OPT, time(), true );
+}
+
+/**
+ * One-time migration that updates Card 2 of the /provenance pillar
+ * index to include the read-time meta and the "Read the long-form on
+ * this site →" affordance pointing at /provenance/as-substrate/. Lives
+ * separately from the seed-flow because production sites already have
+ * SN_PROV_SPLIT_MIGR_OPT set from v6.5.4 and that flow won't re-run.
+ *
+ * Strategy: full-body rewrite via sn_provenance_papers_index_markup().
+ * The pillar page is a generated index — its body shouldn't be hand-
+ * edited, and the index function is the single source of truth for the
+ * cards. A defensive sanity check on the SSRN abstract_id 6730343
+ * anchor (the unique marker for v6.5.4's Card 2 shape) gates the
+ * rewrite: if the marker is missing, the admin has hand-edited away
+ * from the seed shape, so we bail WITHOUT setting the flag. That way a
+ * future run can complete the migration after manual recovery.
+ *
+ * Idempotent: bails (and flags) if the body already contains the
+ * /provenance/as-substrate/ longform URL — that's the unique marker
+ * for the post-migration Card 2 shape, so seeing it means the work is
+ * already done.
+ */
+add_action( 'admin_init', 'sn_migrate_provenance_card2_longform' );
+
+function sn_migrate_provenance_card2_longform() {
+	if ( get_option( SN_PROV_CARD2_LF_MIGR_OPT ) ) {
+		return;
+	}
+
+	$page = get_page_by_path( SN_PROVENANCE_SLUG );
+	if ( ! $page ) {
+		// Pillar page doesn't exist yet — sn_seed_content_surfaces will
+		// create it cleanly. Mark migrated so we don't keep scanning.
+		update_option( SN_PROV_CARD2_LF_MIGR_OPT, time(), true );
+		return;
+	}
+
+	$body = $page->post_content;
+
+	// Already migrated — body has the new longform affordance.
+	if ( false !== strpos( $body, '/provenance/as-substrate/' ) ) {
+		update_option( SN_PROV_CARD2_LF_MIGR_OPT, time(), true );
+		return;
+	}
+
+	// Defensive: only proceed if the v6.5.4 Card 2 shape is present
+	// (the SSRN abstract_id 6730343 anchor is the unique marker). If
+	// absent, the admin has hand-edited away from the seed — bail
+	// WITHOUT flagging so the migration can complete after recovery.
+	if ( false === strpos( $body, 'abstract_id=6730343' ) ) {
+		return;
+	}
+
+	wp_update_post( array(
+		'ID'           => $page->ID,
+		'post_content' => sn_provenance_papers_index_markup(),
+	) );
+
+	update_option( SN_PROV_CARD2_LF_MIGR_OPT, time(), true );
 }
 
 /* The [sn_reading_time] shortcode and its render_block bridge moved to
