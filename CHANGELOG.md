@@ -2,6 +2,23 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [6.5.5] — 2026-05-07
+
+Add a consecutive-revision counter (`-rN`) to the updater's synthetic version label, so the iteration-between-milestones sequence reads as a clean count instead of just an opaque SHA. Resolves the "version bumping should be as consecutive as they are" tension introduced when v6.5.4 moved CSS cache-busting off the theme Version: header — cache-busting is now mtime-driven (frictionless), and the updater label now carries a readable consecutive marker for every commit between tags (so the audit trail isn't lost).
+
+### Added
+- **`sn_updater_revcount()`** in [inc/updater.php](inc/updater.php). Calls GitHub's compare API (`/compare/v{Version}...{branch}`) and returns the `ahead_by` count — i.e., the number of commits the tracked branch is ahead of the v{Version} tag. Cached 5 min alongside the existing branch-HEAD cache to keep API hits low. Returns 0 on any failure (missing tag, API error, rate-limited) so the synthetic label gracefully degrades to "no -rN suffix" rather than blocking the update.
+- **`-rN` suffix in the synthetic update label.** New format: `{Version}{-rN}+{branch}.{sha7}`. Example: `6.5.5-r3+main.a1b2c3d` reads as "3rd commit on main since v6.5.5 was tagged, at SHA a1b2c3d". Counter resets to 0 each time the maintainer ships a milestone (bumps Version + tags).
+- **Rev count surfaced in the admin notice.** Dashboard / Updates / Themes now show "Tracking branch `main` at `<sha>` (default) · `r3` commits since the last tag." so the iteration position is visible without waiting for an update offer.
+
+### Notes
+- **The compare API call is incremental**, not a separate HTTP round-trip per page load — it's cached behind a 5-min transient (same TTL as the branch-HEAD cache) and shares the manual-clear hook on `load-update-core.php`. Net cost: one extra cached API request per 5 min when there's an active iteration window.
+- **What this resolves.** The v6.5.4 cache-busting refactor decoupled "fire on every file change" (mtime) from "fire on milestones" (Version: bumps). That left "audit trail of shipped iterations" without its own primitive — between v6.5.4 and v6.5.5 in the new model, the version history would read as sparse milestones with no per-commit counter. `-rN` fills that gap: every commit between tags has a unique consecutive identifier, milestone semver stays clean, and cache-busting stays frictionless.
+- **Reading the version progression**: `6.5.5` (just-shipped milestone) → `6.5.5-r1+main.<sha>` (1 commit later) → `6.5.5-r2+main.<sha>` → … → `6.5.6` (next milestone) → `6.5.6-r1+main.<sha>` → … and so on.
+
+### Deploy
+After the WP updater shows v6.5.5 available, click Update. The new `-rN` label takes effect for any commit pushed to main *after* this install (since the rev counter is computed by the new updater code). Subsequent commits will appear in the WP UI as `6.5.5-r1+main.<sha>`, `6.5.5-r2+main.<sha>`, etc.
+
 ## [6.5.4] — 2026-05-07
 
 Three things landing together: (1) restructure `/provenance` into a two-paper index with the long-form essay moved to its own child URL, (2) overhaul iteration UX — mtime-based asset cache-busting + simpler updater that always tracks `main`, no dev branch dance, and (3) a design pass on the index after the v6.5.3-shipped first cut rendered as a wall of red shouting (titles inheriting theme.json's global link colour, mid-word "DISTRIB/UTION" wraps, no title hierarchy).

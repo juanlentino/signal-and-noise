@@ -13,6 +13,18 @@
  * Version: bumps too, so version bumps are reserved for actual milestones
  * the maintainer wants to mark.
  *
+ * Synthetic update label format: `{Version}{-rN}+{branch}.{sha7}`
+ *   - {Version}    Theme Version: header (e.g. "6.5.5").
+ *   - -rN          Optional. Count of commits ahead of the v{Version} tag,
+ *                  giving a consecutive sequence between milestones (r1, r2,
+ *                  r3, …). Resets to 0 each time the maintainer ships a
+ *                  milestone (bumps Version + tags). Suppressed when 0 or
+ *                  unavailable. Computed via GitHub's compare API.
+ *   - +branch.sha7 Tracked branch + 7-char commit SHA being offered.
+ *
+ * Example: `6.5.5-r3+main.a1b2c3d` reads as "3rd commit on main since
+ * v6.5.5 was tagged, at SHA a1b2c3d".
+ *
  * Override: define SN_GITHUB_BRANCH in wp-config.php to track a different
  * branch (e.g. for testing). Defaults to 'main' when undefined.
  *
@@ -42,6 +54,60 @@ define( 'SN_THEME_SLUG',  'signal-and-noise' );
  */
 function sn_updater_branch() {
 	return ( defined( 'SN_GITHUB_BRANCH' ) && SN_GITHUB_BRANCH ) ? SN_GITHUB_BRANCH : 'main';
+}
+
+/**
+ * Count commits on the tracked branch since the last tagged release
+ * matching the current theme Version. Used to surface a consecutive
+ * "revision" number in the synthetic update-available label so the
+ * maintainer can read at a glance which iteration is being offered
+ * (e.g. -r3 = 3rd commit since v6.5.4 was tagged). Counter resets to
+ * 0 each time the maintainer ships a milestone (bumps Version + tags).
+ *
+ * Uses GitHub's compare API: the `ahead_by` field on a v{Version}
+ * → branch comparison is exactly the number of commits the branch is
+ * ahead of the tag. Cached 5 min to align with the existing branch-
+ * HEAD cache. Returns 0 on any failure (missing tag, API error, rate
+ * limit) so the synthetic label gracefully degrades to "no -rN suffix"
+ * rather than blocking the update.
+ *
+ * @param string $branch Branch name being tracked.
+ * @return int Commits ahead of the v{Version} tag, or 0 on failure.
+ */
+function sn_updater_revcount( $branch ) {
+	if ( ! defined( 'SN_GITHUB_TOKEN' ) || empty( SN_GITHUB_TOKEN ) ) {
+		return 0;
+	}
+
+	$cache_key = 'sn_github_revcount_' . sanitize_key( $branch );
+	$cached    = get_transient( $cache_key );
+	if ( false !== $cached ) {
+		return (int) $cached;
+	}
+
+	$base = 'v' . wp_get_theme( SN_THEME_SLUG )->get( 'Version' );
+	$response = wp_remote_get(
+		'https://api.github.com/repos/' . SN_GITHUB_REPO . '/compare/' . rawurlencode( $base ) . '...' . rawurlencode( $branch ),
+		array(
+			'headers' => array(
+				'Authorization' => 'token ' . SN_GITHUB_TOKEN,
+				'Accept'        => 'application/vnd.github.v3+json',
+			),
+			'timeout' => 10,
+		)
+	);
+
+	if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
+		// Tag missing, API error, or rate-limited — cache 0 briefly so we
+		// don't hammer the API on every page load.
+		set_transient( $cache_key, 0, 5 * MINUTE_IN_SECONDS );
+		return 0;
+	}
+
+	$body  = json_decode( wp_remote_retrieve_body( $response ), true );
+	$ahead = isset( $body['ahead_by'] ) ? (int) $body['ahead_by'] : 0;
+	set_transient( $cache_key, $ahead, 5 * MINUTE_IN_SECONDS );
+	return $ahead;
 }
 
 /**
@@ -93,12 +159,16 @@ add_filter( 'pre_set_site_transient_update_themes', function( $transient ) {
 
 	if ( $remote_sha7 && $remote_sha7 !== $local_sha7 ) {
 		$local_version = wp_get_theme( SN_THEME_SLUG )->get( 'Version' );
+		$rev           = sn_updater_revcount( $branch );
+		$rev_suffix    = $rev > 0 ? '-r' . $rev : '';
 		$transient->response[ SN_THEME_SLUG ] = array(
 			'theme'       => SN_THEME_SLUG,
 			// Synthetic version label — the SHA-vs-stored check above is the
 			// real gate; this is what WP shows in the "Update available" row
-			// so a human can identify which commit is being installed.
-			'new_version' => $local_version . '+' . $branch . '.' . $remote_sha7,
+			// so a human can identify which commit is being installed. The
+			// -rN suffix is the count of commits since the v{Version} tag,
+			// giving a readable consecutive sequence between milestones.
+			'new_version' => $local_version . $rev_suffix . '+' . $branch . '.' . $remote_sha7,
 			'url'         => 'https://github.com/' . SN_GITHUB_REPO . '/tree/' . rawurlencode( $branch ),
 			'package'     => 'https://api.github.com/repos/' . SN_GITHUB_REPO . '/zipball/' . rawurlencode( $branch ),
 		);
@@ -204,8 +274,10 @@ add_filter( 'upgrader_source_selection', function( $source, $remote_source, $upg
  * branch's HEAD on the next page load.
  */
 add_action( 'load-update-core.php', function() {
+	$branch = sanitize_key( sn_updater_branch() );
 	delete_transient( 'sn_github_error' );
-	delete_transient( 'sn_github_branch_' . sanitize_key( sn_updater_branch() ) );
+	delete_transient( 'sn_github_branch_' . $branch );
+	delete_transient( 'sn_github_revcount_' . $branch );
 	// Clear WP's own theme-update site transient too — without this, WP keeps
 	// serving frozen update info from a previous filter run and never re-runs
 	// our pre_set_site_transient_update_themes filter, so the displayed SHA
@@ -246,7 +318,9 @@ add_action( 'admin_notices', function() {
 	$local_sha = (string) get_option( 'sn_github_local_sha', '' );
 	$sha_label = $local_sha ? ' at <code>' . esc_html( $local_sha ) . '</code>' : '';
 	$mode      = ( 'main' === $branch ) ? 'default' : 'override via SN_GITHUB_BRANCH';
-	echo '<div class="notice notice-info"><p><strong>Signal &amp; Noise:</strong> Tracking branch <code>' . esc_html( $branch ) . '</code>' . $sha_label . ' (' . $mode . '). Updates check the branch HEAD every 5 minutes; visit Dashboard → Updates to force a fresh poll.</p></div>';
+	$rev       = sn_updater_revcount( $branch );
+	$rev_label = $rev > 0 ? ' · <code>r' . (int) $rev . '</code> commits since the last tag' : '';
+	echo '<div class="notice notice-info"><p><strong>Signal &amp; Noise:</strong> Tracking branch <code>' . esc_html( $branch ) . '</code>' . $sha_label . ' (' . $mode . ')' . $rev_label . '. Updates check the branch HEAD every 5 minutes; visit Dashboard → Updates to force a fresh poll.</p></div>';
 
 	$last_error = get_transient( 'sn_github_error' );
 	if ( $last_error ) {
