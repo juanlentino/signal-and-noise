@@ -74,7 +74,19 @@ function sn_theme_options_page() {
 			delete_transient( 'sn_github_error' );
 			$branch = function_exists( 'sn_updater_branch' ) ? sanitize_key( sn_updater_branch() ) : 'main';
 			delete_transient( 'sn_github_branch_' . $branch );
-			delete_transient( 'sn_github_revcount_' . $branch );
+			delete_transient( 'sn_github_remote_version_' . $branch );
+			// Revcount cache is keyed by branch + base_version so we LIKE-delete
+			// all variants for this branch (covers both legacy and bumped forms).
+			global $wpdb;
+			if ( $wpdb ) {
+				$wpdb->query( $wpdb->prepare(
+					"DELETE FROM {$wpdb->options}
+					 WHERE option_name LIKE %s
+					    OR option_name LIKE %s",
+					$wpdb->esc_like( '_transient_sn_github_revcount_' . $branch ) . '%',
+					$wpdb->esc_like( '_transient_timeout_sn_github_revcount_' . $branch ) . '%'
+				) );
+			}
 			delete_site_transient( 'update_themes' );
 			wp_clean_themes_cache();
 

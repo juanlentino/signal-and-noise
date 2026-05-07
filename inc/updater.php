@@ -72,20 +72,37 @@ function sn_updater_branch() {
  * rather than blocking the update.
  *
  * @param string $branch Branch name being tracked.
+ * @param string $branch                 Branch being tracked (e.g., "main").
+ * @param string $version_for_compare   Optional. Version to use as the base
+ *                                       tag for the compare API. Defaults to
+ *                                       the locally-installed `Version:`
+ *                                       header. Pass the remote Version when
+ *                                       building update labels so a remote
+ *                                       bump (e.g. v6.5.5 → v7.0.0 on main)
+ *                                       resets the -rN counter visually,
+ *                                       instead of showing "6.5.5-rN" while
+ *                                       the destination commit is tagged
+ *                                       v7.0.0.
  * @return int Commits ahead of the v{Version} tag, or 0 on failure.
  */
-function sn_updater_revcount( $branch ) {
+function sn_updater_revcount( $branch, $version_for_compare = null ) {
 	if ( ! defined( 'SN_GITHUB_TOKEN' ) || empty( SN_GITHUB_TOKEN ) ) {
 		return 0;
 	}
 
-	$cache_key = 'sn_github_revcount_' . sanitize_key( $branch );
+	$base_version = ( null !== $version_for_compare && '' !== $version_for_compare )
+		? $version_for_compare
+		: wp_get_theme( SN_THEME_SLUG )->get( 'Version' );
+
+	// Cache key includes the base version so concurrent caches for different
+	// base tags (rare, but possible during a deploy transition) don't alias.
+	$cache_key = 'sn_github_revcount_' . sanitize_key( $branch ) . '_' . sanitize_key( $base_version );
 	$cached    = get_transient( $cache_key );
 	if ( false !== $cached ) {
 		return (int) $cached;
 	}
 
-	$base = 'v' . wp_get_theme( SN_THEME_SLUG )->get( 'Version' );
+	$base = 'v' . $base_version;
 	$response = wp_remote_get(
 		'https://api.github.com/repos/' . SN_GITHUB_REPO . '/compare/' . rawurlencode( $base ) . '...' . rawurlencode( $branch ),
 		array(
@@ -108,6 +125,56 @@ function sn_updater_revcount( $branch ) {
 	$ahead = isset( $body['ahead_by'] ) ? (int) $body['ahead_by'] : 0;
 	set_transient( $cache_key, $ahead, 5 * MINUTE_IN_SECONDS );
 	return $ahead;
+}
+
+/**
+ * Fetch the `Version:` header from the remote branch's `style.css` so the
+ * update-offer label can reflect the version of the commit being installed,
+ * not the version of the locally-installed theme. Without this, a tagged
+ * release like v7.0.0 on a site running 6.5.5 produces a label of
+ * "6.5.5-rN+main.<sha>" — mathematically correct (N commits ahead of v6.5.5)
+ * but semantically misleading because the destination IS v7.0.0.
+ *
+ * Cached 5 min like the other GitHub calls. Empty on failure (caller falls
+ * back to local Version).
+ *
+ * @param string $branch
+ * @return string Version string from remote style.css, or '' on failure.
+ */
+function sn_updater_remote_version( $branch ) {
+	$branch = sanitize_key( $branch );
+	if ( '' === $branch ) {
+		return '';
+	}
+
+	$cache_key = 'sn_github_remote_version_' . $branch;
+	$cached    = get_transient( $cache_key );
+	if ( false !== $cached ) {
+		return (string) $cached;
+	}
+
+	$response = wp_remote_get(
+		'https://raw.githubusercontent.com/' . SN_GITHUB_REPO . '/' . rawurlencode( $branch ) . '/style.css',
+		array( 'timeout' => 5 )
+	);
+
+	if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
+		// Cache empty briefly so we don't retry-storm on transient errors.
+		set_transient( $cache_key, '', 5 * MINUTE_IN_SECONDS );
+		return '';
+	}
+
+	$body = wp_remote_retrieve_body( $response );
+	// Match WP's standard theme header parser: optional leading whitespace,
+	// case-insensitive `Version:` followed by the value to end of line.
+	if ( ! preg_match( '/^[ \t\/*#@]*Version:\s*(.+)$/mi', $body, $m ) ) {
+		set_transient( $cache_key, '', 5 * MINUTE_IN_SECONDS );
+		return '';
+	}
+
+	$version = trim( $m[1] );
+	set_transient( $cache_key, $version, 5 * MINUTE_IN_SECONDS );
+	return $version;
 }
 
 /**
@@ -158,17 +225,34 @@ add_filter( 'pre_set_site_transient_update_themes', function( $transient ) {
 	$local_sha7  = (string) get_option( 'sn_github_local_sha', '' );
 
 	if ( $remote_sha7 && $remote_sha7 !== $local_sha7 ) {
-		$local_version = wp_get_theme( SN_THEME_SLUG )->get( 'Version' );
-		$rev           = sn_updater_revcount( $branch );
+		$local_version  = wp_get_theme( SN_THEME_SLUG )->get( 'Version' );
+		$remote_version = sn_updater_remote_version( $branch );
+
+		// Use remote version if we got one, otherwise fall back to local.
+		// Why this matters: when a tagged release bumps Version: on main
+		// (e.g., v6.5.5 → v7.0.0), the LOCAL Version is still 6.5.5 until
+		// the user clicks Update. Using local for the label produces
+		// "6.5.5-rN+main.<sha>" pointing at a v7.0.0 commit, which reads
+		// as misleading even though the destination is correct.
+		$label_version = '' !== $remote_version ? $remote_version : $local_version;
+
+		// Compute -rN against v{label_version} so a remote bump resets the
+		// counter visually. If the v{label_version} tag exists and HEAD is
+		// AT that tag (the bump commit), ahead_by = 0 → no -rN suffix and
+		// the label reads as plain "{version}+{branch}.<sha>" (or just the
+		// version when sha equals the tag's commit, but WP's UI shows our
+		// label verbatim regardless).
+		$rev           = sn_updater_revcount( $branch, $label_version );
 		$rev_suffix    = $rev > 0 ? '-r' . $rev : '';
+
 		$transient->response[ SN_THEME_SLUG ] = array(
 			'theme'       => SN_THEME_SLUG,
 			// Synthetic version label — the SHA-vs-stored check above is the
 			// real gate; this is what WP shows in the "Update available" row
 			// so a human can identify which commit is being installed. The
-			// -rN suffix is the count of commits since the v{Version} tag,
-			// giving a readable consecutive sequence between milestones.
-			'new_version' => $local_version . $rev_suffix . '+' . $branch . '.' . $remote_sha7,
+			// -rN suffix is the count of commits since the v{label_version}
+			// tag, giving a readable consecutive sequence between milestones.
+			'new_version' => $label_version . $rev_suffix . '+' . $branch . '.' . $remote_sha7,
 			'url'         => 'https://github.com/' . SN_GITHUB_REPO . '/tree/' . rawurlencode( $branch ),
 			'package'     => 'https://api.github.com/repos/' . SN_GITHUB_REPO . '/zipball/' . rawurlencode( $branch ),
 		);
@@ -294,7 +378,22 @@ add_action( 'load-update-core.php', function() {
 	$branch = sanitize_key( sn_updater_branch() );
 	delete_transient( 'sn_github_error' );
 	delete_transient( 'sn_github_branch_' . $branch );
-	delete_transient( 'sn_github_revcount_' . $branch );
+	delete_transient( 'sn_github_remote_version_' . $branch );
+	// Revcount cache key now includes the base version (e.g.
+	// sn_github_revcount_main_6.5.5 vs ..._7.0.0) so concurrent bases during
+	// a Version bump transition don't alias. Clear all variants for this
+	// branch with a LIKE delete — covers both the legacy form and the
+	// version-suffixed form.
+	global $wpdb;
+	if ( $wpdb ) {
+		$wpdb->query( $wpdb->prepare(
+			"DELETE FROM {$wpdb->options}
+			 WHERE option_name LIKE %s
+			    OR option_name LIKE %s",
+			$wpdb->esc_like( '_transient_sn_github_revcount_' . $branch ) . '%',
+			$wpdb->esc_like( '_transient_timeout_sn_github_revcount_' . $branch ) . '%'
+		) );
+	}
 	// Clear WP's own theme-update site transient too — without this, WP keeps
 	// serving frozen update info from a previous filter run and never re-runs
 	// our pre_set_site_transient_update_themes filter, so the displayed SHA
