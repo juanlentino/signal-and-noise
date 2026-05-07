@@ -17,14 +17,25 @@
 	<div style="height:var(--wp--preset--spacing--40)" aria-hidden="true" class="wp-block-spacer"></div>
 	<!-- /wp:spacer -->
 
-	<!-- PILLAR ESSAY CARD — promoted from a one-liner. Uses the asphalt+concrete
-	     panel treatment already established by .sn-provenance-panel so it reads
-	     as native theme vocabulary, not a bolted-on card. -->
-	<!-- wp:group {"className":"sn-pillar-card","style":{"spacing":{"padding":{"top":"var:preset|spacing|40","right":"var:preset|spacing|40","bottom":"var:preset|spacing|40","left":"var:preset|spacing|40"},"margin":{"bottom":"var:preset|spacing|50"}},"border":{"color":"var:preset|color|concrete","width":"1px"}},"backgroundColor":"asphalt","layout":{"type":"constrained"}} -->
-	<div class="wp-block-group sn-pillar-card has-border-color has-asphalt-background-color has-background" style="border-color:var(--wp--preset--color--concrete);border-width:1px;margin-bottom:var(--wp--preset--spacing--50);padding-top:var(--wp--preset--spacing--40);padding-right:var(--wp--preset--spacing--40);padding-bottom:var(--wp--preset--spacing--40);padding-left:var(--wp--preset--spacing--40)">
+	<!-- PILLAR ESSAY CARDS — both long-form companion essays surfaced
+	     directly on /notes so visitors see the canonical work without
+	     needing to click through to /provenance first. Asphalt+concrete
+	     panel treatment matches the rest of the theme vocabulary
+	     (.sn-provenance-panel etc.). Subtitles are deliberately punchy
+	     claims rather than the academic SSRN subtitles; the CTAs link
+	     to the on-site long-forms (`/provenance/over-detection/` and
+	     `/provenance/as-substrate/`), not to SSRN — readers who want
+	     the formal paper can click through from the long-form. Read-
+	     time eyebrows use the [sn_reading_time slug="..."] shortcode
+	     so the figure stays in sync with the cached value on each
+	     long-form's post — single source of truth across /provenance,
+	     /notes, and the byline of each essay. -->
+
+	<!-- wp:group {"className":"sn-pillar-card","style":{"spacing":{"padding":{"top":"var:preset|spacing|40","right":"var:preset|spacing|40","bottom":"var:preset|spacing|40","left":"var:preset|spacing|40"},"margin":{"bottom":"var:preset|spacing|30"}},"border":{"color":"var:preset|color|concrete","width":"1px"}},"backgroundColor":"asphalt","layout":{"type":"constrained"}} -->
+	<div class="wp-block-group sn-pillar-card has-border-color has-asphalt-background-color has-background" style="border-color:var(--wp--preset--color--concrete);border-width:1px;margin-bottom:var(--wp--preset--spacing--30);padding-top:var(--wp--preset--spacing--40);padding-right:var(--wp--preset--spacing--40);padding-bottom:var(--wp--preset--spacing--40);padding-left:var(--wp--preset--spacing--40)">
 
 		<!-- wp:paragraph {"className":"sn-pillar-card-eyebrow","style":{"typography":{"fontSize":"0.75rem","letterSpacing":"0.15em","textTransform":"uppercase"},"spacing":{"margin":{"top":"0","bottom":"var:preset|spacing|20"}}},"textColor":"blood","fontFamily":"body"} -->
-		<p class="sn-pillar-card-eyebrow has-blood-color has-text-color has-body-font-family" style="margin-top:0;margin-bottom:var(--wp--preset--spacing--20);font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase">Pillar Essay</p>
+		<p class="sn-pillar-card-eyebrow has-blood-color has-text-color has-body-font-family" style="margin-top:0;margin-bottom:var(--wp--preset--spacing--20);font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase">Pillar Essay · March 2026 · [sn_reading_time slug="provenance/over-detection"]</p>
 		<!-- /wp:paragraph -->
 
 		<!-- wp:heading {"level":2,"className":"font-display sn-pillar-card-title","style":{"typography":{"fontSize":"clamp(2rem, 4vw, 2.8rem)"},"spacing":{"margin":{"top":"0","bottom":"var:preset|spacing|20"}}}} -->
@@ -32,11 +43,33 @@
 		<!-- /wp:heading -->
 
 		<!-- wp:paragraph {"className":"sn-pillar-card-dek","style":{"typography":{"fontSize":"1rem","lineHeight":"1.6"},"spacing":{"margin":{"top":"0","bottom":"var:preset|spacing|30"}}},"textColor":"rust"} -->
-		<p class="sn-pillar-card-dek has-rust-color has-text-color" style="margin-top:0;margin-bottom:var(--wp--preset--spacing--30);font-size:1rem;line-height:1.6">A short read on why the industry needs to prove what's human, not chase what isn't.</p>
+		<p class="sn-pillar-card-dek has-rust-color has-text-color" style="margin-top:0;margin-bottom:var(--wp--preset--spacing--30);font-size:1rem;line-height:1.6">Detection chases what isn't. Provenance proves what is.</p>
 		<!-- /wp:paragraph -->
 
 		<!-- wp:paragraph {"className":"sn-pillar-card-cta","style":{"typography":{"fontSize":"0.85rem","letterSpacing":"0.15em","textTransform":"uppercase"},"spacing":{"margin":{"top":"0","bottom":"0"}}},"fontFamily":"heading"} -->
-		<p class="sn-pillar-card-cta has-heading-font-family" style="margin-top:0;margin-bottom:0;font-size:0.85rem;letter-spacing:0.15em;text-transform:uppercase"><a href="/provenance">Read essay →</a></p>
+		<p class="sn-pillar-card-cta has-heading-font-family" style="margin-top:0;margin-bottom:0;font-size:0.85rem;letter-spacing:0.15em;text-transform:uppercase"><a href="/provenance/over-detection/">Read essay →</a></p>
+		<!-- /wp:paragraph -->
+
+	</div>
+	<!-- /wp:group -->
+
+	<!-- wp:group {"className":"sn-pillar-card","style":{"spacing":{"padding":{"top":"var:preset|spacing|40","right":"var:preset|spacing|40","bottom":"var:preset|spacing|40","left":"var:preset|spacing|40"},"margin":{"bottom":"var:preset|spacing|50"}},"border":{"color":"var:preset|color|concrete","width":"1px"}},"backgroundColor":"asphalt","layout":{"type":"constrained"}} -->
+	<div class="wp-block-group sn-pillar-card has-border-color has-asphalt-background-color has-background" style="border-color:var(--wp--preset--color--concrete);border-width:1px;margin-bottom:var(--wp--preset--spacing--50);padding-top:var(--wp--preset--spacing--40);padding-right:var(--wp--preset--spacing--40);padding-bottom:var(--wp--preset--spacing--40);padding-left:var(--wp--preset--spacing--40)">
+
+		<!-- wp:paragraph {"className":"sn-pillar-card-eyebrow","style":{"typography":{"fontSize":"0.75rem","letterSpacing":"0.15em","textTransform":"uppercase"},"spacing":{"margin":{"top":"0","bottom":"var:preset|spacing|20"}}},"textColor":"blood","fontFamily":"body"} -->
+		<p class="sn-pillar-card-eyebrow has-blood-color has-text-color has-body-font-family" style="margin-top:0;margin-bottom:var(--wp--preset--spacing--20);font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase">Pillar Essay · May 2026 · [sn_reading_time slug="provenance/as-substrate"]</p>
+		<!-- /wp:paragraph -->
+
+		<!-- wp:heading {"level":2,"className":"font-display sn-pillar-card-title","style":{"typography":{"fontSize":"clamp(2rem, 4vw, 2.8rem)"},"spacing":{"margin":{"top":"0","bottom":"var:preset|spacing|20"}}}} -->
+		<h2 class="wp-block-heading font-display sn-pillar-card-title" style="margin-top:0;margin-bottom:var(--wp--preset--spacing--20);font-size:clamp(2rem, 4vw, 2.8rem)">Provenance as Substrate</h2>
+		<!-- /wp:heading -->
+
+		<!-- wp:paragraph {"className":"sn-pillar-card-dek","style":{"typography":{"fontSize":"1rem","lineHeight":"1.6"},"spacing":{"margin":{"top":"0","bottom":"var:preset|spacing|30"}}},"textColor":"rust"} -->
+		<p class="sn-pillar-card-dek has-rust-color has-text-color" style="margin-top:0;margin-bottom:var(--wp--preset--spacing--30);font-size:1rem;line-height:1.6">Music files need fingerprints, not name tags.</p>
+		<!-- /wp:paragraph -->
+
+		<!-- wp:paragraph {"className":"sn-pillar-card-cta","style":{"typography":{"fontSize":"0.85rem","letterSpacing":"0.15em","textTransform":"uppercase"},"spacing":{"margin":{"top":"0","bottom":"0"}}},"fontFamily":"heading"} -->
+		<p class="sn-pillar-card-cta has-heading-font-family" style="margin-top:0;margin-bottom:0;font-size:0.85rem;letter-spacing:0.15em;text-transform:uppercase"><a href="/provenance/as-substrate/">Read essay →</a></p>
 		<!-- /wp:paragraph -->
 
 	</div>

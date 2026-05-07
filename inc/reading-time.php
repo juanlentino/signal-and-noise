@@ -156,19 +156,30 @@ add_shortcode( 'sn_reading_time', function( $atts ) {
  * Process [sn_reading_time] inside block template parts (mirror of the
  * pattern used for [current_year] in inc/setup.php).
  *
- * Exact-match the no-args token only. The slug-attributed form
- * `[sn_reading_time slug="..."]` lives inside post_content (pillar
- * cards) and is resolved by WordPress core's `the_content` filter
- * chain (do_shortcode at priority 11), so it doesn't need this hook.
+ * Two specific strpos checks rather than a prefix-match: catches the
+ * no-args form `[sn_reading_time]` AND the slug-attributed form
+ * `[sn_reading_time slug="..."]`, but does NOT false-positive on
+ * lookalikes (e.g. `[sn_reading_timex]`) the way a prefix-match would.
  *
- * The earlier prefix-match variant (`[sn_reading_time` without the
- * closing bracket) was reverted after triggering a hang on /notes —
- * the precise mechanism wasn't fully diagnosed, but the prefix change
- * was the only render-path delta in commit 949007e and the revert
- * restored /notes to its pre-iteration response time.
+ * Why both forms need to be caught here: post_content shortcodes
+ * resolve via WordPress core's `the_content` filter chain (do_shortcode
+ * at priority 11) regardless of this hook. But TEMPLATE files like
+ * page-notes.html aren't post_content — they're rendered through the
+ * block template engine, which doesn't apply `the_content`. So any
+ * shortcode used in template markup needs this render_block bridge.
+ *
+ * History note: an earlier change (commit 949007e) used a loose
+ * prefix-match `[sn_reading_time` and was suspected of causing the
+ * /notes hang incident. Subsequent diagnosis (e006841 onward)
+ * identified the actual root cause as the OG generator's UTF-8
+ * truncation loop in inc/og-image.php — completely unrelated to this
+ * filter. The targeted two-strpos form here is correct by design and
+ * shouldn't be conflated with the loose prefix-match that was
+ * reverted defensively at the time.
  */
 add_filter( 'render_block', function( $block_content, $block ) {
-	if ( strpos( $block_content, '[sn_reading_time]' ) !== false ) {
+	if ( false !== strpos( $block_content, '[sn_reading_time]' )
+		|| false !== strpos( $block_content, '[sn_reading_time slug=' ) ) {
 		$block_content = do_shortcode( $block_content );
 	}
 	return $block_content;
