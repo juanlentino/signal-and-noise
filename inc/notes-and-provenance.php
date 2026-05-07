@@ -29,12 +29,14 @@ const SN_NOTES_CATEGORY_SLUG    = 'notes';
 const SN_NOTES_PAGE_SLUG        = 'notes';
 const SN_PROVENANCE_SLUG        = 'provenance';
 const SN_OVER_DETECTION_SLUG    = 'over-detection';
+const SN_AS_SUBSTRATE_SLUG      = 'as-substrate';
 const SN_PERMALINK_STRUCTURE    = '/notes/%postname%/';
 const SN_SEED_FLAG_OPTION       = 'sn_content_surfaces_seeded_v1';
 const SN_PROV_BODY_MIGRATED_OPT = 'sn_provenance_body_migrated_v1';
 const SN_PROV_REFINE_MIGR_OPT   = 'sn_provenance_refine_migrated_v1';
 const SN_PROV_BYLINE_RT_MIGR_OPT = 'sn_provenance_byline_reading_time_migrated_v1';
 const SN_PROV_SPLIT_MIGR_OPT    = 'sn_provenance_split_migrated_v1';
+const SN_AS_SUBSTRATE_SEED_OPT  = 'sn_provenance_as_substrate_seeded_v1';
 const SN_NOTES_QUERY_ID         = 42;
 
 /**
@@ -61,6 +63,7 @@ function sn_seed_content_surfaces() {
 	sn_ensure_notes_page();
 	sn_ensure_provenance_page();
 	sn_ensure_over_detection_page();
+	sn_ensure_as_substrate_page();
 	sn_ensure_permalink_structure();
 
 	update_option( SN_SEED_FLAG_OPTION, time(), true );
@@ -156,6 +159,33 @@ function sn_ensure_over_detection_page() {
 }
 
 /**
+ * Create the second long-form essay as a child page under /provenance, at
+ * /provenance/as-substrate. Reuses page-provenance.html so the prose
+ * inherits the same hero/section/byline treatment the first essay was
+ * designed for. Idempotent: leave any existing child page untouched.
+ */
+function sn_ensure_as_substrate_page() {
+	$parent = get_page_by_path( SN_PROVENANCE_SLUG );
+	$parent_id = $parent ? (int) $parent->ID : 0;
+
+	$existing = get_page_by_path( SN_PROVENANCE_SLUG . '/' . SN_AS_SUBSTRATE_SLUG );
+	if ( $existing ) {
+		return (int) $existing->ID;
+	}
+
+	return wp_insert_post( array(
+		'post_title'    => 'Provenance as Substrate',
+		'post_name'     => SN_AS_SUBSTRATE_SLUG,
+		'post_parent'   => $parent_id,
+		'post_status'   => 'publish',
+		'post_type'     => 'page',
+		'post_content'  => sn_load_as_substrate_body(),
+		'post_excerpt'  => 'A short read on why music files need fingerprints, not just name tags.',
+		'page_template' => 'page-provenance',
+	), false );
+}
+
+/**
  * Load the seeded Provenance body markup from disk.
  * Empty string fallback if the seed file is missing — the template will
  * just render an empty post-content area, no fatal.
@@ -171,6 +201,15 @@ function sn_load_provenance_body() {
  */
 function sn_load_over_detection_body() {
 	$body_file = __DIR__ . '/seed-content/over-detection-body.html';
+	return file_exists( $body_file ) ? file_get_contents( $body_file ) : '';
+}
+
+/**
+ * Load the seeded second long-form essay markup from disk. Mirrors
+ * sn_load_over_detection_body — same fallback semantics.
+ */
+function sn_load_as_substrate_body() {
+	$body_file = __DIR__ . '/seed-content/as-substrate-body.html';
 	return file_exists( $body_file ) ? file_get_contents( $body_file ) : '';
 }
 
@@ -594,6 +633,35 @@ function sn_provenance_papers_index_markup() {
 </div>
 <!-- /wp:group -->
 HTML;
+}
+
+/**
+ * One-time migration that creates the second long-form essay
+ * (/provenance/as-substrate) on installs whose `SN_SEED_FLAG_OPTION` was
+ * already set before this page existed — the main seed flow short-
+ * circuits on those sites, so the new ensure-call needs its own gate.
+ *
+ * Idempotent on multiple axes: bails if the dedicated flag is set, and
+ * `sn_ensure_as_substrate_page()` itself bails if the child page exists.
+ */
+add_action( 'admin_init', 'sn_migrate_as_substrate_seed' );
+
+function sn_migrate_as_substrate_seed() {
+	if ( get_option( SN_AS_SUBSTRATE_SEED_OPT ) ) {
+		return;
+	}
+
+	$parent = get_page_by_path( SN_PROVENANCE_SLUG );
+	if ( ! $parent ) {
+		// Parent page doesn't exist yet — sn_seed_content_surfaces will
+		// create both in the same pass on its next admin_init firing.
+		// Mark migrated so we don't keep scanning.
+		update_option( SN_AS_SUBSTRATE_SEED_OPT, time(), true );
+		return;
+	}
+
+	sn_ensure_as_substrate_page();
+	update_option( SN_AS_SUBSTRATE_SEED_OPT, time(), true );
 }
 
 /* The [sn_reading_time] shortcode and its render_block bridge moved to
