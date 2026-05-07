@@ -269,11 +269,28 @@ add_filter( 'upgrader_source_selection', function( $source, $remote_source, $upg
 }, 10, 3 );
 
 /**
- * Clear the GitHub branch cache when checking for updates manually.
- * Visiting Dashboard → Updates forces a fresh poll of the tracked
- * branch's HEAD on the next page load.
+ * Clear the GitHub branch + WP theme-update caches ONLY when the user
+ * explicitly clicked "Check Again" (?force-check=1) on Dashboard →
+ * Updates. The previous version cleared on every visit to update-core,
+ * which had a nasty side effect: it nuked WP's `update_themes` transient
+ * BEFORE the page rendered, leaving `list_theme_updates()` to read an
+ * empty transient and output "Your themes are all up to date" — even
+ * when our filter would have populated a real update offer.
+ *
+ * Themes page (`load-themes.php`) doesn't have the same hook, so it
+ * triggered `_maybe_update_themes()` → `wp_update_themes()` → our filter
+ * → response set → update visible. The discrepancy ("update shows in
+ * theme picker but not on Updates page") was purely this hook's
+ * unconditional clear.
+ *
+ * Force-check path is unchanged: WP itself calls `wp_update_themes()`
+ * after this hook fires, which will repopulate the transient via our
+ * filter with fresh data.
  */
 add_action( 'load-update-core.php', function() {
+	if ( empty( $_GET['force-check'] ) ) {
+		return;
+	}
 	$branch = sanitize_key( sn_updater_branch() );
 	delete_transient( 'sn_github_error' );
 	delete_transient( 'sn_github_branch_' . $branch );
