@@ -286,18 +286,24 @@ add_action( 'load-update-core.php', function() {
 } );
 
 /**
- * Surface GitHub auto-updater state in the admin UI.
+ * Surface GitHub auto-updater state in the admin UI — but only when
+ * there's something the maintainer needs to act on.
  *
- * Two notice classes with different visibility rules:
+ * The previous design also rendered a persistent "Tracking branch X at
+ * <sha>" info notice on every admin page load. That was noise: when
+ * state is healthy and an update IS pending, WP's native update row
+ * already carries everything (the synthetic version label exposes the
+ * SHA, rev count, and branch). When there's nothing to do, an "all is
+ * well" banner is just clutter.
  *
- *   1. Actionable problems (missing token, last API error) — shown on
- *      Dashboard / Updates / Themes screens, anywhere the maintainer
- *      might land while looking for what's wrong.
+ * What we render here:
+ *   - Missing token: warning, every screen we run on.
+ *   - Last API error: error notice, every screen.
  *
- *   2. Persistent tracking-state info (branch, SHA, rev count) —
- *      shown only on the Updates screen. Dashboard and Themes don't
- *      need this on every page load; you go to Updates when you want
- *      to know what's pending.
+ * What we DON'T render:
+ *   - "Tracking branch main at <sha>" tracking-state info — gone.
+ *     If you want to inspect that, look at WP's native update row when
+ *     an update is offered, or read sn_github_local_sha directly.
  */
 add_action( 'admin_notices', function() {
 	if ( ! current_user_can( 'update_themes' ) ) {
@@ -310,28 +316,13 @@ add_action( 'admin_notices', function() {
 	}
 
 	$has_token = defined( 'SN_GITHUB_TOKEN' ) && ! empty( SN_GITHUB_TOKEN );
-
 	if ( ! $has_token ) {
 		echo '<div class="notice notice-warning"><p><strong>Signal &amp; Noise:</strong> Theme auto-updates are disabled. Define <code>SN_GITHUB_TOKEN</code> in <code>wp-config.php</code> (fine-grained PAT with <em>contents: read</em> on <code>' . esc_html( SN_GITHUB_REPO ) . '</code>) to re-enable.</p></div>';
 		return;
 	}
 
-	// Last error is actionable — surface it on every screen we run on.
 	$last_error = get_transient( 'sn_github_error' );
 	if ( $last_error ) {
 		echo '<div class="notice notice-error"><p><strong>Signal &amp; Noise:</strong> GitHub check failed — ' . esc_html( $last_error ) . '. Token may have expired, lost access to the repo, or GitHub is rate-limiting.</p></div>';
 	}
-
-	// Persistent tracking-state info — only on the Updates screen.
-	if ( 'update-core' !== $screen->id ) {
-		return;
-	}
-
-	$branch    = sn_updater_branch();
-	$local_sha = (string) get_option( 'sn_github_local_sha', '' );
-	$sha_label = $local_sha ? ' at <code>' . esc_html( $local_sha ) . '</code>' : '';
-	$mode      = ( 'main' === $branch ) ? 'default' : 'override via SN_GITHUB_BRANCH';
-	$rev       = sn_updater_revcount( $branch );
-	$rev_label = $rev > 0 ? ' · <code>r' . (int) $rev . '</code> commits since the last tag' : '';
-	echo '<div class="notice notice-info"><p><strong>Signal &amp; Noise:</strong> Tracking branch <code>' . esc_html( $branch ) . '</code>' . $sha_label . ' (' . $mode . ')' . $rev_label . '. Updates check the branch HEAD every 5 minutes; visit Dashboard → Updates to force a fresh poll.</p></div>';
 } );
