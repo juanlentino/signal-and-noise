@@ -321,10 +321,13 @@ function sn_apply_legacy_reading_time_cleanup() {
 }
 
 /**
- * Render the Reading Time card on the admin Dashboard tab. Hooked to the
- * `sn_admin_dashboard_extras` action emitted by inc/admin-page.php.
+ * Render the Reading Time admin UI on its dedicated tab. Hooked to
+ * `sn_admin_reading_time_tab` emitted by inc/admin-page.php when the
+ * user selects the Reading Time tab. Pre-v7.0.x this was a card on
+ * the Dashboard tab via `sn_admin_dashboard_extras` — moved out as
+ * part of the Dashboard-grew-too-big reorg.
  */
-add_action( 'sn_admin_dashboard_extras', function() {
+add_action( 'sn_admin_reading_time_tab', function() {
 	if ( ! current_user_can( 'manage_options' ) ) {
 		return;
 	}
@@ -344,9 +347,9 @@ add_action( 'sn_admin_dashboard_extras', function() {
 	$preview_url = esc_url( add_query_arg( 'sn_rt_preview', '1', $base_url ) );
 	$report      = $preview ? sn_find_legacy_reading_time() : array();
 
-	echo '<hr style="margin:1.5em 0;">';
-	echo '<h2 style="font-size:1.1em;margin-bottom:0.8em;">Reading Time</h2>';
-	echo '<p style="color:#666;font-size:0.9em;max-width:680px;">Word count ÷ ' . (int) SN_READING_TIME_DEFAULT_WPM . ' WPM, cached in <code>_sn_reading_time_minutes</code> post meta and rebuilt on save. The cleanup tool below scans for hand-typed strings like "8-minute read" left over from before the shortcode existed.</p>';
+	// No top-level heading here — the "Reading Time" tab name in the
+	// nav above is sufficient label.
+	echo '<p style="color:#666;font-size:0.95em;max-width:680px;margin-top:0;">Word count ÷ ' . (int) SN_READING_TIME_DEFAULT_WPM . ' WPM, cached in <code>_sn_reading_time_minutes</code> post meta and rebuilt on save. The cleanup tool below scans for hand-typed strings like "8-minute read" left over from before the shortcode existed.</p>';
 
 	echo '<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start;margin-top:1em;">';
 	echo '<div style="background:#fff;border:1px solid #c3c4c7;border-radius:4px;padding:16px 20px;max-width:300px;">';

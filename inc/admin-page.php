@@ -2,11 +2,22 @@
 /**
  * Signal & Noise — Theme options admin page.
  *
- * Registers the Appearance → Signal & Noise submenu and renders a two-tab
- * interface (Dashboard / Links) that covers:
- *   - Status & maintenance actions (clear overrides, purge caches, check
- *     for updates, full reset) — all form-posted with WP nonces.
- *   - External service links (GitHub repo/releases, Cloudflare, Cloudways).
+ * Registers the Appearance → Signal & Noise submenu and renders a tabbed
+ * interface that covers theme management without overflowing into a
+ * single-page-of-everything:
+ *
+ *   - Dashboard      — status overview + the four maintenance actions
+ *                      (full reset, clear overrides, purge caches,
+ *                      check for updates).
+ *   - Cloudflare     — token + zone configuration, status, manual
+ *                      zone purge, last-purge timestamp.
+ *   - Reading Time   — legacy reading-time-string cleanup tool
+ *                      (preview + apply).
+ *   - Links          — external service links.
+ *
+ * Modules contribute their per-tab content via dedicated action hooks
+ * (`sn_admin_cloudflare_tab`, `sn_admin_reading_time_tab`) so each
+ * subsystem keeps its UI code colocated with its logic.
  *
  * @package SignalNoise
  */
@@ -32,7 +43,7 @@ function sn_theme_options_page() {
 	$theme         = wp_get_theme( 'signal-and-noise' );
 	$local_version = $theme->get( 'Version' );
 	$notices       = array();
-	$valid_tabs    = array( 'dashboard', 'links' );
+	$valid_tabs    = array( 'dashboard', 'cloudflare', 'reading-time', 'links' );
 	$active_tab    = isset( $_GET['tab'] ) ? sanitize_text_field( wp_unslash( $_GET['tab'] ) ) : 'dashboard';
 	if ( ! in_array( $active_tab, $valid_tabs, true ) ) {
 		$active_tab = 'dashboard';
@@ -48,25 +59,11 @@ function sn_theme_options_page() {
 		}
 
 		if ( 'purge_caches' === $action ) {
-			wp_cache_flush();
-			delete_site_transient( 'update_themes' );
-			wp_clean_themes_cache();
-
-			// Only purge transients we own (sn_*) — leaves plugin transients alone.
-			global $wpdb;
-			if ( $wpdb ) {
-				$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '\\_transient\\_sn\\_%' OR option_name LIKE '\\_transient\\_timeout\\_sn\\_%'" );
-			}
-
-			// Trigger Breeze purge via its own action hooks.
-			do_action( 'breeze_clear_all_cache' );
-			do_action( 'breeze_clear_varnish' );
-
-			// Repopulate update_themes via our filter so subsequent visits to
-			// Dashboard → Updates render the correct state instead of the empty
-			// "all up to date" message that an unpopulated transient produces.
-			wp_update_themes();
-
+			// Single source of truth for "purge everything" — see
+			// sn_purge_all_caches() in inc/template-maintenance.php.
+			// Skip template_overrides here so the button reads as
+			// "purge caches", not "also delete admin Site Editor edits".
+			sn_purge_all_caches( array( 'template_overrides' => false ) );
 			$notices[] = array( 'success', 'All caches purged.' );
 		}
 
@@ -101,25 +98,9 @@ function sn_theme_options_page() {
 		}
 
 		if ( 'full_reset' === $action ) {
-			$count = sn_clear_template_overrides();
-			wp_cache_flush();
-			delete_site_transient( 'update_themes' );
+			// Full reset = purge everything including DB template overrides.
 			delete_transient( 'sn_github_error' );
-			wp_clean_themes_cache();
-
-			// Only purge transients we own (sn_*) — leaves plugin transients alone.
-			global $wpdb;
-			if ( $wpdb ) {
-				$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '\\_transient\\_sn\\_%' OR option_name LIKE '\\_transient\\_timeout\\_sn\\_%'" );
-			}
-
-			do_action( 'breeze_clear_all_cache' );
-			do_action( 'breeze_clear_varnish' );
-
-			// Same rationale as purge_caches/check_updates above: repopulate so
-			// the Updates page shows the real state rather than an empty one.
-			wp_update_themes();
-
+			$count = sn_purge_all_caches();
 			$notices[] = array( 'success', 'Full reset: ' . $count . ' override(s) cleared + all caches purged.' );
 		}
 	}
@@ -178,9 +159,17 @@ function sn_theme_options_page() {
 	}
 
 	// ── TABS ──
+	$tab_labels = array(
+		'dashboard'    => 'Dashboard',
+		'cloudflare'   => 'Cloudflare',
+		'reading-time' => 'Reading Time',
+		'links'        => 'Links',
+	);
 	echo '<nav class="nav-tab-wrapper" style="margin-bottom:1.5em;">';
-	echo '<a href="' . esc_url( $base_url . '&tab=dashboard' ) . '" class="nav-tab' . ( 'dashboard' === $active_tab ? ' nav-tab-active' : '' ) . '">Dashboard</a>';
-	echo '<a href="' . esc_url( $base_url . '&tab=links' ) . '" class="nav-tab' . ( 'links' === $active_tab ? ' nav-tab-active' : '' ) . '">Links</a>';
+	foreach ( $tab_labels as $slug => $label ) {
+		$is_active = ( $slug === $active_tab );
+		echo '<a href="' . esc_url( $base_url . '&tab=' . $slug ) . '" class="nav-tab' . ( $is_active ? ' nav-tab-active' : '' ) . '">' . esc_html( $label ) . '</a>';
+	}
 	echo '</nav>';
 
 	// ════════════════════════════════════════
@@ -257,8 +246,32 @@ function sn_theme_options_page() {
 		echo '</div>';
 		echo '</form>';
 
-		/** Allow modules (e.g. inc/reading-time.php) to inject extra dashboard cards. */
+		/**
+		 * Legacy hook for backward compatibility. As of v7.0.x, modules
+		 * should target their dedicated tab hooks instead:
+		 *   - sn_admin_cloudflare_tab    (Cloudflare tab)
+		 *   - sn_admin_reading_time_tab  (Reading Time tab)
+		 * This action is kept firing on the Dashboard tab so any
+		 * third-party additions land somewhere visible during the
+		 * transition.
+		 */
 		do_action( 'sn_admin_dashboard_extras' );
+
+	// ════════════════════════════════════════
+	// TAB: CLOUDFLARE
+	// ════════════════════════════════════════
+	} elseif ( 'cloudflare' === $active_tab ) {
+
+		/** Module-owned UI: see inc/cloudflare-purge.php. */
+		do_action( 'sn_admin_cloudflare_tab' );
+
+	// ════════════════════════════════════════
+	// TAB: READING TIME
+	// ════════════════════════════════════════
+	} elseif ( 'reading-time' === $active_tab ) {
+
+		/** Module-owned UI: see inc/reading-time.php. */
+		do_action( 'sn_admin_reading_time_tab' );
 
 	// ════════════════════════════════════════
 	// TAB: LINKS

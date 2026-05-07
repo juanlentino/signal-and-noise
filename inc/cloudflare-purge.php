@@ -233,13 +233,16 @@ add_action( 'upgrader_process_complete', function( $upgrader, $options ) {
 }, 30, 2 );
 
 /**
- * Admin UI card on the Signal & Noise dashboard. Lets the user save
- * the API token + zone ID and trigger a manual full-zone purge.
+ * Admin UI for the Cloudflare tab. Lets the user save the API token +
+ * zone ID and trigger a manual full-zone purge.
  *
- * Hooked to the existing `sn_admin_dashboard_extras` action so we
- * don't have to modify inc/admin-page.php directly.
+ * Hooked to the dedicated `sn_admin_cloudflare_tab` action emitted by
+ * inc/admin-page.php when the user selects the Cloudflare tab. Pre-
+ * v7.0.x this UI was on the Dashboard tab via `sn_admin_dashboard_extras`,
+ * but the Dashboard grew unwieldy as features accumulated; splitting
+ * subsystems into their own tabs is the v7.0.x reorg.
  */
-add_action( 'sn_admin_dashboard_extras', function() {
+add_action( 'sn_admin_cloudflare_tab', function() {
 	if ( ! current_user_can( 'manage_options' ) ) {
 		return;
 	}
@@ -296,9 +299,9 @@ add_action( 'sn_admin_dashboard_extras', function() {
 	$last_purge       = get_option( SN_CF_LAST_PURGE_OPT, array() );
 	$is_configured    = sn_cf_is_configured();
 
-	echo '<hr style="margin:1.5em 0;">';
-	echo '<h2 style="font-size:1.1em;margin-bottom:0.8em;">Cloudflare</h2>';
-	echo '<p style="color:#666;font-size:0.9em;max-width:680px;">Auto-purges Cloudflare\'s edge cache when content changes. See <code>docs/CACHING.md</code> for the dashboard-side Cache Rule that turns on HTML caching to begin with — without that, this module purges nothing useful (origin pages aren\'t cached at the edge).</p>';
+	// No top-level heading here — the "Cloudflare" tab name in the
+	// nav above is sufficient label. Just an intro paragraph.
+	echo '<p style="color:#666;font-size:0.95em;max-width:680px;margin-top:0;">Auto-purges Cloudflare\'s edge cache when content changes. See <code>docs/CACHING.md</code> for the dashboard-side Cache Rule that turns on HTML caching to begin with — without that, this module purges nothing useful (origin pages aren\'t cached at the edge).</p>';
 
 	echo '<form method="post" style="background:#fff;border:1px solid #c3c4c7;border-radius:4px;padding:16px 20px;max-width:680px;margin-top:1em;">';
 	wp_nonce_field( 'sn_theme_options_nonce' );

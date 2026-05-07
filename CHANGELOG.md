@@ -2,6 +2,19 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [Unreleased] — Operational fixes (post-v7.0.0)
+
+Two related fixes that surfaced after the v7.0.0 deploy: (a) `/notes` continued to render the old single pillar card after the user clicked Update, despite `wp_template` DB overrides being cleared and the theme files being correctly replaced, because Breeze's HTML page cache wasn't being invalidated on theme file changes; (b) the admin maintenance page accumulated four sections in a single Dashboard tab and grew unwieldy — Cloudflare config + Reading Time cleanup + Status + Actions all stacked vertically.
+
+### Fixed
+- **`sn_purge_all_caches()` unified helper** in [inc/template-maintenance.php](inc/template-maintenance.php). Single source of truth for "make sure no stale rendered HTML or stale metadata is being served anywhere". Covers WP object cache, theme metadata cache, our own `sn_*` transients (targeted DELETE — leaves plugin transients alone), Breeze + Varnish via plugin action hooks, Cloudflare zone via the new purge module, DB template overrides via `sn_clear_template_overrides()`, and an `update_themes` repopulate so the Updates page renders correct state. Accepts a flags array for partial flushes (e.g., `'template_overrides' => false` for a "purge caches but keep my Site Editor edits" semantic).
+- **All theme-file-change triggers now use the unified helper.** Three call sites previously ran *subsets* of the necessary clears: (1) `upgrader_process_complete` only cleared DB overrides, leaving Breeze stale; (2) the Version-compare check on `admin_init` cleared object cache + overrides but not Breeze; (3) the new mtime check (v7.0.0) only cleared overrides. All three now call `sn_purge_all_caches()`. The "/notes still showing one card" symptom after v7.0.0 deploy resolves because the upgrader hook now flushes Breeze synchronously during the install.
+- **Admin "Purge All Caches" and "Full Reset" buttons** now thin wrappers over the unified helper. "Purge All Caches" passes `template_overrides => false` so it doesn't nuke admin Site Editor edits; "Full Reset" lets the helper run with all defaults including overrides. Behavior identical for users; less duplicated code.
+
+### Changed
+- **Admin maintenance page split into four tabs.** Dashboard (status + actions only), Cloudflare (token + zone + status + manual purge), Reading Time (legacy cleanup tool), Links (existing). Each subsystem gets its own dedicated action hook (`sn_admin_cloudflare_tab`, `sn_admin_reading_time_tab`) so the module that owns the logic also owns the UI, colocated. The legacy `sn_admin_dashboard_extras` hook still fires on the Dashboard tab for backward compatibility with any third-party additions.
+- **Removed redundant section headings** from the Cloudflare and Reading Time tab bodies — the tab name in the nav serves as the section label, so internal `<h2>Cloudflare</h2>` was just visual noise.
+
 ## [7.0.0] — 2026-05-07
 
 **Post-incident hardening + new capabilities.** Marks the architectural shift to *"decorative work never blocks essential rendering"* after a `/notes` outage on 2026-05-07 was traced to a UTF-8 truncation loop in the OG card generator that pinned PHP-FPM workers at 100% CPU. The fix to that specific bug is necessary but not sufficient — the deeper change is structural: lazy-on-request synchronous OG generation is gone, replaced with proactive backfill in admin contexts; CI smoke tests catch regressions before users notice; Cloudflare HTML caching with auto-purge reduces origin load and improves global TTFB; mtime-based template-override clear self-heals on every deploy regardless of `Version:` bump policy.

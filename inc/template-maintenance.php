@@ -22,8 +22,105 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
+ * Comprehensive cache flush. Single source of truth for "make sure no
+ * stale rendered HTML or stale metadata is being served anywhere".
+ * Called automatically on every theme-file change (Version: bump,
+ * upgrader complete, mtime advance) and from the admin "Purge All
+ * Caches" / "Full Reset" buttons.
+ *
+ * Why this exists: prior to v7.0.0 these triggers each ran a subset
+ * of the necessary clears. Specifically, `upgrader_process_complete`
+ * cleared DB template overrides but didn't touch Breeze/Varnish, so
+ * the origin's HTML page cache kept serving the old rendered template
+ * even after a theme update wiped the override. The 2026-05-07
+ * "/notes still showing one card after Update" symptom was that.
+ *
+ * Order matters:
+ *   1. WP object cache + theme metadata cache + update_themes — these
+ *      are in-process and need to be cleared first so subsequent calls
+ *      don't repopulate from stale state.
+ *   2. Our own sn_* transients — pruned with a targeted SQL DELETE so
+ *      we don't disturb plugin transients.
+ *   3. Origin HTML caches (Breeze + Varnish) via plugin action hooks.
+ *      Plugin no-op if not installed; safe to call unconditionally.
+ *   4. CDN cache (Cloudflare) via our own purge module — gated on
+ *      having a configured token.
+ *   5. DB template overrides via sn_clear_template_overrides().
+ *   6. Repopulate update_themes by running our filter once, so the
+ *      Updates page renders correct state instead of empty.
+ *   7. Extension hook for future modules (sn_after_full_cache_flush).
+ *
+ * @param array $args {
+ *     Optional flags. All default true.
+ *     @type bool $object_cache       Flush WP object cache + theme caches.
+ *     @type bool $sn_transients      Prune sn_* transients.
+ *     @type bool $origin_html        Trigger Breeze / Varnish purges.
+ *     @type bool $cloudflare         Trigger Cloudflare zone purge.
+ *     @type bool $template_overrides Delete wp_template DB overrides.
+ *     @type bool $repopulate         Re-run update_themes.
+ * }
+ * @return int Count of template overrides cleared (matches the legacy
+ *             return signature of sn_clear_template_overrides()).
+ */
+function sn_purge_all_caches( $args = array() ) {
+	$args = wp_parse_args( $args, array(
+		'object_cache'       => true,
+		'sn_transients'      => true,
+		'origin_html'        => true,
+		'cloudflare'         => true,
+		'template_overrides' => true,
+		'repopulate'         => true,
+	) );
+
+	if ( $args['object_cache'] ) {
+		wp_cache_flush();
+		delete_site_transient( 'update_themes' );
+		wp_clean_themes_cache();
+	}
+
+	if ( $args['sn_transients'] ) {
+		global $wpdb;
+		if ( $wpdb ) {
+			$wpdb->query(
+				"DELETE FROM {$wpdb->options}
+				 WHERE option_name LIKE '\\_transient\\_sn\\_%'
+				    OR option_name LIKE '\\_transient\\_timeout\\_sn\\_%'"
+			);
+		}
+	}
+
+	if ( $args['origin_html'] ) {
+		// Plugin action hooks — no-op if Breeze isn't installed.
+		do_action( 'breeze_clear_all_cache' );
+		do_action( 'breeze_clear_varnish' );
+	}
+
+	if ( $args['cloudflare'] && function_exists( 'sn_cf_purge_everything' ) ) {
+		// Gated on configuration internally; no-op if no token/zone set.
+		sn_cf_purge_everything();
+	}
+
+	$cleared = 0;
+	if ( $args['template_overrides'] ) {
+		$cleared = sn_clear_template_overrides();
+	}
+
+	if ( $args['repopulate'] ) {
+		// Re-run the update_themes filter so subsequent admin pageloads
+		// see correct state instead of the empty-transient false-positive
+		// "all up to date".
+		wp_update_themes();
+	}
+
+	do_action( 'sn_after_full_cache_flush', $args, $cleared );
+
+	return $cleared;
+}
+
+/**
  * Delete all database-stored template overrides.
- * Called on theme activation and via admin button.
+ * Called on theme activation, via admin button, and from
+ * sn_purge_all_caches().
  */
 function sn_clear_template_overrides() {
 	$post_types = array( 'wp_template', 'wp_template_part', 'wp_navigation' );
@@ -52,14 +149,20 @@ add_action( 'after_switch_theme', function() {
 } );
 
 /**
- * Auto-clear when this theme is updated via the WP updater.
+ * Auto-purge everything when this theme is updated via the WP updater.
+ *
+ * Pre-v7.0.0 this only called sn_clear_template_overrides() — but DB
+ * override clearing alone leaves Breeze's HTML page cache serving stale
+ * rendered output. Now calls sn_purge_all_caches() which includes
+ * Breeze, Varnish, object cache, Cloudflare (if configured), AND
+ * overrides. One responsible call instead of a partial subset.
  */
 add_action( 'upgrader_process_complete', function( $upgrader, $options ) {
 	if ( 'theme' === ( $options['type'] ?? '' ) ) {
 		$theme_slug = get_option( 'stylesheet' );
 		$updated    = $options['themes'] ?? ( isset( $options['theme'] ) ? array( $options['theme'] ) : array() );
 		if ( in_array( $theme_slug, $updated, true ) ) {
-			sn_clear_template_overrides();
+			sn_purge_all_caches();
 		}
 	}
 }, 10, 2 );
@@ -78,13 +181,9 @@ add_action( 'admin_init', function() {
 	$cached_version = get_option( 'sn_deployed_version' );
 
 	if ( $cached_version !== $current ) {
-		// Clear theme-related caches.
-		delete_site_transient( 'update_themes' );
-		wp_clean_themes_cache();
-		wp_cache_flush();
-
-		// Clear all template/template-part/navigation overrides.
-		sn_clear_template_overrides();
+		// Use the unified purge helper so Breeze/Varnish/Cloudflare also
+		// clear, not just the WP-side caches that were here pre-v7.0.0.
+		sn_purge_all_caches();
 
 		// Store new version so this only runs once per deploy.
 		update_option( 'sn_deployed_version', $current, true );
@@ -139,7 +238,11 @@ add_action( 'admin_init', function() {
 
 	$cached_mtime = (int) get_option( 'sn_templates_latest_mtime', 0 );
 	if ( $latest_mtime > $cached_mtime ) {
-		sn_clear_template_overrides();
+		// Same architectural rule as the Version-compare check above: any
+		// theme-file change must purge ALL caches (Breeze HTML cache
+		// included), not just the DB overrides. Calling the unified helper
+		// keeps the two triggers in lockstep.
+		sn_purge_all_caches();
 		update_option( 'sn_templates_latest_mtime', $latest_mtime, true );
 	}
 } );
