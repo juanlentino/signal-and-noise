@@ -48,19 +48,20 @@ function sn_pl_styles() {
 	$printed = true;
 	?>
 	<style>
-	.sn-pl-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:0;}
-	.sn-pl-stat{background:#f5f5f5;padding:10px 12px;border-left:3px solid #e00404;}
-	.sn-pl-stat-n{font-family:"Bebas Neue",Impact,sans-serif;font-size:1.75rem;line-height:1;color:#000;}
-	.sn-pl-stat-l{font-family:"DM Mono",monospace;font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;color:#666;margin-top:4px;}
-	.sn-pl-big{font-family:"Bebas Neue",Impact,sans-serif;font-size:4.5rem;line-height:0.9;color:#e00404;text-align:center;padding:6px 0 4px;}
-	.sn-pl-big-l{font-family:"DM Mono",monospace;font-size:0.7rem;letter-spacing:0.18em;text-transform:uppercase;color:#666;text-align:center;}
-	.sn-pl-list{list-style:none;margin:0;padding:0;font-size:0.85em;}
-	.sn-pl-list li{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #eee;gap:10px;}
+	/* WP admin native styling — no theme fonts, WP palette only.
+	   #1d2327 primary text · #646970 muted · #2271b1 link · #f0f0f1 hairline · #d63638 error. */
+	.sn-pl-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px 18px;margin:0;}
+	.sn-pl-stat-n{font-size:1.6rem;font-weight:600;color:#1d2327;line-height:1.1;}
+	.sn-pl-stat-l{font-size:0.85em;color:#646970;margin-top:2px;}
+	.sn-pl-big{font-size:2.5rem;font-weight:600;color:#1d2327;text-align:center;line-height:1;padding:8px 0 4px;}
+	.sn-pl-big-l{font-size:0.85em;color:#646970;text-align:center;}
+	.sn-pl-list{list-style:none;margin:0;padding:0;font-size:0.875em;}
+	.sn-pl-list li{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f0f1;gap:10px;}
 	.sn-pl-list li:last-child{border-bottom:0;}
-	.sn-pl-list .k{color:#000;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-	.sn-pl-list .v{font-family:"DM Mono",monospace;font-size:0.85em;color:#666;flex-shrink:0;}
-	.sn-pl-foot{margin-top:10px;font-family:"DM Mono",monospace;font-size:0.65rem;letter-spacing:0.1em;color:#999;}
-	.sn-pl-empty{color:#666;font-size:0.85em;font-style:italic;margin:0;}
+	.sn-pl-list .k{color:#1d2327;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+	.sn-pl-list .v{color:#646970;flex-shrink:0;font-variant-numeric:tabular-nums;}
+	.sn-pl-foot{margin:12px 0 0;font-size:0.85em;color:#646970;}
+	.sn-pl-empty{color:#646970;font-size:0.875em;font-style:italic;margin:0;}
 	.sn-pl-err{color:#d63638;font-size:0.9em;margin:0;}
 	</style>
 	<?php
@@ -105,8 +106,8 @@ function sn_pl_widget_realtime() {
 	$n = sn_plausible_realtime();
 	echo '<div class="sn-pl-big-l">Visitors right now</div>';
 	echo '<div class="sn-pl-big">' . esc_html( null === $n ? '—' : number_format_i18n( (int) $n ) ) . '</div>';
-	$dash = $cfg['base'] . '/' . rawurlencode( $cfg['domain'] );
-	echo '<p class="sn-pl-foot">Last 5 min · refreshes every 30 s · <a href="' . esc_url( $dash ) . '" target="_blank" rel="noopener">Open dashboard ↗</a></p>';
+	$dash = admin_url( 'index.php?page=plausible_analytics_statistics' );
+	echo '<p class="sn-pl-foot">Last 5 min · refreshes every 30 s · <a href="' . esc_url( $dash ) . '">Open dashboard →</a></p>';
 }
 
 function sn_pl_widget_pages() {
@@ -162,11 +163,10 @@ function sn_pl_duration( $seconds ) {
 }
 
 function sn_pl_footer( $data, $period_label ) {
-	$cfg = sn_plausible_config();
-	if ( ! $cfg ) {
-		return;
-	}
-	$dash = $cfg['base'] . '/' . rawurlencode( $cfg['domain'] );
+	// Internal admin link — the Plausible plugin's embedded stats page.
+	// User is already authenticated in /wp-admin/, so no target=_blank
+	// (it's an in-app navigation, not a hop to plausible.io).
+	$dash = admin_url( 'index.php?page=plausible_analytics_statistics' );
 	$ago  = human_time_diff( (int) $data['fetched'], time() );
-	echo '<p class="sn-pl-foot">' . esc_html( $period_label ) . ' · cached ' . esc_html( $ago ) . ' ago · <a href="' . esc_url( $dash ) . '" target="_blank" rel="noopener">Open dashboard ↗</a></p>';
+	echo '<p class="sn-pl-foot">' . esc_html( $period_label ) . ' · cached ' . esc_html( $ago ) . ' ago · <a href="' . esc_url( $dash ) . '">Open dashboard →</a></p>';
 }

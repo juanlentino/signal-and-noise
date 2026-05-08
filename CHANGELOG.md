@@ -2,6 +2,24 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [7.2.2] — Plausible widgets: native WP admin styling + correct dashboard link
+
+The four Plausible dashboard widgets shipped in v7.2.1 imported theme-front-end styling (Bebas Neue display font, DM Mono labels, blood-red accents, asphalt card backgrounds with a red left rail) into the WordPress admin. The admin is a shared surface — different themes and plugins coexist there, and users expect WP's own UI conventions, not theme-brand styling. The widgets read as foreign-pasted instead of native WP. Fixed.
+
+### Changed
+- **`inc/plausible-widget.php`** — inline CSS rewritten to WP admin conventions:
+  - System font stack inherited from WP admin (no `font-family` override; previously forced `Bebas Neue` and `DM Mono`).
+  - Numbers are bold + slightly larger but use the inherited admin font, matching the visual weight of native widgets like *At a Glance* and *Activity*.
+  - Palette swapped to WP admin tokens: `#1d2327` primary text, `#646970` muted, `#f0f0f1` hairlines, `#d63638` error. Dropped `#000`/`#666`/`#e00404`/`#f5f5f5`.
+  - Removed the asphalt card background and `border-left: 3px solid #e00404` on stat tiles — the brand left-rail belongs on the front end, not in the admin.
+  - Removed `letter-spacing: 0.18em` + `text-transform: uppercase` on labels — WP admin doesn't use that treatment.
+  - Realtime widget's giant red Bebas Neue numeral is now a bold `#1d2327` figure at 2.5rem.
+  - Added `font-variant-numeric: tabular-nums` to breakdown-list values so visitor counts align vertically — small detail, makes the lists scan as native.
+- **Dashboard footer link** in all four widgets now points to `admin_url( 'index.php?page=plausible_analytics_statistics' )` — the Plausible plugin's *own* embedded stats page inside WP admin — instead of constructing a public `https://plausible.io/{domain}` URL. Same surface the user is already authenticated on, no `target="_blank"`, no separate plausible.io login required. Arrow changed from `↗` (external convention) to `→` (internal navigation).
+
+### Why patch (7.2.2)
+Visual calibration on a v7.2.1 feature. No behaviour change to the data flow, the cache layers, the API client, the security module, or anything else — purely styling + a one-line URL swap that fits an existing admin route the user already had configured. Patch 2 of 7.2; cap is 7 per minor.
+
 ## [7.2.1] — Hardening pass + Plausible dashboard widgets + escaping cleanup
 
 A QA / security pass against [WordPress's hardening guide](https://wordpress.org/documentation/article/hardening-wordpress/), plus a four-widget Plausible Analytics panel for the WP dashboard.
