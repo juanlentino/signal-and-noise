@@ -2,6 +2,12 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [7.1.4] — Home hero accent: responsive, matches dek width
+
+The blood-red accent rule on the front page was hardcoded to `120px` wide via inline style — read as a small editorial mark next to a 640px-wide dek. Made it responsive: `width: 100%; max-width: 640px;` so the accent's right edge now lands at the same point as the dek's right edge ("together."). On narrower viewports both shrink together (100% of the available column width), so the accent always reads as the dek's underline rather than a floating mark.
+
+Implementation moves the styling out of inline-on-the-element and into [layout.css:247](assets/css/layout.css:247) where it can express the constraint (`max-width: 640px` matches `.sn-hero-subtitle`'s own `max-width: 640px` from the same file). Honours `prefers-reduced-motion` for the existing fade-in.
+
 ## [7.1.3] — Catalog rollout: skipped items + redundancy fix
 
 Three small follow-ups to v7.1.0–v7.1.2:
