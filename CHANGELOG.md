@@ -2,6 +2,36 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [7.1.0] — Catalog vocabulary rollout
+
+The "Industrial Catalog" design vocabulary developed for `/notes` extends across the site's index/listing surfaces. New shared CSS components in [assets/css/components.css](assets/css/components.css) — `.sn-catalog-eyebrow`, `.sn-catalog-meta`, `.sn-catalog-section` (label + count), `.sn-catalog-number` — replace the ad-hoc blood-mono-caps eyebrow patterns each page reinvented at slightly different sizes. The vocabulary is applied selectively: index pages get the full treatment, action/CTA pages stay untouched.
+
+### Why minor
+
+User-visible design changes across five page templates plus a new shared CSS surface. No public API or settings schema change. Per the project's SemVer policy this is a `MINOR` bump (`new user-visible capabilities`), continuing the v7 series.
+
+### `/services` — Tier 1 full treatment
+- Hero eyebrow: `What I Do` → `Services · 06 Offerings · 02 Sections` (catalog-eyebrow class).
+- The two blood-uppercase `<h2>` section headings (`Music & Production`, `Business & Strategy`) replaced with `.sn-catalog-section` blocks — small mono caps label, hairline divider, count counter (`04 / 06`, `02 / 06`).
+- Each of the six service cards now carries a `№ 01` through `№ 06` mono-blood marker above its heading, sized 0.85rem to read as quiet meta rather than competing with the heading.
+- The four blood-eyebrow elements existed at three different sizes (0.75rem, 0.85rem) before — now unified through the component.
+
+### `/provenance` — Tier 1 numbered pillars
+- The two pillar cards in `sn_provenance_papers_index_markup()` now lead with a `№ 01` / `№ 02` catalog-number marker, mirroring the /notes pillar treatment for visual continuity between the two index pages.
+- New constant `SN_PROV_CATALOG_NUMBERS_OPT` and migration `sn_migrate_provenance_catalog_numbers()` re-renders existing installs' pillar body — without it, the markup-function update would only take effect on fresh installs because earlier migrations' flags lock in the prior shape.
+- Seed file [inc/seed-content/provenance-body.html](inc/seed-content/provenance-body.html) updated in lockstep so fresh installs ship the same shape.
+- Defensive: gated on the SSRN abstract_id 6730343 anchor; if missing, admin has hand-edited away from seed shape and the migration bails without flagging so a future run can complete after recovery.
+
+### Tier 2 — mono hero eyebrows
+- `/resume`: `Background` → `Dossier · Background · 20+ Years`.
+- `/music`: `Listen` → `Catalog · Discography · 2005 → 2026`. Secondary `Full Discography` → `Full Discography · Verified Credits`.
+- `/about`: `Who I Am` → `Dossier · Buenos Aires → Miami · Who I Am`. Secondary `Education & Mentorship` → `Education & Mentorship · Pass-On`.
+
+### Not changed
+- `/` (front page) — landing/identity energy, not browse energy.
+- `/contact`, `/work-with-me` — action pages, different tone.
+- `/notes/{slug}/`, `/provenance/over-detection/`, `/provenance/as-substrate/` — long-form reading surfaces, not catalog surfaces.
+
 ## [Unreleased] — Operational fixes (post-v7.0.0)
 
 ### `/notes` rebuilt from scratch — PHP-rendered, redesigned

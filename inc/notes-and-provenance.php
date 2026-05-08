@@ -42,6 +42,7 @@ const SN_PROV_RT_DYNAMIC_OPT    = 'sn_provenance_card_readtimes_dynamic_v1';
 const SN_AS_DATE_DISPLAYTYPE_OPT = 'sn_provenance_as_substrate_date_displaytype_v1';
 const SN_OD_EYEBROW_DYN_OPT     = 'sn_provenance_over_detection_eyebrow_dynamic_v1';
 const SN_NOTES_TPL_OVERRIDE_CLEARED_OPT = 'sn_notes_template_override_cleared_v1';
+const SN_PROV_CATALOG_NUMBERS_OPT = 'sn_provenance_catalog_numbers_v1';
 const SN_NOTES_QUERY_ID         = 42;
 
 /**
@@ -583,6 +584,10 @@ function sn_provenance_papers_index_markup() {
 		<!-- wp:group {"tagName":"article","className":"sn-prov-paper-card","layout":{"type":"default"}} -->
 		<article class="wp-block-group sn-prov-paper-card">
 
+			<!-- wp:paragraph {"className":"sn-catalog-number","style":{"spacing":{"margin":{"top":"0","bottom":"var:preset|spacing|10"}}}} -->
+			<p class="sn-catalog-number" style="margin-top:0;margin-bottom:var(--wp--preset--spacing--10)">№ 01</p>
+			<!-- /wp:paragraph -->
+
 			<!-- wp:paragraph {"className":"sn-prov-paper-meta","style":{"typography":{"fontSize":"0.75rem","letterSpacing":"0.15em","textTransform":"uppercase"},"spacing":{"margin":{"top":"0","bottom":"var:preset|spacing|20"}}},"textColor":"blood","fontFamily":"body"} -->
 			<p class="sn-prov-paper-meta has-blood-color has-text-color has-body-font-family" style="margin-top:0;margin-bottom:var(--wp--preset--spacing--20);font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase">March 2026 · [sn_reading_time slug="provenance/over-detection"]</p>
 			<!-- /wp:paragraph -->
@@ -608,6 +613,10 @@ function sn_provenance_papers_index_markup() {
 
 		<!-- wp:group {"tagName":"article","className":"sn-prov-paper-card","layout":{"type":"default"}} -->
 		<article class="wp-block-group sn-prov-paper-card">
+
+			<!-- wp:paragraph {"className":"sn-catalog-number","style":{"spacing":{"margin":{"top":"0","bottom":"var:preset|spacing|10"}}}} -->
+			<p class="sn-catalog-number" style="margin-top:0;margin-bottom:var(--wp--preset--spacing--10)">№ 02</p>
+			<!-- /wp:paragraph -->
 
 			<!-- wp:paragraph {"className":"sn-prov-paper-meta","style":{"typography":{"fontSize":"0.75rem","letterSpacing":"0.15em","textTransform":"uppercase"},"spacing":{"margin":{"top":"0","bottom":"var:preset|spacing|20"}}},"textColor":"blood","fontFamily":"body"} -->
 			<p class="sn-prov-paper-meta has-blood-color has-text-color has-body-font-family" style="margin-top:0;margin-bottom:var(--wp--preset--spacing--20);font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase">May 2026 · [sn_reading_time slug="provenance/as-substrate"]</p>
@@ -785,6 +794,61 @@ function sn_migrate_provenance_card_readtimes_dynamic() {
 	) );
 
 	update_option( SN_PROV_RT_DYNAMIC_OPT, time(), true );
+}
+
+/**
+ * One-time migration that adds № 01 / № 02 catalog-number markers
+ * to the /provenance pillar cards, bringing them visually in line
+ * with the /notes pillar treatment. Without this, the
+ * sn_provenance_papers_index_markup() update only takes effect on
+ * fresh installs — production sites already have the prior shape
+ * locked in via earlier migrations' flags.
+ *
+ * Strategy mirrors `sn_migrate_provenance_card_readtimes_dynamic()`:
+ * full-body rewrite via the index function, gated on the SSRN
+ * abstract_id 6730343 anchor for Card 2. If absent, admin has hand-
+ * edited away from seed shape — bail WITHOUT flagging so a future
+ * run can complete after recovery.
+ *
+ * Self-idempotent: bails (and flags) if the body already contains
+ * `sn-catalog-number` — the unique marker for the post-migration
+ * shape.
+ */
+add_action( 'admin_init', 'sn_migrate_provenance_catalog_numbers' );
+
+function sn_migrate_provenance_catalog_numbers() {
+	if ( get_option( SN_PROV_CATALOG_NUMBERS_OPT ) ) {
+		return;
+	}
+
+	$page = get_page_by_path( SN_PROVENANCE_SLUG );
+	if ( ! $page ) {
+		update_option( SN_PROV_CATALOG_NUMBERS_OPT, time(), true );
+		return;
+	}
+
+	$body = $page->post_content;
+
+	// Already migrated — body has the catalog-number markers.
+	if ( false !== strpos( $body, 'sn-catalog-number' ) ) {
+		update_option( SN_PROV_CATALOG_NUMBERS_OPT, time(), true );
+		return;
+	}
+
+	// Defensive: only proceed if the v6.5.4 / Card-2-longform shape
+	// is present (SSRN abstract_id 6730343 anchor for Card 2). If
+	// absent, the admin has hand-edited away from seed — bail
+	// WITHOUT flagging so the migration can complete after recovery.
+	if ( false === strpos( $body, 'abstract_id=6730343' ) ) {
+		return;
+	}
+
+	wp_update_post( array(
+		'ID'           => $page->ID,
+		'post_content' => sn_provenance_papers_index_markup(),
+	) );
+
+	update_option( SN_PROV_CATALOG_NUMBERS_OPT, time(), true );
 }
 
 /**

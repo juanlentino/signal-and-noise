@@ -476,3 +476,73 @@
 	text-transform: uppercase;
 	color: var(--wp--preset--color--rust);
 }
+
+/* ============================================
+   CATALOG VOCABULARY — shared components
+   ============================================
+   Patterns extracted from inc/page-notes-render.php for reuse
+   on other index/listing surfaces (/services, /provenance,
+   /resume, /music, /about). The /notes page itself doesn't
+   use these classes — its CSS is inlined alongside its render
+   for atomic deploys — but the visual language is identical.
+
+   Usage:
+     - .sn-catalog-eyebrow: replace ad-hoc hero "blood mono caps"
+       eyebrows with a standardized treatment.
+     - .sn-catalog-meta: optional meta line under the dek
+       (entry counts, date stamps, status indicators).
+     - .sn-catalog-section: replace ad-hoc blood h2 section
+       headings with a label + hairline + count counter.
+     - .sn-catalog-number: small mono-blood number marker
+       prefix for items in a catalog (e.g. service cards).
+*/
+
+.sn-catalog-eyebrow {
+	font-family: var(--wp--preset--font-family--body);
+	font-size: 0.7rem;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--blood);
+	margin: 0 0 1rem !important;
+}
+
+.sn-catalog-meta {
+	font-family: var(--wp--preset--font-family--body);
+	font-size: 0.7rem;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--rust);
+	margin-top: clamp(1rem, 2vw, 1.5rem) !important;
+}
+.sn-catalog-meta-bullet {
+	color: var(--wp--preset--color--blood);
+	margin: 0 0.5em;
+}
+
+.sn-catalog-section {
+	display: grid;
+	grid-template-columns: 1fr auto;
+	align-items: end;
+	gap: 1rem;
+	margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+	padding-bottom: 0.5rem;
+	border-bottom: 1px solid var(--wp--preset--color--concrete);
+}
+.sn-catalog-section-label,
+.sn-catalog-section-count {
+	font-family: var(--wp--preset--font-family--body);
+	font-size: 0.65rem;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--rust);
+	margin: 0 !important;
+}
+
+.sn-catalog-number {
+	display: block;
+	font-family: var(--wp--preset--font-family--body);
+	font-size: 0.85rem;
+	letter-spacing: 0.05em;
+	color: var(--wp--preset--color--blood);
+	margin: 0 0 0.5rem;
+}
