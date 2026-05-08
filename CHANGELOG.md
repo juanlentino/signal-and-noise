@@ -2,6 +2,12 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [7.1.2] — Drop unverified location from /about eyebrow
+
+In v7.1.0 the catalog rollout introduced a hero eyebrow on /about that read `Dossier · Buenos Aires → Miami · Who I Am`. The "Miami" was an invented geographic claim (no source in the existing copy) and the user's actual current city isn't settled, so the location shouldn't appear in load-bearing identity copy at all. Reverting the eyebrow to a non-geographic form: `Dossier · Who I Am`.
+
+Lesson: when applying a design vocabulary that wants "specificity" in the eyebrow, the specificity must come from existing copy or from facts the user has already published, not from filling in plausible-sounding details to make the line denser. /resume's `Dossier · Background · 20+ Years` and /music's `Catalog · Discography · 2005 → 2026` reused values that were already on the live site; /about's geographic interpolation didn't, and shouldn't have.
+
 ## [7.1.1] — Eyebrow alignment fix
 
 The catalog eyebrows on `/about`, `/services`, `/music`, `/resume` rendered against the viewport's far-left edge instead of centered with the rest of the constrained content. Cause: `.sn-catalog-eyebrow` and `.sn-catalog-meta` in [components.css](assets/css/components.css) used `margin: ... !important` shorthands which silently set `margin-left: 0 !important` and `margin-right: 0 !important`, overriding WP's constrained-layout rule that centers children via `margin-left: auto !important; margin-right: auto !important;`.
