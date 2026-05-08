@@ -2,6 +2,29 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [7.2.4] — Plausible: SN_PLAUSIBLE_STATS_TOKEN constant + corrected token-source assumption
+
+The diagnostic added in v7.2.3 caught a real architectural mistake from v7.2.1: the Plausible plugin's stored `api_token` is a **Plugin Token** scoped to `/api/plugins/wordpress/*` (the namespace the plugin uses for proxy resource management, the embedded stats page wizard, etc.), **not** a Stats API key. The Stats API at `/api/v1/stats/*` rejects Plugin Tokens with HTTP 401 `"Invalid API key or site ID"` — confirmed live on the Plausible CE install.
+
+These are two separate token namespaces in Plausible. They look identical (both are bearer-style strings), and the WP plugin uses both kinds internally — but only Stats API Keys (created in *Plausible → Settings → API Keys*) have `stats:read` scope.
+
+### Added
+- **`SN_PLAUSIBLE_STATS_TOKEN` wp-config constant** as the preferred token source. Matches the existing pattern for sensitive credentials in this codebase (`SN_GITHUB_TOKEN`, `SN_CLOUDFLARE_API_TOKEN`) — file-based, can't be exfiltrated through a SQL injection or compromised admin login. Setup:
+  ```
+  // 1. In Plausible CE → Settings → API Keys → New API Key
+  //    (scope: stats:read on the site domain)
+  // 2. In wp-config.php:
+  define( 'SN_PLAUSIBLE_STATS_TOKEN', 'plnt_…' );
+  ```
+
+### Changed
+- **`sn_plausible_config()` token resolution priority.** Now checks the `SN_PLAUSIBLE_STATS_TOKEN` constant first; falls back to `plausible_analytics_settings.api_token` only if the constant is undefined. The fallback is kept in case a future Plausible release unifies the two token namespaces, or for Plausible Cloud setups where the distinction may not apply — but for self-hosted CE in 2026, the constant is what works.
+- **"Not configured" error message** rewritten to walk users through the correct setup explicitly: set domain in plugin settings, create a Stats API key separately, drop the constant in wp-config. The previous message said "set domain + Plugin Token in *Settings → Plausible Analytics*" which was actively misleading.
+- **Cache key bumped `v3 → v4`.** Same reason as the v7.2.3 bump: forces a fresh fetch immediately after the constant is added, so users don't have to wait 5 minutes for the cached 401 errors to age out before seeing the widgets work.
+
+### Why patch (7.2.4)
+Targeted bug fix for the silent-failure mode v7.2.3's diagnostic exposed. New constant is purely additive (the plugin's `api_token` fallback is unchanged for sites where it happens to work). Patch 4 of 7.2; cap is 7 per minor.
+
 ## [7.2.3] — Plausible widgets: surface API errors + defensive scheme handling
 
 The widgets in v7.2.2 rendered "—" across the board on the live install — meaning the API calls were failing silently. The original `sn_plausible_api()` returned `null` on any non-200 with no breadcrumb, so the maintainer couldn't tell whether they were looking at a bad URL, a bad token, a scope mismatch, or a network blip. This release adds a self-debugging surface and fixes the most likely root cause.

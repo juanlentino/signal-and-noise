@@ -75,7 +75,7 @@ function sn_pl_preamble() {
 	sn_pl_styles();
 	$data = sn_plausible_dashboard_data();
 	if ( ! $data ) {
-		echo '<p class="sn-pl-err">Plausible plugin not configured — set domain + Plugin Token in <em>Settings → Plausible Analytics</em>.</p>';
+		echo '<p class="sn-pl-err">Plausible not configured. Set domain in <em>Settings → Plausible Analytics</em>, then create a Stats API key (<em>Plausible → Settings → API Keys</em>) and add to <code>wp-config.php</code>:<br><code style="display:inline-block;margin-top:4px;font-size:0.95em;">define( \'SN_PLAUSIBLE_STATS_TOKEN\', \'plnt_…\' );</code></p>';
 		return null;
 	}
 	return $data;
@@ -129,7 +129,7 @@ function sn_pl_widget_realtime() {
 	sn_pl_styles();
 	$cfg = sn_plausible_config();
 	if ( ! $cfg ) {
-		echo '<p class="sn-pl-err">Plausible plugin not configured — set domain + Plugin Token in <em>Settings → Plausible Analytics</em>.</p>';
+		echo '<p class="sn-pl-err">Plausible not configured. Set domain in <em>Settings → Plausible Analytics</em>, then create a Stats API key (<em>Plausible → Settings → API Keys</em>) and add to <code>wp-config.php</code>:<br><code style="display:inline-block;margin-top:4px;font-size:0.95em;">define( \'SN_PLAUSIBLE_STATS_TOKEN\', \'plnt_…\' );</code></p>';
 		return;
 	}
 	$n = sn_plausible_realtime();
