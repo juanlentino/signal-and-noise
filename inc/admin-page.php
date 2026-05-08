@@ -160,24 +160,13 @@ function sn_theme_options_page() {
 	$rev          = function_exists( 'sn_updater_revcount' ) ? (int) sn_updater_revcount( $branch ) : 0;
 
 	if ( defined( 'SN_GITHUB_TOKEN' ) && ! empty( SN_GITHUB_TOKEN ) ) {
-		$cache_key = 'sn_github_branch_' . sanitize_key( $branch );
-		$cached    = get_transient( $cache_key );
-		if ( ! $cached ) {
-			$response = wp_remote_get(
-				'https://api.github.com/repos/' . SN_GITHUB_REPO . '/commits/' . rawurlencode( $branch ),
-				array(
-					'headers' => array(
-						'Authorization' => 'token ' . SN_GITHUB_TOKEN,
-						'Accept'        => 'application/vnd.github.v3+json',
-					),
-					'timeout' => 10,
-				)
-			);
-			if ( ! is_wp_error( $response ) && 200 === wp_remote_retrieve_response_code( $response ) ) {
-				$cached = json_decode( wp_remote_retrieve_body( $response ), true );
-				set_transient( $cache_key, $cached, 5 * MINUTE_IN_SECONDS );
-			}
-		}
+		// Read-only since v7.3.1 — the shared `sn_github_branch_$branch`
+		// transient is warmed by sn_updater_refresh_cache() in
+		// inc/updater.php via WP-Cron, never on this page-render path.
+		// If the cache is empty (cron hasn't populated yet), `$remote_sha`
+		// stays empty and the Status table renders "(refreshing in
+		// background)" instead of blocking on a 10s GitHub round-trip.
+		$cached = get_transient( 'sn_github_branch_' . sanitize_key( $branch ) );
 		if ( is_array( $cached ) && ! empty( $cached['sha'] ) ) {
 			$remote_sha = substr( $cached['sha'], 0, 7 );
 		}
@@ -235,7 +224,13 @@ function sn_theme_options_page() {
 		}
 		echo '</td></tr>';
 		echo '<tr><th style="padding:8px 10px 8px 0;">Latest on GitHub</th><td style="padding:8px 0;"><code>' . esc_html( $github_version ) . '</code>';
-		if ( $is_up_to_date ) {
+		if ( '' === $remote_sha ) {
+			// Cron hasn't populated the cache yet (first pageview after
+			// install / token rotation / cache flush). Render an honest
+			// "fetching" rather than "Up to date" — the latter would
+			// imply a comparison happened, when really we have no data.
+			echo ' <span style="color:#646970;"><em>refreshing in background — reload in a moment</em></span>';
+		} elseif ( $is_up_to_date ) {
 			echo ' <span style="color:#00a32a;">&#10003; Up to date</span>';
 		} else {
 			$gap_label = $rev > 0 ? ' (' . (int) $rev . ' commit' . ( $rev === 1 ? '' : 's' ) . ' on main since the last tag)' : '';

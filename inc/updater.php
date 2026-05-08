@@ -86,45 +86,19 @@ function sn_updater_branch() {
  * @return int Commits ahead of the v{Version} tag, or 0 on failure.
  */
 function sn_updater_revcount( $branch, $version_for_compare = null ) {
-	if ( ! defined( 'SN_GITHUB_TOKEN' ) || empty( SN_GITHUB_TOKEN ) ) {
-		return 0;
-	}
-
 	$base_version = ( null !== $version_for_compare && '' !== $version_for_compare )
 		? $version_for_compare
 		: wp_get_theme( SN_THEME_SLUG )->get( 'Version' );
 
-	// Cache key includes the base version so concurrent caches for different
-	// base tags (rare, but possible during a deploy transition) don't alias.
+	// Read-only cache accessor since v7.3.1. Returns 0 when no cached
+	// value is available (cron warmup hasn't run yet, or rate-limited
+	// / API failure populated 0). The cache is written by
+	// sn_updater_refresh_cache() running in a non-blocking spawn_cron()
+	// loopback dispatched by the admin_init warmer below — see that
+	// function for the actual GitHub Compare API call.
 	$cache_key = 'sn_github_revcount_' . sanitize_key( $branch ) . '_' . sanitize_key( $base_version );
 	$cached    = get_transient( $cache_key );
-	if ( false !== $cached ) {
-		return (int) $cached;
-	}
-
-	$base = 'v' . $base_version;
-	$response = wp_remote_get(
-		'https://api.github.com/repos/' . SN_GITHUB_REPO . '/compare/' . rawurlencode( $base ) . '...' . rawurlencode( $branch ),
-		array(
-			'headers' => array(
-				'Authorization' => 'token ' . SN_GITHUB_TOKEN,
-				'Accept'        => 'application/vnd.github.v3+json',
-			),
-			'timeout' => 10,
-		)
-	);
-
-	if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
-		// Tag missing, API error, or rate-limited — cache 0 briefly so we
-		// don't hammer the API on every page load.
-		set_transient( $cache_key, 0, 5 * MINUTE_IN_SECONDS );
-		return 0;
-	}
-
-	$body  = json_decode( wp_remote_retrieve_body( $response ), true );
-	$ahead = isset( $body['ahead_by'] ) ? (int) $body['ahead_by'] : 0;
-	set_transient( $cache_key, $ahead, 5 * MINUTE_IN_SECONDS );
-	return $ahead;
+	return ( false !== $cached ) ? (int) $cached : 0;
 }
 
 /**
@@ -146,35 +120,11 @@ function sn_updater_remote_version( $branch ) {
 	if ( '' === $branch ) {
 		return '';
 	}
-
-	$cache_key = 'sn_github_remote_version_' . $branch;
-	$cached    = get_transient( $cache_key );
-	if ( false !== $cached ) {
-		return (string) $cached;
-	}
-
-	$response = wp_remote_get(
-		'https://raw.githubusercontent.com/' . SN_GITHUB_REPO . '/' . rawurlencode( $branch ) . '/style.css',
-		array( 'timeout' => 5 )
-	);
-
-	if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
-		// Cache empty briefly so we don't retry-storm on transient errors.
-		set_transient( $cache_key, '', 5 * MINUTE_IN_SECONDS );
-		return '';
-	}
-
-	$body = wp_remote_retrieve_body( $response );
-	// Match WP's standard theme header parser: optional leading whitespace,
-	// case-insensitive `Version:` followed by the value to end of line.
-	if ( ! preg_match( '/^[ \t\/*#@]*Version:\s*(.+)$/mi', $body, $m ) ) {
-		set_transient( $cache_key, '', 5 * MINUTE_IN_SECONDS );
-		return '';
-	}
-
-	$version = trim( $m[1] );
-	set_transient( $cache_key, $version, 5 * MINUTE_IN_SECONDS );
-	return $version;
+	// Read-only cache accessor since v7.3.1. The cache is written by
+	// sn_updater_refresh_cache() via WP-Cron — see that function for
+	// the actual GitHub raw style.css fetch and Version header regex.
+	$cached = get_transient( 'sn_github_remote_version_' . $branch );
+	return ( false !== $cached ) ? (string) $cached : '';
 }
 
 /**
@@ -192,36 +142,22 @@ add_filter( 'pre_set_site_transient_update_themes', function( $transient ) {
 		return $transient;
 	}
 
-	$branch        = sn_updater_branch();
-	$transient_key = 'sn_github_branch_' . sanitize_key( $branch );
-	$cached        = get_transient( $transient_key );
-
-	if ( false === $cached ) {
-		$response = wp_remote_get(
-			'https://api.github.com/repos/' . SN_GITHUB_REPO . '/commits/' . rawurlencode( $branch ),
-			array(
-				'headers' => array(
-					'Authorization' => 'token ' . SN_GITHUB_TOKEN,
-					'Accept'        => 'application/vnd.github.v3+json',
-				),
-				'timeout' => 10,
-			)
-		);
-		if ( is_wp_error( $response ) ) {
-			set_transient( 'sn_github_error', $response->get_error_message(), HOUR_IN_SECONDS );
-			return $transient;
-		}
-		$code = wp_remote_retrieve_response_code( $response );
-		if ( 200 !== $code ) {
-			set_transient( 'sn_github_error', 'HTTP ' . (int) $code . ' from GitHub commits API (branch: ' . esc_html( $branch ) . ')', HOUR_IN_SECONDS );
-			return $transient;
-		}
-		$cached = json_decode( wp_remote_retrieve_body( $response ), true );
-		set_transient( $transient_key, $cached, 5 * MINUTE_IN_SECONDS );
-		delete_transient( 'sn_github_error' );
+	// Read-only since v7.3.1. The branch HEAD cache is warmed by
+	// sn_updater_refresh_cache() running in a non-blocking
+	// spawn_cron() loopback dispatched by the admin_init warmer below.
+	// If the cache is empty (cron hasn't populated it yet, or this is
+	// the very first request after a fresh install / cache flush), we
+	// return the transient unchanged — WP doesn't think there's an
+	// update this cycle and will retry on its own schedule once the
+	// cache lands. The filter never blocks on wp_remote_get; previously
+	// a cold cache stalled WP's update_themes refresh for up to 25s.
+	$branch = sn_updater_branch();
+	$cached = get_transient( 'sn_github_branch_' . sanitize_key( $branch ) );
+	if ( ! is_array( $cached ) || empty( $cached['sha'] ) ) {
+		return $transient;
 	}
 
-	$remote_sha7 = substr( $cached['sha'] ?? '', 0, 7 );
+	$remote_sha7 = substr( $cached['sha'], 0, 7 );
 	$local_sha7  = (string) get_option( 'sn_github_local_sha', '' );
 
 	if ( $remote_sha7 && $remote_sha7 !== $local_sha7 ) {
@@ -260,6 +196,150 @@ add_filter( 'pre_set_site_transient_update_themes', function( $transient ) {
 
 	return $transient;
 } );
+
+const SN_UPDATER_REFRESH_HOOK     = 'sn_updater_refresh_cache';
+const SN_UPDATER_FRESHNESS        = 5 * MINUTE_IN_SECONDS;       // matches the prior on-render cache TTL
+const SN_UPDATER_RETENTION        = DAY_IN_SECONDS;              // long survival so stale data is always visible
+const SN_UPDATER_RETENTION_SHORT  = 15 * MINUTE_IN_SECONDS;      // for empty/error sentinels (revcount=0, version='')
+
+/**
+ * Cron-driven refresh of all three GitHub-derived caches the updater
+ * relies on. Runs in a non-blocking spawn_cron() loopback dispatched
+ * by the admin_init warmer below — never on the page-render path.
+ *
+ * Fetches in sequence:
+ *   1. /repos/X/commits/{branch}  — branch HEAD (drives the SHA-vs-stored
+ *                                   gate that decides whether to offer an
+ *                                   update at all). Long retention; the
+ *                                   embedded `fetched` field is the
+ *                                   freshness gate.
+ *   2. /raw/style.css             — Version: header from the remote branch
+ *                                   (used for the synthetic update label).
+ *   3. /repos/X/compare/v{ver}... — ahead-by count for the -rN suffix.
+ *
+ * On any HTTP error, we either preserve the prior cache (so the admin
+ * keeps seeing the last known state) or write a short-TTL empty
+ * sentinel (so we don't re-fetch on every cron tick during a sustained
+ * outage). The 'sn_github_error' transient is the human-readable
+ * surface for the failure — already wired to admin_notices for the
+ * Dashboard / Updates / Themes screens.
+ */
+function sn_updater_refresh_cache() {
+	if ( ! defined( 'SN_GITHUB_TOKEN' ) || empty( SN_GITHUB_TOKEN ) ) {
+		return;
+	}
+
+	$branch     = sn_updater_branch();
+	$branch_key = sanitize_key( $branch );
+
+	// 1. Branch HEAD ────────────────────────────────────────────────
+	$response = wp_remote_get(
+		'https://api.github.com/repos/' . SN_GITHUB_REPO . '/commits/' . rawurlencode( $branch ),
+		array(
+			'headers' => array(
+				'Authorization' => 'token ' . SN_GITHUB_TOKEN,
+				'Accept'        => 'application/vnd.github.v3+json',
+			),
+			'timeout' => 10,
+		)
+	);
+	if ( is_wp_error( $response ) ) {
+		set_transient( 'sn_github_error', $response->get_error_message(), HOUR_IN_SECONDS );
+		return;
+	}
+	$code = wp_remote_retrieve_response_code( $response );
+	if ( 200 !== $code ) {
+		set_transient( 'sn_github_error', 'HTTP ' . (int) $code . ' from GitHub commits API (branch: ' . esc_html( $branch ) . ')', HOUR_IN_SECONDS );
+		return;
+	}
+	$commits = json_decode( wp_remote_retrieve_body( $response ), true );
+	if ( ! is_array( $commits ) || empty( $commits['sha'] ) ) {
+		set_transient( 'sn_github_error', 'Malformed GitHub commits response (branch: ' . esc_html( $branch ) . ')', HOUR_IN_SECONDS );
+		return;
+	}
+	$commits['fetched'] = time();
+	set_transient( 'sn_github_branch_' . $branch_key, $commits, SN_UPDATER_RETENTION );
+	delete_transient( 'sn_github_error' );
+
+	// 2. Remote Version: header ─────────────────────────────────────
+	$remote_version = '';
+	$response       = wp_remote_get(
+		'https://raw.githubusercontent.com/' . SN_GITHUB_REPO . '/' . rawurlencode( $branch ) . '/style.css',
+		array( 'timeout' => 5 )
+	);
+	if ( ! is_wp_error( $response ) && 200 === wp_remote_retrieve_response_code( $response ) ) {
+		$body = wp_remote_retrieve_body( $response );
+		// Match WP's standard theme header parser: optional leading
+		// whitespace, case-insensitive `Version:` followed by value to EOL.
+		if ( preg_match( '/^[ \t\/*#@]*Version:\s*(.+)$/mi', $body, $m ) ) {
+			$remote_version = trim( $m[1] );
+		}
+	}
+	// Always write — even an empty string — so the read accessor returns
+	// something quickly and we don't re-fetch on every cron tick during
+	// a sustained outage. Short TTL on the empty sentinel.
+	set_transient(
+		'sn_github_remote_version_' . $branch_key,
+		$remote_version,
+		'' === $remote_version ? SN_UPDATER_RETENTION_SHORT : SN_UPDATER_RETENTION
+	);
+
+	// 3. Revcount via Compare API ───────────────────────────────────
+	// Cache key includes base version so concurrent caches for different
+	// base tags don't alias during a deploy transition.
+	$base_version = '' !== $remote_version
+		? $remote_version
+		: wp_get_theme( SN_THEME_SLUG )->get( 'Version' );
+	$cache_key    = 'sn_github_revcount_' . $branch_key . '_' . sanitize_key( $base_version );
+	$ahead        = 0;
+	$response     = wp_remote_get(
+		'https://api.github.com/repos/' . SN_GITHUB_REPO . '/compare/' . rawurlencode( 'v' . $base_version ) . '...' . rawurlencode( $branch ),
+		array(
+			'headers' => array(
+				'Authorization' => 'token ' . SN_GITHUB_TOKEN,
+				'Accept'        => 'application/vnd.github.v3+json',
+			),
+			'timeout' => 10,
+		)
+	);
+	if ( ! is_wp_error( $response ) && 200 === wp_remote_retrieve_response_code( $response ) ) {
+		$body  = json_decode( wp_remote_retrieve_body( $response ), true );
+		$ahead = isset( $body['ahead_by'] ) ? (int) $body['ahead_by'] : 0;
+	}
+	set_transient(
+		$cache_key,
+		$ahead,
+		0 === $ahead ? SN_UPDATER_RETENTION_SHORT : SN_UPDATER_RETENTION
+	);
+}
+add_action( SN_UPDATER_REFRESH_HOOK, 'sn_updater_refresh_cache' );
+
+/**
+ * Admin warmer: on every admin pageview, age-check the branch HEAD
+ * cache via the embedded `fetched` field and schedule a non-blocking
+ * background refresh if it's older than the freshness target. Hooked
+ * at admin_init priority 5 so the schedule lands BEFORE wp_loaded
+ * fires — wp_cron() picks up the event in the same request and
+ * spawn_cron() dispatches the loopback before the response is sent.
+ *
+ * Capability gate matches WP's own update-check UI surfaces.
+ */
+add_action( 'admin_init', function() {
+	if ( ! current_user_can( 'update_themes' ) ) {
+		return;
+	}
+	if ( ! defined( 'SN_GITHUB_TOKEN' ) || empty( SN_GITHUB_TOKEN ) ) {
+		return;
+	}
+	$branch = sanitize_key( sn_updater_branch() );
+	$cached = get_transient( 'sn_github_branch_' . $branch );
+	$age    = ( is_array( $cached ) && isset( $cached['fetched'] ) )
+		? ( time() - (int) $cached['fetched'] )
+		: PHP_INT_MAX;
+	if ( $age > SN_UPDATER_FRESHNESS && ! wp_next_scheduled( SN_UPDATER_REFRESH_HOOK ) ) {
+		wp_schedule_single_event( time(), SN_UPDATER_REFRESH_HOOK );
+	}
+}, 5 );
 
 /**
  * After a successful theme upgrade, store the tracked branch's HEAD SHA

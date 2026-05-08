@@ -2,6 +2,41 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [7.3.1] — Updater + S&N options page: stale-while-revalidate
+
+The follow-up flagged in [v7.2.6](#) and [v7.3.0](#). Same SWR architecture from the Plausible (v7.2.6) and template-self-heal (v7.2.7) refactors, applied to the last two synchronous-external-HTTP-on-render hot spots: the GitHub-driven self-updater's `pre_set_site_transient_update_themes` filter and the *Latest on GitHub* status block on the *Appearance → Signal & Noise* options page. Both surfaces now read from a long-retention cache that's warmed by a non-blocking WP-Cron loopback.
+
+Worst-case behaviour before this release:
+- **Updater filter**: on cache miss could fire 3 sequential GitHub API calls (commits + style.css + compare), totalling **up to 25s** of synchronous HTTP every time WP refreshed its `update_themes` site transient. WP refreshes that transient on every admin pageview that hits the Updates / Themes / Dashboard screens.
+- **S&N options page**: independent on-render `wp_remote_get` to the GitHub commits API, **up to 10s** every 5 min on the Status table.
+
+After: both are constant-time cache reads. The render path never touches the network.
+
+### Changed
+- **[`inc/updater.php`](inc/updater.php) — `pre_set_site_transient_update_themes` filter is now read-only.** It reads the `sn_github_branch_$branch` transient and either uses the cached SHA or returns the transient unchanged (no update offered this cycle). Previously the filter would inline-fetch the GitHub commits API on cache miss, blocking WP's update-transient refresh for up to 10s.
+- **[`sn_updater_revcount()`](inc/updater.php) and [`sn_updater_remote_version()`](inc/updater.php) are now read-only cache accessors.** Each was previously a fetch-on-miss helper called from inside the filter — chaining them produced the worst-case 25s stall when all three caches were cold simultaneously. Now both return whatever's in their respective transients (or 0 / `''` on miss); the actual API calls are batched into the new cron callback.
+- **[`inc/admin-page.php`](inc/admin-page.php) — `sn_theme_options_page()` no longer fetches the GitHub branch HEAD inline.** Reads the shared `sn_github_branch_$branch` transient (warmed by the same cron callback). When the cache is empty (cron hasn't populated yet, or fresh install / cache flush), the *Latest on GitHub* row honestly renders *"refreshing in background — reload in a moment"* instead of falsely reporting "Up to date."
+- **Transient retention decoupled from freshness target** for the branch HEAD cache (`DAY_IN_SECONDS` retention vs 5-min freshness via the embedded `fetched` field) and the version + revcount caches (24h on success, 15-min on empty/error sentinel). Stale data remains visible during a GitHub outage; freshness is gated by the warmer's age check, not the transient TTL.
+
+### Added
+- **`sn_updater_refresh_cache()`** — new WP-Cron callback hooked to `sn_updater_refresh_cache`. Sequentially fetches all three GitHub-derived caches (branch HEAD, remote `style.css` Version header, ahead-by revcount) and writes them with appropriate retention. Records `sn_github_error` on the first-step failure so the existing admin notice surfaces what went wrong.
+- **`admin_init` warmer at priority 5** that age-checks the branch HEAD cache via the embedded `fetched` field and schedules `sn_updater_refresh_cache` when stale. Priority 5 is load-bearing — same trick as in [`inc/plausible-api.php`](inc/plausible-api.php) and [`inc/template-self-heal.php`](inc/template-self-heal.php): scheduling at admin_init priority 5 happens BEFORE `wp_loaded` fires, so `wp_cron()` picks up the just-scheduled event in the same request and dispatches the non-blocking `spawn_cron()` loopback before the admin response is sent.
+- **`SN_UPDATER_REFRESH_HOOK`, `SN_UPDATER_FRESHNESS`, `SN_UPDATER_RETENTION`, `SN_UPDATER_RETENTION_SHORT`** constants at the top of the cron block so the SWR semantics are explicit and tunable from one place rather than scattered as magic numbers across function bodies.
+
+### Unchanged (deliberately blocking)
+- **`upgrader_process_complete`'s post-upgrade SHA refetch** — runs synchronously after a successful theme upgrade. The user is staring at the WP upgrader UI and expects the install-then-poll cycle to complete before they see "Theme installed successfully." Moving this to cron would introduce a window where the just-installed SHA hasn't been recorded yet and the next poll would offer the same update again.
+
+### Architectural note — SWR fully applied
+With this release, every synchronous external HTTP call previously blocking the admin render path has been moved to WP-Cron-driven SWR:
+- **v7.2.6** — Plausible Stats API (3 sequential calls + 1 realtime).
+- **v7.2.7** — Template self-heal (N×10s GitHub Contents API loop).
+- **v7.3.1** — Updater (3 sequential GitHub API calls) + S&N options page (1 GitHub commits API call).
+
+The admin dashboard and S&N options page now render in constant time regardless of GitHub or Plausible API health.
+
+### Why patch (7.3.1)
+Pure performance refactor. No new user-visible features, no settings schema changes, no public API changes. Patch 1 of 7.3; cap is 7 per minor.
+
 ## [7.3.0] — Hardening pass + cap-forced minor rollover
 
 Targeted defensive sweep driven by the [R1 standards audit](docs/WP-STANDARDS-AUDIT.md). The audit returned **0 CRITICAL · 2 HIGH · 9 MEDIUM · 11 LOW · 6 NIT** — none exploitable, but two HIGH defense-in-depth gaps in [`inc/admin-page.php`](inc/admin-page.php) and a textdomain registration omission worth closing before the v7.3 line accumulates new surface.
