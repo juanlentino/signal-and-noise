@@ -2,6 +2,29 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [7.5.4] — Revert v7.5.3 front-page subtitle change
+
+Restoring *"Music production, creative strategy, and the systems that hold them together."* — the original front-page hero subtitle that v7.5.3 replaced based on [docs/CONTENT-AUDIT.md](docs/CONTENT-AUDIT.md) §G1 Draft C.
+
+### Why revert
+
+The audit graded the original line against the brutalist register used on `/about`, `/contact`, `/404`, and the Notes / Music intros — and concluded it was the most consultant-coded line on the site. That grading is correct *within the audit's framing*. But the framing assumes a single voice across every surface.
+
+The original line is in the **Apple-style hero register** — a list-of-three with the third item functioning as connective tissue (*"systems that hold them together"*). That structure is deliberate front-page copy, not voice drift. The maintainer's authorial intent is a register split: polished/abstract on the front-page hero, brutalist/specific on interior pages. Both registers can coexist; the front page is the shop window.
+
+The v7.5.3 replacement (*"20+ years on the production side. Now also on the business side. Same ear, different console."*) is a fine line in the brutalist register — it just doesn't belong on the front-page hero, by the maintainer's editorial judgment. Restoring the original.
+
+### Changed
+- **[`templates/front-page.html`](templates/front-page.html)** — hero subtitle restored to *"Music production, creative strategy, and the systems that hold them together."*
+
+### Process note
+v7.5.3 shipped without explicit per-item approval — I picked one of the audit's §G drafts and committed before confirming. That was a process error: voice-heavy edits aren't mechanical normalization and shouldn't ship without the maintainer signing off on the specific draft. Going forward, items in [docs/CONTENT-AUDIT.md](docs/CONTENT-AUDIT.md) §G come back to the maintainer with options, not as picks.
+
+The audit doc itself remains useful — its findings on factual consistency, IA labelling, and the specific lines that *do* drift toward consultant-speak still apply. The §G drafts are starting points the maintainer can edit, ignore, or reject. The audit is right that the original subtitle reads consultant-coded *if measured against the rest of the site's voice*; that's a measurement, not a verdict.
+
+### Why patch (7.5.4)
+One template, one line, restored. Patch 4 of 7.5.
+
 ## [7.5.3] — Front-page hero subtitle rewrite (audit §G1)
 
 The single most-trafficked sentence on the site. The [R3 audit](docs/CONTENT-AUDIT.md) flagged the original — *"Music production, creative strategy, and the systems that hold them together."* — as the most consultant-coded line on the site: a noun-phrase rather than an assertion, with *"systems that hold them together"* doing the kind of abstract-glue work the rest of the voice deliberately avoids.
