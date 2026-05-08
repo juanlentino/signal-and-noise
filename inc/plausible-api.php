@@ -4,17 +4,37 @@
  *
  * Reads the official Plausible plugin's stored settings (domain + Plugin
  * Token) from `plausible_analytics_settings`, makes Stats API calls,
- * and exposes two cache layers:
+ * and exposes two cache layers — both read-only on the page-render path:
  *
- *   - sn_plausible_dashboard_data()   — 5-min batched cache covering 7-day
- *                                       aggregate + top pages + top sources.
- *                                       Used by all "last 7 days" widgets.
- *   - sn_plausible_realtime()         — 30-sec cache for the realtime
- *                                       visitor count (separate so it
- *                                       actually feels real-time).
+ *   - sn_plausible_dashboard_data()   — 7-day aggregate + top pages + top
+ *                                       sources. Freshness target: 5 min.
+ *   - sn_plausible_realtime()         — visitor count right now.
+ *                                       Freshness target: 30 sec.
  *
- * One batched fetch per 5 min covers all dashboard widgets that read from
- * dashboard_data; the realtime widget is the only second round-trip.
+ * Architecture (since v7.2.6): stale-while-revalidate via WP-Cron.
+ *
+ *   - The two accessors above NEVER make network calls. They return
+ *     whatever's in the transient (possibly empty on first-ever load,
+ *     possibly stale during a refresh in flight) so dashboard render
+ *     time is constant — no admin pageview ever blocks on Plausible.
+ *
+ *   - `admin_init` runs sn_plausible_warm_caches(), which checks the
+ *     `fetched` timestamp baked into each cached payload. If the data
+ *     is older than its freshness target (or absent), it schedules a
+ *     non-blocking single-event WP-Cron job. WP fires spawn_cron() at
+ *     wp_loaded (after admin_init), which dispatches a non-blocking
+ *     loopback to wp-cron.php — the actual Plausible API calls run in
+ *     a separate process while the admin response is already on its
+ *     way to the browser.
+ *
+ *   - Transient retention (DAY_IN_SECONDS for the batch, 5 min for
+ *     realtime) is much longer than the freshness window. Stale data
+ *     remains visible if the API goes down; the widget footer's
+ *     "cached X ago" line surfaces how stale it is.
+ *
+ * Why this matters: the prior on-render-fetch design blocked the WP
+ * dashboard for up to 4 × 6s = 24s on every cache-miss (every 5 min by
+ * design). SWR removes that hang completely.
  *
  * Self-hosted Plausible is supported via the same plugin option's
  * `self_hosted_domain` key; falls back to plausible.io otherwise.
@@ -27,11 +47,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-const SN_PLAUSIBLE_BATCH_KEY    = 'sn_plausible_dashboard_v4';
-const SN_PLAUSIBLE_BATCH_TTL    = 5 * MINUTE_IN_SECONDS;
-const SN_PLAUSIBLE_REALTIME_KEY = 'sn_plausible_realtime_v2';
-const SN_PLAUSIBLE_REALTIME_TTL = 30; // seconds
-const SN_PLAUSIBLE_TOKEN_OPT    = 'sn_plausible_stats_token';
+const SN_PLAUSIBLE_BATCH_KEY            = 'sn_plausible_dashboard_v4';
+const SN_PLAUSIBLE_BATCH_TTL            = 5 * MINUTE_IN_SECONDS;       // freshness target
+const SN_PLAUSIBLE_BATCH_RETENTION      = DAY_IN_SECONDS;              // stale-but-cached survives this long
+const SN_PLAUSIBLE_REALTIME_KEY         = 'sn_plausible_realtime_v3';
+const SN_PLAUSIBLE_REALTIME_TTL         = 30;                          // freshness target (seconds)
+const SN_PLAUSIBLE_REALTIME_RETENTION   = 5 * MINUTE_IN_SECONDS;       // stale-but-cached survives this long
+const SN_PLAUSIBLE_TOKEN_OPT            = 'sn_plausible_stats_token';
+const SN_PLAUSIBLE_REFRESH_BATCH_HOOK   = 'sn_plausible_refresh_dashboard';
+const SN_PLAUSIBLE_REFRESH_REALTIME_HOOK = 'sn_plausible_refresh_realtime';
 
 /**
  * Resolve domain + token + API base. Returns null when not configured.
@@ -167,21 +191,71 @@ function sn_plausible_api( $path, $query, $cfg, $expect_json = true ) {
 }
 
 /**
- * Batched 7-day data: aggregate + top pages + top sources, in one
- * 5-minute transient. All "last 7 days" widgets read from this.
+ * Read-only accessor: returns whatever's in the batched cache without
+ * ever firing a network call. The widget renders against this and the
+ * admin_init warmer below schedules a background refresh when the
+ * `fetched` field is older than SN_PLAUSIBLE_BATCH_TTL.
  *
- * @return array|null Null when plugin isn't configured.
+ * Three return shapes:
+ *   - null                              → Plausible not configured
+ *                                         (widget shows the setup help text)
+ *   - array with fetched=0 and empty
+ *     aggregate/pages/sources           → configured but the very first
+ *                                         background refresh hasn't landed
+ *                                         yet (widget shows "—" placeholders
+ *                                         and a "first refresh in flight"
+ *                                         footer)
+ *   - array with fetched>0              → real data, possibly stale but
+ *                                         being refreshed in the background
+ *
+ * @return array|null
  */
 function sn_plausible_dashboard_data() {
 	$cached = get_transient( SN_PLAUSIBLE_BATCH_KEY );
-	if ( false !== $cached ) {
+	if ( is_array( $cached ) ) {
 		return $cached;
 	}
-	$cfg = sn_plausible_config();
-	if ( ! $cfg ) {
+	if ( ! sn_plausible_config() ) {
 		return null;
 	}
+	return array(
+		'aggregate' => array(),
+		'pages'     => array(),
+		'sources'   => array(),
+		'fetched'   => 0,
+	);
+}
 
+/**
+ * Read-only accessor for the realtime visitor count. Like its batched
+ * sibling, never makes a network call. Cache shape since v7.2.6 is
+ * `array{ value: int, fetched: int }` — the embedded `fetched` is what
+ * the warmer reads to decide whether to schedule a 30-sec refresh,
+ * since the transient itself is retained for 5 min so stale data
+ * survives an API outage.
+ *
+ * @return int|null Null when no fresh-or-stale value is available
+ *                  (first-ever load before warm-up, or after retention
+ *                  TTL elapsed). Otherwise the last cached count.
+ */
+function sn_plausible_realtime() {
+	$cached = get_transient( SN_PLAUSIBLE_REALTIME_KEY );
+	if ( is_array( $cached ) && isset( $cached['value'] ) && is_int( $cached['value'] ) ) {
+		return $cached['value'];
+	}
+	return null;
+}
+
+/**
+ * WP-Cron callback: do the actual 7-day batched fetch and write the
+ * cache. Runs in a non-blocking loopback request fired by spawn_cron(),
+ * never on the admin render path.
+ */
+function sn_plausible_refresh_dashboard() {
+	$cfg = sn_plausible_config();
+	if ( ! $cfg ) {
+		return;
+	}
 	$aggregate = sn_plausible_api( 'aggregate', array(
 		'period'  => '7d',
 		'metrics' => 'visitors,pageviews,bounce_rate,visit_duration',
@@ -197,34 +271,87 @@ function sn_plausible_dashboard_data() {
 		'limit'    => 7,
 	), $cfg );
 
-	$data = array(
+	// Long retention so stale data survives if the API is unreachable.
+	// Freshness is gated by the `fetched` field — see the admin_init
+	// warmer below.
+	set_transient( SN_PLAUSIBLE_BATCH_KEY, array(
 		'aggregate' => is_array( $aggregate ) ? $aggregate : array(),
 		'pages'     => is_array( $pages )     ? $pages     : array(),
 		'sources'   => is_array( $sources )   ? $sources   : array(),
 		'fetched'   => time(),
-	);
-	set_transient( SN_PLAUSIBLE_BATCH_KEY, $data, SN_PLAUSIBLE_BATCH_TTL );
-	return $data;
+	), SN_PLAUSIBLE_BATCH_RETENTION );
 }
+add_action( SN_PLAUSIBLE_REFRESH_BATCH_HOOK, 'sn_plausible_refresh_dashboard' );
 
 /**
- * Realtime visitor count, cached 30s. Separate from the batched cache
- * because "right now" needs to actually be approximately now.
- *
- * @return int|null Null when plugin isn't configured or API failed.
+ * WP-Cron callback: refresh the realtime count. Only writes the cache
+ * on a successful fetch; on null/error we leave any prior value to age
+ * out via SN_PLAUSIBLE_REALTIME_RETENTION rather than poison the
+ * transient with `null` (which `get_transient` can't distinguish from
+ * "expired").
  */
-function sn_plausible_realtime() {
-	$cached = get_transient( SN_PLAUSIBLE_REALTIME_KEY );
-	if ( false !== $cached ) {
-		return $cached;
-	}
+function sn_plausible_refresh_realtime() {
 	$cfg = sn_plausible_config();
 	if ( ! $cfg ) {
-		return null;
+		return;
 	}
 	$value = sn_plausible_api( 'realtime/visitors', array(), $cfg, false );
-	// Store the int — or a sentinel array on null so the transient layer
-	// can still cache the "no data" state for 30s instead of refetching.
-	set_transient( SN_PLAUSIBLE_REALTIME_KEY, $value, SN_PLAUSIBLE_REALTIME_TTL );
-	return $value;
+	if ( is_int( $value ) ) {
+		set_transient( SN_PLAUSIBLE_REALTIME_KEY, array(
+			'value'   => $value,
+			'fetched' => time(),
+		), SN_PLAUSIBLE_REALTIME_RETENTION );
+	}
 }
+add_action( SN_PLAUSIBLE_REFRESH_REALTIME_HOOK, 'sn_plausible_refresh_realtime' );
+
+/**
+ * Admin warmer: on every admin pageview, check the cache freshness and
+ * schedule a background refresh if either dataset is stale or missing.
+ *
+ * Hooked at admin_init priority 5 so the scheduling happens BEFORE
+ * wp_loaded fires — that way wp_cron() picks up the just-scheduled
+ * event in the same request and dispatches the non-blocking loopback
+ * (spawn_cron uses wp_remote_post with blocking=false, timeout=0.01).
+ * The actual Plausible API calls then run in a parallel process while
+ * the admin response is already on its way to the browser.
+ *
+ * Capability gate matches the widget registration in
+ * inc/plausible-widget.php so we don't warm caches for users who can
+ * never see the widgets anyway.
+ */
+function sn_plausible_warm_caches() {
+	if ( ! current_user_can( 'view_stats' ) && ! current_user_can( 'manage_options' ) ) {
+		return;
+	}
+	if ( ! sn_plausible_config() ) {
+		return;
+	}
+
+	// Batched 7-day data: refresh if the payload is missing or its
+	// `fetched` timestamp is older than the freshness target. The
+	// wp_next_scheduled gate prevents stacking multiple events for the
+	// same hook when several admins hit the dashboard within the same
+	// freshness window.
+	$batch     = get_transient( SN_PLAUSIBLE_BATCH_KEY );
+	$batch_age = ( is_array( $batch ) && isset( $batch['fetched'] ) )
+		? ( time() - (int) $batch['fetched'] )
+		: PHP_INT_MAX;
+	if ( $batch_age > SN_PLAUSIBLE_BATCH_TTL && ! wp_next_scheduled( SN_PLAUSIBLE_REFRESH_BATCH_HOOK ) ) {
+		wp_schedule_single_event( time(), SN_PLAUSIBLE_REFRESH_BATCH_HOOK );
+	}
+
+	// Realtime: same SWR pattern as the batch, with shorter freshness
+	// (30s, the "right now" cadence the widget advertises) but longer
+	// retention (5 min, so a transient API blip doesn't blank the
+	// widget). Freshness is gated by the embedded `fetched` field, not
+	// the transient TTL.
+	$rt     = get_transient( SN_PLAUSIBLE_REALTIME_KEY );
+	$rt_age = ( is_array( $rt ) && isset( $rt['fetched'] ) )
+		? ( time() - (int) $rt['fetched'] )
+		: PHP_INT_MAX;
+	if ( $rt_age > SN_PLAUSIBLE_REALTIME_TTL && ! wp_next_scheduled( SN_PLAUSIBLE_REFRESH_REALTIME_HOOK ) ) {
+		wp_schedule_single_event( time(), SN_PLAUSIBLE_REFRESH_REALTIME_HOOK );
+	}
+}
+add_action( 'admin_init', 'sn_plausible_warm_caches', 5 );

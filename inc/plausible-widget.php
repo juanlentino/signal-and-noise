@@ -195,7 +195,14 @@ function sn_pl_footer( $data, $period_label ) {
 	// Internal admin link — the Plausible plugin's embedded stats page.
 	// User is already authenticated in /wp-admin/, so no target=_blank
 	// (it's an in-app navigation, not a hop to plausible.io).
-	$dash = admin_url( 'index.php?page=plausible_analytics_statistics' );
-	$ago  = human_time_diff( (int) $data['fetched'], time() );
-	echo '<p class="sn-pl-foot">' . esc_html( $period_label ) . ' · cached ' . esc_html( $ago ) . ' ago · <a href="' . esc_url( $dash ) . '">Open dashboard →</a></p>';
+	$dash    = admin_url( 'index.php?page=plausible_analytics_statistics' );
+	$fetched = (int) ( $data['fetched'] ?? 0 );
+	// fetched=0 means the SWR background refresh hasn't landed yet
+	// (first-ever pageview after install / cache flush). Distinguish
+	// this from real cached data so the footer doesn't print
+	// "cached 56 years ago" off a 1970-epoch timestamp.
+	$status  = $fetched > 0
+		? 'cached ' . esc_html( human_time_diff( $fetched, time() ) ) . ' ago'
+		: '<em>refreshing in background — reload in a moment</em>';
+	echo '<p class="sn-pl-foot">' . esc_html( $period_label ) . ' · ' . $status . ' · <a href="' . esc_url( $dash ) . '">Open dashboard →</a></p>';
 }

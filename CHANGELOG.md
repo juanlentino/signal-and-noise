@@ -2,6 +2,34 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [7.2.6] — Plausible widgets: stale-while-revalidate, no more dashboard hangs
+
+The four Plausible widgets shipped in v7.2.1 fetched data from the Stats API synchronously during dashboard render — three sequential calls for the snapshot/pages/sources panel plus one for the realtime panel. With a 6-second per-call timeout and a 5-minute cache TTL, the WP dashboard could block for up to **24 seconds** on every cache-miss (recurring every 5 min by design). Symptom: "the page hangs for a bit when it shouldn't."
+
+Root cause was the architectural choice to `wp_remote_get` on the page-render path. The fix replaces that with stale-while-revalidate: the render path becomes constant-time (cache reads only), and refreshes run in a non-blocking WP-Cron loopback dispatched by `spawn_cron()` (`wp_remote_post` with `blocking=false, timeout=0.01`).
+
+### Changed
+- **[`inc/plausible-api.php`](inc/plausible-api.php) — `sn_plausible_dashboard_data()` and `sn_plausible_realtime()` are now read-only.** They return whatever's in the transient (possibly empty on first-ever load, possibly stale during a refresh in flight) and never make a network call. Dashboard render is now constant-time regardless of Plausible API health.
+- **Transient retention decoupled from freshness target.** Batch retention is `DAY_IN_SECONDS` (was 5 min); freshness threshold is still 5 min, gated by the `fetched` field embedded in the payload. Realtime retention is 5 min (was 30s); freshness is still 30s. Effect: stale data remains visible if Plausible is unreachable (the widget footer shows "cached X ago" so the staleness is honest), and refresh failures don't poison the transient with `null`.
+
+### Added
+- **`sn_plausible_refresh_dashboard()` and `sn_plausible_refresh_realtime()`** in [`inc/plausible-api.php`](inc/plausible-api.php) — WP-Cron callbacks that do the actual API work. Hooked to `sn_plausible_refresh_dashboard` and `sn_plausible_refresh_realtime` actions. Run in a separate process via the cron loopback, never on a user-facing request.
+- **`sn_plausible_warm_caches()` admin warmer** at `admin_init` priority 5. Checks the cached payload's `fetched` timestamp; if it's older than the freshness threshold (or missing entirely), schedules a single-event cron job. Priority 5 is intentional — it runs before `wp_loaded`, so `wp_cron()` picks up the just-scheduled event in the same request and dispatches the non-blocking loopback before the admin response is sent. Capability gate (`view_stats` / `manage_options`) matches the widget registration in [`inc/plausible-widget.php`](inc/plausible-widget.php) so we don't warm caches for users who can't see the widgets.
+- **`SN_PLAUSIBLE_BATCH_RETENTION`, `SN_PLAUSIBLE_REALTIME_RETENTION`, and the two refresh-hook constants** in [`inc/plausible-api.php`](inc/plausible-api.php) so the SWR semantics are explicit at the top of the file rather than hardcoded inline.
+
+### Fixed
+- **First-ever-load footer** in [`inc/plausible-widget.php`](inc/plausible-widget.php) — `sn_pl_footer()` no longer renders `human_time_diff()` against an epoch-zero `fetched` timestamp (which would have read as "cached 56 years ago"). When `fetched=0`, the footer instead shows *"refreshing in background — reload in a moment"* so the user knows what they're waiting on.
+
+### Why patch (7.2.6)
+Pure performance/architecture fix scoped to the existing Plausible module — no new user-visible features, no settings schema changes, no API surface changes. The widget rendering, configuration tab, and token resolution chain are all untouched. The batch cache key is unchanged because the payload shape is unchanged; old transients written under v7.2.5's 5-min TTL age out naturally and the next warmer run writes new transients under the longer retention. The realtime cache key bumps `v2 → v3` because the payload shape changed from a bare int to `{ value, fetched }` so the warmer can age-check the data without hitting the network — old `v2` transients age out in 30s and the new `v3` shape takes over on the next warmer run. Patch 6 of 7.2; cap is 7 per minor.
+
+### Out of scope (follow-ups)
+The same blocking pattern exists in two other places that pre-date v7.2.x and weren't part of this complaint:
+- [`inc/template-self-heal.php`](inc/template-self-heal.php) — iterates monitored templates with sequential GitHub Contents API calls on `admin_init`, 10s each. Worst-case dwarfs the Plausible hang on installs with many templates.
+- [`inc/updater.php`](inc/updater.php) and [`inc/admin-page.php`](inc/admin-page.php) — GitHub commits/compare API calls on `pre_set_site_transient_update_themes` and on the S&N options page render, 10s each.
+
+Both are candidates for the same SWR pattern in a future patch.
+
 ## [7.2.5] — Plausible: admin tab for Stats API key (no more wp-config edits)
 
 The constant-only token storage from v7.2.4 worked but required SSH/SFTP into Cloudways to rotate. Adds an admin UI tab so the Stats API key can be saved, tested, and rotated from inside WordPress — same precedence pattern as the Cloudflare module's token storage at [`inc/cloudflare-purge.php:58-83`](inc/cloudflare-purge.php).
