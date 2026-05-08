@@ -4,6 +4,31 @@ All notable changes to Signal & Noise are documented here.
 
 ## [Unreleased] — Operational fixes (post-v7.0.0)
 
+### `/notes` rebuilt from scratch — PHP-rendered, redesigned
+
+After three incidents in two months where `/notes` rendered stale content despite the canonical version being correct in `main` (deploy silently skipping the file, broken self-heal corrupting it, stale `wp_template` DB row surviving the one-shot migration), the page is now rendered entirely from PHP via `template_include`. WordPress's block-template resolution chain — file ↔ DB ↔ object cache ↔ registry — never runs for this route. Filter approach from previous commits (118336b, cb055eb) replaced; those filters had to fight every layer of the resolution chain and lost when an unexpected layer cached the wrong version.
+
+#### Architecture
+
+- **[inc/page-notes-template.php](inc/page-notes-template.php)** — `template_include` filter at priority 999 short-circuits to our render file when `is_page('notes')`. Defensive: if the render file is missing for any reason, falls through to WP's normal resolution (which uses `templates/page-notes.html` as a kept-on-disk fallback with the correct two-card content). Also runs an `admin_init` sweep to delete any stale `wp_template` DB row for `page-notes` — keeps the Site Editor template list clean and prevents the row from re-appearing.
+- **[inc/page-notes-render.php](inc/page-notes-render.php)** — full PHP renderer. Builds the entire HTML document from scratch: `wp_head()`, `body_class()`, `wp_body_open()`, the existing `header` block template part, the page body, the existing `footer` block template part, `wp_footer()`. Inline `<style>` block in the document head so the rendering and the design ship together as a single atomic unit — if the file deploys, the whole page deploys; if it doesn't, the fallback in `templates/page-notes.html` takes over.
+
+#### Design — "Industrial Catalog"
+
+The page now reads as a directory listing for the brand, like a library card catalog or a vinyl-store archive. The aesthetic stays inside the existing brutalist white/asphalt/blood vocabulary but adds editorial precision:
+
+- **Hero** — `INDEX · VOL. 01 · {year}` eyebrow in mono caps, oversized "Notes." display headline (clamp 4-11rem), dek line, entry count + last-updated date in a meta line.
+- **Pillar essays — numbered** (`№ 01`, `№ 02`) in mono blood-red on a light asphalt card with a 6px-wide blood-red left rail. The rail expands to 14px and the card translates 2px on hover — a subtle physical-feeling response. CTA is a tracked uppercase "Read essay →" with the arrow shifting on hover.
+- **Notes index — tabular**. Each row is a 2-column grid on desktop: `[140px date+meta col] [1fr title+excerpt col]`. Date renders as `2026.05.07`, reading time as `03 MIN` (zero-padded for tabular alignment with the date). Title in Bebas Neue display, excerpt in body grey. Title link uses an animated underline that fills from 0 to 100% on hover.
+- **RSS footer — terminal status line**. Mono caps `Feed — /notes/feed/` followed by a blinking blood-red cursor (`@keyframes sn-blink` at 1.05s, steps(2)). Subtitle `No subscription form. No schedule.` underneath.
+- **Page entry** — staggered reveal animation on first paint (cubic-bezier ease, 12px translateY, 60ms cascade across the six top-level sections). Honours `prefers-reduced-motion`.
+
+The 140px main `padding-bottom` from the prior layout fix still applies for fixed-footer clearance — verified the new RSS line sits well above the footer.
+
+#### Trade-off
+
+`/notes` can no longer be edited via Site Editor — the canonical layout lives in `sn_render_notes_page()` (PHP). Given the page has only ever been edited by code commits in practice, this trade is correct: removing the editing surface removes the failure mode.
+
 ### `/notes` template now PHP-authoritative
 
 Even after `padding-bottom: 140px` shipped (proving 7ad2dd8 reached disk) and the post-update force-run self-heal hook fired, `/notes` STILL rendered only the first pillar card. PHP `wp-template;dur=50ms` confirmed live-render under `x-cache: MISS` — meaning the renderer was producing single-card output FRESH, not from a cache. Three layers could be responsible: (1) `templates/page-notes.html` on disk still stale despite multiple deploys, (2) a `wp_template` DB override that survived `sn_clear_template_overrides()`, or (3) a registry/object-cache holding a parsed block tree.
