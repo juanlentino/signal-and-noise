@@ -27,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-const SN_PLAUSIBLE_BATCH_KEY    = 'sn_plausible_dashboard_v2';
+const SN_PLAUSIBLE_BATCH_KEY    = 'sn_plausible_dashboard_v3';
 const SN_PLAUSIBLE_BATCH_TTL    = 5 * MINUTE_IN_SECONDS;
 const SN_PLAUSIBLE_REALTIME_KEY = 'sn_plausible_realtime_v2';
 const SN_PLAUSIBLE_REALTIME_TTL = 30; // seconds
@@ -48,12 +48,59 @@ function sn_plausible_config() {
 		return null;
 	}
 	$self_host = trim( (string) ( $settings['self_hosted_domain'] ?? '' ) );
-	$base      = '' !== $self_host ? rtrim( $self_host, '/' ) : 'https://plausible.io';
+	// Defensive: the plugin's settings field accepts a hostname or a full
+	// URL. If the admin saved just the hostname (common for self-hosted
+	// CE setups on Railway/Fly/etc.), wp_remote_get() can't dispatch the
+	// request — the resulting URL has no scheme. Prepend https:// when
+	// missing so this works regardless of how the plugin field was filled.
+	if ( '' !== $self_host && ! preg_match( '#^https?://#i', $self_host ) ) {
+		$self_host = 'https://' . $self_host;
+	}
+	$base = '' !== $self_host ? rtrim( $self_host, '/' ) : 'https://plausible.io';
 	return array( 'domain' => $domain, 'token' => $token, 'base' => $base );
 }
 
 /**
+ * Transient key for the last API error. Stored separately from the data
+ * cache so failure context survives the same 5-min window the empty
+ * data lives in — admins see *why* the widgets are empty, not just that
+ * they are.
+ */
+const SN_PLAUSIBLE_ERR_KEY = 'sn_plausible_last_error';
+
+/**
+ * Record the most recent API failure. Token is never written — only the
+ * URL (which doesn't include credentials), HTTP status, and a body
+ * excerpt. 5-min TTL matches the data cache so a successful refresh
+ * naturally ages the diagnostic out alongside the cached data.
+ */
+function sn_plausible_record_error( $url, $code, $message ) {
+	set_transient( SN_PLAUSIBLE_ERR_KEY, array(
+		'url'     => (string) $url,
+		'code'    => (int) $code,
+		'message' => (string) $message,
+		'when'    => time(),
+	), 5 * MINUTE_IN_SECONDS );
+}
+
+/**
+ * Read the most recent recorded API error, if any.
+ *
+ * @return array{url:string, code:int, message:string, when:int}|null
+ */
+function sn_plausible_last_error() {
+	$err = get_transient( SN_PLAUSIBLE_ERR_KEY );
+	return is_array( $err ) ? $err : null;
+}
+
+/**
  * GET a Plausible Stats API path.
+ *
+ * On any failure, captures the URL + HTTP code + body excerpt into the
+ * SN_PLAUSIBLE_ERR_KEY transient so the widget can surface *why* the
+ * data is missing. Cleared on the next successful call from the same
+ * request, so a transient outage that resolves itself doesn't leave a
+ * stale "API failed" banner sitting on the dashboard.
  *
  * @param string $path        Path under /api/v1/stats — e.g. 'aggregate'.
  * @param array  $query       Query args; site_id is merged in automatically.
@@ -70,10 +117,20 @@ function sn_plausible_api( $path, $query, $cfg, $expect_json = true ) {
 		'timeout' => 6,
 	) );
 
-	if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
+	if ( is_wp_error( $response ) ) {
+		sn_plausible_record_error( $url, 0, $response->get_error_message() );
 		return null;
 	}
+	$code = wp_remote_retrieve_response_code( $response );
 	$body = wp_remote_retrieve_body( $response );
+
+	if ( 200 !== $code ) {
+		sn_plausible_record_error( $url, $code, substr( (string) $body, 0, 240 ) );
+		return null;
+	}
+
+	// Success — clear any stale error from a prior failed batch.
+	delete_transient( SN_PLAUSIBLE_ERR_KEY );
 
 	if ( ! $expect_json ) {
 		// Realtime endpoint returns a bare integer, not a JSON envelope.

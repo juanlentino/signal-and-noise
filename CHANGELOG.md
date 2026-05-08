@@ -2,6 +2,23 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [7.2.3] — Plausible widgets: surface API errors + defensive scheme handling
+
+The widgets in v7.2.2 rendered "—" across the board on the live install — meaning the API calls were failing silently. The original `sn_plausible_api()` returned `null` on any non-200 with no breadcrumb, so the maintainer couldn't tell whether they were looking at a bad URL, a bad token, a scope mismatch, or a network blip. This release adds a self-debugging surface and fixes the most likely root cause.
+
+### Added
+- **Inline API error diagnostic.** [`inc/plausible-api.php`](inc/plausible-api.php) now captures the URL + HTTP status + first 240 bytes of the response body into a `sn_plausible_last_error` 5-min transient on every failure. [`inc/plausible-widget.php`](inc/plausible-widget.php) renders this inline below the snapshot widget, gated behind `manage_options` so non-admins never see internals. Token is never written to the transient — only the URL (which doesn't carry credentials), the HTTP code, and the body excerpt. Error is auto-cleared on the next successful API call so transient outages don't leave stale "API failed" banners on the dashboard.
+- **Diagnostic shows once, not four times.** Only the snapshot widget renders the diagnostic — the other three panels are downstream of the same API + cache, so a single inline notice is enough.
+
+### Fixed
+- **Defensive `https://` prepend on self-hosted Plausible base URL.** [`sn_plausible_config()`](inc/plausible-api.php) now prepends `https://` to `self_hosted_domain` when the plugin's saved value lacks a scheme. The Plausible WP plugin's settings field accepts both forms (hostname or full URL), but `wp_remote_get()` requires a scheme to dispatch. A bare hostname like `plausible-analytics-ce-production-fcb9.up.railway.app` previously produced a silent `WP_Error` that bubbled up as `null` and then "—" in every widget. Now the URL is normalised before dispatch.
+
+### Changed
+- **Cache key bumped `sn_plausible_dashboard_v2` → `sn_plausible_dashboard_v3`.** Without this, sites updating from v7.2.2 keep reading the empty-data cache that v7.2.2 wrote during its silent failure, and the new error capture never gets a chance to populate the diagnostic transient. The bump forces a fresh fetch on the first pageload after update. The 30-sec realtime cache (`sn_plausible_realtime_v2`) wasn't bumped — it ages out naturally too quickly to matter.
+
+### Why patch (7.2.3)
+Diagnostic addition + targeted bug fix. No new user-visible feature; existing widgets get smarter when something's wrong, and the most likely silent-failure mode for self-hosted CE installs gets defensively fixed. Patch 3 of 7.2; cap is 7 per minor.
+
 ## [7.2.2] — Plausible widgets: native WP admin styling + correct dashboard link
 
 The four Plausible dashboard widgets shipped in v7.2.1 imported theme-front-end styling (Bebas Neue display font, DM Mono labels, blood-red accents, asphalt card backgrounds with a red left rail) into the WordPress admin. The admin is a shared surface — different themes and plugins coexist there, and users expect WP's own UI conventions, not theme-brand styling. The widgets read as foreign-pasted instead of native WP. Fixed.

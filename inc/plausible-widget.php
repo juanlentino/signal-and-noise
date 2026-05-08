@@ -94,6 +94,35 @@ function sn_pl_widget_snapshot() {
 	sn_pl_stat( 'Avg time',  isset( $a['visit_duration']['value'] ) ? sn_pl_duration( $a['visit_duration']['value'] ) : null );
 	echo '</div>';
 	sn_pl_footer( $data, '7d' );
+	// Diagnostic only on the snapshot widget — one place is enough; the
+	// other three panels are downstream of the same API + cache.
+	sn_pl_render_diagnostic();
+}
+
+/**
+ * Render the most recent API error inline, gated to admins only. When
+ * the snapshot widget shows "—" everywhere, this is what tells the
+ * maintainer whether they're looking at a bad URL, a bad token, a
+ * scope mismatch, or a network blip.
+ */
+function sn_pl_render_diagnostic() {
+	if ( ! current_user_can( 'manage_options' ) ) {
+		return;
+	}
+	if ( ! function_exists( 'sn_plausible_last_error' ) ) {
+		return;
+	}
+	$err = sn_plausible_last_error();
+	if ( ! $err ) {
+		return;
+	}
+	$code_label = $err['code'] > 0 ? ( 'HTTP ' . (int) $err['code'] ) : 'Network error';
+	echo '<div style="margin-top:12px;padding:8px 10px;background:#fcf0f1;border-left:3px solid #d63638;font-size:0.8em;line-height:1.5;color:#1d2327;">';
+	echo '<strong>API call failed.</strong> ' . esc_html( $code_label ) . ' from <code style="font-size:0.95em;word-break:break-all;">' . esc_html( $err['url'] ) . '</code>';
+	if ( ! empty( $err['message'] ) ) {
+		echo '<br><span style="color:#646970;">' . esc_html( $err['message'] ) . '</span>';
+	}
+	echo '</div>';
 }
 
 function sn_pl_widget_realtime() {
