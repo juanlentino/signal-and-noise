@@ -2,6 +2,34 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [7.5.2] — Editorial cleanups: canonical-form propagation + small voice swaps
+
+Mechanical follow-up to the [v7.5.1](#) IA pass, driven by the [R3 content audit](docs/CONTENT-AUDIT.md). The audit produced 9 prose-cleanup findings explicitly marked "ship-ready, no maintainer voice required" — those land here. Voice-heavy rewrites (front-page hero subtitle, Services intro/closing CTA, Operations & AI Strategy / Artist & Producer Development blurbs) remain as drafts in the audit doc's §G for the maintainer to react to.
+
+### Changed
+- **Canonical "20+ years" form propagated** across the site. The audit found three competing phrasings — *"Over 20 years"* in [page-about.html](templates/page-about.html), *"Twenty years"* on [page-services.html](templates/page-services.html) and [page-work-with-me.html](templates/page-work-with-me.html). All three normalised to **"20+ years"** (canonical for body prose; visual cred-strips continue to use the title-case **"20+ Years"**). Audit findings F1, F2, F4.
+- **Cred-strip noun parity** in [page-services.html](templates/page-services.html). Middle column changed from *"50+ Artists & Labels"* to *"50+ Collaborations"* — every other place on the site uses *"collaborations"* as the canonical noun. Audit finding F3.
+- **PRODUCTION blurb closer** in [page-services.html](templates/page-services.html) line 104. *"Every decision made with intention"* → *"every decision made to serve the song"*. The audit flagged *"made with intention"* as the closest the site got to a Medium-essay tic; *"made to serve the song"* names the actual standard the work is held to. Audit finding A4.
+- **Front-page hero outline button** in [front-page.html](templates/front-page.html). Label *"About Me"* → *"About"* — matches the nav label, removes a small inconsistency where the button-row read differently from the menu it sat under. Audit finding F5.
+- **Front-page pillar card dek** in [home.html](templates/home.html) line 43. The dek for *Provenance Over Detection* diverged between [home.html](templates/home.html) (*"A short read on why the industry needs to prove what's human, not chase what isn't."*) and [page-notes.html](templates/page-notes.html) (*"Detection chases what isn't. Provenance proves what is."*). The `/notes` version is sharper — single chiastic sentence, exemplary of the brutalist register. Reuse it on the home page. Audit finding F6.
+- **Catalog meta line** in [page-music.html](templates/page-music.html) line 55. Trimmed *"every credit, every collaboration, every role I've held across 20+ years"* to *"every credit, every collaboration, every role I've held"*. By the time a visitor reaches Music, the cred-strip on Services and the bio paragraph on About have asserted the years-claim twice already; the catalog itself does the work of asserting tenure here. Audit finding F8.
+- **Eyebrow standardisation** on [page-contact.html](templates/page-contact.html) and [page-work-with-me.html](templates/page-work-with-me.html). The audit identified three competing eyebrow patterns; the *"Section · Specifier"* dossier system used on About, Resume, Music, Services, and 404 is the canonical one. Brought the two outliers into the family:
+  - Contact: bare *"Get In Touch"* → *"Dossier · Get In Touch"*
+  - Work With Me: bare *"Strategy Sessions"* (set in v7.5.1) → *"Consulting · Strategy Sessions"*
+  Audit finding D1.
+
+### Out of scope (deliberately deferred)
+The audit's voice-heavy rewrites stay as drafts in [docs/CONTENT-AUDIT.md](docs/CONTENT-AUDIT.md) §G — these need the maintainer's voice to land:
+- **G1**: Front-page hero subtitle (*"Music production, creative strategy, and the systems that hold them together."*) — three drafts pitched in the audit; one to pick.
+- **G2**: Services intro second sentence (*"…deliberate, thorough, and built to last."*).
+- **G3**: Services closing CTA h2 + body — already partially fixed in v7.5.1 (button split), but the heading *"LET'S TALK ABOUT YOUR PROJECT"* is the weakest h2 on the site.
+- **G4**: OPERATIONS & AI STRATEGY blurb (*"build systems that scale"*).
+- **A6**: ARTIST & PRODUCER DEVELOPMENT blurb (*"connect creative identity to commercial opportunity"*).
+- The Resume page's redundant cred-strip-vs-prose duplication — the audit suggested a restructure (*"Music Production · Strategy · Mentorship"*) but the choice of three disciplines is editorial.
+
+### Why patch (7.5.2)
+Pure editorial cleanup. No new functionality, no IA changes, no schema changes. Eight templates touched, every change a 1–2-line surgical edit verifiable against the audit doc. Patch 2 of 7.5.
+
 ## [7.5.1] — IA pass: stop conflating "Contact" with "Work With Me"
 
 The nav had two top-level items — *Contact* and *Work With Me* — but they pointed at very different products, and the labels misled visitors about what was on the other side of the click.
