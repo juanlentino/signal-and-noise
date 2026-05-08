@@ -10,9 +10,21 @@ Repo: juanlentino/signal-and-noise. Hosted on Cloudways (syntharchy-wp), Cloudfl
 - Cloudways server, Cloudflare for CDN/DNS/headers
 
 ## Versioning
-IMPORTANT: Only bump version for code/functional changes. Never for content-only template edits.
 
-Patch cap is **7 per minor** for this project (overrides the global Apple-style 3-patch rule). So 6.2.0 through 6.2.7 are all valid before the next change must bump to 6.3.0. Minor cap remains 5 per major (6.0–6.5, then 7.0).
+Full workflow + rationale: [docs/VERSIONING.md](docs/VERSIONING.md). Short version below.
+
+**Caps (override global):** Patch cap is **7 per minor**, minor cap is **5 per major**. `7.1.0`–`7.1.7` valid → next bump rolls to `7.2.0`. `7.0`–`7.5` valid → next bump rolls to `8.0.0`. When the cap fires, document the rollover in the CHANGELOG entry.
+
+**What bumps:** code, CSS, migrations, structural template changes. **What doesn't:** `docs/`, `CLAUDE.md`, content-only copy edits, CHANGELOG-only commits.
+
+**Workflow per release:** edit code → bump `Version:` in [style.css](style.css) → CHANGELOG entry at top → commit `vX.Y.Z: summary` → push → annotated tag `vX.Y.Z` at session end → smoke test runs on push → Update in WP admin.
+
+**Commit + tag format:**
+```bash
+git commit -m "vX.Y.Z: summary"
+git tag -a vX.Y.Z -m "vX.Y.Z — summary"
+git push origin vX.Y.Z
+```
 
 ## Security
 - CSP unsafe-inline/unsafe-eval are accepted risks (WordPress architectural constraint).
