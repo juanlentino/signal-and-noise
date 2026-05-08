@@ -2,6 +2,30 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [7.3.0] — Hardening pass + cap-forced minor rollover
+
+Targeted defensive sweep driven by the [R1 standards audit](docs/WP-STANDARDS-AUDIT.md). The audit returned **0 CRITICAL · 2 HIGH · 9 MEDIUM · 11 LOW · 6 NIT** — none exploitable, but two HIGH defense-in-depth gaps in [`inc/admin-page.php`](inc/admin-page.php) and a textdomain registration omission worth closing before the v7.3 line accumulates new surface.
+
+The minor bump is **forced by the per-minor patch cap** (7.2.0 through 7.2.7 = 7 patches, the project's documented ceiling per [docs/VERSIONING.md](docs/VERSIONING.md) and [CLAUDE.md](CLAUDE.md)). Semver-wise this release is patch-class — fixes only, no new user-visible features — but the cap rule supersedes when it fires. Subsequent 7.3.x patches resume normal patch numbering.
+
+### Fixed
+- **H1 — Defense-in-depth `current_user_can()` check in [`sn_theme_options_page()`](inc/admin-page.php).** Previously the function relied solely on the `manage_options` capability gate WordPress enforces from `add_theme_page()`. That's sufficient for the registered admin URL today, but if the function is ever invoked from another context (a future shortcode, AJAX dispatcher, or REST callback), the form-handling block ran without re-checking. Now the function calls `current_user_can( 'manage_options' )` at the top and `wp_die()`s with a translatable error if it fails. WPCS convention; no behavior change for legitimate admin users.
+- **H2 — Refactored the `installed_label` concatenation pattern in the Status table.** The previous form built a pre-escaped HTML string by concatenating `esc_html()` fragments with a static `<span>` literal, then echoed the result. Safe today (every dynamic field was escaped at concatenation site), but a known XSS-bug class — anyone adding a new dynamic field to the concat without escaping it would inject straight into the admin page. Replaced with inline-print: `echo '<code>' . esc_html( $local_version ) . '</code>'` followed by a conditional `<span>` block. Same visual output; future-bug-class eliminated.
+- **L2 — `[current_year]` shortcode now uses `wp_date( 'Y' )` instead of `date( 'Y' )`** in [`inc/setup.php`](inc/setup.php). `date()` reads the server timezone, which on US-hosted WordPress can disagree with the site's configured timezone for a few hours each year around Dec 31 / Jan 1. `wp_date()` (since WP 5.3) respects the WP timezone setting.
+
+### Added
+- **`load_theme_textdomain( 'signal-noise', get_theme_file_path( 'languages' ) )`** registered in `signal_noise_after_setup_theme()` (renamed from `signal_noise_editor_styles()` — same hook, expanded scope). Closes audit finding M8: the text domain `signal-noise` was previously referenced once in [`inc/page-notes-render.php`](inc/page-notes-render.php) via `_n()` but never registered, so translation calls worked by silent fall-through rather than registered intent. The `languages/` directory doesn't exist yet — calling `load_theme_textdomain()` against a non-existent path is harmless and lets the registration land in advance of any future translation work.
+- **Safety contract docblock** above the inline-CSS injector in [`inc/assets-frontend.php`](inc/assets-frontend.php) (audit finding M1). The block reads `assets/css/critical.css` via `file_get_contents()` and echoes it verbatim into `<head>` on every front-end pageview. Currently safe by construction (theme-owned file, never user-influenced), but the audit flagged that any future module programmatically writing to that file would inject straight into the document. The docblock makes the contract explicit and tells future maintainers where sanitization belongs (at the write site, not here).
+
+### Out of scope (deferred to later ships)
+The audit's other findings are tracked but not addressed in this release:
+- **Bulk `__()` / `esc_html__()` wrapping of admin-facing strings** (audit M8 + L1). Mechanical but voluminous — touches 7 files. A separate dedicated ship gives that pass its own review surface and keeps this hardening release focused.
+- **SWR refactor of [`inc/updater.php`](inc/updater.php) + the GitHub branch HEAD fetch in [`inc/admin-page.php`](inc/admin-page.php)** — queued for v7.3.1 (the next patch).
+- All LOW and NIT findings — see [`docs/WP-STANDARDS-AUDIT.md`](docs/WP-STANDARDS-AUDIT.md) for the full list.
+
+### Why minor (cap rollover)
+The 7.2 line shipped 7 patches (`.1` through `.7`) before this release. The project's per-minor patch cap is 7 (see [`docs/VERSIONING.md`](docs/VERSIONING.md)), so the next bump rolls minor regardless of semantic content. v7.3.0 is the first 7.3.x release; subsequent fixes resume at v7.3.1 patch numbering.
+
 ## [7.2.7] — Template self-heal: stale-while-revalidate, no more admin_init hangs
 
 The follow-up to v7.2.6 flagged in that CHANGELOG. Same architectural class — synchronous external HTTP on the admin render path — applied to the self-heal module's GitHub Contents API loop. On a cold rate-limit window, [`sn_self_heal_run()`](inc/template-self-heal.php) iterated every monitored `.html` file (typically 8+ templates and parts) and made one `wp_remote_get` per file with a 10-second timeout. Worst case: **N × 10s of admin pageview hang every 5 minutes** — dwarfing the Plausible widget hang the earlier patch addressed.

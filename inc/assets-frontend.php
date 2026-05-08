@@ -67,6 +67,16 @@ add_action( 'wp_enqueue_scripts', 'signal_noise_enqueue_styles' );
 /**
  * Performance: Inline only critical above-the-fold CSS.
  * The full custom.css is loaded deferred below.
+ *
+ * SAFETY CONTRACT: assets/css/critical.css is theme-owned, ships in the
+ * repo, and MUST never be programmatically rewritten by user-influenced
+ * input. The file's contents are echoed verbatim into <style>; any
+ * future module that programmatically writes to critical.css would
+ * inject straight into <head> on every front-end pageview. If such a
+ * module is ever added, it must sanitize inputs at the WRITE site, not
+ * here — strip-on-read is the wrong layer because the file is already
+ * trusted-by-construction by the rest of the loader chain (Breeze
+ * minification, Cloudflare edge cache, etc.).
  */
 add_action( 'wp_head', function() {
 	$css_file = get_theme_file_path( 'assets/css/critical.css' );

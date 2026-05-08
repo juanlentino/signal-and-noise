@@ -40,6 +40,15 @@ add_action( 'admin_menu', function() {
 } );
 
 function sn_theme_options_page() {
+	// Defense-in-depth capability check. WordPress's add_theme_page()
+	// already gates access to the admin URL itself, but re-checking here
+	// matches WPCS convention for any handler that mutates state and
+	// keeps this function safe if it's ever invoked from another context
+	// (e.g. a future shortcode, AJAX dispatcher, or REST callback).
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'signal-noise' ) );
+	}
+
 	$theme         = wp_get_theme( 'signal-and-noise' );
 	$local_version = $theme->get( 'Version' );
 	$notices       = array();
@@ -216,8 +225,15 @@ function sn_theme_options_page() {
 		// ── STATUS ──
 		echo '<h2 style="font-size:1.1em;margin-bottom:0.8em;">Status</h2>';
 		echo '<table class="form-table" style="max-width:500px;">';
-		$installed_label = esc_html( $local_version ) . ( $local_sha ? ' <span style="color:#666;">at ' . esc_html( $local_sha ) . '</span>' : '' );
-		echo '<tr><th style="width:180px;padding:8px 10px 8px 0;">Installed version</th><td style="padding:8px 0;"><code>' . $installed_label . '</code></td></tr>';
+		// Print escaped fragments inline rather than building a pre-escaped
+		// string and echoing it. Same visual output; eliminates the future-
+		// bug class where a maintainer adds a new dynamic field to the
+		// concatenation and forgets to esc_html it. (Audit finding H2.)
+		echo '<tr><th style="width:180px;padding:8px 10px 8px 0;">Installed version</th><td style="padding:8px 0;"><code>' . esc_html( $local_version ) . '</code>';
+		if ( $local_sha ) {
+			echo ' <span style="color:#666;">at <code>' . esc_html( $local_sha ) . '</code></span>';
+		}
+		echo '</td></tr>';
 		echo '<tr><th style="padding:8px 10px 8px 0;">Latest on GitHub</th><td style="padding:8px 0;"><code>' . esc_html( $github_version ) . '</code>';
 		if ( $is_up_to_date ) {
 			echo ' <span style="color:#00a32a;">&#10003; Up to date</span>';
