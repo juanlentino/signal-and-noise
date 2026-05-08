@@ -19,14 +19,17 @@
  * without requiring SSH/SFTP intervention.
  *
  * How it works:
- *   - On admin_init (rate-limited via 5-min option), iterate the
- *     monitored file list (default: all .html files under templates/
- *     and parts/, filterable via 'sn_self_heal_files').
+ *   - On admin_init (capability + rate-limit gated), schedule a single
+ *     WP-Cron event for the next non-blocking spawn_cron() loopback.
+ *     The admin pageview returns immediately; the actual GitHub
+ *     fetches run in a parallel process. (Since v7.2.7 — previously
+ *     this loop ran inline at admin_init and could synchronously
+ *     block the admin pageview for up to N×10s on cold cache.)
+ *   - In the cron callback, iterate the monitored file list (default:
+ *     all .html files under templates/ and parts/, filterable via
+ *     'sn_self_heal_files').
  *   - For each file, fetch the canonical version from GitHub via the
- *     Contents API using the existing SN_GITHUB_TOKEN. The request
- *     uses the `application/vnd.github.v3.raw` accept header so
- *     GitHub returns the raw file content (no base64-in-JSON
- *     wrapping).
+ *     Contents API using the existing SN_GITHUB_TOKEN.
  *   - Byte-for-byte comparison against the local file.
  *   - On drift, overwrite the local file using WP_Filesystem (the
  *     same write API the WP self-updater itself uses, so anything WP
@@ -34,6 +37,9 @@
  *   - On any successful write, fire sn_purge_all_caches() so the new
  *     content is served immediately — no waiting for the next
  *     deploy-time cache invalidation.
+ *   - The button-click + post-update force-run path (sn_self_heal_force_run)
+ *     remains synchronous by design: the user is staring at the upgrader
+ *     UI / Heal Now button and expects an immediate result.
  *
  * Defensive properties:
  *   - Rate-limited (5 min between checks) so admin pageviews don't
@@ -93,21 +99,66 @@ function sn_self_heal_files() {
 }
 
 /**
- * Run the self-heal check on admin pageviews. Rate-limited via the
- * SN_SELF_HEAL_CHECK_INTERVAL option so we don't hit GitHub on every
- * admin pageview. Capability-gated so only admins trigger it.
+ * Schedule a self-heal pass for the next non-blocking WP-Cron loopback
+ * tick. Runs on admin pageviews, capability-gated, rate-limited via
+ * SN_SELF_HEAL_CHECK_INTERVAL.
  *
- * Priority 20 so this runs AFTER the cache-purge / mtime check at
- * priority 10 — that way if the mtime check just cleared overrides,
- * the self-heal can verify file content right after.
+ * Since v7.2.7: only schedules; the actual GitHub Contents API loop
+ * runs in sn_self_heal_cron() via spawn_cron()'s non-blocking loopback.
+ * Previously this called sn_self_heal_execute() inline at admin_init,
+ * which on a cold cache could synchronously fetch every monitored
+ * template via wp_remote_get (10s timeout each) — N templates × 10s
+ * blocked the admin pageview every 5 min. Now the user's admin page
+ * returns instantly while the heal runs in a parallel process.
+ *
+ * Priority 5 so the schedule call happens BEFORE wp_loaded fires —
+ * wp_cron() picks up the just-scheduled event in the same request and
+ * dispatches the loopback before the admin response is sent. (Same
+ * timing trick used by the Plausible warmer in inc/plausible-api.php.)
+ *
+ * The user_id is stashed in the cron event args so the per-user notice
+ * transient lands under the admin who triggered the schedule, not
+ * under user 0 (cron context has no current user).
  */
-add_action( 'admin_init', 'sn_self_heal_run', 20 );
+add_action( 'admin_init', 'sn_self_heal_run', 5 );
 
 function sn_self_heal_run() {
 	if ( ! current_user_can( 'manage_options' ) ) {
 		return;
 	}
-	sn_self_heal_execute( false );
+	if ( ! defined( 'SN_GITHUB_TOKEN' ) || empty( SN_GITHUB_TOKEN ) ) {
+		return;
+	}
+	if ( ! defined( 'SN_GITHUB_REPO' ) || empty( SN_GITHUB_REPO ) ) {
+		return;
+	}
+
+	// Rate limit: bail if we've already checked recently. Mirrors the gate
+	// inside sn_self_heal_execute() so we don't even bother scheduling a
+	// no-op cron event.
+	$last = (int) get_option( SN_SELF_HEAL_LAST_CHECK_OPT, 0 );
+	if ( time() - $last < SN_SELF_HEAL_CHECK_INTERVAL ) {
+		return;
+	}
+
+	// Don't pile up duplicate cron events when several admins hit the
+	// dashboard within the same rate-limit window.
+	if ( wp_next_scheduled( 'sn_self_heal_cron' ) ) {
+		return;
+	}
+
+	wp_schedule_single_event( time(), 'sn_self_heal_cron', array( get_current_user_id() ) );
+}
+
+/**
+ * Cron-driven ambient heal pass. Wraps the same execute() logic the
+ * synchronous force-run uses, but with the rate-limit gate active
+ * and the notice routed to the admin who triggered the schedule.
+ */
+add_action( 'sn_self_heal_cron', 'sn_self_heal_cron' );
+
+function sn_self_heal_cron( $user_id = 0 ) {
+	sn_self_heal_execute( false, (int) $user_id );
 }
 
 /**
@@ -138,13 +189,20 @@ function sn_self_heal_force_run() {
 
 /**
  * Internal: actual heal loop. Caller decides whether to enforce the
- * rate-limit gate (false = ambient admin_init path, true = manual /
- * post-update force path).
+ * rate-limit gate (false = ambient cron path, true = manual / post-
+ * update force path) and which user the result notice is routed to.
  *
- * @param bool $force True to skip rate-limit; false to honor it.
+ * @param bool     $force          True to skip rate-limit; false to honor it.
+ * @param int|null $notice_user_id Optional user_id for the result-notice
+ *                                  transient. Defaults to the current
+ *                                  user (the logged-in admin in HTTP
+ *                                  contexts; 0 in cron). The cron
+ *                                  caller passes the admin who triggered
+ *                                  the schedule so the notice is
+ *                                  visible to them on their next page.
  * @return array{fixed: string[], failed: string[]}
  */
-function sn_self_heal_execute( $force ) {
+function sn_self_heal_execute( $force, $notice_user_id = null ) {
 	$result = array( 'fixed' => array(), 'failed' => array() );
 
 	if ( ! defined( 'SN_GITHUB_TOKEN' ) || empty( SN_GITHUB_TOKEN ) ) {
@@ -186,15 +244,23 @@ function sn_self_heal_execute( $force ) {
 	}
 
 	if ( $result['fixed'] || $result['failed'] ) {
-		set_transient(
-			'sn_self_heal_notice_' . get_current_user_id(),
-			array(
-				'fixed'  => $result['fixed'],
-				'failed' => $result['failed'],
-				'when'   => time(),
-			),
-			5 * MINUTE_IN_SECONDS
-		);
+		// Resolve notice audience: explicit user_id from the cron caller
+		// wins, otherwise fall back to the current user (HTTP context).
+		// Skip writing entirely when audience resolves to 0 (no logged-in
+		// admin, no scheduling user) — the notice would be invisible
+		// anyway and would just clutter the options table.
+		$audience = ( null !== $notice_user_id ) ? (int) $notice_user_id : get_current_user_id();
+		if ( $audience > 0 ) {
+			set_transient(
+				'sn_self_heal_notice_' . $audience,
+				array(
+					'fixed'  => $result['fixed'],
+					'failed' => $result['failed'],
+					'when'   => time(),
+				),
+				5 * MINUTE_IN_SECONDS
+			);
+		}
 	}
 
 	return $result;

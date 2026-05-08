@@ -2,6 +2,24 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [7.2.7] — Template self-heal: stale-while-revalidate, no more admin_init hangs
+
+The follow-up to v7.2.6 flagged in that CHANGELOG. Same architectural class — synchronous external HTTP on the admin render path — applied to the self-heal module's GitHub Contents API loop. On a cold rate-limit window, [`sn_self_heal_run()`](inc/template-self-heal.php) iterated every monitored `.html` file (typically 8+ templates and parts) and made one `wp_remote_get` per file with a 10-second timeout. Worst case: **N × 10s of admin pageview hang every 5 minutes** — dwarfing the Plausible widget hang the earlier patch addressed.
+
+### Changed
+- **[`inc/template-self-heal.php`](inc/template-self-heal.php) — admin_init becomes a scheduler.** The `sn_self_heal_run()` callback now performs the capability + rate-limit + token-defined gates and, if all pass, calls `wp_schedule_single_event()` for a new `sn_self_heal_cron` hook. The actual GitHub-fetch loop runs in the non-blocking [`spawn_cron()`](https://developer.wordpress.org/reference/functions/spawn_cron/) loopback, never on the admin response path. Hook priority dropped from `20` to `5` so the schedule call lands BEFORE `wp_loaded` fires — same timing trick as the Plausible warmer in [`inc/plausible-api.php`](inc/plausible-api.php), so `wp_cron()` picks up the just-scheduled event in the same request and dispatches the loopback before the admin's response is sent.
+- **[`sn_self_heal_execute()`](inc/template-self-heal.php) gains an optional `$notice_user_id` parameter** so the per-user admin notice routes correctly across the cron boundary. Default behaviour (when called from the synchronous `sn_self_heal_force_run()`) is unchanged — falls back to `get_current_user_id()`. The cron callback passes the user_id stashed at schedule time so the notice lands under the admin who triggered it, not under user `0`.
+- **Notice writes now skip `audience === 0`** entirely. Previously a cron run with no scheduling user (or any future caller without a logged-in admin) would write a notice transient under user_id 0 that no one could see — clutter without value.
+
+### Added
+- **`sn_self_heal_cron($user_id = 0)`** — new WP-Cron callback hooked to `sn_self_heal_cron`. Thin wrapper that calls `sn_self_heal_execute(false, $user_id)`. Single-event scheduled, never recurring; the next admin pageview after the rate-limit window expires schedules the next one.
+
+### Unchanged (preserves expected synchronous behaviour)
+- **`sn_self_heal_force_run()`** — the button-click + post-update entry point — remains synchronous. The user is staring at the *Heal Templates Now* button or the WP upgrader UI and expects an immediate "X files re-synced from GitHub" result. Moving this to cron would make the recovery action feel broken, not faster.
+
+### Why patch (7.2.7)
+Pure performance fix scoped to one module. Rate-limit semantics are preserved (still 5 min between ambient runs); the only behavioural change visible to users is *the absence of a hang* every 5 min. No schema changes, no API changes, no settings changes. **This is the last patch allowed in the 7.2 series** — the project's per-minor patch cap is 7. The next bump rolls minor to 7.3.0; the updater's matching SWR fix is queued for that release.
+
 ## [7.2.6] — Plausible widgets: stale-while-revalidate, no more dashboard hangs
 
 The four Plausible widgets shipped in v7.2.1 fetched data from the Stats API synchronously during dashboard render — three sequential calls for the snapshot/pages/sources panel plus one for the realtime panel. With a 6-second per-call timeout and a 5-minute cache TTL, the WP dashboard could block for up to **24 seconds** on every cache-miss (recurring every 5 min by design). Symptom: "the page hangs for a bit when it shouldn't."
