@@ -148,7 +148,6 @@ body::after {
    ============================================ */
 
 .sn-header {
-	animation: fadeIn 0.8s ease-out;
 	position: fixed;
 	top: 0;
 	left: 0;
@@ -252,15 +251,17 @@ body {
    becomes the actual visible gap. */
 .sn-hero-title {
 	margin-block: 0 !important;
-	animation: fadeInUp 1s ease-out 0.2s both;
 }
 
-.sn-hero-subtitle {
-	animation: fadeInUp 1s ease-out 0.5s both;
-}
-
-.sn-hero-cta {
-	animation: fadeInUp 1s ease-out 0.8s both;
+/* Hero + header entrance — staggered cascade. Gated behind
+   `prefers-reduced-motion: no-preference` so motion-sensitive users
+   get the static layout immediately. Same pattern used elsewhere in
+   this file for block-level fade-ins. */
+@media (prefers-reduced-motion: no-preference) {
+	.sn-header        { animation: fadeIn 0.8s ease-out; }
+	.sn-hero-title    { animation: fadeInUp 1s ease-out 0.2s both; }
+	.sn-hero-subtitle { animation: fadeInUp 1s ease-out 0.5s both; }
+	.sn-hero-cta      { animation: fadeInUp 1s ease-out 0.8s both; }
 }
 
 /* Hero centring via inner markup wrapper. Column is 1100px max, centred via

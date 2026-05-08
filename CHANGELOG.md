@@ -2,6 +2,16 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [7.1.6] — Accessibility + 404 polish
+
+Two findings from the design review:
+
+### Fixed
+- **Home hero animations now honour `prefers-reduced-motion`.** The site already gated block-level fade-ins behind `@media (prefers-reduced-motion: no-preference)` (in [base.css:135](assets/css/base.css:135) and [critical.css:116](assets/css/critical.css:116)), but the hero's own staggered cascade — `.sn-header`, `.sn-hero-title`, `.sn-hero-subtitle`, `.sn-hero-accent`, `.sn-hero-cta` — was declared outside that gate. Motion-sensitive users got a 1.8-second cascading fade-in on the FIRST screen they saw, with no way to suppress it. Wrapped all five animations in a single `prefers-reduced-motion: no-preference` block in both [critical.css](assets/css/critical.css) and [layout.css](assets/css/layout.css). Also consolidates the v7.1.4 `prefers-reduced-motion: reduce` block for `.sn-hero-accent` into the new gate (single source of truth).
+
+### Added
+- **404 page eyebrow.** Added an `Error · 404 · No Signal` `.sn-catalog-eyebrow` above the giant "404" headline in [templates/404.html](templates/404.html), bringing the page into the catalog vocabulary established in v7.1.0. The page's existing editorial copy ("SIGNAL LOST", music-themed scripture quote) didn't need changing — the eyebrow just gives it a small additional tonal anchor that ties it to the rest of the index pages.
+
 ## [7.1.5] — Revert hero accent to 120px editorial mark
 
 v7.1.4 set the hero accent to `width: 100%; max-width: 640px;` to make it match the dek's max-width and read as an underline. In practice it overshot: the dek wraps at natural word boundaries (well before its 640px max), so the accent always ended up wider than the visible text on either line. The "underline" reading didn't land, and the editorial-mark reading from v7.1.0 was lost.

@@ -32,7 +32,6 @@
    ============================================ */
 
 .sn-header {
-	animation: fadeIn 0.8s ease-out;
 	position: fixed;
 	top: 0;
 	left: 0;
@@ -233,15 +232,6 @@ body {
 /* Reset UA default margin-block. See critical.css for rationale. */
 .sn-hero-title {
 	margin-block: 0 !important;
-	animation: fadeInUp 1s ease-out 0.2s both;
-}
-
-.sn-hero-subtitle {
-	animation: fadeInUp 1s ease-out 0.5s both;
-}
-
-.sn-hero-cta {
-	animation: fadeInUp 1s ease-out 0.8s both;
 }
 
 /* Hero accent — blood-red editorial mark beneath the dek.
@@ -257,12 +247,19 @@ body {
 	height: 3px;
 	background-color: var(--wp--preset--color--blood, #e00404);
 	margin: var(--wp--preset--spacing--30) 0;
-	animation: fadeInUp 1s ease-out 0.65s both;
 }
-@media (prefers-reduced-motion: reduce) {
-	.sn-hero-accent {
-		animation: none;
-	}
+
+/* Hero + header entrance — staggered cascade. Single gate behind
+   `prefers-reduced-motion: no-preference` so motion-sensitive users
+   get the static layout immediately. Mirrors the same block in
+   critical.css (CSS architecture has duplication between the two
+   files; this fix lives in both for parity). */
+@media (prefers-reduced-motion: no-preference) {
+	.sn-header        { animation: fadeIn 0.8s ease-out; }
+	.sn-hero-title    { animation: fadeInUp 1s ease-out 0.2s both; }
+	.sn-hero-subtitle { animation: fadeInUp 1s ease-out 0.5s both; }
+	.sn-hero-accent   { animation: fadeInUp 1s ease-out 0.65s both; }
+	.sn-hero-cta      { animation: fadeInUp 1s ease-out 0.8s both; }
 }
 
 /* Hero centring via inner markup wrapper. See critical.css for rationale. */
