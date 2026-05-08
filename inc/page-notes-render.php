@@ -116,7 +116,18 @@ if ( $entry_count > 0 ) {
 <head>
 <meta charset="<?php bloginfo( 'charset' ); ?>">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<?php wp_head(); ?>
+<?php
+// Manually output the document title before wp_head(). Block-theme
+// rendering normally produces this via head-template processing,
+// but our `template_redirect` short-circuit bypasses that path
+// AND the theme doesn't register `add_theme_support('title-tag')`,
+// so WP's auto-title hook isn't installed either. Result without
+// this line: no <title> element at all → browsers display the URL
+// in the tab. The pre_get_document_title filter in
+// inc/page-notes-template.php controls the value used here.
+echo '<title>' . esc_html( wp_get_document_title() ) . '</title>' . "\n";
+wp_head();
+?>
 <style>
 /* ──────────────────────────────────────────────────────────────
    /notes — INDUSTRIAL CATALOG
