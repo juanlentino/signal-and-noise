@@ -138,10 +138,30 @@ if ( $entry_count > 0 ) {
 	margin: 0 auto;
 }
 
+/* TOP COMPOSITION ─────────────────────────────────────────────
+   Hero (left) + pillar essays (right) on desktop. Stacks
+   vertically below the breakpoint. align-items: start so the
+   "Notes." headline anchors the top-left and the pillar cards
+   begin at the same baseline on the right. */
+
+.sn-notes-top {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: clamp(2.5rem, 5vw, 4rem);
+	margin-bottom: clamp(2rem, 4vw, 3rem);
+}
+@media (min-width: 980px) {
+	.sn-notes-top {
+		grid-template-columns: 5fr 7fr;
+		gap: clamp(3rem, 6vw, 5rem);
+		align-items: start;
+	}
+}
+
 /* HERO ────────────────────────────────────────────────────────── */
 
 .sn-notes-hero {
-	margin-bottom: clamp(2.5rem, 5vw, 4rem);
+	margin-bottom: 0; /* gap handled by .sn-notes-top */
 }
 .sn-notes-eyebrow,
 .sn-notes-meta,
@@ -165,6 +185,14 @@ if ( $entry_count > 0 ) {
 	letter-spacing: -0.02em;
 	margin: 0 0 1.25rem;
 	color: var(--wp--preset--color--bone, #000);
+}
+@media (min-width: 980px) {
+	/* Hero now lives in a ~5fr column. Cap the headline so
+	   "Notes." stays inside the column at desktop widths
+	   (Bebas Neue at 11rem would overflow a ~480px column). */
+	.sn-notes-headline {
+		font-size: clamp(5rem, 9vw, 8.5rem);
+	}
 }
 .sn-notes-dek {
 	font-size: clamp(1rem, 1.4vw, 1.15rem);
@@ -216,11 +244,12 @@ if ( $entry_count > 0 ) {
 
 .sn-notes-pillars {
 	display: grid;
+	grid-template-columns: 1fr;
 	gap: clamp(1rem, 2vw, 1.5rem);
 }
-@media (min-width: 880px) {
-	.sn-notes-pillars { grid-template-columns: 1fr 1fr; }
-}
+/* Pillar cards stay in a single column even when the hero+pillars
+   composition splits (≥980px) — they live in the right-hand cell
+   and stack vertically there, paired with the hero on the left. */
 
 .sn-notes-pillar {
 	position: relative;
@@ -492,51 +521,53 @@ echo do_blocks( '<!-- wp:template-part {"slug":"header","area":"header"} /-->' )
 
 <main class="sn-notes-page" id="content">
 
-	<header class="sn-notes-hero">
-		<p class="sn-notes-eyebrow">Index &middot; Vol. 01 &middot; <?php echo esc_html( wp_date( 'Y' ) ); ?></p>
-		<h1 class="sn-notes-headline">Notes.</h1>
-		<p class="sn-notes-dek">Working notes on music, AI, and the infrastructure underneath. Written when there&rsquo;s something worth writing.</p>
-		<p class="sn-notes-meta">
-			<span><?php echo esc_html( sprintf( _n( '%d entry', '%d entries', $entry_count, 'signal-noise' ), $entry_count ) ); ?></span>
-			<?php if ( $latest_date ) : ?>
-				<span class="sn-notes-meta-bullet" aria-hidden="true">&middot;</span>
-				<span>Last updated <?php echo esc_html( $latest_date ); ?></span>
-			<?php endif; ?>
-		</p>
-	</header>
+	<div class="sn-notes-top">
 
-	<hr class="sn-notes-rule" aria-hidden="true">
+		<header class="sn-notes-hero">
+			<p class="sn-notes-eyebrow">Index &middot; Vol. 01 &middot; <?php echo esc_html( wp_date( 'Y' ) ); ?></p>
+			<h1 class="sn-notes-headline">Notes.</h1>
+			<p class="sn-notes-dek">Working notes on music, AI, and the infrastructure underneath. Written when there&rsquo;s something worth writing.</p>
+			<p class="sn-notes-meta">
+				<span><?php echo esc_html( sprintf( _n( '%d entry', '%d entries', $entry_count, 'signal-noise' ), $entry_count ) ); ?></span>
+				<?php if ( $latest_date ) : ?>
+					<span class="sn-notes-meta-bullet" aria-hidden="true">&middot;</span>
+					<span>Last updated <?php echo esc_html( $latest_date ); ?></span>
+				<?php endif; ?>
+			</p>
+		</header>
 
-	<section class="sn-notes-pillars-section" aria-labelledby="sn-pillars-heading">
-		<div class="sn-notes-section-wrap">
-			<p class="sn-notes-section-label" id="sn-pillars-heading">Pillar Essays &mdash; Featured</p>
-			<span class="sn-notes-section-count">02 / 02</span>
-		</div>
+		<section class="sn-notes-pillars-section" aria-labelledby="sn-pillars-heading">
+			<div class="sn-notes-section-wrap">
+				<p class="sn-notes-section-label" id="sn-pillars-heading">Pillar Essays &mdash; Featured</p>
+				<span class="sn-notes-section-count">02 / 02</span>
+			</div>
 
-		<div class="sn-notes-pillars">
+			<div class="sn-notes-pillars">
 
-			<article class="sn-notes-pillar">
-				<span class="sn-notes-pillar-number" aria-hidden="true">&#8470; 01</span>
-				<div class="sn-notes-pillar-body">
-					<p class="sn-notes-pillar-eyebrow">Pillar Essay &middot; March 2026 &middot; <?php echo esc_html( sn_notes_reading_time_for_slug( 'provenance/over-detection' ) ); ?></p>
-					<h2 class="sn-notes-pillar-title">Provenance Over Detection</h2>
-					<p class="sn-notes-pillar-dek">Detection chases what isn&rsquo;t. Provenance proves what is.</p>
-					<a class="sn-notes-pillar-cta" href="/provenance/over-detection/">Read essay</a>
-				</div>
-			</article>
+				<article class="sn-notes-pillar">
+					<span class="sn-notes-pillar-number" aria-hidden="true">&#8470; 01</span>
+					<div class="sn-notes-pillar-body">
+						<p class="sn-notes-pillar-eyebrow">Pillar Essay &middot; March 2026 &middot; <?php echo esc_html( sn_notes_reading_time_for_slug( 'provenance/over-detection' ) ); ?></p>
+						<h2 class="sn-notes-pillar-title">Provenance Over Detection</h2>
+						<p class="sn-notes-pillar-dek">Detection chases what isn&rsquo;t. Provenance proves what is.</p>
+						<a class="sn-notes-pillar-cta" href="/provenance/over-detection/">Read essay</a>
+					</div>
+				</article>
 
-			<article class="sn-notes-pillar">
-				<span class="sn-notes-pillar-number" aria-hidden="true">&#8470; 02</span>
-				<div class="sn-notes-pillar-body">
-					<p class="sn-notes-pillar-eyebrow">Pillar Essay &middot; May 2026 &middot; <?php echo esc_html( sn_notes_reading_time_for_slug( 'provenance/as-substrate' ) ); ?></p>
-					<h2 class="sn-notes-pillar-title">Provenance as Substrate</h2>
-					<p class="sn-notes-pillar-dek">Music files need fingerprints, not name tags.</p>
-					<a class="sn-notes-pillar-cta" href="/provenance/as-substrate/">Read essay</a>
-				</div>
-			</article>
+				<article class="sn-notes-pillar">
+					<span class="sn-notes-pillar-number" aria-hidden="true">&#8470; 02</span>
+					<div class="sn-notes-pillar-body">
+						<p class="sn-notes-pillar-eyebrow">Pillar Essay &middot; May 2026 &middot; <?php echo esc_html( sn_notes_reading_time_for_slug( 'provenance/as-substrate' ) ); ?></p>
+						<h2 class="sn-notes-pillar-title">Provenance as Substrate</h2>
+						<p class="sn-notes-pillar-dek">Music files need fingerprints, not name tags.</p>
+						<a class="sn-notes-pillar-cta" href="/provenance/as-substrate/">Read essay</a>
+					</div>
+				</article>
 
-		</div>
-	</section>
+			</div>
+		</section>
+
+	</div>
 
 	<hr class="sn-notes-rule" aria-hidden="true">
 

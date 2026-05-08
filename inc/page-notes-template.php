@@ -52,7 +52,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * effect?" was answered by behavioural inference, which has lied to
  * us across multiple incidents on this exact page.
  */
-const SN_NOTES_OVERRIDE_BUILD = '2026-05-08-header-rss-fix-v4';
+const SN_NOTES_OVERRIDE_BUILD = '2026-05-08-side-by-side-v5';
 
 /**
  * Detect whether the current request is the /notes index page.
@@ -140,6 +140,27 @@ add_filter( 'template_include', function( $template ) {
  */
 add_action( 'wp_footer', function() {
 	echo "\n<!-- sn-notes-build: " . esc_html( SN_NOTES_OVERRIDE_BUILD ) . " -->\n";
+}, 999 );
+
+/**
+ * Set the document `<title>` for the /notes index page.
+ *
+ * Why this is needed: when our `template_redirect` short-circuit
+ * fires, WordPress's normal title-resolution path can produce
+ * unexpected output (the URL, an empty string, or the site name
+ * with no page-specific prefix) because the request may not have
+ * resolved to the `notes` Page object cleanly — same routing
+ * ambiguity that made `is_page('notes')` unreliable. Filtering
+ * `pre_get_document_title` short-circuits WP's resolver and
+ * returns a title we control, formatted to match the rest of
+ * the site (`Page Title — Site Name`).
+ */
+add_filter( 'pre_get_document_title', function( $title ) {
+	if ( ! sn_notes_is_index_request() ) {
+		return $title;
+	}
+	$site = get_bloginfo( 'name' );
+	return $site ? 'Notes — ' . $site : 'Notes';
 }, 999 );
 
 /**
