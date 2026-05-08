@@ -45,21 +45,82 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Short-circuit template resolution for the /notes page. Priority
- * 999 so we run after any other template_include filter — last
- * writer wins, and we want to win.
+ * Build marker — surfaces in an HTML comment via wp_footer so the
+ * deployed version of THIS file can be verified from the live site
+ * with a curl. Bumped manually on each commit that touches /notes
+ * routing. Without a marker like this, "did the deploy actually take
+ * effect?" was answered by behavioural inference, which has lied to
+ * us across multiple incidents on this exact page.
+ */
+const SN_NOTES_OVERRIDE_BUILD = '2026-05-08-route-match-v3';
+
+/**
+ * Detect whether the current request is the /notes index page.
  *
- * Detection: WP sets `is_page('notes')` true when the request resolves
- * to the static Page with slug `notes`. The page exists since the
- * theme's seed migration creates it on activation (see
- * `sn_ensure_notes_page()` in inc/notes-and-provenance.php).
+ * Two-layer detection because incidents have shown is_page('notes')
+ * to be unreliable in this codebase's setup (the page coexists with
+ * a `notes` category and a `/notes/%postname%/` permalink structure
+ * — WP's resolver sometimes routes through query paths where
+ * is_page() returns false despite the URL clearly being the page):
  *
- * Fallback: if the render file is missing for any reason, fall
- * through to whatever WP would have done. Don't break the page just
- * because our override is missing.
+ *   1. is_page('notes') / is_page() with the seed slug — the
+ *      idiomatic check, fast.
+ *   2. URL-path equality on REQUEST_URI — fires regardless of how
+ *      WP parsed the request. Last-resort match.
+ *
+ * Returns true if EITHER layer matches. False positives here are
+ * harmless (we'd render the index for a route that should have
+ * been a different page — but no other route on this site has the
+ * exact path `/notes` or `/notes/`).
+ */
+function sn_notes_is_index_request() {
+	if ( function_exists( 'is_page' ) && is_page( 'notes' ) ) {
+		return true;
+	}
+	// URL-path fallback. Strip query string + trailing slash, compare
+	// against the canonical bare path. WP will not have resolved a
+	// single-post URL like /notes/some-slug/ to this branch — those
+	// have a longer path.
+	$req  = isset( $_SERVER['REQUEST_URI'] ) ? (string) $_SERVER['REQUEST_URI'] : '';
+	$path = strtok( $req, '?' );
+	$path = '/' . trim( (string) $path, '/' );
+	return ( '/notes' === $path );
+}
+
+/**
+ * PRIMARY override: short-circuit on `template_redirect`, render
+ * the PHP file directly, and exit. This sidesteps the entire WP
+ * template-include pipeline so nothing downstream can cache, mask,
+ * or otherwise interfere with what we render.
+ *
+ * Priority 0 (very early) so we beat anything else hooked here.
+ * After our `include`, exit — WP would otherwise fall through to
+ * its own template loader after this action runs.
+ *
+ * Fallback: if the render file is missing on disk for any reason,
+ * we don't exit — we let WP's normal template resolution run and
+ * (eventually) load templates/page-notes.html as a safety net.
+ */
+add_action( 'template_redirect', function() {
+	if ( ! sn_notes_is_index_request() ) {
+		return;
+	}
+	$render = get_theme_file_path( 'inc/page-notes-render.php' );
+	if ( ! file_exists( $render ) ) {
+		return;
+	}
+	include $render;
+	exit;
+}, 0 );
+
+/**
+ * Belt-and-suspenders: also hook `template_include` (priority 999)
+ * for any code path that calls into WP's template loader without
+ * going through `template_redirect` first. Same render file, same
+ * outcome.
  */
 add_filter( 'template_include', function( $template ) {
-	if ( ! is_page( 'notes' ) ) {
+	if ( ! sn_notes_is_index_request() ) {
 		return $template;
 	}
 	$render = get_theme_file_path( 'inc/page-notes-render.php' );
@@ -67,6 +128,18 @@ add_filter( 'template_include', function( $template ) {
 		return $template;
 	}
 	return $render;
+}, 999 );
+
+/**
+ * Emit the build marker in wp_footer on every page so we can
+ * verify what version of this file is actually on the server.
+ *
+ *   curl -s https://juanlentino.com/ | grep sn-notes-build
+ *
+ * Cheap (one extra comment per page), high diagnostic value.
+ */
+add_action( 'wp_footer', function() {
+	echo "\n<!-- sn-notes-build: " . esc_html( SN_NOTES_OVERRIDE_BUILD ) . " -->\n";
 }, 999 );
 
 /**
