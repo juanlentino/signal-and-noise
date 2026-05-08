@@ -247,7 +247,11 @@ wp_head();
 	margin: clamp(2rem, 4vw, 3.5rem) 0;
 }
 
-/* SECTION LABEL — chapter heading on a hairline */
+/* SECTION LABEL — chapter heading on a hairline.
+   Kept in rust grey (not bone black) so it reads as a quiet
+   meta-marker rather than competing with content for attention.
+   The heading-of-a-section role is carried by the hairline +
+   placement, not by the type weight. */
 
 .sn-notes-section-wrap {
 	display: grid;
@@ -259,11 +263,12 @@ wp_head();
 	border-bottom: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
 }
 .sn-notes-section-label {
-	color: var(--wp--preset--color--bone, #000);
+	font-size: 0.65rem;
+	color: var(--wp--preset--color--rust, #666);
 }
 .sn-notes-section-count {
 	font-family: 'DM Mono', 'Courier New', monospace;
-	font-size: 0.7rem;
+	font-size: 0.65rem;
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
 	color: var(--wp--preset--color--rust, #666);
