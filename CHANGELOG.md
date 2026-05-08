@@ -2,6 +2,37 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [7.5.3] — Front-page hero subtitle rewrite (audit §G1)
+
+The single most-trafficked sentence on the site. The [R3 audit](docs/CONTENT-AUDIT.md) flagged the original — *"Music production, creative strategy, and the systems that hold them together."* — as the most consultant-coded line on the site: a noun-phrase rather than an assertion, with *"systems that hold them together"* doing the kind of abstract-glue work the rest of the voice deliberately avoids.
+
+Replaced with a three-sentence subtitle in the brutalist register the voice fingerprint exemplars (`templates/404.html`, the About bio, the 30-min strategy session description) calibrate against:
+
+> 20+ years on the production side. Now also on the business side. Same ear, different console.
+
+Why this draft (audit §G1 Draft C, with canonical *"20+ years"* in place of *"Twenty years"* per the F1–F4 normalisation that landed in v7.5.2):
+
+- **Three short sentences instead of one list-of-three with abstract glue.** The voice fingerprint specifically calls out short sentences with one longer one when needed; this matches.
+- **First sentence asserts tenure**; second sentence asserts the pivot to creative-business work; third sentence asserts continuity ("same ear, different console") — narrative arc instead of taxonomy.
+- **"Same ear, different console"** is the one phrase in the audit's drafts that isn't outscored by something elsewhere on the site — it's structurally similar to "Knowing when to push, when to pull back, and when to let the silence do the work" (About line 48), which the audit cited as a top-five voice exemplar.
+- **The H1 (`I BUILD THINGS THAT SOUND RIGHT.`) does the first-person heavy lifting**; the subtitle doesn't need to repeat "I" to inherit the register.
+
+### Changed
+- **[`templates/front-page.html`](templates/front-page.html)** — hero subtitle (line 19) replaced. Single-line edit; no structural changes.
+
+### Out of scope (still queued)
+The remaining audit §G drafts that need the maintainer's voice are still pitched in [`docs/CONTENT-AUDIT.md`](docs/CONTENT-AUDIT.md):
+- **G2** — Services intro second sentence
+- **G3** — Services closing CTA h2 (the body and buttons were already split in v7.5.1)
+- **G4** — OPERATIONS & AI STRATEGY blurb
+- **A6** — ARTIST & PRODUCER DEVELOPMENT blurb
+- Resume cred-strip-vs-prose duplication restructure
+
+These are explicitly waiting on the maintainer's voice — drafts in the audit doc are starting points, not ship-ready copy.
+
+### Why patch (7.5.3)
+One template, one line. Patch 3 of 7.5.
+
 ## [7.5.2] — Editorial cleanups: canonical-form propagation + small voice swaps
 
 Mechanical follow-up to the [v7.5.1](#) IA pass, driven by the [R3 content audit](docs/CONTENT-AUDIT.md). The audit produced 9 prose-cleanup findings explicitly marked "ship-ready, no maintainer voice required" — those land here. Voice-heavy rewrites (front-page hero subtitle, Services intro/closing CTA, Operations & AI Strategy / Artist & Producer Development blurbs) remain as drafts in the audit doc's §G for the maintainer to react to.
