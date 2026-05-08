@@ -124,12 +124,16 @@ if ( $entry_count > 0 ) {
    file. If this file deploys, the whole page deploys.
    ────────────────────────────────────────────────────────────── */
 
-/* Counter the global main padding-bottom (140px for fixed footer
-   clearance) — we have our own RSS footer block that handles its
-   own bottom spacing. The global rule still applies, this just
-   tightens the rhythm at the top. */
+/* The site's fixed `.sn-footer` (z-index 9990, ~76px desktop /
+   ~120px mobile) sits over the bottom of the viewport. <main>
+   needs enough padding-bottom to clear it — the global rule
+   `main.wp-block-group { padding-bottom: 140px }` doesn't apply
+   here because our <main> uses .sn-notes-page, not the block-
+   group class. So we set our own clearance: 160px gives the
+   feed footer breathing room above the fixed bar on every
+   viewport. */
 .sn-notes-page {
-	padding: clamp(2rem, 5vw, 4.5rem) clamp(1.25rem, 3vw, 3rem) 0;
+	padding: clamp(2rem, 5vw, 4.5rem) clamp(1.25rem, 3vw, 3rem) 160px;
 	max-width: 1180px;
 	margin: 0 auto;
 }
@@ -476,12 +480,14 @@ if ( $entry_count > 0 ) {
 <?php wp_body_open(); ?>
 
 <?php
-// Header: render the existing block template part. If for any reason
-// it errors or is missing, the page still renders (template parts are
-// rendered, not require'd).
-if ( function_exists( 'block_template_part' ) ) {
-	block_template_part( 'header' );
-}
+// Render the header via the template-part block syntax (instead of
+// `block_template_part('header')` which outputs only the inner
+// content). The block syntax produces the full structure including
+// the `<header class="wp-block-template-part">` wrapper that the
+// CSS for .sn-header (notably the fixed-position rail) depends on
+// to position correctly. Mirror what `templates/page.html` would
+// have rendered.
+echo do_blocks( '<!-- wp:template-part {"slug":"header","area":"header"} /-->' );
 ?>
 
 <main class="sn-notes-page" id="content">
@@ -574,9 +580,11 @@ if ( function_exists( 'block_template_part' ) ) {
 </main>
 
 <?php
-if ( function_exists( 'block_template_part' ) ) {
-	block_template_part( 'footer' );
-}
+// Footer via the template-part block syntax — same reasoning as
+// the header above. Produces the `<footer class="wp-block-template-
+// part">` wrapper that the .sn-footer CSS depends on (position:
+// fixed, z-index 9990, etc).
+echo do_blocks( '<!-- wp:template-part {"slug":"footer","area":"footer"} /-->' );
 ?>
 
 <?php wp_footer(); ?>
