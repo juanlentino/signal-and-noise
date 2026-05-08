@@ -160,12 +160,39 @@ function sn_self_heal_run() {
  * Check a single file: fetch from GitHub, compare to local, write
  * local if different.
  *
+ * Fetch strategy: explicit JSON request (default GitHub Contents API
+ * format) + base64 decode of the `content` field. Earlier versions of
+ * this code used the `application/vnd.github.v3.raw` Accept header
+ * trying to get raw bytes back — but that header was deprecated by
+ * GitHub at some point, and when not honored, GitHub silently fell
+ * back to returning the JSON metadata response. Without response-
+ * shape validation, that JSON got written into the local files,
+ * corrupting every monitored template (incident: this commit fixes
+ * it). The base64-decode approach is more reliable: the response
+ * format is well-known, the encoding field is an explicit signal,
+ * and we can size-check the decoded bytes against the API's
+ * declared `size` value as a final integrity gate.
+ *
+ * Validation gates before any write happens:
+ *   1. HTTP 200 required
+ *   2. Response is parseable JSON
+ *   3. JSON has `content` and `encoding == "base64"`
+ *   4. Base64 decodes successfully
+ *   5. Decoded length matches the API's declared `size`
+ *   6. For .html files, decoded content starts with `<` (must look
+ *      like HTML/XML; rules out JSON, base64, or other accidents)
+ *   7. Decoded content differs from local content
+ *
+ * Only if ALL of the above pass do we write. If any fail, we return
+ * 'skipped' and never touch the local file.
+ *
  * @param string $relpath Path relative to theme root.
  * @param string $branch  GitHub branch to compare against.
  * @return string One of: 'ok' (match), 'fixed' (wrote local),
  *                'failed' (write attempted but failed),
  *                'cooldown' (in failure cooldown), 'skipped'
- *                (transient error or local file missing).
+ *                (transient error, local file missing, or any
+ *                validation failure on the remote content).
  */
 function sn_self_heal_check_one( $relpath, $branch ) {
 	$local_path = get_theme_file_path( $relpath );
@@ -185,18 +212,17 @@ function sn_self_heal_check_one( $relpath, $branch ) {
 		}
 	}
 
-	// Fetch the canonical version from GitHub. The
-	// `application/vnd.github.v3.raw` accept header makes GitHub
-	// return the raw file content directly (rather than the JSON
-	// wrapper with base64-encoded content), so we can byte-compare
-	// without decoding.
+	// Fetch metadata + base64 content via Contents API in default JSON
+	// format. We avoid the `Accept: vnd.github.raw` header path because
+	// it silently fell back to JSON when not recognized, leading to
+	// the corruption incident this commit fixes.
 	$url      = 'https://api.github.com/repos/' . SN_GITHUB_REPO
 		. '/contents/' . ltrim( $relpath, '/' )
 		. '?ref=' . rawurlencode( $branch );
 	$response = wp_remote_get( $url, array(
 		'headers' => array(
 			'Authorization' => 'token ' . SN_GITHUB_TOKEN,
-			'Accept'        => 'application/vnd.github.v3.raw',
+			'Accept'        => 'application/vnd.github+json',
 		),
 		'timeout' => 10,
 	) );
@@ -205,12 +231,49 @@ function sn_self_heal_check_one( $relpath, $branch ) {
 		return 'skipped';
 	}
 	if ( 200 !== wp_remote_retrieve_response_code( $response ) ) {
-		// 404 / 403 / etc — file might not exist on remote, skip.
 		return 'skipped';
 	}
 
-	$remote_content = wp_remote_retrieve_body( $response );
-	$local_content  = file_get_contents( $local_path );
+	$body = wp_remote_retrieve_body( $response );
+	$meta = json_decode( $body, true );
+
+	// Validation: must be an array with the expected fields. If the
+	// API ever changes shape we fail safe (skip) rather than write.
+	if ( ! is_array( $meta ) || empty( $meta['content'] ) || empty( $meta['encoding'] ) ) {
+		return 'skipped';
+	}
+	if ( 'base64' !== $meta['encoding'] ) {
+		return 'skipped';
+	}
+
+	// Decode (strict: invalid base64 returns false). Strip whitespace
+	// from base64 first since GitHub line-wraps the value.
+	$remote_content = base64_decode( preg_replace( '/\s+/', '', $meta['content'] ), true );
+	if ( false === $remote_content ) {
+		return 'skipped';
+	}
+
+	// Size cross-check: API tells us the file size. If decoded bytes
+	// don't match, something's wrong with the response — refuse to
+	// write to avoid corrupting the local file.
+	if ( isset( $meta['size'] ) && strlen( $remote_content ) !== (int) $meta['size'] ) {
+		return 'skipped';
+	}
+
+	// Content-shape gate: for .html files (everything we monitor by
+	// default), the content MUST start with `<`. If it doesn't —
+	// indicating JSON, base64, plain text, anything other than markup
+	// — we refuse to write. This is the defense-in-depth that would
+	// have prevented the corruption incident even if all above
+	// validations had passed wrongly.
+	if ( '.html' === substr( $relpath, -5 ) ) {
+		$first_non_ws = ltrim( $remote_content );
+		if ( '' === $first_non_ws || '<' !== substr( $first_non_ws, 0, 1 ) ) {
+			return 'skipped';
+		}
+	}
+
+	$local_content = file_get_contents( $local_path );
 
 	if ( $remote_content === $local_content ) {
 		// In sync. Clear any prior failure record for this file.
@@ -221,7 +284,8 @@ function sn_self_heal_check_one( $relpath, $branch ) {
 		return 'ok';
 	}
 
-	// Drift detected — try to write the remote content to local.
+	// Drift detected AND remote content passed every validation gate.
+	// Safe to write.
 	if ( ! function_exists( 'WP_Filesystem' ) ) {
 		require_once ABSPATH . 'wp-admin/includes/file.php';
 	}
