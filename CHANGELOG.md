@@ -2,6 +2,39 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [7.5.1] — IA pass: stop conflating "Contact" with "Work With Me"
+
+The nav had two top-level items — *Contact* and *Work With Me* — but they pointed at very different products, and the labels misled visitors about what was on the other side of the click.
+
+- **`/contact`** is a general message form ("Got a project, a question, or just want to talk sound? Fill out the form. I respond to everything that isn't spam.") plus social links. Low-commitment scoping path.
+- **`/work-with-me`** is a Cal.com booking widget for **paid 30- or 60-minute strategy sessions** ("Paid at booking · Non-refundable"). A specific paid product, not a general contact path.
+
+Pre-existing CTAs across the site read *"Get In Touch →"* and pointed at `/work-with-me`, which translates to: visitor clicks expecting an email form, lands on a paid-consult booking widget with their credit card implied. That's the bug.
+
+This release renames and re-frames so labels match destinations. URLs stay (`/contact` and `/work-with-me` slugs unchanged — WordPress URL slugs are CMS-level, not theme-level), but the user-facing labels are now honest about what each page does.
+
+### Changed
+- **[`parts/header.html`](parts/header.html) — nav label "Work With Me" → "Book a Call".** The page is literally a booking widget; the label now says so. URL slug `/work-with-me` is preserved (changing it is a CMS-level migration with redirects, separate scope).
+- **[`templates/page-work-with-me.html`](templates/page-work-with-me.html) — page header re-framed.** H1 changed `WORK WITH ME` → `BOOK A CALL`. Eyebrow changed `Consulting` → `Strategy Sessions` (more specific, matches the actual product). Subtitle rewritten from the generic *"20+ years building music businesses across the U.S. and Latin America"* (which was true but didn't tell visitors what the page was) to *"Paid 30- or 60-minute consults for music businesses, artists, and producers. Twenty years of studio operations and creative strategy, on the clock."* — names the product explicitly.
+- **[`templates/page-services.html`](templates/page-services.html) — closing CTA split into two buttons.** Was a single `Get In Touch →` button pointing at `/work-with-me`. Now two buttons:
+  - **Primary:** `Tell me about your project →` → `/contact` (the actual generic-inquiry path)
+  - **Outline:** `Book a strategy call →` → `/work-with-me` (the paid-booking path)
+
+  Supporting paragraph rewritten to name both options explicitly: *"Two paths in: send a message if you're scoping things out, or book a paid session if you want focused time on the calendar."* Visitor self-selects by intent.
+
+### Renamed
+- **`patterns/cta-work-with-me.php` → `patterns/cta-closing.php`**, slug `signal-noise/cta-work-with-me` → `signal-noise/cta-closing`. The pattern was introduced one release ago in v7.5.0 as a single-button "closing CTA"; the rename + content update reflects what it actually is now (the two-path closing CTA matching the Services page). Renamed via `git mv` so the file rename is tracked. The filename and slug now match. The pattern hasn't been consumed by any template yet (the v7.5.0 CHANGELOG explicitly noted that as a "manual editorial pass" follow-up), so the rename has zero downstream impact.
+- **Pattern title** updated from *"CTA — Work With Me"* to *"CTA — Closing (two paths)"* in the inserter UI.
+
+### Why patch (7.5.1)
+Pure IA / labelling fix — no new functionality, no settings changes. Everything that was on `/work-with-me` is still there at the same URL; visitors just know what they're clicking now. Patch 1 of 7.5.
+
+### Out of scope
+- **The `/contact` page subtitle** ("Got a project in mind, a question about my work, or just want to talk sound?") still reads as solid voice and isn't touched here.
+- **Front-page hero subtitle** ("Music production, creative strategy, and the systems that hold them together.") is identified as the weakest copy on the site relative to the established voice, but rewriting it requires the maintainer's voice — queued for the editorial pass driven by the in-flight `docs/CONTENT-AUDIT.md`.
+- **Eyebrow standardisation** across pages (some use *"Dossier · X"*, others use bespoke labels) — same reason, queued for the audit.
+- **URL slug changes** (`/work-with-me` → `/book-a-call`) — would require a redirect strategy and a CMS-level page-slug edit, neither of which belong in a theme patch.
+
 ## [7.5.0] — Block Patterns: first three extracted from templates
 
 The theme had 13 templates and **zero** block patterns — every repeated layout (page hero, closing CTA, constrained content section) lived as raw block markup duplicated across 4–5 templates. Per the [docs/WP-API-MAP.md](docs/WP-API-MAP.md) R2 audit (top-3 recommendation #2), this release introduces a `signal-noise` pattern category and three patterns covering the most-duplicated layouts. The pattern files use WordPress's `/patterns/` directory convention — drop a PHP file with a header comment, core auto-registers it.
