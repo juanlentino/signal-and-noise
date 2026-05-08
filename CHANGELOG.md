@@ -4,6 +4,21 @@ All notable changes to Signal & Noise are documented here.
 
 ## [Unreleased] — Operational fixes (post-v7.0.0)
 
+### `/notes` template now PHP-authoritative
+
+Even after `padding-bottom: 140px` shipped (proving 7ad2dd8 reached disk) and the post-update force-run self-heal hook fired, `/notes` STILL rendered only the first pillar card. PHP `wp-template;dur=50ms` confirmed live-render under `x-cache: MISS` — meaning the renderer was producing single-card output FRESH, not from a cache. Three layers could be responsible: (1) `templates/page-notes.html` on disk still stale despite multiple deploys, (2) a `wp_template` DB override that survived `sn_clear_template_overrides()`, or (3) a registry/object-cache holding a parsed block tree.
+
+The fix sidesteps all three: we hook `pre_get_block_template` and return a `WP_Block_Template` object built from a PHP heredoc literal in [inc/page-notes-template.php](inc/page-notes-template.php). That filter runs BEFORE WP's DB-then-file resolution chain — DB override can't win, file drift can't win, registry cache can't go stale because PHP rebuilds the object from the literal on every call. The `templates/page-notes.html` file is kept for Site Editor preview parity and as a reference, but is no longer load-bearing for front-end rendering.
+
+This is the third incident where `templates/page-notes.html` has been the source of stale-content drift on `/notes` (2026-04 deploy-skip, 2026-05 corrupt-self-heal, 2026-05 mystery-still-stale). Pulling it out of the rendering path eliminates the surface entirely.
+
+#### Added
+- **[inc/page-notes-template.php](inc/page-notes-template.php)** — new module with `sn_page_notes_template_content()` returning canonical block markup, `sn_page_notes_build_template_object()` constructing a `WP_Block_Template` matching the shape WP's `_build_block_template_result_from_file()` produces (so consumers — rendering pipeline, Site Editor, REST API — see no behavioural difference). Registered on `pre_get_block_template` filter (front-end / single-template lookups) AND `get_block_templates` filter (Site Editor template list endpoint) so the editor's template picker reflects what the front-end actually renders.
+- **functions.php** require_once added between `template-self-heal.php` and `admin-page.php` so the filter is registered before any block-template lookup.
+
+#### Editing /notes layout going forward
+Edit the heredoc in `sn_page_notes_template_content()` in [inc/page-notes-template.php](inc/page-notes-template.php). The .html file is no longer authoritative.
+
 ### Recovery hardening — self-heal force-run + RSS layout fix
 
 Two unrelated production issues that surfaced post-v7.0.0:

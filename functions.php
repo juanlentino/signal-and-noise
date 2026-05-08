@@ -40,6 +40,7 @@ require_once __DIR__ . '/inc/cloudflare-purge.php';
 
 require_once __DIR__ . '/inc/template-maintenance.php';
 require_once __DIR__ . '/inc/template-self-heal.php';
+require_once __DIR__ . '/inc/page-notes-template.php';
 require_once __DIR__ . '/inc/admin-page.php';
 require_once __DIR__ . '/inc/admin-bar.php';
 require_once __DIR__ . '/inc/updater.php';
