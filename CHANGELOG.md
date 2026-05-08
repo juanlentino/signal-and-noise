@@ -2,6 +2,42 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [7.4.0] — REST surface: `signal-noise/v1` namespace for maintenance + Plausible
+
+The first new public-API surface for the theme. Every maintenance action previously buried under *Appearance → Signal & Noise → Dashboard* (purge caches, clear overrides, heal templates, full reset, check updates) plus the Plausible read/test endpoints now have authenticated REST counterparts. Same logic, same capability gate, scriptable from outside the WP admin UI.
+
+Adopted on the recommendation of [docs/WP-API-MAP.md](docs/WP-API-MAP.md) (R2 research pass, top-3 recommendation). The earlier v7.0 plan had pitched the Abilities API for this; the R2 audit pushed back — Abilities is designed for distributed plugins exposing capabilities to external agents and a single-author personal site has no agents to expose to. REST is the strict superset surface a) WP-CLI commands can wrap, b) CI/automation can curl with an Application Password, c) future AI agents can drive directly without an Abilities discovery layer.
+
+### Added
+- **[`inc/rest-api.php`](inc/rest-api.php)** — new module registering 8 endpoints under the `signal-noise/v1` namespace:
+
+  | Method | Path | Wraps | Mirrors UI button |
+  |---|---|---|---|
+  | POST | `/purge-cache` | `sn_purge_all_caches([template_overrides=>false])` | "Purge All Caches" |
+  | POST | `/clear-overrides` | `sn_clear_template_overrides()` | "Clear Overrides" |
+  | POST | `/heal-templates` | `sn_self_heal_force_run()` | "Re-sync from GitHub" |
+  | POST | `/full-reset` | `sn_purge_all_caches()` (with overrides) | "Run Full Reset" |
+  | POST | `/check-updates` | cache-clear + `wp_update_themes()` + returns offered update | "Check Now" |
+  | GET  | `/plausible/stats` | `sn_plausible_dashboard_data()` | (read-only — no UI button) |
+  | GET  | `/plausible/realtime` | `sn_plausible_realtime()` | (read-only — no UI button) |
+  | POST | `/plausible/test` | synchronous `sn_plausible_api('aggregate')` | "Run Test" |
+
+- **`SN_REST_NAMESPACE` constant** at the top of [`inc/rest-api.php`](inc/rest-api.php) so future endpoint registrations and clients reference the namespace from one place.
+- **`sn_rest_can_manage()` permission callback** shared across every endpoint. Returns `WP_Error` with `rest_authorization_required_code()` on failure (so non-authenticated requests get 401, authenticated-but-unprivileged get 403, both with translatable messages). Never `__return_true` — these are state-mutating admin endpoints, not public data.
+- **`sn_rest_ok()` standardized response helper** so every endpoint returns the same `{ ok: true, message: string, data: object }` shape on success. Errors flow through `WP_Error` with a status code and core's REST handler serializes them to JSON automatically.
+
+### Auth model
+- **In-WP admins**: cookie auth + REST nonce flows through `current_user_can()` — no new plumbing.
+- **External clients (CLI, automation)**: WordPress Application Passwords issued to a `manage_options`-capable user. Pair with the existing `SN_GITHUB_TOKEN` / `SN_PLAUSIBLE_STATS_TOKEN` envars in CI to script "after deploy: heal-templates + check-updates + purge-cache" as three curls.
+- The admin-page form handlers in [`inc/admin-page.php`](inc/admin-page.php) are deliberately untouched in this release — they continue to work as classic admin-post forms with nonces. A future patch can migrate the buttons themselves to call the REST endpoints internally, but that's a UX nicety, not the value of this release.
+
+### Why minor (7.4.0)
+First new user-visible API surface since v7.2.x. The endpoints are public (in the auth-gated sense) and compose with external tooling. Per CLAUDE.md SemVer: "MINOR for new user-visible capabilities." 7.3.x line stays available for SWR / hardening follow-ups; 7.4.0 marks the REST capability boundary.
+
+### Out of scope (queued)
+- **WP-CLI commands** (`wp signal-noise purge-cache | heal-templates | …`) wrapping the same REST endpoints — separate ship, the cleanest pattern is a thin `WP_CLI::add_command()` registration that calls the same callbacks the REST routes expose.
+- **Block Patterns extraction** — queued for v7.5.0 per the original Phase 1 plan.
+
 ## [7.3.1] — Updater + S&N options page: stale-while-revalidate
 
 The follow-up flagged in [v7.2.6](#) and [v7.3.0](#). Same SWR architecture from the Plausible (v7.2.6) and template-self-heal (v7.2.7) refactors, applied to the last two synchronous-external-HTTP-on-render hot spots: the GitHub-driven self-updater's `pre_set_site_transient_update_themes` filter and the *Latest on GitHub* status block on the *Appearance → Signal & Noise* options page. Both surfaces now read from a long-retention cache that's warmed by a non-blocking WP-Cron loopback.

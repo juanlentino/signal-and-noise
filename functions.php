@@ -22,6 +22,7 @@
  *   inc/plausible-api.php        — Plausible Stats API client + cache layers
  *   inc/plausible-widget.php     — Dashboard widget set (snapshot/realtime/pages/sources)
  *   inc/plausible-admin.php      — S&N Settings → Plausible tab (Stats API key storage)
+ *   inc/rest-api.php             — signal-noise/v1 REST surface for maintenance + Plausible
  *   inc/updater.php              — GitHub self-updater + admin notice
  *
  * @package SignalNoise
@@ -51,4 +52,5 @@ require_once __DIR__ . '/inc/admin-bar.php';
 require_once __DIR__ . '/inc/plausible-api.php';
 require_once __DIR__ . '/inc/plausible-widget.php';
 require_once __DIR__ . '/inc/plausible-admin.php';
+require_once __DIR__ . '/inc/rest-api.php';
 require_once __DIR__ . '/inc/updater.php';
