@@ -52,7 +52,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * effect?" was answered by behavioural inference, which has lied to
  * us across multiple incidents on this exact page.
  */
-const SN_NOTES_OVERRIDE_BUILD = '2026-05-08-title-tag-v6';
+const SN_NOTES_OVERRIDE_BUILD = '2026-05-08-block-layout-css-v7';
 
 /**
  * Detect whether the current request is the /notes index page.

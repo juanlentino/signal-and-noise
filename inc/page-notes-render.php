@@ -110,6 +110,24 @@ if ( $entry_count > 0 ) {
 	$latest = $query->posts[0];
 	$latest_date = wp_date( 'Y.m.d', (int) get_the_time( 'U', $latest ) );
 }
+
+// PRE-RENDER the header and footer template parts so their block-
+// layout CSS (e.g. `.wp-container-core-group-is-layout-... { flex-
+// wrap, justify-content, … }`) gets registered with WP_Style_Engine
+// BEFORE wp_head() runs. Without this two-pass, the layout styles
+// for the .sn-header / .sn-footer flex containers are queued AFTER
+// wp_head() has already printed its stylesheet — they end up nowhere
+// in the document, and the header nav packs left instead of right
+// (no space-between), the footer copyright packs left instead of
+// right, etc. Output buffer captures the markup; WP's style-engine
+// receives the side effects.
+ob_start();
+echo do_blocks( '<!-- wp:template-part {"slug":"header","area":"header"} /-->' );
+$sn_header_html = ob_get_clean();
+
+ob_start();
+echo do_blocks( '<!-- wp:template-part {"slug":"footer","area":"footer"} /-->' );
+$sn_footer_html = ob_get_clean();
 ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
@@ -520,14 +538,10 @@ wp_head();
 <?php wp_body_open(); ?>
 
 <?php
-// Render the header via the template-part block syntax (instead of
-// `block_template_part('header')` which outputs only the inner
-// content). The block syntax produces the full structure including
-// the `<header class="wp-block-template-part">` wrapper that the
-// CSS for .sn-header (notably the fixed-position rail) depends on
-// to position correctly. Mirror what `templates/page.html` would
-// have rendered.
-echo do_blocks( '<!-- wp:template-part {"slug":"header","area":"header"} /-->' );
+// Header was pre-rendered above (before wp_head ran) so the block-
+// layout styles registered correctly. Now we just echo the captured
+// HTML.
+echo $sn_header_html;
 ?>
 
 <main class="sn-notes-page" id="content">
@@ -622,11 +636,8 @@ echo do_blocks( '<!-- wp:template-part {"slug":"header","area":"header"} /-->' )
 </main>
 
 <?php
-// Footer via the template-part block syntax — same reasoning as
-// the header above. Produces the `<footer class="wp-block-template-
-// part">` wrapper that the .sn-footer CSS depends on (position:
-// fixed, z-index 9990, etc).
-echo do_blocks( '<!-- wp:template-part {"slug":"footer","area":"footer"} /-->' );
+// Footer pre-rendered above. Echo the captured HTML.
+echo $sn_footer_html;
 ?>
 
 <?php wp_footer(); ?>
