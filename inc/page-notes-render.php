@@ -279,16 +279,21 @@ wp_head();
 .sn-notes-pillars {
 	display: grid;
 	grid-template-columns: 1fr;
-	gap: clamp(1rem, 2vw, 1.5rem);
+	gap: clamp(0.75rem, 1.5vw, 1rem);
 }
 /* Pillar cards stay in a single column even when the hero+pillars
    composition splits (≥980px) — they live in the right-hand cell
    and stack vertically there, paired with the hero on the left. */
 
+/* Pillar cards live BESIDE the hero, not below it as a hero-equivalent
+   feature. The hero already carries the page's identity — these cards
+   should feel ELEVATED but not OVERPOWERING. Compact treatment so the
+   notes index below doesn't feel relegated. */
+
 .sn-notes-pillar {
 	position: relative;
 	display: grid;
-	grid-template-columns: 64px 1fr;
+	grid-template-columns: 48px 1fr;
 	gap: 0;
 	background: var(--wp--preset--color--asphalt, #f5f5f5);
 	color: var(--wp--preset--color--bone, #000);
@@ -301,26 +306,26 @@ wp_head();
 	content: '';
 	position: absolute;
 	inset: 0 auto 0 0;
-	width: 6px;
+	width: 4px;
 	background: var(--wp--preset--color--blood, #e00404);
 	transition: width 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .sn-notes-pillar:hover::before {
-	width: 14px;
+	width: 10px;
 }
 .sn-notes-pillar:hover {
 	transform: translateX(2px);
 }
 .sn-notes-pillar-number {
 	font-family: 'DM Mono', 'Courier New', monospace;
-	font-size: clamp(1.2rem, 2vw, 1.6rem);
+	font-size: clamp(0.95rem, 1.4vw, 1.15rem);
 	color: var(--wp--preset--color--blood, #e00404);
-	padding: clamp(1.5rem, 3vw, 2rem) 0 0 1.5rem;
+	padding: clamp(1.1rem, 2vw, 1.4rem) 0 0 1.1rem;
 	letter-spacing: 0.05em;
 	font-weight: 500;
 }
 .sn-notes-pillar-body {
-	padding: clamp(1.5rem, 3vw, 2rem) clamp(1.5rem, 3vw, 2rem) clamp(1.5rem, 3vw, 2rem) 0;
+	padding: clamp(1.1rem, 2vw, 1.4rem) clamp(1.25rem, 2.5vw, 1.6rem) clamp(1.1rem, 2vw, 1.4rem) 0;
 }
 .sn-notes-pillar-eyebrow {
 	font-family: 'DM Mono', 'Courier New', monospace;
@@ -328,23 +333,23 @@ wp_head();
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
 	color: var(--wp--preset--color--blood, #e00404);
-	margin: 0 0 0.75rem;
+	margin: 0 0 0.5rem;
 }
 .sn-notes-pillar-title {
 	font-family: 'Bebas Neue', Impact, sans-serif;
 	font-weight: 400;
-	font-size: clamp(2rem, 4vw, 3rem);
-	line-height: 0.95;
-	letter-spacing: -0.01em;
-	margin: 0 0 1rem;
+	font-size: clamp(1.4rem, 2.4vw, 1.9rem);
+	line-height: 1;
+	letter-spacing: -0.005em;
+	margin: 0 0 0.65rem;
 	color: var(--wp--preset--color--bone, #000);
 }
 .sn-notes-pillar-dek {
-	font-size: clamp(0.95rem, 1.2vw, 1.05rem);
-	line-height: 1.55;
+	font-size: clamp(0.85rem, 1vw, 0.95rem);
+	line-height: 1.5;
 	color: var(--wp--preset--color--rust, #666);
-	margin: 0 0 1.25rem;
-	max-width: 38ch;
+	margin: 0 0 0.85rem;
+	max-width: 42ch;
 }
 .sn-notes-pillar-cta {
 	font-family: 'DM Mono', 'Courier New', monospace;
