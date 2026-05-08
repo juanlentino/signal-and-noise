@@ -2,6 +2,12 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [7.1.7] — Remove scripture quotes from /404 and /contact
+
+The 404 page carried Isaiah 30:21 ("Your own ears will hear him...") and the contact page carried Matthew 7:7 ("Keep on asking, and you will receive..."). Both removed — the brand voice doesn't otherwise lean on religious framing, so these read as out-of-register against the rest of the site. The pages keep their other editorial copy unchanged: the 404 still says "SIGNAL LOST / The frequency you're looking for doesn't exist..." and contact still has its existing dek about projects/sound/spam.
+
+In the v7.1.6 notes I'd called the 404 quote "music-themed scripture" — that conflated two unrelated passes (the music-themed `SIGNAL LOST` line is editorial brand copy; the scripture is a separate thing) and I shouldn't have left the scripture in place when I touched the file. Sweeping for similar patterns elsewhere came up clean — no other scripture references in templates or seed content.
+
 ## [7.1.6] — Accessibility + 404 polish
 
 Two findings from the design review:
