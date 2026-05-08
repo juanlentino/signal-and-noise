@@ -2,6 +2,14 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [7.2.0] — /services № markers — breathing room
+
+The catalog-number markers (`№ 01` through `№ 06`) on the /services cards rendered with only a 4px gap between the number and the card heading. The number read as part of the heading rather than as an eyebrow above it. Cause: the inline markup set `margin-bottom: 0` on the number paragraph and `margin-top: 0.25rem` on the heading.
+
+Fix: bumped each number's `margin-bottom` from `0` to `var:preset|spacing|10` (8px) and removed the `0.25rem margin-top` from each heading. Result: ~12-16px gap between the number and heading on every card; image → number gap stays at the existing 16px. Numbers now read as proper eyebrows.
+
+Why MINOR (rolling over from .7): the project's patch cap is 7 per minor (per CLAUDE.md). v7.1.0 through v7.1.7 used the full cap, so this calibration rolls to v7.2.0 even though it would normally be a patch.
+
 ## [7.1.7] — Remove scripture quotes from /404 and /contact
 
 The 404 page carried Isaiah 30:21 ("Your own ears will hear him...") and the contact page carried Matthew 7:7 ("Keep on asking, and you will receive..."). Both removed — the brand voice doesn't otherwise lean on religious framing, so these read as out-of-register against the rest of the site. The pages keep their other editorial copy unchanged: the 404 still says "SIGNAL LOST / The frequency you're looking for doesn't exist..." and contact still has its existing dek about projects/sound/spam.
