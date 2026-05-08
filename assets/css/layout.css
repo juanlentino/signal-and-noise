@@ -244,16 +244,16 @@ body {
 	animation: fadeInUp 1s ease-out 0.8s both;
 }
 
-/* Hero accent — blood-red rule beneath the dek.
-   width:100% + max-width:640px makes the accent's right edge land
-   at the same point as the dek's right edge ("together."), since
-   .sn-hero-subtitle is also capped at 640px. On narrower viewports
-   both shrink together (100% of the available column width) so the
-   accent always reads as the dek's underline rather than as a
-   floating editorial mark. */
+/* Hero accent — blood-red editorial mark beneath the dek.
+   Fixed 120px width is intentional. v7.1.4 tried matching the
+   dek's max-width (640px) to read as an underline; the result
+   overshot the actual rendered text because the dek wraps at
+   natural word boundaries well before 640px, so the accent
+   always extended past where the visible text ended on either
+   line. The fixed 120px reads as editorial punctuation — a
+   stamp — which is the design intent for a brutalist hero. */
 .sn-hero-accent {
-	width: 100%;
-	max-width: 640px;
+	width: 120px;
 	height: 3px;
 	background-color: var(--wp--preset--color--blood, #e00404);
 	margin: var(--wp--preset--spacing--30) 0;

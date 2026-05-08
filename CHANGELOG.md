@@ -2,6 +2,14 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [7.1.5] — Revert hero accent to 120px editorial mark
+
+v7.1.4 set the hero accent to `width: 100%; max-width: 640px;` to make it match the dek's max-width and read as an underline. In practice it overshot: the dek wraps at natural word boundaries (well before its 640px max), so the accent always ended up wider than the visible text on either line. The "underline" reading didn't land, and the editorial-mark reading from v7.1.0 was lost.
+
+Reverting to `width: 120px;` fixed. The 120px length was correct as an editorial flourish — a stamp beneath the dek — which is what fits the brutalist hero. Keeping the CSS-class form (no inline styles) and the `prefers-reduced-motion` rule from v7.1.4. Comment in the CSS documents the failed attempt so it doesn't get re-tried.
+
+Lesson: container `max-width` ≠ rendered text width. When you want a graphic to align with text, you need to measure the text (which CSS doesn't expose), not the container. Better to commit to the editorial-mark interpretation than to half-implement an underline.
+
 ## [7.1.4] — Home hero accent: responsive, matches dek width
 
 The blood-red accent rule on the front page was hardcoded to `120px` wide via inline style — read as a small editorial mark next to a 640px-wide dek. Made it responsive: `width: 100%; max-width: 640px;` so the accent's right edge now lands at the same point as the dek's right edge ("together."). On narrower viewports both shrink together (100% of the available column width), so the accent always reads as the dek's underline rather than a floating mark.
