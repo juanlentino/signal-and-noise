@@ -19,6 +19,7 @@
  *   inc/template-self-heal.php   — Detect file-on-disk drift vs GitHub main + auto-fix
  *   inc/admin-page.php           — Appearance → Signal & Noise options page
  *   inc/admin-bar.php            — Top-bar quick-action dropdown (purge, etc.)
+ *   inc/patterns.php             — Block Pattern category registration (patterns/ dir auto-discovers)
  *   inc/plausible-api.php        — Plausible Stats API client + cache layers
  *   inc/plausible-widget.php     — Dashboard widget set (snapshot/realtime/pages/sources)
  *   inc/plausible-admin.php      — S&N Settings → Plausible tab (Stats API key storage)
@@ -49,6 +50,7 @@ require_once __DIR__ . '/inc/template-self-heal.php';
 require_once __DIR__ . '/inc/page-notes-template.php';
 require_once __DIR__ . '/inc/admin-page.php';
 require_once __DIR__ . '/inc/admin-bar.php';
+require_once __DIR__ . '/inc/patterns.php';
 require_once __DIR__ . '/inc/plausible-api.php';
 require_once __DIR__ . '/inc/plausible-widget.php';
 require_once __DIR__ . '/inc/plausible-admin.php';

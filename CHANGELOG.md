@@ -2,6 +2,43 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [7.5.0] — Block Patterns: first three extracted from templates
+
+The theme had 13 templates and **zero** block patterns — every repeated layout (page hero, closing CTA, constrained content section) lived as raw block markup duplicated across 4–5 templates. Per the [docs/WP-API-MAP.md](docs/WP-API-MAP.md) R2 audit (top-3 recommendation #2), this release introduces a `signal-noise` pattern category and three patterns covering the most-duplicated layouts. The pattern files use WordPress's `/patterns/` directory convention — drop a PHP file with a header comment, core auto-registers it.
+
+### Added
+- **[`inc/patterns.php`](inc/patterns.php)** — registers a single `signal-noise` block-pattern category on `init` with translatable label and description. The category groups all S&N patterns under a single section in the block-inserter UI. If the pattern surface ever grows past ~10 items, this is the place to split into sub-categories (`signal-noise/hero`, `signal-noise/cta`, etc.) — registration cost is trivial.
+
+- **`patterns/hero-dossier.php`** — the brutalist page hero that recurs across [page-about.html](templates/page-about.html), [page-resume.html](templates/page-resume.html), [page-music.html](templates/page-music.html), [page-services.html](templates/page-services.html), and [404.html](templates/404.html). Eyebrow with `sn-catalog-eyebrow` class ("Dossier · X") + oversized clamped H1 + intro paragraph in `rust` color + `sn-catalog-meta` stats line. All four sites had near-identical block markup with only the strings differing — replacing with this pattern dedupes the layout while leaving the per-page content edit-in-place.
+
+- **`patterns/cta-work-with-me.php`** — the closing-section CTA from [page-services.html](templates/page-services.html) ("LET'S TALK ABOUT YOUR PROJECT" + supporting copy + "Get In Touch →" button to `/work-with-me`). Single source of truth for the "let's talk" framing — one copy edit propagates to every page that uses it instead of fanning out to five files.
+
+- **`patterns/section-constrained.php`** — the most-repeated wrapper across all 14 templates: `void` background + `--wp--preset--spacing--40/70` padding + 1000px constrained content width. Extracted as a pattern so the spacing scale and background-color choices evolve in one file rather than the 30+ inline group blocks where they currently live.
+
+### Pattern registration semantics
+
+WordPress auto-discovers any PHP file in `theme/patterns/` with the right header comments. No `register_block_pattern()` call is needed — the file's *Title*, *Slug*, *Categories*, *Description*, *Keywords*, *Block Types*, and *Viewport Width* headers are parsed by core's `_register_theme_block_patterns()` on every `init`.
+
+The `/patterns/` directory survives self-heal correctly: [`inc/template-self-heal.php`](inc/template-self-heal.php) only monitors `.html` files in `templates/` and `parts/` (filterable via `sn_self_heal_files`), so the new `.php` pattern files are not touched by the drift-detection loop. They're version-controlled like every other theme file.
+
+### Migration note (manual, not in this release)
+
+The patterns are *registered* in v7.5.0 but the existing templates have **not yet been refactored to use them**. The existing inline markup keeps rendering identically. Migrating each template (e.g., replacing the inline hero block in `page-about.html` with `<!-- wp:pattern {"slug":"signal-noise/hero-dossier"} /-->`) is a separate manual editorial pass — recommended approach is to migrate one template at a time so each diff is reviewable, ideally bundled with content edits the maintainer already wanted to make on that page. The R2 audit's recommendation was specifically about *registering* the patterns first; refactoring templates to consume them is value extracted later.
+
+### Why minor (7.5.0)
+New user-visible capability: the patterns appear in the block inserter under a *Signal & Noise* group, immediately usable when authoring posts/pages or editing templates in the Site Editor. Per CLAUDE.md SemVer: "MINOR for new user-visible capabilities."
+
+This is the **last available minor in the 7.x line** — the project's per-major minor cap is 5 (7.0–7.5 valid). The next bump rolls major to 8.0.0. Subsequent 7.5.x patches resume normal numbering up to the per-minor patch cap of 7.
+
+### Phase 1 — complete
+This release closes the original Phase 1 plan from [docs/WP-API-MAP.md](docs/WP-API-MAP.md):
+- ✓ v7.3.0 — hardening pass (security defense-in-depth + i18n setup)
+- ✓ v7.3.1 — SWR for updater + S&N options page (every sync external HTTP off the render path)
+- ✓ v7.4.0 — REST surface (`signal-noise/v1` namespace, 8 endpoints)
+- ✓ v7.5.0 — Block Patterns (this release)
+
+Phase 2 candidates queued for future work: bulk `__()` wrapping of admin strings (audit M8 + L1), Block Bindings to retire shortcodes (R2 #1), WP-CLI commands wrapping the REST endpoints, Style Variations (`/styles/`), template refactor to actually consume the new patterns.
+
 ## [7.4.0] — REST surface: `signal-noise/v1` namespace for maintenance + Plausible
 
 The first new public-API surface for the theme. Every maintenance action previously buried under *Appearance → Signal & Noise → Dashboard* (purge caches, clear overrides, heal templates, full reset, check updates) plus the Plausible read/test endpoints now have authenticated REST counterparts. Same logic, same capability gate, scriptable from outside the WP admin UI.
