@@ -31,6 +31,7 @@ const SN_PLAUSIBLE_BATCH_KEY    = 'sn_plausible_dashboard_v4';
 const SN_PLAUSIBLE_BATCH_TTL    = 5 * MINUTE_IN_SECONDS;
 const SN_PLAUSIBLE_REALTIME_KEY = 'sn_plausible_realtime_v2';
 const SN_PLAUSIBLE_REALTIME_TTL = 30; // seconds
+const SN_PLAUSIBLE_TOKEN_OPT    = 'sn_plausible_stats_token';
 
 /**
  * Resolve domain + token + API base. Returns null when not configured.
@@ -44,25 +45,29 @@ function sn_plausible_config() {
 	}
 	$domain = trim( (string) ( $settings['domain_name'] ?? '' ) );
 
-	// Token resolution priority:
+	// Token resolution priority (mirror of inc/cloudflare-purge.php):
 	//
 	//   1. SN_PLAUSIBLE_STATS_TOKEN constant in wp-config.php — a
 	//      dedicated Stats API Key (Plausible → Settings → API Keys).
 	//      File-based, can't be edited from the admin UI, follows the
 	//      same pattern as SN_GITHUB_TOKEN / SN_CLOUDFLARE_API_TOKEN.
 	//
-	//   2. The Plausible plugin's stored `api_token` from
+	//   2. SN_PLAUSIBLE_TOKEN_OPT option — admin-saved via the
+	//      Appearance → Signal & Noise → Plausible tab. Non-autoloaded
+	//      (third arg to update_option = false) so the credential
+	//      isn't loaded into PHP memory on every request.
+	//
+	//   3. The Plausible plugin's stored `api_token` from
 	//      `plausible_analytics_settings`. ⚠ This is a *Plugin Token*
 	//      (created by the plugin's wizard for /api/plugins/wordpress/*
-	//      operations), NOT a Stats API key. On Plausible CE the Stats
-	//      API rejects it with HTTP 401 "Invalid API key or site ID".
-	//      Kept as a fallback in case a future Plausible release
-	//      unifies the two token namespaces, but for self-hosted CE
-	//      installs in 2026 you almost certainly need path 1.
+	//      operations), NOT a Stats API key on Plausible CE — kept as
+	//      a last-resort fallback for setups where the namespaces
+	//      happen to align (some Plausible Cloud configurations).
 	if ( defined( 'SN_PLAUSIBLE_STATS_TOKEN' ) && SN_PLAUSIBLE_STATS_TOKEN ) {
 		$token = (string) SN_PLAUSIBLE_STATS_TOKEN;
 	} else {
-		$token = trim( (string) ( $settings['api_token'] ?? '' ) );
+		$option_token = (string) get_option( SN_PLAUSIBLE_TOKEN_OPT, '' );
+		$token        = '' !== $option_token ? $option_token : trim( (string) ( $settings['api_token'] ?? '' ) );
 	}
 	if ( '' === $domain || '' === $token ) {
 		return null;

@@ -43,7 +43,7 @@ function sn_theme_options_page() {
 	$theme         = wp_get_theme( 'signal-and-noise' );
 	$local_version = $theme->get( 'Version' );
 	$notices       = array();
-	$valid_tabs    = array( 'dashboard', 'cloudflare', 'reading-time', 'links' );
+	$valid_tabs    = array( 'dashboard', 'cloudflare', 'plausible', 'reading-time', 'links' );
 	$active_tab    = isset( $_GET['tab'] ) ? sanitize_text_field( wp_unslash( $_GET['tab'] ) ) : 'dashboard';
 	if ( ! in_array( $active_tab, $valid_tabs, true ) ) {
 		$active_tab = 'dashboard';
@@ -197,6 +197,7 @@ function sn_theme_options_page() {
 	$tab_labels = array(
 		'dashboard'    => 'Dashboard',
 		'cloudflare'   => 'Cloudflare',
+		'plausible'    => 'Plausible',
 		'reading-time' => 'Reading Time',
 		'links'        => 'Links',
 	);
@@ -305,6 +306,14 @@ function sn_theme_options_page() {
 
 		/** Module-owned UI: see inc/cloudflare-purge.php. */
 		do_action( 'sn_admin_cloudflare_tab' );
+
+	// ════════════════════════════════════════
+	// TAB: PLAUSIBLE
+	// ════════════════════════════════════════
+	} elseif ( 'plausible' === $active_tab ) {
+
+		/** Module-owned UI: see inc/plausible-admin.php. */
+		do_action( 'sn_admin_plausible_tab' );
 
 	// ════════════════════════════════════════
 	// TAB: READING TIME

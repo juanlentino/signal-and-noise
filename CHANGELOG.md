@@ -2,6 +2,29 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [7.2.5] — Plausible: admin tab for Stats API key (no more wp-config edits)
+
+The constant-only token storage from v7.2.4 worked but required SSH/SFTP into Cloudways to rotate. Adds an admin UI tab so the Stats API key can be saved, tested, and rotated from inside WordPress — same precedence pattern as the Cloudflare module's token storage at [`inc/cloudflare-purge.php:58-83`](inc/cloudflare-purge.php).
+
+### Added
+- **`inc/plausible-admin.php`** — new tab at *Appearance → Signal & Noise → Plausible*. Surfaces:
+  - **Status card** — domain (read from the Plausible plugin), current token source (constant / option / plugin fallback), last API call result with `human_time_diff()` timestamp.
+  - **Stats API Key field** — paste to save, type `clear` to remove, last 4 chars displayed obscured (`••••WXYZ`). Hidden when `SN_PLAUSIBLE_STATS_TOKEN` is defined in `wp-config.php` — the constant takes precedence and the form locks itself with an explanation.
+  - **Test Connection button** — fires a synchronous 7-day aggregate call against the Stats API and reports success (`✓ N visitor(s) in last 7 days`) or failure with the actual HTTP code + body excerpt. No more guessing whether the credentials work.
+  - **Embedded Stats link** — quick path to the Plausible plugin's in-admin dashboard.
+  - Saving or clearing the token automatically invalidates the dashboard data + realtime + error transients via `sn_pl_admin_invalidate_caches()` so the next dashboard pageview fires fresh API calls. Without this, users would paste a new key and still see cached 401 errors for 5 minutes.
+- **Token resolution priority** in [`sn_plausible_config()`](inc/plausible-api.php) is now three-tier:
+  1. `SN_PLAUSIBLE_STATS_TOKEN` constant (file-based, locked, preferred for CI-deployed credentials).
+  2. `sn_plausible_stats_token` option (admin-saved via the new tab, non-autoloaded so it isn't in PHP memory on every request).
+  3. Plausible plugin's `api_token` from `plausible_analytics_settings` (last-resort fallback for setups where the namespaces happen to overlap).
+- **`SN_PLAUSIBLE_TOKEN_OPT` const** in [`inc/plausible-api.php`](inc/plausible-api.php) so any module can reference the option key without hardcoding the string.
+
+### Changed
+- **[`inc/admin-page.php`](inc/admin-page.php)** — `Plausible` added to `$valid_tabs` and `$tab_labels` (between Cloudflare and Reading Time). Tab body dispatches via `do_action( 'sn_admin_plausible_tab' )`, the same module-owned-UI pattern used by Cloudflare and Reading Time. The dispatcher in `sn_theme_options_page()` doesn't know about Plausible's internals — it just hands control to whoever's listening on the action.
+
+### Why patch (7.2.5)
+Pure additive: new admin tab + a third tier in the existing token resolution chain. The `wp-config` constant path from v7.2.4 still works unchanged (and is still preferred for security). The Plausible plugin fallback still works unchanged. Existing widget rendering, caching, and API client are untouched. Patch 5 of 7.2; cap is 7 per minor.
+
 ## [7.2.4] — Plausible: SN_PLAUSIBLE_STATS_TOKEN constant + corrected token-source assumption
 
 The diagnostic added in v7.2.3 caught a real architectural mistake from v7.2.1: the Plausible plugin's stored `api_token` is a **Plugin Token** scoped to `/api/plugins/wordpress/*` (the namespace the plugin uses for proxy resource management, the embedded stats page wizard, etc.), **not** a Stats API key. The Stats API at `/api/v1/stats/*` rejects Plugin Tokens with HTTP 401 `"Invalid API key or site ID"` — confirmed live on the Plausible CE install.
