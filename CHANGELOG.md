@@ -2,6 +2,36 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [7.2.1] — Hardening pass + Plausible dashboard widgets + escaping cleanup
+
+A QA / security pass against [WordPress's hardening guide](https://wordpress.org/documentation/article/hardening-wordpress/), plus a four-widget Plausible Analytics panel for the WP dashboard.
+
+### Added
+- **`inc/security-headers.php`** — empirically scoped against what Cloudflare's edge already covers for juanlentino.com (verified 2026-05-08 via `curl -I`), so the module only does work that *isn't* already happening at the edge:
+  - **`/wp-json/wp/v2/users` 401 for anonymous requests.** This is the genuine fix — production was leaking `{"id":616000,"name":"Juan","slug":"juanlentino"}` to anyone hitting the endpoint, free reconnaissance for brute-force attackers. Implemented via `rest_authentication_errors` so authenticated callers (block editor, REST clients, the new Plausible widget proxy) keep working.
+  - **`Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()`.** Cloudflare's edge config wasn't sending one; this fills exactly that gap. The other common security headers (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, HSTS, full CSP) are already emitted at the edge — re-sending them from PHP would be redundant since CF proxies all traffic.
+  - **Belt-and-suspenders fallbacks:** XML-RPC disabled via `xmlrpc_enabled` + `xmlrpc_methods` + `pings_open` + `header_remove('X-Pingback')`, and `?author=N` redirected to home for anonymous visitors. Both effectively no-op against the current Cloudflare config (XML-RPC already returns 520 at the edge, `?author=N` already returns 404 since no author archive is registered) but cost nothing and survive an edge config drift.
+  - All four hardenings are individually filterable (`sn_security_permissions_policy`, `sn_security_lock_rest_users`, `sn_security_block_author_enum`, `sn_security_disable_xmlrpc`).
+- **`inc/plausible-api.php` + `inc/plausible-widget.php`** — four discrete Plausible Analytics dashboard widgets, all reading from one shared 5-min cache:
+  - **Last 7 days** — visitors / pageviews / bounce rate / average visit duration in a 2×2 brutalist tile grid.
+  - **Right now** — large red Bebas Neue numeral of current visitors (Plausible realtime endpoint), 30-sec cache so it actually feels real-time.
+  - **Top pages (7d)** — top 7 URLs by visitors.
+  - **Top sources (7d)** — top 7 referrers, with `Direct / None` label for blank source values.
+  - Reads `domain_name` + `api_token` from the Plausible plugin's existing `plausible_analytics_settings` option — no separate `wp-config.php` constant needed. Self-hosted Plausible is supported via the same option's `self_hosted_domain` key. Failure modes (plugin missing, token absent, API error) degrade to inline notices, never fatal.
+  - One batched API fetch every 5 min covers all four "last 7 days" widgets; only the realtime widget makes a second round-trip (every 30 s).
+
+### Fixed
+- **`/notes` reading-time meta-key bug.** [`inc/page-notes-render.php:74`](inc/page-notes-render.php) read from `_sn_reading_time` but the canonical cache key is `_sn_reading_time_minutes` (defined as `SN_READING_TIME_META_KEY` in [`inc/reading-time.php:36`](inc/reading-time.php)). Result: every row in the /notes index missed the cache and recomputed `str_word_count` per render. Now reads through the constant with `sn_get_reading_time()` as the cache-populating fallback, so misses self-heal.
+- **`/resume` duplicate "20+ Years".** Hero eyebrow read `Dossier · Background · 20+ Years` while the meta line below read `20+ Years · 50+ Collaborations · GRAMMY Voting Member` — the same tag in both places. Eyebrow trimmed to `Dossier · Background`, matching `/about`'s two-part `Dossier · Who I Am` form. The meta line keeps "20+ Years" since it anchors the credentials sequence.
+
+### Changed
+- **Admin notice escaping.** [`inc/admin-page.php`](inc/admin-page.php) was echoing notice severity + body unescaped. Severity now wrapped in `esc_attr()`; body in `wp_kses_post()` (some entries deliberately ship inline `<a>`/`<code>` markup so `esc_html` would mangle them). Theme-Version label in the dashboard status table now wrapped in `esc_html()` against the `Version:` header value.
+- **`wp_unslash` on `$_POST` reads.** [`inc/admin-page.php`](inc/admin-page.php) and [`inc/cloudflare-purge.php`](inc/cloudflare-purge.php) read `$_POST['sn_action']` directly into `sanitize_text_field()` without unslashing first. Now `wp_unslash` ahead of sanitize, per WP coding standards. Cloudflare module refactored to a single sanitised `$posted_action` shared between the save and purge branches.
+- **`esc_url()` on theme asset URLs.** [`inc/assets-frontend.php`](inc/assets-frontend.php) emitted `get_theme_file_uri()` directly into `<link href>` and `@font-face src` without escaping. `get_theme_file_uri()` returns a URL but isn't context-escaped — wrapping with `esc_url()` is the WP convention.
+
+### Why patch (7.2.1)
+Bug fixes + security cleanup + a hardening module + a new dashboard widget set. The widgets are visible new behaviour, but they're admin-only and additive; the security headers similarly add defensive output without changing what the site does. Per the project's convention (see 7.1.6 for prior art — accessibility/animation work landed as patch), this stays at patch level. Patch cap is 7 per minor; this is patch 1 of 7.2.
+
 ## [7.2.0] — /services № markers — breathing room
 
 The catalog-number markers (`№ 01` through `№ 06`) on the /services cards rendered with only a 4px gap between the number and the card heading. The number read as part of the heading rather than as an eyebrow above it. Cause: the inline markup set `margin-bottom: 0` on the number paragraph and `margin-top: 0.25rem` on the heading.

@@ -10,6 +10,7 @@
  *   inc/assets-frontend.php      — frontend CSS/JS/fonts/favicons + defer filters
  *   inc/seo.php                  — meta description + Breeze excludes
  *   inc/frontend-filters.php     — skip link, oEmbed, generator-tag stripping, output buffer
+ *   inc/security-headers.php     — security headers + WP hardening (XML-RPC, REST users, ?author=N)
  *   inc/notes-and-provenance.php — Notes content surface + Provenance pillar page
  *   inc/reading-time.php         — Cached reading-time calc + [sn_reading_time] + cleanup
  *   inc/og-image.php             — Per-post OG/Twitter card generator (GD, Bebas + DM Mono)
@@ -18,6 +19,8 @@
  *   inc/template-self-heal.php   — Detect file-on-disk drift vs GitHub main + auto-fix
  *   inc/admin-page.php           — Appearance → Signal & Noise options page
  *   inc/admin-bar.php            — Top-bar quick-action dropdown (purge, etc.)
+ *   inc/plausible-api.php        — Plausible Stats API client + cache layers
+ *   inc/plausible-widget.php     — Dashboard widget set (snapshot/realtime/pages/sources)
  *   inc/updater.php              — GitHub self-updater + admin notice
  *
  * @package SignalNoise
@@ -33,6 +36,7 @@ require_once __DIR__ . '/inc/setup.php';
 require_once __DIR__ . '/inc/assets-frontend.php';
 require_once __DIR__ . '/inc/seo.php';
 require_once __DIR__ . '/inc/frontend-filters.php';
+require_once __DIR__ . '/inc/security-headers.php';
 require_once __DIR__ . '/inc/notes-and-provenance.php';
 require_once __DIR__ . '/inc/reading-time.php';
 require_once __DIR__ . '/inc/og-image.php';
@@ -43,4 +47,6 @@ require_once __DIR__ . '/inc/template-self-heal.php';
 require_once __DIR__ . '/inc/page-notes-template.php';
 require_once __DIR__ . '/inc/admin-page.php';
 require_once __DIR__ . '/inc/admin-bar.php';
+require_once __DIR__ . '/inc/plausible-api.php';
+require_once __DIR__ . '/inc/plausible-widget.php';
 require_once __DIR__ . '/inc/updater.php';

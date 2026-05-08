@@ -250,7 +250,8 @@ add_action( 'sn_admin_cloudflare_tab', function() {
 	$notices = array();
 
 	// Handle save action.
-	if ( isset( $_POST['sn_action'] ) && 'cf_save' === $_POST['sn_action']
+	$posted_action = isset( $_POST['sn_action'] ) ? sanitize_text_field( wp_unslash( $_POST['sn_action'] ) ) : '';
+	if ( 'cf_save' === $posted_action
 		&& check_admin_referer( 'sn_theme_options_nonce', '_wpnonce', false ) ) {
 
 		$token_constant_set = defined( 'SN_CLOUDFLARE_API_TOKEN' );
@@ -278,7 +279,7 @@ add_action( 'sn_admin_cloudflare_tab', function() {
 	}
 
 	// Handle manual purge.
-	if ( isset( $_POST['sn_action'] ) && 'cf_purge_now' === $_POST['sn_action']
+	if ( 'cf_purge_now' === $posted_action
 		&& check_admin_referer( 'sn_theme_options_nonce', '_wpnonce', false ) ) {
 		if ( sn_cf_purge_everything() ) {
 			$notices[] = array( 'success', 'Cloudflare zone purge dispatched.' );

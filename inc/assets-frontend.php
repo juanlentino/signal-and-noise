@@ -102,10 +102,10 @@ add_action( 'wp_enqueue_scripts', function() {
  * Also output favicon link tags as theme-level fallback.
  */
 add_action( 'wp_head', function() {
-	echo '<link rel="icon" type="image/png" sizes="32x32" href="' . get_theme_file_uri( 'assets/images/favicon-32.png' ) . '">' . "\n";
-	echo '<link rel="apple-touch-icon" sizes="180x180" href="' . get_theme_file_uri( 'assets/images/favicon-180.png' ) . '">' . "\n";
-	echo '<link rel="preload" href="' . get_theme_file_uri( 'assets/fonts/bebas-neue-latin.woff2' ) . '" as="font" type="font/woff2" crossorigin>' . "\n";
-	echo '<link rel="preload" href="' . get_theme_file_uri( 'assets/fonts/dm-mono-300-latin.woff2' ) . '" as="font" type="font/woff2" crossorigin>' . "\n";
+	echo '<link rel="icon" type="image/png" sizes="32x32" href="' . esc_url( get_theme_file_uri( 'assets/images/favicon-32.png' ) ) . '">' . "\n";
+	echo '<link rel="apple-touch-icon" sizes="180x180" href="' . esc_url( get_theme_file_uri( 'assets/images/favicon-180.png' ) ) . '">' . "\n";
+	echo '<link rel="preload" href="' . esc_url( get_theme_file_uri( 'assets/fonts/bebas-neue-latin.woff2' ) ) . '" as="font" type="font/woff2" crossorigin>' . "\n";
+	echo '<link rel="preload" href="' . esc_url( get_theme_file_uri( 'assets/fonts/dm-mono-300-latin.woff2' ) ) . '" as="font" type="font/woff2" crossorigin>' . "\n";
 }, 1 );
 
 /**
@@ -115,7 +115,7 @@ add_action( 'wp_head', function() {
 add_action( 'wp_head', function() {
 	?>
 	<style id="sn-critical-fonts">
-	@font-face{font-family:'Bebas Neue';font-style:normal;font-weight:400;font-display:swap;src:url('<?php echo get_theme_file_uri( 'assets/fonts/bebas-neue-latin.woff2' ); ?>') format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+	@font-face{font-family:'Bebas Neue';font-style:normal;font-weight:400;font-display:swap;src:url('<?php echo esc_url( get_theme_file_uri( 'assets/fonts/bebas-neue-latin.woff2' ) ); ?>') format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 	</style>
 	<?php
 }, 2 );

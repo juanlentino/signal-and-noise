@@ -71,12 +71,19 @@ function sn_notes_render_date( $post ) {
  * tabular alignment with the date.
  */
 function sn_notes_render_reading_time( $post_id ) {
-	$mins = (int) get_post_meta( $post_id, '_sn_reading_time', true );
+	// Read the canonical cache populated by inc/reading-time.php on save.
+	// The constant lives in that module; fall back to the literal key if
+	// reading-time.php is somehow not loaded so this never goes stale.
+	$meta_key = defined( 'SN_READING_TIME_META_KEY' ) ? SN_READING_TIME_META_KEY : '_sn_reading_time_minutes';
+	$mins     = (int) get_post_meta( $post_id, $meta_key, true );
 	if ( $mins < 1 ) {
-		// Fallback compute. ~225 wpm matches the existing shortcode default.
-		$content = (string) get_post_field( 'post_content', $post_id );
-		$words   = str_word_count( wp_strip_all_tags( $content ) );
-		$mins    = max( 1, (int) ceil( $words / 225 ) );
+		// Cache miss on a brand-new post that hasn't been saved through
+		// the wp_after_insert_post hook yet. Use the canonical helper so
+		// we share block-stripping + WPM with the shortcode path; this
+		// also populates the cache for the next render.
+		$mins = function_exists( 'sn_get_reading_time' )
+			? (int) sn_get_reading_time( $post_id )
+			: 1;
 	}
 	return sprintf( '%02d MIN', $mins );
 }

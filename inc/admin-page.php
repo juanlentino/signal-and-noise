@@ -51,7 +51,7 @@ function sn_theme_options_page() {
 
 	// Handle form actions.
 	if ( isset( $_POST['sn_action'] ) && check_admin_referer( 'sn_theme_options_nonce' ) ) {
-		$action = sanitize_text_field( $_POST['sn_action'] );
+		$action = sanitize_text_field( wp_unslash( $_POST['sn_action'] ) );
 
 		if ( 'clear_overrides' === $action ) {
 			$count = sn_clear_template_overrides();
@@ -186,9 +186,11 @@ function sn_theme_options_page() {
 	echo '<h1 style="font-size:1.6em;margin-bottom:0.2em;">Signal &amp; Noise</h1>';
 	echo '<p style="color:#666;margin-top:0;margin-bottom:1em;">Theme management and maintenance.</p>';
 
-	// Notices.
+	// Notices. Severity is escaped as an attribute; bodies are run
+	// through wp_kses_post because some entries deliberately ship
+	// inline markup (<a>, <code>) — esc_html would mangle those.
 	foreach ( $notices as $n ) {
-		echo '<div class="notice notice-' . $n[0] . ' is-dismissible"><p>' . $n[1] . '</p></div>';
+		echo '<div class="notice notice-' . esc_attr( $n[0] ) . ' is-dismissible"><p>' . wp_kses_post( $n[1] ) . '</p></div>';
 	}
 
 	// ── TABS ──
@@ -213,7 +215,7 @@ function sn_theme_options_page() {
 		// ── STATUS ──
 		echo '<h2 style="font-size:1.1em;margin-bottom:0.8em;">Status</h2>';
 		echo '<table class="form-table" style="max-width:500px;">';
-		$installed_label = $local_version . ( $local_sha ? ' <span style="color:#666;">at ' . esc_html( $local_sha ) . '</span>' : '' );
+		$installed_label = esc_html( $local_version ) . ( $local_sha ? ' <span style="color:#666;">at ' . esc_html( $local_sha ) . '</span>' : '' );
 		echo '<tr><th style="width:180px;padding:8px 10px 8px 0;">Installed version</th><td style="padding:8px 0;"><code>' . $installed_label . '</code></td></tr>';
 		echo '<tr><th style="padding:8px 10px 8px 0;">Latest on GitHub</th><td style="padding:8px 0;"><code>' . esc_html( $github_version ) . '</code>';
 		if ( $is_up_to_date ) {
