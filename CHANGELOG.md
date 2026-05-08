@@ -2,6 +2,38 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [7.5.6] — Voice rewrites for Operations / Artist Development / Resume cred-strip
+
+Three targeted prose changes calibrated against the [`docs/VOICE-GUIDE.md`](docs/VOICE-GUIDE.md) anchor (Apple-coded register, sister-blurb pattern, no SaaS register, no consultant bridge-framing). The remaining audit §G items judged against the voice guide:
+
+- **G2** (Services intro *"deliberate, thorough, and built to last"*) — kept as-is. The three-adjective stack is exactly Apple's signature ("Beautiful. Powerful. Fast."). On-register Mode 1.
+- **G3** (Services CTA h2 *"LET'S TALK ABOUT YOUR PROJECT"*) — kept as-is. Mode 1 imperative, defensible.
+- **G4** (Operations & AI Strategy blurb) — rewritten. *"Build systems that scale"* was peak SaaS-coded.
+- **A6** (Artist & Producer Development blurb) — rewritten. *"Connect creative identity to commercial opportunity"* was SaaS bridge-framing.
+- **Resume cred-strip dedup** — restructured per audit recommendation.
+
+### Changed
+- **[`templates/page-services.html`](templates/page-services.html) — OPERATIONS & AI STRATEGY blurb (line 220).**
+  - Before: *"Sustainable business models, streamlined operations, and AI-assisted workflows that actually work. I help studios, labels, and creative companies build systems that scale — grounded in a decade of running my own studio and an MBA in Applied AI."*
+  - After: *"I help studios, labels, and creative companies operate without breaking — pricing, daily operations, AI workflows that earn their keep. Built on a decade running Panacea and an MBA in Applied AI."*
+  - Sister-blurb voice (matches PRODUCTION / MIXING / SONGWRITING / MASTERING's *"I + verb"* opening). The phrase *"operate without breaking"* replaces *"build systems that scale"* — same payload, register-shifted from SaaS to Juan: specific verb-phrase no consultant would write because it implies the consultant's product breaks. Studio name *"Panacea"* surfaced explicitly (the existing About page links it; calling it out here gives the credentials more weight).
+
+- **[`templates/page-services.html`](templates/page-services.html) — ARTIST & PRODUCER DEVELOPMENT blurb (line 240).**
+  - Before: *"Long-term roadmaps that connect creative identity to commercial opportunity. Brand positioning, release strategy, sonic direction, and one-on-one mentorship for artists and producers ready to turn talent into a career."*
+  - After: *"Long-term roadmaps for artists and producers ready to turn talent into a career. Brand positioning, release strategy, sonic direction, one-on-one mentorship — without losing the thread of what made them worth listening to."*
+  - The audience-first opening replaces the SaaS bridge-frame *"connect creative identity to commercial opportunity."* The em-dash close *"without losing the thread of what made them worth listening to"* is a Juan-coded line — concrete, lived-in, the kind of sentence no consultant would write.
+
+- **[`templates/page-resume.html`](templates/page-resume.html) — meta strip (line 23).**
+  - Before: `20+ Years · 50+ Collaborations · GRAMMY Voting Member`
+  - After: `Production · Strategy · Mentorship`
+  - The previous strip duplicated stats already asserted in the prose paragraph three lines above. The audit recommended replacing the redundant stats with discipline-framing if the strip stays. *"Production · Strategy · Mentorship"* maps to the three actual offerings on the Services page (the production cluster, Operations & AI, Artist & Producer Development). The strip now adds positioning instead of repeating numbers — voice guide rule: when the same fact appears twice, the second occurrence should add information the first doesn't.
+
+### Why patch (7.5.6)
+Three surgical voice edits, all judged against the voice guide. No new functionality, no IA changes, no schema changes. Patch 6 of 7.5.
+
+### Audit closure
+This release closes the actionable §G items from [docs/CONTENT-AUDIT.md](docs/CONTENT-AUDIT.md). Remaining: nothing voice-affecting awaits maintainer review. Future audits should measure against [docs/VOICE-GUIDE.md](docs/VOICE-GUIDE.md), not the brutalist anchor that produced the v7.5.3 round-trip.
+
 ## [7.5.5] — Restore Apple-register copy from v7.5.2 / v7.5.1
 
 Two small reverts of changes that shifted phrases out of the canonical Apple-coded register. The maintainer's stated voice intent for the site is **Apple-like** — declarative fragments, list-of-three constructions with thematic glue, abstract verb-phrases like *"engineered for"* / *"crafted to"* / *"made with intention"*, and verbless or implied-verb subtitles. The [R3 content audit](docs/CONTENT-AUDIT.md) anchored on the brutalist passages elsewhere on the site and graded Apple-coded phrases as drift; this release walks back the two changes that landed under that misreading.
