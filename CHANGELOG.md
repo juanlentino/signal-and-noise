@@ -2,6 +2,19 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [7.1.3] — Catalog rollout: skipped items + redundancy fix
+
+Three small follow-ups to v7.1.0–v7.1.2:
+
+### Fixed
+- **`/about` secondary eyebrow** read `Education & Mentorship · Pass-On` directly above the heading `What I Know, I Pass On.` — the "Pass-On" repeated immediately on the next line. Trimmed the eyebrow to just `Education & Mentorship`.
+
+### Added
+- **`/resume` meta line** below the dek paragraph using `.sn-catalog-meta`: `20+ Years · 50+ Collaborations · GRAMMY Voting Member`. Pattern matches the meta-line on /notes ("N entries · last updated YYYY.MM.DD"). All three values come from existing copy on the live site (the /resume dek itself, the /about bio, the /services credibility strip), so no invented facts.
+- **`/music` Muso.AI section-marker** — converted the `.sn-catalog-eyebrow` from v7.1.0 (`Full Discography · Verified Credits`) into a full `.sn-catalog-section` block with hairline border. The Muso.AI panel now reads as a labelled section inside the right column rather than a standalone caption.
+
+These were items I'd called out in the catalog audit but skipped during the v7.1.0 rollout. Closing the gap.
+
 ## [7.1.2] — Drop unverified location from /about eyebrow
 
 In v7.1.0 the catalog rollout introduced a hero eyebrow on /about that read `Dossier · Buenos Aires → Miami · Who I Am`. The "Miami" was an invented geographic claim (no source in the existing copy) and the user's actual current city isn't settled, so the location shouldn't appear in load-bearing identity copy at all. Reverting the eyebrow to a non-geographic form: `Dossier · Who I Am`.
