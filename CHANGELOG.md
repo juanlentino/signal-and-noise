@@ -2,6 +2,14 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [7.1.1] — Eyebrow alignment fix
+
+The catalog eyebrows on `/about`, `/services`, `/music`, `/resume` rendered against the viewport's far-left edge instead of centered with the rest of the constrained content. Cause: `.sn-catalog-eyebrow` and `.sn-catalog-meta` in [components.css](assets/css/components.css) used `margin: ... !important` shorthands which silently set `margin-left: 0 !important` and `margin-right: 0 !important`, overriding WP's constrained-layout rule that centers children via `margin-left: auto !important; margin-right: auto !important;`.
+
+Fix: specify only `margin-top` / `margin-bottom` so the inline-margin auto-centering rule still wins. Added a comment in the CSS explaining the gotcha so it doesn't get reintroduced. Section labels and counts kept `margin: 0` because they're inside a grid container — margins don't participate in grid placement, so the bug wouldn't have manifested there anyway.
+
+Lesson: when adding CSS that targets WP block-rendered children of a constrained layout, never use a margin SHORTHAND with `!important`. Either use `margin-top` / `margin-bottom` only, or specify `margin-inline: auto !important` explicitly to participate in the centering rule.
+
 ## [7.1.0] — Catalog vocabulary rollout
 
 The "Industrial Catalog" design vocabulary developed for `/notes` extends across the site's index/listing surfaces. New shared CSS components in [assets/css/components.css](assets/css/components.css) — `.sn-catalog-eyebrow`, `.sn-catalog-meta`, `.sn-catalog-section` (label + count), `.sn-catalog-number` — replace the ad-hoc blood-mono-caps eyebrow patterns each page reinvented at slightly different sizes. The vocabulary is applied selectively: index pages get the full treatment, action/CTA pages stay untouched.

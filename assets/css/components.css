@@ -497,13 +497,20 @@
        prefix for items in a catalog (e.g. service cards).
 */
 
+/* margin-block only — never margin-inline. WP's constrained-layout
+   CSS centers children via `margin-left: auto !important; margin-right:
+   auto !important;` and using `!important` on a margin shorthand here
+   would override that and push the eyebrow against the parent's left
+   padding. Specifying only top/bottom margins keeps the inline auto-
+   centering intact. */
 .sn-catalog-eyebrow {
 	font-family: var(--wp--preset--font-family--body);
 	font-size: 0.7rem;
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
 	color: var(--wp--preset--color--blood);
-	margin: 0 0 1rem !important;
+	margin-top: 0;
+	margin-bottom: 1rem;
 }
 
 .sn-catalog-meta {
@@ -512,7 +519,8 @@
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
 	color: var(--wp--preset--color--rust);
-	margin-top: clamp(1rem, 2vw, 1.5rem) !important;
+	margin-top: clamp(1rem, 2vw, 1.5rem);
+	margin-bottom: 0;
 }
 .sn-catalog-meta-bullet {
 	color: var(--wp--preset--color--blood);
@@ -535,7 +543,9 @@
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
 	color: var(--wp--preset--color--rust);
-	margin: 0 !important;
+	/* Inside a grid container — margins don't affect grid placement,
+	   so this is safe without the inline-margin caveat above. */
+	margin: 0;
 }
 
 .sn-catalog-number {
