@@ -39,7 +39,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	<!-- /wp:heading -->
 
 	<!-- wp:paragraph {"style":{"typography":{"fontSize":"1rem","lineHeight":"1.8"}},"textColor":"rust"} -->
-	<p class="has-rust-color has-text-color" style="font-size:1rem;line-height:1.8"><?php echo esc_html__( "Whether it's a record, a business problem, or a workflow that needs fixing — I'd rather hear about it than guess. Two paths in: send a message if you're scoping things out, or book a paid session if you want focused time on the calendar.", 'signal-noise' ); ?></p>
+	<p class="has-rust-color has-text-color" style="font-size:1rem;line-height:1.8"><?php echo esc_html__( "Whether it's a record, a business problem, or a workflow that needs fixing — I'd rather hear about it than guess. Tell me what you're working on.", 'signal-noise' ); ?></p>
 	<!-- /wp:paragraph -->
 
 	<!-- wp:buttons {"layout":{"type":"flex","justifyContent":"left","flexWrap":"wrap"},"style":{"spacing":{"margin":{"top":"var:preset|spacing|30"}}}} -->

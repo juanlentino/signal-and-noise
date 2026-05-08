@@ -2,6 +2,23 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [7.5.5] — Restore Apple-register copy from v7.5.2 / v7.5.1
+
+Two small reverts of changes that shifted phrases out of the canonical Apple-coded register. The maintainer's stated voice intent for the site is **Apple-like** — declarative fragments, list-of-three constructions with thematic glue, abstract verb-phrases like *"engineered for"* / *"crafted to"* / *"made with intention"*, and verbless or implied-verb subtitles. The [R3 content audit](docs/CONTENT-AUDIT.md) anchored on the brutalist passages elsewhere on the site and graded Apple-coded phrases as drift; this release walks back the two changes that landed under that misreading.
+
+The audit's findings on factual consistency, IA labelling, redundancy mapping, and prose cleanups remain valid — those are register-neutral. The §G voice-rewrite drafts and a handful of A-tier "voice drift" calls were anchored on the wrong reference voice; this release backs out the two that already shipped.
+
+### Reverted
+- **[`templates/page-services.html`](templates/page-services.html) — PRODUCTION blurb closer.** *"every decision made to serve the song"* → *"every decision made with intention"*. The original is in the Apple verb-phrase register (parallel to *"designed for"*, *"engineered for"*, *"crafted to"*); the v7.5.2 replacement was brutalist/specific. Both work; the original is on-brand. Reverts audit finding A4.
+- **[`templates/page-services.html`](templates/page-services.html) — closing CTA body.** *"Two paths in: send a message if you're scoping things out, or book a paid session if you want focused time on the calendar."* → *"Tell me what you're working on."* (the original closer to the *"Whether it's a record, a business problem, or a workflow that needs fixing — I'd rather hear about it than guess."* sentence). The two-button structure introduced in v7.5.1 stays — the buttons themselves name the paths, the body doesn't have to. Procedural "Two paths in:" was a brutalist tic; the original closer is Apple-register declarative.
+- **[`patterns/cta-closing.php`](patterns/cta-closing.php) — same body-copy revert** so the pattern matches the inline Services version. Two-button structure (the actual IA fix) preserved.
+
+### Voice anchor going forward
+A new [`docs/VOICE-GUIDE.md`](docs/VOICE-GUIDE.md) (committed separately, no version bump) codifies the Apple-coded register as canonical so future audits and rewrites measure against the right reference. The brutalist passages on About / 404 / Contact / parts of Music are not the canonical voice — they're context-adapted moves *within* the Apple voice palette (procedural copy, personal-narrative copy, branded-error-page copy). The hero / abstract / value-prop register is the anchor.
+
+### Why patch (7.5.5)
+Two surgical reverts. No new functionality, no IA change, no schema change. Patch 5 of 7.5.
+
 ## [7.5.4] — Revert v7.5.3 front-page subtitle change
 
 Restoring *"Music production, creative strategy, and the systems that hold them together."* — the original front-page hero subtitle that v7.5.3 replaced based on [docs/CONTENT-AUDIT.md](docs/CONTENT-AUDIT.md) §G1 Draft C.
