@@ -107,53 +107,97 @@ function sn_self_heal_run() {
 	if ( ! current_user_can( 'manage_options' ) ) {
 		return;
 	}
+	sn_self_heal_execute( false );
+}
+
+/**
+ * Force-run self-heal immediately, bypassing the rate-limit gate AND
+ * clearing per-file failure cooldowns. Capability check is the caller's
+ * responsibility — this is the entry point used by:
+ *   - The "Heal Templates Now" admin button (gated by nonce + admin capability).
+ *   - The post-update hook in updater.php (runs as the admin who triggered
+ *     the upgrader, capability already enforced upstream).
+ *
+ * Why a separate force path: the standard rate-limit (5 min between runs)
+ * is correct for ambient admin pageviews, but actively wrong for the two
+ * recovery scenarios above:
+ *   - After a broken self-heal run set the rate-limit option but skipped
+ *     writes, the FIXED version is rate-limited from running for ~5 min.
+ *   - Right after a successful Update, files just got rewritten by the
+ *     upgrader — verifying drift immediately is the whole point.
+ *
+ * @return array{fixed: string[], failed: string[]} Lists of paths.
+ */
+function sn_self_heal_force_run() {
+	// Clear per-file failure cooldowns so files in 1-hour back-off get
+	// retried. The user's intent (clicking "Heal Now" or just-finished
+	// Update) is "try again now, I have new information".
+	delete_option( SN_SELF_HEAL_FAILURES_OPT );
+	return sn_self_heal_execute( true );
+}
+
+/**
+ * Internal: actual heal loop. Caller decides whether to enforce the
+ * rate-limit gate (false = ambient admin_init path, true = manual /
+ * post-update force path).
+ *
+ * @param bool $force True to skip rate-limit; false to honor it.
+ * @return array{fixed: string[], failed: string[]}
+ */
+function sn_self_heal_execute( $force ) {
+	$result = array( 'fixed' => array(), 'failed' => array() );
+
 	if ( ! defined( 'SN_GITHUB_TOKEN' ) || empty( SN_GITHUB_TOKEN ) ) {
-		return;
+		return $result;
 	}
 	if ( ! defined( 'SN_GITHUB_REPO' ) || empty( SN_GITHUB_REPO ) ) {
-		return;
+		return $result;
 	}
 
-	// Rate limit: bail if we've checked recently.
-	$last = (int) get_option( SN_SELF_HEAL_LAST_CHECK_OPT, 0 );
-	if ( time() - $last < SN_SELF_HEAL_CHECK_INTERVAL ) {
-		return;
+	if ( ! $force ) {
+		// Rate limit: bail if we've checked recently.
+		$last = (int) get_option( SN_SELF_HEAL_LAST_CHECK_OPT, 0 );
+		if ( time() - $last < SN_SELF_HEAL_CHECK_INTERVAL ) {
+			return $result;
+		}
 	}
 	// Mark check time BEFORE running so a slow run doesn't stack.
+	// Force runs also update this so subsequent ambient runs don't
+	// immediately re-check.
 	update_option( SN_SELF_HEAL_LAST_CHECK_OPT, time(), false );
 
 	$branch = function_exists( 'sn_updater_branch' ) ? sn_updater_branch() : 'main';
 	$files  = sn_self_heal_files();
-	$fixed  = array();
-	$failed = array();
 
 	foreach ( $files as $relpath ) {
-		$result = sn_self_heal_check_one( $relpath, $branch );
-		if ( 'fixed' === $result ) {
-			$fixed[] = $relpath;
-		} elseif ( 'failed' === $result ) {
-			$failed[] = $relpath;
+		$check = sn_self_heal_check_one( $relpath, $branch );
+		if ( 'fixed' === $check ) {
+			$result['fixed'][] = $relpath;
+		} elseif ( 'failed' === $check ) {
+			$result['failed'][] = $relpath;
 		}
 	}
 
 	// If we wrote any files, purge caches so the new content is served
 	// immediately. Without this, the file change is on disk but Breeze /
 	// object cache might still serve old rendered HTML.
-	if ( $fixed && function_exists( 'sn_purge_all_caches' ) ) {
+	if ( $result['fixed'] && function_exists( 'sn_purge_all_caches' ) ) {
 		sn_purge_all_caches();
 	}
 
-	if ( $fixed || $failed ) {
+	if ( $result['fixed'] || $result['failed'] ) {
 		set_transient(
 			'sn_self_heal_notice_' . get_current_user_id(),
 			array(
-				'fixed'  => $fixed,
-				'failed' => $failed,
+				'fixed'  => $result['fixed'],
+				'failed' => $result['failed'],
 				'when'   => time(),
 			),
 			5 * MINUTE_IN_SECONDS
 		);
 	}
+
+	return $result;
 }
 
 /**

@@ -103,6 +103,39 @@ function sn_theme_options_page() {
 			$count = sn_purge_all_caches();
 			$notices[] = array( 'success', 'Full reset: ' . $count . ' override(s) cleared + all caches purged.' );
 		}
+
+		if ( 'heal_templates' === $action ) {
+			// Force-sync every monitored template/part file from GitHub
+			// main, bypassing the 5-min rate limit and clearing the per-
+			// file failure cooldown so retries happen now. This is the
+			// recovery path for the "deploy didn't take effect on one
+			// specific route" failure mode — see inc/template-self-heal.php
+			// for the validation gates this runs through.
+			if ( function_exists( 'sn_self_heal_force_run' ) ) {
+				$heal = sn_self_heal_force_run();
+				$fixed_n  = count( $heal['fixed'] );
+				$failed_n = count( $heal['failed'] );
+				if ( $fixed_n ) {
+					$notices[] = array(
+						'success',
+						'Self-heal: re-synced ' . $fixed_n . ' template file(s) from GitHub <code>' . esc_html( function_exists( 'sn_updater_branch' ) ? sn_updater_branch() : 'main' ) . '</code> — '
+						. '<code>' . implode( '</code>, <code>', array_map( 'esc_html', $heal['fixed'] ) ) . '</code>. Caches purged.',
+					);
+				} elseif ( ! $failed_n ) {
+					$notices[] = array( 'info', 'Self-heal: all monitored template files already match GitHub <code>' . esc_html( function_exists( 'sn_updater_branch' ) ? sn_updater_branch() : 'main' ) . '</code>. Nothing to do.' );
+				}
+				if ( $failed_n ) {
+					$notices[] = array(
+						'error',
+						'Self-heal: drift detected but write failed for ' . $failed_n . ' file(s) — '
+						. '<code>' . implode( '</code>, <code>', array_map( 'esc_html', $heal['failed'] ) ) . '</code>. '
+						. 'Check file permissions on the affected paths via SFTP.',
+					);
+				}
+			} else {
+				$notices[] = array( 'error', 'Self-heal module not loaded.' );
+			}
+		}
 	}
 
 	// Resolve "what's on GitHub" against the *tracked branch HEAD*, not the
@@ -235,6 +268,12 @@ function sn_theme_options_page() {
 		echo '<strong style="display:block;margin-bottom:4px;">Purge Caches</strong>';
 		echo '<p style="color:#666;font-size:0.85em;margin:0 0 12px;">WP object cache, transients, Breeze page/minification, Varnish.</p>';
 		echo '<button type="submit" name="sn_action" value="purge_caches" class="button">Purge All Caches</button>';
+		echo '</div>';
+
+		echo '<div style="background:#fff;border:1px solid #c3c4c7;border-radius:4px;padding:16px 20px;max-width:260px;">';
+		echo '<strong style="display:block;margin-bottom:4px;">Heal Templates Now</strong>';
+		echo '<p style="color:#666;font-size:0.85em;margin:0 0 12px;">Force re-fetch every <code>templates/*.html</code> and <code>parts/*.html</code> from GitHub <code>main</code>. Bypasses the 5-min rate limit. Use when a deploy didn&rsquo;t take effect on a route.</p>';
+		echo '<button type="submit" name="sn_action" value="heal_templates" class="button">Re-sync from GitHub</button>';
 		echo '</div>';
 
 		echo '<div style="background:#fff;border:1px solid #c3c4c7;border-radius:4px;padding:16px 20px;max-width:260px;">';

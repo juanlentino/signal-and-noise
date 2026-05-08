@@ -282,7 +282,17 @@ body {
 	justify-content: center;
 }
 
-/* Push main content above fixed footer */
+/* Push main content above fixed footer.
+ *
+ * The footer is `position: fixed; z-index: 9990` (above this rule), so
+ * any content within the last `padding-bottom` pixels of <main> sits
+ * behind it and becomes unclickable. Sizing reference:
+ *   - Desktop:  social icons (44px min) + padding (~32px) ≈ 76px tall
+ *   - Mobile:   wraps to two rows, ≈ 120px tall
+ * 140px gives a comfortable buffer in both cases. The /notes index in
+ * particular ends with `.sn-notes-rss` whose link was being eaten by
+ * the footer at the previous 90px buffer.
+ */
 main.wp-block-group {
-	padding-bottom: 90px;
+	padding-bottom: 140px;
 }

@@ -54,6 +54,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *     Optional flags. All default true.
  *     @type bool $object_cache       Flush WP object cache + theme caches.
  *     @type bool $sn_transients      Prune sn_* transients.
+ *     @type bool $self_heal_state    Clear self-heal rate-limit + failures.
  *     @type bool $origin_html        Trigger Breeze / Varnish purges.
  *     @type bool $cloudflare         Trigger Cloudflare zone purge.
  *     @type bool $template_overrides Delete wp_template DB overrides.
@@ -66,6 +67,7 @@ function sn_purge_all_caches( $args = array() ) {
 	$args = wp_parse_args( $args, array(
 		'object_cache'       => true,
 		'sn_transients'      => true,
+		'self_heal_state'    => true,
 		'origin_html'        => true,
 		'cloudflare'         => true,
 		'template_overrides' => true,
@@ -86,6 +88,24 @@ function sn_purge_all_caches( $args = array() ) {
 				 WHERE option_name LIKE '\\_transient\\_sn\\_%'
 				    OR option_name LIKE '\\_transient\\_timeout\\_sn\\_%'"
 			);
+		}
+	}
+
+	if ( $args['self_heal_state'] ) {
+		// Self-heal rate-limit + failure cooldown are stored as regular
+		// options (not transients), so the sn_transients DELETE above
+		// doesn't reach them. Clearing them here means Full Reset / any
+		// caller of sn_purge_all_caches() unblocks the next admin
+		// pageview to run a fresh self-heal — closing the recovery loop
+		// for "I clicked Full Reset but page-notes.html still shows old
+		// content". Constants come from inc/template-self-heal.php; gate
+		// on defined() so this stays safe if that module is ever
+		// disabled.
+		if ( defined( 'SN_SELF_HEAL_LAST_CHECK_OPT' ) ) {
+			delete_option( SN_SELF_HEAL_LAST_CHECK_OPT );
+		}
+		if ( defined( 'SN_SELF_HEAL_FAILURES_OPT' ) ) {
+			delete_option( SN_SELF_HEAL_FAILURES_OPT );
 		}
 	}
 

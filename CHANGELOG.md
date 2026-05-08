@@ -4,6 +4,28 @@ All notable changes to Signal & Noise are documented here.
 
 ## [Unreleased] — Operational fixes (post-v7.0.0)
 
+### Recovery hardening — self-heal force-run + RSS layout fix
+
+Two unrelated production issues that surfaced post-v7.0.0:
+
+1. `/notes` was rendering the OLD single-pillar-card content for hours despite (a) `main` having the correct two-card content, (b) the deploy reporting success, (c) `wp_template` DB overrides at zero, and (d) Cloudflare reporting `cf-cache-status: DYNAMIC`. The theme self-heal module (added in [390c14b](https://github.com/juanlentino/signal-and-noise/commit/390c14b)) was designed for exactly this failure mode but had two gaps: its 5-minute rate-limit option was set by the broken initial run (which corrupted templates with JSON; fixed in [7c820ec](https://github.com/juanlentino/signal-and-noise/commit/7c820ec)), blocking the FIXED self-heal from running again; and its only trigger was ambient `admin_init` pageviews, so recovery wasn't immediate after clicking Update. There was no manual button to force a re-sync — recovery required SSH/SFTP or waiting for the rate-limit to expire.
+
+2. The RSS link at the bottom of `/notes` was unreachable — the fixed-position `.sn-footer` (z-index 9990) was overlapping the last lines of `<main>` because the `padding-bottom: 90px` buffer was too tight. On desktop the buffer was just enough (~14px clearance over a ~76px footer); on mobile the footer wraps to two rows (~120px tall) and ate 30px of the RSS line.
+
+#### Added
+- **`sn_self_heal_force_run()`** in [inc/template-self-heal.php](inc/template-self-heal.php). New entry point that bypasses the 5-min rate-limit gate AND clears the per-file failure cooldown, so files in 1-hour back-off get retried immediately. The original `sn_self_heal_run()` (ambient `admin_init` path) and this force-run path now share an internal `sn_self_heal_execute( $force )` implementation — same validation gates apply to both. The 7 content-shape gates from [7c820ec](https://github.com/juanlentino/signal-and-noise/commit/7c820ec) (HTTP 200, JSON parse, content+encoding fields, base64 decode, size match, starts-with-`<` for HTML files, differs from local) are unchanged; force-run only changes WHEN the check happens, never WHAT gates the write.
+
+- **"Heal Templates Now" admin button** on the Dashboard tab in [inc/admin-page.php](inc/admin-page.php). One-click manual recovery for the "deploy didn't take effect on a route" failure mode. Calls `sn_self_heal_force_run()` synchronously and reports per-file results in admin notices: success notice lists the paths that were re-synced; error notice lists paths where drift was detected but the write failed (with a hint to check SFTP file permissions). Sits next to *Purge Caches* in the Actions row.
+
+- **Post-update auto-heal hook** in [inc/updater.php](inc/updater.php). Hooks into `upgrader_process_complete` at priority 20 (after the existing SHA-stash hook at priority 10). Force-runs `sn_self_heal_force_run()` immediately after every successful theme update, so every Update click ends with a verified file-content sync against `main` HEAD. Closes the loop on the original silent-skip failure mode: the file system either matches `main` or admin sees an error notice naming exactly which paths failed.
+
+#### Fixed
+- **`sn_purge_all_caches()` now clears self-heal state.** New `self_heal_state` flag (default `true`) deletes the `sn_self_heal_last_check` rate-limit option and the `sn_self_heal_failures` cooldown map. These are stored as regular options, so the existing `_transient_sn_*` SQL DELETE didn't reach them. Closes the surprising user-experience gap where clicking *Run Full Reset* didn't actually unblock a stuck self-heal run. Both options are gated on `defined()` of their option-name constants, so the helper stays safe if the self-heal module is ever disabled.
+
+- **RSS link layout on `/notes`.** Bumped `main.wp-block-group { padding-bottom }` from `90px` to `140px` in [assets/css/layout.css](assets/css/layout.css). Sized for the worst case (mobile-wrapped footer ≈ 120px) plus a 20px buffer. Comment in the file documents the constraint so a future "this padding looks excessive" cleanup pass doesn't re-introduce the bug. Universal fix — every page benefits, but `/notes` was where the failure manifested because `.sn-notes-rss` is the last element in `<main>` and sat directly inside the previous overlap zone.
+
+### Earlier in this Unreleased band
+
 Two related fixes that surfaced after the v7.0.0 deploy: (a) `/notes` continued to render the old single pillar card after the user clicked Update, despite `wp_template` DB overrides being cleared and the theme files being correctly replaced, because Breeze's HTML page cache wasn't being invalidated on theme file changes; (b) the admin maintenance page accumulated four sections in a single Dashboard tab and grew unwieldy — Cloudflare config + Reading Time cleanup + Status + Actions all stacked vertically.
 
 ### Fixed

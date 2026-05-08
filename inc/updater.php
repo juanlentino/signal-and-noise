@@ -307,6 +307,45 @@ add_action( 'upgrader_process_complete', function( $upgrader, $hook_extra ) {
 }, 10, 2 );
 
 /**
+ * Force-run template self-heal immediately after a successful theme
+ * update.
+ *
+ * The diagnostic signature this addresses: a deploy completes
+ * (`upgrader_process_complete` fires, SHA gets stored, asset mtimes
+ * advance, every-other-route renders new content), but ONE specific
+ * template file silently doesn't get overwritten on disk. Cause is
+ * usually a stale file lock or permission glitch on Cloudways. The
+ * symptom is invisible until someone notices a route still serves old
+ * markup.
+ *
+ * Self-heal already exists to catch this on ambient admin pageviews,
+ * but its 5-minute rate limit means recovery isn't immediate after an
+ * Update click. Worse, if a previous broken self-heal run set the
+ * rate-limit option, the FIXED version is locked out for up to 5 min.
+ *
+ * Force-running here closes the loop: every Update click now ends with
+ * a verified file-content sync. Priority 20 so we run AFTER the
+ * SHA-stash hook at priority 10 — order matters because self-heal logs
+ * an admin notice the user should see right after the Update success
+ * message.
+ */
+add_action( 'upgrader_process_complete', function( $upgrader, $hook_extra ) {
+	if ( empty( $hook_extra['type'] ) || 'theme' !== $hook_extra['type'] ) {
+		return;
+	}
+	$themes = ! empty( $hook_extra['themes'] )
+		? (array) $hook_extra['themes']
+		: ( ! empty( $hook_extra['theme'] ) ? array( $hook_extra['theme'] ) : array() );
+	if ( ! in_array( SN_THEME_SLUG, $themes, true ) ) {
+		return;
+	}
+	if ( ! function_exists( 'sn_self_heal_force_run' ) ) {
+		return;
+	}
+	sn_self_heal_force_run();
+}, 20, 2 );
+
+/**
  * Inject GitHub token into the download request so WP can fetch
  * the zipball from a private repo.
  */
