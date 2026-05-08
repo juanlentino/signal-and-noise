@@ -63,7 +63,13 @@ const SN_PAGE_NOTES_SLUG = 'page-notes';
  * @return string Block markup matching `templates/page-notes.html`.
  */
 function sn_page_notes_template_content() {
+	// Diagnostic marker: if this comment appears in the rendered HTML,
+	// the PHP override is active. If the page renders without this
+	// marker, our filter didn't take effect and something is resolving
+	// page-notes via a code path that bypasses both `pre_get_block_template`
+	// and `get_block_templates`. Cheap to keep, expensive to need.
 	return <<<'HTML'
+<!-- sn-pillar-cards-php-override-active -->
 <!-- wp:template-part {"slug":"header","area":"header"} /-->
 
 <!-- wp:group {"tagName":"main","className":"sn-notes-index","style":{"spacing":{"padding":{"top":"var:preset|spacing|60","bottom":"var:preset|spacing|60","left":"var:preset|spacing|40","right":"var:preset|spacing|40"}}},"layout":{"type":"constrained"}} -->
@@ -224,13 +230,16 @@ function sn_page_notes_build_template_object() {
  * Capability-and-id-gated so we only ever return our object for the
  * one specific template — every other lookup falls through to WP's
  * normal DB-then-file resolution unchanged.
+ *
+ * Accepts both the canonical id form (`<stylesheet>//page-notes`) and
+ * a bare slug form, because some upstream callers pass just the slug.
  */
 add_filter( 'pre_get_block_template', function( $block_template, $id, $template_type ) {
 	if ( 'wp_template' !== $template_type ) {
 		return $block_template;
 	}
 	$expected_id = get_stylesheet() . '//' . SN_PAGE_NOTES_SLUG;
-	if ( $id !== $expected_id ) {
+	if ( $id !== $expected_id && $id !== SN_PAGE_NOTES_SLUG ) {
 		return $block_template;
 	}
 	if ( ! class_exists( 'WP_Block_Template' ) ) {
@@ -240,14 +249,64 @@ add_filter( 'pre_get_block_template', function( $block_template, $id, $template_
 }, 10, 3 );
 
 /**
- * Surface the page-notes template in `get_block_templates()` results
- * (the listing endpoint used by Site Editor and template-resolution
- * fallbacks). Without this, the editor's template picker can show
- * an empty/legacy entry for `page-notes` that doesn't reflect what
- * the front-end actually renders.
+ * Short-circuit `get_block_templates()` (plural / listing) when the
+ * caller is specifically asking for the page-notes slug. WP's
+ * resolver calls this with `slug__in => [hierarchy slugs]`. By
+ * returning an array containing JUST our object when the query is
+ * scoped to page-notes, we skip WP's DB query AND file scan for
+ * this slug entirely.
  *
- * Strategy: replace any existing entry that matches our id with our
- * canonical object; append if absent. Idempotent.
+ * Why also keep the post-merge `get_block_templates` filter below:
+ * resolution queries pass arrays of slugs (`page-notes`, `page`,
+ * `singular`, `index`), not just one. When the array contains other
+ * slugs too, we let WP do its normal lookup for THOSE slugs and
+ * intervene at the post-merge filter to inject our object and remove
+ * any stale DB/file entries for page-notes.
+ */
+add_filter( 'pre_get_block_templates', function( $block_templates, $query, $template_type ) {
+	if ( 'wp_template' !== $template_type ) {
+		return $block_templates;
+	}
+	if ( ! class_exists( 'WP_Block_Template' ) ) {
+		return $block_templates;
+	}
+	// Only short-circuit when the query is EXCLUSIVELY about page-notes.
+	// Otherwise let WP run its normal lookup and we'll intervene in the
+	// post-merge filter.
+	if ( empty( $query['slug__in'] ) || ! is_array( $query['slug__in'] ) ) {
+		return $block_templates;
+	}
+	if ( count( $query['slug__in'] ) !== 1 ) {
+		return $block_templates;
+	}
+	if ( SN_PAGE_NOTES_SLUG !== reset( $query['slug__in'] ) ) {
+		return $block_templates;
+	}
+	return array( sn_page_notes_build_template_object() );
+}, 10, 3 );
+
+/**
+ * Surface the page-notes template in `get_block_templates()` results.
+ * This is the listing endpoint used by Site Editor AND by the front-
+ * end template resolver (`resolve_block_template()` calls
+ * `get_block_templates(['slug__in' => $hierarchy])`).
+ *
+ * WP's `get_block_templates()` returns
+ * `array_merge( $db_template_query, $template_files )`. DB entries
+ * come first. The resolver iterates and picks the first object whose
+ * slug matches. So if a stale `wp_template` DB row for `page-notes`
+ * exists (from an old Site Editor save that survived
+ * `sn_clear_template_overrides()`, or a different normalization of
+ * the id), the resolver finds the DB row before any file or filter-
+ * appended entry — and renders the stale content.
+ *
+ * Defensive strategy used here: remove EVERY entry from the result
+ * that matches our slug (regardless of source, regardless of id
+ * format), then PREPEND our PHP-built object at index 0. The
+ * resolver iterates from the start, so our object is picked
+ * unconditionally. Side effect: any in-DB customization of
+ * page-notes is invisible to the front end. That's the desired
+ * tradeoff — we want PHP to be authoritative.
  */
 add_filter( 'get_block_templates', function( $query_result, $query, $template_type ) {
 	if ( 'wp_template' !== $template_type ) {
@@ -256,26 +315,26 @@ add_filter( 'get_block_templates', function( $query_result, $query, $template_ty
 	if ( ! class_exists( 'WP_Block_Template' ) ) {
 		return $query_result;
 	}
-	$expected_id = get_stylesheet() . '//' . SN_PAGE_NOTES_SLUG;
 
-	// If a slug filter was passed and page-notes isn't in it, bail.
+	// If a slug filter was passed and page-notes isn't in it, bail —
+	// caller is asking about other templates, no need to inject ours.
 	if ( ! empty( $query['slug__in'] ) && is_array( $query['slug__in'] ) ) {
 		if ( ! in_array( SN_PAGE_NOTES_SLUG, $query['slug__in'], true ) ) {
 			return $query_result;
 		}
 	}
 
-	$ours    = sn_page_notes_build_template_object();
-	$replaced = false;
-	foreach ( $query_result as $i => $existing ) {
-		if ( isset( $existing->id ) && $existing->id === $expected_id ) {
-			$query_result[ $i ] = $ours;
-			$replaced = true;
-			break;
-		}
-	}
-	if ( ! $replaced ) {
-		$query_result[] = $ours;
-	}
+	// Strip every existing entry whose slug is page-notes. Match on
+	// slug, not id — the DB representation might use a normalized id
+	// that doesn't equal exactly `<theme>//page-notes`, and we want
+	// to remove it regardless. Also handles the case where multiple
+	// entries (DB + file) coexist.
+	$query_result = array_values( array_filter( $query_result, function( $tpl ) {
+		return ! ( isset( $tpl->slug ) && SN_PAGE_NOTES_SLUG === $tpl->slug );
+	} ) );
+
+	// Prepend our canonical object at index 0 so the resolver picks
+	// it first regardless of what else is in the array.
+	array_unshift( $query_result, sn_page_notes_build_template_object() );
 	return $query_result;
 }, 10, 3 );
