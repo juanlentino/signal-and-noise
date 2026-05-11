@@ -6,6 +6,14 @@
 		<!-- wp:social-link {"url":"https://open.spotify.com/intl-es/artist/2R3HjldxV2PpYp9DQwMPq0","service":"spotify"} /-->
 		<!-- wp:social-link {"url":"https://www.linkedin.com/in/juanlentino/","service":"linkedin"} /-->
 		<!-- wp:social-link {"url":"https://www.instagram.com/juan_lentino/","service":"instagram"} /-->
+		<!-- The "feed" service is built into Gutenberg core — same inline SVG
+		     and same .wp-block-social-link-anchor styling as the other icons,
+		     so the 44x44 touch target and #666666→hover come for free. The
+		     "label" attr renders into a screen-reader-text span ("Subscribe
+		     via RSS") which is functionally equivalent to aria-label for
+		     assistive tech. Hardcoded /feed/ because FSE template parts
+		     don't execute PHP — same pattern page-notes.html uses. -->
+		<!-- wp:social-link {"url":"/feed/","service":"feed","label":"Subscribe via RSS"} /-->
 	</ul>
 	<!-- /wp:social-links -->
 

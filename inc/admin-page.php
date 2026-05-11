@@ -52,7 +52,7 @@ function sn_theme_options_page() {
 	$theme         = wp_get_theme( 'signal-and-noise' );
 	$local_version = $theme->get( 'Version' );
 	$notices       = array();
-	$valid_tabs    = array( 'dashboard', 'cloudflare', 'plausible', 'reading-time', 'links' );
+	$valid_tabs    = array( 'dashboard', 'cloudflare', 'plausible', 'rss', 'reading-time', 'links' );
 	$active_tab    = isset( $_GET['tab'] ) ? sanitize_text_field( wp_unslash( $_GET['tab'] ) ) : 'dashboard';
 	if ( ! in_array( $active_tab, $valid_tabs, true ) ) {
 		$active_tab = 'dashboard';
@@ -196,6 +196,7 @@ function sn_theme_options_page() {
 		'dashboard'    => 'Dashboard',
 		'cloudflare'   => 'Cloudflare',
 		'plausible'    => 'Plausible',
+		'rss'          => 'RSS',
 		'reading-time' => 'Reading Time',
 		'links'        => 'Links',
 	);
@@ -325,6 +326,27 @@ function sn_theme_options_page() {
 
 		/** Module-owned UI: see inc/plausible-admin.php. */
 		do_action( 'sn_admin_plausible_tab' );
+
+	// ════════════════════════════════════════
+	// TAB: RSS
+	// ════════════════════════════════════════
+	} elseif ( 'rss' === $active_tab ) {
+
+		/**
+		 * Module-owned UI: see mu-plugins/rss-plausible-tracker.php.
+		 *
+		 * The tracker is a Must-Use plugin (not part of the theme) so it
+		 * survives theme switches and continues collecting subscriber
+		 * metrics regardless. When the MU plugin is deployed it hooks
+		 * this action; when it isn't, the tab renders an install hint
+		 * via the fallback below.
+		 */
+		if ( has_action( 'sn_admin_rss_tab' ) ) {
+			do_action( 'sn_admin_rss_tab' );
+		} else {
+			echo '<div class="notice notice-warning inline" style="margin:0;padding:12px 16px;"><p><strong>RSS subscriber tracker not installed.</strong></p>';
+			echo '<p>Copy <code>mu-plugins/rss-plausible-tracker.php</code> from the theme repo to <code>wp-content/mu-plugins/</code> on this host. MU plugins activate automatically — no further action needed.</p></div>';
+		}
 
 	// ════════════════════════════════════════
 	// TAB: READING TIME

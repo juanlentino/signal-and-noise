@@ -2,6 +2,60 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [8.0.0] — Site-wide RSS surfacing + server-side subscriber tracking + admin settings tab
+
+RSS was previously only linked from a hairline footer on `/notes`. This release surfaces it on every page, adds a self-hosted-Plausible-backed measurement layer (no Jetpack, no FeedBlitz, no third-party tracker), and exposes the whole subsystem through a new **Appearance → Signal & Noise → RSS** settings tab. The measurement table is local to the database so a Plausible outage doesn't blank the trend data.
+
+### Added
+- **[`parts/footer.html`](parts/footer.html) — RSS subscribe link in the global footer.** New `<!-- wp:social-link {"url":"/feed/","service":"feed","label":"Subscribe via RSS"} /-->` inside the existing social-links list. Uses Gutenberg core's built-in `feed` service, which renders an inline SVG identical in weight to the other social glyphs and gets `aria-label`-equivalent semantics from a screen-reader-text span. Visible on homepage, `/provenance`, `/resume`, `/notes`, individual posts — everywhere `parts/footer.html` is included. URL hardcoded as `/feed/` because FSE template parts are pure HTML and don't execute PHP; same pattern `page-notes.html` already uses.
+- **[`mu-plugins/rss-plausible-tracker.php`](mu-plugins/rss-plausible-tracker.php) — server-side feed-request tracker.** 482 lines, single self-contained file. Hooks `template_redirect` at priority 1, gates on `is_feed()`, drops requests whose User-Agent matches the bot regex (Googlebot/Bingbot/preview-card bots/curl/wget/uptime monitors — **but never aggregators**; see "Settings tab" below). For surviving requests: (1) inserts a row into the new `wp_rss_feed_log` table with UTC timestamp, first 16 hex chars of `sha256(UA)`, and the feed URL; (2) fires a fire-and-forget POST to the configured Plausible event endpoint with event name, full feed URL, and the `ua_hash` as a custom prop. Non-blocking + 2-second connect timeout so analytics never delays the feed response. Forwards the original `User-Agent` and Cloudflare's `CF-Connecting-IP` (with `X-Forwarded-For` / `REMOTE_ADDR` fallbacks) so Plausible's own bot detection and geo lookup function correctly.
+- **`wp_rss_feed_log` table.** Columns: `id BIGINT PK`, `ts DATETIME`, `ua_hash CHAR(16)`, `feed_url VARCHAR(255)`. Index on `ts` for the rolling-window queries. Created via `dbDelta` on a version-gated `admin_init` hook (MU plugins have no activation hook, so we install lazily and idempotently — at most one option read per admin pageview).
+- **`sn_rss_tracker_settings` option + new admin tab — Appearance → Signal & Noise → RSS.** Hosts everything operational about the tracker: enable/disable toggle, Plausible event endpoint URL, Plausible site domain, custom event name, and log retention window (7–365 days). All form-edited per host, no code changes needed when the Plausible install moves or the event name changes. The tab also renders three activity cards (24h / 7d / 30d, each showing total + unique clients), a 20-row recent-requests table, "Open in Plausible" deep link, and a maintenance section for purging old log entries. Form submissions flow through `admin_init` with nonce + `manage_options` capability gates, then redirect with a flash query arg.
+- **Updated dashboard widget — "RSS Subscribers (30 days)".** Still surfaces the headline 30-day count and unique-client figure for at-a-glance visibility on the WP dashboard, now with a "Settings & activity" link to the new RSS tab and a Plausible deep link built from the configured domain + event name (not the hardcoded values it used to embed).
+- **[`mu-plugins/tests/bot-detection.php`](mu-plugins/tests/bot-detection.php) — standalone fixture test.** 33 fixtures covering real aggregator UAs (Feedly, NewsBlur, Inoreader, NetNewsWire, Reeder, Tiny Tiny RSS, Miniflux, FreshRSS, BazQux, The Old Reader), three modern browsers, and 17 crawlers / monitors / CLIs that should be filtered. Runnable with bare `php mu-plugins/tests/bot-detection.php` — no PHPUnit, no WordPress, no composer. Exits non-zero on any failure. Includes regression coverage for the Feedly filter bug (see below).
+- **[`mu-plugins/README.md`](mu-plugins/README.md) — deployment note.** Documents the one-time copy step on Cloudways: MU plugins must live at `wp-content/mu-plugins/`, not inside the theme.
+- **[`inc/admin-page.php`](inc/admin-page.php) — RSS tab registration.** Added `rss` to `$valid_tabs` and `$tab_labels`, plus a new dispatch branch that fires `do_action('sn_admin_rss_tab')`. Includes a `has_action()` fallback that renders an install-hint notice when the MU plugin file isn't deployed to the host — turns the empty-tab confusion mode into self-service guidance.
+
+### Revised before commit (brainstorming pass)
+A retroactive design review caught three issues in my first-pass implementation. All fixed in this release:
+
+1. **Bot regex silently filtered Feedly + NewsBlur** *(critical)*. The first pass included `fetch` as a substring catch-all in the bot regex. Feedly's UA is `Feedly/1.0 (+http://www.feedly.com/fetcher.html; like FeedFetcher-Google)` — "fetch" matches inside "fetcher", so Feedly's poller (the largest aggregator by subscriber share) would have been silently dropped from the count. Same trap caught NewsBlur ("Page Fetcher") and Tiny Tiny RSS ("feed-fetcher.html"). Fixed by removing the `fetch` substring entirely and anchoring `curl\/` and `wget\/` to their canonical UA prefix. Regression test added.
+2. **Footer was over-engineered** *(simplification)*. The first pass used `wp:html` with a custom inline SVG plus 30 lines of bespoke `.sn-footer-rss-*` CSS. Switched to `<!-- wp:social-link {"service":"feed"} /-->` which is built into Gutenberg core — same visual weight, same 44×44 touch target, same hover color, zero new CSS. Net delta: footer markup went from 14 lines to 1 line, layout.css shed 30 lines.
+3. **`fetch`/`monitor` substring traps** *(precision)*. `monitor` was a broad substring catch that overlapped the explicit `uptimerobot|pingdom|statuscake` terms. Dropped and replaced with `sitelock`; the explicit names cover the actual surface.
+
+### Design decisions
+- **MU plugin, not theme `inc/`.** Subscriber metrics should survive theme switches. The tracker is fully self-contained — no shared functions with `inc/plausible-api.php`. Theme integration (the settings tab) is a one-way hook into the theme's tab dispatch; the tracker functions even with the theme disabled, it just loses its UI surface.
+- **Local DB table is primary, Plausible is fan-out.** The widget and the activity tab read from `wp_rss_feed_log`. If Plausible is unreachable when a feed hit lands, the row still gets logged and the metric still shows — never gated on an external service being up.
+- **UTC throughout.** Rows are inserted with `current_time('mysql', true)` (UTC). Window queries use `UTC_TIMESTAMP() - INTERVAL %d DAY` rather than `NOW()` because MySQL's `NOW()` returns server-local time, which on Cloudways isn't guaranteed UTC and would silently slide the window.
+- **Hashed UA, no IP storage.** Stored fingerprint is `substr(sha256(UA), 0, 16)` — enough collision space for rough unique-client counting, zero PII surface in the table. Client IP is forwarded to Plausible at request time (so its geo lookup works) but never persisted locally.
+- **Bot regex is conservative on bots, generous on aggregators.** The pattern lists specific tool names (Googlebot, Bingbot, AhrefsBot, curl/, wget/) instead of broad substrings. Decision-rule: when in doubt, count it. False negatives (crawler noise) are easier to detect in the data than false positives (silently-dropped real subscribers).
+- **Settings exposed, regex hardcoded.** Plausible URL, domain, event name, retention threshold, and the enable/disable toggle are option-backed and form-edited. The bot regex stays code-only — a bad regex from a UI input could break all tracking with no safe form-submit validation.
+- **No header RSS icon.** Spec made it conditional on existing social links in the header; there are none. Header is logo + 8-item nav, already dense at desktop. Adding a ninth element would have caused mobile-overlay regressions for no discoverability gain over the global footer.
+
+### Operational notes
+- **Aggregator caveat.** Feedly / Inoreader / NetNewsWire-cloud-sync etc. poll feeds server-side and serve cached versions to their users. The metric reflects feed-fetch events, not precise unique human subscribers. Treat as a trend indicator.
+- **Privacy policy follow-up (TODO).** The `wp_rss_feed_log` table stores hashed User-Agent strings. Not strict PII under GDPR but plausibly an "online identifier" for EU readers. Add a one-sentence mention to the site privacy policy — out of scope for this release.
+- **Plausible CE endpoint.** No API key required for `/api/event` POSTs (same endpoint the client-side script uses). Authentication only matters for the Stats API.
+- **CSP exemption.** Cloudflare CSP Transform Rules govern browser-side script/connect-src; server-side `wp_remote_post` from PHP is outside CSP's scope. No CSP changes needed.
+
+### Why MAJOR (cap rollover, 8.0.0)
+The *change kind* is MINOR — site-wide RSS surfacing + a new admin tab + net-new infrastructure (DB table, MU plugin, settings option, dashboard widget). No removed/renamed API, no schema change without migration (new table and new option are additive — defaults via `wp_parse_args`), no behavioural shift that requires action to preserve existing functionality. Existing 7.5.6 sites continue to work unchanged after the theme upgrade; the MU-plugin copy step *enables* the new tracker, it doesn't repair anything.
+
+However, the project's minor cap fires: `7.0`–`7.5` are valid minors in v7; the next minor digit would be `7.6`, which exceeds the cap of 5. Per the documented rule (`docs/VERSIONING.md`, mirrored in [CLAUDE.md](CLAUDE.md)), the cap rollover lands on **`8.0.0`**.
+
+Precedent: `6.0.0` did the same — a modularisation release that wasn't API-breaking but rolled the major digit when the minor cap of v5 was exhausted. This release matches that pattern, with an even stronger case (whole new MU plugin + admin surface + DB schema) for the larger version digit.
+
+The version digit is the cadence here, not a breaking-change signal. See "Design decisions" above for the substance.
+
+### Deployment checklist
+- [ ] Push to repo, deploy theme to Cloudways
+- [ ] Copy `mu-plugins/rss-plausible-tracker.php` → `wp-content/mu-plugins/rss-plausible-tracker.php` on syntharchy-wp (no admin activation needed)
+- [ ] Visit `/wp-admin/` once to trigger `dbDelta` and create `wp_rss_feed_log`
+- [ ] Visit **Appearance → Signal & Noise → RSS** to confirm the tab renders and defaults look right
+- [ ] Hit `/feed/` from a real browser; confirm Plausible dashboard shows the `RSS Feed Request` event and `wp_rss_feed_log` has a corresponding row
+- [ ] Confirm dashboard widget renders the count
+- [ ] (Optional) Run `php mu-plugins/tests/bot-detection.php` on the host — should print 33 passes, exit 0
+
 ## [7.5.6] — Voice rewrites for Operations / Artist Development / Resume cred-strip
 
 Three targeted prose changes calibrated against the [`docs/VOICE-GUIDE.md`](docs/VOICE-GUIDE.md) anchor (Apple-coded register, sister-blurb pattern, no SaaS register, no consultant bridge-framing). The remaining audit §G items judged against the voice guide:
