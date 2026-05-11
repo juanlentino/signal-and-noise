@@ -15,13 +15,14 @@
 		     subscription surface for this site, matching the link pattern
 		     in the bottom of page-notes.html).
 
-		     URL MUST be absolute: WP core's block_core_social_link_render()
-		     in wp-includes/blocks/social-link.php prefixes "https://" to
-		     any URL whose parse_url(... PHP_URL_SCHEME) is null, which
-		     turns a relative "/notes/feed/" into the broken "https:///notes/feed/"
-		     (empty host between the slashes). Hardcoding the full URL is
-		     fine here — this is a single-site theme, the host never moves. -->
-		<!-- wp:social-link {"url":"https://juanlentino.com/notes/feed/","service":"feed","label":"Subscribe via RSS"} /-->
+		     The path-relative URL works because inc/frontend-filters.php
+		     installs a render_block_data filter that swaps any path-relative
+		     core/social-link URL for home_url($path) before WP core's
+		     render callback runs. Without that filter, WP core's
+		     render_block_core_social_link() would prepend "https://" to
+		     this URL and produce the broken "https:///notes/feed/" (empty
+		     host). See the filter's docblock for the upstream-bug detail. -->
+		<!-- wp:social-link {"url":"/notes/feed/","service":"feed","label":"Subscribe via RSS"} /-->
 	</ul>
 	<!-- /wp:social-links -->
 

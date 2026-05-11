@@ -2,6 +2,60 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [8.0.4] — Proper fix for the Gutenberg social-link relative-URL bug
+
+v8.0.3 worked around the bug by hardcoding the full URL (`https://juanlentino.com/notes/feed/`) in the `wp:social-link` block. That fixed the symptom but coupled the template to a specific host — any future dev/staging environment would render a link pointing at production. This release replaces that hack with the structural fix.
+
+### The upstream bug, exact source
+
+WordPress core's `render_block_core_social_link()` in `wp-includes/blocks/social-link.php`:
+
+```php
+/**
+ * Prepend URL with https:// if it doesn't appear to contain a scheme
+ * and it's not a relative link or a fragment.
+ */
+if ( ! parse_url( $url, PHP_URL_SCHEME ) && ! str_starts_with( $url, '//' ) && ! str_starts_with( $url, '#' ) ) {
+    $url = 'https://' . $url;
+}
+```
+
+The comment says "not a relative link" but the check only recognises **two** flavors: protocol-relative (`//`) and fragment (`#`). Path-relative URLs (`/foo`) — which ARE relative links per RFC 3986 — fall through and get `https://` prepended, producing `https:///foo` (three slashes, empty host). Chrome silently normalises the result on click as `https://foo/...`, routing to a non-existent server. The check is missing a `! str_starts_with( $url, '/' )` branch.
+
+### The fix in this release
+
+A `render_block_data` filter in [inc/frontend-filters.php](inc/frontend-filters.php) intercepts every `core/social-link` block before WP core's render runs. If the block's `url` attribute starts with a single `/` (path-relative), it gets swapped for `home_url($path)` — which carries the correct scheme + host for whatever environment WordPress is running in. WP core then sees a complete URL with scheme and skips its broken prepend branch entirely.
+
+```php
+add_filter( 'render_block_data', function( $parsed_block ) {
+    if ( 'core/social-link' !== ( $parsed_block['blockName'] ?? '' ) ) {
+        return $parsed_block;
+    }
+    $url = $parsed_block['attrs']['url'] ?? '';
+    if ( '' !== $url && '/' === $url[0] && ( ! isset( $url[1] ) || '/' !== $url[1] ) ) {
+        $parsed_block['attrs']['url'] = home_url( $url );
+    }
+    return $parsed_block;
+} );
+```
+
+### Why this is the right shape
+
+- **No host hardcoded anywhere.** `home_url()` returns whatever the site is configured to be, so the same template renders correctly on dev, staging, and prod.
+- **Catches every social-link, not just this one.** Any future `wp:social-link` block with a relative URL (Mastodon at `/mastodon/`, GitHub at `/code/`, whatever) gets the same correction. The trap can't be re-introduced via the template.
+- **No-op when core is fixed.** The day WP core adds the missing `! str_starts_with($url, '/')` branch, this filter becomes redundant but harmless — the URL already has a scheme via `home_url()` so core's check passes either way. Comment in the filter documents this so a future maintainer knows when to remove it.
+- **Doesn't touch the upstream code.** No monkey-patching `wp-includes/`, no wp-content/mu-plugins/ load-order risk, no override of a core function. Just a vanilla WP filter.
+
+### Changed
+- **[`inc/frontend-filters.php`](inc/frontend-filters.php) — new `render_block_data` filter** for `core/social-link` blocks. ~15 lines + a 16-line docblock. Sits alongside the existing skip-link / Spotify-embed / generator-stripping filters in the same file.
+- **[`parts/footer.html`](parts/footer.html) — `wp:social-link` `url` attr** reverted from `https://juanlentino.com/notes/feed/` (the v8.0.3 hack) back to `/notes/feed/`. The inline comment now points at the filter so the relationship is discoverable from either direction.
+
+### Upstream
+No core ticket filed yet. File one at https://core.trac.wordpress.org/ if you touch this again — the fix in core would be a one-line addition (`! str_starts_with( $url, '/' )`) to the existing scheme check, after which this filter could be retired.
+
+### Why patch
+Same fix, better implementation. No new capability, no schema change, no user-visible difference vs v8.0.3 *except* that the template is now host-agnostic. Patch 4 in v8.0; within the 7-per-minor cap.
+
 ## [8.0.3] — Footer RSS link uses absolute URL (works around Gutenberg core bug)
 
 The v8.0.0–v8.0.2 footer used a relative URL (`/feed/` then `/notes/feed/`) in the `wp:social-link` block's `url` attribute. WordPress core's `block_core_social_link_render()` callback in `wp-includes/blocks/social-link.php` does this:

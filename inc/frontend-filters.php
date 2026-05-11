@@ -46,6 +46,39 @@ remove_action( 'wp_head', 'wp_generator' );
 add_filter( 'the_generator', '__return_empty_string' );
 
 /**
+ * Work around a WordPress core bug in render_block_core_social_link()
+ * (wp-includes/blocks/social-link.php). Core prepends "https://" to any
+ * URL that has no scheme and doesn't start with "//" or "#" — but it
+ * misses path-relative URLs (starting with a single "/"). Result: a
+ * social-link with url="/notes/feed/" renders as href="https:///notes/feed/"
+ * (three slashes, empty host), which browsers normalise to "https://notes/feed/"
+ * and route to a non-existent server.
+ *
+ * Fix: filter the parsed block attributes BEFORE core's render callback
+ * runs. If we find a path-relative URL on a core/social-link block, swap
+ * it for home_url($path) — which carries the correct scheme + host for
+ * the current environment (dev, staging, prod). Core then sees a complete
+ * URL and skips its broken prepend branch entirely.
+ *
+ * This is upstream-bug shaped: when WP core fixes their scheme check to
+ * recognise the "starts with /" case, this filter becomes a no-op and
+ * can be removed. Tracked at /docs (no upstream issue filed yet — file
+ * one if you touch this again).
+ */
+add_filter( 'render_block_data', function( $parsed_block ) {
+	if ( 'core/social-link' !== ( $parsed_block['blockName'] ?? '' ) ) {
+		return $parsed_block;
+	}
+	$url = $parsed_block['attrs']['url'] ?? '';
+	// Match a single leading "/" (path-relative). Protocol-relative "//"
+	// and fragment "#" URLs are already handled correctly by core.
+	if ( '' !== $url && '/' === $url[0] && ( ! isset( $url[1] ) || '/' !== $url[1] ) ) {
+		$parsed_block['attrs']['url'] = home_url( $url );
+	}
+	return $parsed_block;
+} );
+
+/**
  * Output buffer: strip remaining generator meta tags from plugins and, on
  * non-contact pages, the Cloudflare Turnstile challenge script.
  */
