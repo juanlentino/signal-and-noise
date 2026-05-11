@@ -2,6 +2,24 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [8.0.5] — Tighten auto-surface latency from up-to-5-min to up-to-30-sec
+
+The v8.0.1 auto-surface fix restored the "push → updater shows the offer" pipeline that had been broken since `fbd6b30`, but the perceived latency was still up to 5 minutes — long enough that an actively-iterating maintainer notices and complains. Reducing the freshness window collapses that gap.
+
+### Where the latency came from
+
+The admin_init warmer in [inc/updater.php](inc/updater.php) gates the background refresh on `SN_UPDATER_FRESHNESS` (was 5 min). Until the cache aged out, every admin pageview skipped scheduling a new fetch — even when the maintainer had just pushed. 5 minutes was a leftover from the pre-SWR architecture where the cache served the page-render path directly; a long TTL made sense there. With the SWR refactor in v7.3.1, the cache is read-only on the render path and refreshed in a non-blocking spawn_cron loopback. The freshness gate is now purely a soft rate-limit on outbound GitHub calls, not a render-latency knob.
+
+### Changed
+- **[`inc/updater.php`](inc/updater.php) — `SN_UPDATER_FRESHNESS`** reduced from `5 * MINUTE_IN_SECONDS` to `30` (seconds). Auto-surface latency goes from "up to 5 min" to "up to 30 sec." Comment block now documents the rationale for the chosen number.
+- **[`inc/updater.php`](inc/updater.php) — `SN_UPDATER_RETENTION_SHORT`** reduced from `15 * MINUTE_IN_SECONDS` to `2 * MINUTE_IN_SECONDS`. A transient GitHub blip that lands an empty-sentinel in the cache should not lock auto-surface out of the next 15 minutes; 2 minutes is a more proportionate cooldown.
+
+### GitHub API cost
+Worst case during active admin browsing: ~120 calls/hour (one per pageview at the 30s floor). Token budget is 5000/hour, so ~2.4% utilisation in the busiest scenario. In normal use the loopback fires far less often.
+
+### Why patch
+Constant tweak. No functional change beyond timing. No schema change, no API change. Patch 5 in v8.0; within the 7-per-minor cap.
+
 ## [8.0.4] — Proper fix for the Gutenberg social-link relative-URL bug
 
 v8.0.3 worked around the bug by hardcoding the full URL (`https://juanlentino.com/notes/feed/`) in the `wp:social-link` block. That fixed the symptom but coupled the template to a specific host — any future dev/staging environment would render a link pointing at production. This release replaces that hack with the structural fix.

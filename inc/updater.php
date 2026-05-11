@@ -198,9 +198,17 @@ add_filter( 'pre_set_site_transient_update_themes', function( $transient ) {
 } );
 
 const SN_UPDATER_REFRESH_HOOK     = 'sn_updater_refresh_cache';
-const SN_UPDATER_FRESHNESS        = 5 * MINUTE_IN_SECONDS;       // matches the prior on-render cache TTL
+// Freshness: cap how stale the branch-HEAD cache can be before the
+// admin_init warmer schedules a background refresh. Was 5 min (carried
+// over from the pre-SWR on-render TTL); reduced to 30s in v8.0.5 because
+// the 5-min window left a maintainer-visible "I just pushed but the
+// updater still says I'm up to date" gap of up to 5 min between push and
+// auto-surface. At 30s the gap is bounded to one admin pageview after
+// half a minute. Cost in GitHub API calls: ~120/hour worst case during
+// active admin browsing (5000/hour rate limit, so negligible).
+const SN_UPDATER_FRESHNESS        = 30;                          // seconds
 const SN_UPDATER_RETENTION        = DAY_IN_SECONDS;              // long survival so stale data is always visible
-const SN_UPDATER_RETENTION_SHORT  = 15 * MINUTE_IN_SECONDS;      // for empty/error sentinels (revcount=0, version='')
+const SN_UPDATER_RETENTION_SHORT  = 2 * MINUTE_IN_SECONDS;       // for empty/error sentinels (revcount=0, version=''); was 15 min
 
 /**
  * Cron-driven refresh of all three GitHub-derived caches the updater
