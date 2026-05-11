@@ -2,6 +2,19 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [8.0.2] — Footer RSS link points at /notes/feed/ (not /feed/)
+
+The global footer's RSS icon was pointing at the site-wide WordPress feed (`/feed/`) when the canonical subscription surface for this site is the Notes feed specifically (`/notes/feed/`). The bottom of `templates/page-notes.html` already linked at `/notes/feed/`; this aligns the global footer with that existing pattern so both surfaces point readers at the same feed.
+
+### Changed
+- **[`parts/footer.html`](parts/footer.html) — `wp:social-link` `url` attr.** `/feed/` → `/notes/feed/`. One-attribute change in the existing Gutenberg core social-link block.
+
+### Subscriber-tracking impact
+None. The MU plugin's `template_redirect` hook fires on `is_feed()` regardless of feed slug, so requests to `/notes/feed/` are tracked the same way `/feed/` was — same `wp_rss_feed_log` row, same Plausible event. The `feed_url` column already captured the full URL per request, so the Plausible URL breakdown will simply show `/notes/feed/` as the dominant feed going forward instead of `/feed/`.
+
+### Why patch
+URL string correction. No behavioural change, no schema change, no API change. Patch 2 in v8.0; within the 7-per-minor cap.
+
 ## [8.0.1] — Restore auto-surface for theme updates after push to main
 
 Fixes a regression introduced by [`fbd6b30`](https://github.com/juanlentino/signal-and-noise/commit/fbd6b30) ("Fix Updates page showing 'no updates' due to transient nuke") several minor versions ago. That commit fixed a real bug — `load-update-core.php` was clearing WP-Core's `update_themes` site transient mid-render, causing `list_theme_updates()` to read empty and falsely report "all up to date" — but its narrower gate (`if ( empty( $_GET['force-check'] ) ) return;`) removed a side effect the previous bug had been accidentally providing: every admin pageview was force-invalidating WP's update_themes transient, which in turn forced WP to re-run our `pre_set_site_transient_update_themes` filter against the fresh SN GitHub-cache. That side effect was what made pushes appear in the updater within ~5 minutes without any manual "Check Again" click.

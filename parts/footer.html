@@ -11,9 +11,11 @@
 		     so the 44x44 touch target and #666666→hover come for free. The
 		     "label" attr renders into a screen-reader-text span ("Subscribe
 		     via RSS") which is functionally equivalent to aria-label for
-		     assistive tech. Hardcoded /feed/ because FSE template parts
-		     don't execute PHP — same pattern page-notes.html uses. -->
-		<!-- wp:social-link {"url":"/feed/","service":"feed","label":"Subscribe via RSS"} /-->
+		     assistive tech. URL points at /notes/feed/ (the Notes category
+		     feed) rather than /feed/ — the canonical subscription surface
+		     for this site is Notes specifically, matching the link pattern
+		     already used in the bottom of page-notes.html. -->
+		<!-- wp:social-link {"url":"/notes/feed/","service":"feed","label":"Subscribe via RSS"} /-->
 	</ul>
 	<!-- /wp:social-links -->
 
