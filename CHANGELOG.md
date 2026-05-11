@@ -2,6 +2,21 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [8.0.1] — Restore auto-surface for theme updates after push to main
+
+Fixes a regression introduced by [`fbd6b30`](https://github.com/juanlentino/signal-and-noise/commit/fbd6b30) ("Fix Updates page showing 'no updates' due to transient nuke") several minor versions ago. That commit fixed a real bug — `load-update-core.php` was clearing WP-Core's `update_themes` site transient mid-render, causing `list_theme_updates()` to read empty and falsely report "all up to date" — but its narrower gate (`if ( empty( $_GET['force-check'] ) ) return;`) removed a side effect the previous bug had been accidentally providing: every admin pageview was force-invalidating WP's update_themes transient, which in turn forced WP to re-run our `pre_set_site_transient_update_themes` filter against the fresh SN GitHub-cache. That side effect was what made pushes appear in the updater within ~5 minutes without any manual "Check Again" click.
+
+Symptom of the regression: after pushing a new commit to `main`, the SN cache picks up the new SHA within 5 min (per the admin_init warmer + spawn_cron loopback), but WP-Core's `update_themes` site transient is gated by its own 7200-second freshness window in `_maybe_update_themes()`. During that window WP doesn't re-run our filter, so the fresh SHA goes nowhere visible. Maintainer experience: "I just pushed v8.0.0 and the updater doesn't see it."
+
+### Changed
+- **[`inc/updater.php`](inc/updater.php) — `sn_updater_refresh_cache()`.** Capture the previously-cached SHA before overwriting; after the new fetch lands, if the SHA actually moved, call `delete_site_transient('update_themes')` to force WP to re-evaluate the offer on the next admin pageview. Five-line addition. Safe to do here because this function runs in a `spawn_cron()` loopback context, not during a page render — the original `fbd6b30` race (clearing the transient mid-render of `update-core.php`) is not reachable from this code path.
+
+### Why this is a patch (not a minor)
+Bug fix in existing behavior. No new user-visible capability, no schema change, no API change. First patch in v8.0; well within the 7-per-minor cap.
+
+### One-time activation step
+Because this fix has to be present in the installed code for it to work, the very first deploy after this commit still requires a manual `?force-check=1` click — the broken state can't surface its own fix. After that one click → click Update → install 8.0.1, subsequent pushes auto-surface within ~5 minutes again.
+
 ## [8.0.0] — Site-wide RSS surfacing + server-side subscriber tracking + admin settings tab
 
 RSS was previously only linked from a hairline footer on `/notes`. This release surfaces it on every page, adds a self-hosted-Plausible-backed measurement layer (no Jetpack, no FeedBlitz, no third-party tracker), and exposes the whole subsystem through a new **Appearance → Signal & Noise → RSS** settings tab. The measurement table is local to the database so a Plausible outage doesn't blank the trend data.

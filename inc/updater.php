@@ -232,6 +232,12 @@ function sn_updater_refresh_cache() {
 	$branch     = sn_updater_branch();
 	$branch_key = sanitize_key( $branch );
 
+	// Snapshot the previously-cached SHA before we overwrite. Drives the
+	// transient-invalidation block at the end of this step — see the
+	// "SHA-change invalidation" note below.
+	$prev_cache = get_transient( 'sn_github_branch_' . $branch_key );
+	$prev_sha   = is_array( $prev_cache ) ? ( $prev_cache['sha'] ?? '' ) : '';
+
 	// 1. Branch HEAD ────────────────────────────────────────────────
 	$response = wp_remote_get(
 		'https://api.github.com/repos/' . SN_GITHUB_REPO . '/commits/' . rawurlencode( $branch ),
@@ -260,6 +266,21 @@ function sn_updater_refresh_cache() {
 	$commits['fetched'] = time();
 	set_transient( 'sn_github_branch_' . $branch_key, $commits, SN_UPDATER_RETENTION );
 	delete_transient( 'sn_github_error' );
+
+	// SHA-change invalidation: if the branch HEAD just moved, also nuke
+	// WP-Core's `update_themes` site transient so the next admin pageview
+	// re-runs our `pre_set_site_transient_update_themes` filter with the
+	// fresh SHA. Without this, our SN cache holds the new SHA but WP keeps
+	// serving its last "no updates" decision for up to 2h (WP-Core's
+	// `_maybe_update_themes()` 7200s skip-gate). This restores the auto-
+	// surface behavior that regressed with fbd6b30: the original problem
+	// fbd6b30 fixed was clearing `update_themes` from `load-update-core.php`
+	// mid-render (race with `list_theme_updates()`). Doing it here is
+	// safe — this function runs in a `spawn_cron()` loopback, not on a
+	// page render, so there's no render-race possible.
+	if ( $prev_sha !== $commits['sha'] ) {
+		delete_site_transient( 'update_themes' );
+	}
 
 	// 2. Remote Version: header ─────────────────────────────────────
 	$remote_version = '';
