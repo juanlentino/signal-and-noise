@@ -2,6 +2,29 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [8.0.3] — Footer RSS link uses absolute URL (works around Gutenberg core bug)
+
+The v8.0.0–v8.0.2 footer used a relative URL (`/feed/` then `/notes/feed/`) in the `wp:social-link` block's `url` attribute. WordPress core's `block_core_social_link_render()` callback in `wp-includes/blocks/social-link.php` does this:
+
+```php
+if ( $url ) {
+    $url = esc_url( $url );
+    if ( ! parse_url( $url, PHP_URL_SCHEME ) ) {
+        $url = 'https://' . $url;
+    }
+}
+```
+
+The scheme check returns null for any path-relative URL, so core prefixes `https://`. Result for `/notes/feed/`: `https:///notes/feed/` — three slashes, empty host. Chrome silently normalizes this on hover/click to `https://notes/feed/` (treats "notes" as the hostname), routing the user to a non-existent server.
+
+The same bug affected v8.0.0 with `/feed/` (rendered as `https:///feed/` → `https://feed/`); it just took someone hovering over the icon for the maintainer to notice. Caught from a screenshot showing the status bar.
+
+### Changed
+- **[`parts/footer.html`](parts/footer.html) — `wp:social-link` `url` attr.** `"/notes/feed/"` → `"https://juanlentino.com/notes/feed/"`. Hardcoding the host is acceptable here because this is a single-site theme — the host never moves. Inline comment in the template now documents the core-bug constraint so this trap doesn't get re-introduced.
+
+### Why patch
+URL string correction for a previously-broken link. No behavioural change beyond "the link now goes to the correct URL." Patch 3 in v8.0; well within the 7-per-minor cap.
+
 ## [8.0.2] — Footer RSS link points at /notes/feed/ (not /feed/)
 
 The global footer's RSS icon was pointing at the site-wide WordPress feed (`/feed/`) when the canonical subscription surface for this site is the Notes feed specifically (`/notes/feed/`). The bottom of `templates/page-notes.html` already linked at `/notes/feed/`; this aligns the global footer with that existing pattern so both surfaces point readers at the same feed.

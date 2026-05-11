@@ -11,11 +11,17 @@
 		     so the 44x44 touch target and #666666→hover come for free. The
 		     "label" attr renders into a screen-reader-text span ("Subscribe
 		     via RSS") which is functionally equivalent to aria-label for
-		     assistive tech. URL points at /notes/feed/ (the Notes category
-		     feed) rather than /feed/ — the canonical subscription surface
-		     for this site is Notes specifically, matching the link pattern
-		     already used in the bottom of page-notes.html. -->
-		<!-- wp:social-link {"url":"/notes/feed/","service":"feed","label":"Subscribe via RSS"} /-->
+		     assistive tech. URL points at the Notes feed (canonical
+		     subscription surface for this site, matching the link pattern
+		     in the bottom of page-notes.html).
+
+		     URL MUST be absolute: WP core's block_core_social_link_render()
+		     in wp-includes/blocks/social-link.php prefixes "https://" to
+		     any URL whose parse_url(... PHP_URL_SCHEME) is null, which
+		     turns a relative "/notes/feed/" into the broken "https:///notes/feed/"
+		     (empty host between the slashes). Hardcoding the full URL is
+		     fine here — this is a single-site theme, the host never moves. -->
+		<!-- wp:social-link {"url":"https://juanlentino.com/notes/feed/","service":"feed","label":"Subscribe via RSS"} /-->
 	</ul>
 	<!-- /wp:social-links -->
 
