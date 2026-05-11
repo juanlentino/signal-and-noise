@@ -34,3 +34,12 @@ git push origin vX.Y.Z
 ## Build & Deploy
 Edit theme files → push to repo → deploy to Cloudways via git or SFTP.
 No build step. WordPress handles rendering.
+
+## WordPress reference
+
+**Read [docs/WORDPRESS-REFERENCE.md](docs/WORDPRESS-REFERENCE.md) before touching anything WordPress-internal** — block render callbacks, FSE template parts, WP-Cron, transients/options, dbDelta, MU plugins, escaping, filter timing, the self-updater + self-heal architecture. It's the project-curated cheatsheet of every upstream gotcha we've already paid for. Maintain the "Upstream WordPress core gotchas" running list at the bottom whenever you hit a new one.
+
+For broader WordPress knowledge:
+- **Block markup, attributes, validation rules:** invoke the `gutenberg-block-authoring` skill (auto-loads on any block-editing task).
+- **FSE architecture, theme.json, patterns:** invoke the `wordpress-block-theming` skill (bundled in `cowork-create-wp-site` plugin; available after Claude Code restart).
+- **WordPress core source:** when integrating with a core primitive, read the actual source file first. Don't reason from memory. `raw.githubusercontent.com/WordPress/WordPress/master/<path>` is the fetch pattern.
