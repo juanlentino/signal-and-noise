@@ -71,11 +71,47 @@ Per `docs/VERSIONING.md` and `CLAUDE.md`: "What bumps: code, CSS, migrations, st
 
 ## Open follow-ups
 
-- **Add to WORDPRESS-REFERENCE.md gotcha list:** "Always grep for `template_include` before assuming a `templates/*.html` is the source of truth." Out of scope for this session, flagged for next docs pass.
-- **Add to WORDPRESS-REFERENCE.md gotcha list:** "When deleting a `templates/page-*.html`, also remove the matching entry from `theme.json`'s `customTemplates` array — otherwise WordPress tries to register a phantom template and the Site Editor picker errors on selection." Surfaced by today's verification grep; would have shipped without the post-edit check.
-- **`templates/page-notes.html:136-137`** still has the same `<p class="sn-notes-rss">` dead-code block I cleaned from `home.html`. Not touched this session — the user constraint was "do not touch anything not flagged in the audit" and I missed this in the initial sweep. If `page-notes.html` is also superseded by the PHP renderer (likely — same surface name), it's the same dead-code situation. Recommend a follow-up audit pass: confirm the FSE template hierarchy actually reaches `page-notes.html` for any live URL; if not, strip the block (and possibly the whole template).
-- **Inserter audit.** Two patterns remain: [`hero-dossier.php`](../../patterns/hero-dossier.php) and [`section-constrained.php`](../../patterns/section-constrained.php). Same orphan-check should be done at some point — if neither is inserted by a template, they're inserter-clutter and should follow `cta-closing.php` out the door.
 - **Live `templates/home.html` divergence.** The repo's home.html no longer has any RSS footer block. The PHP renderer owns the live footer. If anyone ever flips the `template_include` short-circuit off (e.g., feature-flagging the new design), the FSE template will render with no footer at all. Acceptable given the renderer is the canonical path, but worth knowing.
+
+## Follow-up corrections (post-tag, same session)
+
+After tagging v8.0.6 I worked the three open follow-ups below. Two of them turned out to be wrong calls in the original session note. Recording the corrections so future-me doesn't re-trigger them.
+
+### Correction 1 — `templates/page-notes.html` is NOT dead code
+
+**Original claim:** "page-notes.html still has the same `<p class="sn-notes-rss">` dead-code block I cleaned from home.html. Likely also superseded by the PHP renderer; recommend a follow-up to strip the block (and possibly the whole template)."
+
+**What's actually going on:** Reading [`inc/page-notes-template.php`](../../inc/page-notes-template.php)'s docblock makes the architecture explicit:
+
+> Defense layers:
+> 1. PHP renderer in inc/page-notes-render.php (PRIMARY) — what users actually see.
+> 2. templates/page-notes.html (FALLBACK) — kept on disk with the correct content. Used by WP normally if the template_include hook fails to resolve. Better to render from a stale-but-correct file than to 404.
+> 3. admin_init wp_template DB sweep — clears stale Site Editor saves.
+
+`page-notes.html` is **deliberate incident-response infrastructure**, not orphan code. It's the second defense layer. Its design will drift from the PHP renderer's design by design — the docblock accepts that trade-off. **Don't sync it.** Don't delete it. Don't strip blocks from it.
+
+**Action taken:** No edits. Documented the architecture in WORDPRESS-REFERENCE.md §10.4 so future-me (or anyone) doesn't re-trigger this misread.
+
+### Correction 2 — `hero-dossier.php` and `section-constrained.php` are NOT orphan inserter-clutter
+
+**Original claim:** "Inserter audit — same orphan-check should be done at some point; if neither is inserted by a template, they're inserter-clutter and should follow `cta-closing.php` out the door."
+
+**What's actually going on:** Read both files. Distinguishing factor from `cta-closing.php`:
+- `cta-closing.php` was a SPECIFIC pattern with a HARDCODED dead URL (`/work-with-me`). Both halves were unused; the second button referenced a 404. Deleting was correct.
+- `hero-dossier.php` and `section-constrained.php` are GENERIC reusable layout primitives with placeholder content — meant for ad-hoc insertion via the Site Editor. The fact that no template inserts them is irrelevant; they're not inserter-clutter, they're inserter-tools. The docblocks even spell this out (`hero-dossier`: "Extracted in v7.5.0... Same five sites had near-identical eyebrow + giant H1 + body + meta blocks").
+
+The criterion isn't "is this pattern referenced by a template" — it's "is this pattern broken/dead/misleading." Generic reusable patterns with placeholder content stay even if no template inserts them.
+
+**Action taken:** No edits. Both patterns retained.
+
+### Correction 3 — WORDPRESS-REFERENCE.md additions (executed)
+
+Two additions landed:
+
+- **New subsection §10.4 — "The `/notes` route — PHP-authoritative rendering"** documents the `template_include` short-circuit, the three defense layers, the rules of engagement (which file to edit for live changes), and how to verify which renderer is live via the `SN_NOTES_OVERRIDE_BUILD` marker. Future-me reading this will know within 30 seconds: don't edit `templates/home.html` or `templates/page-notes.html` for `/notes` design changes; edit the PHP renderer.
+- **New gotcha row #11 in §13** documents the `theme.json customTemplates` ↔ `templates/page-*.html` sync requirement that today's session almost shipped wrong (the `page-work-with-me` registration would have orphaned without the post-edit verification grep).
+
+Both are docs-only, no version bump, separate `docs:` commit.
 
 ## Deployment
 

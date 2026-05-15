@@ -328,6 +328,31 @@ Format: `{Version}{-rN}+{branch}.{sha7}`
 
 Example: `8.0.5-r3+main.78048f2` reads as "3rd commit on main since v8.0.5 was tagged, at SHA 78048f2."
 
+### 10.4 The `/notes` route — PHP-authoritative rendering
+
+**Before editing any `templates/*.html`, check whether a `template_include` short-circuit overrides it.** This theme has one such short-circuit and it was non-obvious enough to ship a real bug from in v8.0.6 (an edit was almost made to the wrong file).
+
+The `/notes` route lives off normal FSE template resolution. [inc/page-notes-template.php](../inc/page-notes-template.php) hooks `template_include` and returns [inc/page-notes-render.php](../inc/page-notes-render.php) when the request matches `is_page('notes')` OR has request URI `/notes` / `/notes/`. WP's normal block-template chain (file ↔ DB ↔ object cache ↔ registry) never runs for this page when our hook fires.
+
+**Why it exists:** three incidents (2026-04 and two in 2026-05) where `/notes` rendered stale content despite `main` being correct. Each had a different proximate cause (silent deploy skip, broken self-heal, stale `wp_template` DB row surviving migration) but the common surface was WP's block-template resolution chain having too many layers that drift independently. Pulling the page off that chain entirely eliminated the failure mode.
+
+**Defense layers (canonical order):**
+
+1. **PRIMARY:** [inc/page-notes-render.php](../inc/page-notes-render.php) — what users actually see. The `<style>` block, `<header>`, `<main>` content, and the `sn-notes-feed-*` footer are all here. Inline `<style>` ships with the page render so the unique CSS classes (`.sn-notes-feed-status`, `.sn-notes-feed-cursor`, `.sn-notes-feed-note`) only exist on this code path.
+2. **FALLBACK:** [templates/page-notes.html](../templates/page-notes.html) — the FSE template. Renders ONLY if the PHP renderer file is missing post-deploy. **Will drift from the live design by design** — the docblock explicitly accepts this trade-off ("better to render from a stale-but-correct file than to 404"). Don't try to keep this file in sync with every footer/copy change to the renderer; that's not its job.
+3. **SWEEP:** an `admin_init` `wp_template` DB sweep clears any stale Site Editor save that would otherwise win in `get_block_templates()` results.
+
+**Rules of engagement:**
+
+- **Footer / copy / structural changes to the live `/notes` page → edit `inc/page-notes-render.php`,** not `templates/home.html` and not `templates/page-notes.html`. The two FSE templates are dead/fallback paths for this URL.
+- **`templates/home.html` is fully dead for `/notes`.** It's the WP "blog index" template, which `/notes` resolves to in the template hierarchy, but the `template_include` hook overrides it before render. Anything in `home.html` after the query loop never ships.
+- **`templates/page-notes.html` is the fallback,** so leaving it inconsistent with the live design is fine. Updating it is a maintenance burden with no payoff in normal operation.
+- **Verify which renderer is live via curl:** the renderer emits `SN_NOTES_OVERRIDE_BUILD` as an HTML comment via `wp_footer`. If you don't see that build marker on a `curl https://juanlentino.com/notes/`, the override hook didn't fire and the fallback is rendering — that's an incident.
+
+**When the override hook DOESN'T fire:** the fallback renders. Legitimate causes: file missing post-deploy, fatal PHP error before the hook registers, theme switched. All three are real failure modes; the fallback is the safety net.
+
+**Could there be more `template_include` short-circuits?** Currently only `/notes`. If someone adds a second one (e.g., the homepage), this section needs a second subsection — the gotcha generalizes: greppable answer is `grep -rn 'template_include' inc/`.
+
 ---
 
 ## 11. The versioning rules (project-specific)
@@ -368,5 +393,6 @@ The bugs / surprises we've actually paid for. Reference this list before assumin
 | 8 | `register_activation_hook` is a no-op for MU plugins | `wp-includes/plugin.php` | Use `init` hook for install instead; document removal steps in README |
 | 9 | dbDelta is whitespace-sensitive | `wp-admin/includes/upgrade.php` | Copy format from existing working calls |
 | 10 | `update_option` returns `false` for "no change" AND for "real failure" — indistinguishable from the return value alone | `wp-includes/option.php` | Check `$wpdb->last_error` to disambiguate. v8.0.1 form handler does this. |
+| 11 | Deleting a `templates/page-*.html` without removing the matching `theme.json` `customTemplates` entry leaves WP registering a phantom custom template (still appears in the Site Editor template picker, errors on selection). No warning at theme-load time. | `wp-includes/block-template-utils.php` (the `_register_block_templates_from_theme_json` walker) | When deleting any `templates/page-*.html`, grep `theme.json` for the slug and delete the matching `customTemplates` entry in the same commit. v8.0.6 caught this only on post-edit verification grep. |
 
 If you hit a new one, add it here with the source pointer and the workaround. Future-you will thank present-you.
