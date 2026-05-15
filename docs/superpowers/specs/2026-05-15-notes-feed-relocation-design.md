@@ -1,5 +1,11 @@
 # Spec — `/notes` feed footer relocation
 
+> **⚠ SUPERSEDED 2026-05-15.** This spec shipped as v8.0.7 and was rejected on visual review — the move-and-replace placed the `<footer class="sn-notes-feed">` element in column 2 of the `.sn-notes-top` 5fr/7fr grid (taking the slot that the pillar essays section had occupied), creating visual co-equality with the hero. The grid layout was the load-bearing primitive missed in this design pass. Replaced by [2026-05-15-notes-subscribe-in-hero-design.md](2026-05-15-notes-subscribe-in-hero-design.md) (subscribe info nested *inside* the hero, pillars restored to column 2, shipped as v8.1.0). Kept on disk as a record of the iteration. Do not act on this spec.
+
+---
+
+# Spec — `/notes` feed footer relocation
+
 **Date:** 2026-05-15
 **Project:** signal-and-noise
 **Targeted release:** v8.0.7
