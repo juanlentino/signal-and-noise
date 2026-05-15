@@ -590,6 +590,14 @@ echo $sn_header_html;
 			</p>
 		</header>
 
+		<footer class="sn-notes-feed" aria-label="RSS feed">
+			<p class="sn-notes-feed-status">
+				Feed &mdash; <a href="/notes/feed/">/notes/feed/</a><span class="sn-notes-feed-cursor" aria-hidden="true"></span>
+			</p>
+			<p class="sn-notes-feed-note">No subscription form. No schedule. Notes available via RSS.</p>
+			<p class="sn-notes-feed-note">For email, pipe the <a href="/notes/feed/">feed</a> through <a href="https://blogtrottr.com/" target="_blank" rel="noopener noreferrer">Blogtrottr</a> or <a href="https://www.feedrabbit.com/" target="_blank" rel="noopener noreferrer">Feedrabbit</a>.</p>
+		</footer>
+
 		<section class="sn-notes-pillars-section" aria-labelledby="sn-pillars-heading">
 			<div class="sn-notes-section-wrap">
 				<p class="sn-notes-section-label" id="sn-pillars-heading">Pillar Essays &mdash; Featured</p>
@@ -652,16 +660,6 @@ echo $sn_header_html;
 			<p class="sn-notes-empty">No notes published yet. Check back soon.</p>
 		<?php endif; ?>
 	</section>
-
-	<hr class="sn-notes-rule" aria-hidden="true">
-
-	<footer class="sn-notes-feed" aria-label="RSS feed">
-		<p class="sn-notes-feed-status">
-			Feed &mdash; <a href="/notes/feed/">/notes/feed/</a><span class="sn-notes-feed-cursor" aria-hidden="true"></span>
-		</p>
-		<p class="sn-notes-feed-note">No subscription form. No schedule. Notes available via RSS.</p>
-		<p class="sn-notes-feed-note">For email, pipe the <a href="/notes/feed/">feed</a> through <a href="https://blogtrottr.com/" target="_blank" rel="noopener noreferrer">Blogtrottr</a> or <a href="https://www.feedrabbit.com/" target="_blank" rel="noopener noreferrer">Feedrabbit</a>.</p>
-	</footer>
 
 </main>
 

@@ -113,6 +113,36 @@ Two additions landed:
 
 Both are docs-only, no version bump, separate `docs:` commit.
 
+## Companion: v8.0.7 — feed-footer relocation (same session)
+
+After v8.0.6 shipped, the user noticed the new "For email, pipe the feed through Blogtrottr or Feedrabbit" line was functionally hidden — it lived in `<footer class="sn-notes-feed">` at the bottom of `<main>`, after all 7 note rows + 2 pillar essay cards, requiring scroll past everything before encountering the subscribe info. The whole point of v8.0.6's footer addition was discoverability for email subscribers; placing it below the fold defeated it.
+
+### Brainstorming pass (`superpowers:brainstorming`)
+
+Invoked the skill explicitly (the user reminded me — "Use skills to do it"). Asked a single A/B/C placement question via `AskUserQuestion`:
+
+- **A. Move up, drop the bottom (Recommended)** — chosen.
+- B. Add to top, keep at bottom too — rejected as redundant.
+- C. New labeled "Subscribe" section between hero and pillars — rejected as out-of-scope; deferred.
+
+Wrote a short design spec to [docs/superpowers/specs/2026-05-15-notes-feed-relocation-design.md](../../docs/superpowers/specs/2026-05-15-notes-feed-relocation-design.md), self-reviewed (no placeholders, internally consistent, single-plan scope, no ambiguity), committed standalone, asked for review. User approved.
+
+The skill flow's terminal state is `superpowers:writing-plans` for an implementation plan. For a literal "move one block, delete one separator" change, that was acknowledged overhead; user's "Finish this..." was the implicit approval to skip writing-plans and execute directly off the spec.
+
+### Files changed (v8.0.7)
+
+| File | Change |
+| --- | --- |
+| [inc/page-notes-render.php](../../inc/page-notes-render.php) | Moved `<footer class="sn-notes-feed">` block (3 paragraphs + blinking cursor) from after `<section class="sn-notes-index-section">` to immediately after `<header class="sn-notes-hero">`, inside `.sn-notes-top`. Re-indented from 1-tab to 2-tab nesting to match the new container depth. |
+| [inc/page-notes-render.php](../../inc/page-notes-render.php) | Deleted the `<hr class="sn-notes-rule">` that previously preceded the bottom footer. The other `<hr>` (between pillars and index) stays. |
+| [style.css](../../style.css) | `Version: 8.0.6` → `Version: 8.0.7`. |
+| [CHANGELOG.md](../../CHANGELOG.md) | New 8.0.7 entry at top with cap-exhaustion note. |
+| [docs/superpowers/specs/2026-05-15-notes-feed-relocation-design.md](../../docs/superpowers/specs/2026-05-15-notes-feed-relocation-design.md) | Spec doc (committed in a previous standalone commit `e682f5a`). |
+
+### v8.0 patch cap exhausted
+
+`8.0.7` is the last patch in v8.0 per the project's 7-per-minor cap. Any further bump in this branch rolls to `8.1.0`. Documented in the CHANGELOG entry's "Why patch + cap note" section.
+
 ## Deployment
 
 Per `CLAUDE.md`: commit only, do not push. User will review the diff and push manually. Annotated `v8.0.6` tag deferred to the user's session-end workflow.

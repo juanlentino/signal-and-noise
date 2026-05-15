@@ -2,6 +2,33 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [8.0.7] — Relocate /notes feed footer above the fold (move-and-replace)
+
+The v8.0.6 email-via-RSS line landed in the right place semantically (`<footer class="sn-notes-feed">` at the bottom of `<main>`) but the wrong place practically — readers had to scroll past 7 note rows + 2 pillar essay cards before encountering the subscribe info. Functionally hidden for the first-impression case, which defeats the purpose of adding the line in the first place.
+
+### Changed
+
+- **[`inc/page-notes-render.php`](inc/page-notes-render.php) — `<footer class="sn-notes-feed">` block.** Relocated from its bottom-of-main position to immediately after the hero `<header>` (inside the `.sn-notes-top` wrapper, between hero and pillar essays section). Same markup, same CSS, same `aria-label`. The blinking cursor in `.sn-notes-feed-cursor` reads as "live feed status" at the top rather than "end of output" at the bottom — arguably more apt for a continuously-updating notes catalog.
+- **[`inc/page-notes-render.php`](inc/page-notes-render.php) — `<hr class="sn-notes-rule">` removal.** Deleted the second `<hr>` (the one that previously preceded the bottom footer). The remaining `<hr>` between pillars and index is preserved — it still divides those two sections.
+
+### Approaches considered + rejected
+
+Documented in the design spec at [docs/superpowers/specs/2026-05-15-notes-feed-relocation-design.md](docs/superpowers/specs/2026-05-15-notes-feed-relocation-design.md):
+
+- *Keep bottom + add compact top callout (redundancy)* — rejected; two design languages on one page.
+- *New labeled "Subscribe" section between hero and pillars* — rejected as out of scope; would be most design-coherent with the catalog metaphor but adds a section the reader scrolls through before the pillar essays. Deferred for a future redesign pass if the simple relocation doesn't surface enough subscriptions.
+
+### Not changed
+
+- No CSS edits. Existing `.sn-notes-feed { margin-top/bottom: clamp(2rem, 4vw, 3rem) }` translates cleanly to the new context.
+- No new copy, no new links, no new design tokens.
+- `templates/page-notes.html` (FSE fallback) untouched — per [WORDPRESS-REFERENCE.md §10.4](docs/WORDPRESS-REFERENCE.md), it's deliberate incident-response infrastructure that's allowed to drift.
+- `<footer>` element retained (vs. switching to `<aside>`). At HTML5-spec level, `<footer>` is not strictly position-bound; the markup-semantic shift to `<aside>` isn't worth a placement-only change.
+
+### Why patch + cap note
+
+Structural change to the live `/notes` renderer → patch bump per project rules. **Patch slot 7 of 7 in the v8.0 minor — the cap is now exhausted.** Any further bump in this branch rolls to `8.1.0`. Documented here so future-me doesn't try to ship `8.0.8`.
+
 ## [8.0.6] — Sync repo to live: drop Book a Call surface, add email-via-RSS hint to Notes footer
 
 The live theme had drifted from this repo. The "Work With Me" Cal.com booking page was removed from production, the "Book a Call" nav link was pulled, and the strategy-call CTA was stripped from `/services` — but the repo still carried all of it. This release brings the repo in line with live, then adds one new line to the Notes-index footer pointing readers at email-by-RSS bridges (Blogtrottr, Feedrabbit) so the "no subscription form" line isn't a dead end for non-RSS-native subscribers.
