@@ -2,6 +2,32 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [8.0.6] — Sync repo to live: drop Book a Call surface, add email-via-RSS hint to Notes footer
+
+The live theme had drifted from this repo. The "Work With Me" Cal.com booking page was removed from production, the "Book a Call" nav link was pulled, and the strategy-call CTA was stripped from `/services` — but the repo still carried all of it. This release brings the repo in line with live, then adds one new line to the Notes-index footer pointing readers at email-by-RSS bridges (Blogtrottr, Feedrabbit) so the "no subscription form" line isn't a dead end for non-RSS-native subscribers.
+
+### Drift removed
+
+- **[`parts/header.html`](parts/header.html) — header nav.** Removed the "Book a Call" → `/work-with-me` `wp:navigation-link`. Live nav is now the canonical 7 items: Home, About, Services, Music, Resume, Notes, Contact.
+- **[`templates/page-work-with-me.html`](templates/page-work-with-me.html) — deleted.** Cal.com booking page (tab bar + 30/60-minute embeds) is gone from production (`/work-with-me/` returns HTTP 404). The orphan template was the last theme-side reference; the page would re-spawn in the FSE template picker if left in place.
+- **[`theme.json`](theme.json) — `customTemplates`.** Removed the `page-work-with-me` registration (was line 283). Without this, deleting the template file would leave WordPress trying to register a phantom custom template that has no source HTML — surfaces as a Site Editor template-picker entry that errors on selection.
+- **[`templates/page-services.html`](templates/page-services.html) — closing CTA.** Removed the inline outline `wp:button` "Book a strategy call →" → `/work-with-me`. Closing CTA is now a single "Tell me about your project →" → `/contact` button, matching the live `/services/` page exactly.
+- **[`patterns/cta-closing.php`](patterns/cta-closing.php) — deleted.** Two-button CTA pattern (`Tell me about your project →` + `Book a strategy call →` → `/work-with-me`). Pattern slug `signal-noise/cta-closing` was registered but not inserted by any template in the repo — orphan from the v7.5.x IA pass. Deleting the file removes it from the block inserter so the booking CTA can't be re-introduced by accident.
+- **[`templates/home.html`](templates/home.html) — dead RSS-footer block.** Stripped the `<!-- RSS FOOTER -->` separator + spacer + `<p class="sn-notes-rss">` block. The `/notes` URL is rendered by [`inc/page-notes-render.php`](inc/page-notes-render.php) via a `template_include` short-circuit; the FSE template's RSS footer never fires. Cleanup, not a behavior change.
+
+### Added
+
+- **[`inc/page-notes-render.php`](inc/page-notes-render.php) — Notes footer second line.** Added `<p class="sn-notes-feed-note">For email, pipe the <a href="/notes/feed/">feed</a> through <a href="https://blogtrottr.com/">Blogtrottr</a> or <a href="https://www.feedrabbit.com/">Feedrabbit</a>.</p>` directly below the existing "No subscription form. No schedule." line. External links use `target="_blank" rel="noopener noreferrer"`. Closes the gap where readers who want email subscriptions had no path forward.
+- **[`inc/page-notes-render.php`](inc/page-notes-render.php) — `.sn-notes-feed-note a` styles.** Mirrors the `.sn-notes-feed-status a` pattern (blood-red, no underline, hover slides in a 1px bottom border). Also added `.sn-notes-feed-note + .sn-notes-feed-note { margin-top: 0.4rem }` so the two adjacent footer lines don't touch.
+
+### Why patch (not content-only)
+
+Originally scoped as a content-only edit (one line added to the Notes footer). The audit revealed the live site had also dropped the booking surface entirely — nav link, page template, services-page CTA, and the orphan pattern. Per project versioning rules ([`docs/VERSIONING.md`](docs/VERSIONING.md)), structural template changes (deleted templates, deleted pattern, removed nav/button blocks) and CSS additions all bump version. So this ships as a patch even though the user-visible behavior change is minimal. Patch 6 in v8.0; within the 7-per-minor cap.
+
+### Migration notes
+
+None required. The `/work-with-me/` URL has been 404 in production for some time — this release just removes the stale theme-side surface. Existing Notes RSS subscribers are unaffected; the footer addition is additive. WP self-updater will offer the bump within ~30 seconds of push (per the v8.0.5 latency tighten).
+
 ## [8.0.5] — Tighten auto-surface latency from up-to-5-min to up-to-30-sec
 
 The v8.0.1 auto-surface fix restored the "push → updater shows the offer" pipeline that had been broken since `fbd6b30`, but the perceived latency was still up to 5 minutes — long enough that an actively-iterating maintainer notices and complains. Reducing the freshness window collapses that gap.

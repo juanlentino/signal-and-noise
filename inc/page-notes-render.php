@@ -526,6 +526,18 @@ wp_head();
 	color: var(--wp--preset--color--rust, #666);
 	margin: 0;
 }
+.sn-notes-feed-note + .sn-notes-feed-note {
+	margin-top: 0.4rem;
+}
+.sn-notes-feed-note a {
+	color: var(--wp--preset--color--blood, #e00404);
+	text-decoration: none;
+	border-bottom: 1px solid transparent;
+	transition: border-color 0.2s ease;
+}
+.sn-notes-feed-note a:hover {
+	border-bottom-color: var(--wp--preset--color--blood, #e00404);
+}
 
 /* PAGE ENTRY ANIMATION — staggered reveal on first paint */
 
@@ -648,6 +660,7 @@ echo $sn_header_html;
 			Feed &mdash; <a href="/notes/feed/">/notes/feed/</a><span class="sn-notes-feed-cursor" aria-hidden="true"></span>
 		</p>
 		<p class="sn-notes-feed-note">No subscription form. No schedule. Notes available via RSS.</p>
+		<p class="sn-notes-feed-note">For email, pipe the <a href="/notes/feed/">feed</a> through <a href="https://blogtrottr.com/" target="_blank" rel="noopener noreferrer">Blogtrottr</a> or <a href="https://www.feedrabbit.com/" target="_blank" rel="noopener noreferrer">Feedrabbit</a>.</p>
 	</footer>
 
 </main>
