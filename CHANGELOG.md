@@ -2,6 +2,31 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [8.1.0] — Notes subscribe info nested in hero (cap rollover from 8.0.7; not a new capability)
+
+The v8.0.7 placement put the `<footer class="sn-notes-feed">` block in column 2 of the `.sn-notes-top` 5fr/7fr grid (because adding a third grid child to a 2-column grid placed it where the pillar essays section had been, displacing pillars to a second row). The visual result was co-equality with the hero — nothing read as the focal point. This release nests the subscribe info inside `<header class="sn-notes-hero">` as a single compact `<p>`, drops the standalone footer block, and lets the pillars section return to column 2 of the grid.
+
+### Changed
+
+- **[`inc/page-notes-render.php`](inc/page-notes-render.php) — markup.** Removed the `<footer class="sn-notes-feed">` block (was at the top of `.sn-notes-top` between hero and pillars after v8.0.7). Added `<p class="sn-notes-subscribe">` as the last child of `<header class="sn-notes-hero">`, with a `<span class="sn-notes-cursor">` blinking-cursor span at the sentence end. Single sentence: *"No subscription form. No schedule. Notes via RSS, or via email through Blogtrottr or Feedrabbit."* Three inline links (RSS internal, Blogtrottr + Feedrabbit external with `target="_blank" rel="noopener noreferrer"`).
+- **[`inc/page-notes-render.php`](inc/page-notes-render.php) — CSS.** Removed the entire `.sn-notes-feed-*` rule block (`.sn-notes-feed`, `.sn-notes-feed-status`, `.sn-notes-feed-status a`, `.sn-notes-feed-status a:hover`, `.sn-notes-feed-cursor`, `.sn-notes-feed-note`, `.sn-notes-feed-note + .sn-notes-feed-note`, `.sn-notes-feed-note a`, `.sn-notes-feed-note a:hover`). Added `.sn-notes-subscribe`, `.sn-notes-subscribe a`, `.sn-notes-subscribe a:hover`, and `.sn-notes-cursor`. Renamed the selector inside `@media (prefers-reduced-motion: reduce)` from `.sn-notes-feed-cursor` to `.sn-notes-cursor`. The `@keyframes sn-blink` rule is preserved (referenced by the new cursor class).
+- **Layout restored.** Pillar essays section now occupies column 2 of the desktop 5fr/7fr grid as it did in v8.0.6 and prior. The two-row layout introduced by v8.0.7 is gone.
+
+### Why minor (cap rollover, not a new capability)
+
+This change is patch-shaped — UX calibration, no new feature, no breaking API change, no migration. But v8.0.7 used the 7th and final patch slot in the v8.0 minor (per the project's 7-per-minor cap documented in [docs/VERSIONING.md](docs/VERSIONING.md)). The cap forces a roll to **v8.1.0**. Future-readers: the minor-digit bump reflects the cap rollover, not a new capability — read the `### Changed` section above for what actually shipped.
+
+### Migration
+
+None required. Placement-only change. Existing RSS subscribers unaffected. The `<footer class="sn-notes-feed">` element no longer exists in the rendered HTML; any external CSS or JS that selected it would break, but no external code does.
+
+### Spec + plan
+
+- [docs/superpowers/specs/2026-05-15-notes-subscribe-in-hero-design.md](docs/superpowers/specs/2026-05-15-notes-subscribe-in-hero-design.md) (supersedes the v8.0.7 spec which is preserved on disk with a SUPERSEDED banner).
+- [docs/superpowers/plans/2026-05-15-notes-subscribe-in-hero.md](docs/superpowers/plans/2026-05-15-notes-subscribe-in-hero.md).
+
+Authored via the `superpowers:brainstorming` (with visual companion) → `superpowers:writing-plans` → `superpowers:executing-plans` skill chain.
+
 ## [8.0.7] — Relocate /notes feed footer above the fold (move-and-replace)
 
 The v8.0.6 email-via-RSS line landed in the right place semantically (`<footer class="sn-notes-feed">` at the bottom of `<main>`) but the wrong place practically — readers had to scroll past 7 note rows + 2 pillar essay cards before encountering the subscribe info. Functionally hidden for the first-impression case, which defeats the purpose of adding the line in the first place.

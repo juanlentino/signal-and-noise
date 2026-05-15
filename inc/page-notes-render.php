@@ -483,30 +483,32 @@ wp_head();
 	padding: 2rem 0;
 }
 
-/* RSS FEED FOOTER — terminal status line ─────────────────────── */
+/* SUBSCRIBE NOTE — compact colophon nested in the hero column.
+   Tertiary in the hero hierarchy (title > dek > meta > subscribe).
+   Same DM Mono / 0.7rem / uppercase as eyebrow + meta; inline links
+   in blood. Cursor terminates the sentence as a "live system" beat
+   inherited from the previous footer aesthetic. */
 
-.sn-notes-feed {
-	margin-top: clamp(2rem, 4vw, 3rem);
-	margin-bottom: clamp(2rem, 4vw, 3rem);
+.sn-notes-subscribe {
+	margin: 1.25rem 0 0;
 	font-family: 'DM Mono', 'Courier New', monospace;
-}
-.sn-notes-feed-status {
-	font-size: 0.85rem;
-	letter-spacing: 0.12em;
+	font-size: 0.7rem;
+	letter-spacing: 0.18em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--bone, #000);
-	margin: 0 0 0.5rem;
+	line-height: 1.7;
+	color: var(--wp--preset--color--rust, #666);
+	max-width: 48ch;
 }
-.sn-notes-feed-status a {
+.sn-notes-subscribe a {
 	color: var(--wp--preset--color--blood, #e00404);
 	text-decoration: none;
 	border-bottom: 1px solid transparent;
 	transition: border-color 0.2s ease;
 }
-.sn-notes-feed-status a:hover {
+.sn-notes-subscribe a:hover {
 	border-bottom-color: var(--wp--preset--color--blood, #e00404);
 }
-.sn-notes-feed-cursor {
+.sn-notes-cursor {
 	display: inline-block;
 	width: 0.4em;
 	height: 0.95em;
@@ -518,25 +520,6 @@ wp_head();
 @keyframes sn-blink {
 	from, 49.999% { opacity: 1; }
 	50%, to       { opacity: 0; }
-}
-.sn-notes-feed-note {
-	font-size: 0.7rem;
-	letter-spacing: 0.18em;
-	text-transform: uppercase;
-	color: var(--wp--preset--color--rust, #666);
-	margin: 0;
-}
-.sn-notes-feed-note + .sn-notes-feed-note {
-	margin-top: 0.4rem;
-}
-.sn-notes-feed-note a {
-	color: var(--wp--preset--color--blood, #e00404);
-	text-decoration: none;
-	border-bottom: 1px solid transparent;
-	transition: border-color 0.2s ease;
-}
-.sn-notes-feed-note a:hover {
-	border-bottom-color: var(--wp--preset--color--blood, #e00404);
 }
 
 /* PAGE ENTRY ANIMATION — staggered reveal on first paint */
@@ -556,7 +539,7 @@ wp_head();
 }
 @media (prefers-reduced-motion: reduce) {
 	.sn-notes-page > * { animation: none; }
-	.sn-notes-feed-cursor { animation: none; opacity: 0.6; }
+	.sn-notes-cursor { animation: none; opacity: 0.6; }
 	.sn-notes-pillar { transition: none; }
 	.sn-notes-pillar::before { transition: none; }
 	.sn-notes-row { transition: none; }
@@ -588,15 +571,10 @@ echo $sn_header_html;
 					<span>Last updated <?php echo esc_html( $latest_date ); ?></span>
 				<?php endif; ?>
 			</p>
-		</header>
-
-		<footer class="sn-notes-feed" aria-label="RSS feed">
-			<p class="sn-notes-feed-status">
-				Feed &mdash; <a href="/notes/feed/">/notes/feed/</a><span class="sn-notes-feed-cursor" aria-hidden="true"></span>
+			<p class="sn-notes-subscribe">
+				No subscription form. No schedule. Notes via <a href="/notes/feed/">RSS</a>, or via email through <a href="https://blogtrottr.com/" target="_blank" rel="noopener noreferrer">Blogtrottr</a> or <a href="https://www.feedrabbit.com/" target="_blank" rel="noopener noreferrer">Feedrabbit</a>.<span class="sn-notes-cursor" aria-hidden="true"></span>
 			</p>
-			<p class="sn-notes-feed-note">No subscription form. No schedule. Notes available via RSS.</p>
-			<p class="sn-notes-feed-note">For email, pipe the <a href="/notes/feed/">feed</a> through <a href="https://blogtrottr.com/" target="_blank" rel="noopener noreferrer">Blogtrottr</a> or <a href="https://www.feedrabbit.com/" target="_blank" rel="noopener noreferrer">Feedrabbit</a>.</p>
-		</footer>
+		</header>
 
 		<section class="sn-notes-pillars-section" aria-labelledby="sn-pillars-heading">
 			<div class="sn-notes-section-wrap">

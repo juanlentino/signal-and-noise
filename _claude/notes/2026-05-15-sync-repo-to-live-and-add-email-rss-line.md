@@ -143,6 +143,38 @@ The skill flow's terminal state is `superpowers:writing-plans` for an implementa
 
 `8.0.7` is the last patch in v8.0 per the project's 7-per-minor cap. Any further bump in this branch rolls to `8.1.0`. Documented in the CHANGELOG entry's "Why patch + cap note" section.
 
+## Companion: v8.1.0 — subscribe-in-hero (immediate post-v8.0.7 redesign)
+
+v8.0.7 shipped and the user rejected the visual result on first viewing. The screenshot showed the `<footer class="sn-notes-feed">` block in the right column of the `.sn-notes-top` grid (because adding a third child to a 5fr/7fr 2-column grid placed it where pillars had been). The hero and the feed read as co-equal columns; nothing had focal-point weight.
+
+### Root-cause lesson (recorded for future-me)
+
+The v8.0.7 spec analyzed the markup change in isolation — moving a `<footer>` block from one position to another — without analyzing how `.sn-notes-top`'s 5fr/7fr grid would treat a third grid child. The grid was the load-bearing layout primitive, and it got skipped in the design pass. **Anti-pattern to avoid: brainstorming markup-position decisions without first reading the CSS that lays them out.** The `superpowers:brainstorming` skill's "explore project context" step should explicitly include reading the CSS for the surrounding layout when proposing markup-position changes.
+
+### Skills chain (this iteration, full discipline)
+
+1. **`superpowers:brainstorming`** (re-invoked after the v8.0.7 result). Accepted the visual companion this round — declined it the first time, which contributed to the bad call. Three full-grid mockups produced; user picked Option A (compact subscribe note inside hero); user refined: keep the two-column grid intact (pillars in col 2), put the subscribe sentence INSIDE the hero column.
+2. **Spec written** to [`docs/superpowers/specs/2026-05-15-notes-subscribe-in-hero-design.md`](../../docs/superpowers/specs/2026-05-15-notes-subscribe-in-hero-design.md), self-reviewed inline, committed standalone (`5639623`). v8.0.7 spec marked SUPERSEDED at the top.
+3. **`superpowers:writing-plans`** invoked. 9-task plan written to [`docs/superpowers/plans/2026-05-15-notes-subscribe-in-hero.md`](../../docs/superpowers/plans/2026-05-15-notes-subscribe-in-hero.md) with bite-sized steps and explicit grep-based verifications. Self-review pass on spec coverage, placeholders, type/name consistency.
+4. **`superpowers:executing-plans`** (this skill, inline execution). Critical review pass before execution, TodoWrite for task tracking, exact verification at each task boundary.
+5. **Standard ship dance** (commit → push → annotated tag → push tag) per project versioning rules.
+
+### Files changed (v8.1.0)
+
+| File | Change |
+| --- | --- |
+| [inc/page-notes-render.php](../../inc/page-notes-render.php) | Removed `<footer class="sn-notes-feed">` block + `.sn-notes-feed-*` CSS; added `<p class="sn-notes-subscribe">` inside hero + `.sn-notes-subscribe` + `.sn-notes-cursor` CSS; renamed selector in reduced-motion media query. `@keyframes sn-blink` preserved. |
+| [style.css](../../style.css) | `Version: 8.0.7` → `Version: 8.1.0`. |
+| [CHANGELOG.md](../../CHANGELOG.md) | New 8.1.0 entry at top with explicit "rollover, not a new capability" note. |
+| [.gitignore](../../.gitignore) | Added `.superpowers/` (brainstorm artifacts directory) if not already present. |
+| [docs/superpowers/specs/2026-05-15-notes-feed-relocation-design.md](../../docs/superpowers/specs/2026-05-15-notes-feed-relocation-design.md) | SUPERSEDED banner at top (committed in `5639623`). |
+| [docs/superpowers/specs/2026-05-15-notes-subscribe-in-hero-design.md](../../docs/superpowers/specs/2026-05-15-notes-subscribe-in-hero-design.md) | New spec (committed in `5639623`). |
+| [docs/superpowers/plans/2026-05-15-notes-subscribe-in-hero.md](../../docs/superpowers/plans/2026-05-15-notes-subscribe-in-hero.md) | New plan (committed in this release commit). |
+
+### v8.0 cap rollover
+
+v8.0.7 used patch slot 7 of 7. v8.1.0 is the cap-rollover release — patch-shaped change, minor-digit bump because the patch cap forced it. Documented in CHANGELOG.
+
 ## Deployment
 
 Per `CLAUDE.md`: commit only, do not push. User will review the diff and push manually. Annotated `v8.0.6` tag deferred to the user's session-end workflow.
