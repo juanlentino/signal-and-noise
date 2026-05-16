@@ -41,6 +41,5 @@ require_once __DIR__ . '/inc/reading-time.php';
 require_once __DIR__ . '/inc/og-image.php';
 
 require_once __DIR__ . '/inc/template-maintenance.php';
-require_once __DIR__ . '/inc/template-self-heal.php';
 require_once __DIR__ . '/inc/page-notes-template.php';
 require_once __DIR__ . '/inc/patterns.php';
