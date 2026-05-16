@@ -2,6 +2,20 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [8.3.0] - 2026-05-15
+
+### Removed
+- `inc/updater.php` (~683 LOC) — GitHub-poll self-updater, obsolete since Cloudways auto-deploy (Phase 2a).
+- `inc/template-self-heal.php` (~488 LOC) — file-drift recovery, redundant under atomic git-pull deploys.
+- `inc/template-maintenance.php` — `upgrader_process_complete` hook + two `admin_init` detectors (version-change + template-mtime tracker), ~100 LOC.
+
+### Added
+- `.github/workflows/deploy.yml` — third step posts to `/wp-json/signal-noise/v1/purge-cache` after Cloudways `/git/pull` so theme deploys atomically refresh Cloudflare edge cache.
+
+### Changed
+- Cross-package contract surface shrinks from 7 hooks to 2. Updater filters (`sn_updater_branch`, `sn_updater_revcount`, `sn_updater_force_check`, `sn_updater_clear_error`) and the self-heal filter (`sn_self_heal_force_run_result`) are retired. Plugin v1.2.0 expects this and renders correctly.
+- `docs/WORDPRESS-REFERENCE.md §10` updated to reflect the new contract surface (§10.1 + §10.2 marked retired).
+
 ## [8.2.1] — RSS Plausible Tracker migrated to companion plugin (early Phase 4 slice)
 
 Brings the only Phase 4 file forward into the early-completion bucket, ahead of Phase 2's updater migration. The theme repo's `mu-plugins/` directory is now empty and deleted entirely. Tracking infrastructure (`wp_rss_feed_log` table, `sn_rss_tracker_*` options, `sn_rss_tracker_daily_prune` cron) lives in the [signal-and-noise-tools companion plugin v1.1.0](https://github.com/juanlentino/signal-and-noise-tools/releases/tag/v1.1.0) from this release onwards.
