@@ -80,9 +80,12 @@ jobs:
           # Let Cloudways' git pull settle + OPcache invalidate.
           sleep 5
           auth=$(printf '%s:%s' "$WP_DEPLOY_USER" "$WP_DEPLOY_APP_PASSWORD" | base64 -w 0)
+          # Content-Length: 0 satisfies Cloudways' WAF (ModSecurity rejects
+          # zero-byte POSTs with empty 400; not a WordPress-layer error).
           response=$(curl -sS -w '\n%{http_code}' -X POST "$PURGE_URL" \
             -H "Authorization: Basic $auth" \
-            -H 'Accept: application/json')
+            -H 'Accept: application/json' \
+            -H 'Content-Length: 0')
           status=$(printf '%s' "$response" | tail -n1)
           body=$(printf '%s' "$response" | sed '$d')
           printf 'HTTP %s\n' "$status"
