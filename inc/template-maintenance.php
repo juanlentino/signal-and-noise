@@ -266,3 +266,39 @@ add_action( 'admin_init', function() {
 		update_option( 'sn_templates_latest_mtime', $latest_mtime, true );
 	}
 } );
+
+/**
+ * Companion-plugin contract listeners (since v8.2.0).
+ *
+ * Two filter contracts owned by this module:
+ *   sn_purge_all_caches_result         → count cleared (int)
+ *   sn_clear_template_overrides_result → count cleared (int)
+ *
+ * See docs/superpowers/specs/2026-05-15-companion-plugin-phase-1-design.md
+ * + docs/WORDPRESS-REFERENCE.md §10.0.
+ */
+
+/**
+ * Filter listener: accept dispatched purge calls from the companion
+ * plugin, run the local sn_purge_all_caches() implementation, return
+ * the count cleared.
+ *
+ * @param int   $count Seed value (typically 0) passed by caller.
+ * @param array $args  Purge args (e.g., array('template_overrides' => false)).
+ * @return int Items cleared.
+ */
+add_filter( 'sn_purge_all_caches_result', function( $count, $args ) {
+	return (int) sn_purge_all_caches( is_array( $args ) ? $args : array() );
+}, 10, 2 );
+
+/**
+ * Filter listener: accept dispatched template-overrides-clear calls
+ * from the companion plugin, run the local sn_clear_template_overrides()
+ * implementation, return the count cleared.
+ *
+ * @param int $count Seed value (typically 0) passed by caller.
+ * @return int DB overrides cleared.
+ */
+add_filter( 'sn_clear_template_overrides_result', function( $count ) {
+	return (int) sn_clear_template_overrides();
+} );

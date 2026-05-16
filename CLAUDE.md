@@ -4,6 +4,8 @@
 Custom WordPress Full Site Editing theme for juanlentino.com.
 Repo: juanlentino/signal-and-noise. Hosted on Cloudways (syntharchy-wp), Cloudflare CDN.
 
+**Companion plugin (since v8.2.0):** Operational tooling (REST surface, Plausible integration, admin UI, security headers, Cloudflare purge) lives in a separate companion plugin: [juanlentino/signal-and-noise-tools](https://github.com/juanlentino/signal-and-noise-tools). The split is partial — see [docs/WORDPRESS-REFERENCE.md](docs/WORDPRESS-REFERENCE.md) §10.0 for the contract surface and the migration phase plan.
+
 ## Stack
 - WordPress FSE (block theme)
 - PHP, HTML, CSS, theme.json

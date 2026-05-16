@@ -465,3 +465,24 @@ add_action( 'admin_notices', function() {
 		echo '</p></div>';
 	}
 } );
+
+/**
+ * Companion-plugin contract listener (since v8.2.0).
+ *
+ * Filter contract owned by this module:
+ *   sn_self_heal_force_run_result → array(fixed, failed) or null
+ *
+ * Plugin code dispatches via the filter; this listener calls the local
+ * sn_self_heal_force_run() implementation and returns its result array.
+ * When the function isn't loaded (defensive), the seed value passes
+ * through (null) and plugin code surfaces "Self-heal module not loaded."
+ *
+ * @param mixed $value Seed value (typically null) passed by caller.
+ * @return array|null array('fixed' => string[], 'failed' => string[]) or null.
+ */
+add_filter( 'sn_self_heal_force_run_result', function( $value ) {
+	if ( function_exists( 'sn_self_heal_force_run' ) ) {
+		return sn_self_heal_force_run();
+	}
+	return $value;
+} );

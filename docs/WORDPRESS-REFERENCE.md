@@ -279,9 +279,36 @@ Priorities currently in use across `inc/`:
 
 ---
 
-## 10. The self-updater + self-heal architecture
+## 10. The self-updater + self-heal architecture (with companion plugin since v8.2.0)
 
-This theme has a non-standard update mechanism. Understand it before touching anything in `inc/updater.php` or `inc/template-self-heal.php`.
+This theme has a non-standard update mechanism AND a companion plugin that holds operational tooling. Understand both before touching `inc/updater.php`, `inc/template-self-heal.php`, or any of the WP hook contracts listed below.
+
+### 10.0 The theme + companion plugin split (Phase 1 — v8.2.0 / Tools v1.0.0)
+
+The theme is presentation; the companion plugin [`signal-and-noise-tools`](https://github.com/juanlentino/signal-and-noise-tools) holds operational tooling. They communicate via 7 WP hooks. **The split is partial as of v8.2.0** — 9 modules moved (Phase 1); Phases 2–4 will migrate the rest. See `docs/superpowers/specs/2026-05-15-companion-plugin-phase-1-design.md` and successors.
+
+**Modules currently in plugin (Phase 1 moves):** `seo.php`, `security-headers.php`, `cloudflare-purge.php`, `plausible-api.php`, `plausible-admin.php`, `plausible-widget.php`, `admin-bar.php`, `admin-page.php`, `rest-api.php`.
+
+**Modules still in theme (will migrate in Phases 2–4):** `updater.php`, `template-self-heal.php`, `template-maintenance.php` (Phase 2); `og-image.php`, `reading-time.php`, `notes-and-provenance.php`, `page-notes-*.php` (Phase 3); `mu-plugins/rss-plausible-tracker.php` (Phase 4).
+
+**Contract hooks (since v8.2.0):**
+
+| Hook | Type | Dispatched by plugin | Implemented by theme |
+| --- | --- | --- | --- |
+| `sn_purge_all_caches_result` | filter | `apply_filters( 'sn_purge_all_caches_result', 0, $args )` returns int count | [`inc/template-maintenance.php`](../inc/template-maintenance.php) wraps `sn_purge_all_caches()` |
+| `sn_clear_template_overrides_result` | filter | `apply_filters( 'sn_clear_template_overrides_result', 0 )` returns int count | [`inc/template-maintenance.php`](../inc/template-maintenance.php) wraps `sn_clear_template_overrides()` |
+| `sn_self_heal_force_run_result` | filter | `apply_filters( 'sn_self_heal_force_run_result', null )` returns array or null | [`inc/template-self-heal.php`](../inc/template-self-heal.php) wraps `sn_self_heal_force_run()` |
+| `sn_updater_branch` | filter | `apply_filters( 'sn_updater_branch', 'main' )` returns string | [`inc/updater.php`](../inc/updater.php) wraps `sn_updater_branch()` |
+| `sn_updater_revcount` | filter | `apply_filters( 'sn_updater_revcount', 0, $branch, $version )` returns int | [`inc/updater.php`](../inc/updater.php) wraps `sn_updater_revcount()` |
+| `sn_updater_force_check` | action | `do_action( 'sn_updater_force_check' )` | [`inc/updater.php`](../inc/updater.php)'s `sn_updater_force_check()` consolidates the cache-clear sequence + `wp_update_themes()` |
+| `sn_updater_clear_error` | action | `do_action( 'sn_updater_clear_error' )` | [`inc/updater.php`](../inc/updater.php)'s `sn_updater_clear_error()` clears `sn_github_error` transient |
+
+**Direct dependencies kept (no contract — stable by design):**
+- `sn_*` option keys (e.g. `sn_github_local_sha`) — plugin reads via `get_option()`.
+- `sn_github_*` transient keys — plugin reads via `get_transient()`. Option/transient *key names* are part of the public contract surface; renaming them would require migration shims for zero benefit.
+- `SN_GITHUB_REPO` / `SN_THEME_SLUG` constants — plugin reads with `defined()` guard.
+
+**When adding new cross-package interactions:** add a row to the table above and document the listener side in the theme file that owns the underlying function. **Never let plugin code directly call a theme function — even with `function_exists` guards.** The contract pattern is non-negotiable.
 
 ### 10.1 The updater
 

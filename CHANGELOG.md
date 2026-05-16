@@ -2,6 +2,64 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [8.2.0] — Phase 1 of theme + companion plugin split
+
+First minor in the 8.x line. Nine modules (`seo.php`, `security-headers.php`, `cloudflare-purge.php`, `plausible-api.php`, `plausible-admin.php`, `plausible-widget.php`, `admin-bar.php`, `admin-page.php`, `rest-api.php`) moved out of `inc/` into the new companion plugin [`signal-and-noise-tools`](https://github.com/juanlentino/signal-and-noise-tools) `v1.0.0`. Cross-package coupling resolves via **7 WP hooks (5 filters, 2 actions)** — the theme registers the listener side; the plugin dispatches.
+
+This is Phase 1 of a 4-phase split. Phase 2 will migrate the self-updater itself. See [docs/superpowers/specs/2026-05-15-companion-plugin-phase-1-design.md](docs/superpowers/specs/2026-05-15-companion-plugin-phase-1-design.md).
+
+### Changed
+
+- **[`functions.php`](functions.php) — 9 `require_once` lines removed.** Down from 20 to 11. Module-map docblock updated to reflect the reduced theme surface; companion plugin referenced.
+- **[`inc/`](inc/) — 9 files deleted.** Files moved to companion plugin's `inc/` with same filenames preserved for parity.
+- **[`inc/updater.php`](inc/updater.php) — 2 new functions + 4 hook listeners.** `sn_updater_force_check()` consolidates the cache-clearing sequence previously duplicated in `admin-page.php`, `admin-bar.php`, and `rest-api.php` (all of which moved to the plugin). `sn_updater_clear_error()` handles the lightweight error-dismiss path. Filter listeners on `sn_updater_branch` and `sn_updater_revcount` expose updater state to plugin code.
+- **[`inc/template-maintenance.php`](inc/template-maintenance.php) — 2 filter listeners added.** Wrap existing `sn_purge_all_caches()` and `sn_clear_template_overrides()` for plugin dispatch.
+- **[`inc/template-self-heal.php`](inc/template-self-heal.php) — filter listener added.** Wraps existing `sn_self_heal_force_run()` for plugin dispatch.
+
+### Added (docs)
+
+- **[`docs/WORDPRESS-REFERENCE.md`](docs/WORDPRESS-REFERENCE.md) §10.0** — new "Theme + companion plugin split" section documenting the contract surface (7 hooks: 5 filters + 2 actions), migration phases, and conventions for adding new cross-package interactions.
+- **[`CLAUDE.md`](CLAUDE.md)** — companion plugin pointer added to the *Project* section.
+
+### Contract surface (7 hooks)
+
+| Hook | Type | Owner |
+| --- | --- | --- |
+| `sn_purge_all_caches_result` | filter | template-maintenance.php |
+| `sn_clear_template_overrides_result` | filter | template-maintenance.php |
+| `sn_self_heal_force_run_result` | filter | template-self-heal.php |
+| `sn_updater_branch` | filter | updater.php |
+| `sn_updater_revcount` | filter | updater.php |
+| `sn_updater_force_check` | action | updater.php |
+| `sn_updater_clear_error` | action | updater.php |
+
+### Coordinated release
+
+Ships with companion plugin `v1.0.0`. **Install order matters:**
+1. Install + activate `signal-and-noise-tools` `v1.0.0` plugin first (download zip from `https://github.com/juanlentino/signal-and-noise-tools/archive/refs/tags/v1.0.0.zip`, WP admin → Plugins → Add New → Upload).
+2. Click the theme's *Update* in WP admin to install `v8.2.0` (which removes the now-duplicate files).
+
+During the brief window between steps 1 and 2, both packages have the 9 modules — WP registers hooks twice (duplicate admin menus, REST endpoints last-write-wins, dashboard widgets duplicated). The theme's menu entry continues to work; the plugin's menu shows but its purge/heal/check-updates buttons silently no-op until step 2 lands and registers the contract listeners. Maintainer should use the theme's menu entry during the window and ship the theme update promptly.
+
+### Why minor
+
+Meaningful capability shift — PHP includes shrink 45% (from 20 to 11), new contract surface introduced, theme becomes swappable in principle — but no breaking user-visible change. First minor in 8.x; well within the 5-per-major cap.
+
+### Migration
+
+None for end users; runtime behavior is identical after both releases land. For the maintainer: follow the install order above.
+
+### Note on contract count vs spec
+
+The spec ([2026-05-15-companion-plugin-phase-1-design.md](docs/superpowers/specs/2026-05-15-companion-plugin-phase-1-design.md)) anticipated 5 contracts. During execution, an audit grep of the moving files surfaced two additional cross-couplings (`sn_clear_template_overrides` and `sn_updater_revcount`) that the planning phase missed. Both are wired with the same contract pattern; the final count is 7. The spec is preserved as-is for historical accuracy.
+
+### Spec + plan
+
+- [docs/superpowers/specs/2026-05-15-companion-plugin-phase-1-design.md](docs/superpowers/specs/2026-05-15-companion-plugin-phase-1-design.md)
+- [docs/superpowers/plans/2026-05-15-companion-plugin-phase-1.md](docs/superpowers/plans/2026-05-15-companion-plugin-phase-1.md)
+
+Authored via the `superpowers:brainstorming` → `superpowers:writing-plans` → `superpowers:subagent-driven-development` skill chain.
+
 ## [8.1.1] — Handbook hygiene pass — strip i18n, refresh headers
 
 Five mechanical hygiene items aligning the theme with the [WordPress Theme Developer Handbook](https://developer.wordpress.org/themes/) where it costs us little. The deliberate deviations (custom self-updater, external HTTP from theme code, business logic in `inc/`, `mu-plugins/` shipped from the theme repo) remain intentional and are NOT addressed here — they're documented in [docs/WORDPRESS-REFERENCE.md](docs/WORDPRESS-REFERENCE.md) §10 and accepted as the price of running a private single-site theme. The companion plugin split and inline-styles refactor are deferred to their own future phases.

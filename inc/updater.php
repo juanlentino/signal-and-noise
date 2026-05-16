@@ -590,3 +590,94 @@ add_action( 'admin_notices', function() {
 		echo '<div class="notice notice-error"><p><strong>Signal &amp; Noise:</strong> GitHub check failed — ' . esc_html( $last_error ) . '. Token may have expired, lost access to the repo, or GitHub is rate-limiting.</p></div>';
 	}
 } );
+
+/**
+ * Companion-plugin contract listeners (since v8.2.0).
+ *
+ * Four hooks exposed for the signal-and-noise-tools plugin (Phase 1
+ * split). The plugin dispatches via these hooks rather than calling
+ * theme functions directly, so plugin code can degrade gracefully when
+ * the theme isn't loaded (filters return defaults, actions are no-ops).
+ *
+ * Contracts owned by inc/updater.php:
+ *   filter sn_updater_branch       → branch name (string)
+ *   filter sn_updater_revcount     → commits ahead (int)
+ *   action sn_updater_force_check  → full cache clear + wp_update_themes()
+ *   action sn_updater_clear_error  → error transient only
+ *
+ * Other contracts live in template-maintenance.php and template-self-heal.php.
+ *
+ * See docs/superpowers/specs/2026-05-15-companion-plugin-phase-1-design.md
+ * + docs/WORDPRESS-REFERENCE.md §10.0 for the full contract surface.
+ *
+ * @since 8.2.0
+ */
+
+/**
+ * Filter listener: return the tracked branch name for the companion plugin.
+ *
+ * @param string $default Default value (typically 'main') passed by caller.
+ * @return string Branch name from sn_updater_branch().
+ */
+add_filter( 'sn_updater_branch', function( $default ) {
+	return sn_updater_branch();
+} );
+
+/**
+ * Filter listener: return the commits-ahead-of-base-tag count.
+ *
+ * @param int         $default       Seed value (typically 0).
+ * @param string      $branch        Branch to compare. Passed by caller.
+ * @param string|null $version       Optional base version to compare against.
+ * @return int Commits ahead.
+ */
+add_filter( 'sn_updater_revcount', function( $default, $branch, $version = null ) {
+	if ( ! is_string( $branch ) || '' === $branch ) {
+		return (int) $default;
+	}
+	return (int) sn_updater_revcount( $branch, $version );
+}, 10, 3 );
+
+/**
+ * Action listener: force-check the updater. Clears all SN GitHub-derived
+ * caches and triggers WP's update_themes recheck so the next admin
+ * pageview re-runs our pre_set_site_transient_update_themes filter
+ * against fresh GitHub state. Consolidates the cache-clearing logic
+ * that was previously duplicated in admin-page.php, admin-bar.php,
+ * and rest-api.php (all of which moved to the companion plugin and now
+ * dispatch through this hook).
+ *
+ * @since 8.2.0
+ */
+function sn_updater_force_check() {
+	$branch = sanitize_key( sn_updater_branch() );
+	delete_transient( 'sn_github_error' );
+	delete_transient( 'sn_github_branch_' . $branch );
+	delete_transient( 'sn_github_remote_version_' . $branch );
+	global $wpdb;
+	if ( $wpdb ) {
+		$wpdb->query( $wpdb->prepare(
+			"DELETE FROM {$wpdb->options}
+			 WHERE option_name LIKE %s
+			    OR option_name LIKE %s",
+			$wpdb->esc_like( '_transient_sn_github_revcount_' . $branch ) . '%',
+			$wpdb->esc_like( '_transient_timeout_sn_github_revcount_' . $branch ) . '%'
+		) );
+	}
+	delete_site_transient( 'update_themes' );
+	wp_clean_themes_cache();
+	wp_update_themes();
+}
+add_action( 'sn_updater_force_check', 'sn_updater_force_check' );
+
+/**
+ * Action listener: clear just the updater's error transient. Lightweight
+ * version of sn_updater_force_check() for code paths that only want to
+ * dismiss the error notice without forcing a full re-poll.
+ *
+ * @since 8.2.0
+ */
+function sn_updater_clear_error() {
+	delete_transient( 'sn_github_error' );
+}
+add_action( 'sn_updater_clear_error', 'sn_updater_clear_error' );
