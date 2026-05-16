@@ -21,7 +21,7 @@ Full workflow + rationale: [docs/VERSIONING.md](docs/VERSIONING.md). Short versi
 
 **What bumps:** code, CSS, migrations, structural template changes. **What doesn't:** `docs/`, `CLAUDE.md`, content-only copy edits, CHANGELOG-only commits.
 
-**Workflow per release:** edit code → bump `Version:` in [style.css](style.css) → CHANGELOG entry at top → commit `vX.Y.Z: summary` → `git push origin HEAD:main` → annotated tag `vX.Y.Z` → `git push origin vX.Y.Z` → **Cloudways auto-pulls theme in ~30s** (plugin still manual install via WP admin Upload Plugin).
+**Workflow per release:** edit code → bump `Version:` in [style.css](style.css) (theme) or [signal-and-noise-tools.php](https://github.com/juanlentino/signal-and-noise-tools/blob/main/signal-and-noise-tools.php) (plugin) → CHANGELOG entry at top → commit `vX.Y.Z: summary` → `git push origin HEAD:main` → annotated tag `vX.Y.Z` → `git push origin vX.Y.Z` → **both theme and plugin auto-deploy + auto-purge CF edge cache in ~30s** (theme via Cloudways API on Phase 2a; plugin via SSH from GHA as app-scoped `sn-plugin` user on Phase 2c).
 
 **Commit + tag format:**
 ```bash
@@ -37,7 +37,7 @@ git push origin vX.Y.Z
 
 ## Build & Deploy
 **Theme:** auto-deploys on annotated-tag push via [.github/workflows/deploy.yml](.github/workflows/deploy.yml) → Cloudways `/api/v1/git/pull`. ~30s tag-to-live.
-**Plugin:** manual install via WP admin → Upload Plugin (Cloudways one-repo-per-app limit; Phase 2c queues SSH-based plugin auto-deploy).
+**Plugin:** auto-deploys on annotated-tag push via [signal-and-noise-tools `.github/workflows/deploy.yml`](https://github.com/juanlentino/signal-and-noise-tools/blob/main/.github/workflows/deploy.yml) → SSH into Cloudways as `sn-plugin` (app-scoped user, NOT master) → `git fetch && git checkout <tag>` in `wp-content/plugins/signal-and-noise-tools/` → CF purge call. ~30s tag-to-live. **Security:** if the GHA `SSH_PRIVATE_KEY` ever leaks, blast radius is bounded to this WP app's filesystem + DB, not the whole Cloudways server.
 **Worktree push:** `git push origin HEAD:main` (worktree branch name differs from `main`).
 No build step. WordPress handles rendering.
 
