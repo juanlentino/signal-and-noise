@@ -290,19 +290,23 @@ The theme is presentation; the companion plugin [`signal-and-noise-tools`](https
 **Modules currently in plugin:**
 - *Phase 1 moves (v8.2.0 / Tools v1.0.0):* `seo.php`, `security-headers.php`, `cloudflare-purge.php`, `plausible-api.php`, `plausible-admin.php`, `plausible-widget.php`, `admin-bar.php`, `admin-page.php`, `rest-api.php`.
 - *Early Phase 4 slice (v8.2.1 / Tools v1.1.0):* `rss-plausible-tracker.php` (was theme's `mu-plugins/rss-plausible-tracker.php`).
+- *Phase 3 moves (v8.4.0 / Tools v1.3.0):* `og-card-generator.php` (was theme's `og-image.php`), `reading-time.php`, plus a 3-way split of the original `notes-and-provenance.php` into `content-surfaces.php` + `content-migrations.php` + `content-rendering-helpers.php`. Theme's `seed-content/` HTML moved alongside the migrations.
 
-**Modules still in theme (will migrate in Phases 2–3):** `updater.php`, `template-self-heal.php`, `template-maintenance.php` (Phase 2); `og-image.php`, `reading-time.php`, `notes-and-provenance.php`, `page-notes-*.php` (Phase 3).
+**Modules still in theme:** `setup.php`, `assets-frontend.php`, `frontend-filters.php`, `og-fonts.php`, `template-maintenance.php`, `page-notes-template.php`, `page-notes-render.php`, `patterns.php`. All presentation/rendering or theme-specific defenses. No further migrations planned.
 
-**Phase 4 is now empty** — the only file it was scheduled to migrate (the RSS tracker MU plugin) shipped early in v8.2.1. The `mu-plugins/` directory no longer exists in the theme repo.
+**Phase 4 is empty** — the only file it was scheduled to migrate (the RSS tracker MU plugin) shipped early in v8.2.1. The `mu-plugins/` directory no longer exists in the theme repo.
 
-**Contract hooks — 2 remain (was 7 before v8.3.0 — see Phase 2b):**
+**Contract hooks — 3 cross-package hooks (was 7 before v8.3.0; was 2 before v8.4.0):**
 
-| Hook | Type | Dispatched by plugin | Implemented by theme |
+| Hook | Type | Dispatched by | Listened by |
 | --- | --- | --- | --- |
-| `sn_purge_all_caches_result` | filter | `apply_filters( 'sn_purge_all_caches_result', 0, $args )` returns int count | [`inc/template-maintenance.php`](../inc/template-maintenance.php) wraps `sn_purge_all_caches()` |
-| `sn_clear_template_overrides_result` | filter | `apply_filters( 'sn_clear_template_overrides_result', 0 )` returns int count | [`inc/template-maintenance.php`](../inc/template-maintenance.php) wraps `sn_clear_template_overrides()` |
+| `sn_purge_all_caches_result` | filter | plugin: `apply_filters( 'sn_purge_all_caches_result', 0, $args )` returns int count | theme: [`inc/template-maintenance.php`](../inc/template-maintenance.php) wraps `sn_purge_all_caches()` |
+| `sn_clear_template_overrides_result` | filter | plugin: `apply_filters( 'sn_clear_template_overrides_result', 0 )` returns int count | theme: [`inc/template-maintenance.php`](../inc/template-maintenance.php) wraps `sn_clear_template_overrides()` |
+| `sn_og_font_paths` | filter | plugin: `apply_filters( 'sn_og_font_paths', array() )` returns array with `bebas` + `dmmono` keys mapping to absolute TTF paths | theme: [`inc/og-fonts.php`](../inc/og-fonts.php) returns paths via `get_theme_file_path( 'assets/fonts/og/*.ttf' )` |
 
 > **Retired in theme v8.3.0 (Phase 2b):** the 5 updater/self-heal contracts (`sn_self_heal_force_run_result`, `sn_updater_branch`, `sn_updater_revcount`, `sn_updater_force_check`, `sn_updater_clear_error`). See [Phase 2b spec](superpowers/specs/2026-05-15-phase-2b-cleanup-design.md).
+
+> **Added in theme v8.4.0 (Phase 3):** `sn_og_font_paths` — plugin owns OG card PHP GD rendering; theme owns the typography. See [Phase 3 spec](superpowers/specs/2026-05-16-phase-3-theme-coupled-moves-design.md).
 
 **Direct dependencies kept (no contract — stable by design):**
 - `sn_*` option keys (e.g. `sn_github_local_sha`) — plugin reads via `get_option()`.
