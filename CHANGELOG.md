@@ -2,6 +2,39 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [8.2.1] — RSS Plausible Tracker migrated to companion plugin (early Phase 4 slice)
+
+Brings the only Phase 4 file forward into the early-completion bucket, ahead of Phase 2's updater migration. The theme repo's `mu-plugins/` directory is now empty and deleted entirely. Tracking infrastructure (`wp_rss_feed_log` table, `sn_rss_tracker_*` options, `sn_rss_tracker_daily_prune` cron) lives in the [signal-and-noise-tools companion plugin v1.1.0](https://github.com/juanlentino/signal-and-noise-tools/releases/tag/v1.1.0) from this release onwards.
+
+### Changed
+
+- **Deleted `mu-plugins/` directory from the theme repo.** Contained `README.md`, `rss-plausible-tracker.php`, and `tests/bot-detection.php`. All three moved to the companion plugin (`inc/rss-plausible-tracker.php` + `tests/bot-detection.php`).
+- **[`docs/WORDPRESS-REFERENCE.md`](docs/WORDPRESS-REFERENCE.md) §10.0:** updated to reflect Phase 4 partial completion. Phase 4 is now empty — the only file it was scheduled to migrate is in the plugin.
+- **[`docs/WORDPRESS-REFERENCE.md`](docs/WORDPRESS-REFERENCE.md) §4, §5, §6, §7:** four `mu-plugins/rss-plausible-tracker.php` reference pointers updated to point at the new location in the companion plugin repo. §5's framing about "supports both install paths" rewritten to historical past tense.
+
+### Coordinated plugin release
+
+Ships alongside [signal-and-noise-tools v1.1.0](https://github.com/juanlentino/signal-and-noise-tools/releases/tag/v1.1.0). **No mandatory order** — the plugin's pre-flight guard #2 handles all scenarios:
+
+- Plugin installed first, MU file still on server: plugin defers loading the rss tracker module to the MU file. Tracking continues uninterrupted.
+- MU file deleted first, plugin not yet upgraded: tracking stops temporarily (data in `wp_rss_feed_log` is preserved). Resumes when plugin v1.1.0 lands.
+- Both upgraded simultaneously (most likely scenario): guard sees MU file, defers. Then maintainer deletes MU file via SFTP. Next request, guard passes, plugin's module takes over.
+
+### Migration steps for the maintainer
+
+1. Click theme update in WP admin → installs v8.2.1 (deletes theme repo's `mu-plugins/` directory but does not touch the live server's `wp-content/mu-plugins/`).
+2. Upload plugin v1.1.0 zip → activates new module loader.
+3. Delete `wp-content/mu-plugins/rss-plausible-tracker.php` via SFTP (or `wp mu-plugin delete rss-plausible-tracker` via WP-CLI).
+4. Next admin pageview → plugin's tracker module loads, admin notice clears.
+
+### Why patch (not minor)
+
+Structural file removal + docs updates. No new theme capability, no schema change, no breaking API change. The Phase 4 *milestone* completion is the plugin v1.1.0's minor bump; the theme's role is just cleanup. Patch bump.
+
+### Spec
+
+[docs/superpowers/specs/2026-05-15-rss-tracker-migration-design.md](docs/superpowers/specs/2026-05-15-rss-tracker-migration-design.md). Compact spec/plan combined since the scope is small.
+
 ## [8.2.0] — Phase 1 of theme + companion plugin split
 
 First minor in the 8.x line. Nine modules (`seo.php`, `security-headers.php`, `cloudflare-purge.php`, `plausible-api.php`, `plausible-admin.php`, `plausible-widget.php`, `admin-bar.php`, `admin-page.php`, `rest-api.php`) moved out of `inc/` into the new companion plugin [`signal-and-noise-tools`](https://github.com/juanlentino/signal-and-noise-tools) `v1.0.0`. Cross-package coupling resolves via **7 WP hooks (5 filters, 2 actions)** — the theme registers the listener side; the plugin dispatches.

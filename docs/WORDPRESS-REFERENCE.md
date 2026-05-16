@@ -151,15 +151,15 @@ update_option( 'large_data_blob', $data, false );  // third arg = autoload
    }
    ```
 
-4. **Hook it on `init`, not `admin_init`,** if anything front-end depends on the table existing. MU plugins like `mu-plugins/rss-plausible-tracker.php` need this because feed-request inserts arrive before any admin pageview on a cold install.
+4. **Hook it on `init`, not `admin_init`,** if anything front-end depends on the table existing. The RSS tracker module needs this because feed-request inserts arrive before any admin pageview on a cold install.
 
-**Reference implementation:** [mu-plugins/rss-plausible-tracker.php](../mu-plugins/rss-plausible-tracker.php) `sn_rss_tracker_install()` + `sn_rss_tracker_maybe_install()` — the v8.0.0 RSS tracker. Read the file header for the cold-install race rationale.
+**Reference implementation:** `sn_rss_tracker_install()` + `sn_rss_tracker_maybe_install()` in the [signal-and-noise-tools companion plugin's inc/rss-plausible-tracker.php](https://github.com/juanlentino/signal-and-noise-tools/blob/main/inc/rss-plausible-tracker.php). Read the file header for the cold-install race rationale. (Migrated from theme's `mu-plugins/` directory in v8.2.1 / Tools v1.1.0.)
 
 ---
 
 ## 5. MU plugins vs regular plugins
 
-Same code, different lifecycle. The RSS tracker plugin we shipped supports both install paths (see [`mu-plugins/rss-plausible-tracker.php`](../mu-plugins/rss-plausible-tracker.php) header).
+Same code, different lifecycle. The RSS tracker was originally an MU plugin (v8.0.0–v8.2.0); migrated to the companion plugin as a regular module in v8.2.1 / Tools v1.1.0. Either path is viable; the table below documents the trade-offs.
 
 | Aspect | MU plugin (`wp-content/mu-plugins/`) | Regular plugin (`wp-content/plugins/`) |
 | --- | --- | --- |
@@ -189,7 +189,7 @@ wp_remote_post( $endpoint, array(
 ) );
 ```
 
-**Reference:** [mu-plugins/rss-plausible-tracker.php](../mu-plugins/rss-plausible-tracker.php) `sn_rss_tracker_send_plausible()`. The DB log row is the durable fallback when the non-blocking POST fails silently.
+**Reference:** `sn_rss_tracker_send_plausible()` in the [companion plugin's inc/rss-plausible-tracker.php](https://github.com/juanlentino/signal-and-noise-tools/blob/main/inc/rss-plausible-tracker.php). The DB log row is the durable fallback when the non-blocking POST fails silently.
 
 **When to also log on failure:** if the non-blocking POST is the only durable channel (no DB fallback), `error_log` the failure. If there IS a DB fallback (like in our case), the silent fail is acceptable design.
 
@@ -241,7 +241,7 @@ function my_handler() {
 add_action( 'admin_init', 'my_handler' );
 ```
 
-**Reference:** [mu-plugins/rss-plausible-tracker.php](../mu-plugins/rss-plausible-tracker.php) `sn_rss_tracker_handle_form()`. Has the soft nonce pattern, the three-state flash on `update_option` returns, and the explicit-fail-vs-success distinction on `$wpdb->query`.
+**Reference:** `sn_rss_tracker_handle_form()` in the [companion plugin's inc/rss-plausible-tracker.php](https://github.com/juanlentino/signal-and-noise-tools/blob/main/inc/rss-plausible-tracker.php). Has the soft nonce pattern, the three-state flash on `update_option` returns, and the explicit-fail-vs-success distinction on `$wpdb->query`.
 
 ---
 
@@ -287,9 +287,13 @@ This theme has a non-standard update mechanism AND a companion plugin that holds
 
 The theme is presentation; the companion plugin [`signal-and-noise-tools`](https://github.com/juanlentino/signal-and-noise-tools) holds operational tooling. They communicate via 7 WP hooks. **The split is partial as of v8.2.0** — 9 modules moved (Phase 1); Phases 2–4 will migrate the rest. See `docs/superpowers/specs/2026-05-15-companion-plugin-phase-1-design.md` and successors.
 
-**Modules currently in plugin (Phase 1 moves):** `seo.php`, `security-headers.php`, `cloudflare-purge.php`, `plausible-api.php`, `plausible-admin.php`, `plausible-widget.php`, `admin-bar.php`, `admin-page.php`, `rest-api.php`.
+**Modules currently in plugin:**
+- *Phase 1 moves (v8.2.0 / Tools v1.0.0):* `seo.php`, `security-headers.php`, `cloudflare-purge.php`, `plausible-api.php`, `plausible-admin.php`, `plausible-widget.php`, `admin-bar.php`, `admin-page.php`, `rest-api.php`.
+- *Early Phase 4 slice (v8.2.1 / Tools v1.1.0):* `rss-plausible-tracker.php` (was theme's `mu-plugins/rss-plausible-tracker.php`).
 
-**Modules still in theme (will migrate in Phases 2–4):** `updater.php`, `template-self-heal.php`, `template-maintenance.php` (Phase 2); `og-image.php`, `reading-time.php`, `notes-and-provenance.php`, `page-notes-*.php` (Phase 3); `mu-plugins/rss-plausible-tracker.php` (Phase 4).
+**Modules still in theme (will migrate in Phases 2–3):** `updater.php`, `template-self-heal.php`, `template-maintenance.php` (Phase 2); `og-image.php`, `reading-time.php`, `notes-and-provenance.php`, `page-notes-*.php` (Phase 3).
+
+**Phase 4 is now empty** — the only file it was scheduled to migrate (the RSS tracker MU plugin) shipped early in v8.2.1. The `mu-plugins/` directory no longer exists in the theme repo.
 
 **Contract hooks (since v8.2.0):**
 
