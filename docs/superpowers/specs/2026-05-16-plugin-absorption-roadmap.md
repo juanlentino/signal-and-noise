@@ -168,10 +168,20 @@ Phase numbers continue from the existing roadmap (Phases 1-5 shipped).
 
 All vanilla WP hooks; works on current 6.x and 7.0+. Compatibility rules (above) apply.
 
-**Phase 6: Verify Phase 3 OG cards under TSF** (30 min diagnostic, no version bump)
-- Visit `https://juanlentino.com/notes/<some-post>/` → view-source → check `<meta property="og:image">` URL
-- If `https://juanlentino.com/wp-content/uploads/sn-og/<slug>.png` → no bug, Phase 3's integration is working
-- If site icon (`cropped-jl_logo-min.png`) → **bug confirmed**: our `wpseo_*` hooks don't fire under TSF. Note for Phase 10.
+**Phase 6: ✅ COMPLETE 2026-05-16** — Verify Phase 3 OG cards under TSF (30 min diagnostic + quick-win patch shipped as plugin v1.4.1)
+
+**Diagnostic finding (more nuanced than expected):** the OG cards have been generating correctly all along. `inc/seo.php` (in the plugin since Phase 1, v8.2.0) emits OG/Twitter meta tags via `wp_head` directly — it never depended on the `wpseo_*` filter hooks in og-card-generator.php (which are dead code under TSF). So our cards have been emitted in `<head>` correctly the whole time.
+
+**The real bug:** TSF was ALSO emitting OG/Twitter meta tags, FIRST in the source, pointing at the site icon as fallback. Result: duplicate conflicting `og:image` and `twitter:image` tags. Crawler parsing of duplicates is undefined; Facebook Debugger would flag the page.
+
+**Quick-win patch shipped (plugin v1.4.1, commit `2b398b8`):** added `the_seo_framework_meta_generator_pools` filter to remove `Open_Graph`, `Facebook`, `Twitter` from TSF's emission. Verified live: og:image count = 1 (was 2), twitter:image count = 1 (was 2), URL points at our generated `/sn-og/post-{ID}.png` cards. Single source of truth restored.
+
+**Phase 10+11 scope revised** (significantly smaller than original estimate):
+- Phase 10 was estimated ~300 LOC; actual scope is ~150 LOC of additions to existing `inc/seo.php` (canonical URL, robots meta, `og:locale`, `og:image:width`/`height`, `article:published_time`/`modified_time`, `twitter:site`/`twitter:creator`) + deletion of the dead `wpseo_*` filter hooks in `og-card-generator.php`.
+- Phase 11 was estimated ~250 LOC; actual scope is ~200 LOC for JSON-LD module + per-post meta box. Drop BreadcrumbList (WP 7.0 ships native).
+- Phase 13 cutover unchanged: deactivate TSF entirely, ships as plugin v2.0.0 (major).
+
+**Net effect on roadmap:** Phase 10+11 combined dropped from ~550 LOC to ~350 LOC.
 
 **Phase 8: wps-hide-login absorption** (~80 LOC). Vanilla `login_url` + rewrite-rules filters. Ships as plugin v1.5.0.
 
