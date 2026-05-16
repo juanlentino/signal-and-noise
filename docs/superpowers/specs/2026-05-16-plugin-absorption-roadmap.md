@@ -4,19 +4,70 @@
 **Status:** Strategic direction; brainstorm not yet held — **gated on WP 7.0 release audit (May 20, 2026)**
 **Author intent:** captured at end of the Phase 5 session, before clearing for a fresh session that will hold the actual brainstorms
 
-## ⚠️ Mandatory prerequisite: WP 7.0 audit (May 20, 2026)
+## ✅ WP 7.0 audit — COMPLETED 2026-05-16
 
-**Do not start any absorption phase or net-new-feature phase until WP 7.0 has shipped and its feature set has been audited against this roadmap.** WordPress 7.0 ships on May 20, 2026 (four days after this doc's creation). Building a feature WordPress core absorbs natively shortly after is wasted work.
+WordPress 7.0 ships on May 20, 2026. The audit was conducted on 2026-05-16 against the following sources:
 
-The audit consists of reading three sources and re-evaluating the candidate columns below:
+- [WP 7.0 Field Guide (make.wordpress.org/core, 2026-05-14)](https://make.wordpress.org/core/2026/05/14/wordpress-7-0-field-guide/)
+- [Introducing the AI Client in WordPress 7.0 (make.wordpress.org/core, 2026-03-24)](https://make.wordpress.org/core/2026/03/24/introducing-the-ai-client-in-wordpress-7-0/)
+- [Proposal for merging WP AI Client into WordPress 7.0 (make.wordpress.org/core, 2026-02-03)](https://make.wordpress.org/core/2026/02/03/proposal-for-merging-wp-ai-client-into-wordpress-7-0/)
+- Search results synthesized 2026-05-16 (DreamHost, GreenGeeks, Kinsta, ByteIota)
 
-1. **WP 7.0 Field Guide** at [make.wordpress.org/core](https://make.wordpress.org/core) — the canonical developer-facing changes summary. Published 2-3 weeks before each WP major release. Read the entire Field Guide; it lists every developer-facing API addition, deprecation, and behavioral change in the release.
+### Audit verdict per candidate
 
-2. **Performance Lab module graduations** — which Performance Lab modules merged into core. Check `wp-content/plugins/performance-lab/` against new core capabilities; you may be able to deactivate Performance Lab entirely if its modules all graduated. The WP Performance Team usually publishes a "Modules Graduating to Core in WP X.Y" post around the time of each release.
+| Candidate | WP 7.0 status | Action |
+|---|---|---|
+| **SEO absorption** | Not addressed — WP remains hands-off | ✅ Proceed as planned; ADD AI-assisted features (see below) |
+| **wps-hide-login absorption** | Not in core | ✅ Proceed as planned |
+| **Deploy status widget** | Not in core (no GHA integration in WP 7.0) | ✅ Proceed; consider integrating with new Command Palette (⌘K) |
+| **Outgoing API rate-limit monitor** | Not in core | ✅ Proceed as planned |
+| **Personal automation webhooks** | Not in core | ✅ Proceed; consider registering as **Abilities** (see below) |
+| **Cron job dashboard** | Not added in 7.0 (was ⚠️ Medium risk) | ✅ Survives the audit; proceed |
+| **Content health checks** | Site Health did NOT expand into content (was ⚠️ Medium-high risk) | ✅ Survives the audit; consider AI-assisted suggestions |
+| **Breadcrumbs** (was a planned sub-feature of SEO absorption) | **Native Breadcrumbs block in 7.0** | ❌ DROP from scope. Use the native block. |
 
-3. **Cron / Site Health changelogs** — specifically check for cron dashboard or content-health expansions, since those overlap two of our proposed net-new features (cron job dashboard, content health checks). These two candidates are tagged ⚠️ Medium / Medium-high risk in the table below; the audit determines whether they survive as part of the absorption roadmap.
+### Things WP 7.0 SHIPS that reshape our strategy
 
-If the audit reveals that WP 7.0 absorbs functionality we'd otherwise have built, the affected candidates are removed from this roadmap and the remaining ones are sequenced as written.
+The single most consequential addition is the **AI Building Blocks** subsystem:
+
+- **`wp_ai_client_prompt('text')`** — fluent builder, returns `WP_AI_Client_Prompt_Builder`. Supports text/image/speech/video output, JSON-schema-validated responses, model preferences, system instructions, temperature/top_p/top_k/max_tokens.
+- **Connectors API** — site admin configures API keys ONCE in `Settings > Connectors`. WP ships 3 official provider plugins (OpenAI, Anthropic, Google) — installed separately, not bundled in core. Plugin developers never handle credentials.
+- **Abilities API** — server + client-side. Plugins register named typed actions; the AI Client can discover and invoke them. Effectively "LSP for AI." `@wordpress/core-abilities` package on the client.
+- **Capability gating** — `wp_ai_client_prevent_prompt` filter controls which prompts a user can dispatch.
+
+**Other 7.0 features worth knowing about** (not strictly affecting our scope but adoption-worthy):
+- **Command Palette** (⌘K / Ctrl+K) in admin bar — extensible; plugins can register commands.
+- **DataViews / DataForms** — Posts/Pages/Media list screens rebuilt. Use this pattern when building list UIs (deploy history, cron events).
+- **Iframed editor**, **Custom CSS per block**, **Viewport-based block visibility**, **View Transitions**, **Modern color scheme** — editor/admin polish; no direct action needed.
+- New blocks: **Headings, Breadcrumbs, Icons, Playlist**, Navigation Overlay Close — Breadcrumbs and Icons are now native; useful in templates.
+- **Iframed editor** — doesn't affect our theme (we have no editor JS).
+- **PHP minimum bumped to 7.4** — we already require 8.0; no action.
+- **OPCache in Site Health > Info** — diagnostic-only addition.
+- **`plugins_list_status_text` filter, Block Hooks moved to REST controller** — small API additions.
+
+**Things WP 7.0 does NOT do** (audit confirmations):
+- No native SEO meta tag emission, OG/Twitter cards, or schema.org JSON-LD
+- No Site Health expansion into content quality
+- No cron dashboard
+- No login URL hiding
+- No Performance Lab module graduations called out in the Field Guide
+- No changes to plugin/theme update transients or upgrader_pre_install (our Phase 5 integration stays compatible)
+
+### NEW candidates unlocked by WP 7.0 AI primitives
+
+These are features that would have required us to build full OpenAI/Anthropic integrations ourselves before WP 7.0. With the AI Client in core, they become ~30-150 LOC each:
+
+| New candidate | Description | Scope (LOC) |
+|---|---|---|
+| **AI-assisted meta descriptions** (bolts onto SEO module) | When editing a post, button to "Generate meta description with AI" → calls `wp_ai_client_prompt()` with post content as context, populates the meta_description field | ~50 |
+| **AI-assisted alt-text** | On image upload, optionally auto-generate alt-text via AI (image-input → text-output, supported by 7.0's multimodal API) | ~40 |
+| **AI-assisted excerpt generation** | Generate WP excerpt from post content via AI | ~30 |
+| **AI-assisted OG card text** | Phase 3's OG generator gets an enhancement: use AI to generate a punchier card-friendly title rather than reusing post_title verbatim | ~50 |
+| **Abilities API integration** | Register our existing actions as Abilities: `regenerate_og_card`, `purge_caches`, `get_deploy_status`, `clear_overrides`. AI Client can orchestrate them via chat-style UX | ~100 |
+| **Site self-knowledge chat (RAG-lite)** | Ask the site "what posts did I publish last month?" or "regenerate the OG card for [post]" — AI Client routes via registered Abilities | ~150 |
+| **AI-assisted content health** (bolts onto content health checks) | Instead of just listing "this image has no alt text," generate a suggested alt-text inline with one-click apply | ~80 |
+
+These all DEPEND on WP 7.0 being installed AND the user having configured at least one AI Connector (Anthropic API key, OpenAI API key, etc.). Plugins gate AI features with feature detection: `is_supported_for_text_generation()`.
 
 ## Context
 
@@ -99,23 +150,42 @@ Ranked by value-to-effort, with WP 7.0 overlap risk:
 | **Cron job dashboard** — surfaces WP-cron health. Per-event next-run + last-fired + "run now" button. | Medium | ~120 LOC | ⚠️ Medium — re-evaluate after WP 7.0 audit |
 | **Content health checks** — orphaned media, missing alt text, broken internal links, posts older than N years with no recent edit. | Medium | ~200 LOC | ⚠️ Medium-high — WP Site Health may expand in 7.0; re-evaluate after audit |
 
-## Suggested sequencing (revised 2026-05-16 with WP 7.0 gate)
+## Sequencing (post-audit, revised 2026-05-16)
 
-**Phase 6: WP 7.0 audit** (May 20+, ~1 hour) — read the three sources in the prerequisite section. Update this roadmap doc to remove any candidates that 7.0 absorbs. Output: a revised candidate matrix.
+Audit complete; sequencing below is the post-audit confirmed plan. Phase numbers continue from the existing roadmap (Phases 1-5 shipped).
 
-**Phase 7: Verify Phase 3 OG cards under TSF** (30 min diagnostic) — confirm whether our `wpseo_*` filter hooks actually fire under TSF. If they don't, our OG cards have been invisible since Phase 3 — which makes the SEO absorption more urgent. Quick: visit a post, view-source, check `og:image` URL. If it's the site icon (not `/sn-og/<slug>.png`), the bug is confirmed.
+**Phase 6: Verify Phase 3 OG cards under TSF** (30 min diagnostic, no version bump)
+- Visit `https://juanlentino.com/notes/<some-post>/` → view-source → check `<meta property="og:image">` URL
+- If it's `https://juanlentino.com/wp-content/uploads/sn-og/<slug>.png` → no bug, Phase 3's integration is working
+- If it's the site icon (`cropped-jl_logo-min.png`) → **bug confirmed**: our `wpseo_*` filter hooks aren't firing under TSF. Note for Phase 10.
 
-**Phase 8: wps-hide-login absorption** (warmup, ~80 LOC). Smallest candidate; good to validate the absorption playbook before tackling SEO. Ships as plugin v1.5.0 (minor).
+**Phase 7: WP 7.0 upgrade** (after May 20, 2026)
+- Upgrade WP core from current 6.x to 7.0.x
+- Install + configure ONE AI provider plugin (recommend Anthropic — already used as the deploy automation source)
+- Configure API key in Settings > Connectors
+- Verify our Phase 5 update integration still works (it should — the filters didn't change)
+- Verify our Phase 3 OG card generator still works
+- No code changes to our packages required by 7.0 upgrade
 
-**Phase 9: Deploy status widget** (~150 LOC). Satisfies the Phase 6 click-to-update want from earlier (visibility + deep-link to manual deploy trigger) without rewiring the deploy architecture. Ships as plugin v1.6.0 (minor).
+**Phase 8: wps-hide-login absorption** (warmup, ~80 LOC). Smallest candidate. Validate the absorption playbook. Ships as plugin v1.5.0 (minor).
 
-**Phase 10: SEO absorption — foundation** (~300 LOC). Meta title + description + Open Graph + Twitter Card + canonical + robots. Wires directly to existing OG card generator. Migration: soft overlap with TSF for a week, then deactivate. Ships as plugin v1.7.0 (minor).
+**Phase 9: Deploy status widget** (~150 LOC). Satisfies the Phase 6-from-earlier click-to-update visibility want. Adopt WP 7.0's Command Palette pattern for deploy-trigger shortcut. Ships as plugin v1.6.0 (minor).
 
-**Phase 11: SEO absorption — schema + admin UI** (~250 LOC). JSON-LD (Article, WebSite, Person, BreadcrumbList) + per-post meta box for title/description overrides. Ships as plugin v1.8.0 (minor) OR v2.0.0 (major if it deactivates TSF as the final cutover step).
+**Phase 10: SEO absorption — foundation** (~300 LOC). Meta title + description + Open Graph + Twitter Card + canonical + robots. Wires directly to existing OG card generator (fixing the latent bug from Phase 6). Soft-overlap migration with TSF for a week, then deactivate. Ships as plugin v1.7.0 (minor).
 
-**Phase 12+: Net-new features survivors** — sequence Outgoing API rate-limit monitor, Personal automation webhooks, and any of the ⚠️ items that survived the WP 7.0 audit. Each its own phase.
+**Phase 11: SEO absorption — schema + admin UI** (~250 LOC). JSON-LD (Article, WebSite, Person — drop BreadcrumbList since WP 7.0 ships a native Breadcrumbs block) + per-post meta box for title/description overrides. Ships as plugin v1.8.0.
 
-That's a ~6-phase roadmap (Phase 6-11 confirmed; 12+ contingent on audit). At one phase every week-or-two, this is a 2-3 month arc.
+**Phase 12: AI-assisted SEO additions** (~120 LOC). Add "Generate with AI" button to per-post meta description field. Add automatic alt-text generation on image upload. Both use `wp_ai_client_prompt()`. Ships as plugin v1.9.0.
+
+**Phase 13: Final TSF cutover** (no new code, just deactivation). After 1-2 weeks of A/B observation with both plugins active. Deactivate TSF. Ships as plugin v2.0.0 (major — TSF dependency dropped).
+
+**Phase 14: Abilities API registration** (~100 LOC). Register existing operations (regenerate_og_card, purge_caches, get_deploy_status, clear_overrides) as Abilities. Enables AI Client to orchestrate them. Ships as plugin v2.1.0 (minor).
+
+**Phase 15+: Surviving net-new features** — Outgoing API rate-limit monitor, Personal automation webhooks, Cron job dashboard, Content health checks (consider AI-assisted version). Each its own phase. Order by user priority at the time.
+
+**Phase 16+: AI features powered by WP 7.0** — AI excerpt generator, AI OG card text generator, Site self-knowledge chat (RAG-lite via Abilities). All depend on Phases 12+14 being in place.
+
+That's a 10-phase roadmap (Phase 6-15) with possible extension via 16+. At one phase per week or two, ~3-5 month arc. Phases 6+7 are prerequisites that take <2 hours total of actual work.
 
 Each phase is its own brainstorm-spec-plan-execute cycle.
 
