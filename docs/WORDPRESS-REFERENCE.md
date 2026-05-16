@@ -295,17 +295,14 @@ The theme is presentation; the companion plugin [`signal-and-noise-tools`](https
 
 **Phase 4 is now empty** — the only file it was scheduled to migrate (the RSS tracker MU plugin) shipped early in v8.2.1. The `mu-plugins/` directory no longer exists in the theme repo.
 
-**Contract hooks (since v8.2.0):**
+**Contract hooks — 2 remain (was 7 before v8.3.0 — see Phase 2b):**
 
 | Hook | Type | Dispatched by plugin | Implemented by theme |
 | --- | --- | --- | --- |
 | `sn_purge_all_caches_result` | filter | `apply_filters( 'sn_purge_all_caches_result', 0, $args )` returns int count | [`inc/template-maintenance.php`](../inc/template-maintenance.php) wraps `sn_purge_all_caches()` |
 | `sn_clear_template_overrides_result` | filter | `apply_filters( 'sn_clear_template_overrides_result', 0 )` returns int count | [`inc/template-maintenance.php`](../inc/template-maintenance.php) wraps `sn_clear_template_overrides()` |
-| `sn_self_heal_force_run_result` | filter | `apply_filters( 'sn_self_heal_force_run_result', null )` returns array or null | [`inc/template-self-heal.php`](../inc/template-self-heal.php) wraps `sn_self_heal_force_run()` |
-| `sn_updater_branch` | filter | `apply_filters( 'sn_updater_branch', 'main' )` returns string | [`inc/updater.php`](../inc/updater.php) wraps `sn_updater_branch()` |
-| `sn_updater_revcount` | filter | `apply_filters( 'sn_updater_revcount', 0, $branch, $version )` returns int | [`inc/updater.php`](../inc/updater.php) wraps `sn_updater_revcount()` |
-| `sn_updater_force_check` | action | `do_action( 'sn_updater_force_check' )` | [`inc/updater.php`](../inc/updater.php)'s `sn_updater_force_check()` consolidates the cache-clear sequence + `wp_update_themes()` |
-| `sn_updater_clear_error` | action | `do_action( 'sn_updater_clear_error' )` | [`inc/updater.php`](../inc/updater.php)'s `sn_updater_clear_error()` clears `sn_github_error` transient |
+
+> **Retired in theme v8.3.0 (Phase 2b):** the 5 updater/self-heal contracts (`sn_self_heal_force_run_result`, `sn_updater_branch`, `sn_updater_revcount`, `sn_updater_force_check`, `sn_updater_clear_error`). See [Phase 2b spec](superpowers/specs/2026-05-15-phase-2b-cleanup-design.md).
 
 **Direct dependencies kept (no contract — stable by design):**
 - `sn_*` option keys (e.g. `sn_github_local_sha`) — plugin reads via `get_option()`.
@@ -314,40 +311,25 @@ The theme is presentation; the companion plugin [`signal-and-noise-tools`](https
 
 **When adding new cross-package interactions:** add a row to the table above and document the listener side in the theme file that owns the underlying function. **Never let plugin code directly call a theme function — even with `function_exists` guards.** The contract pattern is non-negotiable.
 
-### 10.1 The updater
+### 10.1 The updater — RETIRED in v8.3.0
 
-**[inc/updater.php](../inc/updater.php)** tracks `origin/main` by commit SHA via GitHub API. Pushes to main → admin pageview within 30 seconds → SHA-mismatch detected → WP `update_themes` transient invalidated → next admin pageview shows the update offer.
+The GitHub-poll self-updater (`inc/updater.php`) and the associated
+`sn_updater_*` contracts were removed in theme v8.3.0 (2026-05-15) when
+Phase 2b landed. Theme deploys now ride Cloudways' git-pull on tag push
+(see [Phase 2a spec](superpowers/specs/2026-05-15-cloudways-auto-deploy-design.md))
+which makes the WP-Cron SWR refresh + filter-injection layer redundant.
 
-Key constants:
+If you're maintaining a fork that still needs in-WP update polling,
+restore from git history at the v8.2.1 tag.
 
-- `SN_GITHUB_REPO` — `juanlentino/signal-and-noise`
-- `SN_THEME_SLUG` — `signal-and-noise`
-- `SN_GITHUB_TOKEN` — defined in `wp-config.php`, fine-grained PAT with `contents:read`
-- `SN_GITHUB_BRANCH` — optional, defaults to `main`
+### 10.2 Self-heal — RETIRED in v8.3.0
 
-Key hooks:
+The file-drift recovery module (`inc/template-self-heal.php`) was removed
+in theme v8.3.0. Under Cloudways' git-pull deploys, the file tree is
+atomically consistent with the deployed commit — there's nothing to "heal."
 
-- `pre_set_site_transient_update_themes` — injects the synthetic update offer when remote SHA differs from `sn_github_local_sha`
-- `upgrader_process_complete` — after a successful update, re-fetches SHA + stores as the new `local_sha`. Also force-runs self-heal.
-- `upgrader_source_selection` — renames the extracted folder to `signal-and-noise` (fixes the `juanlentino-signal-and-noise-HASH/` naming GitHub zipballs produce)
-- `http_request_args` — injects the auth token on `api.github.com/repos/SN_GITHUB_REPO` requests
-- `load-update-core.php` — clears caches **only** on `?force-check=1` (not every visit — that was the `fbd6b30` bug)
-
-### 10.2 Self-heal
-
-**[inc/template-self-heal.php](../inc/template-self-heal.php)** force-syncs `templates/*.html` and `parts/*.html` from GitHub `main` on a 5-min cron. This catches the "deploy didn't take effect on one route" failure mode (file lock or permission glitch on Cloudways during update).
-
-**Critical scope:** self-heal ONLY syncs **template files** — `templates/*.html` and `parts/*.html`. It does NOT touch:
-
-- `style.css` (the theme Version: header only advances via full theme update)
-- `inc/*.php` (PHP code only updates via full theme update)
-- `assets/` (static assets only update via full theme update)
-
-This means: between a push and the user clicking Update, the **template markup** on the live site may be ahead of the **style.css version + PHP code**. Plan accordingly:
-
-- A template-only change (markup, copy edits inside FSE templates) lands within 5 min of push via self-heal.
-- A PHP-side change (a new filter, a fix in `inc/`) only lands when the user clicks Update.
-- If a template change DEPENDS on a PHP change (e.g., the v8.0.4 social-link filter), ship both in the same commit and explain in the CHANGELOG that the template change won't fully work until the PHP update lands.
+The `/heal-templates` plugin REST endpoint was retired in plugin v1.2.0
+to match.
 
 ### 10.3 The synthetic update label
 
