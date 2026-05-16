@@ -2,6 +2,11 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [8.4.1] - 2026-05-16
+
+### Fixed
+- `style.css` Version field bumped to `8.4.1`. The v8.4.0 release shipped all the Phase 3 code changes correctly but the Version header in `style.css` was left at `8.3.0` due to an editor-tool sequencing error during the release commit. Cosmetic only — WP admin → Themes would show "Version 8.3.0" until this patch. No functional behavior depends on the field value.
+
 ## [8.4.0] - 2026-05-16
 
 ### Removed
