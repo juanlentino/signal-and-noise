@@ -106,16 +106,24 @@ Once auto-deploy works, the following becomes dead code:
 
 Phase 2b (future session): delete the obsoleted code, ship a coordinated theme `v8.3.0` + plugin `v1.2.0` that removes ~1,400 lines of now-unused code.
 
-## Assumptions and risks
+## Post-execution corrections
 
-### Assumed Cloudways API shape
+The spec assumed both theme + plugin could each get their own Cloudways Git Integration deployment. **Wrong.** Cloudways' Deployment Via Git dashboard exposes **a single repository configuration per application** — only one repo can be auto-pulled. Discovered while configuring during execution.
 
-Not verified during spec authoring (public docs returned 403 to my fetcher). To validate before merging the workflow file:
+**Resolution:** Cloudways auto-deploy goes to the **theme only** (the higher-frequency update surface that motivated this work in the first place). The plugin keeps its current manual zip-upload install path documented in its README. A future phase can address plugin auto-deploy via SSH-based deploy from GitHub Actions (bypasses the Cloudways-Git-Integration limit; works symmetrically for both packages) if/when plugin auto-deploy becomes desired.
 
-- `POST /api/v1/oauth/access_token` with `email` + `api_key` body params → returns `{ "access_token": "..." }`.
-- `POST /api/v1/git/pull` with bearer auth and `server_id`, `app_id`, `branch_name`, `deploy_path` body params → returns 200/202 on success.
+**Practical impact:** plugin's `deploy.yml` is NOT created. Plugin's pre-existing manual install instructions stay. Plugin's GitHub repo has the Cloudways secrets pre-loaded (harmless; forward-compatible for the future SSH-based phase). Only the theme repo ships a working `deploy.yml` in this phase.
 
-If the actual API shape differs, the workflow will fail on first run and the response body will surface the actual error. We'd then patch the workflow. Worst case: 5 min fix.
+## Assumed (and verified during execution) Cloudways API shape
+
+Verified during the Phase 2a setup on the live Cloudways app:
+
+- `POST /api/v1/oauth/access_token` with `email` + `api_key` body params → returns `{ "access_token": "...", "token_type": "Bearer", "expires_in": 3600 }`. ✓
+- `POST /api/v1/git/pull` with bearer auth and `server_id`, `app_id`, `branch_name`, `deploy_path` body params → returns `{ "status": true, "operation_id": "flex-NNNNNNNN" }`. ✓
+- `GET /api/v1/operation/<operation_id>` with bearer auth → returns operation status. `is_completed: 1` = success, `-1` = error. ✓
+- `deploy_path` is relative to the application's `public_html/` (do NOT prefix `public_html/`). E.g., `wp-content/themes/signal-and-noise` is correct. ✓
+
+The operation_id only succeeds if Cloudways has a valid Git deployment configured for the given (server_id, app_id, deploy_path) tuple. Calling `/git/pull` without prior dashboard config returns `is_completed: -1, status: "An unexpected error has occurred."` — that's how we discovered the one-deploy-per-app limit.
 
 ### Setup race
 

@@ -1,0 +1,62 @@
+name: Deploy to Cloudways
+
+# Fires on annotated-tag push (vX.Y.Z) — matches the project's existing
+# release ritual. workflow_dispatch allows manual re-runs from the
+# Actions UI if a tagged release ever needs to be re-deployed.
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+# Serialise deploys: if a new tag fires while one is in flight, queue
+# rather than cancel — never drop a release.
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Trigger Cloudways git pull
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Authenticate with Cloudways
+        id: auth
+        env:
+          CW_EMAIL: ${{ secrets.CLOUDWAYS_EMAIL }}
+          CW_API_KEY: ${{ secrets.CLOUDWAYS_API_KEY }}
+        run: |
+          set -euo pipefail
+          response=$(curl -fsS -X POST 'https://api.cloudways.com/api/v1/oauth/access_token' \
+            --data-urlencode "email=$CW_EMAIL" \
+            --data-urlencode "api_key=$CW_API_KEY")
+          token=$(printf '%s' "$response" | jq -r '.access_token // empty')
+          if [ -z "$token" ]; then
+            printf 'Cloudways auth failed. Response:\n%s\n' "$response"
+            exit 1
+          fi
+          printf '::add-mask::%s\n' "$token"
+          printf 'token=%s\n' "$token" >> "$GITHUB_OUTPUT"
+
+      - name: Trigger git pull (theme deploy path)
+        env:
+          CW_TOKEN: ${{ steps.auth.outputs.token }}
+          CW_SERVER_ID: ${{ secrets.CLOUDWAYS_SERVER_ID }}
+          CW_APP_ID: ${{ secrets.CLOUDWAYS_APP_ID }}
+        run: |
+          set -euo pipefail
+          response=$(curl -sS -w '\n%{http_code}' -X POST 'https://api.cloudways.com/api/v1/git/pull' \
+            -H "Authorization: Bearer $CW_TOKEN" \
+            --data-urlencode "server_id=$CW_SERVER_ID" \
+            --data-urlencode "app_id=$CW_APP_ID" \
+            --data-urlencode "branch_name=main" \
+            --data-urlencode "deploy_path=wp-content/themes/signal-and-noise")
+          status=$(printf '%s' "$response" | tail -n1)
+          body=$(printf '%s' "$response" | sed '$d')
+          printf 'HTTP %s\n' "$status"
+          printf '%s\n' "$body"
+          case "$status" in
+            200|202) ;;
+            *) exit 1 ;;
+          esac
