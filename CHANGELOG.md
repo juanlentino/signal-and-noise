@@ -2,6 +2,25 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [8.4.0] - 2026-05-16
+
+### Removed
+- `inc/og-image.php` — moved to plugin `inc/og-card-generator.php`. Plugin generates OG cards via PHP GD; theme provides Bebas Neue + DM Mono TTFs through new `sn_og_font_paths` filter.
+- `inc/reading-time.php` — moved to plugin `inc/reading-time.php`. Calculation + caching + `[sn_reading_time]` shortcode + `render_block` bridge all plugin-side.
+- `inc/notes-and-provenance.php` (1,058 LOC) — moved to plugin and split into three smaller files: `inc/content-surfaces.php`, `inc/content-migrations.php`, `inc/content-rendering-helpers.php`.
+- `inc/seed-content/` directory — moved to plugin alongside the migrations that consume it.
+
+### Added
+- `inc/og-fonts.php` — registers the theme's typefaces as the response to the plugin's `sn_og_font_paths` filter.
+
+### Changed
+- Cross-package contract surface grows from 2 hooks to 3 (added `sn_og_font_paths`).
+- `docs/WORDPRESS-REFERENCE.md §10.0` updated to reflect the new contract.
+- `functions.php` module-map docblock refreshed.
+
+### Notes
+- Requires plugin v1.3.0+ for full functionality. While plugin v1.2.0 is still active (during the ~30-60s deploy gap before plugin v1.3.0 ships), the `[sn_reading_time]` shortcode renders as the literal token string in any page that uses it (notably /provenance byline). Cosmetic, recoverable on next pageload after plugin v1.3.0 lands. Theme's `inc/page-notes-render.php` calls into reading-time via `function_exists()` guard — /notes index degrades gracefully (skips reading-time enrichment) rather than failing.
+
 ## [8.3.0] - 2026-05-15
 
 ### Removed
