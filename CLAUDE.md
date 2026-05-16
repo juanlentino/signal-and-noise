@@ -4,7 +4,9 @@
 Custom WordPress Full Site Editing theme for juanlentino.com.
 Repo: juanlentino/signal-and-noise. Hosted on Cloudways (syntharchy-wp), Cloudflare CDN.
 
-**Companion plugin (since v8.2.0):** Operational tooling (REST surface, Plausible integration, admin UI, security headers, Cloudflare purge) lives in a separate companion plugin: [juanlentino/signal-and-noise-tools](https://github.com/juanlentino/signal-and-noise-tools). The split is partial — see [docs/WORDPRESS-REFERENCE.md](docs/WORDPRESS-REFERENCE.md) §10.0 for the contract surface and the migration phase plan.
+**Companion plugin (since v8.2.0):** Operational tooling lives in [juanlentino/signal-and-noise-tools](https://github.com/juanlentino/signal-and-noise-tools). Phases 1, 4 (RSS tracker), 2a (auto-deploy) shipped; 2b / 2c / 3 queued.
+
+**Start of session:** read the most recent handoff in [docs/superpowers/handoffs/](docs/superpowers/handoffs/) for current state + open questions. Contract surface + phase plan in [docs/WORDPRESS-REFERENCE.md](docs/WORDPRESS-REFERENCE.md) §10.0.
 
 ## Stack
 - WordPress FSE (block theme)
@@ -19,7 +21,7 @@ Full workflow + rationale: [docs/VERSIONING.md](docs/VERSIONING.md). Short versi
 
 **What bumps:** code, CSS, migrations, structural template changes. **What doesn't:** `docs/`, `CLAUDE.md`, content-only copy edits, CHANGELOG-only commits.
 
-**Workflow per release:** edit code → bump `Version:` in [style.css](style.css) → CHANGELOG entry at top → commit `vX.Y.Z: summary` → push → annotated tag `vX.Y.Z` at session end → smoke test runs on push → Update in WP admin.
+**Workflow per release:** edit code → bump `Version:` in [style.css](style.css) → CHANGELOG entry at top → commit `vX.Y.Z: summary` → `git push origin HEAD:main` → annotated tag `vX.Y.Z` → `git push origin vX.Y.Z` → **Cloudways auto-pulls theme in ~30s** (plugin still manual install via WP admin Upload Plugin).
 
 **Commit + tag format:**
 ```bash
@@ -34,7 +36,9 @@ git push origin vX.Y.Z
 - Aikido Security monitors this domain.
 
 ## Build & Deploy
-Edit theme files → push to repo → deploy to Cloudways via git or SFTP.
+**Theme:** auto-deploys on annotated-tag push via [.github/workflows/deploy.yml](.github/workflows/deploy.yml) → Cloudways `/api/v1/git/pull`. ~30s tag-to-live.
+**Plugin:** manual install via WP admin → Upload Plugin (Cloudways one-repo-per-app limit; Phase 2c queues SSH-based plugin auto-deploy).
+**Worktree push:** `git push origin HEAD:main` (worktree branch name differs from `main`).
 No build step. WordPress handles rendering.
 
 ## WordPress reference
