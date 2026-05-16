@@ -40,7 +40,7 @@ So when 7.0 lands, the codebase is already at a known-good state. The verificati
 - [ ] **Confirm release status.** Open https://wordpress.org/news/category/releases/ and confirm WP 7.0 is officially shipped. If a `7.0.1` patch already shipped within the first 24 hours, wait for it — that's the "first weekend bug fix" release WP almost always issues. Click Update only after the dust has settled.
 - [ ] **Check error log on the live install** via Cloudways → Server Management → Logs. Note any *current* `_doing_it_wrong` notices or PHP warnings so you can tell which are pre-existing vs. introduced by the upgrade.
 - [ ] **Take a Cloudways application backup** before the WP core upgrade. WP core upgrades are usually safe but a 2-minute snapshot is cheap insurance for a major version bump.
-- [ ] **Verify SN cache state** by hitting [`/wp-admin/themes.php?page=sn-theme-options`](https://juanlentino.com/wp-admin/themes.php?page=sn-theme-options) — the *Latest on GitHub* row should show a real SHA, not *"refreshing in background"*. If it's still cold, click *Check Now* and reload to populate the SWR cache.
+- [ ] **Verify SN cache state** by hitting [`/wp-admin/admin.php?page=sn-theme-options`](https://juanlentino.com/wp-admin/admin.php?page=sn-theme-options) — the *Latest on GitHub* row should show a real SHA, not *"refreshing in background"*. If it's still cold, click *Check Now* and reload to populate the SWR cache. (Moved from Appearance submenu to top-level menu in plugin v1.8.1.)
 
 ### Update WP core
 
@@ -62,7 +62,7 @@ For each route below, navigate to it and verify it renders correctly. The **acce
   - PDF viewer on `/resume`
   - Cal.com booking widget on `/work-with-me`
 - [ ] **404 page** — visit a deliberately-broken URL like https://juanlentino.com/this-does-not-exist and confirm the brand 404 renders.
-- [ ] **S&N admin options page** at `/wp-admin/themes.php?page=sn-theme-options`. Run each maintenance action once: *Purge All Caches*, *Heal Templates Now*, *Check for Updates*. Confirm all three succeed and surface the expected notice.
+- [ ] **S&N admin options page** at `/wp-admin/admin.php?page=sn-theme-options`. Run each maintenance action once: *Purge All Caches*, *Heal Templates Now*, *Check for Updates*. Confirm all three succeed and surface the expected notice.
 - [ ] **REST endpoints**. With your Application Password, curl one read endpoint and one write endpoint:
   ```bash
   # Read — should return cached Plausible data
