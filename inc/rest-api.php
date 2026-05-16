@@ -80,7 +80,7 @@ function sn_rest_can_manage() {
 	if ( ! current_user_can( 'manage_options' ) ) {
 		return new WP_Error(
 			'sn_rest_forbidden',
-			__( 'You do not have permission to perform this action.', 'signal-noise' ),
+			'You do not have permission to perform this action.',
 			array( 'status' => rest_authorization_required_code() )
 		);
 	}
@@ -165,10 +165,10 @@ add_action( 'rest_api_init', function() {
  */
 function sn_rest_purge_cache( WP_REST_Request $request ) {
 	if ( ! function_exists( 'sn_purge_all_caches' ) ) {
-		return new WP_Error( 'sn_rest_unavailable', __( 'Cache purge module not loaded.', 'signal-noise' ), array( 'status' => 500 ) );
+		return new WP_Error( 'sn_rest_unavailable', 'Cache purge module not loaded.', array( 'status' => 500 ) );
 	}
 	$cleared = (int) sn_purge_all_caches( array( 'template_overrides' => false ) );
-	return sn_rest_ok( __( 'All caches purged.', 'signal-noise' ), array( 'cleared' => $cleared ) );
+	return sn_rest_ok( 'All caches purged.', array( 'cleared' => $cleared ) );
 }
 
 /**
@@ -177,12 +177,12 @@ function sn_rest_purge_cache( WP_REST_Request $request ) {
  */
 function sn_rest_clear_overrides( WP_REST_Request $request ) {
 	if ( ! function_exists( 'sn_clear_template_overrides' ) ) {
-		return new WP_Error( 'sn_rest_unavailable', __( 'Template override module not loaded.', 'signal-noise' ), array( 'status' => 500 ) );
+		return new WP_Error( 'sn_rest_unavailable', 'Template override module not loaded.', array( 'status' => 500 ) );
 	}
 	$count = (int) sn_clear_template_overrides();
 	return sn_rest_ok(
 		/* translators: %d: number of database overrides cleared. */
-		sprintf( __( '%d database override(s) cleared.', 'signal-noise' ), $count ),
+		sprintf( '%d database override(s) cleared.', $count ),
 		array( 'cleared' => $count )
 	);
 }
@@ -194,21 +194,21 @@ function sn_rest_clear_overrides( WP_REST_Request $request ) {
  */
 function sn_rest_heal_templates( WP_REST_Request $request ) {
 	if ( ! function_exists( 'sn_self_heal_force_run' ) ) {
-		return new WP_Error( 'sn_rest_unavailable', __( 'Self-heal module not loaded.', 'signal-noise' ), array( 'status' => 500 ) );
+		return new WP_Error( 'sn_rest_unavailable', 'Self-heal module not loaded.', array( 'status' => 500 ) );
 	}
 	$result    = sn_self_heal_force_run();
 	$fixed_n   = isset( $result['fixed'] ) ? count( (array) $result['fixed'] ) : 0;
 	$failed_n  = isset( $result['failed'] ) ? count( (array) $result['failed'] ) : 0;
 	$message   = $fixed_n > 0
 		/* translators: %d: number of files re-synced from GitHub. */
-		? sprintf( __( 'Self-heal: re-synced %d template file(s) from GitHub.', 'signal-noise' ), $fixed_n )
-		: __( 'Self-heal: all monitored files already match GitHub.', 'signal-noise' );
+		? sprintf( 'Self-heal: re-synced %d template file(s) from GitHub.', $fixed_n )
+		: 'Self-heal: all monitored files already match GitHub.';
 
 	if ( $failed_n > 0 ) {
 		return new WP_Error(
 			'sn_heal_partial',
 			/* translators: %d: number of files that failed to write. */
-			sprintf( __( 'Self-heal: drift detected but write failed for %d file(s).', 'signal-noise' ), $failed_n ),
+			sprintf( 'Self-heal: drift detected but write failed for %d file(s).', $failed_n ),
 			array(
 				'status' => 500,
 				'fixed'  => $result['fixed'] ?? array(),
@@ -231,13 +231,13 @@ function sn_rest_heal_templates( WP_REST_Request $request ) {
  */
 function sn_rest_full_reset( WP_REST_Request $request ) {
 	if ( ! function_exists( 'sn_purge_all_caches' ) ) {
-		return new WP_Error( 'sn_rest_unavailable', __( 'Cache purge module not loaded.', 'signal-noise' ), array( 'status' => 500 ) );
+		return new WP_Error( 'sn_rest_unavailable', 'Cache purge module not loaded.', array( 'status' => 500 ) );
 	}
 	delete_transient( 'sn_github_error' );
 	$count = (int) sn_purge_all_caches();
 	return sn_rest_ok(
 		/* translators: %d: number of overrides cleared as part of a full reset. */
-		sprintf( __( 'Full reset: %d override(s) cleared and all caches purged.', 'signal-noise' ), $count ),
+		sprintf( 'Full reset: %d override(s) cleared and all caches purged.', $count ),
 		array( 'cleared' => $count )
 	);
 }
@@ -249,7 +249,7 @@ function sn_rest_full_reset( WP_REST_Request $request ) {
  */
 function sn_rest_check_updates( WP_REST_Request $request ) {
 	if ( ! function_exists( 'sn_updater_branch' ) ) {
-		return new WP_Error( 'sn_rest_unavailable', __( 'Self-updater module not loaded.', 'signal-noise' ), array( 'status' => 500 ) );
+		return new WP_Error( 'sn_rest_unavailable', 'Self-updater module not loaded.', array( 'status' => 500 ) );
 	}
 
 	$branch = sanitize_key( sn_updater_branch() );
@@ -281,7 +281,7 @@ function sn_rest_check_updates( WP_REST_Request $request ) {
 		: null;
 
 	return sn_rest_ok(
-		__( 'Update check complete.', 'signal-noise' ),
+		'Update check complete.',
 		array(
 			'branch'           => $branch,
 			'update_available' => null !== $offered,
@@ -298,14 +298,14 @@ function sn_rest_check_updates( WP_REST_Request $request ) {
  */
 function sn_rest_plausible_stats( WP_REST_Request $request ) {
 	if ( ! function_exists( 'sn_plausible_dashboard_data' ) ) {
-		return new WP_Error( 'sn_rest_unavailable', __( 'Plausible module not loaded.', 'signal-noise' ), array( 'status' => 500 ) );
+		return new WP_Error( 'sn_rest_unavailable', 'Plausible module not loaded.', array( 'status' => 500 ) );
 	}
 	$data = sn_plausible_dashboard_data();
 	if ( null === $data ) {
-		return new WP_Error( 'sn_plausible_unconfigured', __( 'Plausible is not configured (missing domain or token).', 'signal-noise' ), array( 'status' => 503 ) );
+		return new WP_Error( 'sn_plausible_unconfigured', 'Plausible is not configured (missing domain or token).', array( 'status' => 503 ) );
 	}
 	return sn_rest_ok(
-		__( 'Plausible 7-day stats.', 'signal-noise' ),
+		'Plausible 7-day stats.',
 		$data
 	);
 }
@@ -316,11 +316,11 @@ function sn_rest_plausible_stats( WP_REST_Request $request ) {
  */
 function sn_rest_plausible_realtime( WP_REST_Request $request ) {
 	if ( ! function_exists( 'sn_plausible_realtime' ) ) {
-		return new WP_Error( 'sn_rest_unavailable', __( 'Plausible module not loaded.', 'signal-noise' ), array( 'status' => 500 ) );
+		return new WP_Error( 'sn_rest_unavailable', 'Plausible module not loaded.', array( 'status' => 500 ) );
 	}
 	$value = sn_plausible_realtime();
 	return sn_rest_ok(
-		__( 'Plausible realtime visitors.', 'signal-noise' ),
+		'Plausible realtime visitors.',
 		array( 'visitors' => $value )
 	);
 }
@@ -334,11 +334,11 @@ function sn_rest_plausible_realtime( WP_REST_Request $request ) {
  */
 function sn_rest_plausible_test( WP_REST_Request $request ) {
 	if ( ! function_exists( 'sn_plausible_config' ) || ! function_exists( 'sn_plausible_api' ) ) {
-		return new WP_Error( 'sn_rest_unavailable', __( 'Plausible module not loaded.', 'signal-noise' ), array( 'status' => 500 ) );
+		return new WP_Error( 'sn_rest_unavailable', 'Plausible module not loaded.', array( 'status' => 500 ) );
 	}
 	$cfg = sn_plausible_config();
 	if ( ! $cfg ) {
-		return new WP_Error( 'sn_plausible_unconfigured', __( 'Plausible is not configured (missing domain or token).', 'signal-noise' ), array( 'status' => 503 ) );
+		return new WP_Error( 'sn_plausible_unconfigured', 'Plausible is not configured (missing domain or token).', array( 'status' => 503 ) );
 	}
 	delete_transient( SN_PLAUSIBLE_ERR_KEY );
 	$result = sn_plausible_api( 'aggregate', array( 'period' => '7d', 'metrics' => 'visitors' ), $cfg );
@@ -346,7 +346,7 @@ function sn_rest_plausible_test( WP_REST_Request $request ) {
 		$visitors = (int) ( $result['visitors']['value'] ?? 0 );
 		return sn_rest_ok(
 			/* translators: %d: number of visitors in the last 7 days. */
-			sprintf( __( 'Plausible API call succeeded — %d visitor(s) in last 7 days.', 'signal-noise' ), $visitors ),
+			sprintf( 'Plausible API call succeeded — %d visitor(s) in last 7 days.', $visitors ),
 			array( 'visitors_7d' => $visitors )
 		);
 	}
@@ -354,7 +354,7 @@ function sn_rest_plausible_test( WP_REST_Request $request ) {
 	$status  = $err && isset( $err['code'] ) && (int) $err['code'] >= 400 ? (int) $err['code'] : 502;
 	return new WP_Error(
 		'sn_plausible_test_failed',
-		__( 'Plausible API call failed.', 'signal-noise' ),
+		'Plausible API call failed.',
 		array(
 			'status'      => $status,
 			'last_error'  => $err,

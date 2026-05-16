@@ -46,7 +46,7 @@ function sn_theme_options_page() {
 	// keeps this function safe if it's ever invoked from another context
 	// (e.g. a future shortcode, AJAX dispatcher, or REST callback).
 	if ( ! current_user_can( 'manage_options' ) ) {
-		wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'signal-noise' ) );
+		wp_die( esc_html( 'You do not have sufficient permissions to access this page.' ) );
 	}
 
 	$theme         = wp_get_theme( 'signal-and-noise' );

@@ -29,7 +29,7 @@ add_action( 'init', function() {
 	// signal-noise/section, signal-noise/cta) — registration cost is
 	// trivial and the inserter UX scales better with sub-grouping.
 	register_block_pattern_category( 'signal-noise', array(
-		'label'       => __( 'Signal & Noise', 'signal-noise' ),
-		'description' => __( 'Patterns specific to the Signal & Noise theme.', 'signal-noise' ),
+		'label'       => 'Signal & Noise',
+		'description' => 'Patterns specific to the Signal & Noise theme.',
 	) );
 } );

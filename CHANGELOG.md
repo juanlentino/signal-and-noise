@@ -2,6 +2,34 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [8.1.1] — Handbook hygiene pass — strip i18n, refresh headers
+
+Five mechanical hygiene items aligning the theme with the [WordPress Theme Developer Handbook](https://developer.wordpress.org/themes/) where it costs us little. The deliberate deviations (custom self-updater, external HTTP from theme code, business logic in `inc/`, `mu-plugins/` shipped from the theme repo) remain intentional and are NOT addressed here — they're documented in [docs/WORDPRESS-REFERENCE.md](docs/WORDPRESS-REFERENCE.md) §10 and accepted as the price of running a private single-site theme. The companion plugin split and inline-styles refactor are deferred to their own future phases.
+
+### Changed
+
+- **[`inc/setup.php`](inc/setup.php) — i18n bootstrap removed.** `load_theme_textdomain( 'signal-noise', ... )` and its docblock paragraph deleted. The function `signal_noise_after_setup_theme()` retains its `add_editor_style()` block. `Text Domain: signal-noise` in `style.css` kept as passive metadata.
+- **[`inc/rest-api.php`](inc/rest-api.php) — 22 `__()` calls unwrapped.** All REST handler messages (`WP_Error` errors, `sn_rest_ok` success, sprintf placeholders) become plain string literals. JSON encoding is the rendering path; HTML escape was never applicable.
+- **[`inc/patterns.php`](inc/patterns.php) — 2 `__()` calls unwrapped.** `register_block_pattern_category()` label + description become plain strings. The block editor's Patterns inserter now shows English directly.
+- **[`inc/admin-page.php`](inc/admin-page.php) — 1 `esc_html__()` call unwrapped.** The permission-denied `wp_die()` message becomes `esc_html( '...' )` — escape preserved per original intent.
+- **[`style.css`](style.css) — header updates.** Dropped stale `dark` tag (theme is white-first by design). Bumped `Tested up to: 6.8` → `6.9` (current WP is 6.9.4). Bumped `Version: 8.1.0` → `8.1.1`.
+- **[`theme.json`](theme.json) — `$schema` bumped.** `https://schemas.wp.org/wp/6.7/theme.json` → `https://schemas.wp.org/wp/6.9/theme.json` for editor / IDE completion against current FSE schema.
+
+### Why patch
+
+All five items are mechanical changes to code or static metadata. No new user-visible capability, no schema migration, no breaking API change. First patch in the v8.1 line; well within the 7-per-minor cap.
+
+### Migration
+
+None required. Behavior is identical at runtime — string contents unchanged, function signatures unchanged, REST responses byte-identical (the `__()` calls already fell through to the source strings since no `.mo` file ever existed).
+
+### Spec + plan
+
+- [docs/superpowers/specs/2026-05-15-handbook-hygiene-pass-design.md](docs/superpowers/specs/2026-05-15-handbook-hygiene-pass-design.md)
+- [docs/superpowers/plans/2026-05-15-handbook-hygiene-pass.md](docs/superpowers/plans/2026-05-15-handbook-hygiene-pass.md)
+
+Authored via the `superpowers:brainstorming` → `superpowers:writing-plans` → `superpowers:executing-plans` skill chain.
+
 ## [8.1.0] — Notes subscribe info nested in hero (cap rollover from 8.0.7; not a new capability)
 
 The v8.0.7 placement put the `<footer class="sn-notes-feed">` block in column 2 of the `.sn-notes-top` 5fr/7fr grid (because adding a third grid child to a 2-column grid placed it where the pillar essays section had been, displacing pillars to a second row). The visual result was co-equality with the hero — nothing read as the focal point. This release nests the subscribe info inside `<header class="sn-notes-hero">` as a single compact `<p>`, drops the standalone footer block, and lets the pillars section return to column 2 of the grid.

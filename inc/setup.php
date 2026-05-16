@@ -13,17 +13,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Theme setup: register the text domain and editor styles together at
- * after_setup_theme. load_theme_textdomain() points at the languages/
- * directory we'll create when (if) translations are produced. Even
- * with no translation files present this call is harmless and makes
- * subsequent __() / esc_html__() calls behave consistently with WPCS
- * conventions; without it, sprinkled translation calls work by
- * fall-through rather than by registered intent.
+ * Theme setup: register editor styles to match the frontend cascade.
+ *
+ * i18n bootstrap intentionally absent — see v8.1.1 hygiene pass:
+ * single-author surface, no translation files will ever be produced,
+ * and the prior `load_theme_textdomain()` call pointed at a non-existent
+ * directory. The `Text Domain: signal-noise` header in style.css is
+ * retained as passive metadata.
  */
 function signal_noise_after_setup_theme() {
-	load_theme_textdomain( 'signal-noise', get_theme_file_path( 'languages' ) );
-
 	// Editor styles — same five modular stylesheets used on the public
 	// side, in the same cascade order. Keep this list in sync with the
 	// wp_enqueue chain in inc/assets-frontend.php.
