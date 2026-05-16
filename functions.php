@@ -35,6 +35,7 @@ require_once __DIR__ . '/inc/setup.php';
 require_once __DIR__ . '/inc/assets-frontend.php';
 require_once __DIR__ . '/inc/frontend-filters.php';
 require_once __DIR__ . '/inc/og-fonts.php';
+require_once __DIR__ . '/inc/wp-update-integration.php';
 
 require_once __DIR__ . '/inc/template-maintenance.php';
 require_once __DIR__ . '/inc/page-notes-template.php';

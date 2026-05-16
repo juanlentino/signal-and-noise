@@ -2,6 +2,20 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [8.5.0] - 2026-05-16
+
+### Added
+- `inc/wp-update-integration.php` — registers the theme with WordPress's native update system. Theme now appears in `wp-admin/update-core.php` and Appearance → Themes alongside other themes, showing current version and "up to date" status (or "update available" if auto-deploy ever falls behind a tag). ~120 LOC.
+
+### Behaviour
+- Polls GitHub Tags API every 12h (cached in `sn_gh_latest_theme` site transient). Picks the highest `v\d+\.\d+\.\d+` semver tag.
+- Hooks `pre_set_site_transient_update_themes` to inject the theme into WP's update registry: into `->no_update` when local matches GitHub (the normal case under auto-deploy), into `->response` when GitHub is ahead.
+- Hooks `upgrader_pre_install` to intercept "Update Now" with a WP_Error directing the maintainer to push a git tag instead — preserves the git checkout that auto-deploy depends on.
+
+### Notes
+- ~70 LOC of new code restores the user-facing visibility that was deleted in Phase 2b (`inc/updater.php` at 683 LOC) without bringing back the polling-heavy / self-heal / SHA-tracking machinery that auto-deploy made redundant.
+- GitHub API is queried unauthenticated. 60 requests/hour limit per IP is plenty (cache TTL means 2 requests/day max). Graceful failure: empty cache for 1h on API error.
+
 ## [8.4.1] - 2026-05-16
 
 ### Fixed
