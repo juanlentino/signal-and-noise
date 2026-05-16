@@ -69,3 +69,25 @@ jobs:
             200|202) ;;
             *) exit 1 ;;
           esac
+
+      - name: Purge Cloudflare cache
+        env:
+          WP_DEPLOY_USER: ${{ secrets.WP_DEPLOY_USER }}
+          WP_DEPLOY_APP_PASSWORD: ${{ secrets.WP_DEPLOY_APP_PASSWORD }}
+          PURGE_URL: 'https://juanlentino.com/wp-json/signal-noise/v1/purge-cache'
+        run: |
+          set -euo pipefail
+          # Let Cloudways' git pull settle + OPcache invalidate.
+          sleep 5
+          auth=$(printf '%s:%s' "$WP_DEPLOY_USER" "$WP_DEPLOY_APP_PASSWORD" | base64 -w 0)
+          response=$(curl -sS -w '\n%{http_code}' -X POST "$PURGE_URL" \
+            -H "Authorization: Basic $auth" \
+            -H 'Accept: application/json')
+          status=$(printf '%s' "$response" | tail -n1)
+          body=$(printf '%s' "$response" | sed '$d')
+          printf 'HTTP %s\n' "$status"
+          printf '%s\n' "$body"
+          case "$status" in
+            200) ;;
+            *) exit 1 ;;
+          esac
