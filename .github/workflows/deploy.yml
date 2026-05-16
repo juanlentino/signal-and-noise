@@ -28,11 +28,6 @@ jobs:
           CW_API_KEY: ${{ secrets.CLOUDWAYS_API_KEY }}
         run: |
           set -euo pipefail
-          # DEBUG: lengths only, never the values
-          printf 'email length: %d\n' "${#CW_EMAIL}"
-          printf 'api_key length: %d\n' "${#CW_API_KEY}"
-          printf 'curl version: ' && curl --version | head -1
-          printf 'runner public IP: ' && curl -sS https://api.ipify.org && printf '\n'
           response=$(curl -sS -w '\n%{http_code}' -X POST 'https://api.cloudways.com/api/v1/oauth/access_token' \
             -H 'User-Agent: signal-and-noise-deploy/1.0 (GitHub Actions)' \
             -H 'Accept: application/json' \
@@ -41,13 +36,13 @@ jobs:
           status=$(printf '%s' "$response" | tail -n1)
           body=$(printf '%s' "$response" | sed '$d')
           printf 'HTTP %s\n' "$status"
-          printf 'Body: %s\n' "$body"
           if [ "$status" != "200" ]; then
+            printf 'Auth failed. Body: %s\n' "$body"
             exit 1
           fi
           token=$(printf '%s' "$body" | jq -r '.access_token // empty')
           if [ -z "$token" ]; then
-            printf 'Token extraction failed from body above\n'
+            printf 'Token extraction failed. Body: %s\n' "$body"
             exit 1
           fi
           printf '::add-mask::%s\n' "$token"
