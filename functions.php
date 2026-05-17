@@ -10,6 +10,8 @@
  *   inc/assets-frontend.php      — frontend CSS/JS/fonts/favicons + defer filters
  *   inc/frontend-filters.php     — skip link, oEmbed, generator-tag stripping, output buffer
  *   inc/og-fonts.php             — registers sn_og_font_paths filter (theme brand fonts → plugin's OG generator)
+ *   inc/wp-update-integration.php       — registers theme with WP's update transient (version visibility in wp-admin)
+ *   inc/wp-update-git-preservation.php  — backs up/restores .git through WP UI installs (v8.5.2+)
  *   inc/template-maintenance.php — FSE template-override purge + sn_purge_all_caches_result/sn_clear_template_overrides_result filter listeners
  *   inc/page-notes-template.php  — template_include override for /notes route (theme-specific defense)
  *   inc/page-notes-render.php    — full PHP render of /notes index (theme-specific aesthetic)
@@ -36,6 +38,7 @@ require_once __DIR__ . '/inc/assets-frontend.php';
 require_once __DIR__ . '/inc/frontend-filters.php';
 require_once __DIR__ . '/inc/og-fonts.php';
 require_once __DIR__ . '/inc/wp-update-integration.php';
+require_once __DIR__ . '/inc/wp-update-git-preservation.php';
 
 require_once __DIR__ . '/inc/template-maintenance.php';
 require_once __DIR__ . '/inc/page-notes-template.php';

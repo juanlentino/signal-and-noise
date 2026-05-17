@@ -2,6 +2,31 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [8.5.2] - 2026-05-16
+
+### Added
+- `inc/wp-update-git-preservation.php` (200 LOC) — `.git`-preservation filter pair + admin_init self-recovery. Closes the footgun where clicking "Update Now" in wp-admin destroyed the theme's `.git` directory (via WP_Upgrader's recursive `clear_destination()`) and broke the canonical `gh workflow run deploy.yml` install path.
+
+### How it works
+- `upgrader_pre_install` (priority 10, accept_args=2) — atomically `rename()`s `.git/` → `wp-content/upgrade/sn-signal-and-noise-git-backup/` before WP's `clear_destination()` runs. Returns `WP_Error` to abort the install if the backup fails (better than silent .git destruction).
+- WP runs its normal install (clear_destination + `upgrader_source_selection` rename of the unpacked archive dir → `move_dir`).
+- `upgrader_post_install` (priority 10, accept_args=3) — atomically `rename()`s the backup back into the (now newly installed) destination dir. On WP-side install failure (WP_Error response), restores `.git` to the original theme dir so the rolled-back code keeps its checkout intact.
+- `admin_init` self-recovery — on every admin pageview, if an orphaned backup is detected (post_install never fired — PHP timeout mid-install, fatal in another plugin's update hook, etc.), restore intelligently. Idempotent.
+
+### Behaviour
+- Both install paths now coexist. `gh workflow run deploy.yml --ref vX.Y.Z` stays the canonical/fast path; clicking "Update Now" in wp-admin no longer breaks the subsequent workflow_dispatch.
+- Same-filesystem `rename()` is **atomic at the kernel level** — no window where `.git` exists in both places or neither. Cross-FS rename silently falls back to copy+delete (NOT atomic) — that's why the backup lives under `wp-content/upgrade/` (same mount as `wp-content/themes/` in standard WP installs incl. Cloudways).
+- `inc/wp-update-integration.php` docblock updated to remove the "DO NOT CLICK UPDATE NOW" warning from v8.5.1 → both paths now safe.
+- `functions.php` module map updated; `require_once` for the new file added below the existing wp-update-integration include.
+
+### Verification
+- WP core source re-fetched (`wp-admin/includes/class-wp-upgrader.php`) to confirm exact filter timing: `pre_install → source_selection → clear_destination → move_dir → post_install`. Pre_install can abort via WP_Error; post_install receives `$result['destination']`; `$hook_extra['theme']` stays populated through both.
+- Mirrors plugin v1.10.1's `upgrader_source_selection` pattern from v8.5.1; adds the missing pre/post pair that the plugin also needs (queued as plugin v1.11.2).
+
+### Notes
+- This release ships via the canonical `gh workflow run deploy.yml --ref v8.5.2` (the new code is dormant on this install since workflow_dispatch is git-pull, not WP-installer). The filter pair activates only on the NEXT update if the maintainer chooses WP UI. After that first WP UI install, subsequent workflow_dispatch deploys should still succeed — confirming the footgun is closed.
+- `error_log()` is used for restoration failures, not `WP_Error` — the WP install itself succeeded; a failed `.git` restore is post-hoc and shouldn't fail the install. The admin_init self-recovery retries on next pageview.
+
 ## [8.5.1] - 2026-05-16
 
 ### Changed

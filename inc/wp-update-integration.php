@@ -7,52 +7,34 @@
  * themes. Polls the GitHub Tags API every 12h (cached in a site
  * transient) to compare local version against the latest tagged release.
  *
- * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- * STATUS: VERSION-DISPLAY ONLY. DO NOT CLICK "UPDATE NOW".
- * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * Both install paths now coexist (since v8.5.2):
+ *   - **Canonical:** `gh workflow run deploy.yml --ref vX.Y.Z --repo juanlentino/signal-and-noise`
+ *     → Cloudways /api/v1/git/pull → fast, well-understood, preserves .git
+ *   - **WP UI:** wp-admin → Updates → Update Now
+ *     → WP downloads GitHub tag ZIP → upgrader_source_selection rename
+ *     (below) drops the version suffix → install + .git preserved by
+ *     inc/wp-update-git-preservation.php pre/post-install filters
  *
- * As of v8.5.1, this file *can* serve a working WP UI install — but in
- * practice nobody does, and clicking "Update Now" once would break the
- * canonical update path. Here's why:
+ * The .git preservation work was the missing piece. Without it, clicking
+ * "Update Now" destroyed the .git directory (via WP_Upgrader's recursive
+ * clear_destination) and broke the next gh workflow_dispatch deploy. The
+ * paths shared a destination dir but no coordination protocol. v8.5.0
+ * added a WP_Error gate to block WP UI installs entirely; v8.5.1 removed
+ * the gate without solving the underlying problem; v8.5.2 added the
+ * pre/post-install filter pair that backs up + restores .git atomically.
  *
- *   1. The canonical install path is `gh workflow run deploy.yml --ref vX.Y.Z`,
- *      which calls Cloudways' /api/v1/git/pull (theme) or SSH `git checkout`
- *      (plugin). Both require the destination dir to be a live git checkout.
- *
- *   2. WP's own installer (WP_Upgrader::install_package() in
- *      wp-admin/includes/class-wp-upgrader.php) calls clear_destination()
- *      which runs `$wp_filesystem->delete( $remote_destination, true )`.
- *      The `true` is recursive — it deletes the `.git` directory along
- *      with everything else. After one WP UI install, the next
- *      workflow_dispatch deploy fails (no `.git` to pull into).
- *
- *   3. The two paths share a destination dir but not a coordination
- *      protocol. They're mutually exclusive. The system has been built
- *      twice (v8.5.0 added the WP-Error gate; v8.5.1 removed it) and
- *      both times the actual install path stayed git-pull.
- *
- * What this file genuinely provides:
- *   - Version visibility in wp-admin (the badge + "Up to date" / "Update
- *     Available" indicator on update-core.php and Appearance → Themes).
- *   - A health signal — if local Version != GitHub latest, the gh
- *     workflow_dispatch hasn't fired yet.
- *
- * What it does NOT provide despite appearances:
- *   - A working "Update Now" button. WP will *try* to install (the
- *     upgrader_source_selection filter below renames the unpacked
- *     archive dir correctly), but doing so destroys `.git` and breaks
- *     the canonical deploy path. The button is a footgun until the
- *     `.git` preservation work (option 2 from the 2026-05-16 v8.5.1
- *     handoff) ships as v8.5.2 or later.
- *
- * Use `gh workflow run deploy.yml --ref vX.Y.Z --repo juanlentino/signal-and-noise`
- * to ship a release. Do not click Update Now in wp-admin.
+ * What this file provides:
+ *   - Version visibility in wp-admin (badge + "Up to date" / "Update
+ *     Available" on update-core.php and Appearance → Themes).
+ *   - Health signal — local Version != GitHub latest means no update
+ *     has landed yet via either path.
+ *   - GitHub tag → install via upgrader_source_selection rename so WP
+ *     installs to the correct stylesheet slug.
  *
  * Added in v8.5.0 (2026-05-16). Reworked in v8.5.1 (2026-05-16) to
- * remove the WP_Error gate and add upgrader_source_selection rename,
- * mirroring plugin v1.10.1. Honest docblock added 2026-05-16 after
- * realizing the gate was load-bearing — until .git preservation lands,
- * the gate's intent (block WP UI installs) is the correct behavior.
+ * remove the WP_Error gate. v8.5.2 (2026-05-16) extracted .git
+ * preservation into inc/wp-update-git-preservation.php — the missing
+ * piece that makes the WP UI install path actually safe.
  *
  * @package SignalNoise
  */
