@@ -315,16 +315,21 @@ The theme is presentation; the companion plugin [`signal-and-noise-tools`](https
 
 **When adding new cross-package interactions:** add a row to the table above and document the listener side in the theme file that owns the underlying function. **Never let plugin code directly call a theme function — even with `function_exists` guards.** The contract pattern is non-negotiable.
 
-### 10.1 The updater — RETIRED in v8.3.0
+### 10.1 The legacy updater — RETIRED in v8.3.0
 
-The GitHub-poll self-updater (`inc/updater.php`) and the associated
-`sn_updater_*` contracts were removed in theme v8.3.0 (2026-05-15) when
-Phase 2b landed. Theme deploys now ride Cloudways' git-pull on tag push
+The original GitHub-poll self-updater (`inc/updater.php`, 683 LOC) and the
+associated `sn_updater_*` contracts were removed in theme v8.3.0 (2026-05-15)
+when Phase 2b landed. Theme deploys then rode Cloudways' git-pull on tag push
 (see [Phase 2a spec](superpowers/specs/2026-05-15-cloudways-auto-deploy-design.md))
-which makes the WP-Cron SWR refresh + filter-injection layer redundant.
+which made the WP-Cron SWR refresh + filter-injection layer redundant.
 
-If you're maintaining a fork that still needs in-WP update polling,
-restore from git history at the v8.2.1 tag.
+If you're maintaining a fork that still needs the original in-WP update
+polling, restore from git history at the v8.2.1 tag.
+
+**Status note:** the *visibility* surface of the legacy updater (showing a
+"new version available" badge in wp-admin) was partially restored in v8.5.0
+as a much slimmer WP-native integration. See §10.5 below for the current
+update infrastructure.
 
 ### 10.2 Self-heal — RETIRED in v8.3.0
 
@@ -335,15 +340,14 @@ atomically consistent with the deployed commit — there's nothing to "heal."
 The `/heal-templates` plugin REST endpoint was retired in plugin v1.2.0
 to match.
 
-### 10.3 The synthetic update label
+### 10.3 The synthetic update label — RETIRED in v8.3.0
 
-Format: `{Version}{-rN}+{branch}.{sha7}`
-
-- `{Version}` — theme `Version:` header from `style.css`
-- `-rN` — count of commits ahead of `v{Version}` tag (suppressed if 0)
-- `+branch.sha7` — branch + 7-char SHA being offered
-
-Example: `8.0.5-r3+main.78048f2` reads as "3rd commit on main since v8.0.5 was tagged, at SHA 78048f2."
+The legacy updater produced an artificial version label of the form
+`{Version}{-rN}+{branch}.{sha7}` (e.g. `8.0.5-r3+main.78048f2`) to
+distinguish between "tagged release" and "commits ahead of tag" states.
+Removed alongside the updater itself in v8.3.0. The current WP-native
+integration (§10.5) shows only the plain tag version since deploys are
+now strictly tag-aligned.
 
 ### 10.4 The `/notes` route — PHP-authoritative rendering
 
@@ -369,6 +373,58 @@ The `/notes` route lives off normal FSE template resolution. [inc/page-notes-tem
 **When the override hook DOESN'T fire:** the fallback renders. Legitimate causes: file missing post-deploy, fatal PHP error before the hook registers, theme switched. All three are real failure modes; the fallback is the safety net.
 
 **Could there be more `template_include` short-circuits?** Currently only `/notes`. If someone adds a second one (e.g., the homepage), this section needs a second subsection — the gotcha generalizes: greppable answer is `grep -rn 'template_include' inc/`.
+
+### 10.5 The WP-native update integration (v8.5.0 → v8.5.3, mirror plugin v1.10.1 → v1.11.2)
+
+**Lives in:** [inc/wp-update-integration.php](../inc/wp-update-integration.php) (registration + visibility) and [inc/wp-update-git-preservation.php](../inc/wp-update-git-preservation.php) (`.git` survives WP UI installs). Plugin has identical pair at `signal-and-noise-tools/inc/`.
+
+**Why it exists:** the legacy updater (§10.1) shipped its own polling, SHA tracking, self-heal, and synthetic update label — ~683 LOC for what WP Core already does natively for plugins and themes via the `pre_set_site_transient_update_themes` filter. The Phase 2b cleanup deleted all of that. v8.5.0 reintroduced ~120 LOC of native-WP integration to restore the version-visibility surface in wp-admin without bringing back the polling-heavy machinery.
+
+**Both install paths now coexist:**
+
+| Path | Triggered by | Mechanism |
+|---|---|---|
+| **Canonical** (fast, default) | `gh workflow run deploy.yml --ref vX.Y.Z` | Cloudways `/api/v1/git/pull` (theme) or SSH `git checkout` (plugin) + CF cache purge. ~12s. Doesn't touch `wp-content/upgrade/`; preserves `.git` trivially. |
+| **WP UI** (alternative) | wp-admin → Updates → Update Now | WP downloads GitHub tag ZIP. `upgrader_source_selection` filter renames `<repo>-X.Y.Z/` → `<slug>/`. `upgrader_pre_install` backs up `.git/` → `wp-content/upgrade/sn-<slug>-git-backup/`. WP runs `clear_destination()` + `move_dir`. `upgrader_post_install` restores `.git` into the new dir. `admin_init` self-recovery handles orphaned backups if post_install never fires. |
+
+**The 3-patch arc that made WP UI actually work end-to-end:**
+
+| Patch | What it unblocked | Symptom before |
+|---|---|---|
+| Theme v8.5.1 / plugin v1.10.1 | Enable infrastructure | WP_Error gate rejected all installs |
+| Plugin v1.11.1 / theme v8.5.3 | Make WP actually *see* new tags | 12h cache hid newly-pushed tags from WP's update checker until expiry |
+| Theme v8.5.2 / plugin v1.11.2 | Stop WP UI installs from destroying `.git` | Clicking Update Now broke the next workflow_dispatch |
+
+**Atomic same-filesystem `rename()` is the key primitive** for `.git` preservation. No window where `.git` exists in both places or neither. Backup deliberately lives under `wp-content/upgrade/` to guarantee same-mount as `wp-content/themes/` and `wp-content/plugins/` — cross-FS rename silently falls back to copy+delete, which is NOT atomic.
+
+**WP core source verifications baked in (don't trust memory):**
+
+- `upgrader_source_selection` signature: `($source, $remote_source, $upgrader, $hook_extra)` — `accept_args=4`. Forgetting `accept_args` defaults to 1 and silently drops `$hook_extra`, making the `theme/plugin` guard match every upgrade in a batch.
+- `upgrader_pre_install` signature: `($response, $hook_extra)` — `accept_args=2`. Returning `WP_Error` aborts the install entirely (used to abort if `.git` backup fails).
+- `upgrader_post_install` signature: `($response, $hook_extra, $result)` — `accept_args=3`. `$result['destination']` tells you where to restore `.git`. Never return `WP_Error` here — the install itself succeeded; failed `.git` restore is post-hoc.
+- Filter order is fixed: `pre_install → source_selection → clear_destination → move_dir → post_install`. Verified against `wp-admin/includes/class-wp-upgrader.php::install_package()`.
+- `$hook_extra['theme']` vs `$hook_extra['plugin']` is THE guard key. Wrong key = matches every upgrade in a batch = renames other people's themes/plugins.
+
+**Cache layer (theme + plugin both, since v1.11.1 / v8.5.3):**
+
+- TTL: 1 hour (was 12h until each repo's third patch).
+- Honors `WP_FORCE_UPDATE_CHECK` constant + `?force-check=1` query arg — clicking "Check Again" in wp-admin actually re-fetches.
+- `admin_init` version-change detection: compares on-disk Version against `sn_last_seen_*_version` option; on mismatch, clears both `sn_gh_latest_*` and WP's own `update_themes` / `update_plugins` site transient. Handles the "upgrade just happened, why does WP still say update available?" case for both install paths.
+
+**Theme update transient shape ≠ plugin update transient shape** — themes register via `pre_set_site_transient_update_themes` with **arrays** keyed by stylesheet; plugins use `pre_set_site_transient_update_plugins` with **stdClass objects** keyed by basename. Subtle WP core quirk; copy-adapting code between the two needs the shape conversion.
+
+**Verification recipe** for the .git preservation (the only thing in §10.5 that hasn't been exercised end-to-end yet on this install):
+1. Push a v8.5.4+ tag without running `gh workflow run`.
+2. Wait for 1h cache or hit `?force-check=1` to surface the new version.
+3. Click "Update Now" in wp-admin.
+4. After install completes, run `gh workflow run deploy.yml --ref <same-tag>` against the same tag. If it succeeds, the destination still has `.git` — preservation worked.
+
+**Manual recovery** (if both post_install + admin_init self-recovery fail):
+```bash
+mv wp-content/upgrade/sn-signal-and-noise-git-backup wp-content/themes/signal-and-noise/.git
+# or for the plugin:
+mv wp-content/upgrade/sn-signal-and-noise-tools-git-backup wp-content/plugins/signal-and-noise-tools/.git
+```
 
 ---
 
