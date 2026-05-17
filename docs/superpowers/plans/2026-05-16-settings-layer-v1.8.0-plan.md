@@ -959,7 +959,7 @@ Expected: `1`.
 Force a cache purge first so we get fresh HTML:
 
 ```bash
-auth=$(printf '%s:%s' 'juanlentino' '8eBs UNuI bntk 1eeg fsII PJQ3' | base64)
+auth=$(printf '%s:%s' 'juanlentino' 'REDACTED-REVOKED-2026-05-17' | base64)
 curl -sS -X POST 'https://juanlentino.com/wp-json/signal-noise/v1/purge-cache' \
   -H "Authorization: Basic $auth" -H 'Content-Length: 0' -o /dev/null -w '%{http_code}\n'
 sleep 3
