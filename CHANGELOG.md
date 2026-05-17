@@ -2,6 +2,26 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [8.5.3] - 2026-05-16
+
+### Fixed
+- **Theme update cache was too sticky.** Mirrors the plugin-side fix shipped in v1.11.1 — closes the asymmetry where the theme's `inc/wp-update-integration.php` still had the 12h TTL + no force-check support + no version-change cache invalidation, while the plugin had moved to a much more responsive model.
+- **Three fixes** in `inc/wp-update-integration.php`:
+  1. `sn_gh_latest_theme_tag()` gains an optional `$force_refresh` parameter that bypasses the cache.
+  2. The `pre_set_site_transient_update_themes` filter callback now detects WP's force-check signals (`WP_FORCE_UPDATE_CHECK` constant OR `?force-check=1` query arg) and passes through to the new parameter. Clicking "Check Again" in `wp-admin/update-core.php` now actually re-fetches from GitHub.
+  3. New `admin_init` hook stores the on-disk theme version in an option (`sn_last_seen_theme_version`). On every admin pageview, if the on-disk version differs from the stored last-seen, the GitHub-tag transient AND WP's own `update_themes` transient are cleared. This handles the upgrade-just-happened case automatically — whether the upgrade came via WP UI install or manual `workflow_dispatch` deploy.
+- **Cache TTL reduced from 12 hours → 1 hour.** 12h was too long for "I just pushed a tag, where's my update?" Even with force-check working, the autonomous background poll cadence matters. 1h is responsive enough that pushed tags surface naturally within minutes-to-an-hour without any explicit user action.
+
+### Behaviour
+- Both probability lever (shorter TTL = cache misses oftener) and causality lever (version-change detection = cache MUST be wrong) are now in place together.
+- No public-site emission change. No cross-package contract change.
+- Docblock on `pre_set_site_transient_update_themes` filter clarified — theme transient uses arrays keyed by stylesheet, NOT stdClass objects keyed by basename like the plugin transient (subtle WP core quirk worth documenting).
+
+### Notes
+- **PATCH bump within `8.5.x`.** Bugfix in the update-detection path; no functional change to the theme's actual user-facing features.
+- **Cap headroom:** 3/7 patches used on `8.5.x`; 4 remaining before minor rollover. Theme is already at minor cap (5/5) — next minor bump rolls to **v9.0.0**, not v8.6.0.
+- Symmetry with plugin v1.11.1 was the right move: both repos now share identical cache-behavior code paths in their respective `wp-update-integration.php` files (modulo the theme/plugin transient shape difference).
+
 ## [8.5.2] - 2026-05-16
 
 ### Added

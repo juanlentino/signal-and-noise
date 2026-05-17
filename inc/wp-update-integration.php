@@ -43,21 +43,29 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-const SN_GH_THEME_OWNER      = 'juanlentino';
-const SN_GH_THEME_REPO       = 'signal-and-noise';
-const SN_GH_THEME_CACHE_KEY  = 'sn_gh_latest_theme';
-const SN_GH_THEME_CACHE_TTL  = 12 * HOUR_IN_SECONDS;
-const SN_GH_THEME_STYLESHEET = 'signal-and-noise';
+const SN_GH_THEME_OWNER         = 'juanlentino';
+const SN_GH_THEME_REPO          = 'signal-and-noise';
+const SN_GH_THEME_CACHE_KEY     = 'sn_gh_latest_theme';
+const SN_GH_THEME_CACHE_TTL     = HOUR_IN_SECONDS; // v8.5.3: 12h → 1h (mirrors plugin v1.11.1)
+const SN_GH_THEME_STYLESHEET    = 'signal-and-noise';
+const SN_GH_THEME_LAST_SEEN_OPT = 'sn_last_seen_theme_version';
 
 /**
  * Fetch the highest semver-formatted tag from GitHub. Returns the tag
  * string (e.g. "v8.5.0") on success, null on error / no matching tags.
  * Cached for SN_GH_THEME_CACHE_TTL; empty sentinel cached 1h on failure.
+ *
+ * @param bool $force_refresh When true, bypass the cache and re-fetch.
+ *                            Used when WP's "Check Again" button is
+ *                            clicked (WP_FORCE_UPDATE_CHECK constant
+ *                            or `?force-check=1` query arg). Added v8.5.3.
  */
-function sn_gh_latest_theme_tag() {
-	$cached = get_site_transient( SN_GH_THEME_CACHE_KEY );
-	if ( $cached !== false ) {
-		return $cached === '' ? null : $cached;
+function sn_gh_latest_theme_tag( $force_refresh = false ) {
+	if ( ! $force_refresh ) {
+		$cached = get_site_transient( SN_GH_THEME_CACHE_KEY );
+		if ( $cached !== false ) {
+			return $cached === '' ? null : $cached;
+		}
 	}
 
 	$url      = 'https://api.github.com/repos/' . SN_GH_THEME_OWNER . '/' . SN_GH_THEME_REPO . '/tags?per_page=100';
@@ -103,13 +111,24 @@ function sn_gh_latest_theme_tag() {
 /**
  * Register the theme with WP's update transient. WP renders it on
  * wp-admin/update-core.php and Appearance → Themes from this data.
+ *
+ * Theme update transient shape: `->response` and `->no_update` arrays
+ * keyed by stylesheet, values are associative arrays (not stdClass as
+ * the plugin transient uses). See WP core's _maybe_update_themes().
  */
 add_filter( 'pre_set_site_transient_update_themes', function( $transient ) {
 	if ( empty( $transient ) || ! is_object( $transient ) ) {
 		$transient = new stdClass();
 	}
 
-	$latest_tag = sn_gh_latest_theme_tag();
+	// v8.5.3: honor WP's "Check Again" button. WP sets the WP_FORCE_UPDATE_CHECK
+	// constant during the wp-admin/update-core.php?force-check=1 flow.
+	// Without this, our cached value persists even when the user explicitly
+	// asks for a fresh check. Mirrors plugin v1.11.1.
+	$force_refresh = ( defined( 'WP_FORCE_UPDATE_CHECK' ) && WP_FORCE_UPDATE_CHECK )
+		|| ( isset( $_GET['force-check'] ) && $_GET['force-check'] );
+
+	$latest_tag = sn_gh_latest_theme_tag( $force_refresh );
 	if ( $latest_tag === null ) {
 		return $transient;
 	}
@@ -183,3 +202,31 @@ add_filter( 'upgrader_source_selection', function( $source, $remote_source, $upg
 
 	return $desired_source;
 }, 10, 4 );
+
+/**
+ * On every admin pageview, check whether the on-disk theme version
+ * differs from the last-seen version. If it does, clear the update
+ * transient — the cached "latest" was relative to the previous
+ * version and is now stale.
+ *
+ * Handles the upgrade-just-happened case automatically:
+ * - WP UI install completes → next admin pageview clears the cache
+ * - workflow_dispatch deploy lands → next admin pageview clears the cache
+ *
+ * Costs one get_option() call per admin pageview. Negligible.
+ *
+ * Added in v8.5.3 (2026-05-16). Mirrors plugin v1.11.1's admin_init
+ * cache-invalidation handler.
+ */
+add_action( 'admin_init', function() {
+	$last_seen = (string) get_option( SN_GH_THEME_LAST_SEEN_OPT, '' );
+	$current   = (string) wp_get_theme( SN_GH_THEME_STYLESHEET )->get( 'Version' );
+	if ( $current && $last_seen !== $current ) {
+		delete_site_transient( SN_GH_THEME_CACHE_KEY );
+		// Also clear WP's own theme update transient so the next poll
+		// re-fetches fresh data (covers the case where WP cached our
+		// pre-update version as "latest").
+		delete_site_transient( 'update_themes' );
+		update_option( SN_GH_THEME_LAST_SEEN_OPT, $current );
+	}
+} );
