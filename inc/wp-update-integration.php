@@ -227,6 +227,17 @@ add_action( 'admin_init', function() {
 		// re-fetches fresh data (covers the case where WP cached our
 		// pre-update version as "latest").
 		delete_site_transient( 'update_themes' );
+		// v8.5.4: also clear the parsed-themes-headers cache so the
+		// Appearance → Themes screen renders the current theme header
+		// (Name, Description, Author) instead of the cached pre-update
+		// values. Required because our SSH-checkout deploy path doesn't
+		// trigger WP's installer (which would call wp_clean_themes_cache
+		// automatically). Bug surfaced when the theme name in style.css
+		// had a literal &amp; entity that double-encoded on display;
+		// fixing the header alone wasn't enough — the cache was stale.
+		if ( function_exists( 'wp_clean_themes_cache' ) ) {
+			wp_clean_themes_cache();
+		}
 		update_option( SN_GH_THEME_LAST_SEEN_OPT, $current );
 	}
 } );

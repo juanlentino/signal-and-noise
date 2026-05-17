@@ -2,6 +2,25 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [8.5.4] - 2026-05-16
+
+### Fixed
+- **`style.css` `Theme Name` header had a literal `&amp;` HTML entity** (`Theme Name: Signal &amp; Noise`) instead of a plain `&`. WP reads the header raw and renders it through its own escaping pipeline, so the entity got double-encoded to `&amp;amp;` and displayed in wp-admin Appearance → Themes as the literal text `Signal &amp; Noise`. Changed to plain ampersand: `Theme Name: Signal & Noise`.
+- **`inc/wp-update-integration.php` `admin_init` version-change handler** now also calls `wp_clean_themes_cache()` on every detected version change. The parsed-theme-headers cache (set in `WP_Theme::get_data()` and friends) is invalidated automatically by WP's installer on `Update Now`, but the canonical SSH-checkout deploy path doesn't touch the installer — so the header cache went stale across each `gh workflow run` deploy. The watchdog mirrors the existing pattern for `sn_gh_latest_theme` + `update_themes` transient invalidation; same admin_init pageview, no new request overhead.
+
+### Why this matters
+- Theme name renders correctly in:
+  - wp-admin → Appearance → Themes (the gallery + active-theme label)
+  - wp-admin → Updates (when a theme update is available)
+  - wp-admin → Plugins (cross-references to the theme by name)
+  - Any third-party plugin's theme list (e.g., the desktop-mode dock submenu — the original visible-bug surface that surfaced this)
+- Without the watchdog, every future SSH-checkout deploy that bumps theme version would leave the header cache stale until the next `wp_clean_themes_cache()` call (e.g., manual deactivation/reactivation). Now it self-heals on the next admin pageview.
+
+### Notes
+- **PATCH bump within `8.5.x`.** Bugfix to header metadata + cache watchdog; no functional behavior change.
+- Cap headroom: 4/7 patches used on `8.5.x`; 3 remaining. Theme is at minor cap (5/5) — next minor rolls to **v9.0.0**.
+- Companion fix shipped in plugin v1.15.1 (mirror watchdog for `wp_clean_plugins_cache()`).
+
 ## [8.5.3] - 2026-05-16
 
 ### Fixed
