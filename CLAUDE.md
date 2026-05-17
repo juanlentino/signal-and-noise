@@ -37,7 +37,15 @@ git push origin vX.Y.Z
 
 ## Build & Deploy
 **Theme:** auto-deploys on annotated-tag push via [.github/workflows/deploy.yml](.github/workflows/deploy.yml) → Cloudways `/api/v1/git/pull`. ~30s tag-to-live.
-**Plugin:** auto-deploys on annotated-tag push via [signal-and-noise-tools `.github/workflows/deploy.yml`](https://github.com/juanlentino/signal-and-noise-tools/blob/main/.github/workflows/deploy.yml) → SSH into Cloudways as `sn-plugin` (app-scoped user, NOT master) → `git fetch && git checkout <tag>` in `wp-content/plugins/signal-and-noise-tools/` → CF purge call. ~30s tag-to-live. **Security:** if the GHA `SSH_PRIVATE_KEY` ever leaks, blast radius is bounded to this WP app's filesystem + DB, not the whole Cloudways server.
+
+**Plugin (since v1.10.1):** does NOT auto-deploy on tag push. Two ways to land a plugin release:
+
+1. **Canonical (user-driven):** wp-admin → Dashboard → Updates → "Update plugin" for Signal & Noise Tools. Powered by [inc/wp-update-integration.php](https://github.com/juanlentino/signal-and-noise-tools/blob/main/inc/wp-update-integration.php) registering the plugin with WP's native update system. `.git` is preserved through this install path via the pre/post-install filter pair from v1.11.2.
+
+2. **Emergency manual deploy:** `gh workflow run deploy.yml --repo juanlentino/signal-and-noise-tools --ref vX.Y.Z`. Runs the SSH-into-Cloudways path as the app-scoped `sn-plugin` user (NOT master). **Will fail if the working tree on the server is dirty from a prior WP UI install** — symptom: `git checkout` "local changes would be overwritten" error on `CHANGELOG.md` / `inc/seo*.php` / `signal-and-noise-tools.php`. If that happens, install via path (1) instead, or SSH in and reset the working tree first (`git reset --hard && git clean -fd`).
+
+The earlier auto-on-tag-push behavior was removed in v1.10.1 so releases land at user discretion. **Security:** if the GHA `SSH_PRIVATE_KEY` ever leaks, blast radius is bounded to this WP app's filesystem + DB, not the whole Cloudways server.
+
 **Worktree push:** `git push origin HEAD:main` (worktree branch name differs from `main`).
 No build step. WordPress handles rendering.
 
