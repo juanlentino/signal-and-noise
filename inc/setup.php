@@ -32,6 +32,14 @@ function signal_noise_after_setup_theme() {
 		'assets/css/forms.css',
 		'assets/css/responsive.css',
 	) );
+
+	// Title tag emission — required by WP core's _wp_render_title_tag()
+	// to take over <title> rendering after The SEO Framework is
+	// deactivated (Phase 13 TSF cutover, companion plugin v2.0.0).
+	// Block themes don't auto-declare this; verified against
+	// wp-includes/theme.php on trunk. Without this, deactivating TSF
+	// would leave the page with no <title> tag at all.
+	add_theme_support( 'title-tag' );
 }
 add_action( 'after_setup_theme', 'signal_noise_after_setup_theme' );
 

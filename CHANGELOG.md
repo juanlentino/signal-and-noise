@@ -2,6 +2,20 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [8.5.5] - 2026-05-17
+
+### Added
+- **`add_theme_support('title-tag')` in [inc/setup.php](inc/setup.php).** Block themes do NOT auto-declare title-tag support — verified against [WordPress/wp-includes/theme.php on trunk](https://raw.githubusercontent.com/WordPress/WordPress/master/wp-includes/theme.php); no auto-declaration logic exists for block themes. Until now, The SEO Framework plugin was the only source of the `<title>` tag in `<head>`. With Phase 13 TSF cutover landing (companion plugin v2.0.0), WP core's `_wp_render_title_tag()` needs explicit theme support declared to take over title emission. Companion to plugin v2.0.0's `document_title_parts` filter, which controls the title format (still `Page Name — Site Name` matching what TSF emitted).
+
+### Why this matters
+- Without this declaration, deactivating TSF would leave the page with **no `<title>` tag at all**. That's an SEO catastrophe — title is one of the most-weighted on-page signals.
+- The plugin's `document_title_parts` filter cooperates with WP-native title rendering rather than fighting it. Both pieces together produce the same brand format TSF was emitting, with zero user-visible change at cutover.
+
+### Notes
+- **PATCH bump within `8.5.x`.** From a user-visible perspective the page still has a `<title>` tag after this change — no new capability, no behavior shift. Pure infrastructure restoration of a capability TSF was previously providing externally.
+- Cap headroom: 4/7 → **5/7 patches on 8.5.x**. Two patches of headroom remaining before next minor would roll to v9.0.0.
+- Companion release: plugin v2.0.0 (MAJOR — TSF dependency dropped) shipping in the same session.
+
 ## [8.5.4] - 2026-05-16
 
 ### Fixed
