@@ -26,7 +26,12 @@
  *
  * @package SignalNoise
  * @since 1.0.0
- * @version 8.4.0
+ *
+ * The canonical version is the `Version:` header in style.css. Removed the
+ * `@version` line here in v8.5.3 audit pass — it drifted to 8.4.0 because
+ * keeping two version sources in sync is exactly the bug pattern this
+ * project tries to avoid (gotcha #1 in the WP-REFERENCE doc, applied
+ * recursively to ourselves).
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
