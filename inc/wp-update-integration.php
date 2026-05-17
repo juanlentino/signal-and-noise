@@ -3,23 +3,25 @@
  * Signal & Noise — WP-native update integration.
  *
  * Hooks into WordPress's standard update system so this theme appears
- * in wp-admin/update-core.php alongside other plugins/themes. Polls
- * the GitHub Tags API every 12h (cached in a site transient) to
- * compare local version against the latest tagged release.
+ * in wp-admin/update-core.php and Appearance → Themes alongside other
+ * themes. Polls the GitHub Tags API every 12h (cached in a site
+ * transient) to compare local version against the latest tagged release.
  *
- * Under normal operation (Cloudways auto-deploy on tag push, Phase 2a),
- * local always matches GitHub within ~30s of a tag push, so the UI
- * shows "up to date." If auto-deploy ever fails or hasn't caught up,
- * the UI shows "update available" — useful deploy-health indicator.
+ * When a new tag is available, WP UI shows "Update Available" — the
+ * maintainer clicks Update Now and WP downloads + installs from
+ * GitHub's auto-generated tag archive (`/archive/refs/tags/<tag>.zip`).
  *
- * "Update Now" is intercepted by `upgrader_pre_install`: we return a
- * WP_Error directing the maintainer to push a git tag (WP's installer
- * would overwrite the .git checkout and break subsequent auto-deploys).
+ * The unpacked archive's top-level directory is `signal-and-noise-<version>/`
+ * (GitHub strips the leading 'v' from the tag in the dir name); the
+ * `upgrader_source_selection` filter renames it to `signal-and-noise/`
+ * so WP installs to the stylesheet slug WP expects.
  *
- * Added in v8.5.0 (2026-05-16). The version-display surface dropped in
- * Phase 2b (`inc/updater.php`, 683 LOC) is partially restored here as
- * ~70 LOC of native-WP integration — keeps the visibility, drops the
- * polling/SHA-tracking/self-heal complexity that auto-deploy obviated.
+ * Added in v8.5.0 (2026-05-16). Rewritten in v8.5.1 (2026-05-16): the
+ * original implementation intercepted "Update Now" with a WP_Error
+ * because the legacy auto-deploy-on-tag-push pipeline would
+ * .git-checkout the new tag and overwrite the WP installer's work.
+ * v8.5.1 moves to WP-UI-driven updates and disables the tag-push
+ * auto-deploy (see .github/workflows/deploy.yml). Mirrors plugin v1.10.1.
  *
  * @package SignalNoise
  */
@@ -125,21 +127,46 @@ add_filter( 'pre_set_site_transient_update_themes', function( $transient ) {
 } );
 
 /**
- * Intercept "Update Now" for this theme. Auto-deploy is the only
- * supported installation path; WP's installer would overwrite the
- * .git checkout and break subsequent deploys.
+ * Rename the unpacked source directory so WP installs to the correct
+ * stylesheet slug.
+ *
+ * GitHub's auto-generated tag archive (`/archive/refs/tags/v8.5.1.zip`)
+ * unpacks to `signal-and-noise-8.5.1/` — with the version suffix but
+ * without the leading 'v'. WP's installer uses the dir name to decide
+ * where to install, which would end up as
+ * `wp-content/themes/signal-and-noise-8.5.1/` (wrong slug, the theme
+ * would deactivate on update because the active stylesheet
+ * `signal-and-noise` would no longer resolve).
+ *
+ * The filter receives `$source` (path to the unpacked dir) and renames
+ * it to drop the version suffix. Standard pattern for GitHub-hosted
+ * themes that ship via auto-generated tag archives.
+ *
+ * Note: `$hook_extra['theme']` is the slug for theme installs (mirrors
+ * the plugin-side filter's `$hook_extra['plugin']` basename). Guarding
+ * on this prevents us from renaming other themes that pass through the
+ * same filter during a multi-update batch.
  */
-add_filter( 'upgrader_pre_install', function( $result, $hook_extra ) {
-	$theme_slug = isset( $hook_extra['theme'] ) ? (string) $hook_extra['theme'] : '';
-	if ( $theme_slug !== SN_GH_THEME_STYLESHEET ) {
-		return $result;
+add_filter( 'upgrader_source_selection', function( $source, $remote_source, $upgrader, $hook_extra ) {
+	$theme = isset( $hook_extra['theme'] ) ? (string) $hook_extra['theme'] : '';
+	if ( $theme !== SN_GH_THEME_STYLESHEET ) {
+		return $source;
 	}
-	return new WP_Error(
-		'sn_managed_by_auto_deploy',
-		sprintf(
-			/* translators: %s: linked repo URL */
-			'Signal &amp; Noise is managed via Cloudways auto-deploy on git tag push. To install an update, push a tag from %s — the GitHub Actions workflow handles deployment within ~30 seconds. WP\'s installer would overwrite the git checkout and break subsequent auto-deploys.',
-			'<a href="https://github.com/' . SN_GH_THEME_OWNER . '/' . SN_GH_THEME_REPO . '">github.com/' . SN_GH_THEME_OWNER . '/' . SN_GH_THEME_REPO . '</a>'
-		)
-	);
-}, 10, 2 );
+
+	$source         = trailingslashit( $source );
+	$desired_source = trailingslashit( dirname( $source ) ) . SN_GH_THEME_STYLESHEET . '/';
+
+	if ( $source === $desired_source ) {
+		return $source;
+	}
+
+	global $wp_filesystem;
+	if ( ! $wp_filesystem || ! $wp_filesystem->move( untrailingslashit( $source ), untrailingslashit( $desired_source ) ) ) {
+		return new WP_Error(
+			'sn_rename_source_failed',
+			'Could not rename the unpacked theme directory from "' . esc_html( basename( $source ) ) . '" to "' . SN_GH_THEME_STYLESHEET . '". Manual install via SFTP may be required.'
+		);
+	}
+
+	return $desired_source;
+}, 10, 4 );

@@ -2,6 +2,20 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [8.5.1] - 2026-05-16
+
+### Changed
+- `.github/workflows/deploy.yml` — trigger reduced from `push: tags: v*` to `workflow_dispatch:` only. Tag pushes no longer auto-deploy. Theme updates now land via the WP admin Updates page (the standard WordPress flow other site owners already use). Manual emergency-hotfix path: `gh workflow run deploy.yml --ref vX.Y.Z --repo juanlentino/signal-and-noise`.
+- `inc/wp-update-integration.php` — replaced the `upgrader_pre_install` rejection (which blocked WP-driven installs because the legacy auto-deploy pipeline owned the .git checkout) with an `upgrader_source_selection` filter that renames GitHub's unpacked archive directory from `signal-and-noise-X.Y.Z/` to `signal-and-noise/` so WP installs to the active stylesheet slug.
+
+### Behaviour
+- After this tag is bootstrapped via one `gh workflow run`, future releases follow: edit code → bump `Version:` → CHANGELOG → tag → push tag → wait up to 12h for WP's cache to roll, or click "Check Again" in `wp-admin/update-core.php` → "Update Now". WP downloads the GitHub tag ZIP, the filter renames the unpacked dir, the new version overwrites the old one in place.
+- No theme-side functional change. The cross-package contract surface (3 hooks documented in WORDPRESS-REFERENCE.md §10.0) is untouched.
+
+### Notes
+- Mirrors plugin v1.10.1's pattern exactly — same code shape, same filter pair, same emergency-hotfix workflow_dispatch fallback. Both repos now use WP-UI updates as the default install path.
+- The first `gh workflow run` against v8.5.1 is a one-time bootstrap because pre-v8.5.1 the WP-side gate (the `upgrader_pre_install` WP_Error) would reject any install attempt. From v8.5.2 onward the WP UI flow works end-to-end.
+
 ## [8.5.0] - 2026-05-16
 
 ### Added
