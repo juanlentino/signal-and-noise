@@ -69,7 +69,12 @@
 	margin-top: 0.4rem;
 	padding: 0.75rem 1rem;
 	background: var(--wp--preset--color--void);
-	border: 1px solid var(--wp--preset--color--concrete);
+	/* v8.5.6 WCAG fix: concrete (#d9d9d9) on white = 1.39:1, fails the
+	   3:1 non-text contrast requirement for interactive UI components.
+	   #949494 = 3.02:1, hits AA minimum. Form-input borders use this
+	   darker shade specifically; decorative separators elsewhere keep
+	   the lighter concrete tone. */
+	border: 1px solid #949494;
 	border-radius: 0;
 	font-family: var(--wp--preset--font-family--body);
 	font-size: 0.9rem;
@@ -80,17 +85,29 @@
 	box-sizing: border-box;
 }
 
+/* v8.5.6 WCAG fix: was `outline: none` on plain :focus (mouse clicks
+   show same indicator as keyboard, breaking 2.4.7 Focus Visible).
+   Now: keep the border-color flourish for visual feedback, ADD a
+   real outline only on :focus-visible (keyboard navigation). */
 .wpcf7-form input[type="text"]:focus,
 .wpcf7-form input[type="email"]:focus,
 .wpcf7-form textarea:focus {
-	outline: none;
 	border-color: var(--wp--preset--color--blood);
 }
 
+.wpcf7-form input[type="text"]:focus-visible,
+.wpcf7-form input[type="email"]:focus-visible,
+.wpcf7-form textarea:focus-visible {
+	outline: 2px solid var(--wp--preset--color--blood);
+	outline-offset: 2px;
+}
+
+/* v8.5.6 WCAG fix: placeholder #999 on #fff = 2.85:1 (fails AA 4.5:1).
+   #767676 hits 4.54:1, the minimum for AA normal text. */
 .wpcf7-form input[type="text"]::placeholder,
 .wpcf7-form input[type="email"]::placeholder,
 .wpcf7-form textarea::placeholder {
-	color: #999999;
+	color: #767676;
 }
 
 .wpcf7-form textarea {
@@ -122,7 +139,8 @@
 /* Akismet notice */
 .wpcf7-form p:has(a[href*="akismet"]) {
 	font-size: 0.7rem;
-	color: #999999;
+	/* v8.5.6 WCAG fix: was #999 (2.85:1 fail) -> #767676 (4.54:1 pass) */
+	color: #767676;
 	margin-top: 1rem;
 }
 
@@ -161,7 +179,8 @@
 	font-size: 0.85rem;
 	padding: 0.75rem 1rem;
 	margin: 1rem 0 0;
-	border: 1px solid var(--wp--preset--color--concrete);
+	/* v8.5.6 WCAG fix: interactive UI component border — 3:1 minimum. */
+	border: 1px solid #949494;
 }
 
 .wpcf7-form.sent .wpcf7-response-output {

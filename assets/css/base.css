@@ -100,6 +100,34 @@ body::after {
 }
 
 /* ============================================
+   FOCUS VISIBLE (v8.5.6 — WCAG 2.4.7)
+
+   Single global rule for all keyboard-focusable interactive elements
+   so the brand red-accent system carries through focus styling rather
+   than browsers falling back to UA blue rings. :focus-visible only
+   triggers on keyboard navigation (and other UA heuristics), so
+   mouse-click users don't see the indicator.
+
+   Form-input :focus-visible is handled separately in forms.css with
+   its own border-color flourish; this rule covers links, buttons, and
+   anything else interactive.
+   ============================================ */
+
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible,
+[role="link"]:focus-visible,
+input[type="submit"]:focus-visible,
+input[type="button"]:focus-visible,
+input[type="checkbox"]:focus-visible,
+input[type="radio"]:focus-visible,
+.wp-block-button__link:focus-visible,
+summary:focus-visible {
+	outline: 2px solid var(--wp--preset--color--blood);
+	outline-offset: 3px;
+}
+
+/* ============================================
    ANIMATIONS
    ============================================ */
 

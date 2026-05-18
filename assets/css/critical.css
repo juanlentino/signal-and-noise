@@ -80,47 +80,12 @@ body::after {
 	outline-offset: 2px;
 }
 
-/* ============================================
-   ANIMATIONS
-   ============================================ */
-
-@keyframes fadeInUp {
-	from { opacity: 0.01; transform: translateY(30px); }
-	to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes fadeIn {
-	from { opacity: 0.01; }
-	to { opacity: 1; }
-}
-
-@keyframes slideInLeft {
-	from { opacity: 0.01; transform: translateX(-40px); }
-	to { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes glitchFlicker {
-	0%, 100% { opacity: 1; }
-	92% { opacity: 1; }
-	93% { opacity: 0.8; transform: translateX(-2px); }
-	94% { opacity: 1; transform: translateX(1px); }
-	95% { opacity: 0.9; }
-	96% { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes pulseGlow {
-	0%, 100% { text-shadow: 0 0 8px rgba(224, 4, 4, 0.2); }
-	50% { text-shadow: 0 0 20px rgba(224, 4, 4, 0.4), 0 0 40px rgba(224, 4, 4, 0.1); }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-	.wp-block-group,
-	.wp-block-columns,
-	.wp-block-image,
-	.wp-block-cover {
-		animation: fadeInUp 0.6s ease-out both;
-	}
-}
+/* v8.5.6 critical.css pruning: 5 @keyframes (fadeInUp, fadeIn,
+   slideInLeft, glitchFlicker, pulseGlow) + block-level entrance
+   animation lived here. Keyframes only need to load before the
+   animation fires — block-level entrances animate content below the
+   fold (.wp-block-group etc). Full definitions in assets/css/base.css
+   (deferred). Removing ~41 LOC. */
 /* ============================================
    LOGO
    ============================================ */
@@ -275,32 +240,10 @@ body {
 	margin-right: auto;
 }
 
-/* ============================================
-   BUTTONS
-   ============================================ */
-
-.wp-block-button__link {
-	position: relative;
-	overflow: hidden;
-	transition: all 0.3s ease;
-	border: 1px solid transparent;
-}
-
-.wp-block-button__link:hover {
-	transform: translateY(-1px);
-	box-shadow: 0 4px 20px rgba(224, 4, 4, 0.2);
-}
-
-.is-style-outline .wp-block-button__link {
-	background: transparent !important;
-	border: 1px solid var(--wp--preset--color--bone);
-	color: var(--wp--preset--color--bone) !important;
-}
-
-.is-style-outline .wp-block-button__link:hover {
-	background: var(--wp--preset--color--bone) !important;
-	color: var(--wp--preset--color--void) !important;
-}
+/* v8.5.6 critical.css pruning: .wp-block-button__link resting + hover
+   + outline-style variants lived here. Button hover is not first-paint
+   critical; full definitions in assets/css/components.css (deferred).
+   Removing ~26 LOC. */
 
 
 /* Critical responsive — Tablet */
@@ -392,113 +335,11 @@ body {
 	}
 }
 
-/* Mobile nav overlay — inlined to prevent cache/specificity issues */
-.wp-block-navigation__responsive-container.is-menu-open {
-	position: fixed !important;
-	top: 0 !important;
-	left: 0 !important;
-	right: 0 !important;
-	bottom: 0 !important;
-	width: 100% !important;
-	height: 100vh !important;
-	height: 100dvh !important;
-	z-index: 100000 !important;
-	background-color: #ffffff !important;
-	display: flex !important;
-	flex-direction: column !important;
-	align-items: center !important;
-	justify-content: center !important;
-	padding: 0 !important;
-	overflow-y: auto !important;
-}
-.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation__responsive-container-close {
-	position: absolute !important;
-	top: 1rem !important;
-	right: 1.25rem !important;
-	z-index: 100001 !important;
-}
-.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation__responsive-container-content {
-	display: flex !important;
-	flex-direction: column !important;
-	align-items: center !important;
-	justify-content: center !important;
-	gap: 0 !important;
-	width: 100% !important;
-	height: 100% !important;
-	padding: 4rem 2rem 2rem !important;
-}
-.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation__responsive-container-content::before {
-	content: "" !important;
-	display: block !important;
-	width: 40px !important;
-	height: 3px !important;
-	background: #e00404 !important;
-	margin-bottom: 2rem !important;
-}
-.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation__container,
-.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation__container.is-content-justification-right,
-.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation__container.items-justified-right {
-	display: flex !important;
-	flex-direction: column !important;
-	align-items: center !important;
-	justify-content: center !important;
-	width: 100% !important;
-	gap: 0 !important;
-}
-.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation-item {
-	width: auto !important;
-	border-bottom: none !important;
-}
-.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation-item a {
-	font-size: 2.4rem !important;
-	font-family: var(--wp--preset--font-family--heading) !important;
-	letter-spacing: 0.04em !important;
-	text-transform: uppercase !important;
-	padding: 0.6rem 0 !important;
-	color: #000000 !important;
-	text-decoration: none !important;
-	display: block !important;
-	line-height: 1.1 !important;
-	text-align: center !important;
-	transition: color 0.2s ease !important;
-}
-.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation-item a:hover,
-.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation-item a:active {
-	color: #e00404 !important;
-}
-.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation-item a::after {
-	display: none !important;
-}
+/* v8.5.6 critical.css pruning: mobile nav overlay block (77 LOC,
+   ~40 !important declarations) lived here. It only renders AFTER
+   the hamburger tap — definitionally below-the-fold. Full styles
+   live in assets/css/layout.css (deferred). Removing ~77 LOC. */
 
-/* CF7 form label consistency */
-.wpcf7 label,
-.wpcf7-form label {
-	font-family: var(--wp--preset--font-family--body) !important;
-	font-size: 0.75rem !important;
-	font-weight: 500 !important;
-	letter-spacing: 0.2em !important;
-	text-transform: uppercase !important;
-	color: #000000 !important;
-}
-
-/* CF7 submit button — inlined as Breeze insurance */
-.wpcf7-form input[type="submit"] {
-	display: inline-block;
-	background: #000000;
-	color: #ffffff;
-	font-family: var(--wp--preset--font-family--heading);
-	font-size: 1rem;
-	text-transform: uppercase;
-	letter-spacing: 0.15em;
-	padding: 0.9rem 2.5rem;
-	border: none;
-	border-radius: 0;
-	cursor: pointer;
-	transition: all 0.3s ease;
-	-webkit-appearance: none;
-	appearance: none;
-}
-
-.wpcf7-form input[type="submit"]:hover {
-	background: #e00404;
-}
+/* v8.5.6 critical.css pruning: CF7 form label + submit button rules
+   were here but forms are never above-the-fold; full definitions live
+   in assets/css/forms.css (deferred). Removing ~32 LOC. */

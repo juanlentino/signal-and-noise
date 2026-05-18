@@ -7,12 +7,20 @@
 	<p class="sn-catalog-eyebrow">Error · 404 · No Signal</p>
 	<!-- /wp:paragraph -->
 
-	<!-- wp:heading {"level":1,"style":{"typography":{"fontSize":"clamp(5rem, 15vw, 12rem)","lineHeight":"1"}},"textColor":"concrete","fontFamily":"heading"} -->
-	<h1 class="wp-block-heading has-concrete-color has-text-color has-heading-font-family" style="font-size:clamp(5rem, 15vw, 12rem);line-height:1">404</h1>
-	<!-- /wp:heading -->
+	<!-- v8.5.6 a11y fix: 404 digits were marked as h1 in concrete (#d9d9d9
+	     on white = 1.39:1, fails WCAG 1.4.3 even at large-text 3:1),
+	     while "SIGNAL LOST" — the actual page name — was an h2. Screen
+	     readers heard "404, heading level 1" then "Signal Lost, heading
+	     level 2" — wrong hierarchy AND unreadable contrast. Now: 404
+	     digits are a decorative paragraph (aria-hidden so SRs skip it),
+	     and "SIGNAL LOST" is promoted to h1 carrying the page name. -->
 
-	<!-- wp:heading {"level":2,"style":{"typography":{"fontSize":"clamp(1.5rem, 3vw, 2.5rem)"}},"textColor":"bone"} -->
-	<h2 class="wp-block-heading has-bone-color has-text-color" style="font-size:clamp(1.5rem, 3vw, 2.5rem)">SIGNAL LOST</h2>
+	<!-- wp:paragraph {"className":"sn-404-digits","style":{"typography":{"fontSize":"clamp(5rem, 15vw, 12rem)","lineHeight":"1"}},"textColor":"concrete","fontFamily":"heading"} -->
+	<p class="sn-404-digits has-concrete-color has-text-color has-heading-font-family" style="font-size:clamp(5rem, 15vw, 12rem);line-height:1" aria-hidden="true">404</p>
+	<!-- /wp:paragraph -->
+
+	<!-- wp:heading {"level":1,"style":{"typography":{"fontSize":"clamp(1.5rem, 3vw, 2.5rem)"}},"textColor":"bone"} -->
+	<h1 class="wp-block-heading has-bone-color has-text-color" style="font-size:clamp(1.5rem, 3vw, 2.5rem)">SIGNAL LOST</h1>
 	<!-- /wp:heading -->
 
 	<!-- wp:paragraph {"style":{"typography":{"fontSize":"1rem"}},"textColor":"rust"} -->

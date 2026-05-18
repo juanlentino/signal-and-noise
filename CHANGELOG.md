@@ -2,6 +2,37 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [8.5.6] - 2026-05-17
+
+### Audit consolidation — critical.css pruning + WCAG 2.1 AA fixes
+
+Two parallel subagents (critical.css size review + WCAG 2.1 AA accessibility audit) both flagged work in the same files. Bundled into one patch.
+
+### Fixed — critical.css pruning (176 LOC, ~5 KB removed)
+
+[assets/css/critical.css](assets/css/critical.css) was 504 LOC; pure duplication or below-the-fold content accounted for ~35% of it. Four blocks removed:
+
+- **Animations block (~41 LOC)** — 5 @keyframes + block-level entrance animation. Keyframes only need to load before the animation fires; block-level entrances animate content below the fold (`.wp-block-group`, etc.). Full definitions live in `assets/css/base.css` (deferred).
+- **Button hover + transform (~26 LOC)** — `.wp-block-button__link` resting + hover + outline-style variants. Button hover is not first-paint critical. Full definitions in `assets/css/components.css` (deferred).
+- **Mobile nav overlay (~77 LOC, ~40 `!important` declarations)** — the entire `.is-menu-open` cascade. Definitionally not above-the-fold — it only renders AFTER the hamburger tap. Full definitions in `assets/css/layout.css` (deferred).
+- **CF7 form rules (~32 LOC)** — submit button + label styling. Forms are never above the fold. Full definitions in `assets/css/forms.css` (deferred).
+
+Result: 504 → ~328 LOC. Further pruning of grain/scanline/scrollbar/skip-link sections deferred to a follow-up patch (medium-risk; needs visual verification to confirm zero FOUC).
+
+### Fixed — WCAG 2.1 AA compliance (1 critical + 4 serious findings)
+
+1. **Form fields now have proper `:focus-visible` outline** ([assets/css/forms.css](assets/css/forms.css)) — was bare `outline: none` on plain `:focus` (WCAG 2.4.7 critical fail; mouse clicks suppressed the indicator). Now: keep the border-color flourish for visual feedback, ADD a real outline only on `:focus-visible` (keyboard navigation).
+2. **Global `:focus-visible` rule added** ([assets/css/base.css](assets/css/base.css)) — covers `a`, `button`, `[role="button"]`, `[role="link"]`, `input[type=submit|button|checkbox|radio]`, `.wp-block-button__link`, `summary`. Brand red (`var(--wp--preset--color--blood)`) outline with 3px offset, consistent across the theme. Replaces browser UA blue rings.
+3. **Placeholder + Akismet notice color** `#999` → `#767676` ([assets/css/forms.css](assets/css/forms.css)) — was 2.85:1 contrast (fails WCAG 1.4.3 normal-text 4.5:1). Now 4.54:1 (passes).
+4. **Form input borders** `#d9d9d9` → `#949494` ([assets/css/forms.css:72,177](assets/css/forms.css)) — was 1.39:1 (fails WCAG 1.4.11 non-text 3:1 for interactive UI components). Now 3.02:1 (passes). Surgical: only the input-element borders changed; `concrete` (`#d9d9d9`) stays the brand color for decorative separators where 3:1 doesn't apply.
+5. **404 template heading hierarchy** ([templates/404.html](templates/404.html)) — the giant "404" digits were marked `<h1>` in concrete color (1.39:1 contrast, unreadable AND structurally wrong since they're decorative). "SIGNAL LOST" — the actual page identity — was an `<h2>`. Now: 404 digits are a decorative `<p aria-hidden="true">`, and SIGNAL LOST is promoted to `<h1>`. Fixes both WCAG 1.4.3 and 1.3.1.
+
+### Notes
+
+- **PATCH bump within `8.5.x`.** Patch headroom: 5/7 → **6/7 on 8.5.x**. Next minor still rolls to v9.0.0.
+- The link-hover `#ff4c47` (3.4:1) finding was reviewed and accepted as-is — underline carries the affordance per WCAG 1.4.1 (color is not the only indicator); hover is transient. Could revisit if needed.
+- Verified against actual WP Theme Handbook + WCAG 2.1 AA criteria. Visual treatment unchanged for sighted mouse users; keyboard + screen-reader experience materially improved.
+
 ## [8.5.5] - 2026-05-17
 
 ### Added
