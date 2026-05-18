@@ -2,6 +2,33 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [8.5.7] - 2026-05-18
+
+### Hotfix — restore `.is-menu-open` styles to critical.css
+
+User reported the 404 page looked "messed up" on a fresh incognito visit. Root cause: the v8.5.6 critical.css pruning removed the `.wp-block-navigation__responsive-container.is-menu-open` cascade on the theory that "it only renders after the hamburger tap, so it's below-the-fold." That conflates **render timing** with **interaction timing**. Tapping the hamburger can happen at any moment — including milliseconds after first paint, before deferred `layout.css` has fetched on slow/empty-cache connections. When that race happens, the menu renders with WP's default right-aligned vertical nav instead of the centered brutalist overlay.
+
+### Fixed
+
+- **Restored the 77-LOC `.is-menu-open` cascade to [assets/css/critical.css](assets/css/critical.css)** verbatim from layout.css. Critical-path styles must cover any user-triggered state that can fire before deferred CSS loads, regardless of where the visual element sits on initial paint.
+
+### Kept
+
+- The other v8.5.6 pruning stays:
+  - Animations block (`@keyframes` + block-level entrance) — animations are progressive enhancement; missing them on first paint just removes the entrance fade, not the layout
+  - `.wp-block-button__link` resting + hover — buttons can paint without hover styles, hover happens after mouseover (already past first paint window)
+  - CF7 form rules — forms are deep below the fold; CSS race is improbable
+- WCAG fixes from v8.5.6 (form `:focus-visible`, contrast darkening, 404 heading restructure) remain.
+
+### CLAUDE.md correction
+
+**Theme deploy is `workflow_dispatch:` only since v8.5.1** — not "auto-deploys on annotated-tag push" as CLAUDE.md previously claimed. Updated to match the workflow file. The canonical install path for theme updates is wp-admin → Dashboard → Updates (same as the plugin since v1.10.1).
+
+### Notes
+
+- **PATCH within `8.5.x`.** Patch headroom: 6/7 → **7/7 on 8.5.x — last patch slot used. Next change rolls to v9.0.0.**
+- Lesson logged: critical CSS scope = "what can render before the deferred stylesheet roundtrip completes," not "what's above the fold geometrically." Different time horizons.
+
 ## [8.5.6] - 2026-05-17
 
 ### Audit consolidation — critical.css pruning + WCAG 2.1 AA fixes

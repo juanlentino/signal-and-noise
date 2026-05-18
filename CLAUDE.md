@@ -36,7 +36,11 @@ git push origin vX.Y.Z
 - Aikido Security monitors this domain.
 
 ## Build & Deploy
-**Theme:** auto-deploys on annotated-tag push via [.github/workflows/deploy.yml](.github/workflows/deploy.yml) → Cloudways `/api/v1/git/pull`. ~30s tag-to-live.
+
+**Theme (since v8.5.1):** does NOT auto-deploy on tag push. The workflow is `on: workflow_dispatch:` only — per the comment at [.github/workflows/deploy.yml](.github/workflows/deploy.yml): *"v8.5.1+: tag pushes no longer auto-deploy. Theme updates land via the WP admin Updates page."* Two install paths, same as the plugin:
+
+1. **Canonical (user-driven):** wp-admin → Dashboard → Updates → "Update theme" for Signal & Noise. Powered by [inc/wp-update-integration.php](inc/wp-update-integration.php) registering the theme with WP's native update system + renaming the unpacked GitHub archive to the correct stylesheet slug. `.git` preserved via the pre/post-install filter pair (v8.5.2+).
+2. **Emergency manual deploy:** `gh workflow run deploy.yml --repo juanlentino/signal-and-noise --ref vX.Y.Z`.
 
 **Plugin (since v1.10.1):** does NOT auto-deploy on tag push. Two ways to land a plugin release:
 
