@@ -46,6 +46,7 @@
 		},
 		"typography": {
 			"fluid": true,
+			"textIndent": true,
 			"fontFamilies": [
 				{
 					"fontFamily": "'Bebas Neue', Impact, sans-serif",
@@ -112,6 +113,16 @@
 				{ "slug": "80", "size": "12rem", "name": "Huge" }
 			],
 			"units": ["%", "px", "em", "rem", "vh", "vw"]
+		},
+		"dimensions": {
+			"width": true,
+			"height": true,
+			"dimensionSizes": [
+				{ "slug": "hairline", "size": "1px", "name": "Hairline" },
+				{ "slug": "short", "size": "20rem", "name": "Short" },
+				{ "slug": "medium", "size": "32rem", "name": "Medium" },
+				{ "slug": "tall", "size": "48rem", "name": "Tall" }
+			]
 		},
 		"layout": {
 			"contentSize": "720px",

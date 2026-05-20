@@ -2,6 +2,36 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.0.0] - 2026-05-20
+
+### Added — WP 7.0 alignment + browser-native modernization
+
+Three additive features for the WP 7.0 "Armstrong" launch day (also 2026-05-20):
+
+1. **`settings.dimensions` opt-in** (`theme.json`): `width: true`, `height: true`, and 4 `dimensionSizes` presets (Hairline / Short / Medium / Tall — sizes `1px / 20rem / 32rem / 48rem`). Editors gain block-level width + height controls + a size-picker matching the SN spacing scale. Reference: [Dimensions Support Enhancements in WordPress 7.0](https://make.wordpress.org/core/2026/03/15/dimensions-support-enhancements-in-wordpress-7-0/).
+
+2. **`settings.typography.textIndent: true`** (`theme.json`): Paragraph block gains a text-indent typography control. Reference: [New Block Support: textIndent](https://make.wordpress.org/core/2026/03/15/new-block-support-text-indent-textindent/).
+
+3. **Cross-document View Transitions** (`assets/css/critical.css` +30 LOC): browser-native CSS `@view-transition { navigation: auto; }` rule + `view-transition-name` annotations on `.sn-header`, `.sn-footer`, `main`. Subtle fade between page navigations on Chrome/Edge 111+ and Safari 18+; silently no-op elsewhere. `prefers-reduced-motion: reduce` disables it via the standard media query.
+
+**Note on View Transitions:** WP 7.0's own View Transitions are **admin-only** (smooth dashboard nav). The frontend opt-in here is the **browser CSS feature** ([CSS View Transitions Module Level 2](https://drafts.csswg.org/css-view-transitions-2/)) — same primitive WP itself uses, but for the site frontend instead of wp-admin. Theme-side adoption is independent of WP version.
+
+### Cap rollover note
+
+**v9.0.0 is a minor + patch cap rollover, NOT a semantic breaking change.** v8.x consumed patch 7/7 + minor 5/5 (per CLAUDE.md versioning rules), so the next functional theme change MUST roll to a new major. This release ships zero breaking changes — all settings additions are additive, no template / part / PHP changes, no removed CSS. Existing content renders identically.
+
+### Files
+
+- **Modified:** `theme.json` (+18 LOC for dimensions + 1 LOC for textIndent), `assets/css/critical.css` (+32 LOC for View Transitions), `style.css` (Version: 8.5.7 → 9.0.0), `CHANGELOG.md`
+
+### Explicit non-changes
+
+No template changes. No new PHP or `inc/` modules. No new JS. No new blocks. No removed CSS rules. No changes to existing dimensions or typography styles (only additions).
+
+### Process
+
+`superpowers:brainstorming` (with WP 7.0 Field Guide + 3 specific dev notes read mid-session) → spec written at `docs/superpowers/specs/2026-05-20-theme-v9.0.0-design.md` → executed inline due to small scope (~70 LOC across 2 files). Source-reading during the brainstorm caught a substantive scope error: my original bundle proposed "View Transitions + Block Visibility + Dimensions" as WP-7.0-native, but the dev notes revealed View Transitions are admin-only in 7.0 and Block Visibility's `theme.json` integration is deferred to 7.1. Corrected bundle ships actual adoptable features.
+
 ## [8.5.7] - 2026-05-18
 
 ### Hotfix — restore `.is-menu-open` styles to critical.css

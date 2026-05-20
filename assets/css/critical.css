@@ -424,3 +424,35 @@ body {
 /* v8.5.6 critical.css pruning: CF7 form label + submit button rules
    were here but forms are never above-the-fold; full definitions live
    in assets/css/forms.css (deferred). Removing ~32 LOC. */
+
+/* ─── v9.0.0: View Transitions (browser-native, NOT WP 7.0) ───────────
+ *
+ * Cross-document View Transitions are a browser CSS feature
+ * (https://drafts.csswg.org/css-view-transitions-2/). WP 7.0 uses them
+ * for wp-admin navigation but does NOT enable them for the site
+ * frontend — that's this theme's opt-in.
+ *
+ * Browser support: Chrome/Edge 111+ (March 2023), Safari 18+ (Sept
+ * 2024). Older browsers silently ignore the @view-transition at-rule
+ * and the view-transition-name property. No JS fallback needed.
+ *
+ * Respects user motion preferences via the standard prefers-reduced-
+ * motion media query.
+ * ─────────────────────────────────────────────────────────────────── */
+
+@view-transition {
+	navigation: auto;
+}
+
+/* Persistent shell — header + footer don't re-fade on every nav. */
+.sn-header { view-transition-name: sn-header; }
+.sn-footer { view-transition-name: sn-footer; }
+
+/* Pin a name on the main content area so future tuning has a hook. */
+main { view-transition-name: sn-main; }
+
+@media (prefers-reduced-motion: reduce) {
+	@view-transition {
+		navigation: none;
+	}
+}
