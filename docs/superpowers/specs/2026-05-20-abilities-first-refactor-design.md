@@ -172,15 +172,52 @@ curl -sI "https://juanlentino.com/wp-json/signal-noise/v1/cmd/status"
 
 If any check fails, the install needs investigation BEFORE another tag.
 
+## Source-verified implementation details
+
+Resolved by reading actual Gutenberg + abilities-api source before writing the implementation plan (per the [framework-source-first rule](../../WORDPRESS-REFERENCE.md)):
+
+1. **Abilities REST endpoint shape:** `GET|POST|DELETE /wp-abilities/v1/<namespace>/<ability>/run` — note `/run`, not `/execute`. Source: [abilities-api docs/rest-api.md](https://github.com/WordPress/abilities-api/blob/trunk/docs/rest-api.md).
+
+2. **HTTP method varies per ability annotation:**
+   - `readonly: true` → **GET** (input via `?input=<URL-encoded JSON>`)
+   - regular (`readonly: false`) → **POST** (input in JSON body as `{ "input": { ... } }`)
+   - `destructive: true` → **DELETE** (input via `?input=<URL-encoded JSON>`)
+
+3. **`show_in_rest` opt-in is REQUIRED** for client-side invocation. Default is `false` (REST-hidden). Every ability we want callable from JS must register with `'meta' => array( 'show_in_rest' => true, 'annotations' => [...] )`. **The Phase 14 abilities don't have this set** — fixing them is part of this refactor.
+
+4. **`@wordpress/core-abilities` is ES-module only.** WP core loads it via `wp_enqueue_script_module( '@wordpress/core-abilities' )` (verified at [Gutenberg lib/client-assets.php](https://github.com/WordPress/gutenberg/blob/trunk/lib/client-assets.php)). Our existing classic-script JS files (IIFE-wrapped, loaded via `wp_enqueue_script`) cannot `import` from script modules.
+
+   **Implementation choice:** skip the `@wordpress/core-abilities` package entirely. Use `wp.apiFetch` against the abilities REST URLs directly. The package's value-add is auto-routing the HTTP verb per annotation; we know our own abilities' annotations at code-write time, so we can pick the verb manually. Stays in classic-script land, no module loader integration needed.
+
+   Helper JS function (one place, used by all 4 button scripts):
+   ```js
+   function executeAbility( name, annotations, input ) {
+       const verb = annotations.readonly ? 'GET'
+                  : annotations.destructive ? 'DELETE'
+                  : 'POST';
+       const path = '/wp-abilities/v1/' + name + '/run';
+       const opts = { path, method: verb };
+       if ( input !== null && input !== undefined ) {
+           if ( verb === 'POST' ) {
+               opts.data = { input };
+           } else {
+               opts.path += '?input=' + encodeURIComponent( JSON.stringify( input ) );
+           }
+       }
+       return wp.apiFetch( opts );
+   }
+   ```
+
+   This drops the JS dependency on `@wordpress/abilities` and `@wordpress/core-abilities` script handles entirely — no module-loader integration, just `wp.apiFetch` calling the new REST endpoints.
+
 ## Risks + mitigations
 
 | Risk | Mitigation |
 |---|---|
-| `@wordpress/core-abilities` `initialize()` race — multiple AI buttons all call it on click before the first resolves | Per the README, `initialize()` is idempotent: "Repeated calls return the same in-flight or resolved promise." No mitigation needed. |
 | Ability execute callbacks duplicate input validation already done by `input_schema` | Don't re-validate. The abilities API validates input against `input_schema` BEFORE calling the permission_callback or execute_callback. Trust the framework. |
 | Legacy REST endpoints + new abilities expose the same operation twice — risk of one being "fixed" while the other isn't | Single-source-of-truth: each operation has ONE impl function; both surfaces call it. Defense lives in the impl. |
-| `@wordpress/core-abilities` script handle name may differ from `wp-core-abilities` | Verify the actual registered handle via `wp_scripts()` debug or by inspecting `wp-includes/script-loader.php` source. Pin the correct handle in `wp_register_script` deps. |
-| Plugin still won't install via WP-UI Updates if previously failed | Manual install path: `gh workflow run deploy.yml --repo juanlentino/signal-and-noise-tools --ref v2.5.0`. Workflow now does `git reset --hard` before checkout (v2.0.3+) to survive dirty trees. |
+| Phase 14's existing 4 abilities lack `show_in_rest: true` — they're currently REST-invisible | Add `show_in_rest: true` to all 11 abilities during registration. The 4 existing ones get the meta field added; no other change. |
+| Plugin still won't install via WP-UI Updates if previously failed | Manual install path: `gh workflow run deploy.yml --repo juanlentino/signal-and-noise-tools --ref v2.5.0`. Workflow does `git reset --hard` before checkout (v2.0.3+) to survive dirty trees. |
 
 ## Implementation sequence (high-level — full plan in writing-plans phase)
 
