@@ -24,7 +24,7 @@ WordPress 7.0 ships on May 20, 2026. The audit was conducted on 2026-05-16 again
 | **Personal automation webhooks** | Not in core | ✅ Proceed; consider registering as **Abilities** (see below) |
 | **Cron job dashboard** | Not added in 7.0 (was ⚠️ Medium risk) | ✅ Survives the audit; proceed |
 | **Content health checks** | Site Health did NOT expand into content (was ⚠️ Medium-high risk) | ✅ Survives the audit; consider AI-assisted suggestions |
-| **Breadcrumbs** (was a planned sub-feature of SEO absorption) | **Native Breadcrumbs block in 7.0** | ❌ DROP from scope. Use the native block. |
+| **Breadcrumbs** (was a planned sub-feature of SEO absorption) | **Native Breadcrumbs block in 7.0 — visual HTML only, NO BreadcrumbList JSON-LD** (verified 2026-05-20 vs Gutenberg trunk; see WP-REFERENCE gotcha #30) | ⚠️ PARTIAL DROP — visual emission can use the native block; **JSON-LD emission stays in plugin** (`sn_schema_breadcrumb_list`). |
 
 ### Things WP 7.0 SHIPS that reshape our strategy
 
