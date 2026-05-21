@@ -71,7 +71,16 @@ jobs:
             *) exit 1 ;;
           esac
 
-      - name: Purge Cloudflare cache
+      - name: Purge Cloudflare cache (best-effort)
+        # Best-effort: a 401 here means the WP_DEPLOY_APP_PASSWORD GH
+        # secret has been revoked (Phase 13 incident, 2026-05-16+).
+        # The git-pull step above has already landed the files on
+        # Cloudways, and the CF edge will revalidate naturally via the
+        # new `last-modified` header on every theme asset. A missed
+        # purge is a latency artifact, not a deploy failure. The step
+        # still runs (to attempt the purge when the secret is valid)
+        # but won't redden the run when it can't auth.
+        continue-on-error: true
         env:
           WP_DEPLOY_USER: ${{ secrets.WP_DEPLOY_USER }}
           WP_DEPLOY_APP_PASSWORD: ${{ secrets.WP_DEPLOY_APP_PASSWORD }}
@@ -80,6 +89,11 @@ jobs:
           set -euo pipefail
           # Let Cloudways' git pull settle + OPcache invalidate.
           sleep 5
+          if [ -z "${WP_DEPLOY_USER:-}" ] || [ -z "${WP_DEPLOY_APP_PASSWORD:-}" ]; then
+            echo "::warning::WP_DEPLOY_USER or WP_DEPLOY_APP_PASSWORD not set — skipping purge."
+            echo "Files are live on Cloudways; CF edge cache will TTL/revalidate naturally."
+            exit 0
+          fi
           auth=$(printf '%s:%s' "$WP_DEPLOY_USER" "$WP_DEPLOY_APP_PASSWORD" | base64 -w 0)
           # Content-Length: 0 satisfies Cloudways' WAF (ModSecurity rejects
           # zero-byte POSTs with empty 400; not a WordPress-layer error).
@@ -92,6 +106,18 @@ jobs:
           printf 'HTTP %s\n' "$status"
           printf '%s\n' "$body"
           case "$status" in
-            200) ;;
-            *) exit 1 ;;
+            200)
+              echo "Purge dispatched."
+              ;;
+            401|403)
+              echo "::warning::Purge auth failed (HTTP $status). WP_DEPLOY_APP_PASSWORD is likely revoked."
+              echo "Remediation: wp-admin Users -> Profile -> Application Passwords -> generate 'gha-deploy' then in this repo:"
+              echo "  echo -n '<PASSWORD>' | gh secret set WP_DEPLOY_APP_PASSWORD --repo juanlentino/signal-and-noise"
+              echo "Files are live on Cloudways regardless; CF edge will revalidate naturally via last-modified."
+              exit 1
+              ;;
+            *)
+              echo "::warning::Purge returned HTTP $status (unexpected). Files are live; CF edge cache may take time to refresh."
+              exit 1
+              ;;
           esac
