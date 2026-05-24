@@ -196,8 +196,58 @@ function sn_theme_register_abilities() {
 			'type'     => 'object',
 			'required' => array( 'patterns', 'categories' ),
 			'properties' => array(
-				'patterns'   => array( 'type' => 'array' ),
-				'categories' => array( 'type' => 'array' ),
+				'patterns'   => array(
+					'type'        => 'array',
+					'description' => 'Registered block patterns with metadata.',
+					'items'       => array(
+						'type'       => 'object',
+						'properties' => array(
+							'name'           => array(
+								'type'        => 'string',
+								'description' => 'Unique pattern identifier (namespace/slug).',
+							),
+							'title'          => array(
+								'type'        => 'string',
+								'description' => 'Human-readable pattern title.',
+							),
+							'description'    => array(
+								'type'        => 'string',
+								'description' => 'Pattern description.',
+							),
+							'categories'     => array(
+								'type'        => 'array',
+								'description' => 'Pattern category slugs.',
+								'items'       => array( 'type' => 'string' ),
+							),
+							'keywords'       => array(
+								'type'        => 'array',
+								'description' => 'Search keywords for the pattern.',
+								'items'       => array( 'type' => 'string' ),
+							),
+							'viewport_width' => array(
+								'type'        => 'integer',
+								'description' => 'Pattern viewport width in pixels; 0 if unset.',
+							),
+						),
+					),
+				),
+				'categories' => array(
+					'type'        => 'array',
+					'description' => 'Registered block pattern categories.',
+					'items'       => array(
+						'type'       => 'object',
+						'properties' => array(
+							'name'  => array(
+								'type'        => 'string',
+								'description' => 'Category slug.',
+							),
+							'label' => array(
+								'type'        => 'string',
+								'description' => 'Human-readable category label.',
+							),
+						),
+					),
+				),
 			),
 		),
 		'meta'                => array(
@@ -233,9 +283,37 @@ function sn_theme_register_abilities() {
 			'type'     => 'object',
 			'required' => array( 'template_slug', 'blocks' ),
 			'properties' => array(
-				'template_slug'      => array( 'type' => 'string' ),
-				'template_part_slugs' => array( 'type' => 'array' ),
-				'blocks'             => array( 'type' => 'array' ),
+				'template_slug'       => array(
+					'type'        => 'string',
+					'description' => 'Resolved FSE template slug (e.g., "page", "single").',
+				),
+				'template_part_slugs' => array(
+					'type'        => 'array',
+					'description' => 'Slugs of core/template-part blocks referenced at the top level of the template.',
+					'items'       => array( 'type' => 'string' ),
+				),
+				'blocks'              => array(
+					'type'        => 'array',
+					'description' => 'Shallow summary of the template\'s top-level blocks. Does not recurse into innerBlocks; nested structure is reported as a count only.',
+					'items'       => array(
+						'type'       => 'object',
+						'properties' => array(
+							'blockName'        => array(
+								'type'        => 'string',
+								'description' => 'Block type identifier (e.g., "core/group", "core/template-part").',
+							),
+							'attrs'            => array(
+								'type'        => 'object',
+								'description' => 'Top-level block attributes as parsed from the template.',
+							),
+							'innerBlocksCount' => array(
+								'type'        => 'integer',
+								'description' => 'Number of direct child blocks; nested children are not recursed into.',
+								'minimum'     => 0,
+							),
+						),
+					),
+				),
 			),
 		),
 		'meta'                => array(
@@ -296,7 +374,41 @@ function sn_theme_register_abilities() {
 			'type'     => 'object',
 			'required' => array( 'pillars' ),
 			'properties' => array(
-				'pillars' => array( 'type' => 'array' ),
+				'pillars' => array(
+					'type'        => 'array',
+					'description' => 'Curated /notes pillar essays with computed reading time + last-modified.',
+					'items'       => array(
+						'type'       => 'object',
+						'properties' => array(
+							'slug'                 => array(
+								'type'        => 'string',
+								'description' => 'Pillar essay path slug (e.g., "provenance/over-detection").',
+							),
+							'title'                => array(
+								'type'        => 'string',
+								'description' => 'Pillar essay title.',
+							),
+							'url'                  => array(
+								'type'        => 'string',
+								'format'      => 'uri',
+								'description' => 'Absolute URL to the pillar essay.',
+							),
+							'summary'              => array(
+								'type'        => 'string',
+								'description' => 'Editorial dek summarizing the pillar.',
+							),
+							'reading_time_minutes' => array(
+								'type'        => 'integer',
+								'description' => 'Estimated reading time in minutes; 0 if the slug does not resolve to a post.',
+								'minimum'     => 0,
+							),
+							'last_modified'        => array(
+								'type'        => 'string',
+								'description' => 'YYYY-MM-DD of the resolved post\'s last modification; empty string if no matching post was found.',
+							),
+						),
+					),
+				),
 			),
 		),
 		'meta'                => array(
@@ -447,9 +559,28 @@ function sn_theme_register_abilities() {
 			'required' => array( 'suggestions' ),
 			'properties' => array(
 				'suggestions' => array(
-					'type'     => 'array',
-					'minItems' => 1,
-					'maxItems' => 3,
+					'type'        => 'array',
+					'description' => 'Recommended block patterns ranked by AI fit assessment; capped at 3.',
+					'minItems'    => 1,
+					'maxItems'    => 3,
+					'items'       => array(
+						'type'       => 'object',
+						'properties' => array(
+							'pattern_name' => array(
+								'type'        => 'string',
+								'description' => 'Pattern slug; guaranteed to exist in the block pattern registry at response time.',
+							),
+							'reasoning'    => array(
+								'type'        => 'string',
+								'description' => 'AI rationale for why this pattern fits the draft.',
+							),
+							'confidence'   => array(
+								'type'        => 'string',
+								'enum'        => array( 'high', 'medium', 'low' ),
+								'description' => 'AI confidence band; invalid values from the model are sanitized to "medium".',
+							),
+						),
+					),
 				),
 				'tokens_used' => array( 'type' => 'integer' ),
 			),
@@ -492,7 +623,29 @@ function sn_theme_register_abilities() {
 			'required' => array( 'overall_score', 'findings' ),
 			'properties' => array(
 				'overall_score' => array( 'type' => 'integer', 'minimum' => 0, 'maximum' => 100 ),
-				'findings'      => array( 'type' => 'array' ),
+				'findings'      => array(
+					'type'        => 'array',
+					'description' => 'Per-dimension brand-alignment findings from the AI evaluation.',
+					'items'       => array(
+						'type'       => 'object',
+						'properties' => array(
+							'dimension' => array(
+								'type'        => 'string',
+								'enum'        => array( 'voice', 'tone', 'vocabulary', 'palette_fit', 'structure' ),
+								'description' => 'Brand-alignment dimension; invalid values from the model are sanitized to "voice".',
+							),
+							'verdict'   => array(
+								'type'        => 'string',
+								'enum'        => array( 'aligned', 'drift', 'off-brand' ),
+								'description' => 'Per-dimension verdict; invalid values from the model are sanitized to "drift" (safe pessimistic default).',
+							),
+							'note'      => array(
+								'type'        => 'string',
+								'description' => 'AI rationale for the verdict on this dimension.',
+							),
+						),
+					),
+				),
 				'tokens_used'   => array( 'type' => 'integer' ),
 			),
 		),
@@ -533,7 +686,14 @@ function sn_theme_register_abilities() {
 				'block_markup' => array( 'type' => 'string' ),
 				'pattern_name' => array( 'type' => 'string' ),
 				'tokens_used'  => array( 'type' => 'integer' ),
-				'warnings'     => array( 'type' => 'array' ),
+				'warnings'     => array(
+					'type'        => 'array',
+					'description' => 'Non-fatal advisories surfaced during generation (e.g., parse_blocks failed to validate the output).',
+					'items'       => array(
+						'type'        => 'string',
+						'description' => 'Human-readable warning message.',
+					),
+				),
 			),
 		),
 		'meta'                => array(
