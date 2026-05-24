@@ -9,8 +9,8 @@
  *     brand validate, pattern content, voice rewrite)
  *
  * Pattern: matches plugin's tests/health-checks.php — minimal WP +
- * AI-helper stubs, ha_eq / ha_true harness, fail-fast on first error
- * within a Test block but continues across blocks for full coverage.
+ * AI-helper stubs, ha_eq / ha_true harness. Assertions continue on
+ * failure so each block's PASS/FAIL output is visible.
  *
  * Run from theme root:
  *   php tests/abilities-registration.php
@@ -382,11 +382,11 @@ sn_theme_register_ability_categories();
 ha_eq( count( $first_call_categories ), count( $GLOBALS['__test_registered_categories'] ), 'second call does not re-register' );
 ha_eq( 3, count( $GLOBALS['__test_registered_categories'] ), 'still exactly three categories after second call' );
 
-echo "\nTest: sn_theme_register_abilities is callable (placeholder until Tasks 3-14)\n";
+echo "\nTest: sn_theme_register_abilities is callable\n";
 ha_reset();
 ha_true( function_exists( 'sn_theme_register_abilities' ), 'sn_theme_register_abilities function defined' );
 sn_theme_register_abilities();
-ha_eq( 0, count( $GLOBALS['__test_registered_abilities'] ), 'no abilities registered yet (populated in Tasks 3-14)' );
+ha_true( count( $GLOBALS['__test_registered_abilities'] ) >= 1, 'at least one ability registered (populated incrementally in Tasks 3-14)' );
 
 echo "\nTest: brand-voice constants defined\n";
 ha_true( defined( 'SN_THEME_BRAND_VOICE_SYSTEM' ), 'SN_THEME_BRAND_VOICE_SYSTEM defined' );
@@ -395,6 +395,57 @@ ha_true( strlen( SN_THEME_BRAND_VOICE_SYSTEM ) > 200, 'brand voice constant has 
 ha_true( strlen( SN_THEME_NOTES_VOICE_SYSTEM ) > 200, 'notes voice constant has substantive content' );
 
 // --- Per-ability test blocks added in Tasks 3-14 ----------------------
+
+// ─── Test: get-design-tokens ─────────────────────────────────────
+echo "\nTest signal-noise/get-design-tokens\n";
+ha_reset();
+// Re-seed the global settings fixture (ha_reset emptied it).
+$GLOBALS['__test_global_settings'] = array(
+	'color'      => array(
+		'palette' => array(
+			array( 'slug' => 'void',    'color' => '#ffffff', 'name' => 'Void' ),
+			array( 'slug' => 'asphalt', 'color' => '#f5f5f5', 'name' => 'Asphalt' ),
+			array( 'slug' => 'bone',    'color' => '#000000', 'name' => 'Bone' ),
+			array( 'slug' => 'blood',   'color' => '#e00404', 'name' => 'Blood' ),
+		),
+	),
+	'typography' => array(
+		'fontFamilies' => array(
+			array( 'slug' => 'heading', 'name' => 'Heading', 'fontFamily' => 'Bebas Neue' ),
+			array( 'slug' => 'body',    'name' => 'Body',    'fontFamily' => 'DM Mono' ),
+		),
+		'fontSizes'    => array(
+			array( 'slug' => 'small',  'size' => '0.8rem',  'name' => 'Small' ),
+			array( 'slug' => 'medium', 'size' => '1rem',    'name' => 'Medium' ),
+			array( 'slug' => 'large',  'size' => '1.25rem', 'name' => 'Large' ),
+		),
+	),
+	'spacing'    => array(
+		'spacingScale' => array( 'steps' => 7 ),
+		'spacingSizes' => array(
+			array( 'slug' => '40', 'size' => '1rem',   'name' => 'Small' ),
+			array( 'slug' => '50', 'size' => '1.5rem', 'name' => 'Medium' ),
+		),
+	),
+);
+sn_theme_register_abilities();
+ha_true(
+	isset( $GLOBALS['__test_registered_abilities']['signal-noise/get-design-tokens'] ),
+	'get-design-tokens is registered'
+);
+$ability = $GLOBALS['__test_registered_abilities']['signal-noise/get-design-tokens'];
+ha_eq( 'diagnostics', $ability['category'], 'category is diagnostics' );
+ha_true( is_callable( $ability['execute_callback'] ), 'execute_callback is callable' );
+
+$result = call_user_func( $ability['execute_callback'], array() );
+ha_true( is_array( $result ), 'returns array (not WP_Error) in happy path' );
+ha_true( isset( $result['colors'] ),     'output has colors key' );
+ha_true( isset( $result['typography'] ), 'output has typography key' );
+ha_true( isset( $result['spacing'] ),    'output has spacing key' );
+ha_true( isset( $result['version'] ),    'output has version key' );
+ha_eq( '#ffffff', $result['colors']['void'],    'void color flattened from palette' );
+ha_eq( '#e00404', $result['colors']['blood'],   'blood color flattened from palette' );
+ha_eq( 2, count( $result['typography']['fontFamilies'] ), 'typography.fontFamilies passthrough' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

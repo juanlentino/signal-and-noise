@@ -128,5 +128,110 @@ function sn_theme_register_abilities() {
 	// Ability registrations are appended here in subsequent tasks (3-14).
 	// Stubs intentionally omitted — tests will fail until each task
 	// completes its corresponding registration.
+
+	wp_register_ability( 'signal-noise/get-design-tokens', array(
+		'label'               => 'Get design tokens',
+		'description'         => "Returns the SN theme's color palette, typography (font families + sizes), and spacing scale from theme.json. Read-only.",
+		'category'            => 'diagnostics',
+		'permission_callback' => $permission_read,
+		'execute_callback'    => 'sn_theme_ability_design_tokens',
+		'input_schema'        => array(
+			'type'                 => 'object',
+			'properties'           => array(),
+			'additionalProperties' => false,
+		),
+		'output_schema'       => array(
+			'type'     => 'object',
+			'required' => array( 'colors', 'typography', 'spacing', 'version' ),
+			'properties' => array(
+				'colors'     => array(
+					'type'                 => 'object',
+					'description'          => 'Named brand colors from theme.json color.palette.',
+					'additionalProperties' => array( 'type' => 'string', 'format' => 'color-hex' ),
+				),
+				'typography' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'fontFamilies' => array( 'type' => 'array' ),
+						'fontSizes'    => array( 'type' => 'array' ),
+					),
+				),
+				'spacing'    => array(
+					'type'       => 'object',
+					'properties' => array(
+						'spacingScale' => array( 'type' => 'object' ),
+						'spacingSizes' => array( 'type' => 'array' ),
+					),
+				),
+				'version'    => array( 'type' => 'string' ),
+			),
+		),
+		'meta'                => array(
+			'show_in_rest' => true,
+			'annotations'  => array(
+				'idempotent'      => true,
+				'open_world_hint' => false,
+				'read_only'       => true,
+			),
+		),
+	) );
 }
 add_action( 'wp_abilities_api_init', 'sn_theme_register_abilities' );
+
+/**
+ * Execute callback: signal-noise/get-design-tokens.
+ *
+ * Flattens theme.json palette into a name→hex map for cheap consumption,
+ * passes typography + spacing through verbatim, and includes the theme
+ * version that produced these tokens.
+ *
+ * @since 9.1.0
+ * @return array|WP_Error Shaped tokens, or WP_Error if WP < 5.9.
+ */
+function sn_theme_ability_design_tokens() {
+	try {
+		if ( ! function_exists( 'wp_get_global_settings' ) ) {
+			return new WP_Error(
+				'theme_dependency_missing',
+				'wp_get_global_settings() not available — requires WP 5.9+.',
+				array( 'status' => 503 )
+			);
+		}
+
+		$settings = wp_get_global_settings();
+
+		$colors = array();
+		$palette = isset( $settings['color']['palette'] ) ? (array) $settings['color']['palette'] : array();
+		foreach ( $palette as $entry ) {
+			if ( isset( $entry['slug'], $entry['color'] ) ) {
+				$colors[ (string) $entry['slug'] ] = (string) $entry['color'];
+			}
+		}
+
+		$typography = isset( $settings['typography'] ) ? (array) $settings['typography'] : array();
+		$spacing    = isset( $settings['spacing'] )    ? (array) $settings['spacing']    : array();
+
+		$theme   = function_exists( 'wp_get_theme' ) ? wp_get_theme() : null;
+		$version = $theme && method_exists( $theme, 'get' ) ? (string) $theme->get( 'Version' ) : '';
+
+		return array(
+			'colors'     => $colors,
+			'typography' => array(
+				'fontFamilies' => isset( $typography['fontFamilies'] ) ? array_values( (array) $typography['fontFamilies'] ) : array(),
+				'fontSizes'    => isset( $typography['fontSizes'] )    ? array_values( (array) $typography['fontSizes'] )    : array(),
+			),
+			'spacing'    => array(
+				'spacingScale' => isset( $spacing['spacingScale'] ) ? (array) $spacing['spacingScale'] : array(),
+				'spacingSizes' => isset( $spacing['spacingSizes'] ) ? array_values( (array) $spacing['spacingSizes'] ) : array(),
+			),
+			'version'    => $version,
+		);
+	} catch ( \Throwable $e ) {
+		error_log( 'SN theme ability error in get-design-tokens: ' . $e->getMessage() );
+		return new WP_Error(
+			'theme_ability_error',
+			sprintf( 'Theme ability failed: %s', $e->getMessage() ),
+			array( 'status' => 500 )
+		);
+	}
+}
