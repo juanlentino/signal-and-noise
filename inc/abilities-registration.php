@@ -166,7 +166,10 @@ function sn_theme_register_abilities() {
 	}
 
 	// Permission helpers (private to this function).
-	$permission_read       = function() { return is_user_logged_in() ? true : current_user_can( 'read' ); };
+	// `read` cap is held by every registered WP user (subscribers up). Dropping
+	// the prior `is_user_logged_in()` short-circuit makes the check explicit
+	// without changing who can access — anonymous visitors are still rejected.
+	$permission_read       = function() { return current_user_can( 'read' ); };
 	$permission_edit_posts = function() { return current_user_can( 'edit_posts' ); };
 
 	// Ability registrations are appended here in subsequent tasks (3-14).
