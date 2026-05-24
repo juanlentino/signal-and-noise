@@ -461,6 +461,48 @@ function sn_theme_register_abilities() {
 		),
 	) );
 
+	wp_register_ability( 'signal-noise/ai-validate-brand-alignment', array(
+		'label'               => 'Validate brand alignment',
+		'description'         => "AI scores content (0-100) for fit with the SN brand: voice, tone, vocabulary, palette references, structure. Returns score + per-dimension findings with verdict (aligned|drift|off-brand) + note. Uses the shared brand-voice constant.",
+		'category'            => 'ai-generation',
+		'permission_callback' => $permission_edit_posts,
+		'execute_callback'    => 'sn_theme_ability_ai_validate_brand_alignment',
+		'input_schema'        => array(
+			'type'       => 'object',
+			'required'   => array( 'content' ),
+			'properties' => array(
+				'content'      => array(
+					'type'      => 'string',
+					'minLength' => 50,
+					'maxLength' => 8000,
+				),
+				'content_type' => array(
+					'type'    => 'string',
+					'enum'    => array( 'copy', 'title', 'summary', 'longform' ),
+					'default' => 'copy',
+				),
+			),
+			'additionalProperties' => false,
+		),
+		'output_schema'       => array(
+			'type'     => 'object',
+			'required' => array( 'overall_score', 'findings' ),
+			'properties' => array(
+				'overall_score' => array( 'type' => 'integer', 'minimum' => 0, 'maximum' => 100 ),
+				'findings'      => array( 'type' => 'array' ),
+				'tokens_used'   => array( 'type' => 'integer' ),
+			),
+		),
+		'meta'                => array(
+			'show_in_rest' => true,
+			'annotations'  => array(
+				'idempotent'      => false,
+				'open_world_hint' => false,
+				'read_only'       => false,
+			),
+		),
+	) );
+
 	wp_register_ability( 'signal-noise/get-design-tokens', array(
 		'label'               => 'Get design tokens',
 		'description'         => "Returns the SN theme's color palette, typography (font families + sizes), and spacing scale from theme.json. Read-only.",
@@ -1177,6 +1219,97 @@ function sn_theme_ability_ai_suggest_block_pattern( $input ) {
 		);
 	} catch ( \Throwable $e ) {
 		error_log( 'SN theme ability error in ai-suggest-block-pattern: ' . $e->getMessage() );
+		return new WP_Error(
+			'theme_ability_error',
+			sprintf( 'Theme ability failed: %s', $e->getMessage() ),
+			array( 'status' => 500 )
+		);
+	}
+}
+
+/**
+ * Execute callback: signal-noise/ai-validate-brand-alignment.
+ *
+ * Sends content + brand voice guide + palette tokens to the AI; expects
+ * JSON of shape { overall_score: 0-100, findings: [...] }. Each finding
+ * has a verdict from the enum aligned|drift|off-brand. Invalid verdicts
+ * are sanitized to 'drift' (safe pessimistic default). Score is clamped
+ * to [0, 100].
+ *
+ * @since 9.1.0
+ * @param array $input { content: string, content_type?: string }
+ * @return array|WP_Error
+ */
+function sn_theme_ability_ai_validate_brand_alignment( $input ) {
+	try {
+		if ( ! sn_theme_ai_helper_available() ) {
+			return sn_theme_ai_unavailable_error();
+		}
+
+		$content      = isset( $input['content'] ) ? (string) $input['content'] : '';
+		$content_type = isset( $input['content_type'] ) ? (string) $input['content_type'] : 'copy';
+		if ( ! in_array( $content_type, array( 'copy', 'title', 'summary', 'longform' ), true ) ) {
+			$content_type = 'copy';
+		}
+
+		// Include design tokens for palette-fit context.
+		$tokens = sn_theme_ability_design_tokens();
+		$palette_summary = is_array( $tokens ) && isset( $tokens['colors'] )
+			? implode( ',', array_keys( (array) $tokens['colors'] ) )
+			: '';
+
+		$system = SN_THEME_BRAND_VOICE_SYSTEM . "\n\nYou MUST return ONLY valid JSON of shape "
+			. '{"overall_score": 0-100, "findings": [{"dimension": "voice|tone|vocabulary|palette_fit|structure", "verdict": "aligned|drift|off-brand", "note": "..."}]}'
+			. ' No prose, no markdown.';
+
+		$prompt = "Content type: $content_type\n"
+			. "Brand palette slugs: $palette_summary\n\n"
+			. "CONTENT TO EVALUATE:\n" . $content;
+
+		$raw = snt_ai_generate_with_constraints( $prompt, $system, 1024 );
+		if ( is_wp_error( $raw ) ) {
+			return $raw;
+		}
+
+		$parsed = sn_theme_parse_ai_json( $raw );
+		if ( null === $parsed || ! isset( $parsed['overall_score'], $parsed['findings'] ) || ! is_array( $parsed['findings'] ) ) {
+			error_log( 'SN ai-validate-brand-alignment: malformed JSON: ' . substr( (string) $raw, 0, 200 ) );
+			return new WP_Error(
+				'ai_malformed_response',
+				'AI returned malformed JSON.',
+				array( 'status' => 502 )
+			);
+		}
+
+		$score = (int) $parsed['overall_score'];
+		if ( $score < 0 )   { $score = 0; }
+		if ( $score > 100 ) { $score = 100; }
+
+		$allowed_dims     = array( 'voice', 'tone', 'vocabulary', 'palette_fit', 'structure' );
+		$allowed_verdicts = array( 'aligned', 'drift', 'off-brand' );
+
+		$findings = array();
+		foreach ( (array) $parsed['findings'] as $f ) {
+			$dim = isset( $f['dimension'] ) && in_array( $f['dimension'], $allowed_dims, true )
+				? (string) $f['dimension']
+				: 'voice';
+			$verdict = isset( $f['verdict'] ) && in_array( $f['verdict'], $allowed_verdicts, true )
+				? (string) $f['verdict']
+				: 'drift'; // safe pessimistic default
+			$findings[] = array(
+				'dimension' => $dim,
+				'verdict'   => $verdict,
+				'note'      => isset( $f['note'] ) ? (string) $f['note'] : '',
+			);
+		}
+
+		return array(
+			'overall_score' => $score,
+			'findings'      => $findings,
+			'tokens_used'   => (int) ceil( strlen( (string) $raw ) / 4 ),
+		);
+	} catch ( \Throwable $e ) {
+		error_log( 'SN theme ability error in ai-validate-brand-alignment: ' . $e->getMessage() );
 		return new WP_Error(
 			'theme_ability_error',
 			sprintf( 'Theme ability failed: %s', $e->getMessage() ),

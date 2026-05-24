@@ -843,5 +843,87 @@ $GLOBALS['__test_ai_response'] = wp_json_encode( array(
 $capped = call_user_func( $ability['execute_callback'], array( 'draft_content' => $draft ) );
 ha_eq( 3, count( $capped['suggestions'] ), 'caps at 3 suggestions' );
 
+// ─── Test: ai-validate-brand-alignment ───────────────────────────
+echo "\nTest signal-noise/ai-validate-brand-alignment\n";
+ha_reset();
+// Re-seed palette so the SUT's internal call to sn_theme_ability_design_tokens()
+// has something to hand back as palette context.
+$GLOBALS['__test_global_settings'] = array(
+	'color'      => array(
+		'palette' => array(
+			array( 'slug' => 'void',  'color' => '#ffffff', 'name' => 'Void' ),
+			array( 'slug' => 'bone',  'color' => '#000000', 'name' => 'Bone' ),
+			array( 'slug' => 'blood', 'color' => '#e00404', 'name' => 'Blood' ),
+		),
+	),
+	'typography' => array( 'fontFamilies' => array(), 'fontSizes' => array() ),
+	'spacing'    => array( 'spacingScale' => array(), 'spacingSizes' => array() ),
+);
+sn_theme_register_abilities();
+
+ha_true(
+	isset( $GLOBALS['__test_registered_abilities']['signal-noise/ai-validate-brand-alignment'] ),
+	'ai-validate-brand-alignment is registered'
+);
+$ability = $GLOBALS['__test_registered_abilities']['signal-noise/ai-validate-brand-alignment'];
+ha_eq( 'ai-generation', $ability['category'], 'category is ai-generation' );
+
+$sample_content = str_repeat( 'This is sample content that needs to be evaluated for brand alignment. ', 4 );
+
+// Helper-unavailable.
+$GLOBALS['__test_ai_helper_disabled'] = true;
+$err = call_user_func( $ability['execute_callback'], array( 'content' => $sample_content ) );
+ha_true( is_wp_error( $err ),                'helper unavailable → WP_Error' );
+ha_eq( 'ai_helper_unavailable', $err->code,  'ai_helper_unavailable code' );
+$GLOBALS['__test_ai_helper_disabled'] = false;
+
+// Happy path.
+$GLOBALS['__test_ai_response'] = wp_json_encode( array(
+	'overall_score' => 72,
+	'findings' => array(
+		array( 'dimension' => 'voice',      'verdict' => 'drift',     'note' => 'Tone is too consumer-friendly.' ),
+		array( 'dimension' => 'vocabulary', 'verdict' => 'off-brand', 'note' => "Word 'discover' doesn't fit SN." ),
+		array( 'dimension' => 'palette_fit', 'verdict' => 'aligned',  'note' => 'No off-palette color references.' ),
+	),
+) );
+$result = call_user_func( $ability['execute_callback'], array( 'content' => $sample_content ) );
+ha_true( is_array( $result ),                       'happy path returns array' );
+ha_eq( 72, $result['overall_score'],                'overall_score parsed' );
+ha_eq( 3,  count( $result['findings'] ),            '3 findings returned' );
+ha_eq( 'voice', $result['findings'][0]['dimension'], 'first finding dimension preserved' );
+ha_true( false !== strpos( $GLOBALS['__test_ai_last_system'], 'brutalist' ), 'system uses brand voice constant' );
+
+// Markdown-fenced JSON.
+$GLOBALS['__test_ai_response'] = "```json\n" . wp_json_encode( array(
+	'overall_score' => 50,
+	'findings' => array( array( 'dimension' => 'tone', 'verdict' => 'aligned', 'note' => 'ok' ) ),
+) ) . "\n```";
+$fenced = call_user_func( $ability['execute_callback'], array( 'content' => $sample_content ) );
+ha_eq( 50, $fenced['overall_score'], 'fenced response parses' );
+
+// Malformed JSON.
+$GLOBALS['__test_ai_response'] = 'totally not json';
+$bad = call_user_func( $ability['execute_callback'], array( 'content' => $sample_content ) );
+ha_true( is_wp_error( $bad ),                   'malformed → WP_Error' );
+ha_eq( 'ai_malformed_response', $bad->code,     'code is ai_malformed_response' );
+
+// Invalid verdict in finding is sanitized to "drift" (safe default).
+$GLOBALS['__test_ai_response'] = wp_json_encode( array(
+	'overall_score' => 80,
+	'findings' => array(
+		array( 'dimension' => 'tone', 'verdict' => 'martian', 'note' => 'invalid verdict' ),
+	),
+) );
+$sanitized = call_user_func( $ability['execute_callback'], array( 'content' => $sample_content ) );
+ha_true( in_array( $sanitized['findings'][0]['verdict'], array( 'aligned', 'drift', 'off-brand' ), true ), 'invalid verdict sanitized to allowed enum' );
+
+// overall_score clamped to 0-100.
+$GLOBALS['__test_ai_response'] = wp_json_encode( array(
+	'overall_score' => 999,
+	'findings' => array( array( 'dimension' => 'voice', 'verdict' => 'aligned', 'note' => 'x' ) ),
+) );
+$clamped = call_user_func( $ability['execute_callback'], array( 'content' => $sample_content ) );
+ha_eq( 100, $clamped['overall_score'], 'overall_score clamped to 100' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
