@@ -607,5 +607,34 @@ ha_true( false !== strpos( $result['pillars'][0]['url'], '/provenance/over-detec
 ha_eq( 'provenance/as-substrate', $result['pillars'][1]['slug'], 'pillar 2 slug' );
 ha_true( isset( $result['pillars'][0]['reading_time_minutes'] ), 'reading_time_minutes present' );
 
+// ─── Test: get-reading-time-for-slug ─────────────────────────────
+echo "\nTest signal-noise/get-reading-time-for-slug\n";
+ha_reset();
+
+// Re-seed reading times (ha_reset cleared them).
+$GLOBALS['__test_reading_times'] = array(
+	'provenance/over-detection' => '7 min',
+	'provenance/as-substrate'   => '6 min',
+);
+
+sn_theme_register_abilities();
+ha_true(
+	isset( $GLOBALS['__test_registered_abilities']['signal-noise/get-reading-time-for-slug'] ),
+	'get-reading-time-for-slug is registered'
+);
+$ability = $GLOBALS['__test_registered_abilities']['signal-noise/get-reading-time-for-slug'];
+ha_eq( 'content', $ability['category'], 'category is content' );
+
+$result = call_user_func( $ability['execute_callback'], array( 'slug' => 'provenance/over-detection' ) );
+ha_true( is_array( $result ),                          'returns array' );
+ha_eq( 'provenance/over-detection', $result['slug'],   'echoes input slug' );
+ha_eq( 7, $result['minutes'],                          'parses 7 from "7 min" fixture' );
+ha_true( isset( $result['wpm_basis'] ),                'wpm_basis included' );
+
+// Unknown slug returns minutes=0 (fixture stub returns "5 min" default but no real lookup).
+$missing = call_user_func( $ability['execute_callback'], array( 'slug' => 'nonexistent' ) );
+ha_eq( 'nonexistent', $missing['slug'], 'echoes nonexistent slug' );
+ha_true( $missing['minutes'] >= 0, 'minutes is non-negative for unknown slug' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

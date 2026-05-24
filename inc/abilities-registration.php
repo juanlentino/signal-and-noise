@@ -262,6 +262,42 @@ function sn_theme_register_abilities() {
 		),
 	) );
 
+	wp_register_ability( 'signal-noise/get-reading-time-for-slug', array(
+		'label'               => 'Get reading time for slug',
+		'description'         => 'Returns the computed reading-time minutes for a post identified by slug. Wraps sn_notes_reading_time_for_slug() (the same helper that powers the [sn_reading_time] shortcode). Returns minutes=0 if the slug does not resolve.',
+		'category'            => 'content',
+		'permission_callback' => $permission_read,
+		'execute_callback'    => 'sn_theme_ability_reading_time_for_slug',
+		'input_schema'        => array(
+			'type'       => 'object',
+			'required'   => array( 'slug' ),
+			'properties' => array(
+				'slug' => array(
+					'type'      => 'string',
+					'minLength' => 1,
+				),
+			),
+			'additionalProperties' => false,
+		),
+		'output_schema'       => array(
+			'type'     => 'object',
+			'required' => array( 'slug', 'minutes' ),
+			'properties' => array(
+				'slug'      => array( 'type' => 'string' ),
+				'minutes'   => array( 'type' => 'integer', 'minimum' => 0 ),
+				'wpm_basis' => array( 'type' => 'integer' ),
+			),
+		),
+		'meta'                => array(
+			'show_in_rest' => true,
+			'annotations'  => array(
+				'idempotent'      => true,
+				'open_world_hint' => false,
+				'read_only'       => true,
+			),
+		),
+	) );
+
 	wp_register_ability( 'signal-noise/get-design-tokens', array(
 		'label'               => 'Get design tokens',
 		'description'         => "Returns the SN theme's color palette, typography (font families + sizes), and spacing scale from theme.json. Read-only.",
@@ -646,6 +682,58 @@ function sn_theme_ability_page_notes_pillars() {
 		return array( 'pillars' => $pillars );
 	} catch ( \Throwable $e ) {
 		error_log( 'SN theme ability error in get-page-notes-pillars: ' . $e->getMessage() );
+		return new WP_Error(
+			'theme_ability_error',
+			sprintf( 'Theme ability failed: %s', $e->getMessage() ),
+			array( 'status' => 500 )
+		);
+	}
+}
+
+/**
+ * Execute callback: signal-noise/get-reading-time-for-slug.
+ *
+ * Wraps sn_notes_reading_time_for_slug() which returns a formatted
+ * string like "7 min". Parses the integer back out for a typed
+ * response. wpm_basis is hardcoded to 220 — the project default
+ * baked into sn_get_reading_time().
+ *
+ * @since 9.1.0
+ * @param array $input { slug: string }
+ * @return array|WP_Error
+ */
+function sn_theme_ability_reading_time_for_slug( $input ) {
+	try {
+		$slug = isset( $input['slug'] ) ? (string) $input['slug'] : '';
+		if ( '' === $slug ) {
+			return new WP_Error(
+				'invalid_input',
+				'slug is required.',
+				array( 'status' => 400 )
+			);
+		}
+
+		if ( ! function_exists( 'sn_notes_reading_time_for_slug' ) ) {
+			return new WP_Error(
+				'theme_dependency_missing',
+				'sn_notes_reading_time_for_slug() unavailable — theme module not loaded.',
+				array( 'status' => 503 )
+			);
+		}
+
+		$raw = (string) sn_notes_reading_time_for_slug( $slug );
+		$minutes = 0;
+		if ( preg_match( '/(\d+)/', $raw, $m ) ) {
+			$minutes = (int) $m[1];
+		}
+
+		return array(
+			'slug'      => $slug,
+			'minutes'   => $minutes,
+			'wpm_basis' => 220,
+		);
+	} catch ( \Throwable $e ) {
+		error_log( 'SN theme ability error in get-reading-time-for-slug: ' . $e->getMessage() );
 		return new WP_Error(
 			'theme_ability_error',
 			sprintf( 'Theme ability failed: %s', $e->getMessage() ),
