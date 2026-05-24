@@ -42,6 +42,12 @@ if ( ! function_exists( 'esc_url' ) ) {
 if ( ! function_exists( 'wp_strip_all_tags' ) ) {
 	function wp_strip_all_tags( $s ) { return trim( strip_tags( (string) $s ) ); }
 }
+if ( ! function_exists( 'is_user_logged_in' ) ) {
+	function is_user_logged_in() { return true; }
+}
+if ( ! function_exists( 'current_user_can' ) ) {
+	function current_user_can( $cap = '' ) { return true; }
+}
 if ( ! function_exists( 'home_url' ) ) {
 	function home_url( $path = '/' ) { return 'https://juanlentino.com' . $path; }
 }
@@ -311,6 +317,13 @@ if ( ! function_exists( 'wp_register_ability' ) ) {
 	}
 }
 
+// --- Load the system under test ---------------------------------------
+// Placed AFTER all WP + AI stubs so add_action / wp_register_ability
+// calls inside the SUT land on the no-op stubs above. Placed BEFORE the
+// harness helpers so test blocks below can introspect $GLOBALS state
+// the SUT may have seeded at load time.
+require_once __DIR__ . '/../inc/abilities-registration.php';
+
 // --- Harness -----------------------------------------------------------
 $pass = 0; $fail = 0;
 function ha_eq( $expected, $actual, $msg ) {
@@ -328,10 +341,60 @@ function ha_true( $cond, $msg ) {
 	if ( $cond ) { $pass++; echo "  PASS: $msg\n"; } else { $fail++; echo "  FAIL: $msg\n"; }
 }
 
-// --- Test blocks added in subsequent tasks -----------------------------
-// Task 2 adds: require_once of inc/abilities-registration.php, the
-// do_test_action helper, and the baseline registration smoke tests.
-// Tasks 3-14 add: per-ability execute_callback tests.
+/**
+ * Resets all fixture globals between test blocks. Call at top of each
+ * test block in Tasks 3-14 to prevent state bleed (e.g. AI call counter,
+ * registered-ability cache, post fixtures from a prior block).
+ */
+function ha_reset() {
+	$GLOBALS['__test_global_settings']       = array();
+	$GLOBALS['__test_posts']                  = array();
+	$GLOBALS['__test_reading_times']          = array();
+	$GLOBALS['__test_block_templates']        = array();
+	$GLOBALS['__test_ai_response']            = null;
+	$GLOBALS['__test_ai_call_count']          = 0;
+	$GLOBALS['__test_ai_last_prompt']         = '';
+	$GLOBALS['__test_ai_last_system']         = '';
+	$GLOBALS['__test_ai_available']           = true;
+	$GLOBALS['__test_ai_helper_disabled']     = false;
+	$GLOBALS['__test_registered_categories']  = array();
+	$GLOBALS['__test_registered_abilities']   = array();
+}
+
+// --- Baseline smoke tests (Task 2) -------------------------------------
+// Verifies the SUT loads cleanly, categories register defensively (no
+// _doing_it_wrong on double-call), and the abilities-registration
+// entry point is callable even before Tasks 3-14 populate it.
+
+echo "\nTest: sn_theme_register_ability_categories registers 3 categories\n";
+ha_reset();
+sn_theme_register_ability_categories();
+ha_eq( 3, count( $GLOBALS['__test_registered_categories'] ), 'three categories registered' );
+ha_true( isset( $GLOBALS['__test_registered_categories']['diagnostics'] ), 'diagnostics category present' );
+ha_true( isset( $GLOBALS['__test_registered_categories']['content'] ), 'content category present' );
+ha_true( isset( $GLOBALS['__test_registered_categories']['ai-generation'] ), 'ai-generation category present' );
+
+echo "\nTest: sn_theme_register_ability_categories is idempotent (no double-registration)\n";
+ha_reset();
+sn_theme_register_ability_categories();
+$first_call_categories = $GLOBALS['__test_registered_categories'];
+sn_theme_register_ability_categories();
+ha_eq( count( $first_call_categories ), count( $GLOBALS['__test_registered_categories'] ), 'second call does not re-register' );
+ha_eq( 3, count( $GLOBALS['__test_registered_categories'] ), 'still exactly three categories after second call' );
+
+echo "\nTest: sn_theme_register_abilities is callable (placeholder until Tasks 3-14)\n";
+ha_reset();
+ha_true( function_exists( 'sn_theme_register_abilities' ), 'sn_theme_register_abilities function defined' );
+sn_theme_register_abilities();
+ha_eq( 0, count( $GLOBALS['__test_registered_abilities'] ), 'no abilities registered yet (populated in Tasks 3-14)' );
+
+echo "\nTest: brand-voice constants defined\n";
+ha_true( defined( 'SN_THEME_BRAND_VOICE_SYSTEM' ), 'SN_THEME_BRAND_VOICE_SYSTEM defined' );
+ha_true( defined( 'SN_THEME_NOTES_VOICE_SYSTEM' ), 'SN_THEME_NOTES_VOICE_SYSTEM defined' );
+ha_true( strlen( SN_THEME_BRAND_VOICE_SYSTEM ) > 200, 'brand voice constant has substantive content' );
+ha_true( strlen( SN_THEME_NOTES_VOICE_SYSTEM ) > 200, 'notes voice constant has substantive content' );
+
+// --- Per-ability test blocks added in Tasks 3-14 ----------------------
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
