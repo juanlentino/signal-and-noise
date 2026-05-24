@@ -13,19 +13,19 @@
  *
  * Abilities registered (12):
  *   Read abilities (7):
- *     - signal-noise/get-design-tokens
- *     - signal-noise/list-block-patterns
- *     - signal-noise/get-active-template-structure
- *     - signal-noise/get-theme-version
- *     - signal-noise/get-page-notes-pillars
- *     - signal-noise/get-reading-time-for-slug
- *     - signal-noise/get-design-system-summary
+ *     - signal-and-noise/get-design-tokens
+ *     - signal-and-noise/list-block-patterns
+ *     - signal-and-noise/get-active-template-structure
+ *     - signal-and-noise/get-theme-version
+ *     - signal-and-noise/get-page-notes-pillars
+ *     - signal-and-noise/get-reading-time-for-slug
+ *     - signal-and-noise/get-design-system-summary
  *   Generative abilities (5; require plugin's AI helper):
- *     - signal-noise/ai-generate-page-note-summary
- *     - signal-noise/ai-suggest-block-pattern
- *     - signal-noise/ai-validate-brand-alignment
- *     - signal-noise/ai-generate-pattern-content
- *     - signal-noise/ai-rewrite-in-brand-voice
+ *     - signal-and-noise/ai-generate-page-note-summary
+ *     - signal-and-noise/ai-suggest-block-pattern
+ *     - signal-and-noise/ai-validate-brand-alignment
+ *     - signal-and-noise/ai-generate-pattern-content
+ *     - signal-and-noise/ai-rewrite-in-brand-voice
  *
  * Plugin dependency: generative abilities call
  * snt_ai_generate_with_constraints() (plugin v3.7.x+). The function is
@@ -173,7 +173,7 @@ function sn_theme_register_abilities() {
 	// Stubs intentionally omitted — tests will fail until each task
 	// completes its corresponding registration.
 
-	wp_register_ability( 'signal-noise/list-block-patterns', array(
+	wp_register_ability( 'signal-and-noise/list-block-patterns', array(
 		'label'               => 'List block patterns',
 		'description'         => 'Enumerates all registered block patterns with category + keywords + viewport hints. Optional `category` input filters to a single pattern category.',
 		'category'            => 'content',
@@ -207,7 +207,7 @@ function sn_theme_register_abilities() {
 		),
 	) );
 
-	wp_register_ability( 'signal-noise/get-active-template-structure', array(
+	wp_register_ability( 'signal-and-noise/get-active-template-structure', array(
 		'label'               => 'Inspect active template structure',
 		'description'         => 'Returns the FSE template slug + a shallow block tree (blockName + attrs + innerBlocks count) for a given post by ID or slug. Does not recurse into innerBlocks beyond a count — keeps payload bounded.',
 		'category'            => 'diagnostics',
@@ -245,7 +245,7 @@ function sn_theme_register_abilities() {
 		),
 	) );
 
-	wp_register_ability( 'signal-noise/get-theme-version', array(
+	wp_register_ability( 'signal-and-noise/get-theme-version', array(
 		'label'               => 'Get theme + WP version',
 		'description'         => 'Returns the active theme name + version + parent template + is_block_theme flag + WP version. Use to detect drift between published roadmap docs and the live site.',
 		'category'            => 'diagnostics',
@@ -278,7 +278,7 @@ function sn_theme_register_abilities() {
 		),
 	) );
 
-	wp_register_ability( 'signal-noise/get-page-notes-pillars', array(
+	wp_register_ability( 'signal-and-noise/get-page-notes-pillars', array(
 		'label'               => 'List /notes pillar essays',
 		'description'         => "Returns metadata for the SN /notes catalog pillar essays — slug, title, URL, summary dek, reading time, last modified. The pillars are project-defined in inc/page-notes-render.php and frame the /notes index.",
 		'category'            => 'content',
@@ -306,7 +306,7 @@ function sn_theme_register_abilities() {
 		),
 	) );
 
-	wp_register_ability( 'signal-noise/get-reading-time-for-slug', array(
+	wp_register_ability( 'signal-and-noise/get-reading-time-for-slug', array(
 		'label'               => 'Get reading time for slug',
 		'description'         => 'Returns the computed reading-time minutes for a post identified by slug. Wraps sn_notes_reading_time_for_slug() (the same helper that powers the [sn_reading_time] shortcode). Returns minutes=0 if the slug does not resolve.',
 		'category'            => 'content',
@@ -342,7 +342,7 @@ function sn_theme_register_abilities() {
 		),
 	) );
 
-	wp_register_ability( 'signal-noise/get-design-system-summary', array(
+	wp_register_ability( 'signal-and-noise/get-design-system-summary', array(
 		'label'               => 'Get design-system summary (AI-prompt formatted)',
 		'description'         => 'Formats the design tokens for AI prompt embedding. format=markdown (default) for structured prose, format=compact-text for minimum-token single-line embedding, format=json for full passthrough. Typical 70-80% token reduction vs raw get-design-tokens JSON on compact-text.',
 		'category'            => 'diagnostics',
@@ -378,7 +378,7 @@ function sn_theme_register_abilities() {
 		),
 	) );
 
-	wp_register_ability( 'signal-noise/ai-generate-page-note-summary', array(
+	wp_register_ability( 'signal-and-noise/ai-generate-page-note-summary', array(
 		'label'               => 'Generate /notes-voice summary',
 		'description'         => "Generates a brand-voiced single-sentence summary of a post in the SN /notes catalog vocabulary. Calls the plugin's AI helper (Sonnet 4.6 pinned via plugin v3.7.2+). Requires signal-and-noise-tools plugin.",
 		'category'            => 'ai-generation',
@@ -417,7 +417,7 @@ function sn_theme_register_abilities() {
 		),
 	) );
 
-	wp_register_ability( 'signal-noise/ai-suggest-block-pattern', array(
+	wp_register_ability( 'signal-and-noise/ai-suggest-block-pattern', array(
 		'label'               => 'Suggest block pattern for draft',
 		'description'         => "AI recommends 1–3 SN block patterns that fit a draft. Caller supplies the draft content; ability fetches the SN pattern catalog and asks the AI to pick the best matches. Requires signal-and-noise-tools plugin.",
 		'category'            => 'ai-generation',
@@ -461,7 +461,7 @@ function sn_theme_register_abilities() {
 		),
 	) );
 
-	wp_register_ability( 'signal-noise/ai-validate-brand-alignment', array(
+	wp_register_ability( 'signal-and-noise/ai-validate-brand-alignment', array(
 		'label'               => 'Validate brand alignment',
 		'description'         => "AI scores content (0-100) for fit with the SN brand: voice, tone, vocabulary, palette references, structure. Returns score + per-dimension findings with verdict (aligned|drift|off-brand) + note. Uses the shared brand-voice constant.",
 		'category'            => 'ai-generation',
@@ -503,7 +503,7 @@ function sn_theme_register_abilities() {
 		),
 	) );
 
-	wp_register_ability( 'signal-noise/ai-generate-pattern-content', array(
+	wp_register_ability( 'signal-and-noise/ai-generate-pattern-content', array(
 		'label'               => 'Generate pattern content',
 		'description'         => "Fills a chosen SN block pattern's shell with brand-voiced copy on a given topic. Returns ready-to-paste serialized Gutenberg block markup. Does NOT save anything — caller decides whether to use the markup.",
 		'category'            => 'ai-generation',
@@ -543,7 +543,7 @@ function sn_theme_register_abilities() {
 		),
 	) );
 
-	wp_register_ability( 'signal-noise/ai-rewrite-in-brand-voice', array(
+	wp_register_ability( 'signal-and-noise/ai-rewrite-in-brand-voice', array(
 		'label'               => 'Rewrite in brand voice',
 		'description'         => "Transforms external/generic copy into the SN voice register. Intensity controls aggression (light: vocabulary swaps; medium: sentence restructure; full: full rewrite). Preserves links + list structures when flagged. Net-new vs ai/ai's Editorial Notes which only flag grammar/SEO/a11y — this changes voice.",
 		'category'            => 'ai-generation',
@@ -588,7 +588,7 @@ function sn_theme_register_abilities() {
 		),
 	) );
 
-	wp_register_ability( 'signal-noise/get-design-tokens', array(
+	wp_register_ability( 'signal-and-noise/get-design-tokens', array(
 		'label'               => 'Get design tokens',
 		'description'         => "Returns the SN theme's color palette, typography (font families + sizes), and spacing scale from theme.json. Read-only.",
 		'category'            => 'diagnostics',
@@ -638,7 +638,7 @@ function sn_theme_register_abilities() {
 add_action( 'wp_abilities_api_init', 'sn_theme_register_abilities' );
 
 /**
- * Execute callback: signal-noise/get-design-tokens.
+ * Execute callback: signal-and-noise/get-design-tokens.
  *
  * Flattens theme.json palette into a name→hex map for cheap consumption,
  * passes typography + spacing through verbatim, and includes the theme
@@ -696,7 +696,7 @@ function sn_theme_ability_design_tokens() {
 }
 
 /**
- * Execute callback: signal-noise/list-block-patterns.
+ * Execute callback: signal-and-noise/list-block-patterns.
  *
  * Enumerates the block-pattern + pattern-category registries. Optional
  * input.category filters to a single category slug.
@@ -762,7 +762,7 @@ function sn_theme_ability_list_block_patterns( $input = array() ) {
 }
 
 /**
- * Execute callback: signal-noise/get-active-template-structure.
+ * Execute callback: signal-and-noise/get-active-template-structure.
  *
  * Resolves the active FSE template for a given post (by id OR slug) and
  * returns a shallow summary of its block tree — blockName, attrs, and
@@ -844,7 +844,7 @@ function sn_theme_ability_active_template_structure( $input ) {
 }
 
 /**
- * Execute callback: signal-noise/get-theme-version.
+ * Execute callback: signal-and-noise/get-theme-version.
  *
  * Returns theme + WP environment metadata. supports_fse is currently
  * aliased to is_block_theme — they're the same flag on WP 5.9+ but
@@ -926,7 +926,7 @@ function sn_theme_pillar_descriptors() {
 }
 
 /**
- * Execute callback: signal-noise/get-page-notes-pillars.
+ * Execute callback: signal-and-noise/get-page-notes-pillars.
  *
  * Returns pillar metadata enriched with reading_time_minutes (computed
  * by sn_notes_reading_time_for_slug) and last_modified (read from the
@@ -981,7 +981,7 @@ function sn_theme_ability_page_notes_pillars() {
 }
 
 /**
- * Execute callback: signal-noise/get-reading-time-for-slug.
+ * Execute callback: signal-and-noise/get-reading-time-for-slug.
  *
  * Wraps sn_notes_reading_time_for_slug() which returns a formatted
  * string like "7 min". Parses the integer back out for a typed
@@ -1033,7 +1033,7 @@ function sn_theme_ability_reading_time_for_slug( $input ) {
 }
 
 /**
- * Execute callback: signal-noise/get-design-system-summary.
+ * Execute callback: signal-and-noise/get-design-system-summary.
  *
  * Calls sn_theme_ability_design_tokens() internally for the raw data,
  * then formats per the input.format. token_estimate uses the chars/4
@@ -1140,7 +1140,7 @@ function sn_theme_ability_design_system_summary( $input = array() ) {
 }
 
 /**
- * Execute callback: signal-noise/ai-generate-page-note-summary.
+ * Execute callback: signal-and-noise/ai-generate-page-note-summary.
  *
  * Composes a /notes-voice summary of a post. Uses the plugin's
  * snt_ai_extract_post_text (defensive guard) for the input and
@@ -1214,7 +1214,7 @@ function sn_theme_ability_ai_page_note_summary( $input ) {
 }
 
 /**
- * Execute callback: signal-noise/ai-suggest-block-pattern.
+ * Execute callback: signal-and-noise/ai-suggest-block-pattern.
  *
  * Fetches the SN pattern catalog (via sn_theme_ability_list_block_patterns),
  * sends pattern names + descriptions + the draft to the AI, parses the
@@ -1313,7 +1313,7 @@ function sn_theme_ability_ai_suggest_block_pattern( $input ) {
 }
 
 /**
- * Execute callback: signal-noise/ai-validate-brand-alignment.
+ * Execute callback: signal-and-noise/ai-validate-brand-alignment.
  *
  * Sends content + brand voice guide + palette tokens to the AI; expects
  * JSON of shape { overall_score: 0-100, findings: [...] }. Each finding
@@ -1404,7 +1404,7 @@ function sn_theme_ability_ai_validate_brand_alignment( $input ) {
 }
 
 /**
- * Execute callback: signal-noise/ai-generate-pattern-content.
+ * Execute callback: signal-and-noise/ai-generate-pattern-content.
  *
  * Validates pattern_name against the registry, then prompts the AI to
  * fill the pattern's template with topic-specific brand-voiced content.
@@ -1498,7 +1498,7 @@ function sn_theme_ability_ai_generate_pattern_content( $input ) {
 }
 
 /**
- * Execute callback: signal-noise/ai-rewrite-in-brand-voice.
+ * Execute callback: signal-and-noise/ai-rewrite-in-brand-voice.
  *
  * Transforms input copy into SN brand voice. Intensity controls how
  * aggressive the transform is (light/medium/full). preserve_links and

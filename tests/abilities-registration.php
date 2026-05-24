@@ -397,7 +397,7 @@ ha_true( strlen( SN_THEME_NOTES_VOICE_SYSTEM ) > 200, 'notes voice constant has 
 // --- Per-ability test blocks added in Tasks 3-14 ----------------------
 
 // ─── Test: get-design-tokens ─────────────────────────────────────
-echo "\nTest signal-noise/get-design-tokens\n";
+echo "\nTest signal-and-noise/get-design-tokens\n";
 ha_reset();
 // Re-seed the global settings fixture (ha_reset emptied it).
 $GLOBALS['__test_global_settings'] = array(
@@ -430,10 +430,10 @@ $GLOBALS['__test_global_settings'] = array(
 );
 sn_theme_register_abilities();
 ha_true(
-	isset( $GLOBALS['__test_registered_abilities']['signal-noise/get-design-tokens'] ),
+	isset( $GLOBALS['__test_registered_abilities']['signal-and-noise/get-design-tokens'] ),
 	'get-design-tokens is registered'
 );
-$ability = $GLOBALS['__test_registered_abilities']['signal-noise/get-design-tokens'];
+$ability = $GLOBALS['__test_registered_abilities']['signal-and-noise/get-design-tokens'];
 ha_eq( 'diagnostics', $ability['category'], 'category is diagnostics' );
 ha_true( is_callable( $ability['execute_callback'] ), 'execute_callback is callable' );
 
@@ -448,7 +448,7 @@ ha_eq( '#e00404', $result['colors']['blood'],   'blood color flattened from pale
 ha_eq( 2, count( $result['typography']['fontFamilies'] ), 'typography.fontFamilies passthrough' );
 
 // ─── Test: list-block-patterns ───────────────────────────────────
-echo "\nTest signal-noise/list-block-patterns\n";
+echo "\nTest signal-and-noise/list-block-patterns\n";
 ha_reset();
 // Re-seed the patterns + categories registry (they live as static
 // singletons, so we have to clear + repopulate to isolate this block).
@@ -477,10 +477,10 @@ WP_Block_Pattern_Categories_Registry::get_instance()->categories = array(
 );
 sn_theme_register_abilities();
 ha_true(
-	isset( $GLOBALS['__test_registered_abilities']['signal-noise/list-block-patterns'] ),
+	isset( $GLOBALS['__test_registered_abilities']['signal-and-noise/list-block-patterns'] ),
 	'list-block-patterns is registered'
 );
-$ability = $GLOBALS['__test_registered_abilities']['signal-noise/list-block-patterns'];
+$ability = $GLOBALS['__test_registered_abilities']['signal-and-noise/list-block-patterns'];
 ha_eq( 'content', $ability['category'], 'category is content' );
 
 $result = call_user_func( $ability['execute_callback'], array() );
@@ -500,7 +500,7 @@ $empty = call_user_func( $ability['execute_callback'], array( 'category' => 'non
 ha_eq( 0, count( $empty['patterns'] ), 'unmatched category returns 0 patterns' );
 
 // ─── Test: get-active-template-structure ─────────────────────────
-echo "\nTest signal-noise/get-active-template-structure\n";
+echo "\nTest signal-and-noise/get-active-template-structure\n";
 ha_reset();
 
 // Seed a fixture template.
@@ -520,10 +520,10 @@ $GLOBALS['__test_posts'][42] = array(
 
 sn_theme_register_abilities();
 ha_true(
-	isset( $GLOBALS['__test_registered_abilities']['signal-noise/get-active-template-structure'] ),
+	isset( $GLOBALS['__test_registered_abilities']['signal-and-noise/get-active-template-structure'] ),
 	'get-active-template-structure is registered'
 );
-$ability = $GLOBALS['__test_registered_abilities']['signal-noise/get-active-template-structure'];
+$ability = $GLOBALS['__test_registered_abilities']['signal-and-noise/get-active-template-structure'];
 ha_eq( 'diagnostics', $ability['category'], 'category is diagnostics' );
 
 $result = call_user_func( $ability['execute_callback'], array( 'post_id' => 42 ) );
@@ -540,14 +540,14 @@ $missing = call_user_func( $ability['execute_callback'], array( 'post_id' => 999
 ha_true( is_wp_error( $missing ), 'missing post returns WP_Error' );
 
 // ─── Test: get-theme-version ─────────────────────────────────────
-echo "\nTest signal-noise/get-theme-version\n";
+echo "\nTest signal-and-noise/get-theme-version\n";
 ha_reset();
 sn_theme_register_abilities();
 ha_true(
-	isset( $GLOBALS['__test_registered_abilities']['signal-noise/get-theme-version'] ),
+	isset( $GLOBALS['__test_registered_abilities']['signal-and-noise/get-theme-version'] ),
 	'get-theme-version is registered'
 );
-$ability = $GLOBALS['__test_registered_abilities']['signal-noise/get-theme-version'];
+$ability = $GLOBALS['__test_registered_abilities']['signal-and-noise/get-theme-version'];
 ha_eq( 'diagnostics', $ability['category'], 'category is diagnostics' );
 
 $result = call_user_func( $ability['execute_callback'], array() );
@@ -560,7 +560,7 @@ ha_eq( '7.0.0', $result['wp_version'],   'wp_version from stub' );
 ha_eq( 'signal-and-noise', $result['theme_template'], 'theme_template = stylesheet for non-child' );
 
 // ─── Test: get-page-notes-pillars ────────────────────────────────
-echo "\nTest signal-noise/get-page-notes-pillars\n";
+echo "\nTest signal-and-noise/get-page-notes-pillars\n";
 ha_reset();
 
 // Re-seed reading times (ha_reset cleared them).
@@ -591,10 +591,10 @@ $GLOBALS['__test_posts'][102] = array(
 
 sn_theme_register_abilities();
 ha_true(
-	isset( $GLOBALS['__test_registered_abilities']['signal-noise/get-page-notes-pillars'] ),
+	isset( $GLOBALS['__test_registered_abilities']['signal-and-noise/get-page-notes-pillars'] ),
 	'get-page-notes-pillars is registered'
 );
-$ability = $GLOBALS['__test_registered_abilities']['signal-noise/get-page-notes-pillars'];
+$ability = $GLOBALS['__test_registered_abilities']['signal-and-noise/get-page-notes-pillars'];
 ha_eq( 'content', $ability['category'], 'category is content' );
 
 $result = call_user_func( $ability['execute_callback'], array() );
@@ -608,7 +608,7 @@ ha_eq( 'provenance/as-substrate', $result['pillars'][1]['slug'], 'pillar 2 slug'
 ha_true( isset( $result['pillars'][0]['reading_time_minutes'] ), 'reading_time_minutes present' );
 
 // ─── Test: get-reading-time-for-slug ─────────────────────────────
-echo "\nTest signal-noise/get-reading-time-for-slug\n";
+echo "\nTest signal-and-noise/get-reading-time-for-slug\n";
 ha_reset();
 
 // Re-seed reading times (ha_reset cleared them).
@@ -619,10 +619,10 @@ $GLOBALS['__test_reading_times'] = array(
 
 sn_theme_register_abilities();
 ha_true(
-	isset( $GLOBALS['__test_registered_abilities']['signal-noise/get-reading-time-for-slug'] ),
+	isset( $GLOBALS['__test_registered_abilities']['signal-and-noise/get-reading-time-for-slug'] ),
 	'get-reading-time-for-slug is registered'
 );
-$ability = $GLOBALS['__test_registered_abilities']['signal-noise/get-reading-time-for-slug'];
+$ability = $GLOBALS['__test_registered_abilities']['signal-and-noise/get-reading-time-for-slug'];
 ha_eq( 'content', $ability['category'], 'category is content' );
 
 $result = call_user_func( $ability['execute_callback'], array( 'slug' => 'provenance/over-detection' ) );
@@ -637,7 +637,7 @@ ha_eq( 'nonexistent', $missing['slug'], 'echoes nonexistent slug' );
 ha_true( $missing['minutes'] >= 0, 'minutes is non-negative for unknown slug' );
 
 // ─── Test: get-design-system-summary ─────────────────────────────
-echo "\nTest signal-noise/get-design-system-summary\n";
+echo "\nTest signal-and-noise/get-design-system-summary\n";
 ha_reset();
 // Re-seed the global settings fixture (ha_reset emptied it).
 $GLOBALS['__test_global_settings'] = array(
@@ -670,10 +670,10 @@ $GLOBALS['__test_global_settings'] = array(
 );
 sn_theme_register_abilities();
 ha_true(
-	isset( $GLOBALS['__test_registered_abilities']['signal-noise/get-design-system-summary'] ),
+	isset( $GLOBALS['__test_registered_abilities']['signal-and-noise/get-design-system-summary'] ),
 	'get-design-system-summary is registered'
 );
-$ability = $GLOBALS['__test_registered_abilities']['signal-noise/get-design-system-summary'];
+$ability = $GLOBALS['__test_registered_abilities']['signal-and-noise/get-design-system-summary'];
 ha_eq( 'diagnostics', $ability['category'], 'category is diagnostics' );
 
 // Default = markdown.
@@ -699,7 +699,7 @@ ha_true( is_array( $decoded ),                'json summary is parseable' );
 ha_true( isset( $decoded['colors']['void'] ), 'json contains tokens passthrough' );
 
 // ─── Test: ai-generate-page-note-summary ─────────────────────────
-echo "\nTest signal-noise/ai-generate-page-note-summary\n";
+echo "\nTest signal-and-noise/ai-generate-page-note-summary\n";
 ha_reset();
 
 // Seed a post for the summarizer.
@@ -713,10 +713,10 @@ $GLOBALS['__test_posts'][200] = array(
 
 sn_theme_register_abilities();
 ha_true(
-	isset( $GLOBALS['__test_registered_abilities']['signal-noise/ai-generate-page-note-summary'] ),
+	isset( $GLOBALS['__test_registered_abilities']['signal-and-noise/ai-generate-page-note-summary'] ),
 	'ai-generate-page-note-summary is registered'
 );
-$ability = $GLOBALS['__test_registered_abilities']['signal-noise/ai-generate-page-note-summary'];
+$ability = $GLOBALS['__test_registered_abilities']['signal-and-noise/ai-generate-page-note-summary'];
 ha_eq( 'ai-generation', $ability['category'], 'category is ai-generation' );
 
 // Scenario 1: AI helper disabled → ai_helper_unavailable.
@@ -749,7 +749,7 @@ ha_true( is_wp_error( $gone ),                  'missing post → WP_Error' );
 ha_eq( 'post_not_found', $gone->code,           'error code post_not_found' );
 
 // ─── Test: ai-suggest-block-pattern ──────────────────────────────
-echo "\nTest signal-noise/ai-suggest-block-pattern\n";
+echo "\nTest signal-and-noise/ai-suggest-block-pattern\n";
 ha_reset();
 // Re-seed pattern registry singleton (ha_reset doesn't touch it).
 WP_Block_Patterns_Registry::get_instance()->patterns = array(
@@ -778,10 +778,10 @@ WP_Block_Pattern_Categories_Registry::get_instance()->categories = array(
 sn_theme_register_abilities();
 
 ha_true(
-	isset( $GLOBALS['__test_registered_abilities']['signal-noise/ai-suggest-block-pattern'] ),
+	isset( $GLOBALS['__test_registered_abilities']['signal-and-noise/ai-suggest-block-pattern'] ),
 	'ai-suggest-block-pattern is registered'
 );
-$ability = $GLOBALS['__test_registered_abilities']['signal-noise/ai-suggest-block-pattern'];
+$ability = $GLOBALS['__test_registered_abilities']['signal-and-noise/ai-suggest-block-pattern'];
 ha_eq( 'ai-generation', $ability['category'], 'category is ai-generation' );
 
 $draft = 'This is a draft talking about provenance and substrate as the foundation for music files.';
@@ -844,7 +844,7 @@ $capped = call_user_func( $ability['execute_callback'], array( 'draft_content' =
 ha_eq( 3, count( $capped['suggestions'] ), 'caps at 3 suggestions' );
 
 // ─── Test: ai-validate-brand-alignment ───────────────────────────
-echo "\nTest signal-noise/ai-validate-brand-alignment\n";
+echo "\nTest signal-and-noise/ai-validate-brand-alignment\n";
 ha_reset();
 // Re-seed palette so the SUT's internal call to sn_theme_ability_design_tokens()
 // has something to hand back as palette context.
@@ -862,10 +862,10 @@ $GLOBALS['__test_global_settings'] = array(
 sn_theme_register_abilities();
 
 ha_true(
-	isset( $GLOBALS['__test_registered_abilities']['signal-noise/ai-validate-brand-alignment'] ),
+	isset( $GLOBALS['__test_registered_abilities']['signal-and-noise/ai-validate-brand-alignment'] ),
 	'ai-validate-brand-alignment is registered'
 );
-$ability = $GLOBALS['__test_registered_abilities']['signal-noise/ai-validate-brand-alignment'];
+$ability = $GLOBALS['__test_registered_abilities']['signal-and-noise/ai-validate-brand-alignment'];
 ha_eq( 'ai-generation', $ability['category'], 'category is ai-generation' );
 
 $sample_content = str_repeat( 'This is sample content that needs to be evaluated for brand alignment. ', 4 );
@@ -926,7 +926,7 @@ $clamped = call_user_func( $ability['execute_callback'], array( 'content' => $sa
 ha_eq( 100, $clamped['overall_score'], 'overall_score clamped to 100' );
 
 // ─── Test: ai-generate-pattern-content ───────────────────────────
-echo "\nTest signal-noise/ai-generate-pattern-content\n";
+echo "\nTest signal-and-noise/ai-generate-pattern-content\n";
 ha_reset();
 // Re-seed pattern registry singleton (ha_reset doesn't touch it).
 WP_Block_Patterns_Registry::get_instance()->patterns = array(
@@ -952,10 +952,10 @@ WP_Block_Patterns_Registry::get_instance()->patterns = array(
 sn_theme_register_abilities();
 
 ha_true(
-	isset( $GLOBALS['__test_registered_abilities']['signal-noise/ai-generate-pattern-content'] ),
+	isset( $GLOBALS['__test_registered_abilities']['signal-and-noise/ai-generate-pattern-content'] ),
 	'ai-generate-pattern-content is registered'
 );
-$ability = $GLOBALS['__test_registered_abilities']['signal-noise/ai-generate-pattern-content'];
+$ability = $GLOBALS['__test_registered_abilities']['signal-and-noise/ai-generate-pattern-content'];
 ha_eq( 'ai-generation', $ability['category'], 'category is ai-generation' );
 
 // Helper-unavailable.
@@ -987,15 +987,15 @@ ha_true( count( $unparseable['warnings'] ) >= 1,  'warnings entry added' );
 ha_eq( 'this is plain text not block markup', $unparseable['block_markup'], 'raw output passed through' );
 
 // ─── Test: ai-rewrite-in-brand-voice ─────────────────────────────
-echo "\nTest signal-noise/ai-rewrite-in-brand-voice\n";
+echo "\nTest signal-and-noise/ai-rewrite-in-brand-voice\n";
 ha_reset();
 sn_theme_register_abilities();
 
 ha_true(
-	isset( $GLOBALS['__test_registered_abilities']['signal-noise/ai-rewrite-in-brand-voice'] ),
+	isset( $GLOBALS['__test_registered_abilities']['signal-and-noise/ai-rewrite-in-brand-voice'] ),
 	'ai-rewrite-in-brand-voice is registered'
 );
-$ability = $GLOBALS['__test_registered_abilities']['signal-noise/ai-rewrite-in-brand-voice'];
+$ability = $GLOBALS['__test_registered_abilities']['signal-and-noise/ai-rewrite-in-brand-voice'];
 ha_eq( 'ai-generation', $ability['category'], 'category is ai-generation' );
 
 $source = 'Discover the amazing world of audio fingerprinting! Our exciting new feature lets you unlock the power of provenance like never before.';

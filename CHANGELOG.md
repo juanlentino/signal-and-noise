@@ -2,6 +2,50 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.1.1] - 2026-05-24
+
+### Fixed — Theme abilities now classified as "Theme" in WP 7.0 Abilities Explorer
+
+The 12 theme abilities shipped in v9.1.0 used the namespace `signal-noise/*` (matching the SN plugin's namespace for cohesion). But the `ai/ai` plugin's `Ability_Handler::detect_provider()` classifies an ability as "Theme" only when its namespace literally matches `get_stylesheet()` (the theme directory slug, which is `signal-and-noise`). Mismatch → classifier returned `Plugin`, so the Abilities Explorer + AI Capabilities dashboard widget showed `0 Theme` and our 12 abilities appeared in the Plugin bucket (when cache was fresh) or didn't appear at all (when OPcache/Breeze were stale).
+
+#### Fix
+
+Renamed all 12 theme ability slugs from `signal-noise/*` to `signal-and-noise/*`. The new namespace matches the theme directory slug → `detect_provider()` correctly returns `Theme`.
+
+| OLD slug | NEW slug |
+|---|---|
+| `signal-noise/get-design-tokens` | `signal-and-noise/get-design-tokens` |
+| `signal-noise/list-block-patterns` | `signal-and-noise/list-block-patterns` |
+| `signal-noise/get-active-template-structure` | `signal-and-noise/get-active-template-structure` |
+| `signal-noise/get-theme-version` | `signal-and-noise/get-theme-version` |
+| `signal-noise/get-page-notes-pillars` | `signal-and-noise/get-page-notes-pillars` |
+| `signal-noise/get-reading-time-for-slug` | `signal-and-noise/get-reading-time-for-slug` |
+| `signal-noise/get-design-system-summary` | `signal-and-noise/get-design-system-summary` |
+| `signal-noise/ai-generate-page-note-summary` | `signal-and-noise/ai-generate-page-note-summary` |
+| `signal-noise/ai-suggest-block-pattern` | `signal-and-noise/ai-suggest-block-pattern` |
+| `signal-noise/ai-validate-brand-alignment` | `signal-and-noise/ai-validate-brand-alignment` |
+| `signal-noise/ai-generate-pattern-content` | `signal-and-noise/ai-generate-pattern-content` |
+| `signal-noise/ai-rewrite-in-brand-voice` | `signal-and-noise/ai-rewrite-in-brand-voice` |
+
+#### Cross-package coordination
+
+Companion plugin v3.7.4 plan ([`signal-and-noise-tools/docs/superpowers/plans/2026-05-24-plugin-v3.7.4-ability-command-palette.md`](https://github.com/juanlentino/signal-and-noise-tools/blob/main/docs/superpowers/plans/2026-05-24-plugin-v3.7.4-ability-command-palette.md)) updated in lockstep — the 12 Command Palette command definitions reference the new `signal-and-noise/*` slugs. The plugin v3.7.4 release (not yet shipped) will land the commands using the renamed slugs.
+
+#### Source-verification trail
+
+Verified `Ability_Handler::detect_provider()` behavior from upstream source: [`WordPress/ai`](https://github.com/WordPress/ai/blob/develop/includes/Experiments/Abilities_Explorer/Ability_Handler.php) lines 200-213. The classifier's design assumes each integration namespaces abilities with its own directory slug; the SN-cohesion design (single `signal-noise/*` namespace for both plugin and theme) violated this assumption silently.
+
+#### No functional changes
+
+All 154 assertions in `tests/abilities-registration.php` still pass — the rename is purely cosmetic to the API surface, not behavioral. Abilities continue to function identically; only the classifier's bucket changes.
+
+### Files
+
+- `inc/abilities-registration.php` — 12 `wp_register_ability()` slug renames
+- `tests/abilities-registration.php` — 12 test assertion slug references updated to match
+- `style.css` — version bump 9.1.0 → 9.1.1
+- `functions.php` — module map comment line updated to reference v9.1.1
+
 ## [9.1.0] - 2026-05-24
 
 ### Added — Theme-owned WP 7.0 Abilities API surface (12 new abilities)
