@@ -559,5 +559,53 @@ ha_eq( true,  $result['supports_fse'],   'supports_fse true' );
 ha_eq( '7.0.0', $result['wp_version'],   'wp_version from stub' );
 ha_eq( 'signal-and-noise', $result['theme_template'], 'theme_template = stylesheet for non-child' );
 
+// ─── Test: get-page-notes-pillars ────────────────────────────────
+echo "\nTest signal-noise/get-page-notes-pillars\n";
+ha_reset();
+
+// Re-seed reading times (ha_reset cleared them).
+$GLOBALS['__test_reading_times'] = array(
+	'provenance/over-detection' => '7 min',
+	'provenance/as-substrate'   => '6 min',
+);
+
+// Seed posts behind the pillar slugs so url + last_modified resolve.
+$GLOBALS['__test_posts'][101] = array(
+	'ID'                => 101,
+	'post_name'         => 'over-detection',
+	'post_title'        => 'Provenance Over Detection',
+	'post_modified'     => '2026-03-15 12:00:00',
+	'post_modified_gmt' => '2026-03-15 12:00:00',
+	'post_type'         => 'post',
+	'post_status'       => 'publish',
+);
+$GLOBALS['__test_posts'][102] = array(
+	'ID'                => 102,
+	'post_name'         => 'as-substrate',
+	'post_title'        => 'Provenance as Substrate',
+	'post_modified'     => '2026-05-10 12:00:00',
+	'post_modified_gmt' => '2026-05-10 12:00:00',
+	'post_type'         => 'post',
+	'post_status'       => 'publish',
+);
+
+sn_theme_register_abilities();
+ha_true(
+	isset( $GLOBALS['__test_registered_abilities']['signal-noise/get-page-notes-pillars'] ),
+	'get-page-notes-pillars is registered'
+);
+$ability = $GLOBALS['__test_registered_abilities']['signal-noise/get-page-notes-pillars'];
+ha_eq( 'content', $ability['category'], 'category is content' );
+
+$result = call_user_func( $ability['execute_callback'], array() );
+ha_true( is_array( $result ),                                'returns array' );
+ha_true( isset( $result['pillars'] ),                        'has pillars key' );
+ha_eq( 2, count( $result['pillars'] ),                       'returns 2 pillars (project-defined)' );
+ha_eq( 'provenance/over-detection', $result['pillars'][0]['slug'], 'pillar 1 slug' );
+ha_eq( 'Provenance Over Detection', $result['pillars'][0]['title'], 'pillar 1 title' );
+ha_true( false !== strpos( $result['pillars'][0]['url'], '/provenance/over-detection' ), 'pillar 1 url contains slug' );
+ha_eq( 'provenance/as-substrate', $result['pillars'][1]['slug'], 'pillar 2 slug' );
+ha_true( isset( $result['pillars'][0]['reading_time_minutes'] ), 'reading_time_minutes present' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

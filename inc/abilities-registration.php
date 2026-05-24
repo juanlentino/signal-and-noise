@@ -234,6 +234,34 @@ function sn_theme_register_abilities() {
 		),
 	) );
 
+	wp_register_ability( 'signal-noise/get-page-notes-pillars', array(
+		'label'               => 'List /notes pillar essays',
+		'description'         => "Returns metadata for the SN /notes catalog pillar essays — slug, title, URL, summary dek, reading time, last modified. The pillars are project-defined in inc/page-notes-render.php and frame the /notes index.",
+		'category'            => 'content',
+		'permission_callback' => $permission_read,
+		'execute_callback'    => 'sn_theme_ability_page_notes_pillars',
+		'input_schema'        => array(
+			'type'                 => 'object',
+			'properties'           => array(),
+			'additionalProperties' => false,
+		),
+		'output_schema'       => array(
+			'type'     => 'object',
+			'required' => array( 'pillars' ),
+			'properties' => array(
+				'pillars' => array( 'type' => 'array' ),
+			),
+		),
+		'meta'                => array(
+			'show_in_rest' => true,
+			'annotations'  => array(
+				'idempotent'      => true,
+				'open_world_hint' => false,
+				'read_only'       => true,
+			),
+		),
+	) );
+
 	wp_register_ability( 'signal-noise/get-design-tokens', array(
 		'label'               => 'Get design tokens',
 		'description'         => "Returns the SN theme's color palette, typography (font families + sizes), and spacing scale from theme.json. Read-only.",
@@ -534,6 +562,90 @@ function sn_theme_ability_theme_version() {
 		);
 	} catch ( \Throwable $e ) {
 		error_log( 'SN theme ability error in get-theme-version: ' . $e->getMessage() );
+		return new WP_Error(
+			'theme_ability_error',
+			sprintf( 'Theme ability failed: %s', $e->getMessage() ),
+			array( 'status' => 500 )
+		);
+	}
+}
+
+/**
+ * Returns the canonical SN /notes pillar essay descriptors.
+ *
+ * Hardcoded here (not derived from a DB query) because the pillars
+ * are intentionally curated, not editorial — they frame the /notes
+ * catalog and are mirrored in inc/page-notes-render.php HTML.
+ * Mirroring them in PHP rather than parsing the HTML keeps both
+ * surfaces editable and authoritative.
+ *
+ * @since 9.1.0
+ * @return array<int, array{slug:string, title:string, dek:string, last_path:string}>
+ */
+function sn_theme_pillar_descriptors() {
+	return array(
+		array(
+			'slug'      => 'provenance/over-detection',
+			'title'     => 'Provenance Over Detection',
+			'dek'       => "Detection chases what isn't. Provenance proves what is.",
+			'last_path' => 'over-detection',
+		),
+		array(
+			'slug'      => 'provenance/as-substrate',
+			'title'     => 'Provenance as Substrate',
+			'dek'       => 'Music files need fingerprints, not name tags.',
+			'last_path' => 'as-substrate',
+		),
+	);
+}
+
+/**
+ * Execute callback: signal-noise/get-page-notes-pillars.
+ *
+ * Returns pillar metadata enriched with reading_time_minutes (computed
+ * by sn_notes_reading_time_for_slug) and last_modified (read from the
+ * resolved post if it exists).
+ *
+ * @since 9.1.0
+ * @return array|WP_Error { pillars: array }
+ */
+function sn_theme_ability_page_notes_pillars() {
+	try {
+		$pillars = array();
+		foreach ( sn_theme_pillar_descriptors() as $p ) {
+			$reading_str = function_exists( 'sn_notes_reading_time_for_slug' )
+				? (string) sn_notes_reading_time_for_slug( $p['slug'] )
+				: '5 min';
+			// Parse "N min" into integer minutes.
+			$minutes = 0;
+			if ( preg_match( '/(\d+)/', $reading_str, $m ) ) {
+				$minutes = (int) $m[1];
+			}
+
+			// Last-modified is best-effort: pillars are short essays
+			// stored at a path slug under /provenance/. We look up by
+			// the final path segment.
+			$last_modified = '';
+			if ( function_exists( 'get_page_by_path' ) ) {
+				$post = get_page_by_path( $p['last_path'], OBJECT, 'post' );
+				if ( $post && isset( $post->post_modified ) ) {
+					$last_modified = substr( (string) $post->post_modified, 0, 10 );
+				}
+			}
+
+			$pillars[] = array(
+				'slug'                 => $p['slug'],
+				'title'                => $p['title'],
+				'url'                  => function_exists( 'home_url' ) ? home_url( '/' . $p['slug'] . '/' ) : '/' . $p['slug'] . '/',
+				'summary'              => $p['dek'],
+				'reading_time_minutes' => $minutes,
+				'last_modified'        => $last_modified,
+			);
+		}
+
+		return array( 'pillars' => $pillars );
+	} catch ( \Throwable $e ) {
+		error_log( 'SN theme ability error in get-page-notes-pillars: ' . $e->getMessage() );
 		return new WP_Error(
 			'theme_ability_error',
 			sprintf( 'Theme ability failed: %s', $e->getMessage() ),
