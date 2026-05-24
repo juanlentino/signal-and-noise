@@ -503,6 +503,46 @@ function sn_theme_register_abilities() {
 		),
 	) );
 
+	wp_register_ability( 'signal-noise/ai-generate-pattern-content', array(
+		'label'               => 'Generate pattern content',
+		'description'         => "Fills a chosen SN block pattern's shell with brand-voiced copy on a given topic. Returns ready-to-paste serialized Gutenberg block markup. Does NOT save anything — caller decides whether to use the markup.",
+		'category'            => 'ai-generation',
+		'permission_callback' => $permission_edit_posts,
+		'execute_callback'    => 'sn_theme_ability_ai_generate_pattern_content',
+		'input_schema'        => array(
+			'type'       => 'object',
+			'required'   => array( 'pattern_name', 'topic' ),
+			'properties' => array(
+				'pattern_name' => array( 'type' => 'string', 'description' => 'Pattern slug from list-block-patterns; must exist in registry.' ),
+				'topic'        => array( 'type' => 'string', 'minLength' => 5, 'maxLength' => 500 ),
+				'tone_hint'    => array(
+					'type'    => 'string',
+					'enum'    => array( 'technical', 'narrative', 'manifesto', 'spec-sheet' ),
+					'default' => 'spec-sheet',
+				),
+			),
+			'additionalProperties' => false,
+		),
+		'output_schema'       => array(
+			'type'     => 'object',
+			'required' => array( 'block_markup', 'pattern_name' ),
+			'properties' => array(
+				'block_markup' => array( 'type' => 'string' ),
+				'pattern_name' => array( 'type' => 'string' ),
+				'tokens_used'  => array( 'type' => 'integer' ),
+				'warnings'     => array( 'type' => 'array' ),
+			),
+		),
+		'meta'                => array(
+			'show_in_rest' => true,
+			'annotations'  => array(
+				'idempotent'      => false,
+				'open_world_hint' => false,
+				'read_only'       => false,
+			),
+		),
+	) );
+
 	wp_register_ability( 'signal-noise/get-design-tokens', array(
 		'label'               => 'Get design tokens',
 		'description'         => "Returns the SN theme's color palette, typography (font families + sizes), and spacing scale from theme.json. Read-only.",
@@ -1310,6 +1350,100 @@ function sn_theme_ability_ai_validate_brand_alignment( $input ) {
 		);
 	} catch ( \Throwable $e ) {
 		error_log( 'SN theme ability error in ai-validate-brand-alignment: ' . $e->getMessage() );
+		return new WP_Error(
+			'theme_ability_error',
+			sprintf( 'Theme ability failed: %s', $e->getMessage() ),
+			array( 'status' => 500 )
+		);
+	}
+}
+
+/**
+ * Execute callback: signal-noise/ai-generate-pattern-content.
+ *
+ * Validates pattern_name against the registry, then prompts the AI to
+ * fill the pattern's template with topic-specific brand-voiced content.
+ * Output is raw block markup (NOT JSON-wrapped). If parse_blocks can't
+ * parse the output, the raw markup is still returned but with a
+ * warning entry — caller decides what to do.
+ *
+ * Safety note: this ability does NOT save content. It returns markup
+ * the caller can choose to paste. No DB writes.
+ *
+ * @since 9.1.0
+ * @param array $input { pattern_name: string, topic: string, tone_hint?: string }
+ * @return array|WP_Error
+ */
+function sn_theme_ability_ai_generate_pattern_content( $input ) {
+	try {
+		if ( ! sn_theme_ai_helper_available() ) {
+			return sn_theme_ai_unavailable_error();
+		}
+
+		$pattern_name = isset( $input['pattern_name'] ) ? (string) $input['pattern_name'] : '';
+		$topic        = isset( $input['topic'] )        ? (string) $input['topic']        : '';
+		$tone         = isset( $input['tone_hint'] )    ? (string) $input['tone_hint']    : 'spec-sheet';
+		if ( ! in_array( $tone, array( 'technical', 'narrative', 'manifesto', 'spec-sheet' ), true ) ) {
+			$tone = 'spec-sheet';
+		}
+
+		if ( '' === $pattern_name || '' === $topic ) {
+			return new WP_Error(
+				'invalid_input',
+				'pattern_name and topic are required.',
+				array( 'status' => 400 )
+			);
+		}
+
+		if ( ! class_exists( 'WP_Block_Patterns_Registry' ) ) {
+			return new WP_Error(
+				'theme_dependency_missing',
+				'WP_Block_Patterns_Registry not available.',
+				array( 'status' => 503 )
+			);
+		}
+
+		$pattern = WP_Block_Patterns_Registry::get_instance()->get_registered( $pattern_name );
+		if ( ! $pattern || ! is_array( $pattern ) || ! isset( $pattern['content'] ) ) {
+			return new WP_Error(
+				'pattern_not_found',
+				sprintf( 'Pattern "%s" is not registered.', $pattern_name ),
+				array( 'status' => 404 )
+			);
+		}
+
+		$pattern_template = (string) $pattern['content'];
+
+		$system = SN_THEME_BRAND_VOICE_SYSTEM
+			. "\n\nReplace placeholder text in the provided Gutenberg block pattern with brand-voiced copy on the user's topic."
+			. " Preserve the block structure exactly. Output ONLY the modified block markup — no preamble, no fences, no explanation."
+			. " Tone hint: $tone.";
+
+		$prompt = "TOPIC: $topic\n\nPATTERN TEMPLATE:\n$pattern_template";
+
+		$raw = snt_ai_generate_with_constraints( $prompt, $system, 2048 );
+		if ( is_wp_error( $raw ) ) {
+			return $raw;
+		}
+
+		$markup = trim( (string) $raw );
+		// Strip optional markdown fences if the model wraps the markup.
+		$markup = trim( preg_replace( '/^```(?:[a-z]+)?\s*|\s*```$/i', '', $markup ) );
+
+		$warnings = array();
+		$parsed   = function_exists( 'parse_blocks' ) ? parse_blocks( $markup ) : array();
+		if ( empty( $parsed ) ) {
+			$warnings[] = 'AI output did not parse as Gutenberg blocks; returned as-is.';
+		}
+
+		return array(
+			'block_markup' => $markup,
+			'pattern_name' => $pattern_name,
+			'tokens_used'  => (int) ceil( strlen( $markup ) / 4 ),
+			'warnings'     => $warnings,
+		);
+	} catch ( \Throwable $e ) {
+		error_log( 'SN theme ability error in ai-generate-pattern-content: ' . $e->getMessage() );
 		return new WP_Error(
 			'theme_ability_error',
 			sprintf( 'Theme ability failed: %s', $e->getMessage() ),

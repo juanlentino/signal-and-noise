@@ -925,5 +925,66 @@ $GLOBALS['__test_ai_response'] = wp_json_encode( array(
 $clamped = call_user_func( $ability['execute_callback'], array( 'content' => $sample_content ) );
 ha_eq( 100, $clamped['overall_score'], 'overall_score clamped to 100' );
 
+// ─── Test: ai-generate-pattern-content ───────────────────────────
+echo "\nTest signal-noise/ai-generate-pattern-content\n";
+ha_reset();
+// Re-seed pattern registry singleton (ha_reset doesn't touch it).
+WP_Block_Patterns_Registry::get_instance()->patterns = array(
+	array(
+		'name'           => 'signal-and-noise/hero-dossier',
+		'title'          => 'Hero — Dossier',
+		'description'    => 'Title block with industrial spec-sheet header.',
+		'categories'     => array( 'signal-noise' ),
+		'keywords'       => array( 'hero', 'header' ),
+		'viewport_width' => 1200,
+		'content'        => '<!-- wp:heading -->{{TITLE}}<!-- /wp:heading -->',
+	),
+	array(
+		'name'           => 'signal-and-noise/section-constrained',
+		'title'          => 'Section — Constrained',
+		'description'    => 'Constrained-width section block.',
+		'categories'     => array( 'signal-noise' ),
+		'keywords'       => array( 'section' ),
+		'viewport_width' => 1200,
+		'content'        => '<!-- wp:paragraph -->{{COPY}}<!-- /wp:paragraph -->',
+	),
+);
+sn_theme_register_abilities();
+
+ha_true(
+	isset( $GLOBALS['__test_registered_abilities']['signal-noise/ai-generate-pattern-content'] ),
+	'ai-generate-pattern-content is registered'
+);
+$ability = $GLOBALS['__test_registered_abilities']['signal-noise/ai-generate-pattern-content'];
+ha_eq( 'ai-generation', $ability['category'], 'category is ai-generation' );
+
+// Helper-unavailable.
+$GLOBALS['__test_ai_helper_disabled'] = true;
+$err = call_user_func( $ability['execute_callback'], array( 'pattern_name' => 'signal-and-noise/hero-dossier', 'topic' => 'A test topic.' ) );
+ha_true( is_wp_error( $err ),                'helper unavailable → WP_Error' );
+ha_eq( 'ai_helper_unavailable', $err->code,  'ai_helper_unavailable code' );
+$GLOBALS['__test_ai_helper_disabled'] = false;
+
+// Pattern not in registry → pattern_not_found.
+$GLOBALS['__test_ai_response'] = 'irrelevant';
+$missing = call_user_func( $ability['execute_callback'], array( 'pattern_name' => 'signal-and-noise/does-not-exist', 'topic' => 'x' ) );
+ha_true( is_wp_error( $missing ),                'unknown pattern → WP_Error' );
+ha_eq( 'pattern_not_found', $missing->code,      'code is pattern_not_found' );
+
+// Happy path — well-formed block markup.
+$GLOBALS['__test_ai_response'] = '<!-- wp:heading --><h2>Provenance over detection</h2><!-- /wp:heading -->';
+$result = call_user_func( $ability['execute_callback'], array( 'pattern_name' => 'signal-and-noise/hero-dossier', 'topic' => 'provenance' ) );
+ha_true( is_array( $result ),                                  'happy path returns array' );
+ha_eq( 'signal-and-noise/hero-dossier', $result['pattern_name'], 'echoes pattern_name' );
+ha_true( false !== strpos( $result['block_markup'], 'wp:heading' ), 'block markup contains wp:heading' );
+ha_eq( 0, count( $result['warnings'] ),                        'parseable markup → no warnings' );
+
+// Unparseable AI output → returns markup + warnings entry.
+$GLOBALS['__test_ai_response'] = 'this is plain text not block markup';
+$unparseable = call_user_func( $ability['execute_callback'], array( 'pattern_name' => 'signal-and-noise/hero-dossier', 'topic' => 'x' ) );
+ha_true( is_array( $unparseable ),                'unparseable still returns array' );
+ha_true( count( $unparseable['warnings'] ) >= 1,  'warnings entry added' );
+ha_eq( 'this is plain text not block markup', $unparseable['block_markup'], 'raw output passed through' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
