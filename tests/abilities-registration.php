@@ -1,0 +1,337 @@
+<?php
+/**
+ * Standalone fixture tests for inc/abilities-registration.php (theme v9.1.0).
+ *
+ * Covers all 12 WP 7.0 abilities the theme registers:
+ *   - 7 read abilities (design tokens, patterns, template, version,
+ *     /notes pillars, reading time, design-system summary)
+ *   - 5 generative abilities (page-note summary, pattern suggest,
+ *     brand validate, pattern content, voice rewrite)
+ *
+ * Pattern: matches plugin's tests/health-checks.php — minimal WP +
+ * AI-helper stubs, ha_eq / ha_true harness, fail-fast on first error
+ * within a Test block but continues across blocks for full coverage.
+ *
+ * Run from theme root:
+ *   php tests/abilities-registration.php
+ *
+ * Task 1 (this commit) scaffolds the harness only — stubs, helpers,
+ * counters. The require_once for the SUT and the registration baseline
+ * tests are added in Task 2 once inc/abilities-registration.php exists.
+ *
+ * @since theme v9.1.0
+ */
+
+define( 'ABSPATH', '/' );
+
+// --- WP function stubs -------------------------------------------------
+if ( ! function_exists( 'add_action' ) ) { function add_action() {} }
+if ( ! function_exists( 'add_filter' ) ) { function add_filter() {} }
+if ( ! function_exists( 'apply_filters' ) ) {
+	function apply_filters( $tag, $value ) { return $value; }
+}
+if ( ! function_exists( 'esc_attr' ) ) {
+	function esc_attr( $s ) { return htmlspecialchars( (string) $s, ENT_QUOTES, 'UTF-8' ); }
+}
+if ( ! function_exists( 'esc_html' ) ) {
+	function esc_html( $s ) { return htmlspecialchars( (string) $s, ENT_QUOTES, 'UTF-8' ); }
+}
+if ( ! function_exists( 'esc_url' ) ) {
+	function esc_url( $u ) { return (string) $u; }
+}
+if ( ! function_exists( 'wp_strip_all_tags' ) ) {
+	function wp_strip_all_tags( $s ) { return trim( strip_tags( (string) $s ) ); }
+}
+if ( ! function_exists( 'home_url' ) ) {
+	function home_url( $path = '/' ) { return 'https://juanlentino.com' . $path; }
+}
+if ( ! function_exists( 'get_permalink' ) ) {
+	function get_permalink( $id ) { return "https://juanlentino.com/?p=$id"; }
+}
+if ( ! function_exists( 'wp_json_encode' ) ) {
+	function wp_json_encode( $v ) { return json_encode( $v ); }
+}
+if ( ! function_exists( 'sanitize_key' ) ) {
+	function sanitize_key( $s ) { return strtolower( preg_replace( '/[^a-z0-9_\-]/', '', (string) $s ) ); }
+}
+
+// --- WP_Error + is_wp_error -------------------------------------------
+if ( ! class_exists( 'WP_Error' ) ) {
+	class WP_Error {
+		public $code;
+		public $message;
+		public $data;
+		public function __construct( $c = '', $m = '', $d = array() ) {
+			$this->code    = $c;
+			$this->message = $m;
+			$this->data    = $d;
+		}
+		public function get_error_code()    { return $this->code; }
+		public function get_error_message() { return $this->message; }
+		public function get_error_data()    { return $this->data; }
+	}
+}
+if ( ! function_exists( 'is_wp_error' ) ) {
+	function is_wp_error( $v ) { return $v instanceof WP_Error; }
+}
+
+// --- Theme-specific WP stubs ------------------------------------------
+// Design tokens.
+$GLOBALS['__test_global_settings'] = array(
+	'color'      => array(
+		'palette' => array(
+			array( 'slug' => 'void',     'color' => '#ffffff', 'name' => 'Void' ),
+			array( 'slug' => 'asphalt',  'color' => '#f5f5f5', 'name' => 'Asphalt' ),
+			array( 'slug' => 'bone',     'color' => '#000000', 'name' => 'Bone' ),
+			array( 'slug' => 'blood',    'color' => '#e00404', 'name' => 'Blood' ),
+		),
+	),
+	'typography' => array(
+		'fontFamilies' => array(
+			array( 'slug' => 'heading', 'name' => 'Heading', 'fontFamily' => 'Bebas Neue' ),
+			array( 'slug' => 'body',    'name' => 'Body',    'fontFamily' => 'DM Mono' ),
+		),
+		'fontSizes'    => array(
+			array( 'slug' => 'small',  'size' => '0.8rem',  'name' => 'Small' ),
+			array( 'slug' => 'medium', 'size' => '1rem',    'name' => 'Medium' ),
+			array( 'slug' => 'large',  'size' => '1.25rem', 'name' => 'Large' ),
+		),
+	),
+	'spacing'    => array(
+		'spacingScale' => array( 'steps' => 7 ),
+		'spacingSizes' => array(
+			array( 'slug' => '40', 'size' => '1rem',   'name' => 'Small' ),
+			array( 'slug' => '50', 'size' => '1.5rem', 'name' => 'Medium' ),
+		),
+	),
+);
+if ( ! function_exists( 'wp_get_global_settings' ) ) {
+	function wp_get_global_settings() { return $GLOBALS['__test_global_settings']; }
+}
+
+// Theme metadata.
+if ( ! class_exists( 'SN_Test_Theme' ) ) {
+	class SN_Test_Theme {
+		public function get( $key ) {
+			$map = array(
+				'Name'    => 'Signal & Noise',
+				'Version' => '9.1.0',
+			);
+			return isset( $map[ $key ] ) ? $map[ $key ] : '';
+		}
+		public function get_stylesheet() { return 'signal-and-noise'; }
+		public function get_template()   { return 'signal-and-noise'; }
+	}
+}
+if ( ! function_exists( 'wp_get_theme' ) ) {
+	function wp_get_theme() { return new SN_Test_Theme(); }
+}
+if ( ! function_exists( 'wp_is_block_theme' ) ) {
+	function wp_is_block_theme() { return true; }
+}
+if ( ! function_exists( 'wp_get_wp_version' ) ) {
+	function wp_get_wp_version() { return '7.0.0'; }
+}
+$GLOBALS['wp_version'] = '7.0.0';
+
+// Block patterns registry stub.
+if ( ! class_exists( 'SN_Test_Block_Patterns_Registry' ) ) {
+	class SN_Test_Block_Patterns_Registry {
+		private static $instance = null;
+		public $patterns = array();
+		public static function get_instance() {
+			if ( null === self::$instance ) { self::$instance = new self(); }
+			return self::$instance;
+		}
+		public function get_all_registered() { return $this->patterns; }
+		public function get_registered( $name ) {
+			foreach ( $this->patterns as $p ) {
+				if ( $p['name'] === $name ) { return $p; }
+			}
+			return null;
+		}
+	}
+}
+if ( ! class_exists( 'WP_Block_Patterns_Registry' ) ) {
+	class_alias( 'SN_Test_Block_Patterns_Registry', 'WP_Block_Patterns_Registry' );
+}
+if ( ! class_exists( 'SN_Test_Block_Pattern_Categories_Registry' ) ) {
+	class SN_Test_Block_Pattern_Categories_Registry {
+		private static $instance = null;
+		public $categories = array();
+		public static function get_instance() {
+			if ( null === self::$instance ) { self::$instance = new self(); }
+			return self::$instance;
+		}
+		public function get_all_registered() { return $this->categories; }
+	}
+}
+if ( ! class_exists( 'WP_Block_Pattern_Categories_Registry' ) ) {
+	class_alias( 'SN_Test_Block_Pattern_Categories_Registry', 'WP_Block_Pattern_Categories_Registry' );
+}
+
+// Seed the pattern fixtures used in list-block-patterns + suggest-pattern + generate-pattern-content tests.
+WP_Block_Patterns_Registry::get_instance()->patterns = array(
+	array(
+		'name'           => 'signal-and-noise/hero-dossier',
+		'title'          => 'Hero — Dossier',
+		'description'    => 'Title block with industrial spec-sheet header.',
+		'categories'     => array( 'signal-noise' ),
+		'keywords'       => array( 'hero', 'header' ),
+		'viewport_width' => 1200,
+		'content'        => '<!-- wp:heading -->{{TITLE}}<!-- /wp:heading -->',
+	),
+	array(
+		'name'           => 'signal-and-noise/section-constrained',
+		'title'          => 'Section — Constrained',
+		'description'    => 'Constrained-width section block.',
+		'categories'     => array( 'signal-noise' ),
+		'keywords'       => array( 'section' ),
+		'viewport_width' => 1200,
+		'content'        => '<!-- wp:paragraph -->{{COPY}}<!-- /wp:paragraph -->',
+	),
+);
+WP_Block_Pattern_Categories_Registry::get_instance()->categories = array(
+	array( 'name' => 'signal-noise', 'label' => 'Signal & Noise' ),
+);
+
+// Posts stub for get-page-notes-pillars + reading-time abilities.
+$GLOBALS['__test_posts'] = array();
+if ( ! defined( 'OBJECT' ) ) { define( 'OBJECT', 'OBJECT' ); }
+if ( ! function_exists( 'get_post' ) ) {
+	function get_post( $id ) {
+		$id = (int) $id;
+		return isset( $GLOBALS['__test_posts'][ $id ] ) ? (object) $GLOBALS['__test_posts'][ $id ] : null;
+	}
+}
+if ( ! function_exists( 'get_post_field' ) ) {
+	function get_post_field( $field, $id ) {
+		$p = get_post( $id );
+		return $p && isset( $p->$field ) ? $p->$field : '';
+	}
+}
+if ( ! function_exists( 'get_page_by_path' ) ) {
+	function get_page_by_path( $slug, $output = OBJECT, $post_type = 'page' ) {
+		// The theme's pillars use post_type=post; ignore $post_type filter for stub.
+		foreach ( $GLOBALS['__test_posts'] as $id => $p ) {
+			if ( isset( $p['post_name'] ) && $p['post_name'] === $slug ) {
+				return (object) $p;
+			}
+		}
+		return null;
+	}
+}
+
+// Theme-side reading-time helper stub (the real one lives in inc/page-notes-render.php).
+$GLOBALS['__test_reading_times'] = array(
+	'provenance/over-detection' => '7 min',
+	'provenance/as-substrate'   => '6 min',
+);
+if ( ! function_exists( 'sn_notes_reading_time_for_slug' ) ) {
+	function sn_notes_reading_time_for_slug( $slug ) {
+		if ( isset( $GLOBALS['__test_reading_times'][ $slug ] ) ) {
+			return $GLOBALS['__test_reading_times'][ $slug ];
+		}
+		return '5 min';
+	}
+}
+
+// Template-resolution stubs for get-active-template-structure.
+$GLOBALS['__test_block_templates'] = array();
+if ( ! function_exists( 'get_block_template' ) ) {
+	function get_block_template( $id ) {
+		if ( isset( $GLOBALS['__test_block_templates'][ $id ] ) ) {
+			return (object) $GLOBALS['__test_block_templates'][ $id ];
+		}
+		return null;
+	}
+}
+if ( ! function_exists( 'parse_blocks' ) ) {
+	function parse_blocks( $content ) {
+		// Minimal parser sufficient for tests — looks for `wp:NAME` markers.
+		if ( '' === trim( (string) $content ) ) { return array(); }
+		preg_match_all( '/<!--\s*wp:([a-z0-9_\-\/]+)/i', (string) $content, $m );
+		$blocks = array();
+		foreach ( $m[1] as $name ) {
+			$blocks[] = array(
+				'blockName'   => 'core/' === substr( $name, 0, 5 ) ? $name : ( false === strpos( $name, '/' ) ? 'core/' . $name : $name ),
+				'attrs'       => array(),
+				'innerBlocks' => array(),
+			);
+		}
+		return $blocks;
+	}
+}
+
+// AI helper stubs (mirror plugin's tests/health-checks.php pattern).
+$GLOBALS['__test_ai_call_count']      = 0;
+$GLOBALS['__test_ai_last_prompt']     = '';
+$GLOBALS['__test_ai_last_system']     = '';
+$GLOBALS['__test_ai_response']        = null; // string | WP_Error | null
+$GLOBALS['__test_ai_available']       = true;
+$GLOBALS['__test_ai_helper_disabled'] = false;
+
+if ( ! function_exists( 'snt_ai_generate_with_constraints' ) ) {
+	function snt_ai_generate_with_constraints( $prompt, $system, $max_tokens = 256 ) {
+		$GLOBALS['__test_ai_call_count']++;
+		$GLOBALS['__test_ai_last_prompt'] = $prompt;
+		$GLOBALS['__test_ai_last_system'] = $system;
+		if ( null !== $GLOBALS['__test_ai_response'] ) {
+			return $GLOBALS['__test_ai_response'];
+		}
+		return new WP_Error( 'snt_ai_unavailable', 'no fixture' );
+	}
+}
+if ( ! function_exists( 'snt_ai_extract_post_text' ) ) {
+	function snt_ai_extract_post_text( $post_id, $words = 1000 ) {
+		$p = get_post( $post_id );
+		return $p && isset( $p->post_content ) ? (string) $p->post_content : '';
+	}
+}
+
+// Abilities API stubs - capture registrations so tests can introspect them.
+$GLOBALS['__test_registered_categories'] = array();
+$GLOBALS['__test_registered_abilities']  = array();
+
+if ( ! function_exists( 'wp_register_ability_category' ) ) {
+	function wp_register_ability_category( $slug, $args ) {
+		$GLOBALS['__test_registered_categories'][ $slug ] = $args;
+		return true;
+	}
+}
+if ( ! function_exists( 'wp_has_ability_category' ) ) {
+	function wp_has_ability_category( $slug ) {
+		return isset( $GLOBALS['__test_registered_categories'][ $slug ] );
+	}
+}
+if ( ! function_exists( 'wp_register_ability' ) ) {
+	function wp_register_ability( $slug, $args ) {
+		$GLOBALS['__test_registered_abilities'][ $slug ] = $args;
+		return true;
+	}
+}
+
+// --- Harness -----------------------------------------------------------
+$pass = 0; $fail = 0;
+function ha_eq( $expected, $actual, $msg ) {
+	global $pass, $fail;
+	if ( $expected === $actual ) {
+		$pass++;
+		echo "  PASS: $msg\n";
+	} else {
+		$fail++;
+		echo "  FAIL: $msg\n    Expected: " . var_export( $expected, true ) . "\n    Actual:   " . var_export( $actual, true ) . "\n";
+	}
+}
+function ha_true( $cond, $msg ) {
+	global $pass, $fail;
+	if ( $cond ) { $pass++; echo "  PASS: $msg\n"; } else { $fail++; echo "  FAIL: $msg\n"; }
+}
+
+// --- Test blocks added in subsequent tasks -----------------------------
+// Task 2 adds: require_once of inc/abilities-registration.php, the
+// do_test_action helper, and the baseline registration smoke tests.
+// Tasks 3-14 add: per-ability execute_callback tests.
+
+echo "\nResult: $pass passed, $fail failed.\n";
+exit( $fail > 0 ? 1 : 0 );
