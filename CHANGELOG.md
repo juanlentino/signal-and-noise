@@ -2,6 +2,59 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.1.0] - 2026-05-24
+
+### Added — Theme-owned WP 7.0 Abilities API surface (12 new abilities)
+
+The Signal & Noise theme becomes a first-class WP 7.0 Abilities API consumer-surface. Twelve new abilities expose the theme's design knowledge and brand-aware generative capabilities to any AI consumer (the companion plugin's AI features, the WP 7.0 AI Copilot, WP-CLI agents, future integrations) — making every AI-driven feature brand-aware instead of brand-blind.
+
+**Read abilities (7):**
+
+1. `signal-noise/get-design-tokens` — theme.json palette + typography + spacing scale (flattened name→hex map).
+2. `signal-noise/list-block-patterns` — enumerates all registered block patterns + categories; optional category filter.
+3. `signal-noise/get-active-template-structure` — shallow FSE block tree for a given post (by ID or slug).
+4. `signal-noise/get-theme-version` — theme + WP environment metadata for drift detection.
+5. `signal-noise/get-page-notes-pillars` — `/notes` pillar essay descriptors with reading time + last-modified.
+6. `signal-noise/get-reading-time-for-slug` — wraps `sn_notes_reading_time_for_slug()` with typed integer output.
+7. `signal-noise/get-design-system-summary` — pre-formats design tokens for AI prompt embedding (markdown / compact-text / json formats — typical 70-80% token reduction vs raw token JSON on compact-text).
+
+**Generative abilities (5):** all call the companion plugin's `snt_ai_generate_with_constraints` helper (Sonnet 4.6 pinned via plugin v3.7.2+). Guarded with `function_exists` — if the plugin is missing, generative abilities return `WP_Error('ai_helper_unavailable')` with status 503 and a clear remediation message.
+
+8. `signal-noise/ai-generate-page-note-summary` — single-sentence /notes-voice summary of a post.
+9. `signal-noise/ai-suggest-block-pattern` — AI recommends 1-3 SN patterns for a draft; validates suggestions against the live registry.
+10. `signal-noise/ai-validate-brand-alignment` — scores content (0-100) for fit with SN voice + palette across 5 dimensions.
+11. `signal-noise/ai-generate-pattern-content` — fills a chosen pattern's shell with brand-voiced copy (no DB writes).
+12. `signal-noise/ai-rewrite-in-brand-voice` — transforms external copy into SN voice; intensity + preservation flags.
+
+### Theme test harness — new
+
+`tests/abilities-registration.php` is the theme's FIRST test file. Establishes a standalone PHP test harness matching the companion plugin's `tests/health-checks.php` pattern: ~130+ assertions across the 12 abilities, no PHPUnit dependency, runs via `php tests/abilities-registration.php`. Covers happy paths, schema-validation, helper-unavailable fallbacks, markdown-fence stripping (per v3.7.0 Task B lesson), and the `error_log` instrumentation at every catch site (per v3.7.1 lesson).
+
+### Architecture decisions
+
+- **Theme-owned registration, not plugin-proxied.** Theme-domain knowledge (design tokens, patterns, /notes pillars) belongs in the theme. Lifecycle coupling makes natural sense: swap themes, the abilities swap with them. See [`docs/superpowers/specs/2026-05-24-theme-ai-abilities-design.md`](docs/superpowers/specs/2026-05-24-theme-ai-abilities-design.md) §3 for the full rationale.
+- **Defensive category registration via `wp_has_ability_category` guard.** Per source-verified WP behavior at `class-wp-ability-categories-registry.php:57-67`, double-registration fires `_doing_it_wrong`. The plugin also registers `diagnostics`, `content`, `ai-generation`; the theme's first-mover guard handles theme-only / plugin-only / both-installed install states cleanly.
+- **`function_exists('snt_ai_generate_with_constraints')` guard for generative abilities.** Theme→plugin coupling is a one-directional function call, not a filter. Brief windows where the theme ships before the plugin produce clean `ai_helper_unavailable` errors instead of fatals.
+- **Cross-package filter contract stays at 3.** No new filters added. The existing `sn_purge_all_caches_result`, `sn_clear_template_overrides_result`, `sn_og_font_paths` from v8.4.0 are unchanged. See [`docs/WORDPRESS-REFERENCE.md`](docs/WORDPRESS-REFERENCE.md) §10.0.
+- **Model pinning inherited from plugin.** Theme abilities don't re-pin the AI model — `snt_ai_generate_with_constraints` already pins Sonnet 4.6 (v3.7.2+). One source of truth, theme inherits.
+
+### Files
+
+- **Created:** `inc/abilities-registration.php` (12 abilities, 3 categories, 2 voice constants), `tests/abilities-registration.php` (harness + ~130 assertions)
+- **Modified:** `functions.php` (+2 lines: module map + require_once), `style.css` (Version: 9.0.0 → 9.1.0), `CHANGELOG.md`
+
+### Companion plugin v3.7.4 (separate release)
+
+Command Palette (⌘K) commands for all 12 abilities ship in companion plugin v3.7.4 (separate release). WP-CLI access via `wp ability run signal-noise/*` works automatically once the theme is installed — no companion plugin update required for CLI consumption.
+
+### Release-cap status
+
+Minor cap is 5 per major (project override). v9.0 → v9.1 is well within the cap.
+
+### Process
+
+`superpowers:brainstorming` (architecture re-evaluated mid-session from plugin-proxied to theme-owned) → spec at `docs/superpowers/specs/2026-05-24-theme-ai-abilities-design.md` → plan at `docs/superpowers/plans/2026-05-24-theme-v9.1.0-ai-abilities.md` → TDD execution with subagent-driven development.
+
 ## [9.0.0] - 2026-05-20
 
 ### Added — WP 7.0 alignment + browser-native modernization
