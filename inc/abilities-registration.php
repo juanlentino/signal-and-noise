@@ -129,6 +129,40 @@ function sn_theme_register_abilities() {
 	// Stubs intentionally omitted — tests will fail until each task
 	// completes its corresponding registration.
 
+	wp_register_ability( 'signal-noise/list-block-patterns', array(
+		'label'               => 'List block patterns',
+		'description'         => 'Enumerates all registered block patterns with category + keywords + viewport hints. Optional `category` input filters to a single pattern category.',
+		'category'            => 'content',
+		'permission_callback' => $permission_read,
+		'execute_callback'    => 'sn_theme_ability_list_block_patterns',
+		'input_schema'        => array(
+			'type'                 => 'object',
+			'properties'           => array(
+				'category' => array(
+					'type'        => 'string',
+					'description' => 'Optional filter to a single pattern category slug.',
+				),
+			),
+			'additionalProperties' => false,
+		),
+		'output_schema'       => array(
+			'type'     => 'object',
+			'required' => array( 'patterns', 'categories' ),
+			'properties' => array(
+				'patterns'   => array( 'type' => 'array' ),
+				'categories' => array( 'type' => 'array' ),
+			),
+		),
+		'meta'                => array(
+			'show_in_rest' => true,
+			'annotations'  => array(
+				'idempotent'      => true,
+				'open_world_hint' => false,
+				'read_only'       => true,
+			),
+		),
+	) );
+
 	wp_register_ability( 'signal-noise/get-design-tokens', array(
 		'label'               => 'Get design tokens',
 		'description'         => "Returns the SN theme's color palette, typography (font families + sizes), and spacing scale from theme.json. Read-only.",
@@ -228,6 +262,72 @@ function sn_theme_ability_design_tokens() {
 		);
 	} catch ( \Throwable $e ) {
 		error_log( 'SN theme ability error in get-design-tokens: ' . $e->getMessage() );
+		return new WP_Error(
+			'theme_ability_error',
+			sprintf( 'Theme ability failed: %s', $e->getMessage() ),
+			array( 'status' => 500 )
+		);
+	}
+}
+
+/**
+ * Execute callback: signal-noise/list-block-patterns.
+ *
+ * Enumerates the block-pattern + pattern-category registries. Optional
+ * input.category filters to a single category slug.
+ *
+ * @since 9.1.0
+ * @param array|null $input { category?: string }
+ * @return array|WP_Error { patterns: array, categories: array }
+ */
+function sn_theme_ability_list_block_patterns( $input = array() ) {
+	try {
+		if ( ! class_exists( 'WP_Block_Patterns_Registry' )
+			|| ! class_exists( 'WP_Block_Pattern_Categories_Registry' ) ) {
+			return new WP_Error(
+				'theme_dependency_missing',
+				'WP_Block_Patterns_Registry not available — requires WP 5.5+.',
+				array( 'status' => 503 )
+			);
+		}
+
+		$filter_cat = '';
+		if ( is_array( $input ) && isset( $input['category'] ) ) {
+			$filter_cat = (string) $input['category'];
+		}
+
+		$raw_patterns = WP_Block_Patterns_Registry::get_instance()->get_all_registered();
+		$patterns     = array();
+		foreach ( (array) $raw_patterns as $p ) {
+			$p_cats = isset( $p['categories'] ) ? (array) $p['categories'] : array();
+			if ( '' !== $filter_cat && ! in_array( $filter_cat, $p_cats, true ) ) {
+				continue;
+			}
+			$patterns[] = array(
+				'name'           => isset( $p['name'] )           ? (string) $p['name']           : '',
+				'title'          => isset( $p['title'] )          ? (string) $p['title']          : '',
+				'description'    => isset( $p['description'] )    ? (string) $p['description']    : '',
+				'categories'     => $p_cats,
+				'keywords'       => isset( $p['keywords'] )       ? (array) $p['keywords']        : array(),
+				'viewport_width' => isset( $p['viewport_width'] ) ? (int) $p['viewport_width']    : 0,
+			);
+		}
+
+		$raw_cats = WP_Block_Pattern_Categories_Registry::get_instance()->get_all_registered();
+		$categories = array();
+		foreach ( (array) $raw_cats as $c ) {
+			$categories[] = array(
+				'name'  => isset( $c['name'] )  ? (string) $c['name']  : '',
+				'label' => isset( $c['label'] ) ? (string) $c['label'] : '',
+			);
+		}
+
+		return array(
+			'patterns'   => $patterns,
+			'categories' => $categories,
+		);
+	} catch ( \Throwable $e ) {
+		error_log( 'SN theme ability error in list-block-patterns: ' . $e->getMessage() );
 		return new WP_Error(
 			'theme_ability_error',
 			sprintf( 'Theme ability failed: %s', $e->getMessage() ),

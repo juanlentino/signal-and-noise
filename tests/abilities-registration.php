@@ -447,5 +447,57 @@ ha_eq( '#ffffff', $result['colors']['void'],    'void color flattened from palet
 ha_eq( '#e00404', $result['colors']['blood'],   'blood color flattened from palette' );
 ha_eq( 2, count( $result['typography']['fontFamilies'] ), 'typography.fontFamilies passthrough' );
 
+// ─── Test: list-block-patterns ───────────────────────────────────
+echo "\nTest signal-noise/list-block-patterns\n";
+ha_reset();
+// Re-seed the patterns + categories registry (they live as static
+// singletons, so we have to clear + repopulate to isolate this block).
+WP_Block_Patterns_Registry::get_instance()->patterns = array(
+	array(
+		'name'           => 'signal-and-noise/hero-dossier',
+		'title'          => 'Hero — Dossier',
+		'description'    => 'Title block with industrial spec-sheet header.',
+		'categories'     => array( 'signal-noise' ),
+		'keywords'       => array( 'hero', 'header' ),
+		'viewport_width' => 1200,
+		'content'        => '<!-- wp:heading -->{{TITLE}}<!-- /wp:heading -->',
+	),
+	array(
+		'name'           => 'signal-and-noise/section-constrained',
+		'title'          => 'Section — Constrained',
+		'description'    => 'Constrained-width section block.',
+		'categories'     => array( 'signal-noise' ),
+		'keywords'       => array( 'section' ),
+		'viewport_width' => 1200,
+		'content'        => '<!-- wp:paragraph -->{{COPY}}<!-- /wp:paragraph -->',
+	),
+);
+WP_Block_Pattern_Categories_Registry::get_instance()->categories = array(
+	array( 'name' => 'signal-noise', 'label' => 'Signal & Noise' ),
+);
+sn_theme_register_abilities();
+ha_true(
+	isset( $GLOBALS['__test_registered_abilities']['signal-noise/list-block-patterns'] ),
+	'list-block-patterns is registered'
+);
+$ability = $GLOBALS['__test_registered_abilities']['signal-noise/list-block-patterns'];
+ha_eq( 'content', $ability['category'], 'category is content' );
+
+$result = call_user_func( $ability['execute_callback'], array() );
+ha_true( is_array( $result ), 'returns array' );
+ha_true( isset( $result['patterns'] ) && is_array( $result['patterns'] ), 'has patterns array' );
+ha_true( isset( $result['categories'] ) && is_array( $result['categories'] ), 'has categories array' );
+ha_eq( 2, count( $result['patterns'] ), 'returns 2 patterns from fixture' );
+ha_eq( 'signal-and-noise/hero-dossier', $result['patterns'][0]['name'], 'first pattern name passthrough' );
+ha_eq( 'Hero — Dossier', $result['patterns'][0]['title'], 'title preserved' );
+ha_eq( 1, count( $result['categories'] ), 'returns 1 category from fixture' );
+
+// Category filter input
+$filtered = call_user_func( $ability['execute_callback'], array( 'category' => 'signal-noise' ) );
+ha_eq( 2, count( $filtered['patterns'] ), 'category=signal-noise returns both fixture patterns' );
+
+$empty = call_user_func( $ability['execute_callback'], array( 'category' => 'nonexistent-cat' ) );
+ha_eq( 0, count( $empty['patterns'] ), 'unmatched category returns 0 patterns' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
