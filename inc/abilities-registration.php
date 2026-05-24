@@ -255,7 +255,7 @@ function sn_theme_register_abilities() {
 			'annotations'  => array(
 				'idempotent'      => true,
 				'open_world_hint' => false,
-				'read_only'       => true,
+				'readonly'        => true,
 			),
 		),
 	) );
@@ -321,7 +321,7 @@ function sn_theme_register_abilities() {
 			'annotations'  => array(
 				'idempotent'      => true,
 				'open_world_hint' => false,
-				'read_only'       => true,
+				'readonly'        => true,
 			),
 		),
 	) );
@@ -354,7 +354,7 @@ function sn_theme_register_abilities() {
 			'annotations'  => array(
 				'idempotent'      => true,
 				'open_world_hint' => false,
-				'read_only'       => true,
+				'readonly'        => true,
 			),
 		),
 	) );
@@ -416,7 +416,7 @@ function sn_theme_register_abilities() {
 			'annotations'  => array(
 				'idempotent'      => true,
 				'open_world_hint' => false,
-				'read_only'       => true,
+				'readonly'        => true,
 			),
 		),
 	) );
@@ -452,7 +452,7 @@ function sn_theme_register_abilities() {
 			'annotations'  => array(
 				'idempotent'      => true,
 				'open_world_hint' => false,
-				'read_only'       => true,
+				'readonly'        => true,
 			),
 		),
 	) );
@@ -488,7 +488,7 @@ function sn_theme_register_abilities() {
 			'annotations'  => array(
 				'idempotent'      => true,
 				'open_world_hint' => false,
-				'read_only'       => true,
+				'readonly'        => true,
 			),
 		),
 	) );
@@ -527,7 +527,7 @@ function sn_theme_register_abilities() {
 			'annotations'  => array(
 				'idempotent'      => false,
 				'open_world_hint' => false,
-				'read_only'       => false,
+				'readonly'        => false,
 			),
 		),
 	) );
@@ -590,7 +590,7 @@ function sn_theme_register_abilities() {
 			'annotations'  => array(
 				'idempotent'      => false,
 				'open_world_hint' => false,
-				'read_only'       => false,
+				'readonly'        => false,
 			),
 		),
 	) );
@@ -654,7 +654,7 @@ function sn_theme_register_abilities() {
 			'annotations'  => array(
 				'idempotent'      => false,
 				'open_world_hint' => false,
-				'read_only'       => false,
+				'readonly'        => false,
 			),
 		),
 	) );
@@ -701,7 +701,7 @@ function sn_theme_register_abilities() {
 			'annotations'  => array(
 				'idempotent'      => false,
 				'open_world_hint' => false,
-				'read_only'       => false,
+				'readonly'        => false,
 			),
 		),
 	) );
@@ -746,7 +746,7 @@ function sn_theme_register_abilities() {
 			'annotations'  => array(
 				'idempotent'      => false,
 				'open_world_hint' => false,
-				'read_only'       => false,
+				'readonly'        => false,
 			),
 		),
 	) );
@@ -838,7 +838,7 @@ function sn_theme_register_abilities() {
 			'annotations'  => array(
 				'idempotent'      => true,
 				'open_world_hint' => false,
-				'read_only'       => true,
+				'readonly'        => true,
 			),
 		),
 	) );
