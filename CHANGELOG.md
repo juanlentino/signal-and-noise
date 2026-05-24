@@ -2,6 +2,58 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.1.2] - 2026-05-24
+
+### Refactor — AI-readiness preparation pass for the 12 theme abilities
+
+Preparation work for [WordPress/desktop-mode PR #240](https://github.com/WordPress/desktop-mode/pull/240) (the future Agents framework, which will auto-harvest `wp_register_ability()` registrations into LLM-shaped tools). The 12 theme abilities shipped in v9.1.0 were correct but written for human/wp-cli consumption — this release tightens them for AI tool-calling consumption when the harvester ships.
+
+No breaking changes. Pure quality improvements. Tests pass: 154 assertions, 0 failures.
+
+#### What changed
+
+**Security — explicit `read` capability check on read abilities** ([`5dacac0`](https://github.com/juanlentino/signal-and-noise/commit/5dacac0))
+
+The shared `$permission_read` helper at `inc/abilities-registration.php:169` previously used `is_user_logged_in() ? true : current_user_can('read')`, which short-circuited the cap check on logged-in users. The `read` cap is held by every WP user from subscriber up, so this changed nothing in practice — but the explicit form is correct and removes a subtle bypass that could matter if WP ever changes default subscriber caps.
+
+**Typed `items` schemas on every array-returning ability** ([`b9c66fe`](https://github.com/juanlentino/signal-and-noise/commit/b9c66fe), [`f51a8f2`](https://github.com/juanlentino/signal-and-noise/commit/f51a8f2))
+
+Six abilities had `output_schema` properties typed as bare `array` with no `items` shape — consumers couldn't infer return structure from the schema. Now every array output declares its element shape:
+
+| Ability | Array properties fixed |
+|---|---|
+| `list-block-patterns` | `patterns`, `categories` |
+| `get-active-template-structure` | `template_part_slugs`, `blocks` (shallow summary shape: `blockName + attrs + innerBlocksCount`) |
+| `get-page-notes-pillars` | `pillars` |
+| `ai-suggest-block-pattern` | `suggestions` (`{pattern_name, reasoning, confidence}`) |
+| `ai-validate-brand-alignment` | `findings` (`{dimension, verdict, note}`) |
+| `ai-generate-pattern-content` | `warnings` |
+| `get-design-tokens` | `fontFamilies`, `fontSizes`, `spacingScale`, `spacingSizes` (each with typed sub-properties matching theme.json conventions) |
+
+The plugin's `signal-noise/list-cron-events` schema was the reference pattern — items.properties for every column.
+
+**Annotation key normalization** ([`86ce984`](https://github.com/juanlentino/signal-and-noise/commit/86ce984))
+
+Renamed `meta.annotations.read_only` → `readonly` (one-word, matches MCP convention + the plugin's existing usage). Twelve abilities affected. Non-behavioral; only affects filterability of the merged ability registry.
+
+#### Why now
+
+Reading WordPress/desktop-mode source ([`commands.php:145-153`](https://github.com/WordPress/desktop-mode/blob/trunk/includes/commands.php#L145), the [provider registry](https://github.com/WordPress/desktop-mode/blob/trunk/includes/ai-copilot/providers-registry.php), [PR #240](https://github.com/WordPress/desktop-mode/pull/240)'s Agents framework mock, and [issue #271](https://github.com/WordPress/desktop-mode/issues/271)) revealed that:
+
+1. The future Agents framework will auto-promote `wp_register_ability()` registrations into AI tools, harvesting their `description` (LLM-visible), `input_schema` (parameters), `permission_callback` (capability gating), and `output_schema` (for documentation + testing). The quality of these fields directly determines how well our abilities function as AI tools.
+2. We were planning to ship manual `desktop_mode_register_ai_tool()` wrappers in plugin v3.8.0 to bridge this gap. Reading PR #240 made it clear that work would be obsoleted by Agents — better to invest in making the underlying ability registrations great.
+3. Desktop-mode maintainers have explicitly signaled they're waiting for WordPress Core's AI provider story to crystallize before adding more built-in providers (per [issue #271 comment](https://github.com/WordPress/desktop-mode/issues/271)).
+
+This pass leaves the theme well-positioned for whichever harvester ships first.
+
+#### Files
+
+- `inc/abilities-registration.php` — permission helper + 7 schemas + 12 annotation key renames
+
+#### Patch-cap status
+
+Patch cap is 7 per minor. v9.1.2 is the 3rd patch in v9.1.x (after v9.1.1). 4 patches remain before v9.2.0.
+
 ## [9.1.1] - 2026-05-24
 
 ### Fixed — Theme abilities now classified as "Theme" in WP 7.0 Abilities Explorer
