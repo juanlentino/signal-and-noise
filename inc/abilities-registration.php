@@ -543,6 +543,51 @@ function sn_theme_register_abilities() {
 		),
 	) );
 
+	wp_register_ability( 'signal-noise/ai-rewrite-in-brand-voice', array(
+		'label'               => 'Rewrite in brand voice',
+		'description'         => "Transforms external/generic copy into the SN voice register. Intensity controls aggression (light: vocabulary swaps; medium: sentence restructure; full: full rewrite). Preserves links + list structures when flagged. Net-new vs ai/ai's Editorial Notes which only flag grammar/SEO/a11y — this changes voice.",
+		'category'            => 'ai-generation',
+		'permission_callback' => $permission_edit_posts,
+		'execute_callback'    => 'sn_theme_ability_ai_rewrite_in_brand_voice',
+		'input_schema'        => array(
+			'type'       => 'object',
+			'required'   => array( 'source_text' ),
+			'properties' => array(
+				'source_text'    => array(
+					'type'      => 'string',
+					'minLength' => 20,
+					'maxLength' => 8000,
+				),
+				'preserve_links' => array( 'type' => 'boolean', 'default' => true ),
+				'preserve_lists' => array( 'type' => 'boolean', 'default' => true ),
+				'intensity'      => array(
+					'type'    => 'string',
+					'enum'    => array( 'light', 'medium', 'full' ),
+					'default' => 'medium',
+				),
+			),
+			'additionalProperties' => false,
+		),
+		'output_schema'       => array(
+			'type'     => 'object',
+			'required' => array( 'rewritten_text', 'summary_of_changes' ),
+			'properties' => array(
+				'rewritten_text'     => array( 'type' => 'string' ),
+				'summary_of_changes' => array( 'type' => 'string' ),
+				'preserved_elements' => array( 'type' => 'object' ),
+				'tokens_used'        => array( 'type' => 'integer' ),
+			),
+		),
+		'meta'                => array(
+			'show_in_rest' => true,
+			'annotations'  => array(
+				'idempotent'      => false,
+				'open_world_hint' => false,
+				'read_only'       => false,
+			),
+		),
+	) );
+
 	wp_register_ability( 'signal-noise/get-design-tokens', array(
 		'label'               => 'Get design tokens',
 		'description'         => "Returns the SN theme's color palette, typography (font families + sizes), and spacing scale from theme.json. Read-only.",
@@ -1444,6 +1489,91 @@ function sn_theme_ability_ai_generate_pattern_content( $input ) {
 		);
 	} catch ( \Throwable $e ) {
 		error_log( 'SN theme ability error in ai-generate-pattern-content: ' . $e->getMessage() );
+		return new WP_Error(
+			'theme_ability_error',
+			sprintf( 'Theme ability failed: %s', $e->getMessage() ),
+			array( 'status' => 500 )
+		);
+	}
+}
+
+/**
+ * Execute callback: signal-noise/ai-rewrite-in-brand-voice.
+ *
+ * Transforms input copy into SN brand voice. Intensity controls how
+ * aggressive the transform is (light/medium/full). preserve_links and
+ * preserve_lists tell the model to retain URLs + list structures
+ * verbatim. The pre-call counts links + lists for the
+ * preserved_elements response — a verifiable signal the caller can
+ * audit against the rewritten output.
+ *
+ * @since 9.1.0
+ * @param array $input { source_text, preserve_links?, preserve_lists?, intensity? }
+ * @return array|WP_Error
+ */
+function sn_theme_ability_ai_rewrite_in_brand_voice( $input ) {
+	try {
+		if ( ! sn_theme_ai_helper_available() ) {
+			return sn_theme_ai_unavailable_error();
+		}
+
+		$source         = isset( $input['source_text'] )    ? (string) $input['source_text']  : '';
+		$preserve_links = isset( $input['preserve_links'] ) ? (bool) $input['preserve_links'] : true;
+		$preserve_lists = isset( $input['preserve_lists'] ) ? (bool) $input['preserve_lists'] : true;
+		$intensity      = isset( $input['intensity'] )      ? (string) $input['intensity']    : 'medium';
+		if ( ! in_array( $intensity, array( 'light', 'medium', 'full' ), true ) ) {
+			$intensity = 'medium';
+		}
+
+		// Count links + list markers in the source so the response
+		// reflects what was present (caller can sanity-check).
+		$links_count = preg_match_all( '/https?:\/\/\S+/i', $source );
+		if ( false === $links_count ) { $links_count = 0; }
+		$lists_count = preg_match_all( '/(^|\n)\s*[\-\*\d+\.]\s+/m', $source );
+		if ( false === $lists_count ) { $lists_count = 0; }
+
+		$system = SN_THEME_BRAND_VOICE_SYSTEM
+			. "\n\nReturn ONLY valid JSON of shape "
+			. '{"rewritten_text": "...", "summary_of_changes": "..."}'
+			. ' No prose, no markdown.';
+
+		$intensity_desc = array(
+			'light'  => 'Light — swap off-brand vocabulary; keep sentence shapes.',
+			'medium' => 'Medium — restructure sentences and swap vocabulary.',
+			'full'   => 'Full — rewrite from scratch in brand voice.',
+		);
+
+		$prompt = "INTENSITY: $intensity ({$intensity_desc[ $intensity ]})\n"
+			. 'PRESERVE LINKS: ' . ( $preserve_links ? 'yes — keep all URLs verbatim.' : 'no — paraphrase is OK.' ) . "\n"
+			. 'PRESERVE LISTS: ' . ( $preserve_lists ? 'yes — keep list structures.'   : 'no — prose is fine.'   ) . "\n\n"
+			. "SOURCE TEXT:\n" . $source;
+
+		$raw = snt_ai_generate_with_constraints( $prompt, $system, 2048 );
+		if ( is_wp_error( $raw ) ) {
+			return $raw;
+		}
+
+		$parsed = sn_theme_parse_ai_json( $raw );
+		if ( null === $parsed || ! isset( $parsed['rewritten_text'] ) ) {
+			error_log( 'SN ai-rewrite-in-brand-voice: malformed JSON: ' . substr( (string) $raw, 0, 200 ) );
+			return new WP_Error(
+				'ai_malformed_response',
+				'AI returned malformed JSON.',
+				array( 'status' => 502 )
+			);
+		}
+
+		return array(
+			'rewritten_text'     => (string) $parsed['rewritten_text'],
+			'summary_of_changes' => isset( $parsed['summary_of_changes'] ) ? (string) $parsed['summary_of_changes'] : '',
+			'preserved_elements' => array(
+				'links_count' => (int) $links_count,
+				'lists_count' => (int) $lists_count,
+			),
+			'tokens_used'        => (int) ceil( strlen( (string) $raw ) / 4 ),
+		);
+	} catch ( \Throwable $e ) {
+		error_log( 'SN theme ability error in ai-rewrite-in-brand-voice: ' . $e->getMessage() );
 		return new WP_Error(
 			'theme_ability_error',
 			sprintf( 'Theme ability failed: %s', $e->getMessage() ),

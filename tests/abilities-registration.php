@@ -986,5 +986,63 @@ ha_true( is_array( $unparseable ),                'unparseable still returns arr
 ha_true( count( $unparseable['warnings'] ) >= 1,  'warnings entry added' );
 ha_eq( 'this is plain text not block markup', $unparseable['block_markup'], 'raw output passed through' );
 
+// ─── Test: ai-rewrite-in-brand-voice ─────────────────────────────
+echo "\nTest signal-noise/ai-rewrite-in-brand-voice\n";
+ha_reset();
+sn_theme_register_abilities();
+
+ha_true(
+	isset( $GLOBALS['__test_registered_abilities']['signal-noise/ai-rewrite-in-brand-voice'] ),
+	'ai-rewrite-in-brand-voice is registered'
+);
+$ability = $GLOBALS['__test_registered_abilities']['signal-noise/ai-rewrite-in-brand-voice'];
+ha_eq( 'ai-generation', $ability['category'], 'category is ai-generation' );
+
+$source = 'Discover the amazing world of audio fingerprinting! Our exciting new feature lets you unlock the power of provenance like never before.';
+
+// Helper-unavailable.
+$GLOBALS['__test_ai_helper_disabled'] = true;
+$err = call_user_func( $ability['execute_callback'], array( 'source_text' => $source ) );
+ha_true( is_wp_error( $err ),                'helper unavailable → WP_Error' );
+ha_eq( 'ai_helper_unavailable', $err->code,  'ai_helper_unavailable code' );
+$GLOBALS['__test_ai_helper_disabled'] = false;
+
+// Happy path.
+$GLOBALS['__test_ai_response'] = wp_json_encode( array(
+	'rewritten_text'     => 'Audio fingerprinting establishes provenance for music files. The substrate is the proof.',
+	'summary_of_changes' => 'Removed marketing verbs (discover, unlock); stripped exclamation point; consolidated to two declarative sentences.',
+) );
+$result = call_user_func( $ability['execute_callback'], array( 'source_text' => $source, 'intensity' => 'medium' ) );
+ha_true( is_array( $result ),                                       'happy path returns array' );
+ha_true( '' !== $result['rewritten_text'],                          'rewritten_text non-empty' );
+ha_true( false !== strpos( $result['summary_of_changes'], 'marketing' ), 'summary_of_changes echoed' );
+ha_true( false !== strpos( $GLOBALS['__test_ai_last_system'], 'brutalist' ), 'system uses brand voice constant' );
+ha_true( false !== strpos( $GLOBALS['__test_ai_last_prompt'], 'INTENSITY: medium' ), 'intensity surfaced in prompt' );
+
+// Markdown-fenced JSON.
+$GLOBALS['__test_ai_response'] = "```json\n" . wp_json_encode( array(
+	'rewritten_text'     => 'r',
+	'summary_of_changes' => 's',
+) ) . "\n```";
+$fenced = call_user_func( $ability['execute_callback'], array( 'source_text' => $source ) );
+ha_eq( 'r', $fenced['rewritten_text'], 'fenced JSON parses' );
+
+// Malformed JSON.
+$GLOBALS['__test_ai_response'] = 'not json';
+$bad = call_user_func( $ability['execute_callback'], array( 'source_text' => $source ) );
+ha_true( is_wp_error( $bad ),                'malformed → WP_Error' );
+ha_eq( 'ai_malformed_response', $bad->code,  'code is ai_malformed_response' );
+
+// preserve_links flag surfaces in the prompt instructions.
+$with_link = $source . ' See https://example.com for details.';
+$GLOBALS['__test_ai_response'] = wp_json_encode( array(
+	'rewritten_text'     => 'Rewritten with link: https://example.com.',
+	'summary_of_changes' => 'Preserved link.',
+) );
+$result_pl = call_user_func( $ability['execute_callback'], array( 'source_text' => $with_link, 'preserve_links' => true ) );
+ha_true( false !== strpos( $GLOBALS['__test_ai_last_prompt'], 'PRESERVE LINKS: yes' ), 'preserve_links=true surfaced in prompt' );
+ha_true( isset( $result_pl['preserved_elements']['links_count'] ), 'preserved_elements.links_count present' );
+ha_eq( 1, $result_pl['preserved_elements']['links_count'], 'counted 1 link in source' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
