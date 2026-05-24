@@ -748,5 +748,100 @@ $gone = call_user_func( $ability['execute_callback'], array( 'post_id' => 99999 
 ha_true( is_wp_error( $gone ),                  'missing post → WP_Error' );
 ha_eq( 'post_not_found', $gone->code,           'error code post_not_found' );
 
+// ─── Test: ai-suggest-block-pattern ──────────────────────────────
+echo "\nTest signal-noise/ai-suggest-block-pattern\n";
+ha_reset();
+// Re-seed pattern registry singleton (ha_reset doesn't touch it).
+WP_Block_Patterns_Registry::get_instance()->patterns = array(
+	array(
+		'name'           => 'signal-and-noise/hero-dossier',
+		'title'          => 'Hero — Dossier',
+		'description'    => 'Title block with industrial spec-sheet header.',
+		'categories'     => array( 'signal-noise' ),
+		'keywords'       => array( 'hero', 'header' ),
+		'viewport_width' => 1200,
+		'content'        => '<!-- wp:heading -->{{TITLE}}<!-- /wp:heading -->',
+	),
+	array(
+		'name'           => 'signal-and-noise/section-constrained',
+		'title'          => 'Section — Constrained',
+		'description'    => 'Constrained-width section block.',
+		'categories'     => array( 'signal-noise' ),
+		'keywords'       => array( 'section' ),
+		'viewport_width' => 1200,
+		'content'        => '<!-- wp:paragraph -->{{COPY}}<!-- /wp:paragraph -->',
+	),
+);
+WP_Block_Pattern_Categories_Registry::get_instance()->categories = array(
+	array( 'name' => 'signal-noise', 'label' => 'Signal & Noise' ),
+);
+sn_theme_register_abilities();
+
+ha_true(
+	isset( $GLOBALS['__test_registered_abilities']['signal-noise/ai-suggest-block-pattern'] ),
+	'ai-suggest-block-pattern is registered'
+);
+$ability = $GLOBALS['__test_registered_abilities']['signal-noise/ai-suggest-block-pattern'];
+ha_eq( 'ai-generation', $ability['category'], 'category is ai-generation' );
+
+$draft = 'This is a draft talking about provenance and substrate as the foundation for music files.';
+
+// Helper-unavailable.
+$GLOBALS['__test_ai_helper_disabled'] = true;
+$err = call_user_func( $ability['execute_callback'], array( 'draft_content' => $draft ) );
+ha_true( is_wp_error( $err ),                       'helper unavailable → WP_Error' );
+ha_eq( 'ai_helper_unavailable', $err->code,         'ai_helper_unavailable code' );
+$GLOBALS['__test_ai_helper_disabled'] = false;
+
+// Happy path — plain JSON.
+$GLOBALS['__test_ai_response'] = wp_json_encode( array(
+	'suggestions' => array(
+		array( 'pattern_name' => 'signal-and-noise/hero-dossier', 'reasoning' => 'Strong header for a manifesto-style draft.', 'confidence' => 'high' ),
+		array( 'pattern_name' => 'signal-and-noise/section-constrained', 'reasoning' => 'Body paragraphs fit constrained section.', 'confidence' => 'medium' ),
+	),
+) );
+$result = call_user_func( $ability['execute_callback'], array( 'draft_content' => $draft ) );
+ha_true( is_array( $result ),                         'happy path returns array' );
+ha_eq( 2, count( $result['suggestions'] ),            'returns 2 suggestions' );
+ha_eq( 'signal-and-noise/hero-dossier', $result['suggestions'][0]['pattern_name'], 'first suggestion pattern_name' );
+ha_eq( 'high', $result['suggestions'][0]['confidence'], 'confidence preserved' );
+
+// Markdown-fenced JSON (v3.7.0 lesson).
+$GLOBALS['__test_ai_response'] = "```json\n" . wp_json_encode( array( 'suggestions' => array(
+	array( 'pattern_name' => 'signal-and-noise/hero-dossier', 'reasoning' => 'r', 'confidence' => 'high' ),
+) ) ) . "\n```";
+$fenced = call_user_func( $ability['execute_callback'], array( 'draft_content' => $draft ) );
+ha_true( is_array( $fenced ),                         'fenced JSON parses' );
+ha_eq( 1, count( $fenced['suggestions'] ),            'fenced JSON yields 1 suggestion' );
+
+// Malformed JSON → ai_malformed_response.
+$GLOBALS['__test_ai_response'] = 'this is not json at all';
+$malformed = call_user_func( $ability['execute_callback'], array( 'draft_content' => $draft ) );
+ha_true( is_wp_error( $malformed ),                   'malformed → WP_Error' );
+ha_eq( 'ai_malformed_response', $malformed->code,     'code is ai_malformed_response' );
+
+// Pattern name not in registry → dropped from suggestions.
+$GLOBALS['__test_ai_response'] = wp_json_encode( array(
+	'suggestions' => array(
+		array( 'pattern_name' => 'signal-and-noise/hero-dossier',   'reasoning' => 'ok',  'confidence' => 'high' ),
+		array( 'pattern_name' => 'signal-and-noise/does-not-exist', 'reasoning' => 'bad', 'confidence' => 'low' ),
+	),
+) );
+$filtered = call_user_func( $ability['execute_callback'], array( 'draft_content' => $draft ) );
+ha_eq( 1, count( $filtered['suggestions'] ),          'unknown pattern dropped' );
+ha_eq( 'signal-and-noise/hero-dossier', $filtered['suggestions'][0]['pattern_name'], 'valid pattern kept' );
+
+// Cap at 3.
+$GLOBALS['__test_ai_response'] = wp_json_encode( array(
+	'suggestions' => array(
+		array( 'pattern_name' => 'signal-and-noise/hero-dossier',   'reasoning' => 'a', 'confidence' => 'high' ),
+		array( 'pattern_name' => 'signal-and-noise/section-constrained', 'reasoning' => 'b', 'confidence' => 'medium' ),
+		array( 'pattern_name' => 'signal-and-noise/hero-dossier',   'reasoning' => 'c', 'confidence' => 'low' ),
+		array( 'pattern_name' => 'signal-and-noise/hero-dossier',   'reasoning' => 'd', 'confidence' => 'low' ),
+	),
+) );
+$capped = call_user_func( $ability['execute_callback'], array( 'draft_content' => $draft ) );
+ha_eq( 3, count( $capped['suggestions'] ), 'caps at 3 suggestions' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
