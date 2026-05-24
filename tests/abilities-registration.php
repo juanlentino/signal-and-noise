@@ -499,5 +499,45 @@ ha_eq( 2, count( $filtered['patterns'] ), 'category=signal-noise returns both fi
 $empty = call_user_func( $ability['execute_callback'], array( 'category' => 'nonexistent-cat' ) );
 ha_eq( 0, count( $empty['patterns'] ), 'unmatched category returns 0 patterns' );
 
+// ─── Test: get-active-template-structure ─────────────────────────
+echo "\nTest signal-noise/get-active-template-structure\n";
+ha_reset();
+
+// Seed a fixture template.
+$GLOBALS['__test_block_templates']['signal-and-noise//page'] = array(
+	'slug'    => 'page',
+	'id'      => 'signal-and-noise//page',
+	'content' => '<!-- wp:template-part {"slug":"header"} /--><!-- wp:post-content /--><!-- wp:template-part {"slug":"footer"} /-->',
+);
+// Seed a fixture post resolving to that template.
+$GLOBALS['__test_posts'][42] = array(
+	'ID'          => 42,
+	'post_type'   => 'page',
+	'post_status' => 'publish',
+	'post_name'   => 'about',
+	'post_title'  => 'About',
+);
+
+sn_theme_register_abilities();
+ha_true(
+	isset( $GLOBALS['__test_registered_abilities']['signal-noise/get-active-template-structure'] ),
+	'get-active-template-structure is registered'
+);
+$ability = $GLOBALS['__test_registered_abilities']['signal-noise/get-active-template-structure'];
+ha_eq( 'diagnostics', $ability['category'], 'category is diagnostics' );
+
+$result = call_user_func( $ability['execute_callback'], array( 'post_id' => 42 ) );
+ha_true( is_array( $result ), 'returns array' );
+ha_eq( 'page', $result['template_slug'], 'resolves template_slug=page' );
+ha_true( isset( $result['blocks'] ) && is_array( $result['blocks'] ), 'has blocks array' );
+ha_true( count( $result['blocks'] ) >= 1, 'parses at least one block from fixture' );
+
+$result_slug = call_user_func( $ability['execute_callback'], array( 'slug' => 'about', 'post_type' => 'page' ) );
+ha_true( is_array( $result_slug ), 'slug input also resolves' );
+ha_eq( 'page', $result_slug['template_slug'], 'slug->template_slug=page' );
+
+$missing = call_user_func( $ability['execute_callback'], array( 'post_id' => 9999 ) );
+ha_true( is_wp_error( $missing ), 'missing post returns WP_Error' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

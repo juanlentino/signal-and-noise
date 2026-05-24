@@ -163,6 +163,44 @@ function sn_theme_register_abilities() {
 		),
 	) );
 
+	wp_register_ability( 'signal-noise/get-active-template-structure', array(
+		'label'               => 'Inspect active template structure',
+		'description'         => 'Returns the FSE template slug + a shallow block tree (blockName + attrs + innerBlocks count) for a given post by ID or slug. Does not recurse into innerBlocks beyond a count — keeps payload bounded.',
+		'category'            => 'diagnostics',
+		'permission_callback' => $permission_read,
+		'execute_callback'    => 'sn_theme_ability_active_template_structure',
+		'input_schema'        => array(
+			'type'       => 'object',
+			'properties' => array(
+				'post_id'   => array( 'type' => 'integer', 'minimum' => 1 ),
+				'post_type' => array( 'type' => 'string', 'enum' => array( 'post', 'page' ) ),
+				'slug'      => array( 'type' => 'string' ),
+			),
+			'anyOf' => array(
+				array( 'required' => array( 'post_id' ) ),
+				array( 'required' => array( 'slug' ) ),
+			),
+			'additionalProperties' => false,
+		),
+		'output_schema'       => array(
+			'type'     => 'object',
+			'required' => array( 'template_slug', 'blocks' ),
+			'properties' => array(
+				'template_slug'      => array( 'type' => 'string' ),
+				'template_part_slugs' => array( 'type' => 'array' ),
+				'blocks'             => array( 'type' => 'array' ),
+			),
+		),
+		'meta'                => array(
+			'show_in_rest' => true,
+			'annotations'  => array(
+				'idempotent'      => true,
+				'open_world_hint' => false,
+				'read_only'       => true,
+			),
+		),
+	) );
+
 	wp_register_ability( 'signal-noise/get-design-tokens', array(
 		'label'               => 'Get design tokens',
 		'description'         => "Returns the SN theme's color palette, typography (font families + sizes), and spacing scale from theme.json. Read-only.",
@@ -328,6 +366,88 @@ function sn_theme_ability_list_block_patterns( $input = array() ) {
 		);
 	} catch ( \Throwable $e ) {
 		error_log( 'SN theme ability error in list-block-patterns: ' . $e->getMessage() );
+		return new WP_Error(
+			'theme_ability_error',
+			sprintf( 'Theme ability failed: %s', $e->getMessage() ),
+			array( 'status' => 500 )
+		);
+	}
+}
+
+/**
+ * Execute callback: signal-noise/get-active-template-structure.
+ *
+ * Resolves the active FSE template for a given post (by id OR slug) and
+ * returns a shallow summary of its block tree — blockName, attrs, and
+ * innerBlocks count per top-level block. Does NOT recurse, keeping the
+ * payload small and predictable for AI prompt embedding.
+ *
+ * @since 9.1.0
+ * @param array $input { post_id?: int, post_type?: 'post'|'page', slug?: string }
+ * @return array|WP_Error
+ */
+function sn_theme_ability_active_template_structure( $input ) {
+	try {
+		$post = null;
+
+		if ( ! empty( $input['post_id'] ) ) {
+			$post = function_exists( 'get_post' ) ? get_post( (int) $input['post_id'] ) : null;
+		} elseif ( ! empty( $input['slug'] ) ) {
+			$post_type = isset( $input['post_type'] ) ? (string) $input['post_type'] : 'page';
+			$post = function_exists( 'get_page_by_path' )
+				? get_page_by_path( (string) $input['slug'], OBJECT, $post_type )
+				: null;
+		}
+
+		if ( ! $post || ! isset( $post->post_type ) ) {
+			return new WP_Error(
+				'post_not_found',
+				'No post matches the given post_id or slug.',
+				array( 'status' => 404 )
+			);
+		}
+
+		// Best-effort template resolution. WP's logic for picking the
+		// template for a post is complex; for the diagnostics surface a
+		// simple post_type-based slug is sufficient and matches what the
+		// FSE engine resolves to in 90%+ of cases.
+		$template_slug = 'page' === $post->post_type ? 'page' : 'single';
+
+		$theme = function_exists( 'wp_get_theme' ) ? wp_get_theme() : null;
+		$theme_stylesheet = $theme && method_exists( $theme, 'get_stylesheet' )
+			? (string) $theme->get_stylesheet()
+			: 'signal-and-noise';
+
+		$template_id   = $theme_stylesheet . '//' . $template_slug;
+		$template      = function_exists( 'get_block_template' ) ? get_block_template( $template_id ) : null;
+		$blocks_summary = array();
+		$part_slugs    = array();
+
+		if ( $template && isset( $template->content ) ) {
+			$parsed = function_exists( 'parse_blocks' ) ? parse_blocks( (string) $template->content ) : array();
+			foreach ( (array) $parsed as $block ) {
+				if ( empty( $block['blockName'] ) ) {
+					continue;
+				}
+				$summary = array(
+					'blockName'        => (string) $block['blockName'],
+					'attrs'            => isset( $block['attrs'] ) ? (array) $block['attrs'] : array(),
+					'innerBlocksCount' => isset( $block['innerBlocks'] ) ? count( (array) $block['innerBlocks'] ) : 0,
+				);
+				$blocks_summary[] = $summary;
+				if ( 'core/template-part' === $summary['blockName'] && isset( $block['attrs']['slug'] ) ) {
+					$part_slugs[] = (string) $block['attrs']['slug'];
+				}
+			}
+		}
+
+		return array(
+			'template_slug'       => $template_slug,
+			'template_part_slugs' => $part_slugs,
+			'blocks'              => $blocks_summary,
+		);
+	} catch ( \Throwable $e ) {
+		error_log( 'SN theme ability error in get-active-template-structure: ' . $e->getMessage() );
 		return new WP_Error(
 			'theme_ability_error',
 			sprintf( 'Theme ability failed: %s', $e->getMessage() ),
