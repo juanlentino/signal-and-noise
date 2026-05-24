@@ -773,16 +773,61 @@ function sn_theme_register_abilities() {
 				),
 				'typography' => array(
 					'type'       => 'object',
+					'description' => 'theme.json typography presets.',
 					'properties' => array(
-						'fontFamilies' => array( 'type' => 'array' ),
-						'fontSizes'    => array( 'type' => 'array' ),
+						'fontFamilies' => array(
+							'type'        => 'array',
+							'description' => 'Font-family presets from theme.json typography.fontFamilies.',
+							'items'       => array(
+								'type'       => 'object',
+								'properties' => array(
+									'slug'       => array( 'type' => 'string', 'description' => 'Preset slug used in style attributes.' ),
+									'name'       => array( 'type' => 'string', 'description' => 'Human-readable name shown in the editor.' ),
+									'fontFamily' => array( 'type' => 'string', 'description' => 'CSS font-family declaration value.' ),
+								),
+							),
+						),
+						'fontSizes'    => array(
+							'type'        => 'array',
+							'description' => 'Font-size presets from theme.json typography.fontSizes.',
+							'items'       => array(
+								'type'       => 'object',
+								'properties' => array(
+									'slug' => array( 'type' => 'string', 'description' => 'Preset slug used in style attributes.' ),
+									'name' => array( 'type' => 'string', 'description' => 'Human-readable name shown in the editor.' ),
+									'size' => array( 'type' => 'string', 'description' => 'CSS size value (e.g., "1rem", "clamp(...)").' ),
+								),
+							),
+						),
 					),
 				),
 				'spacing'    => array(
-					'type'       => 'object',
-					'properties' => array(
-						'spacingScale' => array( 'type' => 'object' ),
-						'spacingSizes' => array( 'type' => 'array' ),
+					'type'        => 'object',
+					'description' => 'theme.json spacing scale + named spacing sizes.',
+					'properties'  => array(
+						'spacingScale' => array(
+							'type'        => 'object',
+							'description' => 'Programmatic spacing scale (operator + increment + steps + mediumStep + unit).',
+							'properties'  => array(
+								'operator'   => array( 'type' => 'string', 'description' => 'Math operator applied between steps (e.g., "*", "+").' ),
+								'increment'  => array( 'type' => 'number', 'description' => 'Step delta.' ),
+								'steps'      => array( 'type' => 'integer', 'description' => 'Number of scale steps generated.' ),
+								'mediumStep' => array( 'type' => 'number', 'description' => 'Base value for the middle step.' ),
+								'unit'       => array( 'type' => 'string', 'description' => 'CSS length unit (e.g., "rem").' ),
+							),
+						),
+						'spacingSizes' => array(
+							'type'        => 'array',
+							'description' => 'Named spacing presets from theme.json spacing.spacingSizes.',
+							'items'       => array(
+								'type'       => 'object',
+								'properties' => array(
+									'slug' => array( 'type' => 'string', 'description' => 'Preset slug.' ),
+									'name' => array( 'type' => 'string', 'description' => 'Human-readable name shown in the editor.' ),
+									'size' => array( 'type' => 'string', 'description' => 'CSS size value.' ),
+								),
+							),
+						),
 					),
 				),
 				'version'    => array( 'type' => 'string' ),
