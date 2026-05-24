@@ -298,6 +298,42 @@ function sn_theme_register_abilities() {
 		),
 	) );
 
+	wp_register_ability( 'signal-noise/get-design-system-summary', array(
+		'label'               => 'Get design-system summary (AI-prompt formatted)',
+		'description'         => 'Formats the design tokens for AI prompt embedding. format=markdown (default) for structured prose, format=compact-text for minimum-token single-line embedding, format=json for full passthrough. Typical 70-80% token reduction vs raw get-design-tokens JSON on compact-text.',
+		'category'            => 'diagnostics',
+		'permission_callback' => $permission_read,
+		'execute_callback'    => 'sn_theme_ability_design_system_summary',
+		'input_schema'        => array(
+			'type'                 => 'object',
+			'properties'           => array(
+				'format' => array(
+					'type'    => 'string',
+					'enum'    => array( 'markdown', 'compact-text', 'json' ),
+					'default' => 'markdown',
+				),
+			),
+			'additionalProperties' => false,
+		),
+		'output_schema'       => array(
+			'type'     => 'object',
+			'required' => array( 'format', 'summary', 'token_estimate' ),
+			'properties' => array(
+				'format'         => array( 'type' => 'string', 'enum' => array( 'markdown', 'compact-text', 'json' ) ),
+				'summary'        => array( 'type' => 'string' ),
+				'token_estimate' => array( 'type' => 'integer' ),
+			),
+		),
+		'meta'                => array(
+			'show_in_rest' => true,
+			'annotations'  => array(
+				'idempotent'      => true,
+				'open_world_hint' => false,
+				'read_only'       => true,
+			),
+		),
+	) );
+
 	wp_register_ability( 'signal-noise/get-design-tokens', array(
 		'label'               => 'Get design tokens',
 		'description'         => "Returns the SN theme's color palette, typography (font families + sizes), and spacing scale from theme.json. Read-only.",
@@ -734,6 +770,113 @@ function sn_theme_ability_reading_time_for_slug( $input ) {
 		);
 	} catch ( \Throwable $e ) {
 		error_log( 'SN theme ability error in get-reading-time-for-slug: ' . $e->getMessage() );
+		return new WP_Error(
+			'theme_ability_error',
+			sprintf( 'Theme ability failed: %s', $e->getMessage() ),
+			array( 'status' => 500 )
+		);
+	}
+}
+
+/**
+ * Execute callback: signal-noise/get-design-system-summary.
+ *
+ * Calls sn_theme_ability_design_tokens() internally for the raw data,
+ * then formats per the input.format. token_estimate uses the chars/4
+ * heuristic that matches Anthropic's typical token density.
+ *
+ * @since 9.1.0
+ * @param array $input { format?: 'markdown'|'compact-text'|'json' }
+ * @return array|WP_Error
+ */
+function sn_theme_ability_design_system_summary( $input = array() ) {
+	try {
+		$format = isset( $input['format'] ) ? (string) $input['format'] : 'markdown';
+		if ( ! in_array( $format, array( 'markdown', 'compact-text', 'json' ), true ) ) {
+			$format = 'markdown';
+		}
+
+		$tokens = sn_theme_ability_design_tokens();
+		if ( is_wp_error( $tokens ) ) {
+			return $tokens;
+		}
+
+		$summary = '';
+		switch ( $format ) {
+			case 'compact-text':
+				$color_pairs = array();
+				foreach ( (array) $tokens['colors'] as $slug => $hex ) {
+					$color_pairs[] = $slug . $hex;
+				}
+				$font_slugs = array();
+				foreach ( (array) $tokens['typography']['fontFamilies'] as $ff ) {
+					if ( isset( $ff['slug'] ) ) { $font_slugs[] = (string) $ff['slug']; }
+				}
+				$size_slugs = array();
+				foreach ( (array) $tokens['typography']['fontSizes'] as $fs ) {
+					if ( isset( $fs['slug'] ) ) { $size_slugs[] = (string) $fs['slug']; }
+				}
+				$summary = sprintf(
+					'colors:%s; fonts:%s; sizes:%s',
+					implode( ',', $color_pairs ),
+					implode( ',', $font_slugs ),
+					implode( ',', $size_slugs )
+				);
+				break;
+
+			case 'json':
+				$summary = (string) wp_json_encode( $tokens );
+				break;
+
+			case 'markdown':
+			default:
+				$lines = array();
+				$lines[] = '# Signal & Noise design system';
+				$lines[] = '';
+				$lines[] = '## Colors';
+				foreach ( (array) $tokens['colors'] as $slug => $hex ) {
+					$lines[] = "- `$slug` — $hex";
+				}
+				$lines[] = '';
+				$lines[] = '## Typography';
+				$lines[] = '';
+				$lines[] = '### Font families';
+				foreach ( (array) $tokens['typography']['fontFamilies'] as $ff ) {
+					$slug = isset( $ff['slug'] ) ? (string) $ff['slug'] : '';
+					$name = isset( $ff['name'] ) ? (string) $ff['name'] : '';
+					$fam  = isset( $ff['fontFamily'] ) ? (string) $ff['fontFamily'] : '';
+					$lines[] = "- `$slug` ($name) — $fam";
+				}
+				$lines[] = '';
+				$lines[] = '### Font sizes';
+				foreach ( (array) $tokens['typography']['fontSizes'] as $fs ) {
+					$slug = isset( $fs['slug'] ) ? (string) $fs['slug'] : '';
+					$size = isset( $fs['size'] ) ? (string) $fs['size'] : '';
+					$lines[] = "- `$slug` — $size";
+				}
+				$lines[] = '';
+				$lines[] = '## Spacing';
+				if ( ! empty( $tokens['spacing']['spacingSizes'] ) ) {
+					foreach ( (array) $tokens['spacing']['spacingSizes'] as $sp ) {
+						$slug = isset( $sp['slug'] ) ? (string) $sp['slug'] : '';
+						$size = isset( $sp['size'] ) ? (string) $sp['size'] : '';
+						$lines[] = "- `$slug` — $size";
+					}
+				}
+				$summary = implode( "\n", $lines );
+				break;
+		}
+
+		// Chars/4 heuristic for token estimate (matches Anthropic's docs).
+		$token_estimate = (int) ceil( strlen( $summary ) / 4 );
+
+		return array(
+			'format'         => $format,
+			'summary'        => $summary,
+			'token_estimate' => $token_estimate,
+		);
+	} catch ( \Throwable $e ) {
+		error_log( 'SN theme ability error in get-design-system-summary: ' . $e->getMessage() );
 		return new WP_Error(
 			'theme_ability_error',
 			sprintf( 'Theme ability failed: %s', $e->getMessage() ),

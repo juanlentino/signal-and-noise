@@ -636,5 +636,67 @@ $missing = call_user_func( $ability['execute_callback'], array( 'slug' => 'nonex
 ha_eq( 'nonexistent', $missing['slug'], 'echoes nonexistent slug' );
 ha_true( $missing['minutes'] >= 0, 'minutes is non-negative for unknown slug' );
 
+// ─── Test: get-design-system-summary ─────────────────────────────
+echo "\nTest signal-noise/get-design-system-summary\n";
+ha_reset();
+// Re-seed the global settings fixture (ha_reset emptied it).
+$GLOBALS['__test_global_settings'] = array(
+	'color'      => array(
+		'palette' => array(
+			array( 'slug' => 'void',    'color' => '#ffffff', 'name' => 'Void' ),
+			array( 'slug' => 'asphalt', 'color' => '#f5f5f5', 'name' => 'Asphalt' ),
+			array( 'slug' => 'bone',    'color' => '#000000', 'name' => 'Bone' ),
+			array( 'slug' => 'blood',   'color' => '#e00404', 'name' => 'Blood' ),
+		),
+	),
+	'typography' => array(
+		'fontFamilies' => array(
+			array( 'slug' => 'heading', 'name' => 'Heading', 'fontFamily' => 'Bebas Neue' ),
+			array( 'slug' => 'body',    'name' => 'Body',    'fontFamily' => 'DM Mono' ),
+		),
+		'fontSizes'    => array(
+			array( 'slug' => 'small',  'size' => '0.8rem',  'name' => 'Small' ),
+			array( 'slug' => 'medium', 'size' => '1rem',    'name' => 'Medium' ),
+			array( 'slug' => 'large',  'size' => '1.25rem', 'name' => 'Large' ),
+		),
+	),
+	'spacing'    => array(
+		'spacingScale' => array( 'steps' => 7 ),
+		'spacingSizes' => array(
+			array( 'slug' => '40', 'size' => '1rem',   'name' => 'Small' ),
+			array( 'slug' => '50', 'size' => '1.5rem', 'name' => 'Medium' ),
+		),
+	),
+);
+sn_theme_register_abilities();
+ha_true(
+	isset( $GLOBALS['__test_registered_abilities']['signal-noise/get-design-system-summary'] ),
+	'get-design-system-summary is registered'
+);
+$ability = $GLOBALS['__test_registered_abilities']['signal-noise/get-design-system-summary'];
+ha_eq( 'diagnostics', $ability['category'], 'category is diagnostics' );
+
+// Default = markdown.
+$md = call_user_func( $ability['execute_callback'], array() );
+ha_true( is_array( $md ), 'returns array' );
+ha_eq( 'markdown', $md['format'], 'default format is markdown' );
+ha_true( false !== strpos( $md['summary'], '## Colors' ),     'markdown has Colors heading' );
+ha_true( false !== strpos( $md['summary'], '## Typography' ), 'markdown has Typography heading' );
+ha_true( false !== strpos( $md['summary'], 'void'   ),        'markdown lists void color slug' );
+ha_true( $md['token_estimate'] > 0,                            'token_estimate computed' );
+
+// Compact-text format.
+$compact = call_user_func( $ability['execute_callback'], array( 'format' => 'compact-text' ) );
+ha_eq( 'compact-text', $compact['format'], 'compact format echoed' );
+ha_true( false !== strpos( $compact['summary'], 'colors:' ), 'compact summary leads with colors:' );
+ha_true( $compact['token_estimate'] < $md['token_estimate'], 'compact is smaller than markdown' );
+
+// JSON format = passthrough of get-design-tokens.
+$json = call_user_func( $ability['execute_callback'], array( 'format' => 'json' ) );
+ha_eq( 'json', $json['format'], 'json format echoed' );
+$decoded = json_decode( $json['summary'], true );
+ha_true( is_array( $decoded ),                'json summary is parseable' );
+ha_true( isset( $decoded['colors']['void'] ), 'json contains tokens passthrough' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
