@@ -16,6 +16,7 @@
  *   inc/page-notes-template.php  — template_include override for /notes route (theme-specific defense)
  *   inc/page-notes-render.php    — full PHP render of /notes index (theme-specific aesthetic)
  *   inc/patterns.php             — Block Pattern category registration
+ *   inc/abilities-registration.php — 12 WP 7.0 Abilities (theme-owned: 7 read + 5 generative; v9.1.0)
  *
  * Operational tooling — REST surface, Plausible integration, admin UI, security
  * headers, Cloudflare purge, OG card generation, reading-time, content surfaces +
