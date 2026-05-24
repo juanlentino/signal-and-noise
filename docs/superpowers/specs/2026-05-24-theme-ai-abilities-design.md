@@ -917,7 +917,7 @@ For generative abilities, also confirm the AI helper guard works by temporarily 
 
 **Scope:**
 1. `inc/desktop-mode-integration.php` — add 12 new Command Palette commands (one per new theme ability), all `aiCallable: true`
-2. `assets/desktop-mode.js` — add `input-then-result` render mode (new ⌘K shape; the 15 existing commands all use the existing `result-panel` shape; the 12 new commands include 9 that need a form-then-result flow)
+2. `assets/desktop-mode.js` — add `input-then-result` render mode (new ⌘K shape; the 17 existing commands all use the existing `result-panel` shape; the 12 new commands include 9 that need a form-then-result flow)
 3. `tests/theme-ability-commands.php` — NEW test file (~20 assertions covering the command registrations)
 4. `signal-and-noise-tools.php` — version bump 3.7.3 → 3.7.4
 5. `CHANGELOG.md` — entry documenting the 12 ⌘K commands, the new render mode, and WP-CLI access (which works automatically once theme registers abilities)
@@ -992,7 +992,7 @@ All 12 abilities are reachable from the WP 7.0 Command Palette via the plugin's 
 
 **Where commands live:**
 
-The plugin's `inc/desktop-mode-integration.php` already registers 15 commands. The new theme abilities map cleanly to additional commands in the same file — plugin stays the Command Palette interface layer; theme stays the ability implementation layer.
+The plugin's `inc/desktop-mode-integration.php` already registers 17 commands. The new theme abilities map cleanly to additional commands in the same file — plugin stays the Command Palette interface layer; theme stays the ability implementation layer.
 
 **Command shape:**
 
@@ -1126,9 +1126,9 @@ $theme_ability_commands = array(
 - `result-panel` — invoke ability with no input; display output in a side panel
 - `input-then-result` — show an input form (populated from `input_fields`), then dispatch on submit and display result
 
-The JS-side rendering lives in `assets/desktop-mode.js`. The current implementation handles `result-panel` for the 15 existing commands; `input-then-result` is the new render mode added in plugin v3.7.4.
+The JS-side rendering lives in `assets/desktop-mode.js`. The current implementation handles `result-panel` for the 17 existing commands; `input-then-result` is the new render mode added in plugin v3.7.4.
 
-**Command count after this work:** 15 existing + 12 new = **27 total commands**, all `aiCallable: true` for the new 12.
+**Command count after this work:** 17 existing + 12 new = **29 total commands**, all `aiCallable: true` for the new 12.
 
 ### 11.2 WP-CLI access (free / automatic)
 
@@ -1165,7 +1165,7 @@ The Copilot decides which to call based on:
 - The input/output schemas (it can construct valid input)
 - The label + description text
 
-**Implication:** the labels + descriptions in §11.1 above are not just human-facing — they're also Copilot-facing. They should be terse, accurate, and use vocabulary the AI can match user intent against. The labels follow the existing "SN: <verb> <object>" pattern from the plugin's 15 existing commands.
+**Implication:** the labels + descriptions in §11.1 above are not just human-facing — they're also Copilot-facing. They should be terse, accurate, and use vocabulary the AI can match user intent against. The labels follow the existing "SN: <verb> <object>" pattern from the plugin's 17 existing commands.
 
 ---
 
@@ -1175,8 +1175,8 @@ The Copilot decides which to call based on:
 - WP 7.0 AI Client source: [WordPress/wp-ai-client](https://github.com/WordPress/wp-ai-client) (verified 2026-05-21 in the v3.7.1 root-cause investigation)
 - Plugin v3.7.x AI gate fix arc: `docs/superpowers/handoffs/2026-05-21-maintenance-pass-in-flight.md`
 - Cross-package contract: `docs/WORDPRESS-REFERENCE.md` §10.0 (current 3-filter surface; this spec does NOT extend it)
-- Existing ability registrations: `signal-and-noise-tools/inc/abilities-registration.php` (16 abilities across 5 categories — this spec adds 12 in the THEME, keeping registration locations separate by domain)
-- Existing Command Palette commands: `signal-and-noise-tools/inc/desktop-mode-integration.php` (15 commands — plugin v3.7.4 adds 12 more = 27 total)
+- Existing ability registrations: `signal-and-noise-tools/inc/abilities-registration.php` (17 abilities across 5 categories — this spec adds 12 in the THEME, keeping registration locations separate by domain)
+- Existing Command Palette commands: `signal-and-noise-tools/inc/desktop-mode-integration.php` (17 commands — plugin v3.7.4 adds 12 more = 29 total)
 - Theme structure: `signal-and-noise/functions.php` module map
 - Memory entries:
   - `feedback_skills_plugins_docs_always` (the hard rule)
