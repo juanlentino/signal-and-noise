@@ -65,6 +65,50 @@ const SN_THEME_BRAND_VOICE_SYSTEM = "You are a brand-voice expert for Signal & N
 const SN_THEME_NOTES_VOICE_SYSTEM = "You write entries for the Signal & Noise /notes catalog — a brutalist directory of essays styled like an industrial parts catalog. Summaries are single sentences, declarative, present-tense, technical. Lead with the noun (the subject under discussion), not a verb or pronoun. No 'this post argues' framing. No 'we' or 'I'. Vocabulary: provenance, substrate, signal, noise, fingerprint, drift, anchor, catalog, dossier, primitive, contract. Target length: 18–35 words. Output ONLY the summary sentence — no preamble, no explanation, no trailing punctuation beyond a period. Example shape: 'Provenance treats music as a forensic substrate where origin is proven by cryptographic fingerprint, not claimed by metadata.'";
 
 /**
+ * Returns true if the plugin's AI helper is callable in this request.
+ *
+ * Centralizes the function_exists guard for the 5 generative abilities.
+ * Tests can force the false branch via $GLOBALS['__test_ai_helper_disabled'].
+ *
+ * @since 9.1.0
+ */
+function sn_theme_ai_helper_available() {
+	if ( ! empty( $GLOBALS['__test_ai_helper_disabled'] ) ) {
+		return false;
+	}
+	return function_exists( 'snt_ai_generate_with_constraints' );
+}
+
+/**
+ * Returns the standard WP_Error returned when generative abilities are
+ * invoked but the plugin's AI helper is missing.
+ *
+ * @since 9.1.0
+ */
+function sn_theme_ai_unavailable_error() {
+	return new WP_Error(
+		'ai_helper_unavailable',
+		'AI helper not available. Install or update signal-and-noise-tools plugin to v3.7.x+.',
+		array( 'status' => 503 )
+	);
+}
+
+/**
+ * Strip optional markdown code fences from an AI response and parse
+ * as JSON. Per the v3.7.0 Task B lesson — models sometimes wrap JSON
+ * in ```json ... ``` fences regardless of system instructions.
+ *
+ * @since 9.1.0
+ * @param string $raw Raw AI text.
+ * @return array|null Parsed array on success, null on parse failure.
+ */
+function sn_theme_parse_ai_json( $raw ) {
+	$text = trim( preg_replace( '/^```(?:json)?\s*|\s*```$/i', '', (string) $raw ) );
+	$parsed = json_decode( $text, true );
+	return is_array( $parsed ) ? $parsed : null;
+}
+
+/**
  * Phase 1: register the 3 ability categories defensively.
  *
  * Per source-verified upstream behavior, calling
@@ -330,6 +374,45 @@ function sn_theme_register_abilities() {
 				'idempotent'      => true,
 				'open_world_hint' => false,
 				'read_only'       => true,
+			),
+		),
+	) );
+
+	wp_register_ability( 'signal-noise/ai-generate-page-note-summary', array(
+		'label'               => 'Generate /notes-voice summary',
+		'description'         => "Generates a brand-voiced single-sentence summary of a post in the SN /notes catalog vocabulary. Calls the plugin's AI helper (Sonnet 4.6 pinned via plugin v3.7.2+). Requires signal-and-noise-tools plugin.",
+		'category'            => 'ai-generation',
+		'permission_callback' => $permission_edit_posts,
+		'execute_callback'    => 'sn_theme_ability_ai_page_note_summary',
+		'input_schema'        => array(
+			'type'       => 'object',
+			'required'   => array( 'post_id' ),
+			'properties' => array(
+				'post_id'   => array( 'type' => 'integer', 'minimum' => 1 ),
+				'max_words' => array(
+					'type'    => 'integer',
+					'minimum' => 10,
+					'maximum' => 60,
+					'default' => 30,
+				),
+			),
+			'additionalProperties' => false,
+		),
+		'output_schema'       => array(
+			'type'     => 'object',
+			'required' => array( 'summary', 'post_id' ),
+			'properties' => array(
+				'summary'     => array( 'type' => 'string' ),
+				'post_id'     => array( 'type' => 'integer' ),
+				'tokens_used' => array( 'type' => 'integer' ),
+			),
+		),
+		'meta'                => array(
+			'show_in_rest' => true,
+			'annotations'  => array(
+				'idempotent'      => false,
+				'open_world_hint' => false,
+				'read_only'       => false,
 			),
 		),
 	) );
@@ -877,6 +960,80 @@ function sn_theme_ability_design_system_summary( $input = array() ) {
 		);
 	} catch ( \Throwable $e ) {
 		error_log( 'SN theme ability error in get-design-system-summary: ' . $e->getMessage() );
+		return new WP_Error(
+			'theme_ability_error',
+			sprintf( 'Theme ability failed: %s', $e->getMessage() ),
+			array( 'status' => 500 )
+		);
+	}
+}
+
+/**
+ * Execute callback: signal-noise/ai-generate-page-note-summary.
+ *
+ * Composes a /notes-voice summary of a post. Uses the plugin's
+ * snt_ai_extract_post_text (defensive guard) for the input and
+ * snt_ai_generate_with_constraints for the AI call. The plugin's
+ * helper pins Sonnet 4.6 (v3.7.2+) — theme inherits the pin.
+ *
+ * @since 9.1.0
+ * @param array $input { post_id: int, max_words?: int }
+ * @return array|WP_Error
+ */
+function sn_theme_ability_ai_page_note_summary( $input ) {
+	try {
+		if ( ! sn_theme_ai_helper_available() ) {
+			return sn_theme_ai_unavailable_error();
+		}
+		if ( ! function_exists( 'snt_ai_extract_post_text' ) ) {
+			return sn_theme_ai_unavailable_error();
+		}
+
+		$post_id   = isset( $input['post_id'] ) ? (int) $input['post_id'] : 0;
+		$max_words = isset( $input['max_words'] ) ? (int) $input['max_words'] : 30;
+		$max_words = max( 10, min( 60, $max_words ) );
+
+		$post = function_exists( 'get_post' ) ? get_post( $post_id ) : null;
+		if ( ! $post ) {
+			return new WP_Error(
+				'post_not_found',
+				sprintf( 'Post %d not found.', $post_id ),
+				array( 'status' => 404 )
+			);
+		}
+
+		$body = (string) snt_ai_extract_post_text( $post_id, 1000 );
+		if ( '' === trim( $body ) ) {
+			return new WP_Error(
+				'post_empty',
+				'Post has no extractable text content.',
+				array( 'status' => 422 )
+			);
+		}
+
+		$prompt = "Summarize this post in the Signal & Noise /notes catalog voice. "
+			. "Hard limit: $max_words words. Output the summary sentence only.\n\n"
+			. "POST:\n" . $body;
+
+		$max_tokens = max( 32, $max_words * 2 );
+		$raw = snt_ai_generate_with_constraints( $prompt, SN_THEME_NOTES_VOICE_SYSTEM, $max_tokens );
+
+		if ( is_wp_error( $raw ) ) {
+			return $raw;
+		}
+
+		$summary = trim( (string) $raw );
+		// Strip any leading/trailing quotes the model may wrap the
+		// sentence in.
+		$summary = trim( $summary, "\"'" );
+
+		return array(
+			'summary'     => $summary,
+			'post_id'     => $post_id,
+			'tokens_used' => (int) ceil( strlen( $summary ) / 4 ),
+		);
+	} catch ( \Throwable $e ) {
+		error_log( 'SN theme ability error in ai-generate-page-note-summary: ' . $e->getMessage() );
 		return new WP_Error(
 			'theme_ability_error',
 			sprintf( 'Theme ability failed: %s', $e->getMessage() ),

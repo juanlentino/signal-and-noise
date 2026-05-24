@@ -698,5 +698,55 @@ $decoded = json_decode( $json['summary'], true );
 ha_true( is_array( $decoded ),                'json summary is parseable' );
 ha_true( isset( $decoded['colors']['void'] ), 'json contains tokens passthrough' );
 
+// ─── Test: ai-generate-page-note-summary ─────────────────────────
+echo "\nTest signal-noise/ai-generate-page-note-summary\n";
+ha_reset();
+
+// Seed a post for the summarizer.
+$GLOBALS['__test_posts'][200] = array(
+	'ID'           => 200,
+	'post_title'   => 'Provenance is the substrate',
+	'post_content' => 'Music files need fingerprints, not name tags. Provenance is the substrate everything else rides on.',
+	'post_type'    => 'post',
+	'post_status'  => 'publish',
+);
+
+sn_theme_register_abilities();
+ha_true(
+	isset( $GLOBALS['__test_registered_abilities']['signal-noise/ai-generate-page-note-summary'] ),
+	'ai-generate-page-note-summary is registered'
+);
+$ability = $GLOBALS['__test_registered_abilities']['signal-noise/ai-generate-page-note-summary'];
+ha_eq( 'ai-generation', $ability['category'], 'category is ai-generation' );
+
+// Scenario 1: AI helper disabled → ai_helper_unavailable.
+$GLOBALS['__test_ai_helper_disabled'] = true;
+$err = call_user_func( $ability['execute_callback'], array( 'post_id' => 200 ) );
+ha_true( is_wp_error( $err ), 'returns WP_Error when AI helper disabled' );
+ha_eq( 'ai_helper_unavailable', $err->code, 'error code is ai_helper_unavailable' );
+$GLOBALS['__test_ai_helper_disabled'] = false;
+
+// Scenario 2: happy path.
+$GLOBALS['__test_ai_response']     = 'Provenance is the catalog substrate music files inherit when fingerprints replace name tags.';
+$GLOBALS['__test_ai_call_count']   = 0;
+$result = call_user_func( $ability['execute_callback'], array( 'post_id' => 200, 'max_words' => 25 ) );
+ha_true( is_array( $result ),                                 'happy path returns array' );
+ha_eq( 200,            $result['post_id'],                    'echoes post_id' );
+ha_true( '' !== $result['summary'],                            'summary non-empty' );
+ha_eq( 1, $GLOBALS['__test_ai_call_count'],                   'AI was called once' );
+ha_true( false !== strpos( $GLOBALS['__test_ai_last_system'], 'Signal & Noise /notes' ), 'system instruction is the notes voice constant' );
+
+// Scenario 3: AI returns WP_Error → propagates.
+$GLOBALS['__test_ai_response'] = new WP_Error( 'snt_ai_unavailable', 'no key' );
+$prop = call_user_func( $ability['execute_callback'], array( 'post_id' => 200 ) );
+ha_true( is_wp_error( $prop ),                  'AI WP_Error propagated' );
+ha_eq( 'snt_ai_unavailable', $prop->code,        'propagated code preserved' );
+
+// Scenario 4: missing post → post_not_found.
+$GLOBALS['__test_ai_response'] = 'irrelevant';
+$gone = call_user_func( $ability['execute_callback'], array( 'post_id' => 99999 ) );
+ha_true( is_wp_error( $gone ),                  'missing post → WP_Error' );
+ha_eq( 'post_not_found', $gone->code,           'error code post_not_found' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
