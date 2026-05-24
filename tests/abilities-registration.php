@@ -539,5 +539,25 @@ ha_eq( 'page', $result_slug['template_slug'], 'slug->template_slug=page' );
 $missing = call_user_func( $ability['execute_callback'], array( 'post_id' => 9999 ) );
 ha_true( is_wp_error( $missing ), 'missing post returns WP_Error' );
 
+// ─── Test: get-theme-version ─────────────────────────────────────
+echo "\nTest signal-noise/get-theme-version\n";
+ha_reset();
+sn_theme_register_abilities();
+ha_true(
+	isset( $GLOBALS['__test_registered_abilities']['signal-noise/get-theme-version'] ),
+	'get-theme-version is registered'
+);
+$ability = $GLOBALS['__test_registered_abilities']['signal-noise/get-theme-version'];
+ha_eq( 'diagnostics', $ability['category'], 'category is diagnostics' );
+
+$result = call_user_func( $ability['execute_callback'], array() );
+ha_true( is_array( $result ), 'returns array' );
+ha_eq( '9.1.0', $result['theme_version'], 'theme_version from stub' );
+ha_eq( 'Signal & Noise', $result['theme_name'], 'theme_name from stub' );
+ha_eq( true,  $result['is_block_theme'], 'is_block_theme true' );
+ha_eq( true,  $result['supports_fse'],   'supports_fse true' );
+ha_eq( '7.0.0', $result['wp_version'],   'wp_version from stub' );
+ha_eq( 'signal-and-noise', $result['theme_template'], 'theme_template = stylesheet for non-child' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

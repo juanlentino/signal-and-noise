@@ -201,6 +201,39 @@ function sn_theme_register_abilities() {
 		),
 	) );
 
+	wp_register_ability( 'signal-noise/get-theme-version', array(
+		'label'               => 'Get theme + WP version',
+		'description'         => 'Returns the active theme name + version + parent template + is_block_theme flag + WP version. Use to detect drift between published roadmap docs and the live site.',
+		'category'            => 'diagnostics',
+		'permission_callback' => $permission_read,
+		'execute_callback'    => 'sn_theme_ability_theme_version',
+		'input_schema'        => array(
+			'type'                 => 'object',
+			'properties'           => array(),
+			'additionalProperties' => false,
+		),
+		'output_schema'       => array(
+			'type'     => 'object',
+			'required' => array( 'theme_version', 'theme_name', 'is_block_theme', 'wp_version' ),
+			'properties' => array(
+				'theme_version'  => array( 'type' => 'string' ),
+				'theme_name'     => array( 'type' => 'string' ),
+				'theme_template' => array( 'type' => 'string' ),
+				'is_block_theme' => array( 'type' => 'boolean' ),
+				'supports_fse'   => array( 'type' => 'boolean' ),
+				'wp_version'     => array( 'type' => 'string' ),
+			),
+		),
+		'meta'                => array(
+			'show_in_rest' => true,
+			'annotations'  => array(
+				'idempotent'      => true,
+				'open_world_hint' => false,
+				'read_only'       => true,
+			),
+		),
+	) );
+
 	wp_register_ability( 'signal-noise/get-design-tokens', array(
 		'label'               => 'Get design tokens',
 		'description'         => "Returns the SN theme's color palette, typography (font families + sizes), and spacing scale from theme.json. Read-only.",
@@ -448,6 +481,59 @@ function sn_theme_ability_active_template_structure( $input ) {
 		);
 	} catch ( \Throwable $e ) {
 		error_log( 'SN theme ability error in get-active-template-structure: ' . $e->getMessage() );
+		return new WP_Error(
+			'theme_ability_error',
+			sprintf( 'Theme ability failed: %s', $e->getMessage() ),
+			array( 'status' => 500 )
+		);
+	}
+}
+
+/**
+ * Execute callback: signal-noise/get-theme-version.
+ *
+ * Returns theme + WP environment metadata. supports_fse is currently
+ * aliased to is_block_theme — they're the same flag on WP 5.9+ but
+ * separated for forward compatibility if FSE diverges from
+ * block-theme status.
+ *
+ * @since 9.1.0
+ * @return array|WP_Error
+ */
+function sn_theme_ability_theme_version() {
+	try {
+		if ( ! function_exists( 'wp_get_theme' ) ) {
+			return new WP_Error(
+				'theme_dependency_missing',
+				'wp_get_theme() not available.',
+				array( 'status' => 503 )
+			);
+		}
+
+		$theme         = wp_get_theme();
+		$theme_version = method_exists( $theme, 'get' ) ? (string) $theme->get( 'Version' ) : '';
+		$theme_name    = method_exists( $theme, 'get' ) ? (string) $theme->get( 'Name' )    : '';
+		$template      = method_exists( $theme, 'get_template' ) ? (string) $theme->get_template() : '';
+
+		$is_block = function_exists( 'wp_is_block_theme' ) ? (bool) wp_is_block_theme() : false;
+
+		// wp_get_wp_version() exists on WP 6.7+; fall back to $wp_version global.
+		if ( function_exists( 'wp_get_wp_version' ) ) {
+			$wp_version = (string) wp_get_wp_version();
+		} else {
+			$wp_version = isset( $GLOBALS['wp_version'] ) ? (string) $GLOBALS['wp_version'] : '';
+		}
+
+		return array(
+			'theme_version'  => $theme_version,
+			'theme_name'     => $theme_name,
+			'theme_template' => $template,
+			'is_block_theme' => $is_block,
+			'supports_fse'   => $is_block,
+			'wp_version'     => $wp_version,
+		);
+	} catch ( \Throwable $e ) {
+		error_log( 'SN theme ability error in get-theme-version: ' . $e->getMessage() );
 		return new WP_Error(
 			'theme_ability_error',
 			sprintf( 'Theme ability failed: %s', $e->getMessage() ),
