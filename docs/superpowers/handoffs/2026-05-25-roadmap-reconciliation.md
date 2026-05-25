@@ -18,12 +18,14 @@
 
 Ranked by recommended sequence (smallest blast radius first):
 
-### 1. Login hardening audit log — paused at Section 1 design
+### 1. ~~Login hardening audit log~~ — ✅ SHIPPED as plugin v3.8.3 (2026-05-25)
 
-- **State:** Section 1 (data model, hashing, 90-day retention window) captured inline in [v3.8.1 spec § 4](https://github.com/juanlentino/signal-and-noise-tools/blob/main/docs/superpowers/specs/2026-05-25-v3.8.1-sub-tabs-and-cache-fix-design.md). No code written.
-- **Surface:** would land as an "Audit log" sub-tab under the existing Security tab, alongside the "Login" sub-tab.
-- **Counter+hashed-IP design rationale:** keeps the audit useful without retaining raw IPs, which sidesteps GDPR retention questions.
-- **Estimated:** plugin v3.8.3 (~150-200 LOC). One session of focused work.
+- **Shipped:** Security → Audit log sub-tab. 6 captured events (login_success per-event + login_failed + wp_login_404 + wp_admin_unauth_404 + lockout_triggered + password_reset as day-bucketed counters) + unique_ips_count via ephemeral hashed-IP transient (no IPs persist long-term).
+- **Full 4-surface dispatch:** admin sub-tab (stat-card hero + counter timeline + recent-logins table + LLA summary), REST under signal-noise/v1/audit/*, 4 Abilities (3 read AI-eligible + 1 maintenance prune NOT AI-callable), 2 desktop-mode ⌘K commands.
+- **Spec:** [`docs/superpowers/specs/2026-05-25-login-hardening-audit-log-design.md`](https://github.com/juanlentino/signal-and-noise-tools/blob/main/docs/superpowers/specs/2026-05-25-login-hardening-audit-log-design.md). **Plan:** [`docs/superpowers/plans/2026-05-25-login-hardening-audit-log-v3.8.3.md`](https://github.com/juanlentino/signal-and-noise-tools/blob/main/docs/superpowers/plans/2026-05-25-login-hardening-audit-log-v3.8.3.md).
+- **Notable verified-at-design-time finding:** LLA fires no lockout action hook (only `llar_plugin_version_updated` + `llar_mfa_generate_codes` exist in LLA core). `lockout_triggered` counter uses polling fallback on `limit_login_lockouts` size delta in the daily prune tick.
+- **Follow-up patches in same session:** v3.8.4 fixed a desktop-mode dock submenu drift (8→6 entries; was hardcoded since v1.15.0, missed by v3.8.1's sidebar reduction); v3.8.5 made `.sn-2col` always stack (RSS tab cramped layout couldn't be fixed by breakpoint bump alone).
+- **Actual LOC:** ~991 LOC across 8 files (above the 150-200 estimate because the 4-surface dispatch + LLA polling + admin UI added more surface than initially scoped).
 
 ### 2. AI-assisted content-health fix proposals
 
@@ -133,4 +135,18 @@ These three were flagged in [2026-05-25-sub-tabs-arc-complete.md](2026-05-25-sub
 
 ## One-line summary
 
-**The 15-phase absorption roadmap is fully shipped with significant scope expansion. Five small items remain (login audit log, AI-assisted content fixes, native breadcrumbs adoption check, GSC sitemap submission, WORDPRESS-REFERENCE updates). The headline non-roadmap addition is `insights.php` v3.6.0 (Content Opportunity Advisor), and the 29-ability surface across plugin + theme is the architectural foundation that pays the most forward dividends.**
+**The 15-phase absorption roadmap is fully shipped with significant scope expansion. ~~Five~~ Four small items remain (~~login audit log~~ shipped as plugin v3.8.3-v3.8.5; AI-assisted content fixes, native breadcrumbs adoption check, GSC sitemap submission, WORDPRESS-REFERENCE updates). The headline non-roadmap addition is `insights.php` v3.6.0 (Content Opportunity Advisor), and the 33-ability surface across plugin + theme (17→21 plugin + 12 theme) is the architectural foundation that pays the most forward dividends.**
+
+---
+
+## 2026-05-25 session-end addendum
+
+3 plugin ships landed in the session after this reconciliation was first written:
+
+| Tag | Scope |
+|---|---|
+| **v3.8.3** | Login hardening audit log shipped (Security → Audit log sub-tab); 4 new abilities; 2 new ⌘K commands; +991 LOC across 8 files |
+| **v3.8.4** | Fix: desktop-mode dock submenu derives from `sn_admin_top_tabs()` (was hardcoded 8 entries; v3.8.1 reduced wp-admin sidebar to 6 but missed this parallel filter — single-source-of-truth violation) |
+| **v3.8.5** | Fix: `.sn-2col` always stacks (RSS tab was cramped at every viewport; v3.8.4's breakpoint bump 960→1200px wasn't enough at >1200px monitors) |
+
+Plugin patch headroom after: **5/7** in v3.8.x. 2 patches remain before v3.9.0 rollover. Theme unchanged this session (still v9.1.5).
