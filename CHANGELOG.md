@@ -2,6 +2,21 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.1.5] - 2026-05-25
+
+### Fixed — `sn_purge_all_caches` now invalidates plugin metadata cache
+
+WordPress's `get_plugin_data()` caches plugin metadata in a private cache that isn't cleared by `wp_cache_flush()` alone. SSH-based plugin deploys (companion-plugin's `signal-and-noise-tools` Phase 2c pipeline) update the plugin file on disk but leave the cached metadata stale — so the SN admin Dashboard widget would report e.g. "PLUGIN 3.7.6 • v3.8.0 available" even after the v3.8.0 file was deployed. Two lines added to `sn_purge_all_caches()`'s `object_cache` branch:
+
+- `delete_site_transient( 'update_plugins' )` — symmetric with the existing `update_themes` deletion
+- `wp_clean_plugins_cache()` — symmetric with the existing `wp_clean_themes_cache()`
+
+After this release deploys, every subsequent plugin deploy will properly refresh WordPress's cached plugin metadata as part of the standard cache-purge filter chain.
+
+**Patch cap status:** 5/7 patches used in v9.1.x line (was 4/7). Two patches remain before rollover to v9.2.0.
+
+**Companion ship:** plugin v3.8.1 ships shortly after this, completing the v3.8.0 IA reorg follow-up (sub-tabs + 6-entry submenu fix). See `signal-and-noise-tools/docs/superpowers/specs/2026-05-25-v3.8.1-sub-tabs-and-cache-fix-design.md`.
+
 ## [9.1.4] - 2026-05-25
 
 ### Changed — Deploy cache purge migrated from HTTP+App Password to SSH+wp-eval

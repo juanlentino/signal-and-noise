@@ -73,7 +73,9 @@ function sn_purge_all_caches( $args = array() ) {
 	if ( $args['object_cache'] ) {
 		wp_cache_flush();
 		delete_site_transient( 'update_themes' );
+		delete_site_transient( 'update_plugins' );   // v9.1.5: symmetric with themes
 		wp_clean_themes_cache();
+		wp_clean_plugins_cache();                     // v9.1.5: SSH plugin deploys leave stale get_plugin_data() cache otherwise
 	}
 
 	if ( $args['sn_transients'] ) {
