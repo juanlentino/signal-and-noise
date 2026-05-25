@@ -2,6 +2,52 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.1.3] - 2026-05-24
+
+### Added — AI-invocation integration tests + JSON Schema examples for tool-use accuracy
+
+Continuation of the v9.1.2 AI-readiness pass. Two additions:
+
+1. **85 integration tests** at `tests/abilities-integration.php` exercising `wp_get_ability($slug)->execute($args)` for all 12 abilities. Covers happy paths, capability denials, missing-required validation, enum violations, and edge cases. ([`d01137a`](https://github.com/juanlentino/signal-and-noise/commit/d01137a))
+2. **JSON Schema `examples` arrays** on 11 input properties across 7 abilities. Improves LLM tool-use accuracy — models resolve parameter ambiguity faster when example values are visible in the function-calling tool spec. ([`8a6fab6`](https://github.com/juanlentino/signal-and-noise/commit/8a6fab6))
+
+#### Test additions
+
+`tests/abilities-integration.php` — NEW (685 lines, 85 assertions):
+- Dispatch fundamentals (unknown slug returns null, 12 registered checks)
+- Read happy paths (each of 7 read abilities → schema-conformant output)
+- Read capability denial (anonymous visitor → `rest_forbidden`)
+- Read validation (missing required slug, empty slug, invalid enum format, non-existent post)
+- Generative AI gating (missing-required + subscriber denial + enum violations across all 5 AI abilities)
+- Plugin AI helper unavailable path (`ai_helper_unavailable` error code)
+
+Theme test count: 239 total (154 registration + 85 integration). All green.
+
+#### Schema example additions
+
+Verified real values where possible — `signal-noise/hero-dossier` is an actual registered plugin pattern, not a placeholder. Properties enhanced:
+
+| Ability | Property | Example values |
+|---|---|---|
+| `get-reading-time-for-slug` | `slug` | notes-pillar slug examples |
+| `get-design-system-summary` | `format` | enum examples (`markdown`, `compact`) |
+| `ai-generate-page-note-summary` | `post_id`, `max_words` | integer examples |
+| `ai-suggest-block-pattern` | `draft_content`, `topic_hint` | text + topic examples |
+| `ai-validate-brand-alignment` | `content`, `content_type` | string + enum examples |
+| `ai-generate-pattern-content` | `pattern_name`, `topic`, `tone_hint` | real pattern slugs + topic + enum examples |
+| `ai-rewrite-in-brand-voice` | `source_text`, `intensity` | text + enum examples |
+
+No validation changes; examples are advisory metadata. Non-breaking.
+
+#### Files
+
+- `inc/abilities-registration.php` — schema example additions on 11 properties
+- `tests/abilities-integration.php` — NEW test file
+
+#### Patch-cap status
+
+Patch cap is 7 per minor. v9.1.3 is the 4th patch in v9.1.x. 3 patches remain before v9.2.0.
+
 ## [9.1.2] - 2026-05-24
 
 ### Refactor — AI-readiness preparation pass for the 12 theme abilities
