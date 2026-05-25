@@ -99,13 +99,11 @@ Re-triggered v9.1.4 deploy after the corrected key landed:
 
 ---
 
-## One small manual cleanup remains
+## Manual cleanup — DONE
 
-**User action (~30s):** revoke the App Password at `https://juanlentino.com/wp-admin/profile.php` → Application Passwords → find the entry that was paired with `WP_DEPLOY_USER` (likely named `gha-deploy` or `signal-and-noise-deploy`) → Revoke.
+**App Password revoked in wp-admin** (user-confirmed at session close, 2026-05-25). The credential is gone from both the GH secret store AND the WP DB — no zombie credential left over.
 
-The GH secret holding the App Password is gone, but the credential still exists in the WP DB. Until it's revoked, it's an orphan credential. Per [`feedback_eliminate_credentials_before_rotating.md`](../../../.claude/projects/-Users-juanlentino-Projects-signal-and-noise/memory/feedback_eliminate_credentials_before_rotating.md), zombie credentials are the worst kind — present but not in use, easy to forget.
-
-After revoke: the SN stack has **zero rotatable per-deploy credentials** anywhere. Cleanest rotation strategy achieved.
+**Outcome:** the SN stack has **zero rotatable per-deploy credentials** anywhere. Cleanest rotation strategy achieved. Per [`feedback_eliminate_credentials_before_rotating.md`](../../../.claude/projects/-Users-juanlentino-Projects-signal-and-noise/memory/feedback_eliminate_credentials_before_rotating.md).
 
 ---
 
@@ -210,4 +208,4 @@ Theme deploys whose only changes are CI config / docs / version-header bumps wil
 
 ## One-line summary
 
-**Theme v9.1.4 shipped: cache purge migrated from HTTP+App Password to SSH+wp-eval via app-scoped `sn-theme` SSH user with its own dedicated ed25519 keypair. `WP_DEPLOY_USER` + `WP_DEPLOY_APP_PASSWORD` deleted from theme repo. One small manual cleanup remains (revoke App Password in wp-admin → Users → Profile). After that, SN stack has zero rotatable per-deploy credentials anywhere. Item E (Phase 8 wps-hide-login absorption, plugin v3.8.0) queued for next session.**
+**Theme v9.1.4 shipped: cache purge migrated from HTTP+App Password to SSH+wp-eval via app-scoped `sn-theme` SSH user with its own dedicated ed25519 keypair. `WP_DEPLOY_USER` + `WP_DEPLOY_APP_PASSWORD` deleted from theme repo, App Password revoked in wp-admin. SN stack now has zero rotatable per-deploy credentials anywhere. Item E (Phase 8 wps-hide-login absorption, plugin v3.8.0) queued for next session.**
