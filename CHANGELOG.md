@@ -2,6 +2,20 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.1.4] - 2026-05-25
+
+### Changed — Deploy cache purge migrated from HTTP+App Password to SSH+wp-eval
+
+Item D from the [2026-05-24 AI-readiness arc handoff](docs/superpowers/handoffs/2026-05-24-ai-readiness-arc-complete.md). Mirrors the architectural fix the companion plugin shipped in v3.7.3 (commit [`4e5addd`](https://github.com/juanlentino/signal-and-noise-tools/commit/4e5addd)).
+
+**Before:** `.github/workflows/deploy.yml`'s final step did `curl -X POST https://juanlentino.com/wp-json/signal-noise/v1/purge-cache` using HTTP Basic Auth with `WP_DEPLOY_USER` + `WP_DEPLOY_APP_PASSWORD` GH secrets. The App Password was rotatable (and had been rotated at least once after the 2026-05-16 Phase 13 incident), creating a recurring operational task.
+
+**After:** two new steps replace it — `Configure SSH for Cloudways` (writes the deploy key + known_hosts to the GHA runner) and `Purge caches via WP-CLI in-process` (SSHes in as the app-scoped `sn-plugin` user — same user the plugin repo uses — and runs `wp eval 'echo (int) apply_filters("sn_purge_all_caches_result", 0, array());'`). The empty `array()` arg is deliberate: theme deploys want all defaults including `template_overrides => true` (clears `wp_template`/`wp_template_part` DB records that mask updated theme files — the literal symptom of the 2026-05-07 "/notes still showing one card after Update" incident documented in `inc/template-maintenance.php`). The plugin's deploy passes `template_overrides => false` because plugin updates don't touch theme files; the theme deploy is the opposite case.
+
+**Outcome:** After this release ships and a verified manual deploy succeeds, `WP_DEPLOY_USER` + `WP_DEPLOY_APP_PASSWORD` GH secrets on the theme repo can be deleted, and the corresponding App Password revoked in wp-admin → Users → Profile. With those gone, **the SN stack has zero rotatable credentials anywhere** (the Cloudways API key remains, but it's a platform-account credential, not a per-deploy rotatable secret). Cleanest rotation strategy is "no credential to rotate" — see [`feedback_eliminate_credentials_before_rotating.md`](.claude/projects/-Users-juanlentino-Projects-signal-and-noise/memory/feedback_eliminate_credentials_before_rotating.md).
+
+**Patch cap status:** 5/7 patches used in the v9.1.x line. Two patches remain before the cap rollover to v9.2.0.
+
 ## [9.1.3] - 2026-05-24
 
 ### Added — AI-invocation integration tests + JSON Schema examples for tool-use accuracy
