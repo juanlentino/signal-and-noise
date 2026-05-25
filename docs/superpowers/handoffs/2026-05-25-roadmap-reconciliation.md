@@ -141,12 +141,13 @@ These three were flagged in [2026-05-25-sub-tabs-arc-complete.md](2026-05-25-sub
 
 ## 2026-05-25 session-end addendum
 
-3 plugin ships landed in the session after this reconciliation was first written:
+4 plugin ships landed in the session after this reconciliation was first written:
 
 | Tag | Scope |
 |---|---|
 | **v3.8.3** | Login hardening audit log shipped (Security → Audit log sub-tab); 4 new abilities; 2 new ⌘K commands; +991 LOC across 8 files |
 | **v3.8.4** | Fix: desktop-mode dock submenu derives from `sn_admin_top_tabs()` (was hardcoded 8 entries; v3.8.1 reduced wp-admin sidebar to 6 but missed this parallel filter — single-source-of-truth violation) |
 | **v3.8.5** | Fix: `.sn-2col` always stacks (RSS tab was cramped at every viewport; v3.8.4's breakpoint bump 960→1200px wasn't enough at >1200px monitors) |
+| **v3.8.6** | Viewport-fit admin pages — system-wide CSS pass: sticky chrome (sub-tab nav + TOC), `.snt-scroll-table` opt-in wrapper (max-height 50vh + sticky `<thead>`) on 6 tables across 5 module files, hero card density (16→12px padding, 28→22px values), CSS-variable tightening (`--sn-space-4` 16→12px, `--sn-space-5` 24→20px) rippling through 23 callsites |
 
-Plugin patch headroom after: **5/7** in v3.8.x. 2 patches remain before v3.9.0 rollover. Theme unchanged this session (still v9.1.5).
+Plugin patch headroom after: **6/7** in v3.8.x. **1 patch remains before v3.9.0 rollover.** Theme unchanged this session (still v9.1.5).
