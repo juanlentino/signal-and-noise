@@ -1,5 +1,15 @@
 # Companion plugin absorption — strategic direction (Phase 6+ roadmap)
 
+> **⚠️ STATUS (2026-05-25): FULLY SHIPPED. See reconciliation handoff for current state.**
+>
+> All 11 numbered phases (6 through 16+) have shipped to production, most with significant scope expansion beyond what's documented below. The plan-vs-actual reconciliation lives at:
+>
+> **[`docs/superpowers/handoffs/2026-05-25-roadmap-reconciliation.md`](../handoffs/2026-05-25-roadmap-reconciliation.md)**
+>
+> That document supersedes the planning content in this file. The roadmap below is preserved as the original strategic record — useful for understanding *why* decisions were made — but stale on what has shipped, what shipped beyond scope (e.g., `insights.php` Content Opportunity Advisor, 29 Abilities across plugin + theme, desktop-mode integration), and what tiny residual work remains.
+
+---
+
 **Date:** 2026-05-16 (revised same day with WP 7.0 audit gate)
 **Status:** Strategic direction; brainstorm not yet held — **gated on WP 7.0 release audit (May 20, 2026)**
 **Author intent:** captured at end of the Phase 5 session, before clearing for a fresh session that will hold the actual brainstorms
