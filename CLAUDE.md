@@ -17,7 +17,7 @@ Repo: juanlentino/signal-and-noise. Hosted on Cloudways (syntharchy-wp), Cloudfl
 
 Full workflow + rationale: [docs/VERSIONING.md](docs/VERSIONING.md). Short version below.
 
-**Caps (override global):** Patch cap is **7 per minor**, minor cap is **5 per major**. `7.1.0`–`7.1.7` valid → next bump rolls to `7.2.0`. `7.0`–`7.5` valid → next bump rolls to `8.0.0`. When the cap fires, document the rollover in the CHANGELOG entry.
+**Caps:** None. Per the global versioning rule, minor and patch numbers grow as needed. Majors gate on **actual breaking changes per SemVer** (removed/renamed public API, settings schema migrations, behavioural shifts requiring user action) — not on counter math. Historical context: this project had cap overrides (7 per minor, 5 per major) until 2026-05-26; they were dropped after the v4.4.x audit revealed the cap was forcing fictional majors (v5.0.0 was scoped to 1 REMOVE + counter reset — not an actual breaking change). The roadmap's brainstorm-checkpoints + audit findings docs + post-ship cycles provide the strategic deliberation the cap rule was substituting for. See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 **What bumps:** code, CSS, migrations, structural template changes. **What doesn't:** `docs/`, `CLAUDE.md`, content-only copy edits, CHANGELOG-only commits.
 

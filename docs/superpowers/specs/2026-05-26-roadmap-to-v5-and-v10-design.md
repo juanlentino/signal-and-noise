@@ -2,13 +2,15 @@
 
 **Status:** ROADMAP LOCKED via brainstorm 2026-05-26. Living doc — phase completion markers update as work ships; structural shape doesn't change without re-brainstorm.
 
-**Last updated:** 2026-05-26 (v4.4.x re-gated + v9.4.x gated after deep audit + 4 patches).
+**Last updated:** 2026-05-26 (caps dropped — v5.0.0 + v10.0.0 no longer cap-forced; sequencing preserved as intent, not requirement).
 
 **Repos:**
 - Plugin: [`signal-and-noise-tools`](https://github.com/juanlentino/signal-and-noise-tools) — currently at v4.4.0
 - Theme: [`signal-and-noise`](https://github.com/juanlentino/signal-and-noise) — currently at v9.4.0
 
-**Coordination model:** Sequenced (Option C from brainstorm). v5.0.0 ships first; v9.5.0 starts after v5.0.x post-ship cycle completes. Theme prep operates on plugin's published reality, not anticipated scope.
+**Coordination model:** Sequenced (Option C from brainstorm), now as an intent rather than a requirement. v5.0.0 ships first IF/WHEN it ships; v9.5.0 starts after v5.0.x post-ship cycle completes. Theme prep operates on plugin's published reality, not anticipated scope.
+
+**Cap policy update (2026-05-26):** the 7-patches-per-minor + 5-minors-per-major caps were dropped after the v4.4.x audit revealed the caps were forcing fictional majors. v5.0.0 and v10.0.0 are no longer cap-forced — they happen when actual breaking changes (per SemVer) accumulate. Plugin can now ship v4.5.0, v4.6.0, etc. as long as no breaking changes are warranted. Theme similarly. The `v5.0.0-scope.md` audit doc's single REMOVE finding can ship as a `v4.4.4+` patch whenever convenient. See [docs/VERSIONING.md](../../VERSIONING.md) for full rationale.
 
 ---
 
@@ -93,8 +95,8 @@ Every minor and major follows this exact sequence:
 |---|---|---|
 | **v4.4.0** | ✓ SHIPPED 2026-05-26 | Commit [`79ea06f`](https://github.com/juanlentino/signal-and-noise-tools/commit/79ea06f), tag `v4.4.0`. Cross-package contracts E2E + v5.0.0 readiness pass. 888 assertions / 21 suites. |
 | **v4.4.x post-ship cycle** | ✓ COMPLETE (re-gated) 2026-05-26 | Initial gate (commit a9c71bc) passed prematurely on narrow QA. Deep audit ([findings doc](2026-05-26-v4.4.x-and-v9.4.x-cycle-audit-findings.md)) then surfaced 1 CRITICAL + 2 HIGH + 2 MEDIUM bugs + 9 UI/UX. All addressed across 3 patches: **v4.4.1** (docs tightening, cc881fd), **v4.4.2** (CRITICAL: CLI guards on 27 test files closing remote destructive-action exposure, 0dd786f), **v4.4.3** (Bug-B2 JS dispatcher + Bug-B1 login allowlist + Bug-E1 schema language + TSF gating + inline-style consolidation, 2ad81d0). Live install + URL 404s verified. Site Editor checked — no exploitation occurred during exposure window. Patch count: **3/7**. Re-gate commit: [this commit]. |
-| **v5.0.0 brainstorm-checkpoint** | ⏳ READY TO RUN | Plugin v4.4.x gate passed 2026-05-26. Inputs: [v5.0.0-scope.md](https://github.com/juanlentino/signal-and-noise-tools/blob/main/docs/superpowers/specs/2026-05-26-v5.0.0-scope.md) (backbone), [mimestream-style release notes](~/.claude/projects/-Users-juanlentino-Projects-signal-and-noise/memory/project_mimestream_style_release_notes.md) memory entry (candidate feature). Backbone: 1 REMOVE (`sn_login_rewrites_flushed` option) + minor-counter reset. Features TBD. |
-| **v5.0.0 ship** | 🔒 BLOCKED on v5.0.0 BC | Major version. Likely small (minimal-breakage major). |
+| **v5.0.0 brainstorm-checkpoint** | ⏳ READY TO RUN (no longer cap-forced) | Plugin v4.4.x gate passed 2026-05-26. Inputs: [v5.0.0-scope.md](https://github.com/juanlentino/signal-and-noise-tools/blob/main/docs/superpowers/specs/2026-05-26-v5.0.0-scope.md) (backbone — 1 REMOVE on `sn_login_rewrites_flushed` option, no longer forced as v5.0.0; can ship as v4.4.4+ patch), [mimestream-style release notes](~/.claude/projects/-Users-juanlentino-Projects-signal-and-noise/memory/project_mimestream_style_release_notes.md) memory entry (candidate feature). **Legitimate BC outcomes now include "no v5.0.0 yet — counter reset isn't required and the single REMOVE ships as a patch."** |
+| **v5.0.0 ship** | 🔒 BLOCKED on v5.0.0 BC (and on actual breaking changes warranting a major) | Major version. Caps dropped 2026-05-26 — happens only when actual breaking changes accumulate, not when counter math forces it. May ship eventually as the accumulation of cluster transitions, refactors, schema changes. Until then, v4.5.0 / v4.6.0 / etc. are valid. |
 | **v5.0.x post-ship cycle** | 🔒 BLOCKED on v5.0.0 ship | Same template. Gate completion unblocks v9.5.0 in theme lane. |
 
 ### Theme lane
@@ -103,11 +105,11 @@ Every minor and major follows this exact sequence:
 |---|---|---|
 | **v9.4.0** | ✓ SHIPPED 2026-05-26 | Commit [`a9a6d23`](https://github.com/juanlentino/signal-and-noise/commit/a9a6d23), tag `v9.4.0`. Typography polish (justified + hyphenation + hanging punctuation). 303 assertions / 5 suites. |
 | **v9.4.x post-ship cycle** | ✓ COMPLETE 2026-05-26 | Deep audit + browser smoke surfaced 1 HIGH (sidenote justification regression) + 1 doc-level + 1 UI/UX (Next-only nav) + 1 user-preference (drop cap too aggressive at 5rem). All addressed across 3 patches: **v9.4.1** (sidenote `:not(.sn-sidenote)` selector exclusion, 083b489), **v9.4.2** (test file CLI guards + Previous post nav link, 6217f0d), **v9.4.3** (drop cap 5rem→2.5rem + post-closing `__prev` CSS parity, 4c52587). Live install + visual verification confirmed all fixes working. Patch count: **3/7**. Gate commit: [this commit]. |
-| **v9.5.0 brainstorm-checkpoint** | 🔒 BLOCKED on v5.0.x gate (v9.4.x gate ✓ passed 2026-05-26) | Inputs: [parallel-major-brainstorm](~/.claude/projects/-Users-juanlentino-Projects-signal-and-noise/memory/project_parallel_major_brainstorm.md) memory directive, v5.0.0's actual published changes. **Backbone:** cross-package listener tests (theme side of 4 filters) + theme API audit producing `v10.0.0-scope.md`. **Features TBD** at checkpoint — strong candidates from prior brainstorms: cluster transitions (thrice-deferred), template variants (long-form essay vs short-note distinction), OpenType ligatures, mimestream-style release notes infrastructure (if not landed in v5.0.0). |
+| **v9.5.0 brainstorm-checkpoint** | 🔒 BLOCKED on v5.0.x gate (v9.4.x gate ✓ passed 2026-05-26). NOTE: with caps dropped 2026-05-26, v5.0.0 may now happen later than originally planned (or never if no breaking changes accumulate). If the wait for v5.0.0 extends indefinitely, the v9.5.0 BC's sync constraint can be relaxed (theme proceeds with anticipated rather than published plugin reality) — that decision belongs to a future brainstorm. | Inputs: [parallel-major-brainstorm](~/.claude/projects/-Users-juanlentino-Projects-signal-and-noise/memory/project_parallel_major_brainstorm.md) memory directive, v5.0.0's actual published changes. **Backbone:** cross-package listener tests (theme side of 4 filters) + theme API audit producing `v10.0.0-scope.md`. **Features TBD** at checkpoint — strong candidates from prior brainstorms: cluster transitions (thrice-deferred), template variants (long-form essay vs short-note distinction), OpenType ligatures, mimestream-style release notes infrastructure (if not landed in v5.0.0). |
 | **v9.5.0 ship** | 🔒 BLOCKED on v9.5.0 BC | Prep-for-major + emergent features. Likely 400-800 LOC depending on feature scope. |
 | **v9.5.x post-ship cycle** | 🔒 BLOCKED on v9.5.0 ship | Same template. |
-| **v10.0.0 brainstorm-checkpoint** | 🔒 BLOCKED on v9.5.x gate | Inputs: the v10.0.0-scope.md produced by v9.5.0 audit. **Backbone:** whatever the audit identified as v10.0.0-disposition (RENAME/REMOVE/SCHEMA-CHANGE). **Features TBD** at checkpoint. Likely minimal-breakage major analogous to plugin v5.0.0. |
-| **v10.0.0 ship** | 🔒 BLOCKED on v10.0.0 BC | Major version. |
+| **v10.0.0 brainstorm-checkpoint** | 🔒 BLOCKED on v9.5.x gate (and on actual breaking changes warranting a theme major) | Inputs: the v10.0.0-scope.md produced by v9.5.0 audit (if v9.5.0 happens). **Backbone:** whatever the audit identified as v10.0.0-disposition (RENAME/REMOVE/SCHEMA-CHANGE). With caps dropped, this BC may produce "no v10.0.0 yet" as a legitimate outcome — same logic as v5.0.0 BC. |
+| **v10.0.0 ship** | 🔒 BLOCKED on v10.0.0 BC (and on actual breaking changes) | Major version. Caps dropped 2026-05-26 — happens only when actual breaking changes accumulate. v9.5.0 / v9.6.0 / etc. are valid until then. |
 | **v10.0.x post-ship cycle** | 🔒 BLOCKED on v10.0.0 ship | Terminal cycle — completion = THEME DONE for this roadmap. |
 
 **Status legend:**
