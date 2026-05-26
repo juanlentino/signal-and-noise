@@ -456,3 +456,31 @@ main { view-transition-name: sn-main; }
 		navigation: none;
 	}
 }
+
+/* ─── v9.2.0: pull-quote pattern (patterns/pull-quote.php) ────────── */
+
+.sn-pattern-pull-quote {
+	margin: 2.5rem -1rem;
+	padding: 2rem 1.5rem;
+	background: #fafafa;
+	border-top: 3px solid #111;
+	border-bottom: 3px solid #111;
+}
+
+.sn-pull-quote__body {
+	font-family: Georgia, "Times New Roman", serif;
+	font-size: 1.5rem;
+	line-height: 1.4;
+	font-style: italic;
+	margin: 0 0 1rem 0;
+	color: #111;
+}
+
+.sn-pull-quote__attribution {
+	font-family: "Courier New", monospace;
+	font-size: 0.7rem;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	margin: 0;
+	color: #666;
+}
