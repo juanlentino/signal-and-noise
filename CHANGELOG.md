@@ -2,6 +2,52 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.4.0] - 2026-05-26 — Typography polish (justified + hyphenation + hanging punctuation)
+
+**Released:** 2026-05-26.
+
+**Headline:** Direct sequel to v9.3.0's editorial-spread layout — this minor brings the typography of running prose into the same register. Three CSS rules applied to body paragraphs in single-note `/notes/<slug>/` posts: justified text (≥1024px), hyphenation (≥1024px, both `-webkit-hyphens` and `hyphens`), and hanging punctuation (universal, Safari-only renders today). Smart quotes intentionally dropped — `wptexturize()` already handles them natively.
+
+**Components:**
+
+| # | Component | Selector | Gating |
+|---|---|---|---|
+| 1 | Justified text | `.single-post .wp-block-post-content > p` | `@media (min-width: 1024px)` |
+| 2 | Hyphenation | `.single-post .wp-block-post-content > p` | `@media (min-width: 1024px)` |
+| 3 | Hanging punctuation | `.single-post .wp-block-post-content` | Universal (progressive enhancement) |
+
+**Browser support reality:**
+
+| Component | Safari (macOS + iOS) | Chrome / Edge | Firefox |
+|---|---|---|---|
+| Justified text | ✓ Full | ✓ Full | ✓ Full |
+| Hyphenation | ✓ Full (requires `-webkit-hyphens` prefix) | ✓ Full (unprefixed) | ✓ Full (unprefixed) |
+| Hanging punctuation | ✓ Full | ✗ Not supported | ✗ Not supported |
+
+Unsupported browsers cascade silently — no fallback rule needed; the effect simply doesn't render. Chrome/Firefox users see the same body-paragraph rendering as Safari users for justified + hyphenation; only hanging punctuation differs (Safari hangs; others stay inside the edge).
+
+**Files affected:**
+
+- `assets/css/critical.css` (+37 LOC in new `/* v9.4.0 — Typography polish */` section after line 866)
+- `style.css` (Version: 9.3.0 → 9.4.0)
+- `CHANGELOG.md` (this entry)
+
+**Scope cuts** (explicit non-goals — see [spec §3.2](docs/superpowers/specs/2026-05-26-v9.4.0-typography-polish-design.md)):
+- NO editor opt-in / per-post toggle (universal application matches v9.3.0 pattern)
+- NO touching headings, lists, blockquotes, pull-quote bodies, sidenote bodies, footnote items, frontmatter spec card
+- NO `<html lang>` change (relies on WP's `language_attributes()`)
+- NO smart-quote work (`wptexturize()` handles)
+- NO automated CSS tests (CSS-only change; manual smoke recipe in spec §5.2)
+
+**Tests:** 303 PHP assertions across 5 theme suites — all green (unchanged; CSS-only change).
+
+**Cap math:** theme minor 4/6 → **5/6** — **v9.5.0 is the only remaining minor before forced v10.0.0**. Theme patch resets to 0/7 for v9.4.x (7 patches available; anticipated triggers in [spec §10](docs/superpowers/specs/2026-05-26-v9.4.0-typography-polish-design.md)).
+
+**Plan reference:** [`docs/superpowers/plans/2026-05-26-v9.4.0-typography-polish.md`](docs/superpowers/plans/2026-05-26-v9.4.0-typography-polish.md)
+**Spec reference:** [`docs/superpowers/specs/2026-05-26-v9.4.0-typography-polish-design.md`](docs/superpowers/specs/2026-05-26-v9.4.0-typography-polish-design.md)
+
+---
+
 ## [9.3.0] - 2026-05-26 — Long-form post layout (drop caps + footnotes + sidenotes + frontmatter spec card)
 
 **Released:** 2026-05-26.
