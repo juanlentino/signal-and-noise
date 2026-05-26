@@ -647,3 +647,30 @@ main { view-transition-name: sn-main; }
 .sn-post-closing__next-link a:hover {
 	text-decoration: underline;
 }
+
+/* ─── v9.2.0: catalog → single-note morph ─────────────────────────────
+ *
+ * The render_block filter in inc/blocks-view-transitions.php injects
+ * view-transition-name: sn-note-<slug> on every core/post-title block.
+ * Browser auto-morphs the title position when source + destination both
+ * have a matching name (e.g., /notes catalog card title → /notes/<slug>
+ * single-note hero h1).
+ *
+ * This block adds the mobile carveout. The @view-transition
+ * { navigation: auto; } from the v9.0.0 block above already enables
+ * the cross-document transition behavior; the per-element styling
+ * lives in the inline style injected by the filter.
+ *
+ * Mobile disable: on small screens the card → hero geometry change is
+ * dramatic (small card to full-width hero) and the morph can feel
+ * disorienting. Disabling falls back to the v9.0.0 default cross-doc
+ * fade, which is smoother for the small-screen flow.
+ * ─────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+	/* Disable the per-title morph on small screens. The filter still
+	   injects the inline style; this overrides via CSS specificity. */
+	.wp-block-post-title[style*="view-transition-name"] {
+		view-transition-name: none !important;
+	}
+}
