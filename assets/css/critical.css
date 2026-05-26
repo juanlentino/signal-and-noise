@@ -863,3 +863,40 @@ main { view-transition-name: sn-main; }
 		display: inline-block;
 	}
 }
+
+/* ============================================
+   v9.4.0 — Typography polish (justified + hyphenation + hanging punctuation)
+   ============================================ */
+
+/* Body-paragraph typography for single-note posts.
+   Scoped via `> p` direct-child to exclude paragraphs nested in
+   patterns (pull-quote, sidenote, steps-enumerated list items,
+   footnote list items, code blocks). Those keep their own alignment. */
+
+/* --- JUSTIFIED TEXT + HYPHENATION ---
+   Gated @media (min-width: 1024px) — below that, body paragraphs
+   cascade to left-aligned (the WP default) to avoid ragged spacing
+   on narrow viewports.
+
+   Safari (macOS + iOS) still requires the -webkit-hyphens prefix
+   as of 2026-05; pair both declarations so all major browsers see
+   hyphenation consistently. */
+
+@media (min-width: 1024px) {
+	.single-post .wp-block-post-content > p {
+		text-align: justify;
+		-webkit-hyphens: auto;
+		hyphens: auto;
+	}
+}
+
+/* --- HANGING PUNCTUATION ---
+   Not viewport-gated — applies at all widths. Safari renders
+   correctly (full support since Safari 10, 2017). Chrome/Firefox/
+   Edge ignore the property as of 2026-05; punctuation stays
+   inside the text edge (graceful degradation, no fallback rule
+   needed). */
+
+.single-post .wp-block-post-content {
+	hanging-punctuation: first last allow-end;
+}
