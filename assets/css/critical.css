@@ -484,3 +484,64 @@ main { view-transition-name: sn-main; }
 	margin: 0;
 	color: #666;
 }
+
+/* ─── v9.2.0: compare-columns pattern (patterns/compare-columns.php) ─── */
+
+.sn-pattern-compare-columns {
+	margin: 2.5rem -1rem;
+	background: #fafafa;
+	border-top: 1px solid #ddd;
+	border-bottom: 1px solid #ddd;
+}
+
+.sn-pattern-compare-columns .wp-block-columns {
+	margin: 0;
+	gap: 0;
+	position: relative;
+}
+
+/* Vertical black divider between the two columns. ::before on the
+   wrapper places a 1px line centered horizontally. Disabled on mobile
+   where columns stack vertically. */
+.sn-pattern-compare-columns .wp-block-columns::before {
+	content: "";
+	position: absolute;
+	top: 1.5rem;
+	bottom: 1.5rem;
+	left: 50%;
+	width: 1px;
+	background: #111;
+}
+
+@media (max-width: 768px) {
+	.sn-pattern-compare-columns .wp-block-columns::before { display: none; }
+}
+
+.sn-compare__col {
+	padding: 1.5rem !important;
+}
+
+.sn-compare__label {
+	font-family: "Courier New", monospace;
+	font-size: 0.7rem;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	margin: 0 0 0.75rem 0;
+	color: #666;
+}
+
+.sn-compare__title {
+	font-family: Georgia, "Times New Roman", serif;
+	font-size: 1.1rem;
+	font-weight: 600;
+	margin: 0 0 0.5rem 0;
+	color: #111;
+}
+
+.sn-compare__body {
+	font-family: Georgia, "Times New Roman", serif;
+	font-size: 0.95rem;
+	line-height: 1.5;
+	color: #444;
+	margin: 0;
+}
