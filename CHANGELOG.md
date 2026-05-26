@@ -2,6 +2,63 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.3.0] - 2026-05-26 — Long-form post layout (drop caps + footnotes + sidenotes + frontmatter spec card)
+
+**Released:** 2026-05-26.
+
+**Headline:** Single-note `/notes` posts now feel like a printed editorial spread — drop caps on the first paragraph (Bebas Neue 5rem blood-red), proper footnotes built on `core/footnotes` (brutalist styling + hover-popover JS), Tufte-style sidenotes via CSS float-right at ≥1280px (inline-below at narrower), and a frontmatter spec card above the post title (DATE / READ TIME / TAGS / PILLAR) mirroring the catalog row's DM Mono spec-row vocabulary.
+
+**Scoped to single-note posts only.** The `/notes` catalog (`inc/page-notes-render.php`) and pillar essays at `/provenance/*` are unchanged.
+
+**4 components:**
+1. **Drop caps** — `.single-post .wp-block-post-content > p:first-of-type::first-letter` with Bebas Neue 5rem blood-red. The `:first-of-type` selector skips posts that open with a heading or quote naturally.
+2. **Footnotes** — built on WP core's `core/footnotes` block (6.3+; theme requires 6.4+). Brutalist CSS: DM Mono blood-red `<sup>` markers; end-of-post list with zero-padded counter prefix (`01`, `02`, `03` — mirrors `patterns/steps-enumerated.php`); 1px bone separator. Hover-popover JS enhancement uses safe DOM cloning (no `innerHTML` — XSS surface eliminated). Mobile falls back to WP default scroll-to-footnote.
+3. **Sidenotes** — new `signal-noise/sidenote` pattern (`patterns/sidenote.php`). CSS `float: right` at ≥1280px / inline-below with hairline at narrower. Pure CSS-only Tufte technique — no JS.
+4. **Frontmatter spec card** — new `parts/post-frontmatter.html` template part replaces the v8.x `.sn-note-meta` group. Horizontal DM Mono spec row above the post title with DATE (blood) / READ TIME (blood) / TAGS (rust) / PILLAR (bordered, hovers blood). Mobile (<600px): wraps + pillar drops to its own line.
+
+**New modules:**
+- `inc/post-frontmatter.php` (~51 LOC) — `[sn_post_pillar]` shortcode + convention-based pillar tag-slug map
+- `parts/post-frontmatter.html` (~30 LOC) — frontmatter block markup
+- `patterns/sidenote.php` (~21 LOC) — `signal-noise/sidenote` pattern
+- `assets/js/footnotes-popover.js` (~115 LOC) — hover-popover with safe DOM cloning
+
+**Modified files:**
+- `style.css` — bump `Version:` 9.2.1 → 9.3.0
+- `functions.php` — `require_once __DIR__ . '/inc/post-frontmatter.php';`
+- `templates/single.html` — replace `.sn-note-meta` group with `<!-- wp:template-part {"slug":"post-frontmatter"} /-->`
+- `inc/assets-frontend.php` — conditional `wp_enqueue_script` for footnotes-popover.js on `is_singular('post')` at priority 30 (defer strategy)
+- `assets/css/critical.css` — append 184 LOC: drop caps + footnote styling + popover styling + sidenote styling + frontmatter spec card
+
+**Pillar map (convention-based):**
+
+| Post tag slug | Pillar label | Links to |
+|---|---|---|
+| `provenance` | PROVENANCE | `/provenance/over-detection/` |
+
+Add additional rows in `inc/post-frontmatter.php` `$pillar_map` as future pillar essays are published. Graceful degradation: posts whose tags don't match any pillar return empty string; the frontmatter spec card simply omits the PILLAR slot.
+
+**Tests:**
+
+| Suite | Assertions | Status |
+|---|---|---|
+| `tests/post-frontmatter.php` (new) | 9 (6 fixtures: no-tags, non-pillar-tags, provenance-tag, mixed-tags-with-provenance, null-post, shortcode-registration) | green |
+
+Theme test totals: 85 + 154 + 42 + 13 + 9 = **303 assertions, all green**. Pure CSS components verified via manual UI smoke (matches v9.2.0 convention; theme has no automated CSS testing).
+
+**Security note (footnote popover):** the JS module uses safe DOM cloning (`cloneNode` + `appendChild`) — never `innerHTML`. Source content (the footnote `<li>`) is already-sanitized WP `post_content`, but avoiding `innerHTML` eliminates the XSS surface entirely. Documented as plan decision D11.
+
+**Cap math:** theme minor 3/6 → **4/6** (v9.0, v9.1, v9.2, v9.3 used; **2 minors remaining before v10.0.0**). Patch cap resets from 1/7 → **0/7** for v9.3.x (7 patches available).
+
+**Plan reference:** [`docs/superpowers/plans/2026-05-26-v9.3.0-long-form-post-layout.md`](docs/superpowers/plans/2026-05-26-v9.3.0-long-form-post-layout.md)
+**Spec reference:** [`docs/superpowers/specs/2026-05-26-v9.3.0-long-form-post-layout-design.md`](docs/superpowers/specs/2026-05-26-v9.3.0-long-form-post-layout-design.md)
+
+**Carry-forward to v9.4.0:**
+- Cluster "next-in-series" transitions (deferred from v9.2.0 brainstorm; carried again through v9.3.0)
+- Callout boxes / definition list patterns (additional pattern library expansion)
+- /notes catalog utility (search/sort) — deliberately deferred; tilts the "no subscription, no schedule" posture
+
+---
+
 ## [9.2.1] - 2026-05-26 — Polish: theme tokens for v9.2.0 patterns + abilities-tests back-compat shim
 
 **Released:** 2026-05-26 (same day as v9.2.0).
