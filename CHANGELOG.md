@@ -2,6 +2,28 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.4.1] - 2026-05-26 — Sidenote justification regression fix
+
+**Released:** 2026-05-26.
+
+**Headline:** v9.4.0's typography polish accidentally included sidenote patterns in the justified+hyphenated body-paragraph rule. The `signal-noise/sidenote` pattern emits a bare top-level `<p class="sn-sidenote">` (not nested in `<aside>` as v9.4.0's spec assumed), so the `.single-post .wp-block-post-content > p` direct-child selector matched it. At ≥1280px (where sidenotes float right into a 180px column), this produced catastrophic rivers and aggressive hyphenation. v9.4.1 excludes sidenotes explicitly via `:not(.sn-sidenote)`.
+
+**Change:**
+
+- [`assets/css/critical.css`](assets/css/critical.css) line 886 — selector changed from `.single-post .wp-block-post-content > p` to `.single-post .wp-block-post-content > p:not(.sn-sidenote)`. ~2 LOC delta.
+
+**Why v9.4.0's spec was wrong:** the spec's selector-specificity defense table (§4.5) claimed "Sidenote is `<aside class="sn-sidenote">` containing its own `<p>` — also nested, not direct child. Excluded by `> p`." Actual `patterns/sidenote.php` source shows the pattern emits a bare `<p>`. The spec assumption was never cross-checked against the pattern source; the v9.4.x QA pass caught it.
+
+**Visual impact:** at viewports <1024px no effect (rule doesn't apply). At 1024-1279.98px inline sidenotes were justified+hyphenated (looked unprofessional but readable). At ≥1280px the 180px-wide right-floated sidenote had severe rivers and forced hyphenation — visibly broken.
+
+**Tests:** 303 PHP assertions / 5 suites, all green (CSS-only patch, no PHP impact).
+
+**Cap math:** theme patch 0/7 → **1/7** in v9.4.x. 6 patches remaining.
+
+**Plan reference:** This patch is the v9.4.1 candidate predicted by [v9.4.0 spec §10](docs/superpowers/specs/2026-05-26-v9.4.0-typography-polish-design.md) and confirmed by the v9.4.x post-ship QA pass.
+
+---
+
 ## [9.4.0] - 2026-05-26 — Typography polish (justified + hyphenation + hanging punctuation)
 
 **Released:** 2026-05-26.

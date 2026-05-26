@@ -883,7 +883,7 @@ main { view-transition-name: sn-main; }
    hyphenation consistently. */
 
 @media (min-width: 1024px) {
-	.single-post .wp-block-post-content > p {
+	.single-post .wp-block-post-content > p:not(.sn-sidenote) {
 		text-align: justify;
 		-webkit-hyphens: auto;
 		hyphens: auto;
