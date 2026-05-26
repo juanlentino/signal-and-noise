@@ -49,4 +49,5 @@ require_once __DIR__ . '/inc/wp-update-git-preservation.php';
 require_once __DIR__ . '/inc/template-maintenance.php';
 require_once __DIR__ . '/inc/page-notes-template.php';
 require_once __DIR__ . '/inc/patterns.php';
+require_once __DIR__ . '/inc/blocks-view-transitions.php';
 require_once __DIR__ . '/inc/abilities-registration.php';
