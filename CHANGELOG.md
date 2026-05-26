@@ -2,6 +2,20 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.1.6] - 2026-05-25
+
+### Companion to plugin v4.1.1 audit pass
+
+Audit-driven cleanup on the theme side. Two code changes + one documentation refresh.
+
+**Added — `sn_gh_latest_theme_tag_result` filter (X-01).** Plugin v4.1.1 was calling theme function `sn_gh_latest_theme_tag()` directly via `function_exists` guard for its deploy-status card — a documented contract violation per `docs/WORDPRESS-REFERENCE.md §10` ("never let plugin code directly call a theme function — even with function_exists guards"). Added `add_filter('sn_gh_latest_theme_tag_result', 'sn_gh_latest_theme_tag')` in [`inc/wp-update-integration.php`](inc/wp-update-integration.php) so the plugin can fetch via filter dispatch. Now the deploy-status card is tolerant of theme-absent/inactive states by contract rather than by lucky timing. (`4991c94`)
+
+**Removed — dead `self_heal_state` branch in `sn_purge_all_caches()` (X-07).** The branch read `SN_SELF_HEAL_LAST_CHECK_OPT` + `SN_SELF_HEAL_FAILURES_OPT` — both defined inside `inc/template-self-heal.php`, which was retired in v8.3.0. The `defined()` guards meant the entire branch was permanently dead code on the current codebase. Also removed the `'self_heal_state'` default from `$args` and the `@type bool` docblock entry. No behavior change — just deleting a misleading pointer to a retired module to reduce confusion for future maintainers. (`4991c94`)
+
+**Refreshed — `docs/WORDPRESS-REFERENCE.md §10.0` (X-04 / X-05 / X-06 / X-08).** Section 10's "theme + companion plugin split" was stale by multiple versions. X-04: intro paragraph cleaned up — removed references to retired `inc/updater.php` + `inc/template-self-heal.php`, corrected "7 WP hooks" → "4 WP hooks", changed "split is partial as of v8.2.0" → "split is complete as of v8.4.0 / Tools v1.3.0 — no further migrations planned." X-05: added 3 missing files to the modules-in-theme list (`wp-update-integration.php` v8.5.0, `wp-update-git-preservation.php` v8.5.2, `abilities-registration.php` v9.1.0). X-06: removed the `SN_GITHUB_REPO / SN_THEME_SLUG` line from "Direct dependencies kept" — both constants went away with the v8.3.0 updater retirement; replaced with the actually-relevant dependencies (`[sn_reading_time]` shortcode, `sn_after_full_cache_flush` action). X-08: documented the theme/plugin namespace split for Abilities API (`signal-and-noise/*` in theme vs `signal-noise/*` in plugin) — designed v9.1.1 but never written down in §10.0 until now. Also added the new `sn_gh_latest_theme_tag_result` filter row to the contract hooks table. (`23588dd`)
+
+**v9.x cap state:** patches 6/7 in v9.1.x · minors 1/5 in v9.x. (Patch cap close — next plugin/theme bump may justify a minor.)
+
 ## [9.1.5] - 2026-05-25
 
 ### Fixed — `sn_purge_all_caches` now invalidates plugin metadata cache
