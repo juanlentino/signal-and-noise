@@ -177,3 +177,24 @@ add_filter( 'script_module_loader_tag', function( $tag, $id ) {
 	}
 	return $tag;
 }, 10, 2 );
+
+/**
+ * v9.3.0: footnote hover-popover progressive enhancement.
+ *
+ * Only loads on single-note posts where core/footnotes might appear.
+ * Footnotes work without this JS via WP's default scroll-to-footnote
+ * behavior; this module adds a hover-preview so readers don't lose
+ * their reading position. Mobile / coarse pointer: the JS itself
+ * detects + skips early.
+ */
+add_action( 'wp_enqueue_scripts', function() {
+	if ( is_singular( 'post' ) ) {
+		wp_enqueue_script(
+			'sn-footnotes-popover',
+			get_theme_file_uri( 'assets/js/footnotes-popover.js' ),
+			array(),
+			wp_get_theme()->get( 'Version' ),
+			array( 'in_footer' => true, 'strategy' => 'defer' )
+		);
+	}
+}, 30 );
