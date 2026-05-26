@@ -545,3 +545,57 @@ main { view-transition-name: sn-main; }
 	color: #444;
 	margin: 0;
 }
+
+/* ─── v9.2.0: steps-enumerated pattern (patterns/steps-enumerated.php) ── */
+
+.sn-pattern-steps-enumerated {
+	margin: 2.5rem -1rem;
+	padding: 2rem 1.5rem;
+	background: #fafafa;
+}
+
+.sn-steps__label {
+	font-family: "Courier New", monospace;
+	font-size: 0.7rem;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	margin: 0 0 1.5rem 0;
+	color: #666;
+}
+
+/* Reset core list defaults and re-build using CSS counter for the
+   monospace 01/02/03 numerals. counter-reset on the list, counter-
+   increment on each <li>, ::before pseudo emits the number. */
+.sn-steps__list {
+	counter-reset: sn-step;
+	list-style: none;
+	padding-left: 0;
+	margin: 0;
+}
+
+.sn-steps__list li {
+	counter-increment: sn-step;
+	display: grid;
+	grid-template-columns: 3rem 1fr;
+	gap: 1.25rem 1.5rem;
+	align-items: baseline;
+	margin: 0 0 1.25rem 0;
+	font-family: Georgia, "Times New Roman", serif;
+	font-size: 1.05rem;
+	line-height: 1.5;
+	color: #111;
+}
+
+.sn-steps__list li::before {
+	content: counter( sn-step, decimal-leading-zero );
+	font-family: "Courier New", monospace;
+	font-size: 1.5rem;
+	font-weight: 600;
+	color: #111;
+}
+
+/* Strip default <strong> weight inside the steps — the visual emphasis
+   comes from the numeral, not redundant bolding of the lead sentence. */
+.sn-steps__list li strong {
+	font-weight: 600;
+}
