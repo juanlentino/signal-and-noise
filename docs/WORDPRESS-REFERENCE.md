@@ -279,39 +279,48 @@ Priorities currently in use across `inc/`:
 
 ---
 
-## 10. The self-updater + self-heal architecture (with companion plugin since v8.2.0)
+## 10. The theme + companion plugin split (v8.2.0 → v8.4.0 complete; ongoing contract surface)
 
-This theme has a non-standard update mechanism AND a companion plugin that holds operational tooling. Understand both before touching `inc/updater.php`, `inc/template-self-heal.php`, or any of the WP hook contracts listed below.
+This theme ships with a companion plugin that holds all operational tooling. Understand both before touching `inc/template-maintenance.php` or any of the WP hook contracts listed below.
 
-### 10.0 The theme + companion plugin split (Phase 1 — v8.2.0 / Tools v1.0.0)
+### 10.0 The theme + companion plugin split (Phases 1–3 complete as of v8.4.0 / Tools v1.3.0)
 
-The theme is presentation; the companion plugin [`signal-and-noise-tools`](https://github.com/juanlentino/signal-and-noise-tools) holds operational tooling. They communicate via 7 WP hooks. **The split is partial as of v8.2.0** — 9 modules moved (Phase 1); Phases 2–4 will migrate the rest. See `docs/superpowers/specs/2026-05-15-companion-plugin-phase-1-design.md` and successors.
+The theme is presentation; the companion plugin [`signal-and-noise-tools`](https://github.com/juanlentino/signal-and-noise-tools) holds operational tooling. They communicate via 4 WP hooks (3 since v8.4.0; +1 in v9.1.6/plugin v4.1.1). **The split is complete as of v8.4.0 / Tools v1.3.0 — no further migrations are planned.** See `docs/superpowers/specs/2026-05-15-companion-plugin-phase-1-design.md` and successors for the migration history.
 
 **Modules currently in plugin:**
 - *Phase 1 moves (v8.2.0 / Tools v1.0.0):* `seo.php`, `security-headers.php`, `cloudflare-purge.php`, `plausible-api.php`, `plausible-admin.php`, `plausible-widget.php`, `admin-bar.php`, `admin-page.php`, `rest-api.php`.
 - *Early Phase 4 slice (v8.2.1 / Tools v1.1.0):* `rss-plausible-tracker.php` (was theme's `mu-plugins/rss-plausible-tracker.php`).
 - *Phase 3 moves (v8.4.0 / Tools v1.3.0):* `og-card-generator.php` (was theme's `og-image.php`), `reading-time.php`, plus a 3-way split of the original `notes-and-provenance.php` into `content-surfaces.php` + `content-migrations.php` + `content-rendering-helpers.php`. Theme's `seed-content/` HTML moved alongside the migrations.
 
-**Modules still in theme:** `setup.php`, `assets-frontend.php`, `frontend-filters.php`, `og-fonts.php`, `template-maintenance.php`, `page-notes-template.php`, `page-notes-render.php`, `patterns.php`. All presentation/rendering or theme-specific defenses. No further migrations planned.
+**Modules still in theme:** `setup.php`, `assets-frontend.php`, `frontend-filters.php`, `og-fonts.php`, `template-maintenance.php`, `page-notes-template.php`, `page-notes-render.php`, `patterns.php`, `wp-update-integration.php` (added v8.5.0), `wp-update-git-preservation.php` (added v8.5.2), `abilities-registration.php` (added v9.1.0). All presentation, theme-update visibility, or theme-specific defenses.
 
 **Phase 4 is empty** — the only file it was scheduled to migrate (the RSS tracker MU plugin) shipped early in v8.2.1. The `mu-plugins/` directory no longer exists in the theme repo.
 
-**Contract hooks — 3 cross-package hooks (was 7 before v8.3.0; was 2 before v8.4.0):**
+**Contract hooks — 4 cross-package hooks (3 added v8.4.0–v8.5.0; +1 added v9.1.6):**
 
 | Hook | Type | Dispatched by | Listened by |
 | --- | --- | --- | --- |
 | `sn_purge_all_caches_result` | filter | plugin: `apply_filters( 'sn_purge_all_caches_result', 0, $args )` returns int count | theme: [`inc/template-maintenance.php`](../inc/template-maintenance.php) wraps `sn_purge_all_caches()` |
 | `sn_clear_template_overrides_result` | filter | plugin: `apply_filters( 'sn_clear_template_overrides_result', 0 )` returns int count | theme: [`inc/template-maintenance.php`](../inc/template-maintenance.php) wraps `sn_clear_template_overrides()` |
 | `sn_og_font_paths` | filter | plugin: `apply_filters( 'sn_og_font_paths', array() )` returns array with `bebas` + `dmmono` keys mapping to absolute TTF paths | theme: [`inc/og-fonts.php`](../inc/og-fonts.php) returns paths via `get_theme_file_path( 'assets/fonts/og/*.ttf' )` |
+| `sn_gh_latest_theme_tag_result` | filter | plugin: `apply_filters( 'sn_gh_latest_theme_tag_result', null )` returns `string|null` (latest GitHub theme tag) | theme: [`inc/wp-update-integration.php`](../inc/wp-update-integration.php) wraps `sn_gh_latest_theme_tag()` |
 
 > **Retired in theme v8.3.0 (Phase 2b):** the 5 updater/self-heal contracts (`sn_self_heal_force_run_result`, `sn_updater_branch`, `sn_updater_revcount`, `sn_updater_force_check`, `sn_updater_clear_error`). See [Phase 2b spec](superpowers/specs/2026-05-15-phase-2b-cleanup-design.md).
 
 > **Added in theme v8.4.0 (Phase 3):** `sn_og_font_paths` — plugin owns OG card PHP GD rendering; theme owns the typography. See [Phase 3 spec](superpowers/specs/2026-05-16-phase-3-theme-coupled-moves-design.md).
 
+> **Added in theme v9.1.6 / plugin v4.1.1 (audit X-01):** `sn_gh_latest_theme_tag_result` — plugin needed the latest theme tag for its deploy-status card but was reaching directly into the theme function via `function_exists`. The new filter contract makes the dependency tolerant of theme-absent/inactive states.
+
 **Direct dependencies kept (no contract — stable by design):**
-- `sn_*` option keys (e.g. `sn_github_local_sha`) — plugin reads via `get_option()`.
-- `sn_github_*` transient keys — plugin reads via `get_transient()`. Option/transient *key names* are part of the public contract surface; renaming them would require migration shims for zero benefit.
-- `SN_GITHUB_REPO` / `SN_THEME_SLUG` constants — plugin reads with `defined()` guard.
+- `sn_*` option keys — plugin reads via `get_option()`. Option *key names* are part of the public contract surface; renaming them would require migration shims for zero benefit.
+- `sn_github_*` transient keys — plugin reads via `get_transient()`. Same rationale.
+- `[sn_reading_time]` shortcode — defined by plugin `inc/reading-time.php`; theme's `inc/page-notes-render.php` invokes via `do_shortcode()` with a `'5 min'` fallback if the plugin is absent.
+- `sn_after_full_cache_flush` action — theme dispatches at the end of `sn_purge_all_caches()`; available for plugin extension (no current listener).
+
+**Ability namespacing convention** (added v9.1.1 with the Abilities API integration; documented here in v9.1.6/plugin v4.1.1 per audit X-08):
+- Theme abilities use `signal-and-noise/*` — matches `get_stylesheet()` so WP's `ai/ai` plugin classifies them as "Theme."
+- Plugin abilities use `signal-noise/*` — matches the plugin slug.
+- When adding a new ability, pick the namespace based on which package owns the underlying impl. Both files have `wp_has_ability_category()` guards on shared categories (`content`, `diagnostics`, `ai-generation`) to avoid `_doing_it_wrong` on dual registration.
 
 **When adding new cross-package interactions:** add a row to the table above and document the listener side in the theme file that owns the underlying function. **Never let plugin code directly call a theme function — even with `function_exists` guards.** The contract pattern is non-negotiable.
 
