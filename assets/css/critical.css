@@ -679,3 +679,187 @@ main { view-transition-name: sn-main; }
 		view-transition-name: none !important;
 	}
 }
+
+/* ============================================
+   v9.3.0 — Long-form post layout (single-note posts)
+   ============================================ */
+
+/* --- DROP CAPS ---
+   First paragraph of single-note posts. :first-of-type ensures posts
+   that open with a heading/blockquote/pull-quote skip the drop cap. */
+
+.single-post .wp-block-post-content > p:first-of-type::first-letter {
+	font-family: 'Bebas Neue', Impact, sans-serif;
+	font-size: 5rem;
+	line-height: 0.85;
+	float: left;
+	color: var(--wp--preset--color--blood, #e00404);
+	margin: 0.1em 0.5rem 0 -0.05em;
+	padding-top: 0.3rem;
+	font-weight: 400;
+}
+
+/* --- FOOTNOTES (core/footnotes block, brutalist styling) --- */
+
+.single-post .wp-block-post-content sup a[href^="#footnote-"] {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: 0.75em;
+	color: var(--wp--preset--color--blood, #e00404);
+	text-decoration: none;
+	margin: 0 0.1em;
+	letter-spacing: 0.05em;
+}
+.single-post .wp-block-post-content sup a[href^="#footnote-"]:hover {
+	text-decoration: underline;
+}
+
+.single-post .wp-block-footnotes {
+	border-top: 1px solid var(--wp--preset--color--bone, #000);
+	padding-top: 1.5rem;
+	margin-top: 3rem;
+	counter-reset: sn-footnote;
+	list-style: none;
+	padding-left: 0;
+}
+.single-post .wp-block-footnotes li {
+	counter-increment: sn-footnote;
+	position: relative;
+	padding-left: 3rem;
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: 0.85rem;
+	line-height: 1.55;
+	margin-bottom: 0.85rem;
+	color: var(--wp--preset--color--bone, #000);
+}
+.single-post .wp-block-footnotes li::before {
+	content: counter(sn-footnote, decimal-leading-zero);
+	position: absolute;
+	left: 0;
+	top: 0;
+	color: var(--wp--preset--color--blood, #e00404);
+	letter-spacing: 0.1em;
+	font-weight: 500;
+}
+.single-post .wp-block-footnotes a[href^="#"] {
+	color: var(--wp--preset--color--blood, #e00404);
+	text-decoration: none;
+}
+.single-post .wp-block-footnotes a[href^="#"]:hover {
+	text-decoration: underline;
+}
+
+/* Footnote hover popover (injected by assets/js/footnotes-popover.js) */
+.sn-footnote-popover {
+	position: absolute;
+	z-index: 1000;
+	max-width: 360px;
+	padding: 0.75rem 1rem;
+	background: var(--wp--preset--color--asphalt, #f5f5f5);
+	border: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+	border-top: 2px solid var(--wp--preset--color--blood, #e00404);
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: 0.8rem;
+	line-height: 1.5;
+	color: var(--wp--preset--color--bone, #000);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+	pointer-events: auto;
+}
+.sn-footnote-popover a {
+	color: var(--wp--preset--color--blood, #e00404);
+}
+
+/* --- SIDENOTES (signal-noise/sidenote pattern) --- */
+
+@media (min-width: 1280px) {
+	.single-post .sn-sidenote {
+		float: right;
+		clear: right;
+		width: 180px;
+		margin-right: -200px;
+		margin-top: 0;
+		margin-bottom: 1rem;
+		padding-left: 1rem;
+		font-family: 'DM Mono', 'Courier New', monospace;
+		font-size: 0.75rem;
+		line-height: 1.45;
+		color: var(--wp--preset--color--rust, #666);
+		text-align: left;
+	}
+}
+
+@media (max-width: 1279.98px) {
+	.single-post .sn-sidenote {
+		float: none;
+		width: auto;
+		margin-top: 0.75rem;
+		margin-bottom: 1.5rem;
+		padding-top: 0.5rem;
+		padding-left: 0;
+		border-top: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+		font-family: 'DM Mono', 'Courier New', monospace;
+		font-size: 0.85rem;
+		line-height: 1.5;
+		color: var(--wp--preset--color--rust, #666);
+	}
+}
+
+/* --- FRONTMATTER SPEC CARD (parts/post-frontmatter.html) --- */
+
+.sn-post-frontmatter {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem;
+	margin-bottom: clamp(1rem, 2vw, 1.5rem);
+}
+.sn-post-frontmatter > * {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: 0.75rem;
+	letter-spacing: 0.15em;
+	text-transform: uppercase;
+	margin: 0;
+}
+.sn-post-frontmatter__date {
+	color: var(--wp--preset--color--blood, #e00404);
+	font-weight: 500;
+}
+.sn-post-frontmatter__divider {
+	color: var(--wp--preset--color--rust, #666);
+}
+.sn-post-frontmatter__rt {
+	color: var(--wp--preset--color--blood, #e00404);
+}
+.sn-post-frontmatter__tags,
+.sn-post-frontmatter__tags a {
+	color: var(--wp--preset--color--rust, #666);
+	text-decoration: none;
+}
+.sn-post-frontmatter__tags a:hover {
+	color: var(--wp--preset--color--blood, #e00404);
+}
+.sn-post-frontmatter__pillar {
+	color: var(--wp--preset--color--bone, #000);
+	text-decoration: none;
+	font-weight: 500;
+	margin-left: auto;
+	padding: 0.15rem 0.5rem;
+	border: 1px solid var(--wp--preset--color--bone, #000);
+	transition: color 0.15s ease, background 0.15s ease;
+}
+.sn-post-frontmatter__pillar:hover {
+	color: var(--wp--preset--color--void, #fff);
+	background: var(--wp--preset--color--blood, #e00404);
+	border-color: var(--wp--preset--color--blood, #e00404);
+}
+
+@media (max-width: 600px) {
+	.sn-post-frontmatter {
+		gap: 0.35rem;
+	}
+	.sn-post-frontmatter__pillar {
+		margin-left: 0;
+		margin-top: 0.25rem;
+		flex-basis: 100%;
+		display: inline-block;
+	}
+}
