@@ -109,6 +109,19 @@ function sn_gh_latest_theme_tag( $force_refresh = false ) {
 }
 
 /**
+ * v4.1.1 (X-01 in plugin's audit): expose sn_gh_latest_theme_tag() as a
+ * filter so the companion plugin (signal-and-noise-tools) can fetch the
+ * latest theme tag without calling a theme function directly. Per
+ * WORDPRESS-REFERENCE.md §10, plugin → theme calls go through filter/action
+ * contracts — never function_exists guards on theme functions. The plugin
+ * dispatches apply_filters('sn_gh_latest_theme_tag_result', null) and
+ * this filter substitutes the GitHub tag. Returns null when the call fails
+ * (same shape as the function itself), so the plugin's deploy-status card
+ * degrades gracefully if the theme is absent/inactive.
+ */
+add_filter( 'sn_gh_latest_theme_tag_result', 'sn_gh_latest_theme_tag' );
+
+/**
  * Register the theme with WP's update transient. WP renders it on
  * wp-admin/update-core.php and Appearance → Themes from this data.
  *
