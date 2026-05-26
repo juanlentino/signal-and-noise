@@ -2,7 +2,7 @@
 
 **Status:** ROADMAP LOCKED via brainstorm 2026-05-26. Living doc — phase completion markers update as work ships; structural shape doesn't change without re-brainstorm.
 
-**Last updated:** 2026-05-26 (initial write-up).
+**Last updated:** 2026-05-26 (plugin v4.4.x gate passed).
 
 **Repos:**
 - Plugin: [`signal-and-noise-tools`](https://github.com/juanlentino/signal-and-noise-tools) — currently at v4.4.0
@@ -92,8 +92,8 @@ Every minor and major follows this exact sequence:
 | Phase | Status | Notes |
 |---|---|---|
 | **v4.4.0** | ✓ SHIPPED 2026-05-26 | Commit [`79ea06f`](https://github.com/juanlentino/signal-and-noise-tools/commit/79ea06f), tag `v4.4.0`. Cross-package contracts E2E + v5.0.0 readiness pass. 888 assertions / 21 suites. |
-| **v4.4.x post-ship cycle** | ⏳ IN PROGRESS | QA pending: `wp eval-file tests/contracts-smoke.php` + wp-admin install + admin UI walk. Findings → Bugfix/UI-UX patches → Gate commit. |
-| **v5.0.0 brainstorm-checkpoint** | 🔒 BLOCKED on v4.4.x gate | Inputs: [v5.0.0-scope.md](https://github.com/juanlentino/signal-and-noise-tools/blob/main/docs/superpowers/specs/2026-05-26-v5.0.0-scope.md) (backbone), [mimestream-style release notes](~/.claude/projects/-Users-juanlentino-Projects-signal-and-noise/memory/project_mimestream_style_release_notes.md) memory entry (candidate feature). Backbone: 1 REMOVE (`sn_login_rewrites_flushed` option) + minor-counter reset. Features TBD. |
+| **v4.4.x post-ship cycle** | ✓ COMPLETE 2026-05-26 | QA pass surfaced 6 observations (0 bugs / 0 UI/UX). 3 observations addressed by v4.4.1 patch (commit cc881fd + theme companion 4afef49). 3 observations accepted without patches. Gate commit: [this commit]. |
+| **v5.0.0 brainstorm-checkpoint** | ⏳ READY TO RUN | Plugin v4.4.x gate passed 2026-05-26. Inputs: [v5.0.0-scope.md](https://github.com/juanlentino/signal-and-noise-tools/blob/main/docs/superpowers/specs/2026-05-26-v5.0.0-scope.md) (backbone), [mimestream-style release notes](~/.claude/projects/-Users-juanlentino-Projects-signal-and-noise/memory/project_mimestream_style_release_notes.md) memory entry (candidate feature). Backbone: 1 REMOVE (`sn_login_rewrites_flushed` option) + minor-counter reset. Features TBD. |
 | **v5.0.0 ship** | 🔒 BLOCKED on v5.0.0 BC | Major version. Likely small (minimal-breakage major). |
 | **v5.0.x post-ship cycle** | 🔒 BLOCKED on v5.0.0 ship | Same template. Gate completion unblocks v9.5.0 in theme lane. |
 
