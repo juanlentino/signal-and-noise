@@ -2,6 +2,22 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.4.3] - 2026-05-26 — Drop cap toned down + post-closing prev/next parity
+
+**Released:** 2026-05-26.
+
+**Headline:** Two visual fixes from live-site verification after v9.4.2 install:
+
+1. **Drop cap toned down** — v9.3.0 shipped the first-paragraph drop cap at 5rem (Bebas Neue, blood red), which occupied 4-5 body lines and overpowered the page. v9.4.3 reduces it to 2.5rem (occupies 2-3 lines, conventional editorial typography). Keeps the Bebas Neue character + blood-red color — same design language, less aggressive scale.
+2. **Post-closing Previous/Next visual parity** — v9.4.2 added a Previous link paralleling the existing Next, but `.sn-post-closing__prev` had no CSS rules so it fell back to default styling (monospace red). v9.4.3 unifies the selector so both sides render with the same Bebas Neue large-cap display treatment for the post title.
+
+**Files changed:**
+- `assets/css/critical.css` — drop cap font-size + margin/padding tweaks; `.sn-post-closing__prev` added to existing `.sn-post-closing__next` selectors (combined-selector approach)
+
+**Cap math:** theme patch 2/7 → **3/7** in v9.4.x. 4 patches remaining.
+
+---
+
 ## [9.4.2] - 2026-05-26 — Test file security guards + Previous post link
 
 **Released:** 2026-05-26.

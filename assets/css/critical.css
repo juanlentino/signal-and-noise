@@ -623,11 +623,13 @@ main { view-transition-name: sn-main; }
 	margin: 0 0 1.5rem 0;
 }
 
-.sn-post-closing__next {
+.sn-post-closing__next,
+.sn-post-closing__prev {
 	margin-top: 1.5rem;
 }
 
-.sn-post-closing__next-label {
+.sn-post-closing__next-label,
+.sn-post-closing__prev-label {
 	font-family: var(--wp--preset--font-family--body);
 	font-size: 0.7rem;
 	letter-spacing: 0.12em;
@@ -636,12 +638,14 @@ main { view-transition-name: sn-main; }
 	margin: 0 0 0.3rem 0;
 }
 
-.sn-post-closing__next-link a {
+.sn-post-closing__next-link a,
+.sn-post-closing__prev-link a {
 	color: var(--wp--preset--color--blood);
 	text-decoration: none;
 	/* Use heading (Bebas Neue) to match how the actual post titles
 	   render — creates a "visual breadcrumb" effect from current post to
-	   next. Body font would feel disconnected from where the link leads. */
+	   next/previous. Body font would feel disconnected from where the link
+	   leads. */
 	font-family: var(--wp--preset--font-family--heading);
 	font-size: 1.5rem;
 	font-weight: 400;
@@ -649,7 +653,8 @@ main { view-transition-name: sn-main; }
 	line-height: 1.15;
 }
 
-.sn-post-closing__next-link a:hover {
+.sn-post-closing__next-link a:hover,
+.sn-post-closing__prev-link a:hover {
 	text-decoration: underline;
 }
 
@@ -690,12 +695,12 @@ main { view-transition-name: sn-main; }
 
 .single-post .wp-block-post-content > p:first-of-type::first-letter {
 	font-family: 'Bebas Neue', Impact, sans-serif;
-	font-size: 5rem;
+	font-size: 2.5rem;
 	line-height: 0.85;
 	float: left;
 	color: var(--wp--preset--color--blood, #e00404);
-	margin: 0.1em 0.5rem 0 -0.05em;
-	padding-top: 0.3rem;
+	margin: 0.05em 0.35rem 0 -0.02em;
+	padding-top: 0.15rem;
 	font-weight: 400;
 }
 
