@@ -2,6 +2,45 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.1.7] - 2026-05-25 ⚠️ patch-cap rollover
+
+Structural refactor — theme-side companion to plugin v4.1.3. Closes audit finding **B-11 theme-side**: `inc/abilities-registration.php` was 1814 lines (12× the CLAUDE.md 150-line guideline). Now a 52-line orchestrator that requires 5 per-feature ability files. All 12 abilities still register identically.
+
+⚠️ **This is the last allowed patch in v9.1.x** (7/7). Any subsequent theme change rolls to v9.2.0.
+
+### Changed
+
+- **[`inc/abilities-registration.php`](inc/abilities-registration.php): 1814 → 52 lines (97% reduction).** Now a thin orchestrator that `require_once`s the 5 split files below. Bootstrap require at [`functions.php:52`](functions.php) unchanged — drop-in swap.
+- **Per-feature ability files added under `inc/`:**
+  - [`abilities-helpers.php`](inc/abilities-helpers.php) (154 LOC) — Shared constants (`SN_THEME_BRAND_VOICE_SYSTEM`, `SN_THEME_NOTES_VOICE_SYSTEM`), AI helpers (`sn_theme_ai_helper_available`, `sn_theme_ai_unavailable_error`, `sn_theme_parse_ai_json`), pillar descriptors, and 2 named permission callables (`sn_theme_perm_read`, `sn_theme_perm_edit_posts`). The named permission callables replace the in-function closure pattern (`$permission_read`, `$permission_edit_posts`) — closures don't survive the split into multiple registration functions, but named callables work as `'permission_callback' => 'sn_theme_perm_read'` string references identically.
+  - [`abilities-categories.php`](inc/abilities-categories.php) (56 LOC) — 3 category registrations on `wp_abilities_api_categories_init` (idempotent vs. plugin via `wp_has_ability_category()` guards).
+  - [`abilities-diagnostics.php`](inc/abilities-diagnostics.php) (520 LOC) — 4 abilities: `get-active-template-structure`, `get-theme-version`, `get-design-system-summary`, `get-design-tokens`.
+  - [`abilities-content.php`](inc/abilities-content.php) (337 LOC) — 3 abilities: `list-block-patterns`, `get-page-notes-pillars`, `get-reading-time-for-slug`.
+  - [`abilities-ai-generation.php`](inc/abilities-ai-generation.php) (687 LOC) — 5 abilities: `ai-generate-page-note-summary`, `ai-suggest-block-pattern`, `ai-validate-brand-alignment`, `ai-generate-pattern-content`, `ai-rewrite-in-brand-voice`.
+
+### Architectural notes
+
+- WordPress's `add_action()` queues all callbacks for a hook regardless of registration order, so splitting one `wp_abilities_api_init` action into 3 parallel ones is semantically identical to the original.
+- Cross-file impl calls work naturally because PHP function resolution is by global name. The diagnostic `sn_theme_ability_design_system_summary()` calls `sn_theme_ability_design_tokens()` (same file). The AI `ai-validate-brand-alignment` calls `sn_theme_ability_design_tokens()` (different file). The AI `ai-suggest-block-pattern` calls `sn_theme_ability_list_block_patterns()` (different file). All work because all 5 files are required before any hook fires.
+- Helper file is required FIRST in the orchestrator because constants are evaluated at registration-call time. The 3 feature files can load in any order (action registration doesn't depend on impl functions being defined yet — `permission_callback` and `execute_callback` are resolved lazily when an ability is invoked, not when it's registered).
+- Largest remaining file (`abilities-ai-generation.php` at 687 LOC) still exceeds the 150-line guideline. Further splitting (per-ability files) was rejected — the 5 AI abilities share the brand-voice mental model and per-ability fragmentation would isolate the JSON parsing + sanitization patterns that are intentionally consistent across them.
+- The original file's docblock noted the registration functions were "public (not anonymous) so the test harness can invoke it directly." There is no PHP test suite in the theme repo (verification is structural mirroring vs. plugin v4.1.3 + manual smoke walk post-deploy). The new per-feature registration functions (`sn_theme_register_diagnostics_abilities` etc.) preserve the named-function pattern for future testability.
+
+### Verification
+
+- `php -l` clean on all 6 files (orchestrator + 5 split files).
+- Plugin tests still green: `php tests/abilities-integration.php` → 157/0, `php tests/health-checks.php` → 76/0 (sanity-only — these tests don't exercise theme abilities, but they confirm nothing at the WP Abilities API level broke).
+- No theme PHP test suite. Manual smoke walk post-deploy:
+  1. wp-admin command palette ⌘K → type "design tokens" or "reading time" — abilities should appear if registered.
+  2. `curl https://juanlentino.com/wp-json/wp-abilities/v1/abilities/signal-and-noise/get-design-tokens` → expect 401 (auth required), NOT 404.
+  3. AI Copilot ⌘K dock → any `aiCallable: true` theme abilities should appear.
+
+### Audit provenance
+
+Closes audit finding B-11 across both repos (plugin shipped same fix as v4.1.3, commit `503b23a`, tag `v4.1.3`). All 50 audit findings tracked in `signal-and-noise-tools/.planning/audit-2026-05-25/` are now either shipped or formally deferred to Tier B/C per the v4.1.2-deferred-audit handoff.
+
+**v9.x cap state:** patch **7/7** in v9.1.x ⚠️ — **THIS IS THE LAST PATCH** before forced rollover to v9.2.0 · minor 1/5 on 9.x.
+
 ## [9.1.6] - 2026-05-25
 
 ### Companion to plugin v4.1.1 audit pass
