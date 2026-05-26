@@ -2,6 +2,37 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.2.0] - 2026-05-26 — Pattern library expansion + View Transitions catalog morph
+
+**Released:** 2026-05-26.
+
+**Highlights:**
+
+- **Three new block patterns** tuned to /notes analytical content: `signal-noise/pull-quote` (brutalist thesis-statement callout), `signal-noise/compare-columns` (A vs B framing with vertical divider), `signal-noise/steps-enumerated` (monospace 01/02/03 auto-numbered list). All cluster under the existing "Signal & Noise" pattern category in the inserter.
+- **`post-closing` template part** auto-rendered on every /notes post. Renders tags row + chronologically-next post link below `post-content` (above the existing pillar-link + back-link footer). Zero content changes — purely additive template wrap.
+- **View Transitions catalog morph.** Clicking a note card on /notes morphs the title smoothly into the single-note article hero. Implemented as a `render_block` filter on `core/post-title` that injects `view-transition-name: sn-note-<slug>` — same hook covers BOTH catalog cards and the single-note hero. Mobile carveout disables the morph on small screens where the geometry change feels disorienting.
+
+**Architecture notes:**
+
+- Pattern category infrastructure already existed (`inc/patterns.php`, v7.5.0) — new patterns just declare `Categories: signal-noise` in their docblock.
+- The View Transitions filter approach (single `render_block` hook) was chosen over per-template editing because block themes render the catalog via core/query loops where per-post inline styles can't easily be emitted from template markup. The filter covers every render of `core/post-title` anywhere on the site, not just the catalog — so the morph works from any source page that links to a single note.
+- Reduced-motion respect inherited from v9.0.0's `@media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }`. Per-element morphs auto-disable when navigation is `none`.
+
+**`list-block-patterns` ability:**
+
+- Pattern count enumerated grows from 2 → 5 (no code change in the ability itself). The plugin's `tests/theme-ability-commands.php` expects 2; this test bump ships as a separate plugin patch (v4.2.2). The v9.2.0 theme ship intentionally does NOT couple to the plugin test count update.
+
+**Tests:**
+
+- 2 new test files in `tests/`: `patterns-registry.php` (42 assertions, green) and `view-transitions.php` (13 assertions, green).
+- **Pre-existing baseline issue noted:** `tests/abilities-integration.php` and `tests/abilities-registration.php` have been broken since the v9.1.7 abilities split — both call `sn_theme_register_abilities()` which is undefined since the orchestrator refactor. This is orthogonal to v9.2.0; logged as a v9.2.1 candidate (the test files need updating to match the v9.1.7 architecture).
+
+**Cap math:** theme minor 2/6 → 3/6 (v9.0, v9.1, v9.2 used; 3 minors remaining before v10.0.0). Patch cap resets to 0/7 for v9.2.x. Plugin untouched (stays at v4.2.1).
+
+**Spec:** [docs/superpowers/specs/2026-05-26-v9.2.0-patterns-view-transitions-design.md](docs/superpowers/specs/2026-05-26-v9.2.0-patterns-view-transitions-design.md).
+
+---
+
 ## [9.1.7] - 2026-05-25 ⚠️ patch-cap rollover
 
 Structural refactor — theme-side companion to plugin v4.1.3. Closes audit finding **B-11 theme-side**: `inc/abilities-registration.php` was 1814 lines (12× the CLAUDE.md 150-line guideline). Now a 52-line orchestrator that requires 5 per-feature ability files. All 12 abilities still register identically.
