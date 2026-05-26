@@ -22,6 +22,14 @@
  * @since theme v9.1.0
  */
 
+// SECURITY: Prevent web access. This file is a test fixture, not a runtime
+// module. Direct HTTP GET would leak internal structure (function names,
+// ability slugs, capability matrices). Allow only CLI / WP-CLI invocations.
+if ( PHP_SAPI !== 'cli' && ! defined( 'WP_CLI' ) ) {
+    http_response_code( 404 );
+    exit;
+}
+
 define( 'ABSPATH', '/' );
 
 // --- WP function stubs -------------------------------------------------

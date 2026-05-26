@@ -2,6 +2,33 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.4.2] - 2026-05-26 — Test file security guards + Previous post link
+
+**Released:** 2026-05-26.
+
+**Headline:** Bundled patch from the v4.4.x + v9.4.x cycle audit. Two changes: (a) CLI-only guards on all theme `tests/*.php` files to close the info-leak surface flagged in the audit (parallel to plugin v4.4.2 which shipped the same defense for the plugin's 22 test files); (b) symmetric Previous/Next post navigation in `parts/post-closing.html` — readers can now move backward through publication order, not just forward.
+
+**Changes:**
+
+- **CLI-only guard on every theme `tests/*.php`** (5 files: abilities-integration, abilities-registration, patterns-registry, post-frontmatter, view-transitions). Top-of-file check:
+  ```php
+  if ( PHP_SAPI !== 'cli' && ! defined( 'WP_CLI' ) ) {
+      http_response_code( 404 );
+      exit;
+  }
+  ```
+  Theme tests stub WordPress so no destructive trigger like the plugin's `contracts-smoke.php` — pure info-leak surface (function names, ability slugs, capability matrices). Closed.
+- **`tests/.htaccess` with `Require all denied`** as Apache defense-in-depth.
+- **`parts/post-closing.html`** now renders symmetric "← Previous" + "Next →" navigation via paired `core/post-navigation-link` blocks. Previously only the Next link was rendered, leaving readers at the most-recent post with no navigation target. Both links are wrapped in a flex `sn-post-closing__nav` group (space-between), each with its own label paragraph + `showTitle:true` nav link — matching the existing `sn-post-closing__next` pattern exactly.
+
+**Audit reference:** [`docs/superpowers/specs/2026-05-26-v4.4.x-and-v9.4.x-cycle-audit-findings.md`](docs/superpowers/specs/2026-05-26-v4.4.x-and-v9.4.x-cycle-audit-findings.md) — Bug-A2 (test file info-leak) + U-10 (Next-only navigation).
+
+**Tests:** 303 assertions / 5 suites — all green (no PHP changes affect tests; CSS unchanged from v9.4.1).
+
+**Cap math:** theme patch 1/7 → **2/7** in v9.4.x. 5 patches remaining.
+
+---
+
 ## [9.4.1] - 2026-05-26 — Sidenote justification regression fix
 
 **Released:** 2026-05-26.
