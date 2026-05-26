@@ -4,7 +4,7 @@
 Custom WordPress Full Site Editing theme for juanlentino.com.
 Repo: juanlentino/signal-and-noise. Hosted on Cloudways (syntharchy-wp), Cloudflare CDN.
 
-**Companion plugin (since v8.2.0):** Operational tooling lives in [juanlentino/signal-and-noise-tools](https://github.com/juanlentino/signal-and-noise-tools). Phases 1, 4 (RSS tracker), 2a (auto-deploy) shipped; 2b / 2c / 3 queued.
+**Companion plugin (since v8.2.0):** Operational tooling lives in [juanlentino/signal-and-noise-tools](https://github.com/juanlentino/signal-and-noise-tools). All 15 phases of the original plugin absorption roadmap shipped (v1.4.1 → v4.1.x arc). Plugin is currently at v4.4.3+ with the full SEO + login + admin-UI + AI-health surfaces absorbed. See [docs/superpowers/specs/2026-05-16-plugin-absorption-roadmap.md](docs/superpowers/specs/2026-05-16-plugin-absorption-roadmap.md) for the closed phase list.
 
 **Start of session:** read the most recent handoff in [docs/superpowers/handoffs/](docs/superpowers/handoffs/) for current state + open questions. Contract surface + phase plan in [docs/WORDPRESS-REFERENCE.md](docs/WORDPRESS-REFERENCE.md) §10.0.
 
@@ -21,7 +21,7 @@ Full workflow + rationale: [docs/VERSIONING.md](docs/VERSIONING.md). Short versi
 
 **What bumps:** code, CSS, migrations, structural template changes. **What doesn't:** `docs/`, `CLAUDE.md`, content-only copy edits, CHANGELOG-only commits.
 
-**Workflow per release:** edit code → bump `Version:` in [style.css](style.css) (theme) or [signal-and-noise-tools.php](https://github.com/juanlentino/signal-and-noise-tools/blob/main/signal-and-noise-tools.php) (plugin) → CHANGELOG entry at top → commit `vX.Y.Z: summary` → `git push origin HEAD:main` → annotated tag `vX.Y.Z` → `git push origin vX.Y.Z` → **both theme and plugin auto-deploy + auto-purge CF edge cache in ~30s** (theme via Cloudways API on Phase 2a; plugin via SSH from GHA as app-scoped `sn-plugin` user on Phase 2c).
+**Workflow per release:** edit code → bump `Version:` in [style.css](style.css) (theme) or [signal-and-noise-tools.php](https://github.com/juanlentino/signal-and-noise-tools/blob/main/signal-and-noise-tools.php) (plugin) → CHANGELOG entry at top → commit `vX.Y.Z: summary` → `git push origin HEAD:main` → annotated tag `vX.Y.Z` → `git push origin vX.Y.Z` → install via wp-admin → Dashboard → Updates (canonical for both repos) or `gh workflow run deploy.yml --ref vX.Y.Z` (emergency manual). **Tag push does NOT auto-deploy** for either repo since theme v8.5.1 / plugin v1.10.1 — see [Build & Deploy](#build--deploy) below for the full install paths.
 
 **Commit + tag format:**
 ```bash
