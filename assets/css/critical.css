@@ -599,3 +599,51 @@ main { view-transition-name: sn-main; }
 .sn-steps__list li strong {
 	font-weight: 600;
 }
+
+/* ─── v9.2.0: post-closing template part (parts/post-closing.html) ──── */
+
+.sn-post-closing {
+	margin-top: 3rem;
+	padding-top: 2rem;
+}
+
+.sn-post-closing__rule {
+	border: 0;
+	border-top: 1px solid #111;
+	margin: 0 0 1.5rem 0;
+	background: none;
+}
+
+.sn-post-closing__tags {
+	font-family: "Courier New", monospace;
+	font-size: 0.75rem;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: #666;
+	margin: 0 0 1.5rem 0;
+}
+
+.sn-post-closing__next {
+	margin-top: 1.5rem;
+}
+
+.sn-post-closing__next-label {
+	font-family: "Courier New", monospace;
+	font-size: 0.7rem;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: #666;
+	margin: 0 0 0.3rem 0;
+}
+
+.sn-post-closing__next-link a {
+	color: #cc1414;
+	text-decoration: none;
+	font-family: Georgia, "Times New Roman", serif;
+	font-size: 1.15rem;
+	font-weight: 500;
+}
+
+.sn-post-closing__next-link a:hover {
+	text-decoration: underline;
+}

@@ -29,6 +29,12 @@
 
 	<!-- wp:post-content {"layout":{"type":"constrained"}} /-->
 
+	<!-- v9.2.0: post-closing template part (parts/post-closing.html).
+	     Renders tags + chronologically-next post link. Auto-applied to
+	     every /notes post. Pre-existing pillar-link + back-link footer
+	     remains below. -->
+	<!-- wp:template-part {"slug":"post-closing","tagName":"footer"} /-->
+
 	<!-- wp:spacer {"height":"var:preset|spacing|50"} -->
 	<div style="height:var(--wp--preset--spacing--50)" aria-hidden="true" class="wp-block-spacer"></div>
 	<!-- /wp:spacer -->
