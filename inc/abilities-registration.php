@@ -50,3 +50,26 @@ require_once __DIR__ . '/abilities-categories.php';
 require_once __DIR__ . '/abilities-diagnostics.php';
 require_once __DIR__ . '/abilities-content.php';
 require_once __DIR__ . '/abilities-ai-generation.php';
+
+/**
+ * Back-compat shim — the v9.1.7 split refactored the monolithic
+ * sn_theme_register_abilities() into 3 per-category registration
+ * functions. This shim preserves the single-call entry point used by
+ * tests/abilities-{integration,registration}.php (which weren't updated
+ * during the split, so they've been failing at the worktree baseline
+ * since v9.1.7).
+ *
+ * Calls the 3 abilities-registration functions. Does NOT call
+ * sn_theme_register_ability_categories() because tests already call
+ * that separately.
+ *
+ * In production the 3 underlying functions are invoked by add_action
+ * hooks in their respective feature files. This shim is for tests only.
+ *
+ * @since 9.2.1
+ */
+function sn_theme_register_abilities() {
+	sn_theme_register_diagnostics_abilities();
+	sn_theme_register_content_abilities();
+	sn_theme_register_ai_generation_abilities();
+}

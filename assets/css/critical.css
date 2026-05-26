@@ -462,36 +462,36 @@ main { view-transition-name: sn-main; }
 .sn-pattern-pull-quote {
 	margin: 2.5rem -1rem;
 	padding: 2rem 1.5rem;
-	background: #fafafa;
-	border-top: 3px solid #111;
-	border-bottom: 3px solid #111;
+	background: var(--wp--preset--color--asphalt);
+	border-top: 3px solid var(--wp--preset--color--bone);
+	border-bottom: 3px solid var(--wp--preset--color--bone);
 }
 
 .sn-pull-quote__body {
-	font-family: Georgia, "Times New Roman", serif;
+	font-family: var(--wp--preset--font-family--body);
 	font-size: 1.5rem;
 	line-height: 1.4;
 	font-style: italic;
 	margin: 0 0 1rem 0;
-	color: #111;
+	color: var(--wp--preset--color--bone);
 }
 
 .sn-pull-quote__attribution {
-	font-family: "Courier New", monospace;
+	font-family: var(--wp--preset--font-family--body);
 	font-size: 0.7rem;
 	letter-spacing: 0.1em;
 	text-transform: uppercase;
 	margin: 0;
-	color: #666;
+	color: var(--wp--preset--color--rust);
 }
 
 /* ─── v9.2.0: compare-columns pattern (patterns/compare-columns.php) ─── */
 
 .sn-pattern-compare-columns {
 	margin: 2.5rem -1rem;
-	background: #fafafa;
-	border-top: 1px solid #ddd;
-	border-bottom: 1px solid #ddd;
+	background: var(--wp--preset--color--asphalt);
+	border-top: 1px solid var(--wp--preset--color--concrete);
+	border-bottom: 1px solid var(--wp--preset--color--concrete);
 }
 
 .sn-pattern-compare-columns .wp-block-columns {
@@ -510,7 +510,7 @@ main { view-transition-name: sn-main; }
 	bottom: 1.5rem;
 	left: 50%;
 	width: 1px;
-	background: #111;
+	background: var(--wp--preset--color--bone);
 }
 
 @media (max-width: 768px) {
@@ -522,27 +522,27 @@ main { view-transition-name: sn-main; }
 }
 
 .sn-compare__label {
-	font-family: "Courier New", monospace;
+	font-family: var(--wp--preset--font-family--body);
 	font-size: 0.7rem;
 	letter-spacing: 0.12em;
 	text-transform: uppercase;
 	margin: 0 0 0.75rem 0;
-	color: #666;
+	color: var(--wp--preset--color--rust);
 }
 
 .sn-compare__title {
-	font-family: Georgia, "Times New Roman", serif;
+	font-family: var(--wp--preset--font-family--body);
 	font-size: 1.1rem;
 	font-weight: 600;
 	margin: 0 0 0.5rem 0;
-	color: #111;
+	color: var(--wp--preset--color--bone);
 }
 
 .sn-compare__body {
-	font-family: Georgia, "Times New Roman", serif;
+	font-family: var(--wp--preset--font-family--body);
 	font-size: 0.95rem;
 	line-height: 1.5;
-	color: #444;
+	color: var(--wp--preset--color--rust);
 	margin: 0;
 }
 
@@ -551,16 +551,16 @@ main { view-transition-name: sn-main; }
 .sn-pattern-steps-enumerated {
 	margin: 2.5rem -1rem;
 	padding: 2rem 1.5rem;
-	background: #fafafa;
+	background: var(--wp--preset--color--asphalt);
 }
 
 .sn-steps__label {
-	font-family: "Courier New", monospace;
+	font-family: var(--wp--preset--font-family--body);
 	font-size: 0.7rem;
 	letter-spacing: 0.12em;
 	text-transform: uppercase;
 	margin: 0 0 1.5rem 0;
-	color: #666;
+	color: var(--wp--preset--color--rust);
 }
 
 /* Reset core list defaults and re-build using CSS counter for the
@@ -580,18 +580,18 @@ main { view-transition-name: sn-main; }
 	gap: 1.25rem 1.5rem;
 	align-items: baseline;
 	margin: 0 0 1.25rem 0;
-	font-family: Georgia, "Times New Roman", serif;
+	font-family: var(--wp--preset--font-family--body);
 	font-size: 1.05rem;
 	line-height: 1.5;
-	color: #111;
+	color: var(--wp--preset--color--bone);
 }
 
 .sn-steps__list li::before {
 	content: counter( sn-step, decimal-leading-zero );
-	font-family: "Courier New", monospace;
+	font-family: var(--wp--preset--font-family--body);
 	font-size: 1.5rem;
 	font-weight: 600;
-	color: #111;
+	color: var(--wp--preset--color--bone);
 }
 
 /* Strip default <strong> weight inside the steps — the visual emphasis
@@ -609,17 +609,17 @@ main { view-transition-name: sn-main; }
 
 .sn-post-closing__rule {
 	border: 0;
-	border-top: 1px solid #111;
+	border-top: 1px solid var(--wp--preset--color--bone);
 	margin: 0 0 1.5rem 0;
 	background: none;
 }
 
 .sn-post-closing__tags {
-	font-family: "Courier New", monospace;
+	font-family: var(--wp--preset--font-family--body);
 	font-size: 0.75rem;
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
-	color: #666;
+	color: var(--wp--preset--color--rust);
 	margin: 0 0 1.5rem 0;
 }
 
@@ -628,20 +628,25 @@ main { view-transition-name: sn-main; }
 }
 
 .sn-post-closing__next-label {
-	font-family: "Courier New", monospace;
+	font-family: var(--wp--preset--font-family--body);
 	font-size: 0.7rem;
 	letter-spacing: 0.12em;
 	text-transform: uppercase;
-	color: #666;
+	color: var(--wp--preset--color--rust);
 	margin: 0 0 0.3rem 0;
 }
 
 .sn-post-closing__next-link a {
-	color: #cc1414;
+	color: var(--wp--preset--color--blood);
 	text-decoration: none;
-	font-family: Georgia, "Times New Roman", serif;
-	font-size: 1.15rem;
-	font-weight: 500;
+	/* Use heading (Bebas Neue) to match how the actual post titles
+	   render — creates a "visual breadcrumb" effect from current post to
+	   next. Body font would feel disconnected from where the link leads. */
+	font-family: var(--wp--preset--font-family--heading);
+	font-size: 1.5rem;
+	font-weight: 400;
+	letter-spacing: 0.02em;
+	line-height: 1.15;
 }
 
 .sn-post-closing__next-link a:hover {

@@ -2,6 +2,38 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.2.1] - 2026-05-26 — Polish: theme tokens for v9.2.0 patterns + abilities-tests back-compat shim
+
+**Released:** 2026-05-26 (same day as v9.2.0).
+
+**What this patch fixes:**
+
+1. **Pattern + post-closing CSS now uses theme design tokens** instead of generic web-safe hardcodes. v9.2.0 shipped with `Georgia, "Times New Roman", serif` for body text and `"Courier New", monospace` for mono — but the actual theme is `Bebas Neue + DM Mono` per `style.css` and `theme.json`. The mismatch made the new patterns feel bolted-on. Now everything resolves to `var(--wp--preset--font-family--body)` (DM Mono) for body and labels, with `var(--wp--preset--font-family--heading)` (Bebas Neue) reserved for the `post-closing__next-link` title — matches how actual post titles render via `core/post-title`, creating a "visual breadcrumb" from current post to next.
+2. **Color hardcodes replaced with palette tokens:** `#111` → `bone`, `#666` → `rust`, `#444` → `rust`, `#fafafa` → `asphalt`, `#cc1414` → `blood`, `#ddd` → `concrete`. All 6 token names come from the existing `theme.json` palette (v9.0.0+). The new patterns now feel native, not bolted on.
+3. **`sn_theme_register_abilities()` back-compat shim** added to `inc/abilities-registration.php`. The v9.1.7 abilities split refactored the monolithic function into 3 per-category registration functions, but `tests/abilities-{integration,registration}.php` weren't updated — they've been failing at the worktree baseline since v9.1.7. The shim restores the single-call entry point those tests expect.
+
+**Tests post-shim:**
+
+| Suite | Pre-v9.2.1 | Post-v9.2.1 |
+|---|---|---|
+| `tests/abilities-integration.php` | Fatal (sn_theme_register_abilities undefined) | **85 passed, 0 failed** |
+| `tests/abilities-registration.php` | Fatal (same) | **154 passed, 0 failed** |
+| `tests/patterns-registry.php` | 42 passed, 0 failed | 42 passed, 0 failed |
+| `tests/view-transitions.php` | 13 passed, 0 failed | 13 passed, 0 failed |
+| **Total** | (2 suites unreachable) | **294 passed, 0 failed** |
+
+**What this patch does NOT touch:**
+
+- Pattern HTML structures (`patterns/*.php`) — unchanged.
+- `parts/post-closing.html` template part — unchanged.
+- `inc/blocks-view-transitions.php` filter — unchanged.
+- Any of the existing patterns / templates / abilities functions — purely additive.
+- The plugin `tests/theme-ability-commands.php` expected-pattern-count bump (2 → 5) ships as v4.2.2 plugin patch, separate from this theme patch.
+
+**Cap math:** theme minor unchanged at 3/6. Patch cap 0/7 → **1/7** for v9.2.x. 6 patches available.
+
+---
+
 ## [9.2.0] - 2026-05-26 — Pattern library expansion + View Transitions catalog morph
 
 **Released:** 2026-05-26.
