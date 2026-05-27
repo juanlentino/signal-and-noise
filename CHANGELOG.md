@@ -2,6 +2,38 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.4.4] - 2026-05-26 — Audit D fixes — Turnstile strip via script_loader_tag, reduced-motion gate, Tested up to: 7.0
+
+**Released:** 2026-05-26.
+
+**Headline:** Bundles two Tier A fixes from Audit D (perf + a11y) — closes the Turnstile leak onto `/notes/` (and any other route that short-circuits `template_redirect`) and gates two hover transforms on `prefers-reduced-motion`. Also bumps the `Tested up to:` header to WP 7.0 since the theme has been actively tested against 7.0 since v9.2.0.
+
+**Why bumped:** PA-07 is a real perf regression (~17 KiB of Turnstile JS leaking onto every `/notes/*` page) and PA-12 is a real a11y issue (motion-sensitive users got hover transforms despite asking for none).
+
+**Fixes:**
+
+- **PA-07 (BUG-MED) — Turnstile + dns-prefetch no longer leak onto `/notes/`.** Pre-v9.4.4, the Turnstile strip lived inside a `template_redirect` priority-10 ob_start in `inc/frontend-filters.php`. But `inc/page-notes-template.php` registers a `template_redirect` priority-0 callback that calls `include $render; exit;` — the exit bypassed every later `template_redirect` hook, including the ob_start. Result: Turnstile script + dns-prefetch hint were emitted on `/notes/` and `/notes/<slug>/` despite those routes having no contact form. Fix: moved the strip from the ob_start to a pair of filters (`script_loader_tag` for the `<script>` tag, `wp_resource_hints` for the dns-prefetch) — both fire inside `wp_head()` regardless of the renderer short-circuit. The ob_start remains in place but only for its generator-meta-strip defense-in-depth role. Net: ~17 KiB render-blocking JS saved on every non-contact route.
+- **PA-12 (UI-UX) — Service-card image scale + button hover translate now gated on `prefers-reduced-motion: no-preference`.** Two hover-transform rules in `assets/css/components.css` (service card image `scale(1.02)` at line 34-37; button `translateY(-1px)` at line 64-67) were emitting motion to users who asked for reduced motion. Wrapped both in `@media (prefers-reduced-motion: no-preference)` so the transform only applies for users who haven't opted out. Filter changes and box-shadow remain unconditional (those aren't motion per WCAG). Matches the gating already in place on the hero entrance, view-transitions, and `/notes` page reveal animations.
+- **OBS-HYG-02 — `Tested up to: 6.9 → 7.0` in `style.css` header.** Theme has been actively tested against WP 7.0 since v9.2.0 (patterns + view transitions); the header was just lagging.
+
+**Files changed:**
+
+- `inc/frontend-filters.php` — replaced Turnstile regex strip inside ob_start with `script_loader_tag` + `wp_resource_hints` filters
+- `assets/css/components.css` — wrapped two hover `transform` rules in `@media (prefers-reduced-motion: no-preference)` blocks
+- `style.css` — version 9.4.3 → 9.4.4, Tested up to: 6.9 → 7.0
+
+**Audit reference:** [`docs/superpowers/specs/2026-05-26-audits-c-d-cycle-findings.md`](docs/superpowers/specs/2026-05-26-audits-c-d-cycle-findings.md) §3 (PA-07), §5 (PA-12), §6 (OBS-HYG-02).
+
+**Tests:** 303 assertions / 5 theme suites — all green. PA-07 fix is a filter swap with the same semantic outcome (Turnstile stripped on non-contact pages); PA-12 is CSS-only.
+
+**Post-install user actions:**
+
+- Install v9.4.4 via wp-admin → Dashboard → Updates (canonical) or `gh workflow run deploy.yml --ref v9.4.4` (emergency).
+- Verify on a `/notes/<slug>/` page: view source, search for "turnstile" and "challenges.cloudflare.com" — both should return zero results (pre-v9.4.4 returned 2 references).
+- With macOS System Settings → Accessibility → Display → "Reduce motion" ON, hover a service card on `/services/` — image should NOT scale (only the filter/color change). Hover a button — should NOT translate (only the shadow appears).
+
+---
+
 ## [9.4.3] - 2026-05-26 — Drop cap toned down + post-closing prev/next parity
 
 **Released:** 2026-05-26.

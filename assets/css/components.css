@@ -33,7 +33,13 @@
 
 .wp-block-column:hover .sn-service-image img {
 	filter: grayscale(0%) contrast(1.05);
-	transform: scale(1.02);
+}
+
+/* Motion-only enhancement: gate transform on reduced-motion preference. Audit D PA-12. */
+@media (prefers-reduced-motion: no-preference) {
+	.wp-block-column:hover .sn-service-image img {
+		transform: scale(1.02);
+	}
 }
 
 /* ============================================
@@ -62,8 +68,14 @@
 }
 
 .wp-block-button__link:hover {
-	transform: translateY(-1px);
 	box-shadow: 0 4px 20px rgba(224, 4, 4, 0.2);
+}
+
+/* Motion-only enhancement: gate transform on reduced-motion preference. Audit D PA-12. */
+@media (prefers-reduced-motion: no-preference) {
+	.wp-block-button__link:hover {
+		transform: translateY(-1px);
+	}
 }
 
 .is-style-outline .wp-block-button__link {

@@ -79,20 +79,58 @@ add_filter( 'render_block_data', function( $parsed_block ) {
 } );
 
 /**
- * Output buffer: strip remaining generator meta tags from plugins and, on
- * non-contact pages, the Cloudflare Turnstile challenge script.
+ * Output buffer: strip remaining generator meta tags from plugins that emit
+ * raw <meta name="generator"> inline rather than via the_generator().
+ *
+ * Note: Cloudflare Turnstile used to be stripped here too, but inc/page-notes-template.php
+ * registers a template_redirect at priority 0 that `include + exit`s — bypassing
+ * every later template_redirect hook, including this ob_start. Turnstile is now
+ * filtered via script_loader_tag + wp_resource_hints below (audit D PA-07,
+ * fixed v9.4.4).
  */
 add_action( 'template_redirect', function() {
 	ob_start( function( $html ) {
-		// Strip generator meta tags.
 		$html = preg_replace( '/<meta name="generator"[^>]*>\n?/i', '', $html );
-
-		// Strip Cloudflare Turnstile on non-contact pages (17 KiB render-blocking).
-		if ( ! is_page( 'contact' ) ) {
-			$html = preg_replace( '/<script[^>]*challenges\.cloudflare\.com[^>]*><\/script>\n?/i', '', $html );
-			$html = preg_replace( '/<script[^>]*turnstile[^>]*><\/script>\n?/i', '', $html );
-		}
-
 		return $html;
 	});
 } );
+
+/**
+ * Strip the Cloudflare Turnstile <script> tag on non-contact pages (~17 KiB
+ * render-blocking JS that exists nowhere else).
+ *
+ * Replaces the prior ob_start regex strip (v9.4.3 and earlier) which was
+ * bypassed on /notes/ routes because inc/page-notes-template.php's renderer
+ * short-circuits via `include $render; exit;` at template_redirect priority 0
+ * — that exit bypasses all later template_redirect hooks. script_loader_tag
+ * fires inside wp_head() regardless of the renderer short-circuit, so the
+ * strip is uniform across every route that calls wp_head(). Audit D PA-07.
+ *
+ * Matches CF7's 'cloudflare-turnstile-js' handle plus a defense-in-depth
+ * URL match for any other plugin that enqueues the same SDK under a
+ * different handle.
+ */
+add_filter( 'script_loader_tag', function( $tag, $handle ) {
+	if ( is_page( 'contact' ) ) {
+		return $tag;
+	}
+	if ( false !== strpos( $handle, 'turnstile' ) || false !== strpos( $tag, 'challenges.cloudflare.com' ) ) {
+		return '';
+	}
+	return $tag;
+}, 10, 2 );
+
+/**
+ * Drop the Turnstile dns-prefetch resource hint on non-contact pages.
+ * Pairs with the script_loader_tag filter above — no point prefetching a
+ * domain we're not contacting on this route.
+ */
+add_filter( 'wp_resource_hints', function( $hints, $relation_type ) {
+	if ( 'dns-prefetch' !== $relation_type || is_page( 'contact' ) ) {
+		return $hints;
+	}
+	return array_values( array_filter( $hints, function( $hint ) {
+		$url = is_array( $hint ) ? ( $hint['href'] ?? '' ) : $hint;
+		return false === strpos( (string) $url, 'challenges.cloudflare.com' );
+	} ) );
+}, 10, 2 );
