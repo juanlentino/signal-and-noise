@@ -2,6 +2,36 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.4.5] - 2026-05-26 — Tier B fixes — static template img lazy/async + footnote keyboard parity
+
+**Released:** 2026-05-26. (CHANGELOG entry added as follow-up docs commit — the v9.4.5 tag itself was pushed without this entry due to a string-mismatch in the original edit; rather than re-tag, this entry lands separately as a CHANGELOG-only commit per CLAUDE.md's "CHANGELOG-only commits don't bump" rule.)
+
+**Headline:** Two Tier B fixes from Audit D, both small and shipped together.
+
+**Fixes:**
+
+- **PA-08 (BUG-LOW → confirmed real) — Static template `<img>` tags now have `loading="lazy" decoding="async"`.** Live HTML probe of `/about/` and `/services/` confirmed that WP core's `wp_filter_content_tags` does NOT inject these attributes for block-template `<img>` tags that lack a `wp-image-<id>` class. Manual probe found 7 affected images: 1 portrait on `/about/` (`templates/page-about.html:31`) + 6 service-card images on `/services/` (`templates/page-services.html:92, 112, 143, 163, 208, 228`). All seven now explicitly carry the attributes. The header logo (`parts/header.html:8`) remains `loading="eager" fetchpriority="high"` — it's the LCP candidate per audit, intentional override.
+- **PA-11 (BUG-LOW) — Footnote popover now opens on keyboard focus, not just pointer hover.** `assets/js/footnotes-popover.js` previously listened for `pointerenter`/`pointerleave` only — keyboard users tabbing through `<sup>` anchors in long-form notes got no preview. Added `focusin` + `focusout` listeners that mirror the hover behaviour (build popover on focus, dismiss on blur). Progressive enhancement — the underlying `<a href="#footnote-N">` scroll-to-footnote behaviour still works without JS, this just adds parity for keyboard users. `(pointer: coarse)` early-return remains (mobile keyboard-only navigation is rare enough that the simpler ungate-everything is fine).
+
+**Files changed:**
+
+- `templates/page-about.html` — 1 `<img>` augmented with `loading="lazy" decoding="async"`
+- `templates/page-services.html` — 6 `<img>` augmented (same)
+- `assets/js/footnotes-popover.js` — `focusin` / `focusout` handlers added alongside existing `pointerenter` / `pointerleave`
+- `style.css` — version 9.4.4 → 9.4.5
+
+**Audit reference:** [`docs/superpowers/specs/2026-05-26-audits-c-d-cycle-findings.md`](docs/superpowers/specs/2026-05-26-audits-c-d-cycle-findings.md) — Tier B PA-08 + PA-11.
+
+**Tests:** 303 assertions / 5 theme suites — all green. PA-08 is HTML-attribute-only; PA-11 is event-listener add; no test surface change.
+
+**Post-install user actions:**
+
+- Install v9.4.5 via wp-admin → Dashboard → Updates (canonical) or `gh workflow run deploy.yml --ref v9.4.5` (emergency).
+- View source on `/about/` and `/services/` — every `<img>` should now have `loading="lazy"` and `decoding="async"` (except the header logo, which stays `loading="eager"` as LCP).
+- On any `/notes/<slug>/` post with footnotes, Tab to a footnote `<sup>` anchor — the popover should appear on focus (same as hover). Tab away — it dismisses.
+
+---
+
 ## [9.4.4] - 2026-05-26 — Audit D fixes — Turnstile strip via script_loader_tag, reduced-motion gate, Tested up to: 7.0
 
 **Released:** 2026-05-26.
