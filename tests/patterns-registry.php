@@ -4,12 +4,13 @@
  *
  * Verifies:
  *   1. The signal-noise pattern category is registered (by inc/patterns.php).
- *   2. All 5 patterns are present with required header fields:
+ *   2. All 6 patterns are present with required header fields:
  *      - signal-noise/hero-dossier   (pre-existing, v7.5.0)
  *      - signal-noise/section-constrained (pre-existing, v7.5.0)
  *      - signal-noise/pull-quote     (new in v9.2.0)
  *      - signal-noise/compare-columns (new in v9.2.0)
  *      - signal-noise/steps-enumerated (new in v9.2.0)
+ *      - signal-noise/sidenote       (new in v9.3.0, gap closed in v9.5.0)
  *   3. The parts/post-closing.html template part file exists and parses
  *      as valid WordPress block markup. (Will fail until Task 5 ships it.)
  *   4. templates/single.html references the post-closing template part.
@@ -86,13 +87,14 @@ ha_eq(
 	'category label is "Signal & Noise"'
 );
 
-// --- Test 2: All 5 pattern files exist + have required headers ---------
+// --- Test 2: All 6 pattern files exist + have required headers ---------
 $expected_patterns = array(
 	'hero-dossier'        => array( 'Slug' => 'signal-noise/hero-dossier' ),
 	'section-constrained' => array( 'Slug' => 'signal-noise/section-constrained' ),
 	'pull-quote'          => array( 'Slug' => 'signal-noise/pull-quote' ),
 	'compare-columns'     => array( 'Slug' => 'signal-noise/compare-columns' ),
 	'steps-enumerated'    => array( 'Slug' => 'signal-noise/steps-enumerated' ),
+	'sidenote'            => array( 'Slug' => 'signal-noise/sidenote' ),
 );
 
 foreach ( $expected_patterns as $basename => $expected ) {

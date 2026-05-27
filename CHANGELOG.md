@@ -2,6 +2,41 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.5.0] - 2026-05-27 — Cross-package listener tests + WCAG contrast baseline + v10 scope audit
+
+**Released:** 2026-05-27.
+
+**Headline:** v9.5.0 closes the consumer-side seal on all 4 plugin→theme filter contracts (mirrors plugin v4.4.0's producer-side lock from `tests/contracts-stub.php`), turns `docs/ACCESSIBILITY.md` measurements into machine-enforced WCAG contrast assertions, and produces the theme v10.0.0 scope audit. Convened after plugin v4.5.x gate (v4.5.1 shipped 2026-05-27 with the audit-driven dead-Suggest-button fix).
+
+### Added
+
+- **Cross-package listener tests** (`tests/cross-package-listeners.php`): theme-side seal for the 4 plugin→theme filter contracts. 25 assertions verify each listener is registered AND returns the documented type when invoked. Mirrors plugin's `tests/contracts-stub.php` producer-side lock from v4.4.0. Standalone fixture pattern with WP function stubs — no WP load required.
+- **Build-time WCAG 2.1 contrast verification** (`tests/contrast-baseline.php`): pure PHP relative-luminance computation from `theme.json`'s palette. 20 assertions covering required slugs, AA-normal pairings (>= 4.5:1), AA-large pairings (>= 3.0:1), and baseline drift tolerance (±0.20). The tight `blood-on-asphalt` margin (4.60, only 0.10 above AA threshold) is locked — any deliberate palette evolution must update BOTH `theme.json` AND this test in the same commit. Negative-test verified during development: mutating `asphalt` `#f5f5f5` → `#dddddd` triggers 5 failures including the tight margin.
+- **Theme v10.0.0 scope audit** (`docs/superpowers/specs/2026-05-27-v10.0.0-scope.md`): public surface inventory + dispositions across 7 dimensions (36 `sn_*` functions, 4 dispatched hooks, 4 contract listeners, theme.json v3 schema, 13 templates + 4 parts, 6 patterns, 12 abilities). 79 KEEP / 0 RENAME / 0 REMOVE / 1 SCHEMA-CHANGE-conditional (theme.json v3→v4, contingent on WP). Mirrors plugin's `2026-05-26-v5.0.0-scope.md`. Conclusion: v10.0.0 has no current driver — cap-drop intact.
+
+### Changed
+
+- Theme aggregate test count: 303 → **355 assertions** across 7 suites, 0 failed (348 pre-sidenote-fix → 355 after sidenote adds 7 assertions to patterns-registry).
+
+### Fixed
+
+- `tests/patterns-registry.php` now covers the `signal-noise/sidenote` pattern (discovered as untested gap during the v10.0.0 audit). Pattern was auto-registered by WP's pattern engine but had no test enforcement. +7 assertions (42 → 49 in that suite).
+- `readme.txt` Stable tag drift: was `9.4.3`, now correctly tracks the shipped version (bumped directly to `9.5.0`, skipping intermediate stale values).
+
+### Implementation notes
+
+- v9.5.0 BC convened on **v4.5.x gate** (relaxed from v5.0.x per spec §1 — escape hatch from roadmap §3 exercised). Cap-drop intact; v10.0.0 stays unforced.
+- Paired with [plugin v4.5.0](https://github.com/juanlentino/signal-and-noise-tools/releases/tag/v4.5.0) + [v4.5.1 post-ship patch](https://github.com/juanlentino/signal-and-noise-tools/releases/tag/v4.5.1). Plugin shipped first per spec §5 sequencing; this release reacts to it.
+- Spec: [docs/superpowers/specs/2026-05-26-v4.5.0-and-v9.5.0-paired-design.md](docs/superpowers/specs/2026-05-26-v4.5.0-and-v9.5.0-paired-design.md).
+- Plan: `docs/superpowers/plans/2026-05-26-v9.5.0.md` (this repo).
+
+**Post-install user actions:**
+
+- Install v9.5.0 via wp-admin → Dashboard → Updates.
+- No cache purge required — no CSS or JS changes in this release. Theme version bump refreshes `sn_asset_ver()` mtime automatically.
+
+---
+
 ## [9.4.6] - 2026-05-26 — Body heading scale for single-post context (h2/h3/h4 no longer beat h1)
 
 **Released:** 2026-05-26.
