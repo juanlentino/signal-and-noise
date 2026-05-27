@@ -2,6 +2,57 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.4.6] - 2026-05-26 — Body heading scale for single-post context (h2/h3/h4 no longer beat h1)
+
+**Released:** 2026-05-26.
+
+**Headline:** theme.json maps body `h2` → `xx-large` (`clamp(3rem, 7vw, 6rem)`) and `h3` → `x-large` (`clamp(2rem, 4vw, 3.5rem)`) — both bigger than the `.sn-note-title` h1 (`clamp(2.5rem, 6vw, 5rem)`) at typical viewports. The body heading scale was calibrated for a catalog-hero h1 (`xxx-large = clamp(4rem, 10vw, 9rem)`) and never re-tuned after long-form post layout shrank h1 to 5rem max. Result: body section headings competed with or exceeded the post title visually.
+
+**Why bumped:** real visual regression caught immediately after the v9.3.0 long-form post layout shipped. Affects every single-note post.
+
+**Fix:**
+
+- **`.single-post .wp-block-post-content h2.wp-block-heading`** — `clamp(1.875rem, 3.5vw, 3rem)`, `line-height: 1.15`, `margin-top: 1.8em`, `margin-bottom: 0.6em`. Caps at 3rem (48px) — clearly subordinate to the 5rem (80px) max h1.
+- **`.single-post .wp-block-post-content h3.wp-block-heading`** — `clamp(1.5rem, 2.5vw, 2.25rem)`, `line-height: 1.2`, `margin-top: 1.6em`, `margin-bottom: 0.5em`.
+- **`.single-post .wp-block-post-content h4.wp-block-heading`** — `clamp(1.25rem, 2vw, 1.75rem)`, `line-height: 1.25`, `margin-top: 1.4em`, `margin-bottom: 0.4em`.
+
+At 1440px viewport: h1=80px → h2=48px → h3=36px → h4=28px. Each ~1.3–1.7× the next. Clean Bebas Neue rhythm.
+
+**Files changed:**
+
+- `assets/css/critical.css` — body heading scale block added immediately above the existing v9.3.0 drop-cap rules
+- `style.css` — version 9.4.5 → 9.4.6
+
+**Why this is decoupled from the PA-01 WCAG fix:** Audit D PA-01 flagged that body headings on `/notes/*` posts are stored as `<h3>` (h1→h3 skip violates WCAG 1.3.1 Level A). The proposed content sweep promotes them to `<h2>`. **The sweep is still pending** — the previous SQL recipe (`REPLACE` against literal `<!-- wp:heading {"level":3}`) matched 0 rows, indicating the heading blocks have additional attrs in the JSON or whitespace variations that broke the prefix match. v9.4.6's CSS fix lands the visual hierarchy regardless of the WCAG state — whether body headings are stored as h3 (today) or h2 (after the sweep), they render at the right size.
+
+**Audit reference:** [`docs/superpowers/specs/2026-05-26-audit-d-perf-a11y-findings.md`](docs/superpowers/specs/2026-05-26-audit-d-perf-a11y-findings.md) §3 PA-01 — visual coupling.
+
+**Tests:** 303 assertions / 5 theme suites — all green. CSS-only change; no test surface affected.
+
+**Post-install user actions:**
+
+- Install v9.4.6 via wp-admin → Dashboard → Updates.
+- **Purge caches** — Signal & Noise → Dashboard → "Purge all caches" (the new CSS is `?ver=`-busted automatically by `sn_asset_ver()` mtime tracking, but Cloudflare + Breeze still need a poke). Or wait ~30s for natural cache rotation.
+- Reload any `/notes/<slug>/` post — section headings should now sit clearly below the post title in size.
+
+**Related — re-running the PA-01 SQL fix (separate from this release):**
+
+The earlier SQL pattern (`'<!-- wp:heading {"level":3}'` literal) didn't match. Likely cause: block JSON has extra keys (e.g., `{"level":3,"className":"..."}`) so the closing `}` in the prefix fails. Try this diagnostic SELECT first to see the actual stored format:
+
+```sql
+SELECT
+    ID, post_title,
+    SUBSTRING(post_content, LOCATE('wp:heading', post_content), 100) AS heading_block_start
+FROM wp_posts
+WHERE post_type='post' AND post_status='publish'
+    AND post_content LIKE '%wp:heading%level":3%'
+LIMIT 5;
+```
+
+Once we see the actual format, a corrected `REGEXP_REPLACE` (MySQL 8+) can target the variations — happy to write it after seeing the SELECT output.
+
+---
+
 ## [9.4.5] - 2026-05-26 — Tier B fixes — static template img lazy/async + footnote keyboard parity
 
 **Released:** 2026-05-26. (CHANGELOG entry added as follow-up docs commit — the v9.4.5 tag itself was pushed without this entry due to a string-mismatch in the original edit; rather than re-tag, this entry lands separately as a CHANGELOG-only commit per CLAUDE.md's "CHANGELOG-only commits don't bump" rule.)
