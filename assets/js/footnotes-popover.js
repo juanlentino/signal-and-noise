@@ -103,9 +103,34 @@
 		removeActive();
 	}
 
+	/**
+	 * Keyboard parity: show the popover when the footnote anchor gains focus
+	 * (Tab key navigation), dismiss when it blurs. Mirrors the hover behavior
+	 * for keyboard users. Audit D PA-11.
+	 */
+	function onFocusIn( event ) {
+		var sup = event.target.closest( 'sup' );
+		if ( ! sup ) { return; }
+		var anchor = sup.querySelector( 'a[href^="#footnote-"]' );
+		if ( ! anchor || anchor !== event.target ) { return; }
+		removeActive();
+		var popover = buildPopover( anchor );
+		if ( ! popover ) { return; }
+		activePopover = popover;
+		positionPopover( popover, sup.getBoundingClientRect() );
+	}
+
+	function onFocusOut( event ) {
+		var sup = event.target.closest( 'sup' );
+		if ( ! sup ) { return; }
+		removeActive();
+	}
+
 	function init() {
 		document.addEventListener( 'pointerenter', onEnter, true );
 		document.addEventListener( 'pointerleave', onLeave, true );
+		document.addEventListener( 'focusin', onFocusIn );
+		document.addEventListener( 'focusout', onFocusOut );
 	}
 
 	if ( document.readyState === 'loading' ) {
