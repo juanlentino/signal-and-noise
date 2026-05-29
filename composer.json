@@ -4,7 +4,7 @@
     "type": "wordpress-theme",
     "license": "proprietary",
     "require": {
-        "php": ">=8.1"
+        "php": ">=8.0"
     },
     "require-dev": {
         "squizlabs/php_codesniffer": "^3.13",
