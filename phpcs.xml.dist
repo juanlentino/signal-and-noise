@@ -18,14 +18,16 @@
 	<exclude-pattern>*/tests/*</exclude-pattern>
 	<exclude-pattern>*/assets/*</exclude-pattern>
 	<exclude-pattern>*/.git/*</exclude-pattern>
-	<!-- NOTE: deliberately NO `.claude/` exclude-pattern. PHPCS matches
-	     exclude-patterns as regex against the FULL ABSOLUTE path, and this theme
-	     is developed in a git worktree under .../.claude/worktrees/…, so any
-	     `.claude` pattern matches the worktree's own path and silently excludes
-	     EVERY file locally (a false 0/0) while CI — on a neutral /home/runner/work
-	     path — scans everything. It's also unnecessary: .claude/ is gitignored, so
-	     it's absent from any clean checkout (CI/server/clone) and never contains
-	     scannable .php anyway. Leaving it out is strictly correct. -->
+	<!-- .claude/ exclusion is anchored type="relative" (matched against basepath,
+	     NOT the absolute path). This theme is developed in a git worktree under
+	     `…/.claude/worktrees/…`; a bare `*/.claude/*` matches the ABSOLUTE path and
+	     so matched the worktree's own ancestor dir, silently excluding EVERY file
+	     locally (a false 0/0) while CI — on a neutral /home/runner path — scanned
+	     everything and failed. The relative anchor (`^\.claude/`) only ever matches
+	     a `.claude/` at THIS repo's root, never an ancestor — so local matches CI.
+	     Always falsification-test a 0/0 (inject a violation, confirm it's reported)
+	     before trusting it: exit 0 can mean "scanned nothing." -->
+	<exclude-pattern type="relative">^\.claude/</exclude-pattern>
 
 
 	<arg name="extensions" value="php"/>
