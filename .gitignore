@@ -5,3 +5,6 @@ node_modules/
 
 # Brainstorm artifacts (superpowers visual-companion mockups + session state)
 .superpowers/
+
+# Claude Code session state (worktree-local; never committed)
+.claude/
