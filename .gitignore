@@ -3,6 +3,13 @@ node_modules/
 .DS_Store
 .preview/
 
+# Composer dev tooling (PHPCS/WPCS) — local only, never shipped.
+# composer.lock is gitignored too: this is a distributed theme, not a
+# deployed app, and the only deps are dev-only linters that don't ship,
+# so pinning them repo-wide adds churn for no runtime benefit.
+/vendor/
+composer.lock
+
 # Brainstorm artifacts (superpowers visual-companion mockups + session state)
 .superpowers/
 
