@@ -68,13 +68,24 @@ function sn_gh_latest_theme_tag( $force_refresh = false ) {
 		}
 	}
 
-	$url      = 'https://api.github.com/repos/' . SN_GH_THEME_OWNER . '/' . SN_GH_THEME_REPO . '/tags?per_page=100';
+	$url     = 'https://api.github.com/repos/' . SN_GH_THEME_OWNER . '/' . SN_GH_THEME_REPO . '/tags?per_page=100';
+	$headers = array(
+		'Accept'     => 'application/vnd.github+json',
+		'User-Agent' => 'WordPress; ' . home_url(),
+	);
+	// v9.5.2: authenticate the tag-fetch when SNT_GITHUB_TOKEN is defined in
+	// wp-config.php — raises the GitHub limit from 60/h (unauthenticated, shared
+	// per-server-IP) to 5000/h. Without this, a busy/shared IP can exhaust the
+	// 60/h pool, the fetch 403s, sn_gh_latest_theme_tag() returns null, and the
+	// Updates page silently shows "no update available" even when one exists.
+	// SNT_GITHUB_TOKEN is the same wp-config constant the plugin uses (both run
+	// in one WP process). Conditional → unauthenticated fallback unchanged when absent.
+	if ( defined( 'SNT_GITHUB_TOKEN' ) && SNT_GITHUB_TOKEN ) {
+		$headers['Authorization'] = 'Bearer ' . SNT_GITHUB_TOKEN;
+	}
 	$response = wp_remote_get( $url, array(
 		'timeout' => 8,
-		'headers' => array(
-			'Accept'     => 'application/vnd.github+json',
-			'User-Agent' => 'WordPress; ' . home_url(),
-		),
+		'headers' => $headers,
 	) );
 
 	if ( is_wp_error( $response ) || wp_remote_retrieve_response_code( $response ) !== 200 ) {

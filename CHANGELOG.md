@@ -2,6 +2,20 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.5.2] - 2026-05-29 — Self-updater authenticates to GitHub (60/h → 5000/h)
+
+**Released:** 2026-05-29.
+
+**Headline:** The theme self-updater's GitHub tag-fetch (`sn_gh_latest_theme_tag`) only ever sent `Accept` + `User-Agent` — never an `Authorization` header — so every WP update-check spent from GitHub's **60/h unauthenticated** pool (shared per-server-IP on Cloudways). When exhausted, the fetch 403s, the function returns `null`, and the Updates page silently shows "no update available" even when a release exists. Now authenticates with the same `SNT_GITHUB_TOKEN` wp-config constant the plugin uses (both run in one WP process). Paired with plugin v4.5.6.
+
+### Fixed
+
+- **`sn_gh_latest_theme_tag()` now sends `Authorization: Bearer <SNT_GITHUB_TOKEN>`** when the constant is defined — 60/h → 5000/h. Conditional: absent constant → byte-for-byte the previous unauthenticated request, so no regression for tokenless installs. (`inc/wp-update-integration.php`)
+
+### Added
+
+- **`tests/updater-github-auth.php`** — 6 assertions locking the token-auth contract (Authorization present when defined, headers preserved, `defined()`-guarded fallback). Theme test total: **361 assertions across 8 suites**.
+
 ## [9.5.1] - 2026-05-29 — Post-ship QA audit fixes — skip-link a11y + duplicate title + sub-11px floor + reduced-motion scroll
 
 **Released:** 2026-05-29. (CHANGELOG entry backfilled 2026-05-29 — the v9.5.1 commit + tag shipped without it due to an editor no-op; code + version were correct.)
