@@ -142,15 +142,12 @@ $sn_footer_html = ob_get_clean();
 <meta charset="<?php bloginfo( 'charset' ); ?>">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <?php
-// Manually output the document title before wp_head(). Block-theme
-// rendering normally produces this via head-template processing,
-// but our `template_redirect` short-circuit bypasses that path
-// AND the theme doesn't register `add_theme_support('title-tag')`,
-// so WP's auto-title hook isn't installed either. Result without
-// this line: no <title> element at all → browsers display the URL
-// in the tab. The pre_get_document_title filter in
-// inc/page-notes-template.php controls the value used here.
-echo '<title>' . esc_html( wp_get_document_title() ) . '</title>' . "\n";
+// The document <title> is emitted by core's _wp_render_title_tag() during
+// wp_head() below — inc/setup.php registers add_theme_support( 'title-tag' )
+// (added for the TSF cutover, v8.5.5), and the value comes from the
+// pre_get_document_title filter in inc/page-notes-template.php. Before v9.5.1
+// this renderer ALSO echoed a manual <title> here (a leftover from before
+// title-tag support existed), which produced a DUPLICATE <title> on /notes.
 wp_head();
 ?>
 <style>
@@ -270,12 +267,12 @@ wp_head();
 	border-bottom: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
 }
 .sn-notes-section-label {
-	font-size: 0.65rem;
+	font-size: max(0.7rem, 11px);
 	color: var(--wp--preset--color--rust, #666);
 }
 .sn-notes-section-count {
 	font-family: 'DM Mono', 'Courier New', monospace;
-	font-size: 0.65rem;
+	font-size: max(0.7rem, 11px);
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
 	color: var(--wp--preset--color--rust, #666);
@@ -556,7 +553,7 @@ wp_head();
 echo $sn_header_html;
 ?>
 
-<main class="sn-notes-page" id="content">
+<main class="sn-notes-page" id="wp--skip-link--target">
 
 	<div class="sn-notes-top">
 

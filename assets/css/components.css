@@ -551,7 +551,7 @@
 .sn-catalog-section-label,
 .sn-catalog-section-count {
 	font-family: var(--wp--preset--font-family--body);
-	font-size: 0.65rem;
+	font-size: max(0.7rem, 11px);
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
 	color: var(--wp--preset--color--rust);

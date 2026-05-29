@@ -80,6 +80,18 @@ body::after {
 	outline-offset: 2px;
 }
 
+/* v9.5.1: hide WordPress core's native block-template skip-link
+   (<a id="wp-skip-link">, emitted by _block_template_add_skip_link()). The
+   theme already provides its own brand-styled .sn-skip-link first in the DOM
+   via wp_body_open(), so core's is a DUPLICATE "Skip to content" link on every
+   block-template page. ID-selector specificity (1,0,0) beats core's inline
+   .skip-link.screen-reader-text rule, so this wins regardless of load order.
+   Not an a11y regression: the theme's link comes first in tab order and points
+   at the same #wp--skip-link--target. */
+#wp-skip-link {
+	display: none;
+}
+
 /* v8.5.6 critical.css pruning: 5 @keyframes (fadeInUp, fadeIn,
    slideInLeft, glitchFlicker, pulseGlow) + block-level entrance
    animation lived here. Keyframes only need to load before the

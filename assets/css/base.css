@@ -30,6 +30,17 @@ html {
 	overflow-x: hidden;
 }
 
+/* v9.5.1: honour prefers-reduced-motion. Smooth scrolling is a motion effect
+   (fires on skip-link activation + every in-page anchor jump) — the one motion
+   vector not already gated (the theme disables all keyframe animations, hover
+   transitions, and View Transitions under reduce). Loaded after the inline
+   critical.css `html { scroll-behavior: smooth }`, so this override wins. */
+@media (prefers-reduced-motion: reduce) {
+	html {
+		scroll-behavior: auto;
+	}
+}
+
 body {
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
