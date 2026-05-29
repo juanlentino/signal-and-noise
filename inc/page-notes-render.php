@@ -129,10 +129,12 @@ if ( $entry_count > 0 ) {
 // right, etc. Output buffer captures the markup; WP's style-engine
 // receives the side effects.
 ob_start();
+// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- do_blocks() output is trusted rendered block HTML (the theme's own header template part); escaping it would corrupt the markup. Captured here only to register block-layout styles before wp_head().
 echo do_blocks( '<!-- wp:template-part {"slug":"header","area":"header"} /-->' );
 $sn_header_html = ob_get_clean();
 
 ob_start();
+// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- do_blocks() output is trusted rendered block HTML (the theme's own footer template part); must not be escaped.
 echo do_blocks( '<!-- wp:template-part {"slug":"footer","area":"footer"} /-->' );
 $sn_footer_html = ob_get_clean();
 ?>
@@ -550,6 +552,7 @@ wp_head();
 // Header was pre-rendered above (before wp_head ran) so the block-
 // layout styles registered correctly. Now we just echo the captured
 // HTML.
+// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $sn_header_html is trusted do_blocks() output captured above; must not be re-escaped.
 echo $sn_header_html;
 ?>
 
@@ -619,7 +622,7 @@ echo $sn_header_html;
 			<?php while ( $query->have_posts() ) : $query->the_post(); $p = get_post(); ?>
 				<li class="sn-notes-row">
 					<div class="sn-notes-row-spec" aria-hidden="false">
-						<time class="sn-notes-row-date" datetime="<?php echo esc_attr( get_the_date( 'c', $p ) ); ?>"><?php echo sn_notes_render_date( $p ); ?></time>
+						<time class="sn-notes-row-date" datetime="<?php echo esc_attr( get_the_date( 'c', $p ) ); ?>"><?php echo sn_notes_render_date( $p ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- helper returns esc_html()'d output (see sn_notes_render_date); escaping again would double-encode. ?></time>
 						<span class="sn-notes-row-rt"><?php echo esc_html( sn_notes_render_reading_time( $p->ID ) ); ?></span>
 					</div>
 					<div class="sn-notes-row-content">
@@ -640,6 +643,7 @@ echo $sn_header_html;
 
 <?php
 // Footer pre-rendered above. Echo the captured HTML.
+// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $sn_footer_html is trusted do_blocks() output captured above; must not be re-escaped.
 echo $sn_footer_html;
 ?>
 

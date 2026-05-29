@@ -18,7 +18,15 @@
 	<exclude-pattern>*/tests/*</exclude-pattern>
 	<exclude-pattern>*/assets/*</exclude-pattern>
 	<exclude-pattern>*/.git/*</exclude-pattern>
-	<exclude-pattern>*/.claude/*</exclude-pattern>
+	<!-- NOTE: deliberately NO `.claude/` exclude-pattern. PHPCS matches
+	     exclude-patterns as regex against the FULL ABSOLUTE path, and this theme
+	     is developed in a git worktree under .../.claude/worktrees/…, so any
+	     `.claude` pattern matches the worktree's own path and silently excludes
+	     EVERY file locally (a false 0/0) while CI — on a neutral /home/runner/work
+	     path — scans everything. It's also unnecessary: .claude/ is gitignored, so
+	     it's absent from any clean checkout (CI/server/clone) and never contains
+	     scannable .php anyway. Leaving it out is strictly correct. -->
+
 
 	<arg name="extensions" value="php"/>
 	<arg name="basepath" value="."/>
@@ -37,7 +45,12 @@
 	<rule ref="WordPress.WP.GlobalVariablesOverride"/>
 	<rule ref="WordPress.PHP.DontExtract"/>
 
-	<!-- ── i18n (informational — theme deliberately ships no translations) ─ -->
+	<!-- ── i18n ──────────────────────────────────────────────────────────
+	     Kept ACTIVE for text-domain VALIDATION (catches a typo'd/wrong domain),
+	     but MissingTranslatorsComment is excluded: translator comments only help
+	     human translators, and this single-author theme produces no translations
+	     (documented non-goal — see inc/setup.php). Strings stay wrapped in __()
+	     so i18n CAN be enabled later. (Mirrors the plugin's I18n stance.) -->
 	<rule ref="WordPress.WP.I18n">
 		<properties>
 			<property name="text_domain" type="array">
@@ -45,6 +58,7 @@
 				<element value="default"/>
 			</property>
 		</properties>
+		<exclude name="WordPress.WP.I18n.MissingTranslatorsComment"/>
 	</rule>
 
 	<!-- ── PHP cross-version compatibility against the declared floor ──── -->

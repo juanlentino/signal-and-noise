@@ -139,7 +139,7 @@ add_filter( 'pre_set_site_transient_update_themes', function( $transient ) {
 	// Without this, our cached value persists even when the user explicitly
 	// asks for a fresh check. Mirrors plugin v1.11.1.
 	$force_refresh = ( defined( 'WP_FORCE_UPDATE_CHECK' ) && WP_FORCE_UPDATE_CHECK )
-		|| ( isset( $_GET['force-check'] ) && $_GET['force-check'] );
+		|| ! empty( $_GET['force-check'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only cache-buster; presence-only boolean, no state change.
 
 	$latest_tag = sn_gh_latest_theme_tag( $force_refresh );
 	if ( $latest_tag === null ) {

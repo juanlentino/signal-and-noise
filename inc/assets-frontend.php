@@ -82,7 +82,8 @@ add_action( 'wp_head', function() {
 	$css_file = get_theme_file_path( 'assets/css/critical.css' );
 	if ( file_exists( $css_file ) ) {
 		echo '<style id="sn-critical-inline">' . "\n";
-		echo file_get_contents( $css_file );  // phpcs:ignore WordPress.WP.AlternativeFunctions
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents, WordPress.Security.EscapeOutput.OutputNotEscaped -- repo-shipped, theme-owned CSS file (assets/css/critical.css); trusted by construction and intentionally emitted raw. Escaping would corrupt the stylesheet.
+		echo file_get_contents( $css_file );
 		echo '</style>' . "\n";
 	}
 }, 50 );

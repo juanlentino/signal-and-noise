@@ -81,7 +81,7 @@ function sn_notes_is_index_request() {
 	// against the canonical bare path. WP will not have resolved a
 	// single-post URL like /notes/some-slug/ to this branch — those
 	// have a longer path.
-	$req  = isset( $_SERVER['REQUEST_URI'] ) ? (string) $_SERVER['REQUEST_URI'] : '';
+	$req  = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
 	$path = strtok( $req, '?' );
 	$path = '/' . trim( (string) $path, '/' );
 	return ( '/notes' === $path );
