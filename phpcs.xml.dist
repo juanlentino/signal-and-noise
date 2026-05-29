@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<ruleset name="Signal &amp; Noise theme — curated WP handbook conformance">
+	<description>
+		Curated WordPress-handbook ruleset for the FSE theme: security
+		(escaping/sanitization), i18n, deprecated/discouraged APIs, and PHP 8.0+
+		cross-version compatibility against the declared `Requires PHP` floor.
+
+		Cosmetic/whitespace/Yoda/alignment sniffs are intentionally EXCLUDED — the
+		theme has its own consistent tab style; the goal is correctness + security,
+		not formatting churn. Note: i18n is a documented non-goal for this single-
+		author theme (no textdomain loaded), so the I18n sniff is informational.
+
+		Run:  composer install, then composer exec -- phpcs
+	</description>
+
+	<file>.</file>
+	<exclude-pattern>*/vendor/*</exclude-pattern>
+	<exclude-pattern>*/tests/*</exclude-pattern>
+	<exclude-pattern>*/assets/*</exclude-pattern>
+	<exclude-pattern>*/.git/*</exclude-pattern>
+	<exclude-pattern>*/.claude/*</exclude-pattern>
+
+	<arg name="extensions" value="php"/>
+	<arg name="basepath" value="."/>
+	<arg name="parallel" value="8"/>
+	<arg name="colors"/>
+	<arg value="sp"/>
+
+	<!-- ── Security: escaping + sanitization (theme is output-heavy) ──── -->
+	<rule ref="WordPress.Security"/>
+
+	<!-- ── API hygiene ───────────────────────────────────────────────── -->
+	<rule ref="WordPress.WP.DeprecatedFunctions"/>
+	<rule ref="WordPress.WP.DeprecatedParameters"/>
+	<rule ref="WordPress.WP.DeprecatedClasses"/>
+	<rule ref="WordPress.WP.DiscouragedFunctions"/>
+	<rule ref="WordPress.WP.GlobalVariablesOverride"/>
+	<rule ref="WordPress.PHP.DontExtract"/>
+
+	<!-- ── i18n (informational — theme deliberately ships no translations) ─ -->
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array">
+				<element value="signal-noise"/>
+				<element value="default"/>
+			</property>
+		</properties>
+	</rule>
+
+	<!-- ── PHP cross-version compatibility against the declared floor ──── -->
+	<config name="testVersion" value="8.0-"/>
+	<rule ref="PHPCompatibilityWP"/>
+
+	<config name="minimum_wp_version" value="6.4"/>
+</ruleset>

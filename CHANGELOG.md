@@ -2,6 +2,26 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.5.1] - 2026-05-29 — Post-ship QA audit fixes — skip-link a11y + duplicate title + sub-11px floor + reduced-motion scroll
+
+**Released:** 2026-05-29. (CHANGELOG entry backfilled 2026-05-29 — the v9.5.1 commit + tag shipped without it due to an editor no-op; code + version were correct.)
+
+**Headline:** Front-end accessibility + polish from the full-codebase QA audit (7 parallel review agents) run before the v9.6.0 cycle. No behavioural changes to settings, templates, or abilities. A follow-up PHPCS/WPCS handbook conformance pass (2026-05-29) confirmed the theme's PHP is clean (0 errors / 0 warnings) and added a committed `phpcs.xml.dist` + `composer run lint` workflow (dev-tooling only, no runtime change, no version bump).
+
+### Fixed
+
+- **Broken skip-link on `/notes`** — the "Skip to content" link targeted `#wp--skip-link--target`, but the custom `/notes` renderer bypasses WP's block-template pipeline (which is what stamps that id onto the first `<main>`), so the anchor dangled. The `/notes` `<main>` now carries `id="wp--skip-link--target"`. WCAG 2.4.1. (`inc/page-notes-render.php`)
+- **Duplicate "Skip to content" link on every block-template page** — WP core's native skip-link (`<a id="wp-skip-link">`) and the theme's own `.sn-skip-link` both rendered. Core's duplicate is now hidden via an ID-specificity CSS rule; the theme's brand-styled link (first in tab order, same target) remains. (`assets/css/critical.css`)
+- **Duplicate `<title>` on `/notes`** — the renderer echoed a manual `<title>` and `wp_head()` also emitted one via `title-tag` support (registered for the v8.5.5 TSF cutover). Removed the manual echo; core's `_wp_render_title_tag()` now owns it. (`inc/page-notes-render.php`)
+- **Sub-11px type below the project floor** — `.sn-catalog-section-label`/`-count` (services + music pages) and `.sn-notes-section-label`/`-count` (`/notes`) rendered at `0.65rem` (10.4px). Raised to `max(0.7rem, 11px)`. (`assets/css/components.css`, `inc/page-notes-render.php`)
+- **`scroll-behavior: smooth` now respects `prefers-reduced-motion`** — the one motion vector not already gated (the theme disables all keyframe animations, hover transitions, and View Transitions under reduce). Added a reduced-motion override. (`assets/css/base.css`)
+
+### Tooling
+
+- **Added `phpcs.xml.dist` + `composer require-dev`** (PHPCS + WordPress-Coding-Standards + PHPCompatibilityWP) with a `composer run lint` workflow. The theme's PHP passes clean (0/0). Dev-tooling only — `vendor/` is gitignored and nothing ships to the runtime site, so no version bump.
+
+---
+
 ## [9.5.0] - 2026-05-27 — Cross-package listener tests + WCAG contrast baseline + v10 scope audit
 
 **Released:** 2026-05-27.
