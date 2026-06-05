@@ -578,6 +578,41 @@ wp_head();
 	.sn-notes-pillar::before { transition: none; }
 	.sn-notes-row { transition: none; }
 }
+
+/* PAGINATION — numbered control below the notes index.
+   paginate_links() emits <a>/<span> with .current on the active page.
+   DM Mono numerals + 11px floor, matching the catalog vocabulary. No
+   animated transitions → nothing to gate under prefers-reduced-motion.
+   (Active/hover use `bone` #000 — `void` is the white page background.) */
+.sn-notes-pagination {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	align-items: center;
+	justify-content: center;
+	margin-top: clamp(2rem, 5vw, 3.5rem);
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.8rem, 12px);
+	letter-spacing: 0.1em;
+}
+.sn-notes-pagination a,
+.sn-notes-pagination span {
+	color: var(--wp--preset--color--rust, #666);
+	text-decoration: none;
+	padding: 0.25rem 0.5rem;
+	min-width: 1.5rem;
+	text-align: center;
+}
+.sn-notes-pagination a:hover,
+.sn-notes-pagination a:focus {
+	color: var(--wp--preset--color--bone, #000);
+	text-decoration: underline;
+	text-underline-offset: 0.25em;
+}
+.sn-notes-pagination .current {
+	color: var(--wp--preset--color--bone, #000);
+	font-weight: 700;
+}
 </style>
 </head>
 <body <?php body_class( 'sn-notes-body' ); ?>>
@@ -649,7 +684,7 @@ echo $sn_header_html;
 	<section class="sn-notes-index-section" aria-labelledby="sn-index-heading">
 		<div class="sn-notes-section-wrap">
 			<p class="sn-notes-section-label" id="sn-index-heading">Notes &mdash; Index</p>
-			<span class="sn-notes-section-count"><?php echo esc_html( sprintf( '%02d / %02d', $entry_count, $entry_count ) ); ?></span>
+			<span class="sn-notes-section-count"><?php echo esc_html( sprintf( '%02d', (int) $query->found_posts ) ); ?></span>
 		</div>
 
 		<?php if ( $query->have_posts() ) : ?>
@@ -671,6 +706,32 @@ echo $sn_header_html;
 			</ol>
 		<?php else : ?>
 			<p class="sn-notes-empty">No notes published yet. Check back soon.</p>
+		<?php endif; ?>
+
+		<?php if ( $query->max_num_pages > 1 ) : ?>
+			<nav class="sn-notes-pagination" aria-label="Notes pages">
+				<?php
+				$sn_notes_links = paginate_links( array(
+					'base'      => esc_url_raw( add_query_arg( 'paged', '%#%', home_url( '/notes/' ) ) ),
+					'format'    => '',
+					'current'   => sn_notes_current_page(),
+					'total'     => (int) $query->max_num_pages,
+					'type'      => 'array',
+					'prev_text' => '&larr;',
+					'next_text' => '&rarr;',
+					'mid_size'  => 2,
+					'end_size'  => 1,
+				) );
+				if ( is_array( $sn_notes_links ) ) {
+					foreach ( $sn_notes_links as $sn_link ) {
+						// paginate_links() returns pre-escaped, controlled
+						// <a>/<span> markup (WP core helper). Echo as-is;
+						// wrapping in esc_html would mangle the anchors.
+						echo $sn_link; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- paginate_links() output is trusted WP-core-generated markup.
+					}
+				}
+				?>
+			</nav>
 		<?php endif; ?>
 	</section>
 
