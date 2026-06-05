@@ -52,7 +52,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * effect?" was answered by behavioural inference, which has lied to
  * us across multiple incidents on this exact page.
  */
-const SN_NOTES_OVERRIDE_BUILD = '2026-05-30-pagination-v10';
+const SN_NOTES_OVERRIDE_BUILD = '2026-06-05-notes-search-v11';
 
 /**
  * Detect whether the current request is the /notes index page.
@@ -162,6 +162,49 @@ add_filter( 'pre_get_document_title', function( $title ) {
 	$site = get_bloginfo( 'name' );
 	return $site ? 'Notes — ' . $site : 'Notes';
 }, 999 );
+
+/**
+ * Build the canonical Notes-search URL for a term. Empty term -> /notes/.
+ * rawurlencode() the term because WP's add_query_arg() does NOT urlencode
+ * values (urlencode=false), so a multi-word term would otherwise produce
+ * an invalid URL.
+ *
+ * @param string $term Raw search term.
+ * @return string Absolute /notes/ URL, with ?s= when a term is present.
+ */
+function sn_notes_search_redirect_target( $term ) {
+	$term = trim( sanitize_text_field( (string) $term ) );
+	$url  = home_url( '/notes/' );
+	if ( '' !== $term ) {
+		$url = add_query_arg( 's', rawurlencode( $term ), $url );
+	}
+	return $url;
+}
+
+/**
+ * Funnel any site-wide search (?s=) to the single Notes search surface
+ * (v9.8.0). There is exactly one search UI on the site — the /notes
+ * archive — so a raw ?s= anywhere (old bookmarks, browser search
+ * providers, a leftover global-search URL) is redirected there.
+ *
+ * Priority 1: AFTER the notes-render short-circuit (priority 0, which
+ * already exits for the /notes index) and BEFORE redirect_canonical
+ * (priority 10). Skips admin, REST, feeds, and the /notes index itself
+ * (defensive — that branch has already exited) so there is no loop.
+ */
+add_action( 'template_redirect', function() {
+	if ( is_admin() || is_feed() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
+		return;
+	}
+	if ( ! is_search() ) {
+		return;
+	}
+	if ( sn_notes_is_index_request() ) {
+		return; // already the /notes surface; its renderer handles ?s=.
+	}
+	wp_safe_redirect( sn_notes_search_redirect_target( get_search_query( false ) ), 302 );
+	exit;
+}, 1 );
 
 /**
  * Auto-purge wp_template DB rows for `page-notes` on every admin
