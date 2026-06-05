@@ -554,7 +554,10 @@ wp_head();
 	max-width: 60ch;
 }
 
-.sn-notes-empty {
+/* Scoped to .sn-notes-page so this inline rule deterministically wins over
+   the global components.css .sn-notes-empty (specificity 0,2,0 > 0,1,0),
+   not by source order alone. */
+.sn-notes-page .sn-notes-empty {
 	font-family: 'DM Mono', 'Courier New', monospace;
 	font-size: 0.85rem;
 	letter-spacing: 0.1em;
@@ -593,6 +596,21 @@ wp_head();
 }
 .sn-notes-search input[type="search"]:focus {
 	outline: none;
+}
+/* Restore a real keyboard ring: mouse focus stays ring-less (rule above),
+   but :focus-visible re-adds the brand 2px blood ring for keyboard nav —
+   the theme's global focus-visible list (base.css) doesn't cover
+   input[type="search"]. WCAG 2.4.7. */
+.sn-notes-search input[type="search"]:focus-visible {
+	outline: 2px solid var(--wp--preset--color--blood, #e00404);
+	outline-offset: 3px;
+}
+/* Strip the UA search-clear "✕" + decoration so the brutalist field stays a
+   clean underline on WebKit/Blink. */
+.sn-notes-search input[type="search"]::-webkit-search-cancel-button,
+.sn-notes-search input[type="search"]::-webkit-search-decoration {
+	-webkit-appearance: none;
+	appearance: none;
 }
 .sn-notes-search input[type="search"]::placeholder {
 	color: var(--wp--preset--color--rust, #666);
@@ -782,6 +800,12 @@ echo $sn_header_html;
 			<p class="sn-notes-eyebrow">Index &middot; Vol. 01 &middot; <?php echo esc_html( wp_date( 'Y' ) ); ?></p>
 			<h1 class="sn-notes-headline">Notes.</h1>
 			<p class="sn-notes-dek">Working notes on music, AI, and the infrastructure underneath. Written when there&rsquo;s something worth writing.</p>
+			<?php if ( ! $sn_searching ) : ?>
+			<?php // Corpus stats: entry count + last-updated. Suppressed in search
+			      // state — there $entry_count is the page's result count and
+			      // $latest_date is the newest match, so "entries"/"Last updated"
+			      // would mislabel them (the result count lives in the search
+			      // summary line below). Hero stays as page identity only. ?>
 			<p class="sn-notes-meta">
 				<span><?php echo esc_html( sprintf( _n( '%d entry', '%d entries', $entry_count, 'signal-noise' ), $entry_count ) ); ?></span>
 				<?php if ( $latest_date ) : ?>
@@ -789,6 +813,7 @@ echo $sn_header_html;
 					<span>Last updated <?php echo esc_html( $latest_date ); ?></span>
 				<?php endif; ?>
 			</p>
+			<?php endif; ?>
 			<p class="sn-notes-subscribe">
 				No subscription form. No schedule. Notes via <a href="/notes/feed/">RSS</a>, or via email through <a href="https://blogtrottr.com/" target="_blank" rel="noopener noreferrer">Blogtrottr</a> or <a href="https://www.feedrabbit.com/" target="_blank" rel="noopener noreferrer">Feedrabbit</a>.<span class="sn-notes-cursor" aria-hidden="true"></span>
 			</p>
