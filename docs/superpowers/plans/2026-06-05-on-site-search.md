@@ -357,7 +357,7 @@ git commit -m "feat(search): grouped search.html — Notes + Pages results, quer
 Replace the existing navigation block (the whole `<!-- wp:navigation … -->` … `<!-- /wp:navigation -->` block, currently lines 14–22) with the navigation wrapped in an actions group followed by the search block:
 
 ```html
-	<!-- wp:group {"className":"sn-header-actions","layout":{"type":"flex","flexWrap":"nowrap","verticalAlignment":"center"}} -->
+	<!-- wp:group {"className":"sn-header-actions","layout":{"type":"flex","flexWrap":"nowrap"}} -->
 	<div class="wp-block-group sn-header-actions">
 
 		<!-- wp:navigation {"overlayMenu":"mobile","style":{"typography":{"fontStyle":"normal","fontWeight":"400","letterSpacing":"0.14em","textTransform":"uppercase","fontSize":"1.125rem"},"spacing":{"blockGap":"var:preset|spacing|40"}},"fontFamily":"heading","layout":{"type":"flex"}} -->
@@ -427,6 +427,7 @@ Add to the end of `assets/css/components.css`:
 	padding: 1rem 0;
 }
 .sn-header-actions {
+	align-items: center;
 	gap: var(--wp--preset--spacing--40, 1.5rem);
 }
 .sn-header-search .wp-block-search__button svg {
