@@ -2,6 +2,25 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.6.0] - 2026-06-05 — /notes index pagination
+
+**Released:** 2026-06-05.
+
+**Headline:** The `/notes` index now paginates. The custom PHP renderer queried `posts_per_page => 50` with `no_found_rows => true`, so the archive was an unbounded single page with no paging UI and a misleading "N / N" count. `/notes/?paged=N` now pages at a default of 20 per page (overridable by the plugin via the new `sn_notes_per_page` filter — Release 2), with a styled `paginate_links()` control and an honest grand-total count. Theme-only, no JS, no build step. Query-string paging was chosen over pretty paths (`/notes/page/2/`) because the exact-path short-circuit router strips the query string before matching, so `?paged=N` works with zero routing changes on an incident-prone page. At 13 published notes (< 20/page) the control stays hidden until published volume exceeds the per-page value — dormant, not broken.
+
+### Added
+
+- **Query-string pagination on `/notes`** — `/notes/?paged=N` at 20 notes/page. Two new tested helpers: `sn_notes_per_page()` (default 20, clamped [1,100]) and `sn_notes_current_page()` (`paged` query var with a `$_GET['paged']` fallback for the short-circuit router, floored at 1). (`inc/page-notes-render.php`)
+- **`sn_notes_per_page` filter** — 5th theme↔plugin contract. The theme applies it with a default of 20 (works standalone); the plugin will optionally supply the configured value in Release 2. (`inc/page-notes-render.php`)
+- **Styled `paginate_links()` control** — numbered `← 1 2 3 →` rendered after the index only when `max_num_pages > 1`. DM Mono numerals, 11px floor, current page in bone. (`inc/page-notes-render.php`)
+- **`tests/notes-pagination.php`** — 16 assertions locking the helpers + pagination query args (default/override/clamp, query-var + `$_GET` fallback + floor, `posts_per_page`/`paged`/`no_found_rows`/`post_status`/`post_type`). Theme suite total: **377 assertions across 9 suites**.
+
+### Changed
+
+- **`/notes` count display now shows the grand total**, not the per-page row count — was `'%02d / %02d', $entry_count, $entry_count` (e.g. "20 / 20" on a 22-note archive); now `$query->found_posts`. (`inc/page-notes-render.php`)
+- **`sn_notes_query_posts()` flips `no_found_rows` to `false`** (one extra COUNT query, negligible at tens of posts) to expose `found_posts` / `max_num_pages` that pagination requires, and now passes `posts_per_page` + `paged`. (`inc/page-notes-render.php`)
+- **`/notes` build marker** bumped to `2026-05-30-pagination-v10` for deploy verification. (`inc/page-notes-template.php`)
+
 ## [9.5.2] - 2026-05-29 — Self-updater authenticates to GitHub (60/h → 5000/h)
 
 **Released:** 2026-05-29.
