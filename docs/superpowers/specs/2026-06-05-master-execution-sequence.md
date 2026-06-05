@@ -12,7 +12,7 @@
 
 | # | What | Repo | Target | Status | Size |
 |---|------|------|--------|--------|------|
-| **1** | `/notes` pagination **R1** — helpers + `paginate_links()` control + count fix + tests | theme | **v9.6.0** | ✅ **code-complete (this session); awaiting ship-go** | M |
+| ~~1~~ | `/notes` pagination **R1** — helpers + `paginate_links()` control + count fix + tests | theme | **v9.6.0** | ✅ **SHIPPED 2026-06-05** (tag `v9.6.0`, commit `b111f1c`) | M |
 | 2 | `/notes` **R2** — `sn_notes_per_page` setting + Identity&SEO section refactor + paged SEO | plugin | TBD (own minor vs fold into v4.6.0) | backlog — needs BC + plan | M |
 | 3 | **Pre-cycle gate** — verify WP 7.0 on Cloudways + reconcile v4.6.0 plan drift | both | pre-BC | blocking, unblocked | XS |
 | 4 | **Plugin v4.6.0** — 6 abilities, WP<7.0 notice, `@deprecated` PHPdoc, rate-monitor split, deferred-backlog fold-ins | plugin | v4.6.0 | plan-locked (rebase at BC) | L |
@@ -66,4 +66,4 @@ Enrich Article JSON-LD (`timeRequired`/`wordCount`/`keywords`, patch); print/sav
 ---
 
 ## Shipped from this sequence
-- **2026-06-05** — `/notes` R1 code-complete (Tasks 1–5; commits `9187628`→`d9d41fb`). 16 new test assertions (theme suite 361→377/9). Awaiting ship-go for Task 6 (bump v9.6.0 + CHANGELOG + readme + tag + push).
+- **2026-06-05 — theme v9.6.0** `/notes` pagination R1 SHIPPED (tag `v9.6.0`, release commit `b111f1c`, pushed to `main`). Tasks 1–6 complete; 16 new test assertions (theme suite 361→377/9); PHPCS 0/0. Install via wp-admin → Updates. **Next:** the prep-minor renumbers to v9.7.0 (gated on plugin v4.6.0 stable); on-site search brainstorm started immediately after (reuses R1's `.sn-notes-pagination` control).
