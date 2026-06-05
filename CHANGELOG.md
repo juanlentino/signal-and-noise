@@ -2,6 +2,28 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.8.0] - 2026-06-05 — Notes-scoped search & archive
+
+**Released:** 2026-06-05.
+
+**Headline:** Search now lives inside the Notes archive, scoped to Notes only — no more header search icon. The v9.7.0 header `core/search` trigger rendered as a solid black "blob" (it dragged the theme's `.wp-element-button` chrome — a black icon on a black pill) and, more fundamentally, search didn't belong in the header. This release removes that trigger and the global Notes+Pages results template, and rebuilds search as a hand-rolled field on `/notes`: the index page becomes a searchable archive. `/notes/?s=term` runs a `post_type=post` query (Notes only — Pages excluded by construction), shows results in the existing catalog rows with a count and a Clear link, hides the pillar essays to focus, and paginates within the search. Any stray site-wide `/?s=` is funnelled to `/notes/?s=` so there is exactly one search surface.
+
+### Added
+
+- **Notes archive search** — a hand-rolled `<form role="search">` on `/notes` (no `core/search` block, so no `.wp-element-button` blob). Browse state shows the field above the index; search state hides the pillar essays + divider, echoes the query, shows a result count + Clear link, and renders matches in catalog rows with a branded empty state. (`inc/page-notes-render.php`)
+- **`sn_notes_search_term()` / `sn_notes_pagination_add_args()`** — pure, unit-tested helpers; `sn_notes_query_posts()` now injects `s` when a term is present. (`inc/page-notes-render.php`)
+- **`/?s=` → `/notes/?s=` funnel** — `sn_notes_search_redirect_target()` + a `template_redirect` (priority 1) redirect so all search lands on the single Notes surface. (`inc/page-notes-template.php`)
+- **`tests/notes-search.php` (13 assertions), `tests/notes-redirect.php` (4 assertions)** — standalone fixtures for the new helpers.
+
+### Removed
+
+- **Header search trigger** — the `core/search` block + the `sn-header-actions` wrapper in `parts/header.html` (nav returns to a direct child of `.sn-header`); the `.sn-header-search` / `.sn-header-actions` CSS in `assets/css/components.css`.
+- **Global posts+pages search** — `templates/search.html`, `inc/search-query.php` (+ its `functions.php` require and `tests/search-query.php`). Search is Notes-only now.
+
+### Fixed
+
+- **Header "black blob"** — the v9.7.0 search icon rendered as a solid black pill (black icon on the `.wp-element-button` black background). Removed at the root by dropping the block entirely.
+
 ## [9.7.0] - 2026-06-05 — On-site search
 
 **Released:** 2026-06-05.
