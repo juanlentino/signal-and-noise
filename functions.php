@@ -9,7 +9,6 @@
  *   inc/setup.php                — editor styles, shortcodes
  *   inc/assets-frontend.php      — frontend CSS/JS/fonts/favicons + defer filters
  *   inc/frontend-filters.php     — skip link, oEmbed, generator-tag stripping, output buffer
- *   inc/search-query.php         — injects ?s= into the grouped /search Query Loops (v9.7.0)
  *   inc/og-fonts.php             — registers sn_og_font_paths filter (theme brand fonts → plugin's OG generator)
  *   inc/wp-update-integration.php       — registers theme with WP's update transient (version visibility in wp-admin)
  *   inc/wp-update-git-preservation.php  — backs up/restores .git through WP UI installs (v8.5.2+)
@@ -45,7 +44,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 require_once __DIR__ . '/inc/setup.php';
 require_once __DIR__ . '/inc/assets-frontend.php';
 require_once __DIR__ . '/inc/frontend-filters.php';
-require_once __DIR__ . '/inc/search-query.php';
 require_once __DIR__ . '/inc/og-fonts.php';
 require_once __DIR__ . '/inc/wp-update-integration.php';
 require_once __DIR__ . '/inc/wp-update-git-preservation.php';
