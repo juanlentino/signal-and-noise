@@ -324,6 +324,17 @@ The theme is presentation; the companion plugin [`signal-and-noise-tools`](https
 
 **When adding new cross-package interactions:** add a row to the table above and document the listener side in the theme file that owns the underlying function. **Never let plugin code directly call a theme function — even with `function_exists` guards.** The contract pattern is non-negotiable.
 
+**Function-prefix convention — `sn_` vs `snt_` (documented v9.6.x / plugin v4.5.x; rationale from the [v5.0.0 scope audit](superpowers/specs/2026-05-26-v5.0.0-scope.md)):**
+
+The plugin splits its function names across two prefixes. This is a real, load-bearing convention — the v5.0.0 contract audit acts on it — not accidental drift:
+
+- **`sn_*` = public contract surface.** Intended-stable functions, hooks, option keys, and shortcodes that the theme (or external code) may depend on. Treat these as API: removing or renaming one is a breaking change requiring a major bump + migration shim. The v5.0.0 scope audit inventories this surface (KEEP / REMOVE / RENAME dispositions live there).
+- **`snt_*` = internal implementation namespace.** Plugin-private helpers not part of the contract. KEEP-by-default, but free to refactor/deprecate case-by-case without a major bump (no external consumer by definition).
+
+Rough live split (plugin, 2026-06): ~200 `sn_*` vs ~186 `snt_*` function definitions; the audited inventory (exact counts + per-symbol dispositions) is in the scope doc. The theme is almost entirely `sn_*` (a handful of legacy `signal_noise_*` stragglers remain — trivial, leave them).
+
+**DO NOT mass-rename across the boundary.** Re-drawing `sn_` ↔ `snt_` would itself be a v5.0.0-class breaking change for zero functional benefit. When adding a new function, choose the prefix by intent: will anything outside the plugin ever call it? → `sn_`; otherwise → `snt_`.
+
 ### 10.1 The legacy updater — RETIRED in v8.3.0
 
 The original GitHub-poll self-updater (`inc/updater.php`, 683 LOC) and the
