@@ -594,18 +594,3 @@
 	color: var(--wp--preset--color--rust, #666);
 	padding: 1rem 0;
 }
-.sn-header-actions {
-	align-items: center;
-	gap: var(--wp--preset--spacing--40, 1.5rem);
-}
-.sn-header-search .wp-block-search__button svg {
-	fill: var(--wp--preset--color--bone, #000);
-	transition: fill 0.2s ease;
-}
-.sn-header-search .wp-block-search__button:hover svg,
-.sn-header-search .wp-block-search__button:focus svg {
-	fill: var(--wp--preset--color--blood, #e00404);
-}
-@media (prefers-reduced-motion: reduce) {
-	.sn-header-search .wp-block-search__button svg { transition: none; }
-}
