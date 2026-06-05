@@ -89,6 +89,16 @@ function sn_notes_render_reading_time( $post_id ) {
 }
 
 /**
+ * Notes per page for the /notes index. Default 20; overridable by the
+ * plugin via the sn_notes_per_page filter (Release 2). Clamped [1,100]
+ * to defend against a bad filter return.
+ */
+function sn_notes_per_page() {
+	$n = (int) apply_filters( 'sn_notes_per_page', 20 );
+	return max( 1, min( 100, $n ) );
+}
+
+/**
  * Query the notes posts in chronological-descending order.
  *
  * Constraint: post_type=post (Signal & Noise treats all blog posts
@@ -105,6 +115,15 @@ function sn_notes_query_posts() {
 		'order'          => 'DESC',
 		'no_found_rows'  => true,
 	) );
+}
+
+// Under test (tests/notes-pagination.php), the helper functions above are
+// now declared; stop here so the render body (which echoes HTML + runs
+// WP_Query) doesn't execute. Placement matters: this return MUST be below
+// every helper declaration (PHP does not declare a function written after
+// a return that runs). Verified empirically during plan authoring.
+if ( defined( 'SN_NOTES_RENDER_TEST' ) && SN_NOTES_RENDER_TEST ) {
+	return;
 }
 
 // ── BEGIN PAGE OUTPUT ──────────────────────────────────────────
