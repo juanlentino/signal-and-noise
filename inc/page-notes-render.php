@@ -122,7 +122,7 @@ function sn_notes_current_page() {
  * No taxonomy filter needed.
  */
 function sn_notes_query_posts() {
-	return new WP_Query( array(
+	$args = array(
 		'post_type'      => 'post',
 		'post_status'    => 'publish',
 		'posts_per_page' => sn_notes_per_page(),
@@ -130,7 +130,45 @@ function sn_notes_query_posts() {
 		'orderby'        => 'date',
 		'order'          => 'DESC',
 		'no_found_rows'  => false, // pagination needs found_posts / max_num_pages
-	) );
+	);
+	// Notes-only by construction (post_type=post = the whole Notes corpus;
+	// Pages are never queried here). Add the search term only when present.
+	$term = sn_notes_search_term();
+	if ( '' !== $term ) {
+		$args['s'] = $term;
+	}
+	return new WP_Query( $args );
+}
+
+/**
+ * Resolve the current Notes search term, if any. Mirrors
+ * sn_notes_current_page(): reads WP's `s` query var, falling back to the
+ * raw ?s= query-string param (the short-circuit router may not populate
+ * the query var cleanly). Unslashed, tag-stripped, trimmed. Returns ''
+ * when absent or whitespace-only (= browse mode). The empty short-circuit
+ * means sanitize_text_field()/wp_unslash() are only touched when a term
+ * exists — keeping the pagination fixtures (which don't stub them) green.
+ */
+function sn_notes_search_term() {
+	$term = (string) get_query_var( 's' );
+	if ( '' === $term && isset( $_GET['s'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only search index, no state change.
+		$term = (string) wp_unslash( $_GET['s'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	}
+	if ( '' === $term ) {
+		return '';
+	}
+	return trim( sanitize_text_field( $term ) );
+}
+
+/**
+ * The extra query args paginate_links() must carry so search-result page
+ * 2+ stays inside the search. Empty array when browsing. The term is
+ * rawurlencode()'d because WP's add_query_arg() does not URL-encode values
+ * (urlencode=false), so a multi-word term would otherwise yield a broken
+ * page link.
+ */
+function sn_notes_pagination_add_args( $term = '' ) {
+	return ( '' !== $term ) ? array( 's' => rawurlencode( $term ) ) : array();
 }
 
 // Under test (tests/notes-pagination.php), the helper functions above are
