@@ -152,7 +152,7 @@ function sn_notes_query_posts() {
 function sn_notes_search_term() {
 	$term = (string) get_query_var( 's' );
 	if ( '' === $term && isset( $_GET['s'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only search index, no state change.
-		$term = (string) wp_unslash( $_GET['s'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$term = sanitize_text_field( wp_unslash( $_GET['s'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only, sanitized at point of read.
 	}
 	if ( '' === $term ) {
 		return '';
@@ -182,6 +182,8 @@ if ( defined( 'SN_NOTES_RENDER_TEST' ) && SN_NOTES_RENDER_TEST ) {
 
 // ── BEGIN PAGE OUTPUT ──────────────────────────────────────────
 $query = sn_notes_query_posts();
+$sn_term      = sn_notes_search_term();
+$sn_searching = ( '' !== $sn_term );
 $entry_count = (int) $query->post_count;
 
 // Latest-post date for the meta line.
@@ -562,6 +564,106 @@ wp_head();
 	padding: 2rem 0;
 }
 
+/* SEARCH FORM ─────────────────────────────────────────────────
+   Hand-rolled (no core/search → no .wp-element-button chrome, so no
+   black-pill "blob"). Thin underline field in the catalog vocabulary:
+   bone text, rust uppercase placeholder, blood on submit hover. */
+.sn-notes-search {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	margin-bottom: clamp(1.5rem, 3vw, 2.25rem);
+	border-bottom: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+	transition: border-color 0.2s ease;
+}
+.sn-notes-search:focus-within {
+	border-bottom-color: var(--wp--preset--color--bone, #000);
+}
+.sn-notes-search input[type="search"] {
+	flex: 1 1 auto;
+	min-width: 0;
+	border: 0;
+	background: transparent;
+	padding: 0.65rem 0;
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.9rem, 12px);
+	letter-spacing: 0.04em;
+	color: var(--wp--preset--color--bone, #000);
+	-webkit-appearance: none;
+	appearance: none;
+}
+.sn-notes-search input[type="search"]:focus {
+	outline: none;
+}
+.sn-notes-search input[type="search"]::placeholder {
+	color: var(--wp--preset--color--rust, #666);
+	text-transform: uppercase;
+	letter-spacing: 0.16em;
+	font-size: 0.78em;
+}
+.sn-notes-search button {
+	flex: 0 0 auto;
+	border: 0;
+	background: transparent;
+	padding: 0 0.4rem;
+	cursor: pointer;
+	color: var(--wp--preset--color--bone, #000);
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: 1.15rem;
+	line-height: 1;
+	transition: color 0.2s ease, transform 0.2s ease;
+}
+.sn-notes-search button:hover,
+.sn-notes-search button:focus {
+	color: var(--wp--preset--color--blood, #e00404);
+	transform: translateX(2px);
+}
+
+/* Search state: hero spans full width (pillars hidden). Specificity
+   (0,2,0) beats the .sn-notes-top media rule (0,1,0) at all widths. */
+.sn-notes-top.is-search {
+	grid-template-columns: 1fr;
+}
+
+/* Clear link replaces the count in the section header during search. */
+.sn-notes-section-clear {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.7rem, 11px);
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--rust, #666);
+	text-decoration: none;
+	transition: color 0.2s ease;
+}
+.sn-notes-section-clear:hover,
+.sn-notes-section-clear:focus {
+	color: var(--wp--preset--color--blood, #e00404);
+}
+
+/* Result-count line under the search header. */
+.sn-notes-search-summary {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.7rem, 11px);
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--rust, #666);
+	margin: 0 0 clamp(1.25rem, 2.5vw, 1.75rem);
+}
+
+/* Visually-hidden label. Scoped + self-contained — /notes inlines all
+   its own CSS, so we don't rely on a global .screen-reader-text. */
+.sn-notes-page .screen-reader-text {
+	position: absolute !important;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+
 /* SUBSCRIBE NOTE — compact colophon nested in the hero column.
    Tertiary in the hero hierarchy (title > dek > meta > subscribe).
    Same DM Mono / 0.7rem / uppercase as eyebrow + meta; inline links
@@ -622,6 +724,8 @@ wp_head();
 	.sn-notes-pillar { transition: none; }
 	.sn-notes-pillar::before { transition: none; }
 	.sn-notes-row { transition: none; }
+	.sn-notes-search { transition: none; }
+	.sn-notes-search button { transition: none; transform: none; }
 }
 
 /* PAGINATION — numbered control below the notes index.
@@ -673,7 +777,7 @@ echo $sn_header_html;
 
 <main class="sn-notes-page" id="wp--skip-link--target">
 
-	<div class="sn-notes-top">
+	<div class="sn-notes-top<?php echo $sn_searching ? ' is-search' : ''; ?>">
 
 		<header class="sn-notes-hero">
 			<p class="sn-notes-eyebrow">Index &middot; Vol. 01 &middot; <?php echo esc_html( wp_date( 'Y' ) ); ?></p>
@@ -691,6 +795,7 @@ echo $sn_header_html;
 			</p>
 		</header>
 
+		<?php if ( ! $sn_searching ) : ?>
 		<section class="sn-notes-pillars-section" aria-labelledby="sn-pillars-heading">
 			<div class="sn-notes-section-wrap">
 				<p class="sn-notes-section-label" id="sn-pillars-heading">Pillar Essays &mdash; Featured</p>
@@ -721,16 +826,35 @@ echo $sn_header_html;
 
 			</div>
 		</section>
+		<?php endif; ?>
 
 	</div>
 
+	<?php if ( ! $sn_searching ) : ?>
 	<hr class="sn-notes-rule" aria-hidden="true">
+	<?php endif; ?>
 
 	<section class="sn-notes-index-section" aria-labelledby="sn-index-heading">
+
+		<form class="sn-notes-search" role="search" method="get" action="<?php echo esc_url( home_url( '/notes/' ) ); ?>">
+			<label class="screen-reader-text" for="sn-notes-q">Search notes</label>
+			<input type="search" id="sn-notes-q" name="s" value="<?php echo esc_attr( $sn_term ); ?>" placeholder="Search notes" autocomplete="off" />
+			<button type="submit" aria-label="Search"><span aria-hidden="true">&rarr;</span></button>
+		</form>
+
 		<div class="sn-notes-section-wrap">
-			<p class="sn-notes-section-label" id="sn-index-heading">Notes &mdash; Index</p>
-			<span class="sn-notes-section-count"><?php echo esc_html( sprintf( '%02d', (int) $query->found_posts ) ); ?></span>
+			<?php if ( $sn_searching ) : ?>
+				<p class="sn-notes-section-label" id="sn-index-heading">Notes &mdash; Search &middot; &ldquo;<?php echo esc_html( $sn_term ); ?>&rdquo;</p>
+				<a class="sn-notes-section-clear" href="<?php echo esc_url( home_url( '/notes/' ) ); ?>">Clear &times;</a>
+			<?php else : ?>
+				<p class="sn-notes-section-label" id="sn-index-heading">Notes &mdash; Index</p>
+				<span class="sn-notes-section-count"><?php echo esc_html( sprintf( '%02d', (int) $query->found_posts ) ); ?></span>
+			<?php endif; ?>
 		</div>
+
+		<?php if ( $sn_searching ) : ?>
+			<p class="sn-notes-search-summary"><?php echo esc_html( sprintf( _n( '%d note found', '%d notes found', (int) $query->found_posts, 'signal-noise' ), (int) $query->found_posts ) ); ?></p>
+		<?php endif; ?>
 
 		<?php if ( $query->have_posts() ) : ?>
 			<ol class="sn-notes-index-list">
@@ -749,6 +873,8 @@ echo $sn_header_html;
 				</li>
 			<?php endwhile; wp_reset_postdata(); ?>
 			</ol>
+		<?php elseif ( $sn_searching ) : ?>
+			<p class="sn-notes-empty">No notes match &ldquo;<?php echo esc_html( $sn_term ); ?>&rdquo;.</p>
 		<?php else : ?>
 			<p class="sn-notes-empty">No notes published yet. Check back soon.</p>
 		<?php endif; ?>
@@ -761,6 +887,7 @@ echo $sn_header_html;
 					'format'    => '',
 					'current'   => sn_notes_current_page(),
 					'total'     => (int) $query->max_num_pages,
+					'add_args'  => sn_notes_pagination_add_args( $sn_term ),
 					'type'      => 'array',
 					'prev_text' => '&larr;',
 					'next_text' => '&rarr;',
