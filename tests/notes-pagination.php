@@ -66,5 +66,22 @@ ok( sn_notes_per_page() === 100, 'clamp ceiling: 999 -> 100' );
 $GLOBALS['__filters'] = array( 'sn_notes_per_page' => '15abc' );
 ok( sn_notes_per_page() === 15, 'cast non-int return to int (15abc -> 15)' );
 
+// ── sn_notes_current_page(): query var + $_GET fallback + floor ──
+$GLOBALS['__query_vars'] = array(); unset( $_GET['paged'] );
+ok( sn_notes_current_page() === 1, 'default page is 1 (nothing set)' );
+
+$GLOBALS['__query_vars'] = array( 'paged' => 3 ); unset( $_GET['paged'] );
+ok( sn_notes_current_page() === 3, 'reads get_query_var(paged)=3' );
+
+$GLOBALS['__query_vars'] = array(); $_GET['paged'] = '2';
+ok( sn_notes_current_page() === 2, 'falls back to $_GET[paged]=2 when query var is 0/empty' );
+
+$GLOBALS['__query_vars'] = array( 'paged' => 0 ); $_GET['paged'] = '4';
+ok( sn_notes_current_page() === 4, 'query var 0 -> uses $_GET fallback (4)' );
+
+$GLOBALS['__query_vars'] = array(); $_GET['paged'] = '-5';
+ok( sn_notes_current_page() === 1, 'floor at 1 for negative $_GET' );
+unset( $_GET['paged'] );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

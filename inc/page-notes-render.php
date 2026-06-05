@@ -99,6 +99,21 @@ function sn_notes_per_page() {
 }
 
 /**
+ * Resolve the current page number for the /notes index. Reads WP's
+ * `paged` query var, falling back to the raw ?paged= query-string
+ * param — the short-circuit router (inc/page-notes-template.php) may
+ * not populate the query var cleanly, and the paginate_links() output
+ * carries ?paged=N. Floored at 1.
+ */
+function sn_notes_current_page() {
+	$paged = (int) get_query_var( 'paged' );
+	if ( $paged < 1 && isset( $_GET['paged'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only pagination index, no state change.
+		$paged = (int) $_GET['paged']; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	}
+	return max( 1, $paged );
+}
+
+/**
  * Query the notes posts in chronological-descending order.
  *
  * Constraint: post_type=post (Signal & Noise treats all blog posts
