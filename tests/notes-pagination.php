@@ -35,6 +35,19 @@ if ( ! function_exists( 'get_query_var' ) ) {
 	}
 }
 
+// Capture the args WP_Query is constructed with.
+$GLOBALS['__wpquery_args'] = null;
+if ( ! class_exists( 'WP_Query' ) ) {
+	class WP_Query {
+		public $args;
+		public function __construct( $args = array() ) {
+			$args['_constructed'] = true;
+			$GLOBALS['__wpquery_args'] = $args;
+			$this->args = $args;
+		}
+	}
+}
+
 // Pull in ONLY the helper functions. page-notes-render.php is a full
 // render file that echoes HTML + calls WP_Query at load, so we cannot
 // require it directly. Instead, the helpers live in a guarded block at
@@ -82,6 +95,20 @@ ok( sn_notes_current_page() === 4, 'query var 0 -> uses $_GET fallback (4)' );
 $GLOBALS['__query_vars'] = array(); $_GET['paged'] = '-5';
 ok( sn_notes_current_page() === 1, 'floor at 1 for negative $_GET' );
 unset( $_GET['paged'] );
+
+// ── sn_notes_query_posts(): pagination args ──
+$GLOBALS['__filters'] = array(); $GLOBALS['__query_vars'] = array( 'paged' => 2 ); unset( $_GET['paged'] );
+$q = sn_notes_query_posts();
+$a = $GLOBALS['__wpquery_args'];
+ok( $a['posts_per_page'] === 20, 'query uses default per-page 20' );
+ok( $a['paged'] === 2,           'query passes paged=2 from query var' );
+ok( $a['no_found_rows'] === false, 'no_found_rows is false (pagination needs found_posts)' );
+ok( $a['post_status'] === 'publish', 'still publish-only (scheduled excluded)' );
+ok( $a['post_type'] === 'post',  'still post_type=post' );
+
+$GLOBALS['__filters'] = array( 'sn_notes_per_page' => 10 ); $GLOBALS['__query_vars'] = array();
+sn_notes_query_posts();
+ok( $GLOBALS['__wpquery_args']['posts_per_page'] === 10, 'filter override flows into query (10)' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

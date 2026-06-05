@@ -125,10 +125,11 @@ function sn_notes_query_posts() {
 	return new WP_Query( array(
 		'post_type'      => 'post',
 		'post_status'    => 'publish',
-		'posts_per_page' => 50,
+		'posts_per_page' => sn_notes_per_page(),
+		'paged'          => sn_notes_current_page(),
 		'orderby'        => 'date',
 		'order'          => 'DESC',
-		'no_found_rows'  => true,
+		'no_found_rows'  => false, // pagination needs found_posts / max_num_pages
 	) );
 }
 
