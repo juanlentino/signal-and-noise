@@ -163,6 +163,13 @@ if ( $entry_count > 0 ) {
 // (no space-between), the footer copyright packs left instead of
 // right, etc. Output buffer captures the markup; WP's style-engine
 // receives the side effects.
+//
+// LOAD-BEARING beyond CSS: the header's core/search block (button-only,
+// parts/header.html) calls wp_enqueue_script_module() at render. For block
+// themes WP prints ALL script-module output (the import map AND the module
+// <script> tags) on wp_head — so this pre-render MUST stay BEFORE wp_head()
+// below, or the /notes search icon silently degrades to a non-expanding
+// (still-functional) submit button. Do NOT move this pass after wp_head().
 ob_start();
 // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- do_blocks() output is trusted rendered block HTML (the theme's own header template part); escaping it would corrupt the markup. Captured here only to register block-layout styles before wp_head().
 echo do_blocks( '<!-- wp:template-part {"slug":"header","area":"header"} /-->' );

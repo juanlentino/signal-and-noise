@@ -28,7 +28,7 @@ All notable changes to Signal & Noise are documented here.
 ### Added
 
 - **Query-string pagination on `/notes`** — `/notes/?paged=N` at 20 notes/page. Two new tested helpers: `sn_notes_per_page()` (default 20, clamped [1,100]) and `sn_notes_current_page()` (`paged` query var with a `$_GET['paged']` fallback for the short-circuit router, floored at 1). (`inc/page-notes-render.php`)
-- **`sn_notes_per_page` filter** — 5th theme↔plugin contract. The theme applies it with a default of 20 (works standalone); the plugin will optionally supply the configured value in Release 2. (`inc/page-notes-render.php`)
+- **`sn_notes_per_page` filter** — 5th theme↔plugin contract (the plugin *producer* arrives in Release 2; until then the contract-registry tests still enumerate the 4 contracts that have a live producer+consumer pair). The theme applies it with a default of 20 (works standalone); the plugin will optionally supply the configured value in Release 2. (`inc/page-notes-render.php`)
 - **Styled `paginate_links()` control** — numbered `← 1 2 3 →` rendered after the index only when `max_num_pages > 1`. DM Mono numerals, 11px floor, current page in bone. (`inc/page-notes-render.php`)
 - **`tests/notes-pagination.php`** — 16 assertions locking the helpers + pagination query args (default/override/clamp, query-var + `$_GET` fallback + floor, `posts_per_page`/`paged`/`no_found_rows`/`post_status`/`post_type`). Theme suite total: **377 assertions across 9 suites**.
 

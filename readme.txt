@@ -52,21 +52,4 @@ WCAG AA contrast: every text pairing clears 4.5:1 normal-text threshold. See `do
 
 == Changelog ==
 
-See [CHANGELOG.md](CHANGELOG.md) in the repository root for the full release history. Latest stable: v9.5.0 (2026-05-27).
-
-= 9.5.0 =
-* New: cross-package listener tests for all 4 plugin-to-theme contracts (theme-side seal, 25 assertions)
-* New: build-time WCAG 2.1 contrast verification asserting docs/ACCESSIBILITY.md baseline (20 assertions)
-* New: theme v10.0.0 scope audit (docs/superpowers/specs/2026-05-27-v10.0.0-scope.md)
-* Fix: tests/patterns-registry.php now covers the sidenote pattern (was untested)
-* Fix: readme.txt Stable tag drift (was 9.4.3, now matches the shipped version)
-* See CHANGELOG.md for full details.
-
-Notable milestones:
-* v2.0.0 — Full palette inversion to white-first brutalist (matches nin.com)
-* v3.0.0 — PageSpeed Insights optimization pass (font preload, GSI removal, deferred scripts)
-* v8.2.0 — Companion plugin (Signal & Noise Tools) introduced
-* v9.0.0 — Theme abilities + Interactivity API integration
-* v9.3.0 — Long-form post layout (drop caps, footnotes, sidenotes, frontmatter spec card)
-* v9.4.0 — Typography polish (justified, hyphenation, hanging punctuation)
-* v9.5.0 — Cross-package listener tests + WCAG contrast baseline + v10 scope audit
+See [CHANGELOG.md](CHANGELOG.md) in the repository root for the full, current release history. The `Stable tag:` field above is the single source of truth for the installed version.

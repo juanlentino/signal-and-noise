@@ -5,18 +5,21 @@
  * Loads the modular theme code under inc/. Keep this file small — it should
  * only compose the theme, not implement anything.
  *
- * Module map (post-Phase 3, v8.4.0):
+ * Module map (load order; updated v9.7.0):
  *   inc/setup.php                — editor styles, shortcodes
  *   inc/assets-frontend.php      — frontend CSS/JS/fonts/favicons + defer filters
  *   inc/frontend-filters.php     — skip link, oEmbed, generator-tag stripping, output buffer
+ *   inc/search-query.php         — injects ?s= into the grouped /search Query Loops (v9.7.0)
  *   inc/og-fonts.php             — registers sn_og_font_paths filter (theme brand fonts → plugin's OG generator)
  *   inc/wp-update-integration.php       — registers theme with WP's update transient (version visibility in wp-admin)
  *   inc/wp-update-git-preservation.php  — backs up/restores .git through WP UI installs (v8.5.2+)
  *   inc/template-maintenance.php — FSE template-override purge + sn_purge_all_caches_result/sn_clear_template_overrides_result filter listeners
- *   inc/page-notes-template.php  — template_include override for /notes route (theme-specific defense)
- *   inc/page-notes-render.php    — full PHP render of /notes index (theme-specific aesthetic)
+ *   inc/page-notes-template.php  — template_include override for /notes route; includes page-notes-render.php
  *   inc/patterns.php             — Block Pattern category registration
+ *   inc/blocks-view-transitions.php — view-transition opt-in for block markup
  *   inc/abilities-registration.php — 12 WP 7.0 Abilities (theme-owned: 7 read + 5 generative; v9.1.1)
+ *   inc/post-frontmatter.php     — long-form post frontmatter rendering
+ *   (inc/page-notes-render.php   — full PHP render of /notes index; loaded by page-notes-template.php, not here)
  *
  * Operational tooling — REST surface, Plausible integration, admin UI, security
  * headers, Cloudflare purge, OG card generation, reading-time, content surfaces +
