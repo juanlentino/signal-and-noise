@@ -2,6 +2,23 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.7.0] - 2026-06-05 — On-site search
+
+**Released:** 2026-06-05.
+
+**Headline:** Adds a real on-site search experience. Previously a `/?s=` query fell through to `index.html` (a generic Query Loop) with no "results for X" heading, no result count, and no search input. Now a dedicated FSE `templates/search.html` groups results into **Notes** (posts) and **Pages**, with a header search icon and a refine field. The two grouped Query Loops use `inherit:false` and are made search-aware by one small filter (`inc/search-query.php`) that injects the search term via WordPress's `query_loop_block_query_vars` — guarded by `is_search()` plus a post-type discriminator so it never bleeds into unrelated custom queries. Note: the search-aware results render on the **front end only** (the filter isn't active in the Site Editor preview, by design).
+
+### Added
+
+- **`templates/search.html`** — grouped search results: a `query-title` "Search results for: …" heading, a refine `core/search` field, then a **Notes** group (`postType:post`, date · title · excerpt) and a **Pages** group (`postType:page`, title · excerpt), each with its own `query-no-results` message. (`templates/search.html`)
+- **Header search trigger** — a `core/search` icon (`buttonPosition:"button-only"`) wrapped with the nav in a right-aligned `sn-header-actions` group; expands to an input (WP auto-enqueues the search Interactivity module; degrades to a non-expanding icon if blocked). (`parts/header.html`)
+- **`inc/search-query.php`** — `sn_search_inject_term()` hooks `query_loop_block_query_vars` to set `s` on the two grouped loops when `is_search()` and the loop targets `post`/`page` (discriminator `sn_is_search_loop()`). Verified against WP core source: the filter runs only on the `inherit:false` path. (`inc/search-query.php`)
+- **`tests/search-query.php`** — 10 assertions (discriminator true/false cases, term injected only on search pages for post/page loops, existing query args preserved). Theme suite total: **387 assertions across 10 suites**.
+
+### Changed
+
+- **Search results styling** added to `assets/css/components.css` — `.sn-search-section-label` hairline labels, `.sn-search-row` separators, `.sn-search-no-results`, and the `.sn-header-search` icon (bone → blood on hover, reduced-motion-safe). 11px floor throughout. (`assets/css/components.css`)
+
 ## [9.6.0] - 2026-06-05 — /notes index pagination
 
 **Released:** 2026-06-05.
