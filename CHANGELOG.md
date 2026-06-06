@@ -2,6 +2,36 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.9.0] - 2026-06-06 — Prep minor for v10.0.0 — 1 new ability + WP 7.0 pre-warning
+
+**Released:** 2026-06-06.
+
+**Headline:** v9.9.0 is the theme's prep-minor cycle for the v10.0.0 + plugin v5.0.0 paired-major event. It adds the one ability the v10.0.0 scope audit identified as a meaningful gap (`get-latest-theme-tag`), warns admins via a dismissible notice that **v10.0.0 will require WordPress 7.0**, and ships the CHANGELOG announcement so site owners can plan their WP upgrade. No front-end behaviour changes.
+
+**v10.0.0 plan** (per `docs/superpowers/specs/2026-05-27-v5-and-v10-paired-cycle-design.md`):
+
+- **HARD-raise `Requires at least: 7.0`.** The v10.0.0 theme will refuse to load on WordPress < 7.0.
+- DROP pre-7.0 compat code (minimal — the theme is already mostly WP 7.0+).
+- PROMOTE any `@deprecated` PHPdoc on the non-Ability surface to `_deprecated_function()` runtime warnings (removal scheduled for v11.0.0).
+- (Conditional) theme.json v3 → v4 schema migration if WP ships v4 by then; otherwise defer to v11.0.0.
+
+The dismissible WP-version notice in this release is the user-facing heads-up for that hard raise.
+
+### Added
+
+- **`signal-and-noise/get-latest-theme-tag` ability** (`inc/abilities-diagnostics.php`). Returns the latest GitHub release tag for the Signal & Noise theme as `{ ok, tag }`. Wraps the existing `sn_gh_latest_theme_tag()` update-integration helper (GitHub Tags API + cache + retry pipeline), exposing it to AI agents and automation that want to check whether a theme update is available. Read-only; `force_refresh` bypasses the cache.
+- **WP 7.0 pre-warning admin notice** (`inc/admin-notice-wp-version.php`). Dismissible `notice-warning` on every wp-admin page when WP < 7.0, gated to `manage_options`. Per-user dismissal via the `sn_theme_dismissed_wp_version_notice_v990` user-meta sentinel. Self-contained file — deleted in v10.0.0 after the hard WP 7.0 raise.
+
+### Changed
+
+- **Total abilities registered: 13** (was 12 at v9.8.0) — diagnostics category grows from 4 to 5.
+
+### Tests
+
+- **415 assertions across 12 suites, 0 failures.** New: 17 assertions for `get-latest-theme-tag` (registration + behavioral tag/null/empty/force-refresh paths) in `tests/abilities-registration.php`; new `tests/wp-version-admin-notice.php` (4 tests — renders < 7.0, suppressed ≥ 7.0, suppressed when dismissed, suppressed for non-admin).
+
+**Sequenced after:** plugin v4.x prep work + UAT stable. Per the paired-cycle spec, prep minors ship in sequence before the v5.0.0 / v10.0.0 BC convenes.
+
 ## [9.8.0] - 2026-06-05 — Notes-scoped search & archive
 
 **Released:** 2026-06-05.
