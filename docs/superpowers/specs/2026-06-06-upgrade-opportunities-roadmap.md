@@ -4,7 +4,9 @@
 
 **Provenance:** Sweep 1 (code-first, 8 lenses): 57 candidates → 46 kept / 11 dropped. Sweep 2 (handbook-driven, 8 lenses): 45 candidates → 12 kept / 9 dropped / **24 un-verdicted** (verifier glitch — recoverable via a follow-up pass; pattern suggests they skew low-leverage/dupes). After dedup ≈ **42 distinct opportunities**, below. Verification killed fabricated citations + false premises (see §Rejected).
 
-**Project state at capture:** theme **v9.9.0**, plugin **v4.8.0**. Version numbers below are *proposed bundles/order*, not committed tags (releases batch at session end per `[[feedback_batch_releases_not_per_fix]]`). Theme + plugin version independently.
+**Execution order — LOCKED 2026-06-06:** **Track A → Track B → Track C** (patches/fixes first, then additive minors, then the majors). Confirmed by the user. Individual version numbers within each track are still assigned at build time (releases batch at session end per `[[feedback_batch_releases_not_per_fix]]`); theme + plugin version independently.
+
+**Project state at capture:** theme **v9.9.0**, plugin **v4.8.0**.
 
 ---
 
