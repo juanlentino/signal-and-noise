@@ -2,15 +2,17 @@
 /**
  * Signal & Noise — Abilities API: diagnostics abilities.
  *
- * 4 read abilities in the 'diagnostics' category:
+ * 5 read abilities in the 'diagnostics' category:
  *   - signal-and-noise/get-active-template-structure
  *   - signal-and-noise/get-theme-version
  *   - signal-and-noise/get-design-system-summary
  *   - signal-and-noise/get-design-tokens
+ *   - signal-and-noise/get-latest-theme-tag (added v9.9.0)
  *
  * Extracted from inc/abilities-registration.php by the v9.1.7 split (B-11
- * theme-side, companion to plugin v4.1.3). The 4 impl functions are
- * co-located with their registrations.
+ * theme-side, companion to plugin v4.1.3). The first 4 impl functions are
+ * co-located with their registrations; get-latest-theme-tag (v9.9.0)
+ * delegates to sn_gh_latest_theme_tag() in inc/wp-update-integration.php.
  *
  * Cross-file note: sn_theme_ability_design_system_summary() internally
  * calls sn_theme_ability_design_tokens() (also in this file — same-file
@@ -239,6 +241,39 @@ function sn_theme_register_diagnostics_abilities() {
 			),
 		),
 	) );
+
+		wp_register_ability( 'signal-and-noise/get-latest-theme-tag', array(
+			'label'               => 'Get latest Signal & Noise theme release tag from GitHub',
+			'description'         => 'Returns the latest published GitHub release tag for the Signal & Noise theme. Useful for AI agents checking whether a theme update is available. Hits the GitHub API with the standard `sn_gh_latest_theme_tag()` retry + cache pipeline. Read-only.',
+			'category'            => 'diagnostics',
+			'permission_callback' => 'sn_theme_perm_read',
+			'execute_callback'    => 'sn_theme_ability_get_latest_theme_tag',
+			'input_schema'        => array(
+				'type'                 => array( 'object', 'null' ),
+				'properties'           => array(
+					'force_refresh' => array(
+						'type'        => 'boolean',
+						'description' => 'Bypass the cached tag and force a fresh GitHub API call. Default false.',
+						'default'     => false,
+					),
+				),
+				'additionalProperties' => false,
+			),
+			'output_schema'       => array(
+				'type'       => 'object',
+				'properties' => array(
+					'ok'  => array( 'type' => 'boolean' ),
+					'tag' => array( 'type' => array( 'string', 'null' ), 'description' => 'Tag string like "v9.5.0", or null on API failure.' ),
+				),
+			),
+			'meta'                => array(
+				'show_in_rest' => true,
+				'annotations'  => array(
+					'destructive' => false,
+					'idempotent'  => true,
+				),
+			),
+		) );
 }
 add_action( 'wp_abilities_api_init', 'sn_theme_register_diagnostics_abilities' );
 
@@ -517,4 +552,27 @@ function sn_theme_ability_design_system_summary( $input = array() ) {
 			array( 'status' => 500 )
 		);
 	}
+}
+
+/**
+ * Ability execute_callback for signal-and-noise/get-latest-theme-tag.
+ *
+ * Delegates to sn_gh_latest_theme_tag() in inc/wp-update-integration.php.
+ * That function handles the GitHub API call + caching + filter dispatch
+ * to the plugin (via sn_gh_latest_theme_tag_result contract listener).
+ *
+ * @since 9.9.0
+ * @param mixed $input { force_refresh?: bool } or null.
+ * @return array{ok:bool,tag:?string}
+ */
+function sn_theme_ability_get_latest_theme_tag( $input ) {
+	if ( ! function_exists( 'sn_gh_latest_theme_tag' ) ) {
+		return array( 'ok' => false, 'tag' => null );
+	}
+	$force_refresh = is_array( $input ) && ! empty( $input['force_refresh'] );
+	$tag = sn_gh_latest_theme_tag( $force_refresh );
+	if ( ! is_string( $tag ) || '' === $tag ) {
+		return array( 'ok' => false, 'tag' => null );
+	}
+	return array( 'ok' => true, 'tag' => $tag );
 }
