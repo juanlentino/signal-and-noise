@@ -303,6 +303,19 @@ if ( ! function_exists( 'snt_ai_extract_post_text' ) ) {
 	}
 }
 
+// Update-integration helper stub for get-latest-theme-tag (v9.9.0).
+// The real sn_gh_latest_theme_tag() lives in inc/wp-update-integration.php
+// (not loaded here). Controllable via $GLOBALS['__test_latest_tag'] so the
+// behavioral block can exercise both the tag-returned and null paths.
+$GLOBALS['__test_latest_tag']     = 'v9.5.0'; // string|null returned by the stub
+$GLOBALS['__test_latest_tag_arg'] = null;     // captures the force_refresh arg
+if ( ! function_exists( 'sn_gh_latest_theme_tag' ) ) {
+	function sn_gh_latest_theme_tag( $force_refresh = false ) {
+		$GLOBALS['__test_latest_tag_arg'] = $force_refresh;
+		return $GLOBALS['__test_latest_tag'];
+	}
+}
+
 // Abilities API stubs - capture registrations so tests can introspect them.
 $GLOBALS['__test_registered_categories'] = array();
 $GLOBALS['__test_registered_abilities']  = array();
@@ -1051,6 +1064,53 @@ $result_pl = call_user_func( $ability['execute_callback'], array( 'source_text' 
 ha_true( false !== strpos( $GLOBALS['__test_ai_last_prompt'], 'PRESERVE LINKS: yes' ), 'preserve_links=true surfaced in prompt' );
 ha_true( isset( $result_pl['preserved_elements']['links_count'] ), 'preserved_elements.links_count present' );
 ha_eq( 1, $result_pl['preserved_elements']['links_count'], 'counted 1 link in source' );
+
+// ─── Test: get-latest-theme-tag (v9.9.0) ─────────────────────────
+echo "\nTest signal-and-noise/get-latest-theme-tag\n";
+ha_reset();
+sn_theme_register_abilities();
+
+ha_true(
+	isset( $GLOBALS['__test_registered_abilities']['signal-and-noise/get-latest-theme-tag'] ),
+	'get-latest-theme-tag is registered'
+);
+$ability = $GLOBALS['__test_registered_abilities']['signal-and-noise/get-latest-theme-tag'];
+ha_eq( 'diagnostics', $ability['category'], 'category is diagnostics' );
+ha_eq( 'sn_theme_perm_read', $ability['permission_callback'], 'uses the read permission callback' );
+ha_true( is_callable( $ability['execute_callback'] ), 'execute_callback is callable' );
+ha_true( function_exists( 'sn_theme_ability_get_latest_theme_tag' ), 'impl function sn_theme_ability_get_latest_theme_tag defined' );
+
+// Behavioral: a tag string from the helper → {ok:true, tag:<tag>}.
+$GLOBALS['__test_latest_tag']     = 'v9.8.0';
+$GLOBALS['__test_latest_tag_arg'] = null;
+$ok = call_user_func( $ability['execute_callback'], array() );
+ha_true( is_array( $ok ),            'tag path returns array' );
+ha_eq( true,     $ok['ok'],          'ok=true when helper returns a tag' );
+ha_eq( 'v9.8.0', $ok['tag'],         'tag echoed from helper' );
+ha_eq( false,    $GLOBALS['__test_latest_tag_arg'], 'force_refresh defaults to false when input omits it' );
+
+// Behavioral: force_refresh=true is forwarded to the helper.
+$forced = call_user_func( $ability['execute_callback'], array( 'force_refresh' => true ) );
+ha_eq( true, $GLOBALS['__test_latest_tag_arg'], 'force_refresh=true forwarded to helper' );
+ha_eq( 'v9.8.0', $forced['tag'], 'tag still returned on forced refresh' );
+
+// Behavioral: helper returns null → {ok:false, tag:null}.
+$GLOBALS['__test_latest_tag'] = null;
+$nullres = call_user_func( $ability['execute_callback'], array() );
+ha_eq( false, $nullres['ok'],  'ok=false when helper returns null' );
+ha_eq( null,  $nullres['tag'], 'tag=null when helper returns null' );
+
+// Behavioral: helper returns empty string → {ok:false, tag:null}.
+$GLOBALS['__test_latest_tag'] = '';
+$emptyres = call_user_func( $ability['execute_callback'], array() );
+ha_eq( false, $emptyres['ok'],  'ok=false when helper returns empty string' );
+ha_eq( null,  $emptyres['tag'], 'tag=null when helper returns empty string' );
+
+// Behavioral: null input (input_schema allows object|null) is tolerated.
+$GLOBALS['__test_latest_tag'] = 'v9.9.0';
+$nullinput = call_user_func( $ability['execute_callback'], null );
+ha_eq( true,     $nullinput['ok'],  'ok=true with null input' );
+ha_eq( 'v9.9.0', $nullinput['tag'], 'tag returned with null input' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
