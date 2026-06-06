@@ -53,6 +53,9 @@ All four constraint-checked against the documented don't-propose list (no new da
 ### Other surfaced candidates (NOT committed — parked for later consideration)
 Enrich Article JSON-LD (`timeRequired`/`wordCount`/`keywords`, patch); print/save-as-PDF stylesheet (no `@media print` exists); JSON Feed 1.1 endpoint; post-deploy smoke-check for the `/notes` renderer (admin-bar sub-item + read-only ability); series/reading-path nav; ETag/304 for OG PNGs + RSS.
 
+### ⭐ Flagship candidate for the v5.0.0 + v10.0.0 major (seeded 2026-06-06)
+**Plausible content-intelligence layer** — the major is currently scoped *cleanup-only*; this is its marquee-feature candidate. Sizing pass found SN uses a sliver of Plausible CE (v1 API, `7d` only, 2 breakdowns) vs the full v2 query surface (timeseries, arbitrary filters, ~15 unused dimensions incl. custom props, `scroll_depth`/`time_on_page`/`conversion_rate`, and **zero** goals/conversions used). Theme consumes Plausible data nowhere → a front-end "read-next/popular" surface is the v10-visible piece. 5 directions + the enabling v1→v2 client refactor in the seed. **Seed (substantive):** plugin repo `docs/superpowers/specs/2026-06-06-plausible-content-intelligence-seed.md`. Deep design → the paired-major brainstorm.
+
 ---
 
 ## Drift / risks to reconcile at the v4.6.0 BC (found vs live code)
