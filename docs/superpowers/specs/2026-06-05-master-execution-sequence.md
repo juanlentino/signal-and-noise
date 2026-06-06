@@ -15,7 +15,7 @@
 |---|------|------|--------|--------|------|
 | ~~1~~ | `/notes` pagination **R1** — helpers + `paginate_links()` control + count fix + tests | theme | **v9.6.0** | ✅ **SHIPPED 2026-06-05** (tag `v9.6.0`, commit `b111f1c`) | M |
 | 2 | `/notes` **R2** — `sn_notes_per_page` setting + Identity&SEO section refactor + paged SEO | plugin | TBD (own minor vs fold into v4.6.0) | backlog — needs BC + plan | M |
-| 3 | **Pre-cycle gate** — verify WP 7.0 on Cloudways + reconcile v4.6.0 plan drift | both | pre-BC | blocking, unblocked | XS |
+| ~~3~~ | **Pre-cycle gate** — verify WP 7.0 on Cloudways + reconcile v4.6.0 plan drift | both | pre-BC | ✅ **DONE 2026-06-05** — WP 7.0 confirmed live; drift reconciled into both plugin plans (`e9488c9`) | XS |
 | 4 | **Plugin v4.6.0** — 6 abilities, WP<7.0 notice, `@deprecated` PHPdoc, rate-monitor split, deferred-backlog fold-ins | plugin | v4.6.0 | plan-locked (rebase at BC) | L |
 | 5 | Plugin **v4.6.x** — post-ship audit + LOW sweeps (+ optional `/sn-login` hardening) | plugin | v4.6.x | gated on #4 | M |
 | 6 | **Theme prep-minor** — `get-latest-theme-tag` ability + WP<7.0 notice + announce v10 | theme | **v9.9.0** (renumbered twice — v9.7.0/v9.8.0 consumed; see collision note) | plan-locked; blocked on #4 | S |
@@ -57,12 +57,14 @@ Enrich Article JSON-LD (`timeRequired`/`wordCount`/`keywords`, patch); print/sav
 
 ## Drift / risks to reconcile at the v4.6.0 BC (found vs live code)
 
-1. **Ability-count baseline stale** — v4.6.0 plan + `inc/abilities-registration.php` docblock say "30 abilities" but live registers **34 distinct slugs**. The G6 gate math (30→36) is wrong; real target ~34→40. Fix docblock + gate before executing.
-2. **Plan written against v4.5.1; live is v4.5.6** — rebase the v4.6.0 plan at BC.
-3. **`readme.txt` does not exist in the plugin repo** — the plan's "bump Stable tag in readme.txt" step is moot; drop or re-spec it.
-4. **v5.0.0 Task 7 self-contradiction** — "promote `@deprecated` → `_deprecated_function()`" but Tasks 2+3 DELETE the 10 handlers, leaving nothing to warn. Real target is likely a different non-Ability surface (e.g. `sn_admin_pages()`). Resolve at v5.0.0 BC.
-5. **WP 7.0 adoption gate unverified** — the entire major chain depends on Cloudways + juanlentino.com being on WP 7.0. Verify before the v4.6.0 BC.
-6. **`/notes` R2 title double-append hazard** — theme owns `pre_get_document_title` for `/notes`; R2's paged SEO must not also append "— Page N". Single owner for the paged suffix, decided at R2 BC.
+**A0 reconcile pass ran 2026-06-05 — items 1–5 fixed in the plugin plans (`e9488c9`); item 6 carries into the R2 plan.**
+
+1. ✅ **RESOLVED — Ability-count baseline.** Live registers **34** distinct slugs (verified both grep patterns); the `abilities-registration.php` docblock undercounts at 30 (omits `abilities-block-migrations.php`'s 4 slugs). v4.6.0 plan corrected: count work is **34 → 40**, G6 gate target **40**, and the docblock fix (correct total + add the block-migrations line) is now an explicit task step.
+2. ✅ **RESOLVED — baseline version.** Live is now **v4.5.8** (plan said v4.5.1). Recorded in the v4.6.0 A0 addendum; rebase task line-refs against v4.5.8 at BC.
+3. ✅ **RESOLVED — no `readme.txt`.** Confirmed absent. The "bump Stable tag in readme.txt" row was dropped from the v4.6.0 file table (16→15 files); Stable-tag lives in `signal-and-noise-tools.php` + CHANGELOG.md.
+4. ✅ **RESOLVED — v5.0.0 Task 7 contradiction.** Confirmed real; Task 7 rescoped to warn the surviving legacy surface **`sn_admin_pages()`** (`inc/admin-legacy-redirect.php:39`), not the deleted REST handlers.
+5. ✅ **RESOLVED — WP 7.0 gate.** **WP 7.0 confirmed live on Cloudways** (juanlentino.com serves `/wp-includes/…?ver=7.0`). The major chain is unblocked.
+6. ⏳ **PENDING (R2) — `/notes` R2 title double-append hazard.** Theme owns `pre_get_document_title` for `/notes`; R2's paged SEO must not also append "— Page N". Single owner for the paged suffix — carry into the R2 plan when written (no R2 plan exists yet).
 
 ---
 
