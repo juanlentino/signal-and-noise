@@ -269,8 +269,9 @@ function sn_theme_register_diagnostics_abilities() {
 			'meta'                => array(
 				'show_in_rest' => true,
 				'annotations'  => array(
-					'destructive' => false,
-					'idempotent'  => true,
+					'idempotent'      => true,
+					'open_world_hint' => true,
+					'readonly'        => true,
 				),
 			),
 		) );
