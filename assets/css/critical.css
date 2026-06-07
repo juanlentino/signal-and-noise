@@ -7,7 +7,7 @@
 html {
 	scroll-behavior: smooth;
 	scrollbar-width: thin;
-	scrollbar-color: #d9d9d9 #ffffff;
+	scrollbar-color: var(--wp--preset--color--concrete) var(--wp--preset--color--void);
 	overflow-x: hidden;
 }
 
@@ -18,13 +18,13 @@ body {
 }
 
 ::selection {
-	background: #e00404;
-	color: #ffffff;
+	background: var(--wp--preset--color--blood);
+	color: var(--wp--preset--color--void);
 }
 
 ::-moz-selection {
-	background: #e00404;
-	color: #ffffff;
+	background: var(--wp--preset--color--blood);
+	color: var(--wp--preset--color--void);
 }
 
 /* --- Film Grain Overlay --- */
@@ -64,8 +64,8 @@ body::after {
 	top: -100%;
 	left: 1rem;
 	z-index: 999999;
-	background: #000000;
-	color: #ffffff;
+	background: var(--wp--preset--color--bone);
+	color: var(--wp--preset--color--void);
 	padding: 0.75rem 1.5rem;
 	font-family: var(--wp--preset--font-family--heading);
 	font-size: 0.85rem;
@@ -76,7 +76,7 @@ body::after {
 
 .sn-skip-link:focus {
 	top: 0.5rem;
-	outline: 2px solid #e00404;
+	outline: 2px solid var(--wp--preset--color--blood);
 	outline-offset: 2px;
 }
 

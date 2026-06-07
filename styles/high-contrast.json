@@ -1,0 +1,18 @@
+{
+	"$schema": "https://schemas.wp.org/wp/7.0/theme.json",
+	"version": 3,
+	"title": "High Contrast",
+	"settings": {
+		"color": {
+			"palette": [
+				{ "slug": "void", "color": "#ffffff", "name": "White" },
+				{ "slug": "asphalt", "color": "#e0e0e0", "name": "Smoke" },
+				{ "slug": "concrete", "color": "#9e9e9e", "name": "Concrete" },
+				{ "slug": "rust", "color": "#333333", "name": "Steel" },
+				{ "slug": "bone", "color": "#000000", "name": "Black" },
+				{ "slug": "blood", "color": "#e00404", "name": "Red" },
+				{ "slug": "signal", "color": "#ff4c47", "name": "Signal" }
+			]
+		}
+	}
+}
