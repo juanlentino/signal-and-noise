@@ -27,6 +27,13 @@
 	     remains below. -->
 	<!-- wp:template-part {"slug":"post-closing","tagName":"footer"} /-->
 
+	<!-- v9.10.0: Related Notes footer (inc/related-notes.php). Shared-tag
+	     heuristic with recency backfill; resolved by the [sn_related_notes]
+	     render_block bridge (core/shortcode only wpautop()s its content). -->
+	<!-- wp:shortcode -->
+	[sn_related_notes]
+	<!-- /wp:shortcode -->
+
 	<!-- wp:spacer {"height":"var:preset|spacing|50"} -->
 	<div style="height:var(--wp--preset--spacing--50)" aria-hidden="true" class="wp-block-spacer"></div>
 	<!-- /wp:spacer -->

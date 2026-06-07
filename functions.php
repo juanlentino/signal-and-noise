@@ -56,3 +56,4 @@ require_once __DIR__ . '/inc/blocks-view-transitions.php';
 require_once __DIR__ . '/inc/abilities-registration.php';
 require_once __DIR__ . '/inc/admin-notice-wp-version.php';
 require_once __DIR__ . '/inc/post-frontmatter.php';
+require_once __DIR__ . '/inc/related-notes.php';
