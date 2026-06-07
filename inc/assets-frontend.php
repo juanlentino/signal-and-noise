@@ -199,3 +199,28 @@ add_action( 'wp_enqueue_scripts', function() {
 		);
 	}
 }, 30 );
+
+/**
+ * v9.10.0: print / save-as-PDF stylesheet for single posts + pages.
+ *
+ * Enqueued with media="print" so it only applies when the reader prints
+ * or saves a single note/page as PDF — it never affects on-screen render.
+ * Strips chrome (header/footer/nav/share/skip-link), forces black-on-white,
+ * and reveals external link URLs inline. Singular-only so list/archive
+ * views (which print poorly anyway) are left to the browser default.
+ *
+ * Named (not an anonymous closure) so the conditional wiring is testable —
+ * see tests/print-styles.php.
+ */
+function sn_enqueue_print_styles() {
+	if ( is_singular( array( 'post', 'page' ) ) ) {
+		wp_enqueue_style(
+			'sn-print',
+			get_theme_file_uri( 'assets/css/print.css' ),
+			array(),
+			sn_asset_ver( 'assets/css/print.css' ),
+			'print'
+		);
+	}
+}
+add_action( 'wp_enqueue_scripts', 'sn_enqueue_print_styles', 30 );

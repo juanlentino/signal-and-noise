@@ -1,0 +1,97 @@
+/* Signal & Noise — Print / Save-as-PDF stylesheet (v9.10.0)
+ *
+ * Loaded with media="print" on single posts + pages only (see
+ * sn_enqueue_print_styles() in inc/assets-frontend.php). Never affects
+ * on-screen render. Goal: a clean, legible, ink-frugal page that keeps
+ * the brutalist Bebas title but drops every navigational affordance the
+ * paper version can't use. */
+
+@page {
+	margin: 2cm;
+}
+
+/* ── Force black-on-white. Brutalist on screen; legible + ink-frugal in print. ── */
+html,
+body {
+	background: #fff !important;
+	color: #000 !important;
+}
+
+body * {
+	background-color: transparent !important;
+	background-image: none !important;
+	box-shadow: none !important;
+	text-shadow: none !important;
+}
+
+/* ── Strip site chrome + navigational affordances paper can't use. ── */
+.sn-skip-link,
+#wp-skip-link,
+header.wp-block-template-part,
+.sn-header,
+footer.wp-block-template-part,
+.sn-footer,
+.wp-block-navigation,
+.sn-post-closing__nav,
+.sn-note-pillar-link,
+.sn-note-back,
+.sn-note-share {
+	display: none !important;
+}
+
+/* ── Typography: keep Bebas for the title, DM Mono for body. ── */
+.sn-note-single {
+	max-width: none !important;
+	padding: 0 !important;
+}
+
+.wp-block-post-title,
+h1,
+h2,
+h3 {
+	color: #000 !important;
+	page-break-after: avoid;
+}
+
+.wp-block-post-content,
+.wp-block-post-content p,
+.wp-block-post-content li {
+	color: #000 !important;
+	font-size: 11pt;
+	line-height: 1.5;
+}
+
+a {
+	color: #000 !important;
+	text-decoration: underline;
+}
+
+/* ── Reveal external URLs inline so links survive on paper. ── */
+.wp-block-post-content a[href^="http"]::after {
+	content: " (" attr(href) ")";
+	font-size: 9pt;
+	word-break: break-all;
+}
+
+/* In-page anchors + mailto/tel don't need their target spelled out. */
+.wp-block-post-content a[href^="#"]::after,
+.wp-block-post-content a[href^="mailto"]::after,
+.wp-block-post-content a[href^="tel"]::after {
+	content: "";
+}
+
+/* ── Don't orphan images / blockquotes across a page break. ── */
+img,
+figure,
+blockquote,
+pre,
+table {
+	page-break-inside: avoid;
+	max-width: 100% !important;
+}
+
+/* Footnotes: keep them, they're part of the argument. */
+.wp-block-footnotes {
+	font-size: 9pt;
+	page-break-before: avoid;
+}
