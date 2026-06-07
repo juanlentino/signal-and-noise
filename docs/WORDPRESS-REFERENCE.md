@@ -32,15 +32,21 @@ The comment claims "not a relative link" but the check only recognizes protocol-
 
 When WP core ships a fix (adds `! str_starts_with( $url, '/' )` to the check), this filter becomes a no-op. Comment in `inc/frontend-filters.php` documents when it can be retired.
 
-### 1.2 FSE template parts don't execute PHP
+### 1.2 FSE template parts don't execute PHP — but they DO resolve shortcodes
 
-`parts/*.html` and `templates/*.html` are **pure HTML**. PHP tags are stripped, shortcodes are NOT processed. This means:
+`parts/*.html` and `templates/*.html` are **pure HTML**: raw `<?php ?>` tags are stripped and never execute. Shortcodes, however, **are** resolved by core — anywhere in the markup, no `render_block` bridge required:
 
-- ❌ `<?php bloginfo('rss2_url'); ?>` — silently dropped
+- ❌ `<?php bloginfo('rss2_url'); ?>` — silently dropped (PHP never runs)
 - ❌ `home_url('/')` — not callable
-- ❌ Even `[some_shortcode]` won't run inside arbitrary positions; only specific block types (like the post-content block) trigger shortcode processing
+- ✅ `[any_shortcode]` **does** run, in any position (paragraph text, a `core/shortcode` block, raw HTML). Core does `do_shortcode()` on the **raw** markup *before* `do_blocks()`:
+  - Template **parts** → `render_block_core_template_part()` runs `shortcode_unautop()` + `do_shortcode()` then `do_blocks()` (`wp-includes/blocks/template-part.php` — comment: *"Run through the actions that are typically taken on the_content"*).
+  - Full **templates** → `get_the_block_template_html()` does the same on `$_wp_current_template_content` (`wp-includes/block-template.php`).
 
-**The pattern this theme uses:** hardcode URLs as paths (`/notes/feed/`, `/feed/`, `/about/`) and rely on the social-link filter (above) or block-block defaults to resolve them at render. For URLs in `core/html` blocks or paragraph hrefs, paths are fine — the browser resolves them against the current host.
+  Note `render_block_core_shortcode()` itself is *only* `wpautop( $content )` — it does **not** do_shortcode. The resolution happens at the part/template level above it, before the block ever renders.
+
+> ⚠️ **Corollary — the `render_block` shortcode bridges are belt-and-suspenders, not load-bearing on the front end.** [inc/setup.php](../inc/setup.php) bridges `[current_year]`; the companion plugin bridges `[sn_reading_time]`. Both are redundant on the front-end template-part path because core already do_shortcodes the raw markup first. **Verified 2026-06-07:** `[sn_post_pillar]` in `parts/post-frontmatter.html` resolves correctly on the live front end with **no** bridge of its own (0 literal-token leaks; renders empty for non-`provenance` posts, the PROVENANCE link otherwise). Don't assume a template-markup shortcode is broken just because it lacks a bridge — check the live render first. (The bridges *do* earn their keep outside the front-end render — e.g. the block editor shows shortcode tokens as literal text — so keep them; just don't treat the bridge as the thing that makes front-end resolution work.)
+
+**The URL pattern this theme uses:** hardcode URLs as paths (`/notes/feed/`, `/feed/`, `/about/`) and rely on the social-link filter (above) or block-block defaults to resolve them at render. For URLs in `core/html` blocks or paragraph hrefs, paths are fine — the browser resolves them against the current host.
 
 ### 1.3 Avoid `wp:html` when a core block exists
 

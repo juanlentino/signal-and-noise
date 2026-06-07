@@ -1,10 +1,7 @@
 <?php
 /**
- * Standalone fixture tests for v9.3.0's pillar shortcode helper.
- *
- * Stubs get_post, wp_get_post_tags → returns whatever the test
- * fixture set. Tests the convention-based tag-to-pillar mapping.
- *
+ * Standalone fixture tests for the pillar shortcode helper + render_block bridge.
+ * Stubs WP fns; tests tag→pillar mapping, core's template-part resolution, the bridge.
  * @since theme v9.3.0
  */
 
@@ -20,8 +17,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	define( 'ABSPATH', '/' );
 }
 
-$GLOBALS['__test_post'] = null;
-$GLOBALS['__test_tags'] = array();
+$GLOBALS['__test_post']    = null;
+$GLOBALS['__test_tags']    = array();
+$GLOBALS['__test_filters'] = array();
 
 if ( ! function_exists( 'get_post' ) ) {
 	function get_post() { return $GLOBALS['__test_post']; }
@@ -41,6 +39,21 @@ if ( ! function_exists( 'add_shortcode' ) ) {
 	function add_shortcode( $tag, $callback ) {
 		$GLOBALS['__test_shortcodes'][ $tag ] = $callback;
 		return true;
+	}
+}
+if ( ! function_exists( 'add_filter' ) ) {
+	function add_filter( $hook, $cb, $priority = 10, $args = 1 ) {
+		$GLOBALS['__test_filters'][ $hook ][] = $cb;
+		return true;
+	}
+}
+// Minimal stand-in for WP do_shortcode over the [sn_post_pillar] token.
+if ( ! function_exists( 'do_shortcode' ) ) {
+	function do_shortcode( $content ) {
+		$cb = $GLOBALS['__test_shortcodes']['sn_post_pillar'] ?? null;
+		return $cb ? preg_replace_callback( '/\[sn_post_pillar\]/', function () use ( $cb ) {
+			return call_user_func( $cb );
+		}, $content ) : $content;
 	}
 }
 
@@ -105,6 +118,32 @@ pf_eq( '', sn_post_pillar_shortcode(), 'Test 5.1: get_post() returning null → 
 echo "\nTest 6: add_shortcode registered\n";
 pf_eq( true, isset( $GLOBALS['__test_shortcodes']['sn_post_pillar'] ), 'Test 6.1: sn_post_pillar shortcode registered' );
 pf_eq( 'sn_post_pillar_shortcode', $GLOBALS['__test_shortcodes']['sn_post_pillar'], 'Test 6.2: shortcode callback name correct' );
+
+// ─── Test 7: front-end contract — core do_shortcodes raw part markup before do_blocks (template-part.php; see §1.2) ─
+echo "\nTest 7: template-part do_shortcode pass resolves the token\n";
+$raw = "<!-- wp:shortcode -->\n[sn_post_pillar]\n<!-- /wp:shortcode -->";
+
+_pf_post( 701, array( 'provenance' ) );
+$rendered = do_shortcode( $raw );
+pf_contains( $rendered, '/provenance/over-detection/', 'Test 7.1: provenance post → token resolves to pillar link' );
+pf_eq( false, strpos( $rendered, '[sn_post_pillar]' ) !== false, 'Test 7.2: literal token does not survive the do_shortcode pass' );
+
+_pf_post( 702, array( 'unrelated' ) );
+$rendered = do_shortcode( $raw );
+pf_eq( false, strpos( $rendered, '[sn_post_pillar]' ) !== false, 'Test 7.3: non-pillar post → token removed, no leak' );
+pf_eq( false, strpos( $rendered, 'sn-post-frontmatter__pillar' ) !== false, 'Test 7.4: non-pillar post → no pillar link emitted' );
+
+// ─── Test 8: render_block bridge (belt-and-suspenders; redundant on front end, kept for parity — added 2026-06-07) ─
+echo "\nTest 8: render_block bridge resolves the token in block content\n";
+pf_eq( true, function_exists( 'sn_post_pillar_render_block' ), 'Test 8.1: bridge function exists' );
+pf_eq( true, in_array( 'sn_post_pillar_render_block', (array) ( $GLOBALS['__test_filters']['render_block'] ?? array() ), true ), 'Test 8.2: bridge registered on render_block hook' );
+if ( function_exists( 'sn_post_pillar_render_block' ) ) {
+	_pf_post( 801, array( 'provenance' ) );
+	$out = sn_post_pillar_render_block( '<p>[sn_post_pillar]</p>', array() );
+	pf_contains( $out, 'sn-post-frontmatter__pillar', 'Test 8.3: token in block content → bridge runs do_shortcode → pillar link' );
+	pf_eq( false, strpos( $out, '[sn_post_pillar]' ) !== false, 'Test 8.4: token does not survive the bridge' );
+	pf_eq( '<p>x</p>', sn_post_pillar_render_block( '<p>x</p>', array() ), 'Test 8.5: no token → content unchanged (strpos guard)' );
+}
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

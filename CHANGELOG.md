@@ -2,6 +2,24 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.9.1] - 2026-06-07 — Pillar shortcode render_block bridge (belt-and-suspenders)
+
+**Released:** 2026-06-07.
+
+**Headline:** Adds a `render_block` bridge for the `[sn_post_pillar]` frontmatter shortcode, completing the convention already used for `[current_year]` and `[sn_reading_time]`. **No user-visible change.** The pillar slot already resolved correctly on the front end — WordPress core `do_shortcode()`s a template part's raw markup *before* `do_blocks()` via `render_block_core_template_part()` — so this filter is belt-and-suspenders: redundant on the standard front-end path, kept for parity and as version-independent insurance if the frontmatter part is ever rendered outside the template-part render path (e.g. inlined into a pattern). Verified on the live front end before adding: `[sn_post_pillar]` was resolving, not leaking.
+
+### Added
+
+- **`sn_post_pillar_render_block()` bridge** (`inc/post-frontmatter.php`) — a `render_block` filter that `do_shortcode()`s any block whose content contains `[sn_post_pillar`. Mirrors the `[current_year]` bridge in `inc/setup.php`. A `strpos` guard makes it a no-op for blocks without the token.
+
+### Tests
+
+- **`tests/post-frontmatter.php` → 18 assertions (was 9).** Test 7 locks the front-end contract (core's template-part `do_shortcode` pass resolves the token before any bridge runs); Test 8 covers the bridge itself — registration on `render_block`, resolution when the token is present, and the `strpos` pass-through guard.
+
+### Docs
+
+- **Corrected `docs/WORDPRESS-REFERENCE.md` §1.2.** It claimed shortcodes are "NOT processed" in FSE template parts. They are: `render_block_core_template_part()` and `get_the_block_template_html()` both run `do_shortcode()` on raw markup before `do_blocks()`. The section now documents the real mechanism with source citations and notes that the shortcode bridges are belt-and-suspenders, not load-bearing on the front end.
+
 ## [9.9.0] - 2026-06-06 — Prep minor for v10.0.0 — 1 new ability + WP 7.0 pre-warning
 
 **Released:** 2026-06-06.
