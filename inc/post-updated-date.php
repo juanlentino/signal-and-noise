@@ -89,7 +89,12 @@ function sn_updated_date_shortcode() {
  */
 function sn_updated_date_render_block_bridge( $block_content, $block ) {
 	if ( false !== strpos( $block_content, '[sn_updated_date]' ) ) {
-		$block_content = do_shortcode( $block_content );
+		// core/shortcode wpautop()'d the bare token first (verified vs WP
+		// trunk). shortcode_unautop() strips the <p> around the registered
+		// token before we resolve it, so an EMPTY render (note below the
+		// material-revision threshold) collapses to '' instead of leaving an
+		// empty <p></p>, and a non-empty <time> isn't left <p>-wrapped.
+		$block_content = do_shortcode( shortcode_unautop( $block_content ) );
 	}
 	return $block_content;
 }

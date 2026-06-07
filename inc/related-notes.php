@@ -178,7 +178,11 @@ function sn_related_notes_shortcode() {
  */
 function sn_related_notes_render_block_bridge( $block_content, $block ) {
 	if ( false !== strpos( $block_content, '[sn_related_notes' ) ) {
-		$block_content = do_shortcode( $block_content );
+		// core/shortcode wpautop()'d the bare token first (verified vs WP
+		// trunk), so a block-level shortcode output (this <footer>) would end
+		// up wrapped in an invalid <p>. shortcode_unautop() strips the <p>
+		// around the registered token before we resolve it.
+		$block_content = do_shortcode( shortcode_unautop( $block_content ) );
 	}
 	return $block_content;
 }

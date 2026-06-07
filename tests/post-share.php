@@ -79,14 +79,71 @@ if ( ! function_exists( 'esc_html__' ) ) {
 	}
 }
 if ( ! function_exists( 'do_shortcode' ) ) {
+	// Faithful enough to catch FIX 2: substitutes the real shortcode output
+	// (a block-level <div>) where the literal token sits, so a stray <p>
+	// wrapper around it is observable.
 	function do_shortcode( $content ) {
 		$GLOBALS['__do_shortcode_ran'] = true;
-		return str_replace( '[sn_note_share]', 'RENDERED', $content );
+		if ( false !== strpos( $content, '[sn_note_share]' ) ) {
+			$content = str_replace( '[sn_note_share]', sn_note_share_shortcode(), $content );
+		}
+		return $content;
+	}
+}
+if ( ! function_exists( 'wp_spaces_regexp' ) ) {
+	function wp_spaces_regexp() {
+		return '[\r\n\t ]|\xC2\xA0|&nbsp;';
+	}
+}
+// Real shortcode_unautop from WP trunk wp-includes/formatting.php.
+if ( ! function_exists( 'shortcode_unautop' ) ) {
+	function shortcode_unautop( $text ) {
+		global $shortcode_tags;
+		if ( empty( $shortcode_tags ) || ! is_array( $shortcode_tags ) ) {
+			return $text;
+		}
+		$tagregexp = implode( '|', array_map( 'preg_quote', array_keys( $shortcode_tags ) ) );
+		$spaces    = wp_spaces_regexp();
+		$pattern   =
+			'/'
+			. '<p>'
+			. '(?:' . $spaces . ')*+'
+			. '('
+			.     '\\['
+			.     "($tagregexp)"
+			.     '(?![\\w-])'
+			.     '[^\\]\\/]*'
+			.     '(?:'
+			.         '\\/(?!\\])'
+			.         '[^\\]\\/]*'
+			.     ')*?'
+			.     '(?:'
+			.         '\\/\\]'
+			.     '|'
+			.         '\\]'
+			.         '(?:'
+			.             '[^\\[]*+'
+			.             '(?:'
+			.                 '\\[(?!\\/\\2\\])'
+			.                 '[^\\[]*+'
+			.             ')*+'
+			.             '\\[\\/\\2\\]'
+			.         ')?'
+			.     ')'
+			. ')'
+			. '(?:' . $spaces . ')*+'
+			. '<\\/p>'
+			. '/';
+		return preg_replace( $pattern, '$1', $text );
 	}
 }
 
 define( 'SN_POST_SHARE_TEST', true );
 require __DIR__ . '/../inc/post-share.php';
+
+// shortcode_unautop() recognises only REGISTERED shortcodes (reads
+// $shortcode_tags). Register the token the way the runtime does.
+$GLOBALS['shortcode_tags']['sn_note_share'] = 'sn_note_share_shortcode';
 
 $pass = 0; $fail = 0;
 function ok( $cond, $label ) {
@@ -131,11 +188,23 @@ $evil = sn_note_share_shortcode();
 ok( strpos( $evil, '<b>note</b>' ) === false, 'title is escaped — no raw <b> leaks' );
 ok( strpos( $evil, '"onmouseover="alert(1)' ) === false, 'permalink is esc_url\'d — quote breakout stripped' );
 
-// ── BRIDGE: render_block filter runs do_shortcode when token present ──
+// ── BRIDGE: feed a wpautop-shaped input through the REAL bridge ───────
+// core/shortcode wpautop()s the bare token into "<p>[sn_note_share]</p>".
+// The bridge must shortcode_unautop() before do_shortcode (FIX 2) so the
+// block-level <div> isn't emitted wrapped in an invalid <p>.
+$GLOBALS['__is_singular_post'] = true;
+$GLOBALS['__queried_id']       = 1;
+$GLOBALS['__permalink']        = 'https://x/notes/1/';
+$GLOBALS['__title']            = 'A note';
 $GLOBALS['__do_shortcode_ran'] = false;
+
 $out = sn_note_share_render_block_bridge( '<p>[sn_note_share]</p>', array() );
 ok( ! empty( $GLOBALS['__do_shortcode_ran'] ), 'bridge: do_shortcode runs when token present' );
-ok( strpos( $out, 'RENDERED' ) !== false, 'bridge: token resolved to rendered output' );
+ok( strpos( $out, 'class="sn-note-share"' ) !== false, 'bridge: token resolved to the real <div> output' );
+ok( strpos( $out, '[sn_note_share]' ) === false, 'bridge: raw token gone after resolution' );
+// FIX 2 — the block-level <div> must NOT be wrapped in a <p>.
+ok( strpos( $out, '<p><div' ) === false, 'FIX 2: <div> not directly wrapped in <p>' );
+ok( strpos( $out, '<p>' ) === false, 'FIX 2: no leftover <p> wrapping the block-level output at all' );
 
 $GLOBALS['__do_shortcode_ran'] = false;
 $untouched = sn_note_share_render_block_bridge( '<p>no token here</p>', array() );

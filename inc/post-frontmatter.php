@@ -66,7 +66,11 @@ function sn_post_pillar_shortcode() {
  */
 function sn_post_pillar_render_block_bridge( $block_content, $block ) {
 	if ( false !== strpos( $block_content, '[sn_post_pillar]' ) ) {
-		$block_content = do_shortcode( $block_content );
+		// core/shortcode wpautop()'d the bare token first (verified vs WP
+		// trunk). shortcode_unautop() strips the <p> around the registered
+		// token before we resolve it, so an EMPTY render (post with no
+		// matching pillar tag) collapses to '' instead of an empty <p></p>.
+		$block_content = do_shortcode( shortcode_unautop( $block_content ) );
 	}
 	return $block_content;
 }

@@ -194,5 +194,21 @@ pf_eq( false, strpos( $bridged, '[sn_post_pillar]' ) !== false, 'Test 7.2: raw t
 $untouched = sn_post_pillar_render_block_bridge( '<p>no token</p>', array() );
 pf_eq( '<p>no token</p>', $untouched, 'Test 7.3: content unchanged when token absent' );
 
+// ─── Test 8: FIX 2 — block-level shortcode is NOT left wrapped in <p> ─
+// core/shortcode wpautop()s the bare token into "<p>[sn_post_pillar]</p>".
+// The bridge must shortcode_unautop() before do_shortcode so the resolved
+// output isn't wrapped in an invalid <p>, and an EMPTY render (no matching
+// pillar tag) collapses to '' instead of leaving an empty <p></p>.
+echo "\nTest 8: FIX 2 shortcode_unautop strips the wpautop <p> wrapper\n";
+_pf_post( 801, array( 'provenance' ) );
+$bridged2 = sn_post_pillar_render_block_bridge( '<p>[sn_post_pillar]</p>', array() );
+pf_contains( $bridged2, 'sn-post-frontmatter__pillar', 'Test 8.1: pillar output still resolves' );
+pf_eq( false, strpos( $bridged2, '<p>' ) !== false, 'Test 8.2: no leftover <p> wrapping the shortcode output' );
+
+// Empty pillar render (no matching tag) → collapses to ''.
+_pf_post( 802, array( 'random' ) );
+$empty = sn_post_pillar_render_block_bridge( '<p>[sn_post_pillar]</p>', array() );
+pf_eq( '', $empty, 'Test 8.3: empty render collapses to "" (no empty <p></p>)' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

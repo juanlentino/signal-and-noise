@@ -25,6 +25,7 @@ All notable changes to Signal & Noise are documented here.
 ### Fixed
 
 - **`[sn_post_pillar]` rendered raw on every single note** (`inc/post-frontmatter.php`) — the pillar token sits in a `wp:shortcode` block in `parts/post-frontmatter.html` but had no `render_block` bridge, so `core/shortcode`'s wpautop-only render left the literal `[sn_post_pillar]` text visible. Added the missing bridge mirroring the Related Notes / Updated-date / share-row pattern.
+- **Block-level shortcodes were wrapped in an invalid `<p>`** (`inc/related-notes.php`, `inc/post-share.php`, `inc/post-updated-date.php`, `inc/post-frontmatter.php`) — `core/shortcode` runs `wpautop()` on the bare token *before* the `render_block` bridge runs `do_shortcode()`, so the Related Notes `<footer>` and the share-row `<div>` ended up inside a stray `<p>`, and an empty Updated-date render emitted an empty `<p></p>`. Every bridge now calls `shortcode_unautop()` before `do_shortcode()`, stripping the paragraph wrapper around the registered token (verified vs WP trunk `wp-includes/formatting.php`).
 
 ### Tests
 

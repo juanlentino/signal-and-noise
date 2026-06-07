@@ -76,7 +76,11 @@ function sn_note_share_shortcode() {
  */
 function sn_note_share_render_block_bridge( $block_content, $block ) {
 	if ( false !== strpos( $block_content, '[sn_note_share' ) ) {
-		$block_content = do_shortcode( $block_content );
+		// core/shortcode wpautop()'d the bare token first (verified vs WP
+		// trunk), so this block-level <div> output would end up wrapped in an
+		// invalid <p>. shortcode_unautop() strips the <p> around the
+		// registered token before we resolve it.
+		$block_content = do_shortcode( shortcode_unautop( $block_content ) );
 	}
 	return $block_content;
 }

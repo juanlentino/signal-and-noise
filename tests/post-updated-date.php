@@ -68,8 +68,60 @@ if ( ! function_exists( 'esc_html' ) ) {
 	}
 }
 
+if ( ! function_exists( 'wp_spaces_regexp' ) ) {
+	function wp_spaces_regexp() {
+		return '[\r\n\t ]|\xC2\xA0|&nbsp;';
+	}
+}
+// Real shortcode_unautop from WP trunk wp-includes/formatting.php.
+if ( ! function_exists( 'shortcode_unautop' ) ) {
+	function shortcode_unautop( $text ) {
+		global $shortcode_tags;
+		if ( empty( $shortcode_tags ) || ! is_array( $shortcode_tags ) ) {
+			return $text;
+		}
+		$tagregexp = implode( '|', array_map( 'preg_quote', array_keys( $shortcode_tags ) ) );
+		$spaces    = wp_spaces_regexp();
+		$pattern   =
+			'/'
+			. '<p>'
+			. '(?:' . $spaces . ')*+'
+			. '('
+			.     '\\['
+			.     "($tagregexp)"
+			.     '(?![\\w-])'
+			.     '[^\\]\\/]*'
+			.     '(?:'
+			.         '\\/(?!\\])'
+			.         '[^\\]\\/]*'
+			.     ')*?'
+			.     '(?:'
+			.         '\\/\\]'
+			.     '|'
+			.         '\\]'
+			.         '(?:'
+			.             '[^\\[]*+'
+			.             '(?:'
+			.                 '\\[(?!\\/\\2\\])'
+			.                 '[^\\[]*+'
+			.             ')*+'
+			.             '\\[\\/\\2\\]'
+			.         ')?'
+			.     ')'
+			. ')'
+			. '(?:' . $spaces . ')*+'
+			. '<\\/p>'
+			. '/';
+		return preg_replace( $pattern, '$1', $text );
+	}
+}
+
 define( 'SN_POST_UPDATED_DATE_TEST', true );
 require __DIR__ . '/../inc/post-updated-date.php';
+
+// shortcode_unautop() recognises only REGISTERED shortcodes (reads
+// $shortcode_tags). Register the token the way the runtime does.
+$GLOBALS['shortcode_tags']['sn_updated_date'] = 'sn_updated_date_shortcode';
 
 $pass = 0; $fail = 0;
 function ok( $cond, $label ) {
@@ -151,17 +203,34 @@ $GLOBALS['__timestamps'] = array(
 $sc = sn_updated_date_shortcode();
 ok( strpos( $sc, 'Updated ' ) !== false, 'shortcode renders the helper output for get_post()' );
 
-// ── render_block bridge: runs do_shortcode only when token present ──
+// ── render_block bridge: faithful do_shortcode resolving the real token ──
+// Faithful enough to catch FIX 2: substitutes the REAL shortcode output
+// (which is '' below threshold, a <time> above it) at the token position, so
+// both the empty-<p></p> collapse and the <p>-wrapped-<time> bug are visible.
 $GLOBALS['__do_shortcode_ran'] = false;
 if ( ! function_exists( 'do_shortcode' ) ) {
 	function do_shortcode( $content ) {
 		$GLOBALS['__do_shortcode_ran'] = true;
-		return '<resolved/>';
+		if ( false !== strpos( $content, '[sn_updated_date]' ) ) {
+			$content = str_replace( '[sn_updated_date]', sn_updated_date_shortcode(), $content );
+		}
+		return $content;
 	}
 }
+
+// Above threshold → a real <time> element. Must NOT be <p>-wrapped (FIX 2).
+$GLOBALS['__post']       = $post;
+$GLOBALS['__timestamps'] = array( 'date' => $published, 'modified' => $modified );
 $resolved = sn_updated_date_render_block_bridge( '<p>[sn_updated_date]</p>', array() );
 ok( ! empty( $GLOBALS['__do_shortcode_ran'] ), 'bridge: do_shortcode run when token present' );
-ok( $resolved === '<resolved/>', 'bridge: returns do_shortcode output when token present' );
+ok( strpos( $resolved, '<time' ) !== false, 'bridge: token resolved to the real <time> output' );
+ok( strpos( $resolved, '<p>' ) === false, 'FIX 2: <time> not left wrapped in a <p>' );
+
+// Below threshold → empty shortcode output. The whole <p>[token]</p> must
+// collapse to '' (FIX 2), not leave an empty <p></p>.
+$GLOBALS['__timestamps'] = array( 'date' => $published, 'modified' => $published + ( 2 * DAY_IN_SECONDS ) );
+$empty = sn_updated_date_render_block_bridge( '<p>[sn_updated_date]</p>', array() );
+ok( $empty === '', 'FIX 2: empty render collapses to "" (no empty <p></p>)' );
 
 $GLOBALS['__do_shortcode_ran'] = false;
 $untouched = sn_updated_date_render_block_bridge( '<p>no token here</p>', array() );
