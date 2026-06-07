@@ -19,6 +19,7 @@
  *   inc/abilities-registration.php — 13 WP 7.0 Abilities (theme-owned: 8 read + 5 generative; v9.1.1, get-latest-theme-tag added v9.9.0)
  *   inc/admin-notice-wp-version.php — dismissible WP < 7.0 admin notice (v9.9.0 pre-warning; deleted in v10.0.0)
  *   inc/post-frontmatter.php     — long-form post frontmatter rendering
+ *   inc/post-updated-date.php    — [sn_updated_date] "Updated YYYY.MM.DD" line for materially-revised notes (v9.10.0)
  *   (inc/page-notes-render.php   — full PHP render of /notes index; loaded by page-notes-template.php, not here)
  *
  * Operational tooling — REST surface, Plausible integration, admin UI, security
@@ -56,4 +57,5 @@ require_once __DIR__ . '/inc/blocks-view-transitions.php';
 require_once __DIR__ . '/inc/abilities-registration.php';
 require_once __DIR__ . '/inc/admin-notice-wp-version.php';
 require_once __DIR__ . '/inc/post-frontmatter.php';
+require_once __DIR__ . '/inc/post-updated-date.php';
 require_once __DIR__ . '/inc/related-notes.php';

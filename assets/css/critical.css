@@ -881,6 +881,10 @@ main { view-transition-name: sn-main; }
 .sn-post-frontmatter__rt {
 	color: var(--wp--preset--color--blood, #e00404);
 }
+.sn-post-frontmatter__updated {
+	color: var(--wp--preset--color--rust, #666);
+	font-weight: 500;
+}
 .sn-post-frontmatter__tags,
 .sn-post-frontmatter__tags a {
 	color: var(--wp--preset--color--rust, #666);
