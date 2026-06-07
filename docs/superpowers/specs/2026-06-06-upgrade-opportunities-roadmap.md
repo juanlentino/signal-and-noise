@@ -12,6 +12,8 @@
 
 ## Track A — Patches & fixes (highest confidence, smallest, land first)
 
+> **STATUS (2026-06-07): ✅ SHIPPED.** A1 SEO/schema batch + the aria-current PA-03 TOC fix + feed-304 + sitemap trim + the Breeze cache-rollover latent bug (gotcha #28) all shipped in **plugin v4.8.1**. A2's Speculation Rules tuning shipped in **plugin v4.10.0** (it landed plugin-side, not theme — see Track B1). **Resolved:** fluid-headings = keep the hand-written `clamp()`s (the WP fluid engine can't reproduce the brutalist `vw`-proportional display type; converting would only degrade brand type); the "Block Bindings raw-token render bug" = verified **false positive** (tokens live only in templates/parts + are registered shortcodes stripped everywhere). **One leftover:** theme.json `caption`/`cite` element styles → fold into the first THEME minor (don't ship a 1-item theme patch).
+
 Fixes, perf, and data-only correctness. PATCH-class per the project SemVer (fix/perf/calibration), though the SEO batch could equally be one MINOR.
 
 ### A1 · Plugin patch — SEO/schema + a latent bug
@@ -41,6 +43,9 @@ Fixes, perf, and data-only correctness. PATCH-class per the project SemVer (fix/
 ## Track B — Minors (additive capabilities, bundled by theme)
 
 ### B1 · Plugin minor — "Operational hardening" (mostly native-WP-citizen wins)
+
+> **STATUS (2026-06-07): ✅ SHIPPED** across two bundles, each via a build→adversarial-review→fix cycle. **v4.9.0:** CF security-header drift check, native Site Health cron test, Site Health → Info panel, opt-in Uptime Kuma heartbeat, Heartbeat live-refresh. **v4.10.0:** multi-event webhooks (`post.updated`/`unpublished`/`deleted`), `list-abilities` meta-ability, audit-log CSV/JSON export, Privacy exporter/eraser + suggested Privacy Policy text, + A2's Speculation Rules tuning. **v4.10.1:** post-review fixes — webhook `post.deleted` single-fire (HIGH; was double-firing on trash→empty-trash + firing for never-published rows), CSV formula-injection (security), abilities false-green test fidelity, i18n domain.
+
 | Item | Lev | Eff | AI | Note |
 |---|---|---|---|---|
 | **Cloudflare security-header drift health check** (cached `wp_remote_head(home_url())`) | 5 | S | — | Whole CSP/HSTS posture is delegated to CF with **zero drift detection**. |
