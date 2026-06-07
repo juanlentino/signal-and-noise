@@ -224,3 +224,28 @@ function sn_enqueue_print_styles() {
 	}
 }
 add_action( 'wp_enqueue_scripts', 'sn_enqueue_print_styles', 30 );
+
+/**
+ * v9.10.0: copy-permalink + native Web Share progressive enhancement.
+ *
+ * Only loads on single notes where the [sn_note_share] row is rendered
+ * (parts/post-closing.html). The share buttons are server-rendered and
+ * inert without this JS — the script wires clipboard copy and reveals the
+ * native SHARE button when navigator.share exists. Footer + defer so it
+ * never blocks first paint. Mirrors the footnotes-popover conditional
+ * enqueue above.
+ *
+ * Named (not an anonymous closure) so the conditional wiring is testable.
+ */
+function sn_enqueue_note_share() {
+	if ( is_singular( 'post' ) ) {
+		wp_enqueue_script(
+			'sn-note-share',
+			get_theme_file_uri( 'assets/js/note-share.js' ),
+			array(),
+			sn_asset_ver( 'assets/js/note-share.js' ),
+			true
+		);
+	}
+}
+add_action( 'wp_enqueue_scripts', 'sn_enqueue_note_share', 30 );

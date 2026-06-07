@@ -700,3 +700,62 @@
 		transition: none;
 	}
 }
+
+/* ── Copy-permalink + native Web Share row (v9.10.0) ──────────────────
+   Rendered by [sn_note_share] into the single-note footer
+   (parts/post-closing.html). Brutalist: mono uppercase tracked labels,
+   sharp outline buttons, blood accent on hover / copied. The .__native
+   SHARE button ships `hidden` and is revealed by note-share.js only when
+   navigator.share exists. */
+.sn-note-share {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.75rem;
+	margin-top: clamp(1.5rem, 3vw, 2.25rem);
+}
+.sn-note-share__label {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.7rem, 11px);
+	font-weight: 500;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--rust, #666);
+	margin-right: 0.25rem;
+}
+.sn-note-share__copy,
+.sn-note-share__native {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.7rem, 11px);
+	font-weight: 500;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--bone, #000);
+	background: transparent;
+	border: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+	border-radius: 0;
+	padding: 0.5rem 0.85rem;
+	cursor: pointer;
+	transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+.sn-note-share__copy:hover,
+.sn-note-share__native:hover,
+.sn-note-share__copy:focus-visible,
+.sn-note-share__native:focus-visible {
+	color: var(--wp--preset--color--blood, #e00404);
+	border-color: var(--wp--preset--color--blood, #e00404);
+}
+.sn-note-share__copy.is-copied {
+	color: var(--wp--preset--color--void, #fff);
+	background-color: var(--wp--preset--color--blood, #e00404);
+	border-color: var(--wp--preset--color--blood, #e00404);
+}
+.sn-note-share__native[hidden] {
+	display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+	.sn-note-share__copy,
+	.sn-note-share__native {
+		transition: none;
+	}
+}

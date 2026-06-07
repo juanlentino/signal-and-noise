@@ -59,3 +59,4 @@ require_once __DIR__ . '/inc/admin-notice-wp-version.php';
 require_once __DIR__ . '/inc/post-frontmatter.php';
 require_once __DIR__ . '/inc/post-updated-date.php';
 require_once __DIR__ . '/inc/related-notes.php';
+require_once __DIR__ . '/inc/post-share.php';
