@@ -232,6 +232,28 @@
 						"text": "var(--wp--preset--color--void)"
 					}
 				}
+			},
+			"caption": {
+				"typography": {
+					"fontFamily": "var(--wp--preset--font-family--body)",
+					"fontSize": "max(0.75rem, 11px)",
+					"textTransform": "uppercase",
+					"letterSpacing": "0.1em"
+				},
+				"color": {
+					"text": "var(--wp--preset--color--rust)"
+				}
+			},
+			"cite": {
+				"typography": {
+					"fontFamily": "var(--wp--preset--font-family--body)",
+					"fontSize": "max(0.75rem, 11px)",
+					"textTransform": "uppercase",
+					"letterSpacing": "0.1em"
+				},
+				"color": {
+					"text": "var(--wp--preset--color--rust)"
+				}
 			}
 		},
 		"blocks": {
