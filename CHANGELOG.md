@@ -2,6 +2,30 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.10.0] - 2026-06-07 — Reader experience I
+
+**Released:** 2026-06-07.
+
+**Headline:** A front-end-only batch that improves the reading and sharing experience on single notes and pages, plus two new whole-site Style Variations and editor polish. Eight features, no new wp-admin chrome, no dark mode, brutalist/white-first throughout. The per-post dynamic surfaces (Related Notes, the "Updated" line, the share row) ride the proven `render_block` shortcode bridge rather than a bare `wp:shortcode` block, so they resolve correctly inside FSE templates.
+
+### Added
+
+- **Related Notes footer** (`inc/related-notes.php`) — single notes now end with a "Related Notes" block surfacing up to three other notes chosen by a shared-tag heuristic, rendered in the established `.sn-notes-row` two-column vocabulary (mono date + reading-time spec column / Bebas-Neue title). Wired into `templates/single.html` via the theme's `render_block` shortcode bridge. Degrades silently when there are no tag matches.
+- **Print / save-as-PDF stylesheet** (`assets/css/print.css`) — a dedicated `media="print"` stylesheet for single posts and pages, conditionally enqueued in `inc/assets-frontend.php`. Strips site chrome (header, nav, footer, share row, related notes), flattens colour to black-on-white, and sets readable print typography so a browser "Save as PDF" produces a clean document.
+- **Reader-visible "Updated" date** (`inc/post-updated-date.php`) — materially-revised notes now show an "Updated" line in the front-matter (`parts/post-frontmatter.html`), shown only when the modified date is meaningfully later than the published date so trivial edits don't churn the byline.
+- **Copy-permalink + native Web Share** (`inc/post-share.php`, `assets/js/note-share.js`) — single notes gain a share row (`parts/post-closing.html`) with a copy-permalink button and, where the browser supports it, the native Web Share sheet. Progressive enhancement: the JS is conditionally enqueued and the row degrades to a plain copyable link without it.
+- **Monolith + High Contrast Style Variations** (`styles/monolith.json`, `styles/high-contrast.json`) — two new whole-site variations selectable in the Site Editor, theme.json v3, settings-only (no `blockTypes`).
+- **Hairline + Signal block styles** (`inc/block-styles.php`) — a `hairline` separator variation and a `signal` quote variation registered via `register_block_style` with `inline_style`, available in the block inserter's Styles panel.
+- **Curated editor block palette** (`inc/editor-block-palette.php`) — a conservative `allowed_block_types_all` allowlist for the post/page editor, keeping every block the templates actually need while trimming inserter noise. Bails (returns the full set) on non-post contexts so the Site Editor is unaffected.
+
+### Improvements
+
+- **Brutalist caption + cite element styles** (`theme.json`) — `elements.caption` and `elements.cite` now carry brand-consistent typography (mono, restrained scale, 11px+ floor) so figure captions and citations read as part of the system instead of browser defaults.
+
+### Tests
+
+- **581 assertions across 20 suites, 0 failures** (was 415 across 12 at v9.9.0). Eight new standalone fixtures: `tests/related-notes.php` (19), `tests/print-styles.php` (8), `tests/post-updated-date.php` (17), `tests/post-share.php` (17), `tests/style-variations.php` (34), `tests/block-styles.php` (13), `tests/editor-block-palette.php` (43), `tests/theme-json-elements.php` (15).
+
 ## [9.9.0] - 2026-06-06 — Prep minor for v10.0.0 — 1 new ability + WP 7.0 pre-warning
 
 **Released:** 2026-06-06.
