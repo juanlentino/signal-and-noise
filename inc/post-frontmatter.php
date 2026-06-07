@@ -48,4 +48,32 @@ function sn_post_pillar_shortcode() {
 
 	return '';
 }
-add_shortcode( 'sn_post_pillar', 'sn_post_pillar_shortcode' );
+
+/**
+ * Resolve [sn_post_pillar] inside block template parts.
+ *
+ * core/shortcode only wpautop()s its content — it never runs do_shortcode
+ * on block-template output (verified vs WP trunk
+ * wp-includes/blocks/shortcode.php → render_block_core_shortcode is wpautop
+ * only). Without this bridge the [sn_post_pillar] token rendered RAW on
+ * every single Note. Mirrors the [current_year] bridge in inc/setup.php and
+ * the sibling bridges in inc/related-notes.php / inc/post-share.php /
+ * inc/post-updated-date.php.
+ *
+ * @param string $block_content Rendered block HTML.
+ * @param array  $block         Parsed block (unused).
+ * @return string
+ */
+function sn_post_pillar_render_block_bridge( $block_content, $block ) {
+	if ( false !== strpos( $block_content, '[sn_post_pillar]' ) ) {
+		$block_content = do_shortcode( $block_content );
+	}
+	return $block_content;
+}
+
+// Skip WP registration under the standalone test harness (add_shortcode /
+// add_filter aren't stubbed there; the helpers are exercised directly).
+if ( ! defined( 'SN_POST_FRONTMATTER_TEST' ) || ! SN_POST_FRONTMATTER_TEST ) {
+	add_shortcode( 'sn_post_pillar', 'sn_post_pillar_shortcode' );
+	add_filter( 'render_block', 'sn_post_pillar_render_block_bridge', 10, 2 );
+}

@@ -39,8 +39,73 @@ if ( ! function_exists( 'esc_html' ) ) {
 }
 if ( ! function_exists( 'add_shortcode' ) ) {
 	function add_shortcode( $tag, $callback ) {
-		$GLOBALS['__test_shortcodes'][ $tag ] = $callback;
+		$GLOBALS['__test_shortcodes'][ $tag ]      = $callback;
+		$GLOBALS['shortcode_tags'][ $tag ]         = $callback; // shortcode_unautop reads this.
 		return true;
+	}
+}
+if ( ! function_exists( 'add_filter' ) ) {
+	function add_filter( $hook, $callback, $priority = 10, $args = 1 ) {
+		$GLOBALS['__test_filters'][ $hook ][] = $callback;
+		return true;
+	}
+}
+if ( ! function_exists( 'do_shortcode' ) ) {
+	// Resolve only the registered token, mirroring real do_shortcode for the
+	// single token this fixture exercises.
+	function do_shortcode( $content ) {
+		if ( false !== strpos( $content, '[sn_post_pillar]' ) ) {
+			return str_replace( '[sn_post_pillar]', sn_post_pillar_shortcode(), $content );
+		}
+		return $content;
+	}
+}
+if ( ! function_exists( 'wp_spaces_regexp' ) ) {
+	function wp_spaces_regexp() {
+		return '[\r\n\t ]|\xC2\xA0|&nbsp;';
+	}
+}
+// Real shortcode_unautop from WP trunk wp-includes/formatting.php — strips a
+// <p> wrapper around a registered shortcode token. Reads $shortcode_tags.
+if ( ! function_exists( 'shortcode_unautop' ) ) {
+	function shortcode_unautop( $text ) {
+		global $shortcode_tags;
+		if ( empty( $shortcode_tags ) || ! is_array( $shortcode_tags ) ) {
+			return $text;
+		}
+		$tagregexp = implode( '|', array_map( 'preg_quote', array_keys( $shortcode_tags ) ) );
+		$spaces    = wp_spaces_regexp();
+		$pattern   =
+			'/'
+			. '<p>'
+			. '(?:' . $spaces . ')*+'
+			. '('
+			.     '\\['
+			.     "($tagregexp)"
+			.     '(?![\\w-])'
+			.     '[^\\]\\/]*'
+			.     '(?:'
+			.         '\\/(?!\\])'
+			.         '[^\\]\\/]*'
+			.     ')*?'
+			.     '(?:'
+			.         '\\/\\]'
+			.     '|'
+			.         '\\]'
+			.         '(?:'
+			.             '[^\\[]*+'
+			.             '(?:'
+			.                 '\\[(?!\\/\\2\\])'
+			.                 '[^\\[]*+'
+			.             ')*+'
+			.             '\\[\\/\\2\\]'
+			.         ')?'
+			.     ')'
+			. ')'
+			. '(?:' . $spaces . ')*+'
+			. '<\\/p>'
+			. '/';
+		return preg_replace( $pattern, '$1', $text );
 	}
 }
 
@@ -56,7 +121,14 @@ function _pf_no_post() {
 	$GLOBALS['__test_tags'] = array();
 }
 
+define( 'SN_POST_FRONTMATTER_TEST', true );
 require_once __DIR__ . '/../inc/post-frontmatter.php';
+
+// Exercise the real registration path the runtime takes (the require above is
+// guarded by SN_POST_FRONTMATTER_TEST, so register explicitly here). This also
+// populates $shortcode_tags so shortcode_unautop() recognises the token.
+add_shortcode( 'sn_post_pillar', 'sn_post_pillar_shortcode' );
+add_filter( 'render_block', 'sn_post_pillar_render_block_bridge', 10, 2 );
 
 $pass = 0; $fail = 0;
 function pf_eq( $e, $a, $msg ) {
@@ -101,10 +173,26 @@ echo "\nTest 5: null post → empty\n";
 _pf_no_post();
 pf_eq( '', sn_post_pillar_shortcode(), 'Test 5.1: get_post() returning null → empty string' );
 
-// ─── Test 6: shortcode registered ────────────────────────────────────
-echo "\nTest 6: add_shortcode registered\n";
+// ─── Test 6: shortcode + render_block bridge registered ──────────────
+echo "\nTest 6: add_shortcode + add_filter registered\n";
 pf_eq( true, isset( $GLOBALS['__test_shortcodes']['sn_post_pillar'] ), 'Test 6.1: sn_post_pillar shortcode registered' );
 pf_eq( 'sn_post_pillar_shortcode', $GLOBALS['__test_shortcodes']['sn_post_pillar'], 'Test 6.2: shortcode callback name correct' );
+pf_eq(
+	true,
+	in_array( 'sn_post_pillar_render_block_bridge', $GLOBALS['__test_filters']['render_block'] ?? array(), true ),
+	'Test 6.3: render_block bridge registered (token was rendering RAW without it)'
+);
+
+// ─── Test 7: render_block bridge resolves the token ──────────────────
+echo "\nTest 7: render_block bridge\n";
+_pf_post( 701, array( 'provenance' ) );
+$bridged = sn_post_pillar_render_block_bridge( '<p>[sn_post_pillar]</p>', array() );
+pf_contains( $bridged, 'sn-post-frontmatter__pillar', 'Test 7.1: bridge resolves [sn_post_pillar] to its rendered HTML' );
+pf_eq( false, strpos( $bridged, '[sn_post_pillar]' ) !== false, 'Test 7.2: raw token no longer present after bridge' );
+
+// Token absent → content returned untouched.
+$untouched = sn_post_pillar_render_block_bridge( '<p>no token</p>', array() );
+pf_eq( '<p>no token</p>', $untouched, 'Test 7.3: content unchanged when token absent' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

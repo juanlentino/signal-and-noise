@@ -22,6 +22,10 @@ All notable changes to Signal & Noise are documented here.
 
 - **Brutalist caption + cite element styles** (`theme.json`) — `elements.caption` and `elements.cite` now carry brand-consistent typography (mono, restrained scale, 11px+ floor) so figure captions and citations read as part of the system instead of browser defaults.
 
+### Fixed
+
+- **`[sn_post_pillar]` rendered raw on every single note** (`inc/post-frontmatter.php`) — the pillar token sits in a `wp:shortcode` block in `parts/post-frontmatter.html` but had no `render_block` bridge, so `core/shortcode`'s wpautop-only render left the literal `[sn_post_pillar]` text visible. Added the missing bridge mirroring the Related Notes / Updated-date / share-row pattern.
+
 ### Tests
 
 - **581 assertions across 20 suites, 0 failures** (was 415 across 12 at v9.9.0). Eight new standalone fixtures: `tests/related-notes.php` (19), `tests/print-styles.php` (8), `tests/post-updated-date.php` (17), `tests/post-share.php` (17), `tests/style-variations.php` (34), `tests/block-styles.php` (13), `tests/editor-block-palette.php` (43), `tests/theme-json-elements.php` (15).
