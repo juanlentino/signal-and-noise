@@ -1,0 +1,180 @@
+/**
+ * Signal & Noise — reader command palette.
+ *
+ * Brutalist/white-first overlay. Preset tokens only (no bespoke vars). The
+ * overlay sits above every other surface (header/skip-link reach 9998–9999,
+ * some critical.css overlays reach 100000–100001) at z-index 100002. The open
+ * animation runs only under prefers-reduced-motion: no-preference; the overlay
+ * itself still appears instantly under reduced motion. 11px type floor honoured.
+ *
+ * @since theme v9.11.0
+ */
+
+/* ── Trigger button (server-rendered into wp_footer) ───────────────────────── */
+.sn-cmdk-trigger {
+	position: fixed;
+	right: 1.25rem;
+	bottom: 1.25rem;
+	z-index: 100001;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.5rem 0.85rem;
+	border: 2px solid var(--wp--preset--color--void);
+	background: var(--wp--preset--color--bone);
+	color: var(--wp--preset--color--void);
+	font-family: var(--wp--preset--font-family--heading);
+	font-size: 0.875rem;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	cursor: pointer;
+	box-shadow: 4px 4px 0 var(--wp--preset--color--void);
+}
+
+.sn-cmdk-trigger:hover,
+.sn-cmdk-trigger:focus-visible {
+	background: var(--wp--preset--color--blood);
+	color: var(--wp--preset--color--bone);
+	outline: none;
+}
+
+.sn-cmdk-trigger:focus-visible {
+	outline: 2px solid var(--wp--preset--color--blood);
+	outline-offset: 2px;
+}
+
+.sn-cmdk-hint {
+	font-family: var(--wp--preset--font-family--body);
+	font-size: 0.6875rem; /* 11px floor */
+	letter-spacing: 0.05em;
+	color: inherit;
+	opacity: 0.75;
+}
+
+/* No physical keyboard on touch devices — hide the ⌘K hint, keep the button. */
+@media (pointer: coarse) {
+	.sn-cmdk-hint {
+		display: none;
+	}
+}
+
+/* ── Overlay ───────────────────────────────────────────────────────────────── */
+.sn-cmdk {
+	position: fixed;
+	inset: 0;
+	z-index: 100002;
+	display: flex;
+	align-items: flex-start;
+	justify-content: center;
+	padding: 12vh 1rem 1rem;
+}
+
+.sn-cmdk[hidden] {
+	display: none;
+}
+
+.sn-cmdk-backdrop {
+	position: absolute;
+	inset: 0;
+	background: color-mix( in srgb, var(--wp--preset--color--void) 82%, transparent );
+}
+
+.sn-cmdk-panel {
+	position: relative;
+	width: 100%;
+	max-width: 36rem;
+	background: var(--wp--preset--color--bone);
+	border: 2px solid var(--wp--preset--color--void);
+	box-shadow: 8px 8px 0 var(--wp--preset--color--void);
+}
+
+.sn-cmdk-input {
+	display: block;
+	width: 100%;
+	box-sizing: border-box;
+	padding: 1rem 1.1rem;
+	border: none;
+	border-bottom: 2px solid var(--wp--preset--color--void);
+	background: var(--wp--preset--color--bone);
+	color: var(--wp--preset--color--void);
+	font-family: var(--wp--preset--font-family--body);
+	font-size: 1rem;
+	line-height: 1.3;
+}
+
+.sn-cmdk-input:focus {
+	outline: none;
+}
+
+.sn-cmdk-input::placeholder {
+	color: var(--wp--preset--color--asphalt);
+	opacity: 1;
+}
+
+.sn-cmdk-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	max-height: 50vh;
+	overflow-y: auto;
+}
+
+.sn-cmdk-option {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 1rem;
+	padding: 0.7rem 1.1rem;
+	cursor: pointer;
+	border-bottom: 1px solid color-mix( in srgb, var(--wp--preset--color--void) 12%, transparent );
+}
+
+.sn-cmdk-option:last-child {
+	border-bottom: none;
+}
+
+.sn-cmdk-option__label {
+	font-family: var(--wp--preset--font-family--body);
+	font-size: 0.9375rem;
+	color: var(--wp--preset--color--void);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.sn-cmdk-option__sub {
+	flex: none;
+	font-family: var(--wp--preset--font-family--body);
+	font-size: 0.6875rem; /* 11px floor */
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--asphalt);
+}
+
+.sn-cmdk-option.is-active {
+	background: var(--wp--preset--color--blood);
+}
+
+.sn-cmdk-option.is-active .sn-cmdk-option__label,
+.sn-cmdk-option.is-active .sn-cmdk-option__sub {
+	color: var(--wp--preset--color--bone);
+}
+
+/* Open animation only when motion is welcome; overlay still appears instantly
+   under reduced motion (no @keyframes gating the display). */
+@media (prefers-reduced-motion: no-preference) {
+	.sn-cmdk:not([hidden]) .sn-cmdk-panel {
+		animation: sn-cmdk-in 120ms ease-out both;
+	}
+
+	@keyframes sn-cmdk-in {
+		from {
+			opacity: 0;
+			transform: translateY( -0.5rem );
+		}
+		to {
+			opacity: 1;
+			transform: translateY( 0 );
+		}
+	}
+}
