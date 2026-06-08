@@ -10,36 +10,36 @@
  * @since theme v9.11.0
  */
 
-/* ── Trigger button (server-rendered into wp_footer) ───────────────────────── */
+/* ── Trigger button (in-flow, footer utility bar — parts/footer.html) ───────── */
+/* v9.11.3: was position:fixed bottom-right and collided with the footer
+   colophon. Now an in-flow element on the dark (void) footer bar: transparent
+   with a faint bone hairline, bone label, blood on hover/focus. */
 .sn-cmdk-trigger {
-	position: fixed;
-	right: 1.25rem;
-	bottom: 1.25rem;
-	z-index: 100001;
 	display: inline-flex;
 	align-items: center;
 	gap: 0.5rem;
-	padding: 0.5rem 0.85rem;
-	border: 2px solid var(--wp--preset--color--void);
-	background: var(--wp--preset--color--bone);
-	color: var(--wp--preset--color--void);
+	padding: 0.4rem 0.8rem;
+	border: 1px solid color-mix( in srgb, var(--wp--preset--color--bone) 38%, transparent );
+	background: transparent;
+	color: var(--wp--preset--color--bone);
 	font-family: var(--wp--preset--font-family--heading);
-	font-size: 0.875rem;
+	font-size: 0.7rem;
+	line-height: 1;
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
 	cursor: pointer;
-	box-shadow: 4px 4px 0 var(--wp--preset--color--void);
 }
 
 .sn-cmdk-trigger:hover,
 .sn-cmdk-trigger:focus-visible {
 	background: var(--wp--preset--color--blood);
+	border-color: var(--wp--preset--color--blood);
 	color: var(--wp--preset--color--bone);
 	outline: none;
 }
 
 .sn-cmdk-trigger:focus-visible {
-	outline: 2px solid var(--wp--preset--color--blood);
+	outline: 2px solid var(--wp--preset--color--bone);
 	outline-offset: 2px;
 }
 

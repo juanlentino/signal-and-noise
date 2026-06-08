@@ -64,5 +64,15 @@ ok( $GLOBALS['__qargs']['post_status'] === 'publish', 'recent query is publish-o
 $enc = wp_json_encode( array( 't' => '</script>' ), JSON_HEX_TAG | JSON_UNESCAPED_SLASHES );
 ok( strpos( $enc, '</script>' ) === false, 'JSON_HEX_TAG escapes a closing script tag' );
 
+// v9.11.3: the visible trigger lives in the footer utility bar, not as a
+// position:fixed overlay that collided with the colophon. Guard the move.
+$footer = file_get_contents( __DIR__ . '/../parts/footer.html' );
+ok( strpos( $footer, 'class="sn-cmdk-trigger"' ) !== false, 'footer template renders the command-palette trigger' );
+ok( strpos( $footer, 'aria-keyshortcuts' ) !== false, 'footer trigger keeps aria-keyshortcuts a11y' );
+$cmdk_src = file_get_contents( __DIR__ . '/../inc/command-palette.php' );
+ok( strpos( $cmdk_src, "add_action( 'wp_footer'" ) === false, 'trigger is no longer injected as a floating wp_footer button' );
+$pal_css = file_get_contents( __DIR__ . '/../assets/css/command-palette.css' );
+ok( ! preg_match( '/\.sn-cmdk-trigger\s*\{[^}]*position\s*:\s*fixed/s', $pal_css ), 'trigger is no longer position:fixed' );
+
 echo "Result: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

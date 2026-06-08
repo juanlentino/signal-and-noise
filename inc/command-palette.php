@@ -80,21 +80,12 @@ function sn_cmdk_enqueue() {
 	wp_add_inline_script( 'sn-command-palette', 'window.SN_CMDK=' . $json . ';', 'before' );
 }
 
-/**
- * Print the visible trigger button on wp_footer (no template edit needed).
- * aria-keyshortcuts advertises ⌘K / Ctrl-K / "/" to assistive tech.
- *
- * No aria-controls: the #sn-cmdk dialog is built lazily on first open, so a
- * server-rendered aria-controls would be a dangling IDREF on page load (CMD-1).
- * aria-haspopup="dialog" already conveys that the button opens a dialog.
- */
-function sn_cmdk_print_trigger() {
-	echo '<button type="button" class="sn-cmdk-trigger" aria-haspopup="dialog" aria-keyshortcuts="Control+K Meta+K /">'
-		. '<span class="sn-cmdk-trigger-label">Search</span>'
-		. '<kbd class="sn-cmdk-hint" aria-hidden="true">&#8984;K</kbd></button>' . "\n";
-}
+// The visible trigger button is server-rendered in the footer utility bar
+// (parts/footer.html, wp:html block) rather than injected as a position:fixed
+// wp_footer overlay — the floating button collided with the footer colophon
+// (v9.11.3). command-palette.js binds it by the .sn-cmdk-trigger class, so its
+// location is immaterial to the wiring. ⌘K / Ctrl-K / "/" still open it globally.
 
 if ( ! defined( 'SN_CMDK_TEST' ) || ! SN_CMDK_TEST ) {
 	add_action( 'wp_enqueue_scripts', 'sn_cmdk_enqueue', 30 );
-	add_action( 'wp_footer', 'sn_cmdk_print_trigger', 5 );
 }

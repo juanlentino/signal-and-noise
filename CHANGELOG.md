@@ -2,6 +2,24 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.11.3] - 2026-06-08 — Search trigger moved into the footer bar
+
+**Released:** 2026-06-08.
+
+**Headline:** The command-palette **SEARCH ⌘K** trigger was a `position: fixed` button pinned to the viewport's bottom-right corner — so at the bottom of every page it floated *on top of* the footer colophon ("Colophon · © Juan Lentino"). This surfaced now because the v9.11.2 deploy finally purged the stale Breeze bundle that had been suppressing `command-palette.css` (the v9.11.1 "renders unstyled / mispositioned" known issue). The trigger now lives **in the footer utility bar** beside the colophon — no overlap, ever. ⌘K / Ctrl-K / "/" still open the palette globally.
+
+### Improvements
+
+- **Command-palette trigger relocated to the footer bar** — moved the visible trigger from a `wp_footer`-injected `position: fixed` overlay to an in-flow element inside `parts/footer.html` (the `.sn-footer__meta` cluster). `assets/js/command-palette.js` binds it by the `.sn-cmdk-trigger` class, so the click handler and the global ⌘K/Ctrl-K/"/" shortcuts are unchanged. Restyled for the dark footer: transparent with a faint bone hairline, bone label, blood on hover/focus (the floating brutalist hard-shadow no longer made sense in-flow).
+
+### Fixed
+
+- **SEARCH ⌘K button overlapped the footer colophon** at the bottom of every page (the fixed button and the colophon both sat bottom-right). Resolved by the relocation above.
+
+### Tests
+
+- Added four guards to `tests/command-palette.php`: the footer template renders the trigger, it keeps `aria-keyshortcuts`, the floating `wp_footer` injection is gone, and the trigger is no longer `position: fixed`. Suite: 26 suites / 687 assertions / 0 failures.
+
 ## [9.11.2] - 2026-06-08 — Hotfix: the *real* single-notes critical error (undefined function)
 
 **Released:** 2026-06-08.
