@@ -919,8 +919,18 @@ main { view-transition-name: sn-main; }
 .sn-post-frontmatter__pillar-slot:empty {
 	display: none;
 }
+/* The pillar is now wrapped in a bound <p> slot, so the inner anchor's
+   margin-left:auto (which right-aligned the badge) no longer moves the flex
+   item — carry the auto margin on the slot to preserve the badge-at-row-end
+   intent. */
+.sn-post-frontmatter__pillar-slot {
+	margin-left: auto;
+}
 
 @media (max-width: 600px) {
+	.sn-post-frontmatter__pillar-slot {
+		margin-left: 0;
+	}
 	.sn-post-frontmatter {
 		gap: 0.35rem;
 	}
