@@ -72,3 +72,4 @@ require_once __DIR__ . '/inc/post-share.php';
 require_once __DIR__ . '/inc/feed-json.php';
 require_once __DIR__ . '/inc/feed-enrichment.php';
 require_once __DIR__ . '/inc/command-palette.php';
+require_once __DIR__ . '/inc/discography-render.php';

@@ -200,6 +200,32 @@ require_once __DIR__ . '/../inc/template-maintenance.php';
 require_once __DIR__ . '/../inc/og-fonts.php';
 require_once __DIR__ . '/../inc/wp-update-integration.php';
 
+// Escaping stubs for the discography render module (Contract 5). It only
+// ever runs apply_filters('sn_discography_entries', array()) + escapes
+// output, so these minimal stubs are enough to exercise the read path.
+if ( ! function_exists( 'add_shortcode' ) ) {
+	function add_shortcode( $tag, $callback ) {
+		$GLOBALS['shortcode_tags'][ $tag ] = $callback;
+		return true;
+	}
+}
+if ( ! function_exists( 'esc_url' ) ) {
+	function esc_url( $u ) {
+		$u = str_replace( array( '"', "'", '<', '>', ' ' ), '', (string) $u );
+		return str_replace( '&', '&amp;', $u );
+	}
+}
+if ( ! function_exists( 'esc_attr' ) ) {
+	function esc_attr( $s ) { return htmlspecialchars( (string) $s, ENT_QUOTES ); }
+}
+if ( ! function_exists( 'esc_html' ) ) {
+	function esc_html( $s ) { return htmlspecialchars( (string) $s, ENT_QUOTES ); }
+}
+if ( ! function_exists( 'esc_html__' ) ) {
+	function esc_html__( $s, $d = 'default' ) { return htmlspecialchars( (string) $s, ENT_QUOTES ); }
+}
+require_once __DIR__ . '/../inc/discography-render.php';
+
 // ─── Harness ────────────────────────────────────────────────────────
 $pass = 0; $fail = 0;
 function cpl_eq( $e, $a, $msg ) {
@@ -290,6 +316,53 @@ cpl_true( null === $tag || is_string( $tag ), 'Test 4.3: returns string or null'
 
 // In the failure path (which our stub forces) it should be exactly null.
 cpl_eq( null, $tag, 'Test 4.4: returns null on HTTP failure (stub returns 500)' );
+
+// ═════════════════════════════════════════════════════════════════════
+// CONTRACT 5: sn_discography_entries  (theme is the CONSUMER/reader)
+// Producer (plugin): add_filter('sn_discography_entries', …) supplies the
+//   normalized release entries from the cached store.
+// Consumer (theme): inc/discography-render.php's [sn_discography] shortcode
+//   reads apply_filters('sn_discography_entries', array()) and renders the
+//   timeline; with no producer it degrades to '' (standalone-safe).
+// Unlike contracts 1–4 the theme does NOT register a listener here — it
+// READS the filter — so the seal is: (a) the shortcode is registered, and
+// (b) entries supplied via the filter flow into the rendered markup.
+// ═════════════════════════════════════════════════════════════════════
+
+echo "\nContract 5: sn_discography_entries (theme reads the filter)\n";
+cpl_true(
+	isset( $GLOBALS['shortcode_tags']['sn_discography'] )
+		&& 'sn_discography_shortcode' === $GLOBALS['shortcode_tags']['sn_discography'],
+	'Test 5.1: theme registers the [sn_discography] reader shortcode'
+);
+
+// No producer attached → empty timeline, no fatal (standalone-safe).
+unset( $GLOBALS['__test_filters']['sn_discography_entries'] );
+cpl_eq( '', sn_discography_shortcode(), 'Test 5.2: no producer → "" (standalone-safe)' );
+
+// Attach a producer (as the plugin would) and confirm the theme READS it:
+// the supplied entry's fields must surface in the rendered markup.
+add_filter( 'sn_discography_entries', function ( $entries ) {
+	return array(
+		array(
+			'id'          => 'c5',
+			'title'       => 'Contract Five',
+			'artist'      => 'Producer Side',
+			'roles'       => array( 'Producer' ),
+			'year'        => 2026,
+			'type'        => 'album',
+			'image'       => 'https://i.scdn.co/image/c5.jpg',
+			'spotify_id'  => 'c5SpotifyId',
+			'spotify_url' => 'https://open.spotify.com/album/c5SpotifyId',
+			'muso_url'    => 'https://credits.muso.ai/album/c5',
+			'isrc'        => '',
+			'upc'         => '',
+		),
+	);
+} );
+$disco_html = sn_discography_shortcode();
+cpl_true( strpos( $disco_html, 'Contract Five' ) !== false, 'Test 5.3: theme reads filter — supplied title rendered' );
+cpl_true( strpos( $disco_html, 'data-spotify="c5SpotifyId"' ) !== false, 'Test 5.4: theme reads filter — spotify_id flows to play trigger' );
 
 // ═════════════════════════════════════════════════════════════════════
 // META: listener-count summary across all 4 contracts.
