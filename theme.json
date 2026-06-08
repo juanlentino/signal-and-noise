@@ -314,6 +314,7 @@
 		{ "name": "page-contact", "title": "Contact", "postTypes": ["page"] },
 		{ "name": "page-resume", "title": "Resume / CV", "postTypes": ["page"] },
 		{ "name": "page-notes", "title": "Notes Index", "postTypes": ["page"] },
-		{ "name": "page-provenance", "title": "Provenance Pillar", "postTypes": ["page"] }
+		{ "name": "page-provenance", "title": "Provenance Pillar", "postTypes": ["page"] },
+		{ "name": "page-colophon", "title": "Colophon", "postTypes": ["page"] }
 	]
 }
