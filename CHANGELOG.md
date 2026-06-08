@@ -2,6 +2,26 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.13.0] - 2026-06-08 — Music Identity (release timeline)
+
+**Released:** 2026-06-08.
+
+**Headline:** The `/music` page gains a data-driven release timeline. The companion plugin (Signal & Noise Tools v4.13.0) mirrors Juan's Muso.AI producer credits + Spotify album media into a cached store and exposes it via the standalone-safe `sn_discography_entries` filter; the theme's new `[sn_discography]` shortcode reads that filter and renders a brutalist, year-grouped timeline with click-to-play embeds. The theme works **standalone** — with the plugin absent (or before the first sync) the filter yields `array()` and the shortcode renders nothing, so `/music` falls back to its existing content. Companion to plugin v4.13.0.
+
+### New
+
+- **`[sn_discography]` release-timeline shortcode** ([inc/discography-render.php](inc/discography-render.php)) — reads the normalized discography entries off `apply_filters( 'sn_discography_entries', array() )` and renders a year-grouped (descending) timeline: lazy artwork, title, primary artist, Juan's credited role(s), a click-to-play control, and a Muso credits link. Every external-data field is escaped (`esc_html` / `esc_url` / `esc_attr`).
+- **Lazy click-to-play embeds** ([assets/js/discography.js](assets/js/discography.js)) — the server emits **zero** Spotify iframes (N live embeds would wreck the page); each release ships a `.sn-disco-play` button that this script swaps for the Spotify embed on demand (`/embed/album/` or `/embed/track/` per the release type). Enqueued only on `/music`, footer + deferred. With JS off the button no-ops and the Credits link still works — pure progressive enhancement.
+- **Discography timeline styles** ([assets/css/components.css](assets/css/components.css)) — brutalist `.sn-discography*` treatment matching the existing catalog tokens (mono year labels, hairline rows, fixed artwork sizing).
+
+### Standalone-safety
+
+- The new `sn_discography_entries` filter joins the cross-package contract set covered by [tests/cross-package-listeners.php](tests/cross-package-listeners.php) (Contract 5): the theme is the consumer; plugin absent → `array()` → shortcode returns `''` → `/music` static fallback. No fatal, no blank.
+
+### Notes
+
+- **One-time `/music` placement (manual):** edit the Music page in wp-admin and replace the hand-curated Spotify-embed blocks in the page **content** with a Shortcode block containing `[sn_discography]`. The page header and Muso CTA live in the `page-music.html` template, so the content should hold only the shortcode.
+
 ## [9.12.0] - 2026-06-08 — Front-end render knobs (plugin-configurable)
 
 **Released:** 2026-06-08.
