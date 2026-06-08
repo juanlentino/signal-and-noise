@@ -1,0 +1,17 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "signal-noise/sidenote",
+	"title": "Sidenote",
+	"category": "signal-noise",
+	"icon": "editor-ol",
+	"description": "Tufte-style margin annotation. Floats right at >=1280px, inline hairline below at narrower.",
+	"keywords": ["sidenote", "marginalia", "footnote", "tufte"],
+	"textdomain": "signal-noise",
+	"attributes": {
+		"content": { "type": "string", "source": "html", "selector": ".sn-sidenote", "default": "" }
+	},
+	"supports": { "html": false, "reusable": false },
+	"editorScript": "signal-noise-blocks-editor",
+	"render": "file:./render.php"
+}

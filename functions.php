@@ -15,6 +15,7 @@
  *   inc/template-maintenance.php — FSE template-override purge + sn_purge_all_caches_result/sn_clear_template_overrides_result filter listeners
  *   inc/page-notes-template.php  — template_include override for /notes route; includes page-notes-render.php
  *   inc/patterns.php             — Block Pattern category registration
+ *   inc/blocks-register.php      — custom sidenote + pull-quote dynamic blocks (v9.11.0)
  *   inc/blocks-view-transitions.php — view-transition opt-in for block markup
  *   inc/abilities-registration.php — 13 WP 7.0 Abilities (theme-owned: 8 read + 5 generative; v9.1.1, get-latest-theme-tag added v9.9.0)
  *   inc/admin-notice-wp-version.php — dismissible WP < 7.0 admin notice (v9.9.0 pre-warning; deleted in v10.0.0)
@@ -56,6 +57,7 @@ require_once __DIR__ . '/inc/wp-update-git-preservation.php';
 require_once __DIR__ . '/inc/template-maintenance.php';
 require_once __DIR__ . '/inc/page-notes-template.php';
 require_once __DIR__ . '/inc/patterns.php';
+require_once __DIR__ . '/inc/blocks-register.php';
 require_once __DIR__ . '/inc/block-styles.php';
 require_once __DIR__ . '/inc/blocks-view-transitions.php';
 require_once __DIR__ . '/inc/abilities-registration.php';

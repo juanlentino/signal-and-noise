@@ -10,6 +10,9 @@
  * Added in theme v9.3.0 — part of the long-form post layout minor.
  * The CSS in assets/css/critical.css handles the float-right at wide /
  * inline-below at narrow split.
+ *
+ * Superseded by the signal-noise/sidenote BLOCK as of v9.11.0; retained as a
+ * no-block fallback / scaffold.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {

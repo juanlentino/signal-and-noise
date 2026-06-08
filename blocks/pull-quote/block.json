@@ -1,0 +1,18 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "signal-noise/pull-quote",
+	"title": "Pull-quote",
+	"category": "signal-noise",
+	"icon": "format-quote",
+	"description": "Brutalist pull-quote: black rules, serif italic body, mono uppercase attribution.",
+	"keywords": ["thesis", "quote", "callout", "pull-quote"],
+	"textdomain": "signal-noise",
+	"attributes": {
+		"body": { "type": "string", "source": "html", "selector": ".sn-pull-quote__body", "default": "" },
+		"attribution": { "type": "string", "source": "html", "selector": ".sn-pull-quote__attribution", "default": "" }
+	},
+	"supports": { "html": false, "align": ["wide", "full"] },
+	"editorScript": "signal-noise-blocks-editor",
+	"render": "file:./render.php"
+}

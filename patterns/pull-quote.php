@@ -10,6 +10,9 @@
  *
  * Added in theme v9.2.0 — tuned for /notes analytical posts where the
  * thesis statement deserves visual emphasis.
+ *
+ * Superseded by the signal-noise/pull-quote BLOCK as of v9.11.0; retained as a
+ * no-block fallback / scaffold.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
