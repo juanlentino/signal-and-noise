@@ -325,7 +325,7 @@ mk_post( 6, array( 10 ),  500, 'Sib6', 'https://x/notes/6/' );
 $GLOBALS['__queried_id']                  = 1;
 $GLOBALS['__filters']['sn_related_count'] = 5;
 sn_related_notes_shortcode();
-ok( (int) $GLOBALS['__last_qargs']['posts_per_page'] === 5, 'related: shortcode honors sn_related_count=5 (not the dead literal 3)' );
+ok( (int) $GLOBALS['__last_qargs']['posts_per_page'] === 5, 'related: shortcode honors sn_related_count=5 (was hardcoded to 3)' );
 $GLOBALS['__filters'] = array();
 sn_related_notes_shortcode();
 ok( (int) $GLOBALS['__last_qargs']['posts_per_page'] === 3, 'related: default count is 3 when unfiltered' );

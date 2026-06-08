@@ -139,9 +139,9 @@ function sn_related_notes_shortcode() {
 	}
 
 	/**
-	 * Related-notes count. Default 3; the companion plugin supplies the
-	 * configured value via sn_setting('theme.related_count'). Fixes the prior
-	 * dead literal that bypassed the $limit param.
+	 * Related-notes count. Default 3 (was hardcoded to 3 at this call site);
+	 * now configurable — the companion plugin supplies the chosen value via
+	 * sn_setting('theme.related_count').
 	 */
 	$related = sn_related_notes_query( $post_id, (int) apply_filters( 'sn_related_count', 3 ) );
 	if ( empty( $related ) ) {

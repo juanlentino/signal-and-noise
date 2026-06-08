@@ -2,6 +2,25 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.12.0] - 2026-06-08 — Front-end render knobs (plugin-configurable)
+
+**Released:** 2026-06-08.
+
+**Headline:** Several recently-added front-end behaviors that were hardcoded are now exposed through filters the companion plugin (Signal & Noise Tools v4.12.0) drives from a new **Tools → Front-End** settings tab. Every default equals the previous hardcoded value, so this update changes nothing on its own — the theme works standalone, and the plugin (if active) supplies the configured value.
+
+### New
+
+- **`sn_related_count`** (default 3) — number of related notes in the single-note footer (was hardcoded to 3 at the shortcode call site).
+- **`sn_palette_recent_count`** (default 8) — recent-notes count in the reader command palette (⌘K).
+- **`sn_palette_enabled`** (default true) — kill-switch for the reader command palette: when off, the palette JS/CSS is not enqueued and the footer trigger is hidden via a `body.sn-cmdk-off` class (rule lives in always-loaded `critical.css`).
+- **`sn_json_feed_items`** (default 20) — item count in the JSON Feed.
+
+These join the existing `sn_updated_date_threshold_days` and (plugin-side) `sn_reading_time_wpm` filters, which the plugin's Front-End tab now also drives.
+
+### Internal
+
+- Extracted `sn_feed_json_query_args()` (pure, testable) from the JSON-feed render path. Suite: 26 suites / 697 assertions / 0 failures.
+
 ## [9.11.3] - 2026-06-08 — Search trigger moved into the footer bar
 
 **Released:** 2026-06-08.
