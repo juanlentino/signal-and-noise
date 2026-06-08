@@ -998,3 +998,38 @@
 		transition: none;
 	}
 }
+
+/* ── FEATURED RELEASE (/music hero, v9.15.0) ─────────────────────────
+   The [sn_music_featured] shortcode (inc/music-featured-render.php, from the
+   plugin-supplied sn_music_featured filter) emits the single "press play"
+   Spotify embed at the top of /music — the ONE eager iframe on the page; the
+   cover grid below stays click-to-play. */
+.sn-music-featured {
+	margin: clamp(1.5rem, 4vw, 2.75rem) 0;
+	border: 1px solid var(--wp--preset--color--bone, #000);
+	background: var(--wp--preset--color--asphalt, #f5f5f5);
+	padding: clamp(1rem, 2.5vw, 1.6rem);
+}
+.sn-music-featured__label {
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.7rem, 11px);
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--rust, #666);
+	margin: 0 0 0.9rem;
+}
+.sn-music-featured__dot {
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: var(--wp--preset--color--signal, #ff4c47);
+	flex: 0 0 auto;
+}
+.sn-music-featured__player {
+	display: block;
+	width: 100%;
+	border: 0;
+}

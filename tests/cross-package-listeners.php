@@ -225,6 +225,7 @@ if ( ! function_exists( 'esc_html__' ) ) {
 	function esc_html__( $s, $d = 'default' ) { return htmlspecialchars( (string) $s, ENT_QUOTES ); }
 }
 require_once __DIR__ . '/../inc/discography-render.php';
+require_once __DIR__ . '/../inc/music-featured-render.php';
 
 // ─── Harness ────────────────────────────────────────────────────────
 $pass = 0; $fail = 0;
@@ -363,6 +364,35 @@ add_filter( 'sn_discography_entries', function ( $entries ) {
 $disco_html = sn_discography_shortcode();
 cpl_true( strpos( $disco_html, 'Contract Five' ) !== false, 'Test 5.3: theme reads filter — supplied title rendered' );
 cpl_true( strpos( $disco_html, 'data-spotify="c5SpotifyId"' ) !== false, 'Test 5.4: theme reads filter — spotify_id flows to play trigger' );
+
+// ═════════════════════════════════════════════════════════════════════
+// CONTRACT 6: sn_music_featured  (theme is the CONSUMER/reader)
+// Producer (plugin): add_filter('sn_music_featured', …) supplies the featured
+//   { type, id, embed_url } from the Monitoring → Music "Featured release"
+//   setting.
+// Consumer (theme): inc/music-featured-render.php's [sn_music_featured]
+//   shortcode reads apply_filters('sn_music_featured', array()) and renders the
+//   single hero player; with no producer it degrades to '' (standalone-safe).
+// ═════════════════════════════════════════════════════════════════════
+
+echo "\nContract 6: sn_music_featured (theme reads the filter)\n";
+cpl_true(
+	isset( $GLOBALS['shortcode_tags']['sn_music_featured'] )
+		&& 'sn_music_featured_shortcode' === $GLOBALS['shortcode_tags']['sn_music_featured'],
+	'Test 6.1: theme registers the [sn_music_featured] reader shortcode'
+);
+unset( $GLOBALS['__test_filters']['sn_music_featured'] );
+cpl_eq( '', sn_music_featured_shortcode(), 'Test 6.2: no producer → "" (standalone-safe)' );
+add_filter( 'sn_music_featured', function ( $f ) {
+	return array(
+		'type'      => 'album',
+		'id'        => 'c6AlbumId',
+		'embed_url' => 'https://open.spotify.com/embed/album/c6AlbumId',
+		'open_url'  => 'https://open.spotify.com/album/c6AlbumId',
+	);
+} );
+$feat_html = sn_music_featured_shortcode();
+cpl_true( strpos( $feat_html, 'embed/album/c6AlbumId' ) !== false, 'Test 6.3: theme reads filter — featured embed URL flows to the player' );
 
 // ═════════════════════════════════════════════════════════════════════
 // META: listener-count summary across all 4 contracts.

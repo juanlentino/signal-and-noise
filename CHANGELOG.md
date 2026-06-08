@@ -2,6 +2,21 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.15.0] - 2026-06-08 — Featured release player (/music hero)
+
+**Released:** 2026-06-08.
+
+**Headline:** A new `[sn_music_featured]` shortcode renders the single "press play" Spotify player at the top of `/music` from a release the owner picks in the S&N admin (Signal & Noise Tools v4.14.0 → Monitoring → Music → **Featured release**). No more hand-editing an embed block into the page: paste a Spotify link in settings and it appears here, styled to match. Standalone-safe — plugin absent or unset → renders nothing. Companion to plugin v4.14.0.
+
+### New
+
+- **`[sn_music_featured]` shortcode** ([inc/music-featured-render.php](inc/music-featured-render.php)) — reads the featured release off the cross-package `sn_music_featured` filter and renders a single Spotify embed inside a brutalist "Featured · Press play" card. Height adapts to the embed type (compact for a track, full for an album/playlist). This is the one eager iframe on `/music`; the cover grid below stays click-to-play. Escaped, and `''` when nothing is configured (joins the cross-package contract set in [tests/cross-package-listeners.php](tests/cross-package-listeners.php) as Contract 6).
+- **`.sn-music-featured` styles** ([assets/css/components.css](assets/css/components.css)) — bordered card with the signal-dot label, on the existing palette.
+
+### Notes
+
+- **One-time placement:** in the Music page content, replace your hand-curated featured Spotify embed block with a Shortcode block containing `[sn_music_featured]`. Thereafter you change the featured release entirely from Monitoring → Music — no page editing.
+
 ## [9.14.0] - 2026-06-08 — /music cover-grid redesign
 
 **Released:** 2026-06-08.
