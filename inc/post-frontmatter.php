@@ -16,7 +16,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-function sn_post_pillar_shortcode() {
+/**
+ * Resolve the pillar anchor HTML for a post.
+ *
+ * Extracted so the Block Bindings source (inc/block-bindings.php) can pass an
+ * explicit, context-resolved $post_id instead of relying on the global post
+ * (BND-4). The shortcode wrapper below preserves the no-arg / global behavior.
+ *
+ * @param int $post_id Post to resolve for; 0 = the current global post.
+ * @return string Anchor HTML, or '' when the post has no pillar tag.
+ */
+function sn_post_pillar_html( $post_id = 0 ) {
 	$pillar_map = array(
 		'provenance' => array(
 			'label' => 'PROVENANCE',
@@ -25,7 +35,7 @@ function sn_post_pillar_shortcode() {
 		// Add additional pillars here as their essay URLs are published.
 	);
 
-	$post = get_post();
+	$post = $post_id ? get_post( $post_id ) : get_post();
 	if ( ! $post ) {
 		return '';
 	}
@@ -47,6 +57,13 @@ function sn_post_pillar_shortcode() {
 	}
 
 	return '';
+}
+
+/**
+ * [sn_post_pillar] — renders the PILLAR slot for the current global post.
+ */
+function sn_post_pillar_shortcode() {
+	return sn_post_pillar_html();
 }
 add_shortcode( 'sn_post_pillar', 'sn_post_pillar_shortcode' );
 

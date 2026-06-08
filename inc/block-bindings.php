@@ -46,10 +46,13 @@ function sn_post_field_binding_value( $source_args, $block_instance = null, $att
 			}
 			return esc_html( sprintf( '%d min read', max( 1, (int) sn_get_reading_time( $post_id ) ) ) );
 		case 'pillar':
-			if ( ! function_exists( 'sn_post_pillar_shortcode' ) ) {
+			// Pass the RESOLVED $post_id (context or global) so the pillar honors
+			// the same post the other keys do — not the global get_post() (BND-4:
+			// matters if this part is ever reused inside a Query Loop).
+			if ( ! function_exists( 'sn_post_pillar_html' ) ) {
 				return null;
 			}
-			$html = sn_post_pillar_shortcode();
+			$html = sn_post_pillar_html( $post_id );
 			return '' !== $html ? $html : null;
 		case 'canonical':
 			if ( ! function_exists( 'sn_post_settings_get_canonical_url' ) ) {

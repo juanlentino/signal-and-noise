@@ -19,7 +19,7 @@ function esc_url( $s ) { return $s; }
 function get_post() { return (object) array( 'ID' => 7 ); }
 // Plugin-side stubs (toggle-able via globals).
 function sn_get_reading_time( $id = null ) { return $GLOBALS['__rt']; }
-function sn_post_pillar_shortcode() { return $GLOBALS['__pillar']; }
+function sn_post_pillar_html( $post_id = 0 ) { $GLOBALS['__pillar_arg'] = $post_id; return $GLOBALS['__pillar']; }
 function sn_post_settings_get_canonical_url( $id ) { return $GLOBALS['__canon']; }
 function sn_post_settings_get_og_card_title( $id ) { return $GLOBALS['__ogt']; }
 
@@ -60,6 +60,12 @@ ok( sn_post_field_binding_value( array() ) === null, 'missing key → null' );
 $blk = (object) array( 'context' => array( 'postId' => 42 ) );
 $GLOBALS['__rt'] = 9;
 ok( sn_post_field_binding_value( array( 'key' => 'reading_time' ), $blk ) === '9 min read', 'uses block context postId' );
+
+// pillar must honor the SAME resolved postId, not the global get_post() — BND-4.
+$GLOBALS['__pillar'] = '<a class="sn-post-frontmatter__pillar">P</a>';
+$GLOBALS['__pillar_arg'] = -1;
+sn_post_field_binding_value( array( 'key' => 'pillar' ), $blk );
+ok( $GLOBALS['__pillar_arg'] === 42, 'pillar resolver receives the resolved context postId (not the global)' );
 
 echo "Result: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

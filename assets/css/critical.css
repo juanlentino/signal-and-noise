@@ -911,6 +911,14 @@ main { view-transition-name: sn-main; }
 	background: var(--wp--preset--color--blood, #e00404);
 	border-color: var(--wp--preset--color--blood, #e00404);
 }
+/* v9.11.0: the reading-time + pillar slots are now Block-Bindings paragraphs.
+   When a binding returns null (no pillar match; or the plugin is absent) WP keeps
+   the slot's empty fallback <p>, which would otherwise consume a flex gap. Hide
+   the empty flex item so the row stays tight (most posts have no pillar). */
+.sn-post-frontmatter__rt:empty,
+.sn-post-frontmatter__pillar-slot:empty {
+	display: none;
+}
 
 @media (max-width: 600px) {
 	.sn-post-frontmatter {
