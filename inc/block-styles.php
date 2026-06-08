@@ -45,6 +45,15 @@ function signal_noise_register_block_styles() {
 	// Hairline separator: sharp 1px concrete rule, full opacity.
 	// Core's default separator is intentionally faded; override
 	// border + opacity so the rule reads at full strength.
+	//
+	// border-color MUST carry !important: the base rule in
+	// assets/css/components.css sets `.wp-block-separator{border-color:concrete
+	// !important}`, and an !important declaration always beats a non-important
+	// one regardless of specificity — so without our own !important here the
+	// Hairline's colour would be silently dictated by that unrelated base rule
+	// instead of this style's own declaration. The more-specific
+	// `.is-style-hairline` selector wins the !important tie-break, so the
+	// Hairline now owns its border colour.
 	register_block_style(
 		'core/separator',
 		array(
@@ -54,6 +63,7 @@ function signal_noise_register_block_styles() {
 				'.wp-block-separator.is-style-hairline{' .
 					'border:0;' .
 					'border-top:1px solid var(--wp--preset--color--concrete);' .
+					'border-top-color:var(--wp--preset--color--concrete) !important;' .
 					'opacity:1;' .
 					'height:0;' .
 					'margin-block:1.5rem;' .
@@ -63,8 +73,16 @@ function signal_noise_register_block_styles() {
 	);
 
 	// Signal quote: brutalist, blood-accented pull-quote — thick left
-	// rule, bone field, void text. Matches the pull-quote pattern's
-	// emphasis without requiring a full pattern insert.
+	// rule on a LIGHT field with DARK text, matching the theme's
+	// white-first vocabulary (the pull-quote pattern's emphasis without
+	// requiring a full pattern insert).
+	//
+	// theme.json slugs are deliberately inverted from their literal names:
+	// void=#ffffff (white), asphalt=#f5f5f5 (smoke), bone=#000000 (black).
+	// So a brutalist white-first quote = asphalt FIELD (light) + bone TEXT
+	// (dark). The previous bone-field/void-text registration rendered a
+	// black box with white text — the exact opposite of the brand's
+	// white-first intent.
 	register_block_style(
 		'core/quote',
 		array(
@@ -73,8 +91,8 @@ function signal_noise_register_block_styles() {
 			'inline_style' =>
 				'.wp-block-quote.is-style-signal{' .
 					'border-left:4px solid var(--wp--preset--color--blood);' .
-					'background-color:var(--wp--preset--color--bone);' .
-					'color:var(--wp--preset--color--void);' .
+					'background-color:var(--wp--preset--color--asphalt);' .
+					'color:var(--wp--preset--color--bone);' .
 					'padding:1rem 1.25rem;' .
 					'margin-block:1.5rem;' .
 					'font-style:normal;' .

@@ -83,6 +83,44 @@ function ha_find_style( $block, $name ) {
 	return null;
 }
 
+// Real theme.json palette (slug => hex). Lets the COLOR-INTENT assertions
+// resolve var(--wp--preset--color--SLUG) the way WP would at render time, so
+// the test catches a light/dark INVERSION — not just CSS shape. Keep in sync
+// with theme.json settings.color.palette.
+$GLOBALS['__palette'] = array(
+	'void'     => '#ffffff', // White
+	'asphalt'  => '#f5f5f5', // Smoke
+	'concrete' => '#d9d9d9', // Concrete
+	'rust'     => '#666666', // Steel
+	'bone'     => '#000000', // Black
+	'blood'    => '#e00404', // Red
+	'signal'   => '#ff4c47', // Signal
+);
+
+// Resolve every var(--wp--preset--color--SLUG) token in a CSS string to its
+// theme.json hex, so assertions can reason about actual rendered colour.
+function ha_resolve_colors( $css ) {
+	return preg_replace_callback(
+		'/var\(--wp--preset--color--([a-z0-9-]+)\)/',
+		function ( $m ) {
+			return $GLOBALS['__palette'][ $m[1] ] ?? $m[0];
+		},
+		(string) $css
+	);
+}
+
+// Perceived luminance (0=black..1=white) of a #rrggbb hex.
+function ha_luminance( $hex ) {
+	$hex = ltrim( (string) $hex, '#' );
+	if ( 6 !== strlen( $hex ) ) {
+		return -1.0;
+	}
+	$r = hexdec( substr( $hex, 0, 2 ) );
+	$g = hexdec( substr( $hex, 2, 2 ) );
+	$b = hexdec( substr( $hex, 4, 2 ) );
+	return ( 0.2126 * $r + 0.7152 * $g + 0.0722 * $b ) / 255.0;
+}
+
 // --- Test 0: exactly two styles registered -----------------------------
 echo "\nTest: two block-style variations registered\n";
 ha_eq( 2, count( $GLOBALS['__test_registered_block_styles'] ), 'exactly 2 register_block_style calls' );
@@ -106,6 +144,17 @@ if ( $hairline ) {
 		'inline_style uses a theme color custom property'
 	);
 	ha_true( ! isset( $hairline['props']['is_default'] ), 'opt-in: no is_default key' );
+
+	// T6-02: the Hairline must own its border colour. assets/css/components.css
+	// sets `.wp-block-separator{border-color:concrete !important}`, which an
+	// ordinary declaration can never beat — so the Hairline's colour was
+	// silently dictated by that unrelated rule. The style must now declare its
+	// own border colour with !important so it actually controls it.
+	$hcss = (string) ( $hairline['props']['inline_style'] ?? '' );
+	ha_true(
+		(bool) preg_match( '/border-top-color\s*:[^;]*var\(--wp--preset--color--concrete\)\s*!important/', $hcss ),
+		'T6-02: Hairline owns its border colour via an !important border-top-color (beats the base .wp-block-separator !important rule)'
+	);
 }
 
 // --- Test 2: core/quote -> signal --------------------------------------
@@ -127,6 +176,33 @@ if ( $signal ) {
 		'inline_style uses the blood accent color'
 	);
 	ha_true( ! isset( $signal['props']['is_default'] ), 'opt-in: no is_default key' );
+
+	// FIX 4: COLOUR INTENT — white-first brutalist = LIGHT field / DARK text.
+	// The previous registration used bone field (#000 black) + void text
+	// (#fff white): a black box with white text, the exact inverse. Resolve
+	// the var() tokens to theme.json hex and assert the field is lighter than
+	// the text (not just that *some* colour token is present).
+	$scss    = ha_resolve_colors( (string) ( $signal['props']['inline_style'] ?? '' ) );
+	$has_bg  = preg_match( '/background-color\s*:\s*(#[0-9a-fA-F]{6})/', $scss, $bg );
+	$has_txt = preg_match( '/(?<![-\w])color\s*:\s*(#[0-9a-fA-F]{6})/', $scss, $tx );
+	ha_true( 1 === $has_bg, 'Signal: background-color resolves to a concrete hex' );
+	ha_true( 1 === $has_txt, 'Signal: text color resolves to a concrete hex' );
+	if ( $has_bg && $has_txt ) {
+		$bg_lum = ha_luminance( $bg[1] );
+		$tx_lum = ha_luminance( $tx[1] );
+		ha_true(
+			$bg_lum > 0.5,
+			"FIX 4: Signal FIELD is light (luminance {$bg[1]}=" . round( $bg_lum, 2 ) . ' > 0.5)'
+		);
+		ha_true(
+			$tx_lum < 0.5,
+			"FIX 4: Signal TEXT is dark (luminance {$tx[1]}=" . round( $tx_lum, 2 ) . ' < 0.5)'
+		);
+		ha_true(
+			$bg_lum > $tx_lum,
+			'FIX 4: Signal is light-field/dark-text (NOT the old inverted black-box/white-text)'
+		);
+	}
 }
 
 echo "\nResult: $pass passed, $fail failed.\n";
