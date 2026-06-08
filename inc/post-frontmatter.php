@@ -48,36 +48,29 @@ function sn_post_pillar_shortcode() {
 
 	return '';
 }
+add_shortcode( 'sn_post_pillar', 'sn_post_pillar_shortcode' );
 
 /**
- * Resolve [sn_post_pillar] inside block template parts.
+ * Bridge: resolve [sn_post_pillar] inside block template-part markup.
  *
- * core/shortcode only wpautop()s its content — it never runs do_shortcode
- * on block-template output (verified vs WP trunk
- * wp-includes/blocks/shortcode.php → render_block_core_shortcode is wpautop
- * only). Without this bridge the [sn_post_pillar] token rendered RAW on
- * every single Note. Mirrors the [current_year] bridge in inc/setup.php and
- * the sibling bridges in inc/related-notes.php / inc/post-share.php /
- * inc/post-updated-date.php.
+ * Belt-and-suspenders. Core already do_shortcodes a template part's RAW
+ * markup before do_blocks() — render_block_core_template_part(),
+ * wp-includes/blocks/template-part.php — so on the standard front-end path the
+ * token is resolved before render_block ever fires and this filter is a
+ * redundant no-op (the strpos guard finds nothing). It is kept for parity with
+ * the [current_year] (inc/setup.php) and [sn_reading_time] (companion plugin)
+ * bridges, and as version-independent insurance if the frontmatter part is ever
+ * rendered outside the template-part render path (e.g. inlined into a pattern).
+ * See docs/WORDPRESS-REFERENCE.md §1.2 for why core resolves it already.
  *
  * @param string $block_content Rendered block HTML.
  * @param array  $block         Parsed block (unused).
- * @return string
+ * @return string Block HTML with [sn_post_pillar] resolved.
  */
-function sn_post_pillar_render_block_bridge( $block_content, $block ) {
-	if ( false !== strpos( $block_content, '[sn_post_pillar]' ) ) {
-		// core/shortcode wpautop()'d the bare token first (verified vs WP
-		// trunk). shortcode_unautop() strips the <p> around the registered
-		// token before we resolve it, so an EMPTY render (post with no
-		// matching pillar tag) collapses to '' instead of an empty <p></p>.
-		$block_content = do_shortcode( shortcode_unautop( $block_content ) );
+function sn_post_pillar_render_block( $block_content, $block ) {
+	if ( strpos( $block_content, '[sn_post_pillar' ) !== false ) {
+		$block_content = do_shortcode( $block_content );
 	}
 	return $block_content;
 }
-
-// Skip WP registration under the standalone test harness (add_shortcode /
-// add_filter aren't stubbed there; the helpers are exercised directly).
-if ( ! defined( 'SN_POST_FRONTMATTER_TEST' ) || ! SN_POST_FRONTMATTER_TEST ) {
-	add_shortcode( 'sn_post_pillar', 'sn_post_pillar_shortcode' );
-	add_filter( 'render_block', 'sn_post_pillar_render_block_bridge', 10, 2 );
-}
+add_filter( 'render_block', 'sn_post_pillar_render_block', 10, 2 );

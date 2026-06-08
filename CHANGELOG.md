@@ -6,7 +6,7 @@ All notable changes to Signal & Noise are documented here.
 
 **Released:** 2026-06-07.
 
-**Headline:** A front-end-only batch that improves the reading and sharing experience on single notes and pages, plus two new whole-site Style Variations and editor polish. Eight features, no new wp-admin chrome, no dark mode, brutalist/white-first throughout. The per-post dynamic surfaces (Related Notes, the "Updated" line, the share row) ride the proven `render_block` shortcode bridge rather than a bare `wp:shortcode` block, so they resolve correctly inside FSE templates.
+**Headline:** A front-end-only batch that improves the reading and sharing experience on single notes and pages, plus two new whole-site Style Variations and editor polish. Eight features, no new wp-admin chrome, no dark mode, brutalist/white-first throughout. The per-post dynamic surfaces (Related Notes, the "Updated" line, the share row) are emitted via shortcodes that WordPress core resolves in templates/parts (`get_the_block_template_html()` / `render_block_core_template_part()` run `shortcode_unautop()` + `do_shortcode()` before `do_blocks()`); the theme also keeps belt-and-suspenders `render_block` bridges for parity with the `[current_year]` / `[sn_reading_time]` / `[sn_post_pillar]` (v9.9.1) convention.
 
 ### Added
 
@@ -24,8 +24,6 @@ All notable changes to Signal & Noise are documented here.
 
 ### Fixed
 
-- **`[sn_post_pillar]` rendered raw on every single note** (`inc/post-frontmatter.php`) — the pillar token sits in a `wp:shortcode` block in `parts/post-frontmatter.html` but had no `render_block` bridge, so `core/shortcode`'s wpautop-only render left the literal `[sn_post_pillar]` text visible. Added the missing bridge mirroring the Related Notes / Updated-date / share-row pattern.
-- **Block-level shortcodes were wrapped in an invalid `<p>`** (`inc/related-notes.php`, `inc/post-share.php`, `inc/post-updated-date.php`, `inc/post-frontmatter.php`) — `core/shortcode` runs `wpautop()` on the bare token *before* the `render_block` bridge runs `do_shortcode()`, so the Related Notes `<footer>` and the share-row `<div>` ended up inside a stray `<p>`, and an empty Updated-date render emitted an empty `<p></p>`. Every bridge now calls `shortcode_unautop()` before `do_shortcode()`, stripping the paragraph wrapper around the registered token (verified vs WP trunk `wp-includes/formatting.php`).
 - **Signal quote block style rendered inverted** (`inc/block-styles.php`) — the `signal` quote variation used a `bone` field (`#000000` black) with `void` text (`#ffffff` white), i.e. a black box with white text — the exact opposite of the theme's white-first brutalist vocabulary. It now uses an `asphalt` light field (`#f5f5f5`) with `bone` dark text (`#000000`) and the `blood` left rule. (theme.json slugs are deliberately inverted from their literal names.)
 - **Hairline separator border colour was silently dictated by an unrelated rule** (`inc/block-styles.php`) — the base `.wp-block-separator{border-color:concrete !important}` in `components.css` overrode the Hairline's own non-`!important` border declaration (an `!important` always beats a normal declaration regardless of specificity). The Hairline now sets its own `border-top-color` with `!important` on the more-specific `.is-style-hairline` selector, so the style owns its colour.
 - **Curated block palette wrongly applied in the Site Editor** (`inc/editor-block-palette.php`) — editing a *page* in the Site Editor sets `$context->post` to the page object, so the `empty($context->post)` firewall didn't catch it and the trimmed allowlist starved the Site Editor (which needs every block for templates). It now also bails when `$context->name === 'core/edit-site'` (verified vs WP trunk `WP_Block_Editor_Context`).
@@ -36,6 +34,23 @@ All notable changes to Signal & Noise are documented here.
 ### Tests
 
 - **608 assertions across 20 suites, 0 failures** (was 415 across 12 at v9.9.0). Eight new standalone fixtures: `tests/related-notes.php` (22), `tests/print-styles.php` (11), `tests/post-updated-date.php` (19), `tests/post-share.php` (20), `tests/style-variations.php` (34), `tests/block-styles.php` (19), `tests/editor-block-palette.php` (46), `tests/theme-json-elements.php` (15). The Fixed-batch above hardened the bridge fixtures (the old `do_shortcode` str-replace stubs were false-greens that couldn't catch the `<p>`-wrap bug — reworked to run a wpautop-shaped input through the real bridge + real `shortcode_unautop`), added colour-intent assertions to `block-styles.php` (resolves `var()` tokens to theme.json hex), a Site-Editor firewall case to `editor-block-palette.php`, and a print-CSS content assertion.
+## [9.9.1] - 2026-06-07 — Pillar shortcode render_block bridge (belt-and-suspenders)
+
+**Released:** 2026-06-07.
+
+**Headline:** Adds a `render_block` bridge for the `[sn_post_pillar]` frontmatter shortcode, completing the convention already used for `[current_year]` and `[sn_reading_time]`. **No user-visible change.** The pillar slot already resolved correctly on the front end — WordPress core `do_shortcode()`s a template part's raw markup *before* `do_blocks()` via `render_block_core_template_part()` — so this filter is belt-and-suspenders: redundant on the standard front-end path, kept for parity and as version-independent insurance if the frontmatter part is ever rendered outside the template-part render path (e.g. inlined into a pattern). Verified on the live front end before adding: `[sn_post_pillar]` was resolving, not leaking.
+
+### Added
+
+- **`sn_post_pillar_render_block()` bridge** (`inc/post-frontmatter.php`) — a `render_block` filter that `do_shortcode()`s any block whose content contains `[sn_post_pillar`. Mirrors the `[current_year]` bridge in `inc/setup.php`. A `strpos` guard makes it a no-op for blocks without the token.
+
+### Tests
+
+- **`tests/post-frontmatter.php` → 18 assertions (was 9).** Test 7 locks the front-end contract (core's template-part `do_shortcode` pass resolves the token before any bridge runs); Test 8 covers the bridge itself — registration on `render_block`, resolution when the token is present, and the `strpos` pass-through guard.
+
+### Docs
+
+- **Corrected `docs/WORDPRESS-REFERENCE.md` §1.2.** It claimed shortcodes are "NOT processed" in FSE template parts. They are: `render_block_core_template_part()` and `get_the_block_template_html()` both run `do_shortcode()` on raw markup before `do_blocks()`. The section now documents the real mechanism with source citations and notes that the shortcode bridges are belt-and-suspenders, not load-bearing on the front end.
 
 ## [9.9.0] - 2026-06-06 — Prep minor for v10.0.0 — 1 new ability + WP 7.0 pre-warning
 
