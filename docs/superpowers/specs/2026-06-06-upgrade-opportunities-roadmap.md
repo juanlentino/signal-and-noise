@@ -59,6 +59,9 @@ Fixes, perf, and data-only correctness. PATCH-class per the project SemVer (fix/
 | Privacy **exporter + eraser** for audit-log usernames + suggested **Privacy Policy text** | 2 | S | — | WP-citizen hygiene (thin PII surface). |
 
 ### B2 · Plugin minor — "Editor UX + frugal AI"
+
+> **STATUS (2026-06-07): ✅ SHIPPED as plugin v4.11.0** (`3543a45`). All 5 items: insights body-grounding (0 new AI calls), pre-publish mistake gate (`PluginPrePublishPanel`, reactive `useSelect` — review caught a stale-snapshot HIGH), ⌘K palette expansion, AI release-notes drafter (Tools sub-tab + ability), insights "Create draft" button. Build→adversarial-review→fix cycle; 53 suites / 1754 / 0.
+
 | Item | Lev | Eff | AI | Note |
 |---|---|---|---|---|
 | **Body-ground the Insights advisor** (bounded top-25 excerpts into the *existing* weekly call) | 5 | S | ✅ frugal | Zero new calls, ~$0.42/yr; far sharper recs. |
@@ -68,6 +71,9 @@ Fixes, perf, and data-only correctness. PATCH-class per the project SemVer (fix/
 | "Create draft" button on `write_about` insights cards (seed from cached rec) | 2 | M | — | No new AI call. |
 
 ### B3 · Theme minor — "Reader experience I"
+
+> **STATUS (2026-06-07): ✅ SHIPPED as theme v9.10.0** (`489d586`, merged onto the user's v9.9.1). All 8 items: Related Notes footer, print/PDF stylesheet, "Updated" date, copy-permalink/Web-Share, Monolith+High-Contrast Style Variations, Hairline+Signal block styles, conservative curated editor palette, caption/cite element styles. Review caught the Signal-quote colour inversion + a Site-Editor palette-guard leak (both fixed). **Key learning:** FSE templates/parts resolve shortcodes via core (`get_the_block_template_html`/`render_block_core_template_part`); the render_block bridges are belt-and-suspenders — see `[[reference_fse_shortcodes_resolve_via_core]]`. 20 suites / 610 / 0.
+
 | Item | Lev | Eff | Note |
 |---|---|---|---|
 | **Related Notes footer** (shared-tag/pillar **heuristic** "More on this") | 5 | M | Single-note footer has no related surface; no AI. (AI relatedness map = flagship, Track C.) |
