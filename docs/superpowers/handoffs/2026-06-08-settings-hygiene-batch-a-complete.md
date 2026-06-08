@@ -35,9 +35,19 @@ related 3 · palette_recent 8 · palette_enabled true · json_feed 20 · updated
 2. Smoke: Tools → Front-End renders 7 fields + saves (success flash); change related-count → front-end reflects it; toggle palette off → ⌘K trigger disappears + no palette JS loads; **save the Identity (Site) tab and confirm Front-End values persist** (the data-loss regression).
    - Note: `feedback_desktop_mode_blocks_browser_automation` — UI smoke is manual.
 
-## Next: the agreed sequence is **C → B** (Batch A done)
-- **C (cheap wins, next):** (1) **Build Speculation Rules** — roadmap CLAIMS "shipped v4.10.0" but grep shows ZERO impl in either repo (drift). ~one filter, prerender `/notes`→note. (2) **Copy the Plausible content-intelligence seed doc to plugin main** — exists only in plugin worktrees (`.claude/worktrees/v4.*/docs/superpowers/specs/2026-06-06-plausible-content-intelligence-seed.md`). (3) Correct the Speculation-Rules drift status line in `docs/superpowers/specs/2026-06-06-upgrade-opportunities-roadmap.md`.
-- **B (flagship specs, after C):** brainstorm + spec the two majors — **theme v10.0.0 = Music identity** (`MusicGroup`/`MusicRecording` JSON-LD + discography); **plugin v5.0.0 = Plausible content-intelligence** (v1→v2 API refactor + "Read next/Popular" surface + traffic-grounded stale-post triage).
+## Next: Batch B (the agreed C→B sequence — but C is PHANTOM, see below)
+
+### ⚠️ Batch C ("cheap wins") was investigated 2026-06-08 and is ALREADY DONE — do NOT re-chase it
+All three items in the prior handoff's Batch C were false-premise drift in the *research*, not in the code/docs. Verified against ground truth:
+- **(1) "Build Speculation Rules — zero impl (drift)" → FALSE.** Fully shipped **plugin v4.10.0**: `inc/speculation-rules.php` hooks both WP 7.0 core filters (`wp_speculation_rules_configuration` → null/off else prerender+moderate; `wp_speculation_rules_href_exclude_paths` (10,2) → appends the login slug + `/contact/*`), `sn_login_get_slug()` exists (`inc/login-hide.php:108` — no latent fatal), required at bootstrap (`signal-and-noise-tools.php:204`), dedicated `tests/speculation-rules.php`. Performance sub-tab toggle + `sn_handle_perf_save` + `perf.speculative_loading` default. Nothing to build.
+- **(2) "Copy Plausible seed doc to plugin main" → FALSE.** Already tracked on plugin `origin/main` since `6b7d60e` (v4.11.0), present at v4.12.0.
+- **(3) "Fix the drift status line in the roadmap" → FALSE.** The roadmap (`2026-06-06-upgrade-opportunities-roadmap.md:15,47`) AND the master sequence (`2026-06-05-master-execution-sequence.md:78`) BOTH already correctly record Speculation Rules as ✅ SHIPPED v4.10.0.
+- **Root cause of the bad research:** it almost certainly grepped the **stale non-worktree plugin checkout** (`/Users/juanlentino/Projects/signal-and-noise-tools`, pinned at v4.7.0 — predates v4.10.0's `speculation-rules.php`), so "grep shows zero impl" was an artifact of the wrong tree. **Lesson:** for "does feature X exist" greps, ALWAYS check `origin/main` or a CURRENT worktree, never the stale v4.7.0 checkout. → see [[reference_stale_plugin_checkout_grep_trap]].
+
+### **B (flagship specs — the real next work):** brainstorm + spec the two majors
+- **theme v10.0.0 = Music identity** (`MusicGroup`/`MusicRecording` JSON-LD + discography model + release timeline).
+- **plugin v5.0.0 = Plausible content-intelligence** (v1→v2 API refactor + "Read next/Popular" front-end surface + traffic-grounded stale-post triage). Seed: `docs/superpowers/specs/2026-06-06-plausible-content-intelligence-seed.md` (already on plugin main).
+- Both majors are otherwise scoped cleanup-only (WP 7.0 floor-raise + REST removals). NOT cheap — each needs a brainstorm before spec/build.
 
 ## Workflow reliability lessons (reconfirmed this session)
 The 4-lens verify ran clean with: text-mode (no schema), `agentType:'general-purpose'`, `parallel()` barrier (4 lenses, low concurrency), `.catch()` that flags crashed verifiers as UNVERIFIED (not as a pass — per `feedback_workflow_verify_crash_not_refute`). Script auto-persisted under the session dir; inline `script` worked fine.
