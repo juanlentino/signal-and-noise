@@ -470,8 +470,12 @@ main { view-transition-name: sn-main; }
 }
 
 /* ─── v9.2.0: pull-quote pattern (patterns/pull-quote.php) ────────── */
+/* v9.11.0: the signal-noise/pull-quote BLOCK renders .sn-pull-quote (an <aside>);
+   the box frame must target it too, not only the pattern wrapper, or the block
+   renders as bare text. */
 
-.sn-pattern-pull-quote {
+.sn-pattern-pull-quote,
+.sn-pull-quote {
 	margin: 2.5rem -1rem;
 	padding: 2rem 1.5rem;
 	background: var(--wp--preset--color--asphalt);

@@ -41,6 +41,13 @@ foreach ( array( 'sidenote', 'pull-quote' ) as $slug ) {
 	ok( $json['render'] === 'file:./render.php', "$slug uses a dynamic render.php" );
 	ok( $json['category'] === 'signal-noise', "$slug in the signal-noise block category" );
 	ok( strpos( $json['editorScript'], 'file:' ) === false, "$slug editorScript is NOT a file: path (empty-deps trap)" );
+	// A DYNAMIC block's render_callback receives ONLY comment-delimiter attrs +
+	// defaults — WP does NOT source `source:html` attributes server-side (verified
+	// vs wp-includes/class-wp-block.php). A source:html attr here would arrive
+	// EMPTY in render.php and drop all content on the front end. Lock it to plain.
+	foreach ( (array) $json['attributes'] as $attr_name => $attr_def ) {
+		ok( ! isset( $attr_def['source'] ), "$slug/$attr_name is a plain attribute (no source:html → populated in render.php server-side)" );
+	}
 }
 
 // Behavioral render: sidenote.
@@ -56,6 +63,13 @@ ok( strpos( $pq, 'sn-pull-quote' ) !== false && strpos( $pq, 'sn-pattern-pull-qu
 $attributes = array( 'body' => 'Only body', 'attribution' => '' );
 ob_start(); include "$blocks_dir/pull-quote/render.php"; $pq2 = ob_get_clean();
 ok( strpos( $pq2, 'sn-pull-quote__attribution' ) === false, 'pull-quote omits the attribution slot when empty' );
+
+// The block emits .sn-pull-quote; the brutalist BOX (rules/padding/background)
+// must target that class, not only the pattern's .sn-pattern-pull-quote — else
+// the block renders as bare text. Assert critical.css carries a .sn-pull-quote
+// box selector (matches ".sn-pull-quote {" or ".sn-pull-quote," — NOT __body).
+$critical_css = file_get_contents( __DIR__ . '/../assets/css/critical.css' );
+ok( preg_match( '/\.sn-pull-quote\s*[,{]/', $critical_css ) === 1, 'critical.css has a .sn-pull-quote box selector (block gets the brutalist frame)' );
 
 // Registration wiring.
 require __DIR__ . '/../inc/blocks-register.php';

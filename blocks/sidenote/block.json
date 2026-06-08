@@ -9,7 +9,7 @@
 	"keywords": ["sidenote", "marginalia", "footnote", "tufte"],
 	"textdomain": "signal-noise",
 	"attributes": {
-		"content": { "type": "string", "source": "html", "selector": ".sn-sidenote", "default": "" }
+		"content": { "type": "string", "default": "" }
 	},
 	"supports": { "html": false, "reusable": false },
 	"editorScript": "signal-noise-blocks-editor",

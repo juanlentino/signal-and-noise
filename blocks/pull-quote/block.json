@@ -9,8 +9,8 @@
 	"keywords": ["thesis", "quote", "callout", "pull-quote"],
 	"textdomain": "signal-noise",
 	"attributes": {
-		"body": { "type": "string", "source": "html", "selector": ".sn-pull-quote__body", "default": "" },
-		"attribution": { "type": "string", "source": "html", "selector": ".sn-pull-quote__attribution", "default": "" }
+		"body": { "type": "string", "default": "" },
+		"attribution": { "type": "string", "default": "" }
 	},
 	"supports": { "html": false, "align": ["wide", "full"] },
 	"editorScript": "signal-noise-blocks-editor",
