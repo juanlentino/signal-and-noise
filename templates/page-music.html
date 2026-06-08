@@ -28,6 +28,13 @@
 
 		<!-- wp:post-content {"layout":{"type":"constrained"}} /-->
 
+		<!-- Data-driven discography (v9.15.1): the [sn_discography] cover-grid renders from
+		     the sn_discography_entries store, template-driven so the /music route structurally
+		     owns the gallery (no hand-placed page-content block). FSE resolves shortcodes via
+		     core's do_shortcode pass; standalone-safe — degrades to '' if the plugin is absent,
+		     leaving the curated playlist above as the fallback. -->
+		<!-- wp:shortcode -->[sn_discography]<!-- /wp:shortcode -->
+
 	</div>
 	<!-- /wp:group -->
 

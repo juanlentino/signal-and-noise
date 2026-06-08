@@ -2,6 +2,23 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.15.1] - 2026-06-08 — /music gallery renders from the template
+
+**Released:** 2026-06-08.
+
+**Headline:** The `/music` cover-grid discography now renders structurally from the page template — install the update and it appears, no block-editor step. Since v9.13.0 the gallery only showed if `[sn_discography]` was hand-placed into the Music Page's `post_content`; if that edit was never made (or never saved), the page kept showing only the curated playlist while the plugin's `MusicAlbum` JSON-LD and full album store were already live. Moving the shortcode into [templates/page-music.html](templates/page-music.html) makes the discography a feature of the `/music` route itself.
+
+### Fixed
+
+- **`/music` showed only the curated playlist, not the cover-grid gallery.** The data-driven `[sn_discography]` gallery (v9.13.0 / v9.14.0) only rendered when the shortcode was hand-placed in the Music Page body. On the live site that placement never persisted (the page was untouched since February), so visitors saw the old single playlist embed even though Signal & Noise Tools was synced and emitting 11 `MusicAlbum` JSON-LD nodes. Root cause: the page body never received the shortcode, and manual per-page placement is fragile and easy to lose. Fixed by wiring the gallery into the template instead. ([templates/page-music.html](templates/page-music.html))
+
+### Improvements
+
+- **Discography is now template-driven, not content-driven.** `[sn_discography]` is wired into the template's "Spotify Embeds Area" via a `wp:shortcode` block — the same FSE-resolves-shortcodes pattern already shipped in [templates/single.html](templates/single.html) for `[sn_related_notes]` and [parts/post-frontmatter.html](parts/post-frontmatter.html) for `[sn_updated_date]`. It sits below the curated playlist, which stays as the hero **and** the plugin-absent fallback: with the plugin gone the shortcode self-degrades to `''`, leaving the playlist alone — no blank region. The plugin, the store, and the `sn_discography_entries` contract are untouched.
+- **Structural guard** ([tests/page-music-template.php](tests/page-music-template.php)) — asserts the `/music` template wires `[sn_discography]` in a valid `wp:shortcode` block, preserves `wp:post-content` (hero + fallback), and keeps the header/footer parts + the Muso.AI credits CTA. Theme suite: 29 → 30 files, 0 failures; phpcs falsification-verified.
+
+> **Why PATCH (not minor):** no new capability — the gallery shortcode, store, schema, and styles all shipped in v9.13.0–v9.15.0. This release only makes the already-shipped feature render where manual placement failed to. No public API change, no required user action beyond installing the update (per the project's "majors/minors gate on capability, not surface area" rule).
+
 ## [9.15.0] - 2026-06-08 — Featured release player (/music hero)
 
 **Released:** 2026-06-08.
