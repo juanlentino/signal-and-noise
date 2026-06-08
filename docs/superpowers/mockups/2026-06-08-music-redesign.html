@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MUSIC — redesign mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--void:#ffffff;--asphalt:#f5f5f5;--concrete:#d9d9d9;--rust:#666666;--bone:#000000;--blood:#e00404;--signal:#ff4c47}
+*{box-sizing:border-box}
+html{-webkit-font-smoothing:antialiased}
+body{margin:0;background:var(--void);color:var(--bone);font-family:'DM Mono','Courier New',monospace;line-height:1.6}
+.wrap{max-width:1240px;margin:0 auto;padding:0 clamp(1.25rem,4vw,3rem)}
+a{color:inherit}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:1.5rem 0;border-bottom:1px solid var(--concrete)}
+.logo{font-family:'Bebas Neue';font-size:2rem;line-height:1;letter-spacing:.02em}
+.nav{display:flex;gap:1.4rem;font-size:11px;letter-spacing:.18em;text-transform:uppercase}
+.nav a{text-decoration:none;color:var(--rust)} .nav a.on{color:var(--bone)}
+.hero{padding:clamp(2.5rem,6vw,4.5rem) 0 clamp(1.5rem,3vw,2.5rem)}
+.eyebrow{color:var(--blood);font-size:12px;letter-spacing:.22em;text-transform:uppercase;margin:0 0 1rem}
+h1.big{font-family:'Bebas Neue';font-weight:400;font-size:clamp(3.5rem,11vw,8rem);line-height:.86;margin:0;letter-spacing:-.01em}
+.lead{max-width:64ch;margin:1.25rem 0 0;color:var(--bone);font-size:clamp(.85rem,1.4vw,1rem)}
+.featured{margin:clamp(1.5rem,4vw,2.75rem) 0 clamp(2rem,5vw,3.5rem);border:1px solid var(--bone);background:var(--asphalt);padding:clamp(1rem,2.5vw,1.6rem)}
+.featured-label{display:flex;align-items:center;gap:.6rem;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--rust);margin:0 0 .9rem}
+.featured-label b{color:var(--bone)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--signal);display:inline-block}
+.hero-player{display:block;border:0;background:#000}
+.controls{position:sticky;top:0;z-index:5;background:var(--void);padding:1rem 0;border-bottom:1px solid var(--concrete);display:flex;flex-wrap:wrap;gap:.9rem 1.2rem;align-items:center;justify-content:space-between}
+.count{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--rust);white-space:nowrap}
+.count b{color:var(--bone)}
+.chips{display:flex;flex-wrap:wrap;gap:.5rem}
+.chip{font-family:'DM Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--bone);background:transparent;border:1px solid var(--bone);padding:.45rem .8rem;cursor:pointer;transition:all .15s}
+.chip:hover{border-color:var(--blood);color:var(--blood)}
+.chip.active{background:var(--blood);color:var(--void);border-color:var(--blood)}
+.year{margin:clamp(2rem,4vw,3.25rem) 0}
+.year-label{font-family:'DM Mono';font-weight:500;font-size:clamp(1.1rem,2vw,1.4rem);letter-spacing:.1em;color:var(--blood);margin:0 0 1.25rem;padding-bottom:.5rem;border-bottom:1px solid var(--concrete);display:flex;align-items:baseline;justify-content:space-between}
+.year-count{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--rust)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,232px),1fr));gap:clamp(1.1rem,2.6vw,2rem)}
+.card{display:flex;flex-direction:column;transition:transform .28s ease}
+.card.hidden{display:none}
+.card:hover{transform:translateY(-5px)}
+.cover-wrap{position:relative;aspect-ratio:1;overflow:hidden;background:var(--concrete);border:1px solid var(--concrete);cursor:pointer}
+.cover{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s ease,filter .3s ease}
+.cover--none{display:grid;place-items:center}
+.card:hover .cover{transform:scale(1.05);filter:brightness(.82)}
+.play-badge{position:absolute;inset:0;display:grid;place-items:center;opacity:0;transition:opacity .25s ease}
+.card:hover .play-badge,.cover-wrap:focus-visible .play-badge{opacity:1}
+.play-circle{width:60px;height:60px;border-radius:50%;background:var(--blood);display:grid;place-items:center;box-shadow:0 6px 22px rgba(224,4,4,.4)}
+.tri{width:0;height:0;border-left:18px solid var(--void);border-top:11px solid transparent;border-bottom:11px solid transparent;margin-left:5px}
+.meta{padding:.85rem 0 0}
+.title{font-family:'Bebas Neue';font-weight:400;font-size:clamp(1.45rem,2.4vw,1.9rem);line-height:.95;letter-spacing:-.005em;margin:0}
+.artist{font-size:max(.78rem,12px);color:var(--bone);margin:.3rem 0 0}
+.roles{font-size:max(.66rem,11px);letter-spacing:.13em;text-transform:uppercase;color:var(--rust);margin:.45rem 0 0}
+.embed-host iframe{width:100%;height:100%;min-height:152px;border:0;display:block}
+.empty{display:none;padding:3rem 0;text-align:center;color:var(--rust);font-size:13px;letter-spacing:.1em;text-transform:uppercase}
+.empty.on{display:block}
+.cta{margin:clamp(3rem,7vw,5rem) 0;display:grid;grid-template-columns:1fr;gap:2rem;align-items:center;border-top:1px solid var(--concrete);padding-top:clamp(2.5rem,5vw,4rem)}
+@media(min-width:760px){.cta{grid-template-columns:1.4fr .9fr;gap:clamp(2rem,5vw,4rem)}}
+.cta-eyebrow{color:var(--blood);font-size:11px;letter-spacing:.2em;text-transform:uppercase;margin:0 0 .9rem}
+.cta h2{font-family:'Bebas Neue';font-weight:400;font-size:clamp(2rem,5vw,3.4rem);line-height:1;margin:0 0 1rem}
+.cta p{color:var(--bone);font-size:max(.82rem,13px);margin:0;max-width:48ch}
+.cta-box{border:1px solid var(--concrete);background:var(--asphalt);padding:clamp(1.5rem,3vw,2rem);text-align:center}
+.cta-box .pb{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--rust);margin:0}
+.cta-box .ms{font-family:'Bebas Neue';font-size:2rem;line-height:1;margin:.25rem 0 1.25rem}
+.btn{display:block;text-decoration:none;text-align:center;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--void);background:var(--bone);padding:.85rem 1rem;transition:background .2s}
+.btn:hover{background:var(--blood)}
+footer{border-top:1px solid var(--concrete);padding:1.75rem 0;display:flex;justify-content:space-between;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--rust)}
+.note{position:fixed;left:1rem;bottom:1rem;background:var(--bone);color:var(--void);font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:.5rem .75rem;z-index:20;opacity:.85}
+</style></head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="logo">JL</div>
+    <nav class="nav"><a>Home</a><a>About</a><a>Services</a><a class="on">Music</a><a>Resume</a><a>Notes</a><a>Contact</a></nav>
+  </div>
+  <header class="hero">
+    <p class="eyebrow">Catalog · Discography · 2007 → 2025</p>
+    <h1 class="big">MUSIC</h1>
+    <p class="lead">Two decades of work, distilled into sound. A selection of records I’ve produced, mixed, mastered, and shaped — across genres, across borders, across a whole lot of late nights. Press play, or browse the catalog below.</p>
+  </header>
+  <div class="featured">
+    <p class="featured-label"><span class="dot"></span> Featured — <b>press play</b></p>
+    <iframe class="hero-player" src="https://open.spotify.com/embed/track/6MuumbyTsu4CLaniAN0lBW?theme=0" width="100%" height="152" frameborder="0" loading="lazy" allow="encrypted-media" title="Featured player"></iframe>
+  </div>
+  <div class="controls">
+    <div class="count"><b id="n">11</b> releases <span id="span">· 2007 → 2025</span></div>
+    <div class="chips"><button class="chip active" data-role="*">All</button>
+<button class="chip" data-role="Producer">Producer</button>
+<button class="chip" data-role="Mixing">Mixing</button>
+<button class="chip" data-role="Mastering">Mastering</button>
+<button class="chip" data-role="Engineer">Engineer</button>
+<button class="chip" data-role="Composer">Composer</button>
+<button class="chip" data-role="Keyboard">Keyboard</button>
+<button class="chip" data-role="Synthesizer">Synthesizer</button>
+<button class="chip" data-role="Assistant Producer">Assistant Producer</button>
+<button class="chip" data-role="Manager">Manager</button></div>
+  </div>
+  <main id="cat">
+<section class="year" data-year="2025">
+  <h2 class="year-label">2025<span class="year-count">1 release</span></h2>
+  <div class="grid"><article class="card" data-roles="Mastering|Engineer" data-track="6MuumbyTsu4CLaniAN0lBW">
+  <div class="cover-wrap" role="button" tabindex="0" aria-label="Play ARGIRIA">
+    <img class="cover" loading="lazy" src="https://i.scdn.co/image/ab67616d0000b27337cece3027c19db0becf5a81" alt="ARGIRIA">
+    <span class="play-badge"><span class="play-circle"><span class="tri"></span></span></span>
+  </div>
+  <div class="meta">
+    <h3 class="title">ARGIRIA</h3>
+    <p class="artist">Cande Schulman</p>
+    <p class="roles">Mastering · Engineer</p>
+  </div>
+</article></div>
+</section>
+<section class="year" data-year="2023">
+  <h2 class="year-label">2023<span class="year-count">1 release</span></h2>
+  <div class="grid"><article class="card" data-roles="Mastering|Mixing" data-track="73KOzJk97YeTBSl4LKUuRv">
+  <div class="cover-wrap" role="button" tabindex="0" aria-label="Play This City">
+    <img class="cover" loading="lazy" src="https://i.scdn.co/image/ab67616d0000b273d9f665b135ba3a3055d47715" alt="This City">
+    <span class="play-badge"><span class="play-circle"><span class="tri"></span></span></span>
+  </div>
+  <div class="meta">
+    <h3 class="title">This City</h3>
+    <p class="artist">Victor Spinelli</p>
+    <p class="roles">Mastering · Mixing</p>
+  </div>
+</article></div>
+</section>
+<section class="year" data-year="2022">
+  <h2 class="year-label">2022<span class="year-count">1 release</span></h2>
+  <div class="grid"><article class="card" data-roles="Composer|Producer|Mastering|Mixing|Engineer|Keyboard|Synthesizer" data-track="57eAeAM1urv5Ee3ORDz1KJ">
+  <div class="cover-wrap" role="button" tabindex="0" aria-label="Play Moment of Supreme Clarity">
+    <img class="cover" loading="lazy" src="https://i.scdn.co/image/ab67616d0000b273612d78c28dbef61d053c089b" alt="Moment of Supreme Clarity">
+    <span class="play-badge"><span class="play-circle"><span class="tri"></span></span></span>
+  </div>
+  <div class="meta">
+    <h3 class="title">Moment of Supreme Clarity</h3>
+    <p class="artist">Juan Lentino</p>
+    <p class="roles">Composer · Producer · Mastering · Mixing · Engineer · Keyboard · Synthesizer</p>
+  </div>
+</article></div>
+</section>
+<section class="year" data-year="2021">
+  <h2 class="year-label">2021<span class="year-count">1 release</span></h2>
+  <div class="grid"><article class="card" data-roles="Engineer" data-track="3DzCu0YYO8bW7Ki63leL2U">
+  <div class="cover-wrap" role="button" tabindex="0" aria-label="Play 421">
+    <img class="cover" loading="lazy" src="https://i.scdn.co/image/ab67616d0000b2736ac59bd1212981abe18cab07" alt="421">
+    <span class="play-badge"><span class="play-circle"><span class="tri"></span></span></span>
+  </div>
+  <div class="meta">
+    <h3 class="title">421</h3>
+    <p class="artist">Romil</p>
+    <p class="roles">Engineer</p>
+  </div>
+</article></div>
+</section>
+<section class="year" data-year="2020">
+  <h2 class="year-label">2020<span class="year-count">2 releases</span></h2>
+  <div class="grid"><article class="card" data-roles="Engineer|Mixing" data-track="1iJgPQTInD4BFfRCzt1k19">
+  <div class="cover-wrap" role="button" tabindex="0" aria-label="Play Itsasoan">
+    <img class="cover" loading="lazy" src="https://i.scdn.co/image/ab67616d0000b273646c084d23d4bd57ed50b5da" alt="Itsasoan">
+    <span class="play-badge"><span class="play-circle"><span class="tri"></span></span></span>
+  </div>
+  <div class="meta">
+    <h3 class="title">Itsasoan</h3>
+    <p class="artist">Zutarriak</p>
+    <p class="roles">Engineer · Mixing</p>
+  </div>
+</article>
+<article class="card" data-roles="Assistant Producer|Manager" data-track="6osQgaKCAfnd2C9cT4v4kb">
+  <div class="cover-wrap" role="button" tabindex="0" aria-label="Play Autogestión">
+    <img class="cover" loading="lazy" src="https://i.scdn.co/image/ab67616d0000b2737a9e6ed1261262c4f287cee3" alt="Autogestión">
+    <span class="play-badge"><span class="play-circle"><span class="tri"></span></span></span>
+  </div>
+  <div class="meta">
+    <h3 class="title">Autogestión</h3>
+    <p class="artist">Richter</p>
+    <p class="roles">Assistant Producer · Manager</p>
+  </div>
+</article></div>
+</section>
+<section class="year" data-year="2014">
+  <h2 class="year-label">2014<span class="year-count">2 releases</span></h2>
+  <div class="grid"><article class="card" data-roles="Assistant Producer|Manager" data-track="0BAvrGS4AnTSfLK900vsqA">
+  <div class="cover-wrap" role="button" tabindex="0" aria-label="Play Transforma2 - Transformador Remixes">
+    <img class="cover" loading="lazy" src="https://i.scdn.co/image/ab67616d0000b273959888bb8743c96cd8e3131d" alt="Transforma2 - Transformador Remixes">
+    <span class="play-badge"><span class="play-circle"><span class="tri"></span></span></span>
+  </div>
+  <div class="meta">
+    <h3 class="title">Transforma2 - Transformador Remixes</h3>
+    <p class="artist">Richter</p>
+    <p class="roles">Assistant Producer · Manager</p>
+  </div>
+</article>
+<article class="card" data-roles="Assistant Producer|Manager" data-track="7uwvrmCaUsN8lsjkSEvmIr">
+  <div class="cover-wrap" role="button" tabindex="0" aria-label="Play Transforma2">
+    <img class="cover" loading="lazy" src="https://i.scdn.co/image/ab67616d0000b273dbc76f6ddd8323b59a08371b" alt="Transforma2">
+    <span class="play-badge"><span class="play-circle"><span class="tri"></span></span></span>
+  </div>
+  <div class="meta">
+    <h3 class="title">Transforma2</h3>
+    <p class="artist">Richter</p>
+    <p class="roles">Assistant Producer · Manager</p>
+  </div>
+</article></div>
+</section>
+<section class="year" data-year="2011">
+  <h2 class="year-label">2011<span class="year-count">1 release</span></h2>
+  <div class="grid"><article class="card" data-roles="Assistant Producer|Manager" data-track="6lqAQlUZExyeVOMzGLvacx">
+  <div class="cover-wrap" role="button" tabindex="0" aria-label="Play Transformador">
+    <img class="cover" loading="lazy" src="https://i.scdn.co/image/ab67616d0000b273405236bcd4c35deb9a0d7308" alt="Transformador">
+    <span class="play-badge"><span class="play-circle"><span class="tri"></span></span></span>
+  </div>
+  <div class="meta">
+    <h3 class="title">Transformador</h3>
+    <p class="artist">Richter</p>
+    <p class="roles">Assistant Producer · Manager</p>
+  </div>
+</article></div>
+</section>
+<section class="year" data-year="2008">
+  <h2 class="year-label">2008<span class="year-count">1 release</span></h2>
+  <div class="grid"><article class="card" data-roles="Assistant Producer|Manager" data-track="5rd0qQhnwSDa0paJWhh1QX">
+  <div class="cover-wrap" role="button" tabindex="0" aria-label="Play Fin del Mundo">
+    <img class="cover" loading="lazy" src="https://i.scdn.co/image/ab67616d0000b273e424e45e25c81b85d3cd4ffa" alt="Fin del Mundo">
+    <span class="play-badge"><span class="play-circle"><span class="tri"></span></span></span>
+  </div>
+  <div class="meta">
+    <h3 class="title">Fin del Mundo</h3>
+    <p class="artist">Richter</p>
+    <p class="roles">Assistant Producer · Manager</p>
+  </div>
+</article></div>
+</section>
+<section class="year" data-year="2007">
+  <h2 class="year-label">2007<span class="year-count">1 release</span></h2>
+  <div class="grid"><article class="card" data-roles="Assistant Producer|Manager" data-track="6pU2etPO8vRUiW9TAv1Su0">
+  <div class="cover-wrap" role="button" tabindex="0" aria-label="Play Fin del Mundo">
+    <img class="cover" loading="lazy" src="https://i.scdn.co/image/ab67616d0000b2738ced26b475adfd87f9b619b8" alt="Fin del Mundo">
+    <span class="play-badge"><span class="play-circle"><span class="tri"></span></span></span>
+  </div>
+  <div class="meta">
+    <h3 class="title">Fin del Mundo</h3>
+    <p class="artist">Richter</p>
+    <p class="roles">Assistant Producer · Manager</p>
+  </div>
+</article></div>
+</section>
+
+    <div class="empty" id="empty">No releases with that credit.</div>
+  </main>
+  <section class="cta">
+    <div>
+      <p class="cta-eyebrow">Full discography · verified credits</p>
+      <h2>VERIFIED CREDITS</h2>
+      <p>What you see here is a selection. The full picture — every credit, every collaboration, every role — is verified on Muso.AI, the industry standard for production credits.</p>
+    </div>
+    <div class="cta-box">
+      <p class="pb">Powered by</p>
+      <p class="ms">MUSO.AI</p>
+      <a class="btn" href="https://credits.muso.ai/profile/50d6a7c0-2d7b-4557-94b6-c472fa949df2" target="_blank" rel="noopener">View all credits →</a>
+    </div>
+  </section>
+</div>
+<footer class="wrap"><span>Spotify · LinkedIn · Instagram · RSS</span><span>© Juan Lentino 2026</span></footer>
+<div class="note">Mockup — real catalog data · not the live site</div>
+<script>
+const chips=[...document.querySelectorAll('.chip')], cards=[...document.querySelectorAll('.card')];
+const nEl=document.getElementById('n'), empty=document.getElementById('empty');
+chips.forEach(c=>c.addEventListener('click',()=>{
+  chips.forEach(x=>x.classList.remove('active')); c.classList.add('active');
+  const role=c.dataset.role; let shown=0;
+  cards.forEach(card=>{
+    const ok = role==='*' || (card.dataset.roles||'').split('|').includes(role);
+    card.classList.toggle('hidden',!ok); if(ok) shown++;
+  });
+  document.querySelectorAll('.year').forEach(y=>{
+    const any=[...y.querySelectorAll('.card')].some(k=>!k.classList.contains('hidden'));
+    y.style.display=any?'':'none';
+  });
+  nEl.textContent=shown; empty.classList.toggle('on',shown===0);
+}));
+cards.forEach(card=>{
+  const wrap=card.querySelector('.cover-wrap'), track=card.dataset.track;
+  function play(){
+    if(!track||wrap.classList.contains('embed-host'))return;
+    wrap.classList.add('embed-host'); wrap.style.cursor='default';
+    while(wrap.firstChild) wrap.removeChild(wrap.firstChild);
+    const f=document.createElement('iframe');
+    f.src='https://open.spotify.com/embed/track/'+encodeURIComponent(track)+'?theme=0';
+    f.setAttribute('allow','encrypted-media'); f.setAttribute('loading','lazy'); f.title='Player';
+    wrap.appendChild(f);
+  }
+  wrap.addEventListener('click',play);
+  wrap.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();play();}});
+});
+</script>
+</body></html>
