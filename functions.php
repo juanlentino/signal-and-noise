@@ -21,6 +21,7 @@
  *   inc/post-frontmatter.php     — long-form post frontmatter rendering
  *   inc/post-updated-date.php    — [sn_updated_date] "Updated YYYY.MM.DD" line for materially-revised notes (v9.10.0)
  *   inc/feed-json.php            — JSON Feed 1.1 for the Notes corpus (v9.11.0)
+ *   inc/feed-enrichment.php      — RSS media:content + reading-time enrichment, plugin-guarded (v9.11.0)
  *   (inc/page-notes-render.php   — full PHP render of /notes index; loaded by page-notes-template.php, not here)
  *
  * Operational tooling — REST surface, Plausible integration, admin UI, security
@@ -64,3 +65,4 @@ require_once __DIR__ . '/inc/post-updated-date.php';
 require_once __DIR__ . '/inc/related-notes.php';
 require_once __DIR__ . '/inc/post-share.php';
 require_once __DIR__ . '/inc/feed-json.php';
+require_once __DIR__ . '/inc/feed-enrichment.php';

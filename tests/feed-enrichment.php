@@ -1,0 +1,48 @@
+<?php
+/**
+ * Standalone fixture tests for RSS item enrichment (v9.11.0).
+ *
+ * Stubs the WP primitives the enrichment callbacks touch (escaping helpers,
+ * featured-image lookup, the current loop ID) plus a togglable plugin-owned
+ * sn_get_reading_time(), so the named functions in inc/feed-enrichment.php run
+ * without a WordPress load. Mirrors tests/related-notes.php.
+ *
+ * @since theme v9.11.0
+ */
+
+if ( PHP_SAPI !== 'cli' && ! defined( 'WP_CLI' ) ) { http_response_code( 404 ); exit; }
+if ( ! defined( 'ABSPATH' ) ) { define( 'ABSPATH', '/' ); }
+define( 'SN_FEED_ENRICH_TEST', true );
+$pass = 0; $fail = 0;
+function ok( $c, $m ) { global $pass, $fail; if ( $c ) { $pass++; echo "PASS: $m\n"; } else { $fail++; echo "FAIL: $m\n"; } }
+
+function add_action( $h, $cb, $p = 10, $a = 1 ) { return true; }
+function add_filter( $h, $cb, $p = 10, $a = 1 ) { return true; }
+function esc_url( $u ) { return $u; }
+function esc_html( $s ) { return $s; }
+function esc_attr( $s ) { return $s; }
+$GLOBALS['__thumb'] = 'https://x.test/og/7.png';
+function get_post_thumbnail_id( $id ) { return $GLOBALS['__has_thumb'] ? 99 : 0; }
+function wp_get_attachment_image_url( $aid, $size ) { return $GLOBALS['__thumb']; }
+function get_the_ID() { return 7; }
+
+require __DIR__ . '/../inc/feed-enrichment.php';
+
+// Namespace declaration.
+ob_start(); sn_rss_media_ns(); $ns = ob_get_clean();
+ok( strpos( $ns, 'xmlns:media="http://search.yahoo.com/mrss/"' ) !== false, 'rss2_ns emits the Media RSS namespace' );
+
+// Item enrichment WITH a featured image + plugin reading-time.
+$GLOBALS['__has_thumb'] = true;
+function sn_get_reading_time( $id = null ) { return 6; }
+ob_start(); sn_rss_item_enrich(); $item = ob_get_clean();
+ok( strpos( $item, '<media:content' ) !== false && strpos( $item, $GLOBALS['__thumb'] ) !== false, 'rss2_item emits media:content for the featured image' );
+ok( strpos( $item, '6' ) !== false, 'rss2_item emits reading-time when the plugin is present' );
+
+// Degrade: no featured image → no media:content (no fatal, no empty tag).
+$GLOBALS['__has_thumb'] = false;
+ob_start(); sn_rss_item_enrich(); $item2 = ob_get_clean();
+ok( strpos( $item2, '<media:content' ) === false, 'no media:content when there is no featured image' );
+
+echo "Result: $pass passed, $fail failed.\n";
+exit( $fail > 0 ? 1 : 0 );
