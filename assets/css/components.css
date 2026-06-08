@@ -759,3 +759,135 @@
 		transition: none;
 	}
 }
+
+/* ── DISCOGRAPHY TIMELINE (/music) ───────────────────────────────────
+   v9.13.0 — Music Identity. The [sn_discography] shortcode (rendered by
+   inc/discography-render.php from the plugin-supplied store) emits a
+   year-grouped release timeline. Reuses the catalog vocabulary already on
+   the page: DM Mono tracked-caps year labels, Bebas Neue release titles,
+   concrete hairlines, the rust/blood accent pair, 11px floor.
+
+   Performance: zero eager Spotify iframes. Each release ships a
+   .sn-disco-play button that assets/js/discography.js swaps for the
+   embed on demand. */
+.sn-discography {
+	margin-top: clamp(2rem, 4vw, 3rem);
+}
+.sn-disco-year {
+	margin-bottom: clamp(2.5rem, 5vw, 4rem);
+}
+.sn-disco-year__label {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-weight: 500;
+	font-size: clamp(1.1rem, 2vw, 1.4rem);
+	letter-spacing: 0.1em;
+	color: var(--wp--preset--color--blood, #e00404);
+	margin: 0 0 clamp(1rem, 2vw, 1.5rem);
+	padding-bottom: 0.5rem;
+	border-bottom: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+}
+.sn-disco-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+.sn-disco-item {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 1rem;
+	padding: clamp(1rem, 2vw, 1.5rem) 0;
+	border-bottom: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+	transition: padding 0.2s ease;
+}
+.sn-disco-item:last-child {
+	border-bottom: 0;
+}
+@media (min-width: 600px) {
+	.sn-disco-item {
+		grid-template-columns: 120px 1fr;
+		gap: clamp(1.25rem, 3vw, 2rem);
+		align-items: start;
+	}
+}
+.sn-disco-item:hover {
+	padding-left: 6px;
+}
+.sn-disco-art {
+	display: block;
+	width: 120px;
+	height: 120px;
+	object-fit: cover;
+	background-color: var(--wp--preset--color--concrete, #d9d9d9);
+	border: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+}
+.sn-disco-meta {
+	min-width: 0;
+}
+.sn-disco-title {
+	font-family: 'Bebas Neue', Impact, sans-serif;
+	font-weight: 400;
+	font-size: clamp(1.5rem, 3vw, 2.25rem);
+	line-height: 1;
+	letter-spacing: -0.005em;
+	color: var(--wp--preset--color--bone, #000);
+	margin: 0;
+}
+.sn-disco-artist {
+	font-family: var(--wp--preset--font-family--body);
+	font-size: max(0.85rem, 12px);
+	color: var(--wp--preset--color--bone, #000);
+	margin: 0.25rem 0 0;
+}
+.sn-disco-roles {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.7rem, 11px);
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--rust, #666);
+	margin: 0.5rem 0 0;
+}
+.sn-disco-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 1rem;
+	margin: 0.85rem 0 0;
+}
+.sn-disco-play,
+.sn-disco-credits {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.7rem, 11px);
+	font-weight: 500;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--bone, #000);
+	background: transparent;
+	border: 1px solid var(--wp--preset--color--bone, #000);
+	padding: 0.5rem 0.85rem;
+	cursor: pointer;
+	text-decoration: none;
+	transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+.sn-disco-play:hover,
+.sn-disco-credits:hover,
+.sn-disco-play:focus-visible,
+.sn-disco-credits:focus-visible {
+	color: var(--wp--preset--color--void, #fff);
+	background-color: var(--wp--preset--color--blood, #e00404);
+	border-color: var(--wp--preset--color--blood, #e00404);
+}
+/* Lazy-mounted Spotify embed (swapped in by JS on .sn-disco-play click). */
+.sn-disco-embed {
+	width: 100%;
+	max-width: 480px;
+	margin: 0.85rem 0 0;
+	border: 0;
+	border-radius: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+	.sn-disco-item,
+	.sn-disco-play,
+	.sn-disco-credits {
+		transition: none;
+	}
+}

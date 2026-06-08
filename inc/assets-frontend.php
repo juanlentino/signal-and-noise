@@ -249,3 +249,29 @@ function sn_enqueue_note_share() {
 	}
 }
 add_action( 'wp_enqueue_scripts', 'sn_enqueue_note_share', 30 );
+
+/**
+ * v9.13.0: discography click-to-play lazy Spotify embed (/music only).
+ *
+ * The [sn_discography] timeline (inc/discography-render.php) renders ZERO
+ * eager Spotify iframes — each release ships a .sn-disco-play button that
+ * this script swaps for the embed on demand. Loaded only on the /music
+ * Page where the shortcode lives, footer + deferred so it never blocks
+ * first paint. The timeline is fully usable without it (the Credits link
+ * + the page's Muso CTA still work) — pure progressive enhancement.
+ *
+ * Named (not an anonymous closure) so the conditional wiring is testable —
+ * mirrors sn_enqueue_note_share above.
+ */
+function sn_enqueue_discography() {
+	if ( is_page( 'music' ) ) {
+		wp_enqueue_script(
+			'sn-discography',
+			get_theme_file_uri( 'assets/js/discography.js' ),
+			array(),
+			sn_asset_ver( 'assets/js/discography.js' ),
+			true
+		);
+	}
+}
+add_action( 'wp_enqueue_scripts', 'sn_enqueue_discography', 30 );

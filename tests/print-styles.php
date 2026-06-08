@@ -75,11 +75,24 @@ if ( ! function_exists( 'add_filter' ) ) {
 	function add_filter() {}
 }
 if ( ! function_exists( 'wp_enqueue_script' ) ) {
-	function wp_enqueue_script() {}
+	function wp_enqueue_script( $handle, $src = '', $deps = array(), $ver = false, $in_footer = false ) {
+		$GLOBALS['__enqueued_scripts'][ $handle ] = array(
+			'src'       => $src,
+			'deps'      => $deps,
+			'ver'       => $ver,
+			'in_footer' => $in_footer,
+		);
+	}
 }
+// is_page('music') is controllable via $GLOBALS['__page_slug'].
+$GLOBALS['__page_slug']       = '';
+$GLOBALS['__enqueued_scripts'] = array();
 if ( ! function_exists( 'is_page' ) ) {
-	function is_page() {
-		return false;
+	function is_page( $page = '' ) {
+		if ( '' === $page ) {
+			return '' !== $GLOBALS['__page_slug'];
+		}
+		return (string) $page === $GLOBALS['__page_slug'];
 	}
 }
 
@@ -133,6 +146,36 @@ ok( strpos( $print_css, '.sn-note-share' ) !== false, 'print.css hides the share
 // FIX 7 — the Related Notes footer is nav-like; the CHANGELOG claims print
 // strips it, so the selector must actually be in the hide list.
 ok( strpos( $print_css, '.sn-related-notes' ) !== false, 'FIX 7: print.css hides the Related Notes footer (.sn-related-notes)' );
+
+// ── DISCOGRAPHY ENQUEUE (v9.13.0): /music-page-scoped lazy-embed JS ──
+function reset_scripts() {
+	$GLOBALS['__enqueued_scripts'] = array();
+}
+
+ok( function_exists( 'sn_enqueue_discography' ), 'sn_enqueue_discography() is defined' );
+
+// On the /music page → sn-discography enqueued, footer, cache-busted.
+reset_scripts();
+$GLOBALS['__page_slug'] = 'music';
+sn_enqueue_discography();
+ok( isset( $GLOBALS['__enqueued_scripts']['sn-discography'] ), 'sn-discography enqueued on /music page' );
+ok( strpos( (string) ( $GLOBALS['__enqueued_scripts']['sn-discography']['src'] ?? '' ), 'assets/js/discography.js' ) !== false, 'sn-discography src points at assets/js/discography.js' );
+ok( ( $GLOBALS['__enqueued_scripts']['sn-discography']['in_footer'] ?? null ) === true, 'sn-discography loaded in footer' );
+ok( ( $GLOBALS['__enqueued_scripts']['sn-discography']['ver'] ?? null ) !== false, 'sn-discography carries a cache-bust version (sn_asset_ver)' );
+
+// On any other page → NOT enqueued.
+reset_scripts();
+$GLOBALS['__page_slug'] = 'contact';
+sn_enqueue_discography();
+ok( ! isset( $GLOBALS['__enqueued_scripts']['sn-discography'] ), 'sn-discography NOT enqueued off the /music page' );
+
+// JS CONTENT: lazy mount only — no eager iframe in the source, swaps the
+// play button for the Spotify embed on click.
+$disco_js = (string) @file_get_contents( realpath( __DIR__ . '/..' ) . '/assets/js/discography.js' );
+ok( '' !== $disco_js, 'discography.js is readable' );
+ok( strpos( $disco_js, 'sn-disco-play' ) !== false, 'discography.js targets the .sn-disco-play trigger' );
+ok( strpos( $disco_js, 'open.spotify.com/embed/album/' ) !== false, 'discography.js builds the Spotify album embed URL' );
+ok( strpos( $disco_js, "createElement( 'iframe' )" ) !== false, 'discography.js mounts the iframe on demand (not server-rendered)' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
