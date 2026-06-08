@@ -43,9 +43,48 @@
 		} );
 	}
 
-	function wireCopy( btn ) {
+	/**
+	 * Build a visually-hidden aria-live="polite" status region so the
+	 * COPY -> COPIED label swap is ANNOUNCED to screen readers (changing a
+	 * button's textContent does not reliably re-announce the focused control).
+	 * Inline styles keep it visually hidden without depending on theme CSS;
+	 * the WP-provided .screen-reader-text class is added as belt-and-braces.
+	 *
+	 * @param {HTMLElement} row The .sn-note-share container to append into.
+	 * @return {HTMLElement} The live region element.
+	 */
+	function makeLiveRegion( row ) {
+		var live = document.createElement( 'span' );
+		live.className = 'sn-note-share__status screen-reader-text';
+		live.setAttribute( 'role', 'status' );
+		live.setAttribute( 'aria-live', 'polite' );
+		live.style.position = 'absolute';
+		live.style.width = '1px';
+		live.style.height = '1px';
+		live.style.margin = '-1px';
+		live.style.padding = '0';
+		live.style.border = '0';
+		live.style.overflow = 'hidden';
+		live.style.clip = 'rect(0 0 0 0)';
+		live.style.clipPath = 'inset(50%)';
+		live.style.whiteSpace = 'nowrap';
+		row.appendChild( live );
+		return live;
+	}
+
+	function wireCopy( btn, live ) {
 		var original = btn.textContent;
 		var timer = null;
+
+		function announce( msg ) {
+			if ( ! live ) {
+				return;
+			}
+			// Clear first so an identical consecutive message still fires the
+			// live-region announcement.
+			live.textContent = '';
+			live.textContent = msg;
+		}
 
 		btn.addEventListener( 'click', function () {
 			var url = btn.getAttribute( 'data-sn-share-url' );
@@ -56,6 +95,7 @@
 				function () {
 					btn.textContent = 'COPIED';
 					btn.classList.add( 'is-copied' );
+					announce( 'Link copied to clipboard' );
 					if ( timer ) {
 						clearTimeout( timer );
 					}
@@ -66,6 +106,7 @@
 				},
 				function () {
 					btn.textContent = 'COPY FAILED';
+					announce( 'Copy failed' );
 					if ( timer ) {
 						clearTimeout( timer );
 					}
@@ -104,7 +145,7 @@
 			var copyBtn = row.querySelector( '.sn-note-share__copy' );
 			var nativeBtn = row.querySelector( '.sn-note-share__native' );
 			if ( copyBtn ) {
-				wireCopy( copyBtn );
+				wireCopy( copyBtn, makeLiveRegion( row ) );
 			}
 			if ( nativeBtn ) {
 				wireNativeShare( nativeBtn );

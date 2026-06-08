@@ -31,6 +31,7 @@ All notable changes to Signal & Noise are documented here.
 - **Curated block palette wrongly applied in the Site Editor** (`inc/editor-block-palette.php`) — editing a *page* in the Site Editor sets `$context->post` to the page object, so the `empty($context->post)` firewall didn't catch it and the trimmed allowlist starved the Site Editor (which needs every block for templates). It now also bails when `$context->name === 'core/edit-site'` (verified vs WP trunk `WP_Block_Editor_Context`).
 - **Synced patterns could vanish from the inserter** (`inc/editor-block-palette.php`) — `core/block` (the reusable/synced Pattern block) is now in the allowlist so synced patterns stay insertable in the post/page editor.
 - **Print stylesheet didn't strip the Related Notes footer** (`assets/css/print.css`) — the Related Notes footer is a nav-like affordance that paper can't use, and the CHANGELOG already claimed print strips it. Added `.sn-related-notes` to the print hide list.
+- **Copy-link label swap was silent to screen readers** (`assets/js/note-share.js`) — the COPY -> COPIED button-text swap changed the control's accessible name without re-announcing it. Each share row now carries a visually-hidden `aria-live="polite"` `role="status"` region that announces "Link copied to clipboard" / "Copy failed".
 
 ### Tests
 
