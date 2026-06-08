@@ -2,6 +2,20 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.11.1] - 2026-06-08 — Hotfix: single notes critical error
+
+**Released:** 2026-06-08.
+
+**Headline:** Emergency revert of the v9.11.0 Block Bindings migration of the post front-matter, which caused a PHP fatal ("There has been a critical error on this website.") on **single notes**. `parts/post-frontmatter.html` is restored to the proven v9.10.0 `[sn_reading_time]` / `[sn_post_pillar]` shortcode slots, which renders single notes correctly. The other five v9.11.0 features (JSON Feed, RSS enrichment, sidenote/pull-quote blocks, `/colophon`, reader command palette) are untouched.
+
+### Fixed
+
+- **Single notes returned a critical error** (`parts/post-frontmatter.html`) — the v9.11.0 migration of the reading-time and pillar front-matter slots to the `signal-noise/post-field` Block Bindings source caused a PHP fatal on the single-note render path. The change was isolated as the cause: `single.html` (the only template that renders the front-matter part) was the only single-note-path change in v9.11.0, and the homepage — which never renders the front-matter — was unaffected. Reverted the front-matter to the v9.10.0 shortcode slots, restoring single notes. The `signal-noise/post-field` source stays registered (proven safe at registration; unused) pending a proper runtime root-cause before the binding is re-introduced.
+
+### Known issues (not yet fixed)
+
+- **Reader command-palette trigger renders unstyled / mispositioned** — `assets/css/command-palette.css` sets the trigger to `position: fixed` bottom-right, but it is rendering in the footer flow, which points to a stale Breeze CSS bundle that predates the new file (gotcha #28). Purging Breeze + Cloudflare caches should resolve it; under investigation.
+
 ## [9.11.0] - 2026-06-08 — Feeds, blocks & pages
 
 **Released:** 2026-06-08.
