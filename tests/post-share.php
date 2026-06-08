@@ -3,7 +3,7 @@
  * Standalone fixture tests for the copy-permalink + Web Share row (v9.10.0).
  *
  * Stubs the WP primitives the [sn_note_share] shortcode touches
- * (is_singular / get_the_queried_object_id / get_permalink / get_the_title
+ * (is_singular / get_queried_object_id / get_permalink / get_the_title
  * / escaping) so the pure helper in inc/post-share.php runs without a
  * WordPress load. Mirrors tests/related-notes.php.
  *
@@ -26,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // ── Controllable stub state ──────────────────────────────────────────
 $GLOBALS['__is_singular_post'] = false; // is_singular('post') return.
-$GLOBALS['__queried_id']       = 0;     // get_the_queried_object_id() return.
+$GLOBALS['__queried_id']       = 0;     // get_queried_object_id() return.
 $GLOBALS['__permalink']        = '';    // get_permalink() return.
 $GLOBALS['__title']            = '';    // get_the_title() return.
 
@@ -39,8 +39,8 @@ if ( ! function_exists( 'is_singular' ) ) {
 		return (bool) $GLOBALS['__is_singular_post'];
 	}
 }
-if ( ! function_exists( 'get_the_queried_object_id' ) ) {
-	function get_the_queried_object_id() {
+if ( ! function_exists( 'get_queried_object_id' ) ) {
+	function get_queried_object_id() {
 		return (int) $GLOBALS['__queried_id'];
 	}
 }

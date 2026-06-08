@@ -2,6 +2,24 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.11.2] - 2026-06-08 — Hotfix: the *real* single-notes critical error (undefined function)
+
+**Released:** 2026-06-08.
+
+**Headline:** Single notes were *still* returning "There has been a critical error on this website." after v9.11.1 — because v9.11.1 fixed the wrong thing. The Cloudways error log named the real culprit all along: a call to the **nonexistent WordPress function `get_the_queried_object_id()`** (the real function is `get_queried_object_id()` — there is no `the_`) at `inc/related-notes.php:136` and `inc/post-share.php:45`. Both were introduced in **v9.10.0** (Related Notes footer + Share row), not v9.11.0. Every single-note render fataled on the first of these calls. This release renames both calls to the correct core function and repairs the test stubs that had been hiding the bug.
+
+### Fixed
+
+- **Single notes returned a PHP fatal on every render** — `[sn_related_notes]` (`inc/related-notes.php:136`) and `[sn_note_share]` (`inc/post-share.php:45`) called `get_the_queried_object_id()`, which does not exist in WordPress. PHP aborts on the first undefined-function call, so the error log showed only `related-notes.php:136`; `post-share.php:45` carried the identical typo and would have fataled next, so both are fixed. Both now call `get_queried_object_id()` (real core function since WP 3.1.0). Adversarially verified: it returns the queried note's ID on the single-note render path (set via `is_singular` before the loop, independent of loop cursor — the *most* robust choice for a `render_block` bridge call site), and the existing `< 1` / `is_singular('post')` guards degrade to empty output rather than fataling if it ever returns 0.
+- **bfcache ("Page prevented back/forward cache restoration") on single notes** — this Lighthouse/Cloudways flag was a *symptom* of the same fatal: WordPress serves its 500 error page with `Cache-Control: no-store`, which blocks the back/forward cache. With the fatal fixed, single notes return 200 and bfcache is restored — no separate change needed.
+- **Closed the false-green that let this ship** — `tests/related-notes.php` and `tests/post-share.php` had *stubbed the misspelled* `get_the_queried_object_id()`, modeling a fictional WordPress in which the typo'd function existed, so the suite passed green while production fataled. Both stubs now define the real `get_queried_object_id()`; the suite faithfully models core, and any future reintroduction of the typo fails the tests (verified red→green: with the stub corrected and the production typo still in place, both suites reproduce the exact production fatal). Full suite remains green — 26 suites / 683 assertions / 0 failures.
+
+### Notes
+
+- A multi-agent audit independently confirmed completeness: the full single-note render path (4 template parts, 6 shortcodes incl. the plugin-owned `[sn_reading_time]`, 2 dynamic blocks) was swept and contains **no other undefined-function call**, and a false-green stub audit across all 26 test files found **no other misspelled-core-function stubs**.
+- v9.11.1's hotfix reverted the v9.11.0 Block Bindings front-matter migration on the hypothesis that it was the cause; the error log identified `related-notes.php:136` as the actual fatal. That revert is left in place (orthogonal, already shipped); this release addresses the true root cause.
+- The other two Cloudways perf flags ("Enable text compression", "inefficient static-asset cache policy") did not reproduce against live headers — compression is enabled and static assets are edge-cached. Re-run Lighthouse after installing this update + a Breeze/Cloudflare cache purge to clear the stale audits.
+
 ## [9.11.1] - 2026-06-08 — Hotfix: single notes critical error
 
 **Released:** 2026-06-08.

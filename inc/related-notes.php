@@ -133,7 +133,7 @@ function sn_related_notes_reading_time( $post_id ) {
  * @return string Footer HTML, or '' when there are no related notes.
  */
 function sn_related_notes_shortcode() {
-	$post_id = (int) get_the_queried_object_id();
+	$post_id = (int) get_queried_object_id();
 	if ( $post_id < 1 ) {
 		return '';
 	}

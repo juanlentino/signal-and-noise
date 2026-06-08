@@ -42,7 +42,7 @@ function sn_note_share_shortcode() {
 		return '';
 	}
 
-	$post_id   = (int) get_the_queried_object_id();
+	$post_id   = (int) get_queried_object_id();
 	$permalink = get_permalink( $post_id );
 	$title     = get_the_title( $post_id );
 

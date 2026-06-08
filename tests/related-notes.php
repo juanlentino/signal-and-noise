@@ -26,7 +26,7 @@ if ( ! defined( 'DAY_IN_SECONDS' ) ) {
 // $POSTS: id => stub WP_Post-ish object (tag_ids[], date_ts, title, link).
 $GLOBALS['POSTS']         = array();
 $GLOBALS['__last_qargs']  = null;   // last WP_Query args (assert tax_query etc.)
-$GLOBALS['__queried_id']  = 0;      // get_the_queried_object_id() return.
+$GLOBALS['__queried_id']  = 0;      // get_queried_object_id() return.
 
 /**
  * Minimal post fixture. Mirrors the fields the helpers read.
@@ -63,8 +63,8 @@ if ( ! function_exists( 'is_wp_error' ) ) {
 		return false;
 	}
 }
-if ( ! function_exists( 'get_the_queried_object_id' ) ) {
-	function get_the_queried_object_id() {
+if ( ! function_exists( 'get_queried_object_id' ) ) {
+	function get_queried_object_id() {
 		return (int) $GLOBALS['__queried_id'];
 	}
 }
