@@ -35,7 +35,7 @@ All notable changes to Signal & Noise are documented here.
 
 ### Tests
 
-- **581 assertions across 20 suites, 0 failures** (was 415 across 12 at v9.9.0). Eight new standalone fixtures: `tests/related-notes.php` (19), `tests/print-styles.php` (8), `tests/post-updated-date.php` (17), `tests/post-share.php` (17), `tests/style-variations.php` (34), `tests/block-styles.php` (13), `tests/editor-block-palette.php` (43), `tests/theme-json-elements.php` (15).
+- **608 assertions across 20 suites, 0 failures** (was 415 across 12 at v9.9.0). Eight new standalone fixtures: `tests/related-notes.php` (22), `tests/print-styles.php` (11), `tests/post-updated-date.php` (19), `tests/post-share.php` (20), `tests/style-variations.php` (34), `tests/block-styles.php` (19), `tests/editor-block-palette.php` (46), `tests/theme-json-elements.php` (15). The Fixed-batch above hardened the bridge fixtures (the old `do_shortcode` str-replace stubs were false-greens that couldn't catch the `<p>`-wrap bug — reworked to run a wpautop-shaped input through the real bridge + real `shortcode_unautop`), added colour-intent assertions to `block-styles.php` (resolves `var()` tokens to theme.json hex), a Site-Editor firewall case to `editor-block-palette.php`, and a print-CSS content assertion.
 
 ## [9.9.0] - 2026-06-06 — Prep minor for v10.0.0 — 1 new ability + WP 7.0 pre-warning
 
