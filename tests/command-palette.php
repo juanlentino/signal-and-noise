@@ -26,6 +26,11 @@ function ok( $c, $m ) {
 }
 
 function add_action( $h, $cb, $p = 10, $a = 1 ) { return true; }
+function add_filter( $h, $cb, $p = 10, $a = 1 ) { return true; }
+$GLOBALS['__filters'] = array();
+function apply_filters( $tag, $value ) {
+	return array_key_exists( $tag, $GLOBALS['__filters'] ?? array() ) ? $GLOBALS['__filters'][ $tag ] : $value;
+}
 function home_url( $p = '' ) { return 'https://x.test' . $p; }
 function get_permalink( $p = null ) { return 'https://x.test/notes/n' . ( is_object( $p ) ? $p->ID : $p ) . '/'; }
 function get_the_title( $p = null ) { return 'A &amp; B'; }
@@ -73,6 +78,14 @@ $cmdk_src = file_get_contents( __DIR__ . '/../inc/command-palette.php' );
 ok( strpos( $cmdk_src, "add_action( 'wp_footer'" ) === false, 'trigger is no longer injected as a floating wp_footer button' );
 $pal_css = file_get_contents( __DIR__ . '/../assets/css/command-palette.css' );
 ok( ! preg_match( '/\.sn-cmdk-trigger\s*\{[^}]*position\s*:\s*fixed/s', $pal_css ), 'trigger is no longer position:fixed' );
+
+// v9.12.0: recent-notes count honors sn_palette_recent_count (default 8).
+$GLOBALS['__filters']['sn_palette_recent_count'] = 4;
+sn_cmdk_build_data();
+ok( (int) $GLOBALS['__qargs']['posts_per_page'] === 4, 'palette: recent query honors sn_palette_recent_count=4' );
+$GLOBALS['__filters'] = array();
+sn_cmdk_build_data();
+ok( (int) $GLOBALS['__qargs']['posts_per_page'] === 8, 'palette: default recent count is 8' );
 
 echo "Result: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

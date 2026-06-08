@@ -27,7 +27,7 @@ function sn_cmdk_build_data() {
 	$q      = new WP_Query( array(
 		'post_type'           => 'post',
 		'post_status'         => 'publish',
-		'posts_per_page'      => 8,
+		'posts_per_page'      => (int) apply_filters( 'sn_palette_recent_count', 8 ),
 		'orderby'             => 'date',
 		'order'               => 'DESC',
 		'no_found_rows'       => true,
