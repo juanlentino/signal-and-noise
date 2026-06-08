@@ -8,13 +8,20 @@
  * here" blocks that the brutalist cascade never styled.
  *
  * THE FIREWALL (why this is safe): the curated list is applied ONLY in the
- * post/page editor (`$context->post` set). The Site Editor (`core/edit-site`),
- * the widgets editor, and any post-less context get `$allowed` back UNCHANGED
- * — so template editing keeps every registered block. This mirrors WP core's
- * own gating: the deprecated `allowed_block_types` filter in
- * wp-includes/block-editor.php fires only `if ( ! empty( $context->post ) )`.
+ * post/page CONTENT editor. Two firewall checks, BOTH required:
+ *
+ *   1. Site Editor by NAME (`$context->name === 'core/edit-site'`) — editing a
+ *      PAGE in the Site Editor sets `$context->post` to that page object, so an
+ *      `empty($context->post)` check alone is NOT enough: the curated list
+ *      would wrongly starve the Site Editor (which needs every block for
+ *      templates). The name check is the real Site-Editor firewall.
+ *   2. Post-less contexts (`empty($context->post)`) — the post-list-screen
+ *      context, widgets, etc.
+ *
  * Verified vs WordPress/WordPress trunk (class-wp-block-editor-context.php:
- * `public $post = null`; block-editor.php get_allowed_block_types()).
+ * `public $name = 'core/edit-post'; public $post = null;` — documented $name
+ * values: core/edit-post, core/edit-site, core/edit-widgets,
+ * core/customize-widgets).
  *
  * We also bail when `$allowed` is already an array — never clobber a peer
  * plugin that has already narrowed the inserter.
@@ -41,8 +48,17 @@ if ( ! defined( 'ABSPATH' ) ) {
  *                       unchanged everywhere else.
  */
 function sn_theme_allowed_blocks( $allowed, $context ) {
-	// Firewall: post-less contexts (Site Editor, widgets, customizer-widgets)
-	// keep the full registered palette so template editing is never starved.
+	// Firewall 1: the Site Editor (core/edit-site) keeps the full registered
+	// palette so template editing is never starved. Checked by NAME because
+	// editing a PAGE in the Site Editor sets $context->post — an empty($post)
+	// check alone would wrongly curate it. (WP_Block_Editor_Context->name,
+	// verified vs trunk; default 'core/edit-post'.)
+	if ( isset( $context->name ) && 'core/edit-site' === $context->name ) {
+		return $allowed;
+	}
+
+	// Firewall 2: post-less contexts (widgets, customizer-widgets, the
+	// post-list screen) keep the full registered palette too.
 	if ( empty( $context->post ) ) {
 		return $allowed;
 	}
@@ -111,6 +127,9 @@ function sn_theme_allowed_blocks( $allowed, $context ) {
 		'core/nextpage',
 		'core/page-list',
 		'core/site-logo',
+		// Reusable / synced Patterns block — without it, synced patterns the
+		// author has created would silently vanish from the inserter.
+		'core/block',
 	);
 
 	// The site's contact-form block (Fluent Forms). Verified from its source:

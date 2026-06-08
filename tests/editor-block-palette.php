@@ -126,6 +126,10 @@ foreach ( $authoring_primitives as $slug ) {
 // GutenbergBlock.php register_block_type('fluentfom/guten-block', ...)).
 ha_true( in_array( 'fluentfom/guten-block', $result, true ), 'allowlist includes the contact-form block slug (fluentfom/guten-block)' );
 
+// FIX 6: the reusable / synced Patterns block must stay insertable, else any
+// synced pattern the author created vanishes from the inserter.
+ha_true( in_array( 'core/block', $result, true ), 'FIX 6: allowlist includes core/block (synced/reusable Pattern)' );
+
 // Conservative integrity: no duplicate slugs, all non-empty strings.
 ha_eq( count( $result ), count( array_unique( $result ) ), 'no duplicate slugs in the allowlist' );
 $all_strings = true;
@@ -135,10 +139,29 @@ foreach ( $result as $s ) {
 ha_true( $all_strings, 'every entry is a non-empty string' );
 
 // --- Test 2: non-post context returns $allowed unchanged ---------------
-echo "\nTest: non-post context (Site Editor / widgets) → \$allowed unchanged\n";
+echo "\nTest: post-less context (widgets / post-list) → \$allowed unchanged\n";
 $ctx_none = new SN_Test_Editor_Context(); // ->post stays null
-ha_eq( true, sn_theme_allowed_blocks( true, $ctx_none ), 'boolean true passes through (Site Editor keeps all blocks)' );
+ha_eq( true, sn_theme_allowed_blocks( true, $ctx_none ), 'boolean true passes through (post-less context keeps all blocks)' );
 ha_eq( false, sn_theme_allowed_blocks( false, $ctx_none ), 'boolean false passes through unchanged' );
+
+// --- Test 2b: FIX 5 — Site Editor editing a PAGE (post IS set) bails ----
+// Editing a page in the Site Editor sets $context->post to that page object,
+// so empty($post) is FALSE — only the name check saves the Site Editor from
+// being wrongly curated. The full palette ($allowed=true) must pass through.
+echo "\nTest: FIX 5 — Site Editor (core/edit-site) with a page post set → \$allowed unchanged\n";
+$ctx_site       = new SN_Test_Editor_Context();
+$ctx_site->name = 'core/edit-site';
+$ctx_site->post = new SN_Test_Post(); // a page is being edited → ->post IS set
+ha_eq(
+	true,
+	sn_theme_allowed_blocks( true, $ctx_site ),
+	'FIX 5: core/edit-site with post set → full palette (true) passes through, not curated'
+);
+// And it must NOT return the curated string[] in the Site Editor.
+ha_true(
+	! is_array( sn_theme_allowed_blocks( true, $ctx_site ) ),
+	'FIX 5: Site Editor never receives the curated array (templates need all blocks)'
+);
 
 // --- Test 3: pre-curated array $allowed returned unchanged -------------
 echo "\nTest: pre-set array \$allowed (peer plugin) → returned unchanged\n";
