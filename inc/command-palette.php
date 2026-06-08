@@ -83,9 +83,13 @@ function sn_cmdk_enqueue() {
 /**
  * Print the visible trigger button on wp_footer (no template edit needed).
  * aria-keyshortcuts advertises ⌘K / Ctrl-K / "/" to assistive tech.
+ *
+ * No aria-controls: the #sn-cmdk dialog is built lazily on first open, so a
+ * server-rendered aria-controls would be a dangling IDREF on page load (CMD-1).
+ * aria-haspopup="dialog" already conveys that the button opens a dialog.
  */
 function sn_cmdk_print_trigger() {
-	echo '<button type="button" class="sn-cmdk-trigger" aria-haspopup="dialog" aria-controls="sn-cmdk" aria-keyshortcuts="Control+K Meta+K /">'
+	echo '<button type="button" class="sn-cmdk-trigger" aria-haspopup="dialog" aria-keyshortcuts="Control+K Meta+K /">'
 		. '<span class="sn-cmdk-trigger-label">Search</span>'
 		. '<kbd class="sn-cmdk-hint" aria-hidden="true">&#8984;K</kbd></button>' . "\n";
 }

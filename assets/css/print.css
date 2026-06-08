@@ -36,7 +36,9 @@ footer.wp-block-template-part,
 .sn-note-pillar-link,
 .sn-note-back,
 .sn-note-share,
-.sn-related-notes {
+.sn-related-notes,
+.sn-cmdk-trigger,
+.sn-cmdk {
 	display: none !important;
 }
 
