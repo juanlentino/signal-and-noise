@@ -20,18 +20,29 @@ function sn_feed_json_content_type( $type, $feed ) {
 }
 
 /**
- * do_feed_json callback. Core invokes it as ($is_comment_feed, $feed_name).
+ * Pure, testable WP_Query args for the JSON feed. posts_per_page is filterable
+ * via sn_json_feed_items (default 20); the companion plugin supplies the
+ * configured value.
+ *
+ * @return array
  */
-function sn_feed_json_render( $is_comment_feed = false, $feed = 'json' ) {
-	$q = new WP_Query( array(
+function sn_feed_json_query_args() {
+	return array(
 		'post_type'           => 'post',
 		'post_status'         => 'publish',
-		'posts_per_page'      => 20,
+		'posts_per_page'      => (int) apply_filters( 'sn_json_feed_items', 20 ),
 		'orderby'             => 'date',
 		'order'               => 'DESC',
 		'no_found_rows'       => true,
 		'ignore_sticky_posts' => true,
-	) );
+	);
+}
+
+/**
+ * do_feed_json callback. Core invokes it as ($is_comment_feed, $feed_name).
+ */
+function sn_feed_json_render( $is_comment_feed = false, $feed = 'json' ) {
+	$q = new WP_Query( sn_feed_json_query_args() );
 	$items = array();
 	while ( $q->have_posts() ) {
 		$q->the_post();

@@ -18,7 +18,8 @@ function get_post_modified_time( $f, $gmt, $p ) { return $GLOBALS['__moddate'] ?
 function get_the_category( $id ) { $c = new stdClass(); $c->name = 'analysis'; return array( $c ); }
 function has_excerpt( $p ) { return false; }
 function get_the_excerpt( $p ) { return ''; }
-function apply_filters( $h, $v ) { return $v; }
+$GLOBALS['__filters'] = array();
+function apply_filters( $h, $v ) { return array_key_exists( $h, $GLOBALS['__filters'] ?? array() ) ? $GLOBALS['__filters'][ $h ] : $v; }
 function get_bloginfo( $k ) { return 'Signal & Noise'; }
 function home_url( $p = '' ) { return 'https://x.test' . $p; }
 function get_option( $k ) { return 'UTF-8'; }
@@ -51,6 +52,12 @@ $GLOBALS['__pubdate'] = false; $GLOBALS['__moddate'] = false;
 $bad = sn_feed_json_build_item( (object) array( 'ID' => 8, 'post_content' => 'x' ) );
 ok( ! isset( $bad['date_published'] ) && ! isset( $bad['date_modified'] ), 'non-string dates are omitted, not serialized as false (JF-2)' );
 unset( $GLOBALS['__pubdate'], $GLOBALS['__moddate'] );
+
+// v9.12.0: feed item count honors sn_json_feed_items (default 20).
+$GLOBALS['__filters']['sn_json_feed_items'] = 5;
+ok( (int) sn_feed_json_query_args()['posts_per_page'] === 5, 'json-feed: honors sn_json_feed_items=5' );
+$GLOBALS['__filters'] = array();
+ok( (int) sn_feed_json_query_args()['posts_per_page'] === 20, 'json-feed: default item count is 20' );
 
 echo "Result: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
