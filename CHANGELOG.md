@@ -33,7 +33,8 @@ All notable changes to Signal & Noise are documented here.
 
 ### Tests
 
-- **608 assertions across 20 suites, 0 failures** (was 415 across 12 at v9.9.0). Eight new standalone fixtures: `tests/related-notes.php` (22), `tests/print-styles.php` (11), `tests/post-updated-date.php` (19), `tests/post-share.php` (20), `tests/style-variations.php` (34), `tests/block-styles.php` (19), `tests/editor-block-palette.php` (46), `tests/theme-json-elements.php` (15). The Fixed-batch above hardened the bridge fixtures (the old `do_shortcode` str-replace stubs were false-greens that couldn't catch the `<p>`-wrap bug — reworked to run a wpautop-shaped input through the real bridge + real `shortcode_unautop`), added colour-intent assertions to `block-styles.php` (resolves `var()` tokens to theme.json hex), a Site-Editor firewall case to `editor-block-palette.php`, and a print-CSS content assertion.
+- **610 assertions across 20 suites, 0 failures** (was 415 across 12 at v9.9.0), merged on top of v9.9.1. Eight new standalone fixtures (`tests/related-notes.php`, `tests/print-styles.php`, `tests/post-updated-date.php`, `tests/post-share.php`, `tests/style-variations.php`, `tests/block-styles.php`, `tests/editor-block-palette.php`, `tests/theme-json-elements.php`) plus colour-intent assertions in `block-styles.php` (resolving `var()` tokens to theme.json hex so an inverted palette fails red), a Site-Editor firewall case in `editor-block-palette.php`, and a print-CSS content assertion. The bridge fixtures exercise the real `do_shortcode` path rather than a str-replace stub.
+
 ## [9.9.1] - 2026-06-07 — Pillar shortcode render_block bridge (belt-and-suspenders)
 
 **Released:** 2026-06-07.
