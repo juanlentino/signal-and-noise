@@ -178,10 +178,20 @@ ok( strpos( $html, 'https://i.scdn.co/image/new.jpg' ) !== false, 'artwork src p
 // Click-to-play trigger carrying the spotify_id — NOT an eager iframe.
 ok( strpos( $html, 'class="sn-disco-play"' ) !== false, 'play trigger button present' );
 ok( strpos( $html, 'data-spotify="newAlbumId123"' ) !== false, 'play trigger carries spotify_id' );
+ok( strpos( $html, 'data-type="album"' ) !== false, 'play trigger carries entry type (album)' );
 ok( stripos( $html, '<iframe' ) === false, 'NO eager <iframe> in server markup' );
 
 // Muso deep link.
 ok( strpos( $html, 'https://credits.muso.ai/album/new' ) !== false, 'Muso link present' );
+
+// type-aware embed: a track-type entry tags the trigger so the JS uses /embed/track/.
+$GLOBALS['__test_filters']['sn_discography_entries'] = array(
+	function ( $ignored ) {
+		return array( array( 'title' => 'Single Cut', 'artist' => 'Z', 'year' => 2022, 'type' => 'track', 'spotify_id' => 'trk987' ) );
+	},
+);
+$track_html = sn_discography_shortcode();
+ok( strpos( $track_html, 'data-type="track"' ) !== false, 'track entry → play trigger tagged data-type="track"' );
 
 // ── ESCAPING: hostile entry data must not leak raw HTML ───────────────
 $GLOBALS['__test_filters']['sn_discography_entries'] = array(

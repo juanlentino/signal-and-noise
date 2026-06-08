@@ -106,6 +106,7 @@ function sn_discography_render_entry( $entry ) {
 	$artist     = (string) ( $entry['artist'] ?? '' );
 	$image      = (string) ( $entry['image'] ?? '' );
 	$spotify_id = (string) ( $entry['spotify_id'] ?? '' );
+	$type       = (string) ( $entry['type'] ?? 'album' );
 	$muso_url   = (string) ( $entry['muso_url'] ?? '' );
 	$roles      = isset( $entry['roles'] ) && is_array( $entry['roles'] ) ? $entry['roles'] : array();
 
@@ -138,7 +139,7 @@ function sn_discography_render_entry( $entry ) {
 
 	if ( '' !== $spotify_id ) {
 		$out .= '<button type="button" class="sn-disco-play" data-spotify="'
-			. esc_attr( $spotify_id ) . '">'
+			. esc_attr( $spotify_id ) . '" data-type="' . esc_attr( $type ) . '">'
 			. esc_html__( 'Play', 'signal-noise' ) . '</button>';
 	}
 

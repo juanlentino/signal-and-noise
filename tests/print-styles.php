@@ -174,7 +174,9 @@ ok( ! isset( $GLOBALS['__enqueued_scripts']['sn-discography'] ), 'sn-discography
 $disco_js = (string) @file_get_contents( realpath( __DIR__ . '/..' ) . '/assets/js/discography.js' );
 ok( '' !== $disco_js, 'discography.js is readable' );
 ok( strpos( $disco_js, 'sn-disco-play' ) !== false, 'discography.js targets the .sn-disco-play trigger' );
-ok( strpos( $disco_js, 'open.spotify.com/embed/album/' ) !== false, 'discography.js builds the Spotify album embed URL' );
+ok( strpos( $disco_js, 'open.spotify.com/embed/' ) !== false, 'discography.js builds the Spotify embed URL' );
+ok( strpos( $disco_js, "'track' : 'album'" ) !== false, 'discography.js picks the track vs album embed path by entry type' );
+ok( strpos( $disco_js, "getAttribute( 'data-type' )" ) !== false, 'discography.js reads data-type from the trigger (render contract)' );
 ok( strpos( $disco_js, "createElement( 'iframe' )" ) !== false, 'discography.js mounts the iframe on demand (not server-rendered)' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
