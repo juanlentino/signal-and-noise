@@ -31,13 +31,18 @@ require __DIR__ . '/../inc/feed-enrichment.php';
 // Namespace declaration.
 ob_start(); sn_rss_media_ns(); $ns = ob_get_clean();
 ok( strpos( $ns, 'xmlns:media="http://search.yahoo.com/mrss/"' ) !== false, 'rss2_ns emits the Media RSS namespace' );
+// RSS-1: the sn: prefix MUST be declared or every <sn:readingTimeMinutes> below
+// is an undeclared-prefix XML well-formedness error that breaks the whole feed.
+ok( strpos( $ns, 'xmlns:sn="https://juanlentino.com/ns/feed"' ) !== false, 'rss2_ns declares the sn: namespace backing readingTimeMinutes (RSS-1)' );
 
 // Item enrichment WITH a featured image + plugin reading-time.
 $GLOBALS['__has_thumb'] = true;
 function sn_get_reading_time( $id = null ) { return 6; }
 ob_start(); sn_rss_item_enrich(); $item = ob_get_clean();
 ok( strpos( $item, '<media:content' ) !== false && strpos( $item, $GLOBALS['__thumb'] ) !== false, 'rss2_item emits media:content for the featured image' );
-ok( strpos( $item, '6' ) !== false, 'rss2_item emits reading-time when the plugin is present' );
+// RSS-2: assert the FULL well-formed, paired element — not just the digit '6'
+// appearing anywhere (which a malformed/unclosed element would also satisfy).
+ok( strpos( $item, '<sn:readingTimeMinutes>6</sn:readingTimeMinutes>' ) !== false, 'rss2_item emits a well-formed <sn:readingTimeMinutes> element (RSS-2)' );
 
 // Degrade: no featured image → no media:content (no fatal, no empty tag).
 $GLOBALS['__has_thumb'] = false;

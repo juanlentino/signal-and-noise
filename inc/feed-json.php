@@ -43,7 +43,11 @@ function sn_feed_json_render( $is_comment_feed = false, $feed = 'json' ) {
 		'version'       => 'https://jsonfeed.org/version/1.1',
 		'title'         => get_bloginfo( 'name' ),
 		'home_page_url' => home_url( '/notes/' ),
-		'feed_url'      => home_url( '/feed/json/' ),
+		// Advertise the query-arg path: it resolves on every install. The pretty
+		// /feed/json/ only works after the PLUGIN's next rewrite flush (the theme
+		// must not flush), so a self-referential /feed/json/ would 404 on a cold
+		// deploy (JF-1). ?feed=json is always live.
+		'feed_url'      => home_url( '/?feed=json' ),
 		'description'   => get_bloginfo( 'description' ),
 		'language'      => get_bloginfo( 'language' ),
 		'items'         => $items,
@@ -62,13 +66,22 @@ function sn_feed_json_build_item( $post ) {
 		$tags[] = $cat->name;
 	}
 	$item = array(
-		'id'             => (string) get_permalink( $post ),
-		'url'            => get_permalink( $post ),
-		'title'          => get_the_title( $post ),
-		'content_html'   => (string) apply_filters( 'the_content', $post->post_content ),
-		'date_published' => get_post_time( 'c', true, $post ),
-		'date_modified'  => get_post_modified_time( 'c', true, $post ),
+		'id'           => (string) get_permalink( $post ),
+		'url'          => get_permalink( $post ),
+		'title'        => get_the_title( $post ),
+		'content_html' => (string) apply_filters( 'the_content', $post->post_content ),
 	);
+	// get_post_time('c',…) returns FALSE on a zeroed/invalid post date; a bare
+	// false would serialize to "date_published":false, which is not a valid JSON
+	// Feed date-time. Only emit when it's a real RFC-3339 string (JF-2).
+	$pub = get_post_time( 'c', true, $post );
+	if ( is_string( $pub ) && '' !== $pub ) {
+		$item['date_published'] = $pub;
+	}
+	$mod = get_post_modified_time( 'c', true, $post );
+	if ( is_string( $mod ) && '' !== $mod ) {
+		$item['date_modified'] = $mod;
+	}
 	if ( $tags ) { $item['tags'] = $tags; }
 	if ( has_excerpt( $post ) ) {
 		$ex = get_the_excerpt( $post );
@@ -77,7 +90,20 @@ function sn_feed_json_build_item( $post ) {
 	return $item;
 }
 
+/**
+ * Autodiscovery: advertise the JSON Feed in <head> so readers/validators can
+ * find it (mirrors WP's RSS rel=alternate). Uses the always-live ?feed=json URL.
+ */
+function sn_feed_json_head_link() {
+	printf(
+		'<link rel="alternate" type="application/feed+json" title="%s" href="%s">' . "\n",
+		esc_attr( get_bloginfo( 'name' ) . ' — JSON Feed' ),
+		esc_url( home_url( '/?feed=json' ) )
+	);
+}
+
 if ( ! defined( 'SN_FEED_JSON_TEST' ) || ! SN_FEED_JSON_TEST ) {
 	add_action( 'init', 'sn_feed_json_register' );
 	add_filter( 'feed_content_type', 'sn_feed_json_content_type', 10, 2 );
+	add_action( 'wp_head', 'sn_feed_json_head_link' );
 }

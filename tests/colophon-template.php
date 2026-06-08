@@ -16,14 +16,23 @@ ok( file_exists( "$root/templates/page-colophon.html" ), 'page-colophon.html tem
 ok( file_exists( "$root/patterns/colophon.php" ), 'colophon pattern exists' );
 
 $tpl = file_get_contents( "$root/templates/page-colophon.html" );
+$pat = file_get_contents( "$root/patterns/colophon.php" );
 ok( strpos( $tpl, 'wp:template-part' ) !== false && strpos( $tpl, 'header' ) !== false, 'template pulls the header part' );
-ok( strpos( $tpl, 'signal-noise/colophon' ) !== false || strpos( $tpl, 'wp:pattern' ) !== false, 'template references the colophon pattern' );
 
 $footer = file_get_contents( "$root/parts/footer.html" );
 ok( strpos( $footer, '/colophon' ) !== false, 'footer links to /colophon' );
 
-$pat = file_get_contents( "$root/patterns/colophon.php" );
 ok( strpos( $pat, 'Slug: signal-noise/colophon' ) !== false, 'colophon pattern declares its slug' );
+
+// COL-1: cross-validate the slug round-trips between the template's wp:pattern
+// reference and the pattern file's declared Slug. A one-char typo in the template
+// slug renders a BLANK page (render_block_core_pattern returns '' for an
+// unregistered slug) — an OR'd "any wp:pattern block exists" test wouldn't catch it.
+preg_match( '/wp:pattern\s*\{[^}]*"slug":"([^"]+)"/', $tpl, $tpl_slug_m );
+preg_match( '/Slug:\s*(\S+)/', $pat, $pat_slug_m );
+$tpl_slug = $tpl_slug_m[1] ?? '';
+$pat_slug = $pat_slug_m[1] ?? '';
+ok( '' !== $tpl_slug && $tpl_slug === $pat_slug, "template wp:pattern slug ($tpl_slug) round-trips to the pattern Slug ($pat_slug)" );
 
 echo "Result: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
