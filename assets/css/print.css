@@ -35,7 +35,8 @@ footer.wp-block-template-part,
 .sn-post-closing__nav,
 .sn-note-pillar-link,
 .sn-note-back,
-.sn-note-share {
+.sn-note-share,
+.sn-related-notes {
 	display: none !important;
 }
 

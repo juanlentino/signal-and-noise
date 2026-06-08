@@ -125,5 +125,14 @@ $GLOBALS['__singular'] = array( 'attachment' => true );
 sn_enqueue_print_styles();
 ok( ! isset( $GLOBALS['__enqueued']['sn-print'] ), 'sn-print NOT enqueued on non-post/page singular' );
 
+// ── CSS CONTENT: the stylesheet strips the nav-like affordances the
+//    CHANGELOG promises (header, footer, nav, share row, related notes). ──
+$print_css = (string) @file_get_contents( realpath( __DIR__ . '/..' ) . '/assets/css/print.css' );
+ok( '' !== $print_css, 'print.css is readable' );
+ok( strpos( $print_css, '.sn-note-share' ) !== false, 'print.css hides the share row' );
+// FIX 7 — the Related Notes footer is nav-like; the CHANGELOG claims print
+// strips it, so the selector must actually be in the hide list.
+ok( strpos( $print_css, '.sn-related-notes' ) !== false, 'FIX 7: print.css hides the Related Notes footer (.sn-related-notes)' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
