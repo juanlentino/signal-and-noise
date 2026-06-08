@@ -2,6 +2,23 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.14.0] - 2026-06-08 — /music cover-grid redesign
+
+**Released:** 2026-06-08.
+
+**Headline:** The `/music` discography is redesigned from a vertical list of text rows into an **album-cover gallery** — the covers are the hero. A sticky controls rail adds a live release count and **filter-by-role** chips (Producer · Mixing · Mastering · Engineer · …), so a visitor can instantly surf, say, *everything Juan produced*. Same brutalist vocabulary (Bebas titles, DM Mono labels, blood-red accents), same data source — this is theme-side only; the companion plugin and the `sn_discography_entries` store contract are unchanged.
+
+### New
+
+- **Cover-grid gallery** ([inc/discography-render.php](inc/discography-render.php) + [assets/css/components.css](assets/css/components.css)) — `[sn_discography]` now emits a responsive grid of large square album covers grouped by year (descending), each with the title (Bebas), primary artist, credited roles, and a per-album Muso `Credits ↗` link. Replaces the v9.13.0 row list.
+- **Role filter + live count** ([assets/js/discography.js](assets/js/discography.js)) — a sticky rail shows `N releases · <span>` and a chip per credited role. Filtering shows only releases carrying that credit, collapses empty year sections, updates the count, and reveals an empty state when nothing matches. `All` resets. Pure progressive enhancement (no JS → all releases visible).
+- **Click-to-play covers** — the whole cover is the play affordance: click (or Enter/Space) swaps it for the lazy Spotify embed in place. Zero eager iframes (unchanged performance contract); a release with no Spotify match renders a static cover with its Credits link.
+
+### Notes
+
+- The page header, the curated "press play" featured player, and the Muso.AI CTA are unchanged. With the `[sn_discography]` shortcode already placed in the Music page content, the redesigned gallery appears as soon as the theme updates — no content edit needed.
+- Verified against the live 11-album catalog (covers load, 3-col grid, reactive count, role-accurate filtering, no console errors). Design contract: [docs/superpowers/mockups/2026-06-08-music-redesign.html](docs/superpowers/mockups/2026-06-08-music-redesign.html).
+
 ## [9.13.0] - 2026-06-08 — Music Identity (release timeline)
 
 **Released:** 2026-06-08.

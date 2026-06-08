@@ -170,10 +170,11 @@ sn_enqueue_discography();
 ok( ! isset( $GLOBALS['__enqueued_scripts']['sn-discography'] ), 'sn-discography NOT enqueued off the /music page' );
 
 // JS CONTENT: lazy mount only — no eager iframe in the source, swaps the
-// play button for the Spotify embed on click.
+// cover for the Spotify embed on click; plus client-side role filtering (v9.14.0).
 $disco_js = (string) @file_get_contents( realpath( __DIR__ . '/..' ) . '/assets/js/discography.js' );
 ok( '' !== $disco_js, 'discography.js is readable' );
-ok( strpos( $disco_js, 'sn-disco-play' ) !== false, 'discography.js targets the .sn-disco-play trigger' );
+ok( strpos( $disco_js, 'sn-disco-cover-wrap' ) !== false, 'discography.js targets the .sn-disco-cover-wrap play trigger (v9.14.0 cover grid)' );
+ok( strpos( $disco_js, 'sn-disco-chip' ) !== false, 'discography.js wires the .sn-disco-chip role filter (v9.14.0)' );
 ok( strpos( $disco_js, 'open.spotify.com/embed/' ) !== false, 'discography.js builds the Spotify embed URL' );
 ok( strpos( $disco_js, "'track' : 'album'" ) !== false, 'discography.js picks the track vs album embed path by entry type' );
 ok( strpos( $disco_js, "getAttribute( 'data-type' )" ) !== false, 'discography.js reads data-type from the trigger (render contract)' );
