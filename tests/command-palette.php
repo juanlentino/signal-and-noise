@@ -87,5 +87,14 @@ $GLOBALS['__filters'] = array();
 sn_cmdk_build_data();
 ok( (int) $GLOBALS['__qargs']['posts_per_page'] === 8, 'palette: default recent count is 8' );
 
+// v9.12.0: enable/disable kill-switch (default on).
+$GLOBALS['__filters'] = array();
+ok( sn_cmdk_enabled() === true, 'palette: enabled by default' );
+$GLOBALS['__filters']['sn_palette_enabled'] = false;
+ok( sn_cmdk_enabled() === false, 'palette: sn_palette_enabled=false disables it' );
+ok( in_array( 'sn-cmdk-off', sn_cmdk_body_class( array( 'home' ) ), true ), 'palette: body class sn-cmdk-off added when disabled' );
+$GLOBALS['__filters'] = array();
+ok( ! in_array( 'sn-cmdk-off', sn_cmdk_body_class( array( 'home' ) ), true ), 'palette: no sn-cmdk-off class when enabled' );
+
 echo "Result: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

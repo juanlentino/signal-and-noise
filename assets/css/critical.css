@@ -978,3 +978,6 @@ main { view-transition-name: sn-main; }
 .single-post .wp-block-post-content {
 	hanging-punctuation: first last allow-end;
 }
+
+/* v9.12.0: command-palette kill-switch (sn_palette_enabled=false -> body.sn-cmdk-off). */
+.sn-cmdk-off .sn-cmdk-trigger { display: none; }

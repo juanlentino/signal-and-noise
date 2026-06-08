@@ -59,10 +59,37 @@ function sn_cmdk_build_data() {
 }
 
 /**
+ * Whether the reader command palette is active. Default true; the companion
+ * plugin supplies sn_setting('theme.palette_enabled') via this filter.
+ */
+function sn_cmdk_enabled() {
+	return (bool) apply_filters( 'sn_palette_enabled', true );
+}
+
+/**
+ * Add sn-cmdk-off to <body> when the palette is disabled, so the static footer
+ * trigger (parts/footer.html) is hidden via critical.css even though the palette
+ * stylesheet is not enqueued.
+ *
+ * @param string[] $classes Body classes.
+ * @return string[]
+ */
+function sn_cmdk_body_class( $classes ) {
+	if ( ! sn_cmdk_enabled() ) {
+		$classes[] = 'sn-cmdk-off';
+	}
+	return $classes;
+}
+
+/**
  * Enqueue palette CSS + JS site-wide (no is_singular guard — palette is global).
  * The data island is injected before the deferred module via wp_add_inline_script.
+ * Skipped entirely when the palette is disabled (sn_palette_enabled=false).
  */
 function sn_cmdk_enqueue() {
+	if ( ! sn_cmdk_enabled() ) {
+		return;
+	}
 	wp_enqueue_style(
 		'sn-command-palette',
 		get_theme_file_uri( 'assets/css/command-palette.css' ),
@@ -88,4 +115,5 @@ function sn_cmdk_enqueue() {
 
 if ( ! defined( 'SN_CMDK_TEST' ) || ! SN_CMDK_TEST ) {
 	add_action( 'wp_enqueue_scripts', 'sn_cmdk_enqueue', 30 );
+	add_filter( 'body_class', 'sn_cmdk_body_class' );
 }
