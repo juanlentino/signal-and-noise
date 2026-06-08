@@ -138,7 +138,12 @@ function sn_related_notes_shortcode() {
 		return '';
 	}
 
-	$related = sn_related_notes_query( $post_id, 3 );
+	/**
+	 * Related-notes count. Default 3; the companion plugin supplies the
+	 * configured value via sn_setting('theme.related_count'). Fixes the prior
+	 * dead literal that bypassed the $limit param.
+	 */
+	$related = sn_related_notes_query( $post_id, (int) apply_filters( 'sn_related_count', 3 ) );
 	if ( empty( $related ) ) {
 		return '';
 	}

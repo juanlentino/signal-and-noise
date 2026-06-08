@@ -68,6 +68,16 @@ if ( ! function_exists( 'get_queried_object_id' ) ) {
 		return (int) $GLOBALS['__queried_id'];
 	}
 }
+$GLOBALS['__filters'] = array();
+if ( ! function_exists( 'apply_filters' ) ) {
+	// Test stub: returns an injected value from $GLOBALS['__filters'] when set,
+	// else the supplied default. Lets a test exercise the sn_related_count hook.
+	function apply_filters( $tag, $value ) {
+		return array_key_exists( $tag, $GLOBALS['__filters'] ?? array() )
+			? $GLOBALS['__filters'][ $tag ]
+			: $value;
+	}
+}
 if ( ! function_exists( 'get_post' ) ) {
 	function get_post( $id = null ) {
 		$id = (int) $id;
@@ -301,6 +311,24 @@ $GLOBALS['__do_shortcode_ran'] = false;
 $untouched = sn_related_notes_render_block_bridge( '<p>no token here</p>', array() );
 ok( empty( $GLOBALS['__do_shortcode_ran'] ), 'bridge: do_shortcode NOT run when token absent' );
 ok( $untouched === '<p>no token here</p>', 'bridge: content returned unchanged when token absent' );
+
+// ── v9.12.0: the shortcode must honor sn_related_count, not a dead literal 3 ──
+$GLOBALS['POSTS'] = array();
+mk_post( 1, array( 10 ), 5000, 'Current', 'https://x/notes/1/' );
+mk_post( 2, array( 10 ), 4000, 'Sib2', 'https://x/notes/2/' );
+mk_post( 3, array( 10 ), 3000, 'Sib3', 'https://x/notes/3/' );
+mk_post( 4, array( 10 ), 2000, 'Sib4', 'https://x/notes/4/' );
+mk_post( 5, array( 10 ), 1000, 'Sib5', 'https://x/notes/5/' );
+mk_post( 6, array( 10 ),  500, 'Sib6', 'https://x/notes/6/' );
+// 5 shared-tag siblings → PRIMARY pass satisfies any limit ≤ 5 with no backfill,
+// so __last_qargs is the PRIMARY query (its posts_per_page == the limit).
+$GLOBALS['__queried_id']                  = 1;
+$GLOBALS['__filters']['sn_related_count'] = 5;
+sn_related_notes_shortcode();
+ok( (int) $GLOBALS['__last_qargs']['posts_per_page'] === 5, 'related: shortcode honors sn_related_count=5 (not the dead literal 3)' );
+$GLOBALS['__filters'] = array();
+sn_related_notes_shortcode();
+ok( (int) $GLOBALS['__last_qargs']['posts_per_page'] === 3, 'related: default count is 3 when unfiltered' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
