@@ -6,7 +6,7 @@ on:
       - '**/render.php'
       - 'templates/**'
       - 'parts/**'
-      - 'functions.php'
+      - '*.php'
       - 'theme.json'
 jobs:
   review:
