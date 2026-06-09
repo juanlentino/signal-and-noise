@@ -126,7 +126,7 @@ function sn_theme_register_content_abilities() {
 
 	wp_register_ability( 'signal-and-noise/get-reading-time-for-slug', array(
 		'label'               => 'Get reading time for slug',
-		'description'         => 'Returns the computed reading-time minutes for a post identified by slug. Wraps sn_notes_reading_time_for_slug() (the same helper that powers the [sn_reading_time] shortcode). Returns minutes=0 if the slug does not resolve.',
+		'description'         => 'Returns the computed reading-time minutes for a page identified by slug. Wraps sn_notes_reading_time_for_slug() (the same helper that powers the [sn_reading_time] shortcode). Returns minutes=0 if the slug does not resolve to a page the current user may view (so it cannot be used to probe for non-public pages).',
 		'category'            => 'content',
 		'permission_callback' => 'sn_theme_perm_read',
 		'execute_callback'    => 'sn_theme_ability_reading_time_for_slug',
@@ -292,6 +292,12 @@ function sn_theme_ability_page_notes_pillars() {
  * response. wpm_basis is hardcoded to 220 — the project default
  * baked into sn_get_reading_time().
  *
+ * v9.15.5: gated on per-page viewability. Because the ability carries
+ * only the bare `read` cap, a non-public page (draft/private/scheduled)
+ * the current user cannot read returns a uniform minutes=0 — identical
+ * to a non-resolving slug — so it cannot double as an existence/length
+ * oracle (sibling of the v9.15.4 get-active-template-structure fix).
+ *
  * @since 9.1.0
  * @param array $input { slug: string }
  * @return array|WP_Error
@@ -312,6 +318,34 @@ function sn_theme_ability_reading_time_for_slug( $input ) {
 				'theme_dependency_missing',
 				'sn_notes_reading_time_for_slug() unavailable — theme module not loaded.',
 				array( 'status' => 503 )
+			);
+		}
+
+		// v9.15.5: gate on per-page viewability so this ability cannot be used as
+		// an existence/length oracle for non-public pages — the sibling of the
+		// v9.15.4 get-active-template-structure fix. The ability is registered
+		// with the bare `read` cap (any logged-in user). Without this check a
+		// subscriber could enumerate slugs and distinguish "a draft/private page
+		// with this slug exists" (a real reading time) from "no such slug" (the
+		// 5-min fallback), leaking the existence — and a coarse length proxy — of
+		// non-public content. Resolve the same page the [sn_reading_time] resolver
+		// would (post_type 'page', any status); unless it is publicly viewable OR
+		// the current user can read_post it, return a uniform minutes=0 — identical
+		// to a non-resolving slug, so "exists but private" is indistinguishable
+		// from "doesn't exist". Only the integer minutes is ever returned, never
+		// content.
+		$post = function_exists( 'get_page_by_path' )
+			? get_page_by_path( $slug, OBJECT, 'page' )
+			: null;
+		$can_read = $post && (
+			( function_exists( 'is_post_publicly_viewable' ) && is_post_publicly_viewable( $post ) )
+			|| ( function_exists( 'current_user_can' ) && current_user_can( 'read_post', (int) $post->ID ) )
+		);
+		if ( ! $can_read ) {
+			return array(
+				'slug'      => $slug,
+				'minutes'   => 0,
+				'wpm_basis' => 220,
 			);
 		}
 

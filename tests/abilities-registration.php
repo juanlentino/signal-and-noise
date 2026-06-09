@@ -637,6 +637,15 @@ $GLOBALS['__test_reading_times'] = array(
 	'provenance/over-detection' => '7 min',
 	'provenance/as-substrate'   => '6 min',
 );
+// v9.15.5: the ability now resolves the page (get_page_by_path) and gates on
+// viewability before returning a reading time, so the legitimate happy-path
+// slug must resolve to a publicly-viewable page fixture.
+$GLOBALS['__test_posts']['rt'] = array(
+	'ID'          => 770,
+	'post_type'   => 'page',
+	'post_name'   => 'provenance/over-detection',
+	'post_status' => 'publish',
+);
 
 sn_theme_register_abilities();
 ha_true(

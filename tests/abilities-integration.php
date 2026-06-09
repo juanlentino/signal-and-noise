@@ -423,6 +423,26 @@ $GLOBALS['__test_posts'][42] = array(
 	'post_name'  => 'about',
 	'post_title' => 'About',
 );
+// v9.15.5: reading-time existence-oracle fixtures (sibling of the v9.15.4
+// diagnostics oracle). A publicly-viewable page the legitimate path resolves...
+$GLOBALS['__test_posts'][302] = array(
+	'ID'          => 302,
+	'post_type'   => 'page',
+	'post_name'   => 'provenance/over-detection',
+	'post_title'  => 'Over-detection',
+	'post_status' => 'publish',
+);
+// ...and a NON-public draft page a subscriber must not be able to existence-probe.
+$GLOBALS['__test_posts'][301] = array(
+	'ID'          => 301,
+	'post_type'   => 'page',
+	'post_name'   => 'secret-draft',
+	'post_title'  => 'Secret draft',
+	'post_status' => 'draft',
+);
+// Give the draft a distinctive reading time — if the oracle leaked, the
+// subscriber would see 9 (real) instead of the uniform 0 / not-found signal.
+$GLOBALS['__test_reading_times']['secret-draft'] = '9 min';
 
 // ─── Harness ─────────────────────────────────────────────────────────
 $pass = 0; $fail = 0;
@@ -593,6 +613,28 @@ $res2 = wp_get_ability( 'signal-and-noise/get-active-template-structure' )->exec
 ap_eq( 'post_not_found', is_wp_error( $res2 ) ? $res2->get_error_code() : '(no error)', 'diagnostics oracle: missing post is also post_not_found (indistinguishable from unreadable)' );
 $res3 = wp_get_ability( 'signal-and-noise/get-active-template-structure' )->execute( array( 'post_id' => 42 ) ); // public 'about' page
 ap_true( is_array( $res3 ) && isset( $res3['template_slug'] ), 'diagnostics oracle: a publicly-viewable post is still inspectable by the same bare-read user' );
+ap_reset_caps();
+
+// ── v9.15.5: get-reading-time-for-slug must NOT be an existence/length oracle
+// for non-public pages (sibling of the v9.15.4 diagnostics-oracle fix). A bare
+// `read`-cap user probing a draft slug they cannot read gets the SAME minutes=0
+// as a truly-missing slug — so "exists but private" is indistinguishable from
+// "doesn't exist", and no real reading-time (a coarse length proxy) leaks.
+$GLOBALS['__test_user_caps']      = array( 'read' => true );  // subscriber-shaped
+$GLOBALS['__test_readable_posts'] = array();                   // can read no non-public page
+$res = wp_get_ability( 'signal-and-noise/get-reading-time-for-slug' )->execute( array( 'slug' => 'secret-draft' ) );
+ap_true( is_array( $res ) && isset( $res['minutes'] ), 'reading-time oracle: non-public slug still returns a typed minutes payload (no success-vs-error oracle)' );
+ap_eq( 0, $res['minutes'], 'reading-time oracle: a draft a subscriber cannot read returns minutes=0 (no real length leaks)' );
+$res2 = wp_get_ability( 'signal-and-noise/get-reading-time-for-slug' )->execute( array( 'slug' => 'no-such-slug-xyz' ) );
+ap_eq( 0, $res2['minutes'], 'reading-time oracle: a missing slug also returns minutes=0 (indistinguishable from unreadable)' );
+// An authorized reader (editor/author who CAN read the draft) still gets the real time.
+$GLOBALS['__test_readable_posts'] = array( 301 );
+$res3 = wp_get_ability( 'signal-and-noise/get-reading-time-for-slug' )->execute( array( 'slug' => 'secret-draft' ) );
+ap_eq( 9, $res3['minutes'], 'reading-time oracle: a user who can read_post the draft still gets its real reading time' );
+// A publicly-viewable page is unchanged for everyone.
+$GLOBALS['__test_readable_posts'] = array();
+$res4 = wp_get_ability( 'signal-and-noise/get-reading-time-for-slug' )->execute( array( 'slug' => 'provenance/over-detection' ) );
+ap_eq( 7, $res4['minutes'], 'reading-time oracle: a publicly-viewable page still returns its real reading time' );
 ap_reset_caps();
 
 // ════════════════════════════════════════════════════════════════════
