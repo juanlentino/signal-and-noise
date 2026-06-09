@@ -1,7 +1,7 @@
 # Handoff — Security back-audit shipped (theme v9.15.3 + plugin v4.14.2)
 
 **Date:** 2026-06-09 (later session; follows `2026-06-09-session-close-full-state.md`)
-**Status:** A whole-codebase security back-audit ran, produced two paired releases, both **merged to `main` + tagged**. Owner installed; re-check Updates (tags were created after the install attempt). The pre-existing AI-tooling thread is unchanged and still owner-gated on the API key.
+**Status:** A whole-codebase security back-audit ran, produced two paired releases, both **merged to `main` + tagged + installed**. **UPDATE (same session, later):** the AI-tooling thread is now CLOSED too — `ANTHROPIC_API_KEY` set in both repos, tooling PRs #1 (plugin) + #2 (theme) **merged**, and the release-notes drafter validated end-to-end (both runs green → draft Releases for v9.15.3 + v4.14.2). The review CI (`security-review` + house-rules `claude-review`) + the drafter are now live on `main`. **No open PRs or issues in either repo.**
 
 ## What shipped (merged + tagged)
 - **Theme `v9.15.3`** (`874f5ab`, tag pushed) — **MEDIUM IDOR fix.** The `ai-generate-page-note-summary` WP ability gated on the blanket `edit_posts` cap, so any **Contributor** could summarize → read any draft/private post by enumerating `post_id`. Added `sn_theme_perm_edit_post($input)` (per-post `current_user_can('edit_post', …)`, mirroring the plugin's `snt_ability_perm_edit_post`) and repointed the ability. TDD: RED reproduced the leak → GREEN; `tests/abilities-integration.php` 85→94, full theme sweep 30/0.
@@ -14,10 +14,15 @@
 - **Both repos' PHPCS rulesets exclude cosmetic sniffs** (theme = security+API-hygiene+i18n+compat; plugin = security-only). A whitespace probe yields 0 findings that looks like a false-green but isn't — **falsify with a SECURITY violation** (`echo $_GET['x']`). See `reference_theme_phpcs_claude_trap_fixed` / `reference_plugin_phpcs_ruleset_security_only`.
 - **A `php tests/X.php | tail -1` local sweep is a false-green machine** — a fatal mid-output (after an echo'd HTML dump) isn't on the last line. CI's "every suite must emit `N passed, M failed`" gate caught a silent fatal mine missed (the plugin's `sn_mask_secret` cross-file dep in `discography-admin-render.php`). Mirror CI's summary-line gate locally. See `reference_test_sweep_summary_line_gate`. (The fatal was real, caught on the PR, fixed before merge.)
 
-## Still pending (unchanged from the earlier handoff — separate thread)
-1. **`ANTHROPIC_API_KEY`** not set in either repo → the two **AI-tooling PRs** (plugin #1, theme #2) remain open, waiting on it. Set it → merge those → validate (deliberate-bug PR + a `Release Notes` draft).
-2. **Installs / Sync:** re-check wp-admin → Updates for v9.15.3 / v4.14.2 (tags now exist); run **Monitoring → Music → Sync now** to dedupe `/music` 11→10. Tag pushes do NOT auto-deploy.
-3. Optional INFO hardening from the audit (above); the deferred items from the prior handoff (tier-2 hard gate, `/releases` page, audit-harness skills).
+## Done (closed this session)
+- ✅ Security releases v9.15.3 + v4.14.2 — merged, tagged, **installed** by owner.
+- ✅ `/music` dedupe (Monitoring → Music → Sync now) — owner ran it.
+- ✅ AI-tooling: `ANTHROPIC_API_KEY` set both repos → PRs #1/#2 merged → drafter validated (draft Releases for both versions exist).
+
+## Optional / your-call (NOT blocking — nothing depends on these)
+1. **Publish the 2 draft Releases** (theme v9.15.3, plugin v4.14.2) if you want public notes — or leave them as drafts. From now on every `v*` tag push auto-drafts one.
+2. **Optional INFO hardening** from the audit report (none is a live exploit): per-post read check on `get-active-template-structure` (theme `abilities-diagnostics.php`); `sanitize_text_field` parity for discography `roles[]` (`discography-store.php`); `wp_kses_post` on `plausible-widget.php:222`.
+3. **Older deferred** (from the prior handoff): tier-2 branch-protection hard gate (drop the admin bypass); on-site `/releases` page fed by the drafter's draft Releases; the `defending-code-reference-harness` audit skills for periodic back-audits.
 
 ## Worktrees
 The `sec-audit` worktrees (created for the audit + fixes) were removed; both feature branches merged + deleted. No in-flight branches from this session.
