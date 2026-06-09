@@ -44,7 +44,10 @@ function sn_theme_register_ai_generation_abilities() {
 		'label'               => 'Generate /notes-voice summary',
 		'description'         => "Generates a brand-voiced single-sentence summary of a post in the SN /notes catalog vocabulary. Calls the plugin's AI helper (Sonnet 4.6 pinned via plugin v3.7.2+). Requires signal-and-noise-tools plugin.",
 		'category'            => 'ai-generation',
-		'permission_callback' => 'sn_theme_perm_edit_posts',
+		// Per-post gate (v9.15.3): this ability reads a specific post's body, so
+		// it must check edit_post(post_id), not the blanket edit_posts — otherwise
+		// any contributor could summarize/exfiltrate arbitrary drafts via post_id.
+		'permission_callback' => 'sn_theme_perm_edit_post',
 		'execute_callback'    => 'sn_theme_ability_ai_page_note_summary',
 		'input_schema'        => array(
 			'type'       => 'object',
