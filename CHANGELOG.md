@@ -2,6 +2,16 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.15.4] - 2026-06-09 — Back-audit INFO hardening: diagnostics existence oracle
+
+**Headline:** The theme-side INFO/defense-in-depth item from the 2026-06-09 security back-audit. Not a content-disclosure bug — it closes an existence/post-type *oracle* in a diagnostics ability.
+
+### Improvements
+
+- **`get-active-template-structure` no longer leaks which non-public posts exist.** The ability is gated by the `read` cap (any logged-in user) and resolved an arbitrary `post_id`/`slug` without a per-post check — so a subscriber could enumerate `post_id` and learn from a 200-vs-404 response which draft/private/pending posts exist and whether they're pages. It now requires the post to be publicly viewable *or* readable by the user (`is_post_publicly_viewable()` / `current_user_can('read_post', …)`); on failure it returns the **same `post_not_found`** as a genuinely missing post, so "exists but private" is indistinguishable from "doesn't exist". Post *content* was never exposed (only the theme's template structure), so this is defense-in-depth, not a disclosure fix. Regression test in [tests/abilities-integration.php](tests/abilities-integration.php) (96 → 98 assertions). ([inc/abilities-diagnostics.php](inc/abilities-diagnostics.php))
+
+> **Why PATCH:** defense-in-depth hardening of an existing diagnostics surface — no new capability, no public-API or settings-schema change, no required user action beyond installing. Legitimate callers (admins/editors via the AI client) can read posts and are unaffected.
+
 ## [9.15.3] - 2026-06-09 — Security: per-post gate on the /notes-summary ability (IDOR fix)
 
 **Headline:** Closes an IDOR in the `ai-generate-page-note-summary` WP ability surfaced by a whole-codebase security back-audit. The ability gated on the blanket `edit_posts` capability, so any Contributor-level account could summarize — and thereby read the body of — **any** draft, pending, scheduled, or private post by passing its `post_id`, regardless of authorship. It now checks the per-post `edit_post` capability, matching the convention every post-scoped ability in the companion plugin already uses.

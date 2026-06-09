@@ -76,10 +76,14 @@ $GLOBALS['__test_user_caps'] = array(
 // `edit_post` is a meta-capability evaluated against a specific object, so the
 // stub must consult this allowlist rather than a blanket cap flag.
 $GLOBALS['__test_editable_posts'] = array();
+$GLOBALS['__test_readable_posts'] = array();  // per-post read_post allowlist (v9.15.4 diagnostics oracle test)
 if ( ! function_exists( 'current_user_can' ) ) {
 	function current_user_can( $cap = '', $object_id = null ) {
 		if ( 'edit_post' === $cap ) {
 			return in_array( (int) $object_id, (array) $GLOBALS['__test_editable_posts'], true );
+		}
+		if ( 'read_post' === $cap ) {
+			return in_array( (int) $object_id, (array) $GLOBALS['__test_readable_posts'], true );
 		}
 		return ! empty( $GLOBALS['__test_user_caps'][ $cap ] );
 	}
@@ -219,6 +223,15 @@ if ( ! function_exists( 'get_post' ) ) {
 	function get_post( $id ) {
 		$id = (int) $id;
 		return isset( $GLOBALS['__test_posts'][ $id ] ) ? (object) $GLOBALS['__test_posts'][ $id ] : null;
+	}
+}
+if ( ! function_exists( 'is_post_publicly_viewable' ) ) {
+	function is_post_publicly_viewable( $post ) {
+		$p = is_object( $post ) ? $post : get_post( $post );
+		if ( ! $p ) { return false; }
+		// Seeded posts with no explicit status are treated as public (e.g. the
+		// 'about' page); anything explicitly non-'publish' (draft/private) is not.
+		return ! isset( $p->post_status ) || 'publish' === $p->post_status;
 	}
 }
 if ( ! function_exists( 'get_page_by_path' ) ) {
@@ -431,6 +444,8 @@ function ap_reset_caps() {
 	);
 	// Default: the simulated user can edit the seeded happy-path post (200).
 	$GLOBALS['__test_editable_posts'] = array( 200 );
+	// Default: no special read_post grants (public posts pass via is_post_publicly_viewable).
+	$GLOBALS['__test_readable_posts'] = array();
 }
 function ap_reset_ai() {
 	$GLOBALS['__test_ai_response']        = null;
@@ -564,6 +579,21 @@ ap_eq( 'post_not_found', $res->get_error_code(), 'get-active-template-structure:
 // get-active-template-structure: by slug (resolves)
 $res = wp_get_ability( 'signal-and-noise/get-active-template-structure' )->execute( array( 'slug' => 'about', 'post_type' => 'page' ) );
 ap_true( is_array( $res ) && 'page' === $res['template_slug'], 'get-active-template-structure: slug input resolves' );
+
+// ── v9.15.4: get-active-template-structure must NOT be an existence/post_type
+// oracle for non-public posts. A bare `read`-cap user probing a draft they
+// cannot read gets the SAME post_not_found as a truly-missing post — so
+// "exists but private" is indistinguishable from "doesn't exist".
+$GLOBALS['__test_user_caps']      = array( 'read' => true );  // subscriber-shaped
+$GLOBALS['__test_readable_posts'] = array();                   // can read no non-public post
+$res = wp_get_ability( 'signal-and-noise/get-active-template-structure' )->execute( array( 'post_id' => 201 ) ); // 201 = a draft
+ap_true( is_wp_error( $res ), 'diagnostics oracle: non-public post a subscriber cannot read → WP_Error' );
+ap_eq( 'post_not_found', is_wp_error( $res ) ? $res->get_error_code() : '(leaked structure!)', 'diagnostics oracle: unreadable post returns the SAME post_not_found as a missing one (no existence oracle)' );
+$res2 = wp_get_ability( 'signal-and-noise/get-active-template-structure' )->execute( array( 'post_id' => 99999 ) );
+ap_eq( 'post_not_found', is_wp_error( $res2 ) ? $res2->get_error_code() : '(no error)', 'diagnostics oracle: missing post is also post_not_found (indistinguishable from unreadable)' );
+$res3 = wp_get_ability( 'signal-and-noise/get-active-template-structure' )->execute( array( 'post_id' => 42 ) ); // public 'about' page
+ap_true( is_array( $res3 ) && isset( $res3['template_slug'] ), 'diagnostics oracle: a publicly-viewable post is still inspectable by the same bare-read user' );
+ap_reset_caps();
 
 // ════════════════════════════════════════════════════════════════════
 // Category: generative AI abilities — gating + validation

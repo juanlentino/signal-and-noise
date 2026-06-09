@@ -358,6 +358,25 @@ function sn_theme_ability_active_template_structure( $input ) {
 			);
 		}
 
+		// v9.15.4: the ability is gated only by the `read` cap (any logged-in
+		// user). Without a per-post check it doubles as an existence/post_type
+		// oracle — a subscriber could enumerate post_id and learn which non-public
+		// posts exist (and whether they're pages) from a 200-vs-404 response.
+		// Require the post be publicly viewable OR readable by the user, and on
+		// failure return the SAME post_not_found as a missing post — so "exists
+		// but private" is indistinguishable from "doesn't exist". No content
+		// leaks either way (only the theme's template structure is returned), so
+		// this is defense-in-depth, not a content-disclosure fix.
+		$can_read = ( function_exists( 'is_post_publicly_viewable' ) && is_post_publicly_viewable( $post ) )
+			|| ( function_exists( 'current_user_can' ) && current_user_can( 'read_post', (int) $post->ID ) );
+		if ( ! $can_read ) {
+			return new WP_Error(
+				'post_not_found',
+				'No post matches the given post_id or slug.',
+				array( 'status' => 404 )
+			);
+		}
+
 		// Best-effort template resolution. WP's logic for picking the
 		// template for a post is complex; for the diagnostics surface a
 		// simple post_type-based slug is sufficient and matches what the
