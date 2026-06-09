@@ -2,6 +2,16 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.15.6] - 2026-06-09 — Reconcile reading-time ability with the v4.14.5 resolver (public-only)
+
+**Headline:** A consistency fix following plugin **v4.14.5**, which closed the same reading-time existence oracle at the `[sn_reading_time]` shortcode-resolver layer (it now returns empty for *any* non-public post, regardless of cap). The theme's v9.15.5 `get-reading-time-for-slug` gate allowed a `read_post`-authorized user through — intending to still return a draft's real reading time — but the v4.14.5 resolver blocks that downstream, so the branch was **dead** and left the two layers with divergent policies. The ability is now **public-only**, matching the resolver.
+
+### Fixed
+
+- **`get-reading-time-for-slug` is now public-only, consistent with the plugin v4.14.5 resolver.** Dropped the `current_user_can('read_post')` allowance from the viewability gate — it was dead (the `[sn_reading_time]` resolver returns empty for any non-public post regardless of cap) and made the theme ability and the plugin resolver diverge, surfacing the wrapper's 5-min fallback to an authorized editor instead of a real time. The gate is now `is_post_publicly_viewable()` only; a non-public page yields a uniform `minutes=0`, identical to a non-resolving slug. The regression test now asserts a `read_post`-authorized user also gets `0` — the prior assertion (`→ real time`) encoded behavior that didn't hold end-to-end against the real plugin resolver (it passed only via the test stub). Theme suite 103 integration assertions / 29 suites, 0 failures; PHPCS falsification-verified. ([inc/abilities-content.php](inc/abilities-content.php))
+
+> **Why PATCH:** internal consistency cleanup of a just-shipped gate — removes a dead, divergent code path. No new capability, no public-API or settings-schema change. The security outcome (oracle closed) is unchanged and now enforced identically by both layers. (Contrast `get-active-template-structure`, which computes in-theme and still honors `read_post` — the policy difference is justified by the dependency difference.)
+
 ## [9.15.5] - 2026-06-09 — Delta-audit hardening: reading-time existence oracle
 
 **Headline:** A direct sibling of the v9.15.4 fix, surfaced by a delta security audit of the v9.15.2→v9.15.4 / plugin v4.14.1→v4.14.3 changes (the surface the original back-audit never saw, because it ran pre-fix). The `get-reading-time-for-slug` ability — gated only by the `read` cap (any logged-in user) — resolved an arbitrary slug to a page of *any* status and returned its real reading time, while a non-resolving slug returned a 5-minute fallback. A subscriber could therefore enumerate slugs and distinguish "a draft/private page with this slug exists" (real minutes, a coarse length proxy) from "no such slug" (5). Not a content-disclosure bug — an existence/length *oracle*, closed exactly as the diagnostics sibling was.

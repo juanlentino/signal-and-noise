@@ -235,6 +235,14 @@ if ( ! function_exists( 'get_page_by_path' ) ) {
 		return null;
 	}
 }
+// v9.15.6: get-reading-time-for-slug is gated public-only on is_post_publicly_viewable.
+if ( ! function_exists( 'is_post_publicly_viewable' ) ) {
+	function is_post_publicly_viewable( $post ) {
+		$p = is_object( $post ) ? $post : ( function_exists( 'get_post' ) ? get_post( $post ) : null );
+		if ( ! $p ) { return false; }
+		return ! isset( $p->post_status ) || 'publish' === $p->post_status;
+	}
+}
 
 // Theme-side reading-time helper stub (the real one lives in inc/page-notes-render.php).
 $GLOBALS['__test_reading_times'] = array(
