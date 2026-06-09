@@ -61,3 +61,12 @@ For broader WordPress knowledge:
 - **Block markup, attributes, validation rules:** invoke the `gutenberg-block-authoring` skill (auto-loads on any block-editing task).
 - **FSE architecture, theme.json, patterns:** invoke the `wordpress-block-theming` skill (bundled in `cowork-create-wp-site` plugin; available after Claude Code restart).
 - **WordPress core source:** when integrating with a core primitive, read the actual source file first. Don't reason from memory. `raw.githubusercontent.com/WordPress/WordPress/master/<path>` is the fetch pattern.
+
+## Dev-loop tooling (local Claude Code — not a wp-admin surface)
+
+Local Claude Code plugins harden the dev loop *before* commit (dev/CI tooling lives here in CLAUDE.md, never as a plugin settings tab — it has no WordPress runtime config):
+
+- **php-lsp / Intelephense** (`/plugin install php-lsp@claude-plugins-official` + `npm i -g intelephense`) — real PHP diagnostics on the primary language. Catches unknown-symbol fatals before runtime (the class behind the v9.11.2 single-notes incident: `get_the_queried_object_id()` vs `get_queried_object_id()`), which neither phpcs nor a test stub of the bad symbol catch.
+- **security-guidance** (`/plugin install security-guidance@claude-plugins-official`) — pattern + LLM review for injection/XSS/SSRF/hardcoded-secrets at edit + commit time (the webhook-SSRF + never-commit-PAT classes). Scope its LLM hooks to commit/PR moments, not every keystroke, to control token spend.
+
+CI mirrors this on PRs — see `.github/workflows/security-review.yml` + `.github/workflows/claude-review.yml`.
