@@ -1,7 +1,7 @@
 # Handoff — Security back-audit, SSRF fix (v4.14.1), branch protection
 
 **Date:** 2026-06-09
-**Status:** Audit done (clean bar one consistency gap). SSRF fix built + adversarially verified on **plugin PR #2** (not merged). Branch protection (tier-1 + tier-2) **applied + live** on both repos. This doc was pushed **directly to `main`** — proving the tier-2 bypass keeps the direct-push release flow working.
+**Status:** Audit done (clean bar one consistency gap). SSRF fix **merged to plugin `main` + tagged `v4.14.1`** (`4fce151`) — owner installs via wp-admin → Updates. Branch protection (tier-1 + tier-2) **applied + live** on both repos. This doc was pushed **directly to `main`** — proving the tier-2 bypass keeps the direct-push release flow working.
 
 ## Security back-audit (defending-code-reference-harness methodology)
 
