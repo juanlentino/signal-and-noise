@@ -2,6 +2,23 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.15.2] - 2026-06-08 — Two-track width system across all pages
+
+**Released:** 2026-06-08.
+
+**Headline:** Every page now sits on one of two intentional content widths instead of an ad-hoc scatter (600 / 680 / 700 / 720 / 800 / 900 / 1000 / 1100 / 1400). A **reading track (760px)** carries single-column prose — page titles, intros, body copy, forms, CTAs, posts, notes — and a **wide track (1400px)** carries galleries, card grids, credibility strips, timelines, multi-column media, and the landing hero. The wide track is the near-full width the `/music` cover grid already used; the system extends that consistency site-wide while protecting text readability (prose never goes wider than the ~70-character reading measure).
+
+### Improvements
+
+- **Two global width tracks defined in [theme.json](theme.json)** — `contentSize` 720px → **760px** (reading), `wideSize` 1200px → **1400px** (wide). These are the only two widths the site uses.
+- **Every template snapped to a track:**
+  - *Reading (760px):* 404 (600→760), contact title + form + connect (800/700→760), services title + closing CTA (1000/680→760), music title + credits (900→760), resume title (900→760), about title (1000→760). home · index · single · notes · page · provenance · colophon inherit the 760 default automatically.
+  - *Wide (1400px):* about bio + education sections (1000→1400, photo-left/text-right columns) and the front-page hero (1100→1400) join the wide track. music gallery, services cards + credibility strip, and the resume timeline were already 1400 and are unchanged.
+- **Per-page rhythm preserved** — pages keep their "narrow intro → wide content" cadence (e.g. music: 760 title → 1400 gallery; services: 760 title → 1400 cards → 760 CTA); only the *narrow* number was unified to the reading track.
+- **Guard test** ([tests/layout-width-system.php](tests/layout-width-system.php)) — fails if any template carries a `contentSize` outside {760px, 1400px}, or if theme.json's two tracks drift. Locks the system so the old scatter can't creep back. Theme suite 30 → 31 files, 0 failures.
+
+> **Why PATCH:** layout calibration of existing pages — no new capability, no public-API or settings-schema change, no required user action beyond installing the update. Per the project rule, majors/minors gate on capability, not on how many files a calibration touches.
+
 ## [9.15.1] - 2026-06-08 — /music gallery renders from the template
 
 **Released:** 2026-06-08.
