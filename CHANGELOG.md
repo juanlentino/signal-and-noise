@@ -2,6 +2,20 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.15.5] - 2026-06-09 — Delta-audit hardening: reading-time existence oracle
+
+**Headline:** A direct sibling of the v9.15.4 fix, surfaced by a delta security audit of the v9.15.2→v9.15.4 / plugin v4.14.1→v4.14.3 changes (the surface the original back-audit never saw, because it ran pre-fix). The `get-reading-time-for-slug` ability — gated only by the `read` cap (any logged-in user) — resolved an arbitrary slug to a page of *any* status and returned its real reading time, while a non-resolving slug returned a 5-minute fallback. A subscriber could therefore enumerate slugs and distinguish "a draft/private page with this slug exists" (real minutes, a coarse length proxy) from "no such slug" (5). Not a content-disclosure bug — an existence/length *oracle*, closed exactly as the diagnostics sibling was.
+
+### Improvements
+
+- **`get-reading-time-for-slug` no longer leaks which non-public pages exist.** The ability now resolves the same page the `[sn_reading_time]` resolver would (`get_page_by_path`, post_type `page`) and, unless the page is publicly viewable *or* readable by the current user (`is_post_publicly_viewable()` / `current_user_can('read_post', …)`), returns a uniform `minutes=0` — identical to a non-resolving slug, so "exists but private" is indistinguishable from "doesn't exist". Only the integer minutes was ever returned (never content), so this is defense-in-depth. Behavioral regression test in [tests/abilities-integration.php](tests/abilities-integration.php) pins: a subscriber gets `minutes=0` on a draft slug *and* on a missing slug; a user who can `read_post` the draft still gets the real time; a public page is unchanged. Theme suite 98 → 103 integration assertions (+ a registration fixture), 0 failures; PHPCS falsification-verified (security ruleset proven live). Also corrects a doc-drift — the registration already claimed "minutes=0 if the slug does not resolve". ([inc/abilities-content.php](inc/abilities-content.php))
+
+### Docs
+
+- **Delta security audit report** ([docs/superpowers/audits/2026-06-09-delta-audit.md](docs/superpowers/audits/2026-06-09-delta-audit.md)) — adversarial re-audit of the security-fix delta: 10 review clusters (9 fix clusters + a generalized IDOR-class sweep) with 3-lens verification + a completeness critic. It verified the shipped fixes sound (incl. the v9.15.3 IDOR fix against upstream `WP_Ability` dispatch), found no untouched IDOR siblings, and the completeness critic surfaced this reading-time oracle. Runbook for periodic audits: [docs/SECURITY-BACK-AUDIT.md](docs/SECURITY-BACK-AUDIT.md).
+
+> **Why PATCH:** defense-in-depth hardening of an existing read ability — no new capability, no public-API or settings-schema change, no required user action beyond installing. Legitimate callers (published pages; editors/authors on their own drafts) are unaffected.
+
 ## [9.15.4] - 2026-06-09 — Back-audit INFO hardening: diagnostics existence oracle
 
 **Headline:** The theme-side INFO/defense-in-depth item from the 2026-06-09 security back-audit. Not a content-disclosure bug — it closes an existence/post-type *oracle* in a diagnostics ability.
