@@ -72,8 +72,15 @@ $GLOBALS['__test_user_caps'] = array(
 	'edit_posts'     => true,
 	'manage_options' => true,
 );
+// Per-post `edit_post` gating: the IDs the simulated current user may edit.
+// `edit_post` is a meta-capability evaluated against a specific object, so the
+// stub must consult this allowlist rather than a blanket cap flag.
+$GLOBALS['__test_editable_posts'] = array();
 if ( ! function_exists( 'current_user_can' ) ) {
-	function current_user_can( $cap = '' ) {
+	function current_user_can( $cap = '', $object_id = null ) {
+		if ( 'edit_post' === $cap ) {
+			return in_array( (int) $object_id, (array) $GLOBALS['__test_editable_posts'], true );
+		}
 		return ! empty( $GLOBALS['__test_user_caps'][ $cap ] );
 	}
 }
@@ -388,6 +395,15 @@ $GLOBALS['__test_posts'][200] = array(
 	'post_type'    => 'post',
 	'post_status'  => 'publish',
 );
+// Another author's unpublished draft — the IDOR regression target. A
+// contributor who can edit post 200 must NOT be able to summarize this.
+$GLOBALS['__test_posts'][201] = array(
+	'ID'           => 201,
+	'post_title'   => "Another author's private draft",
+	'post_content' => 'Confidential unpublished body a contributor must not be able to summarize.',
+	'post_type'    => 'post',
+	'post_status'  => 'draft',
+);
 $GLOBALS['__test_posts'][42] = array(
 	'ID'         => 42,
 	'post_type'  => 'page',
@@ -413,6 +429,8 @@ function ap_reset_caps() {
 		'edit_posts'     => true,
 		'manage_options' => true,
 	);
+	// Default: the simulated user can edit the seeded happy-path post (200).
+	$GLOBALS['__test_editable_posts'] = array( 200 );
 }
 function ap_reset_ai() {
 	$GLOBALS['__test_ai_response']        = null;
@@ -553,20 +571,59 @@ ap_true( is_array( $res ) && 'page' === $res['template_slug'], 'get-active-templ
 
 echo "\nCategory: generative AI abilities — gating + validation\n";
 
-// AI ability rejected when user lacks edit_posts cap.
-$GLOBALS['__test_user_caps'] = array( 'read' => true ); // subscriber-shaped
+// AI ability rejected when the user cannot edit the target post.
+$GLOBALS['__test_user_caps']      = array( 'read' => true ); // subscriber-shaped
+$GLOBALS['__test_editable_posts'] = array();                 // edits no posts
 ap_reset_ai();
 $GLOBALS['__test_ai_response'] = 'Provenance is the substrate; fingerprints are the proof.';
 
 $res = wp_get_ability( 'signal-and-noise/ai-generate-page-note-summary' )->execute( array( 'post_id' => 200 ) );
 ap_true( is_wp_error( $res ), 'ai-generate-page-note-summary: subscriber denied' );
-ap_eq( 'rest_forbidden', $res->get_error_code(), 'ai-generate-page-note-summary: rest_forbidden for subscriber' );
+ap_eq( 'rest_forbidden', is_wp_error( $res ) ? $res->get_error_code() : '(not-error)', 'ai-generate-page-note-summary: rest_forbidden for subscriber' );
 
 ap_reset_caps();
 
-// Missing required field across the 5 generative abilities.
+// ════════════════════════════════════════════════════════════════════
+// Category: IDOR regression — ai-generate-page-note-summary per-post gate
+// v9.15.3 closed a blanket-`edit_posts` → per-post `edit_post` drift: the
+// ability read+summarized (and thus exfiltrated) the body of ANY draft/
+// private post for any contributor who enumerated post_id. This pins the
+// per-post gate so the convention can't silently regress again.
+// ════════════════════════════════════════════════════════════════════
+
+echo "\nCategory: IDOR regression — per-post edit_post gate\n";
+
+// Contributor: holds edit_posts, can edit only their own post 200 — not 201.
+$GLOBALS['__test_user_caps']      = array( 'read' => true, 'edit_posts' => true );
+$GLOBALS['__test_editable_posts'] = array( 200 );
+ap_reset_ai();
+$GLOBALS['__test_ai_response'] = 'Must never be produced for the forbidden post 201.';
+
+// End-to-end dispatch: contributor DENIED on another author's draft.
+$res = wp_get_ability( 'signal-and-noise/ai-generate-page-note-summary' )->execute( array( 'post_id' => 201 ) );
+ap_true( is_wp_error( $res ), 'IDOR: contributor cannot summarize a non-editable post' );
+ap_eq( 'rest_forbidden', is_wp_error( $res ) ? $res->get_error_code() : '(leaked summary!)', 'IDOR: denial is rest_forbidden, not a leaked summary' );
+ap_eq( 0, $GLOBALS['__test_ai_call_count'], 'IDOR: AI helper never invoked for the forbidden post (no content read)' );
+
+// Same contributor IS allowed on their own editable post 200.
+ap_reset_ai();
+$GLOBALS['__test_ai_response'] = 'Provenance is the substrate; fingerprints are the proof.';
+$out = wp_get_ability( 'signal-and-noise/ai-generate-page-note-summary' )->execute( array( 'post_id' => 200 ) );
+ap_true( is_array( $out ) && isset( $out['summary'] ), 'IDOR: contributor allowed on own editable post' );
+ap_eq( 200, is_array( $out ) ? $out['post_id'] : 0, 'IDOR: own-post summary returns the right post_id' );
+
+// Named permission callable — direct unit checks (mirrors plugin snt_ability_perm_edit_post).
+ap_true( true  === sn_theme_perm_edit_post( array( 'post_id' => 200 ) ), 'sn_theme_perm_edit_post: true for an editable post' );
+ap_true( false === sn_theme_perm_edit_post( array( 'post_id' => 201 ) ), 'sn_theme_perm_edit_post: false for a non-editable post (IDOR guard)' );
+ap_true( false === sn_theme_perm_edit_post( null ),                      'sn_theme_perm_edit_post: false for null input' );
+ap_true( false === sn_theme_perm_edit_post( array() ),                   'sn_theme_perm_edit_post: false for missing post_id' );
+
+ap_reset_caps();
+
+// Missing required field across the 4 content-string generative abilities.
+// (ai-generate-page-note-summary is post-scoped now — covered separately below,
+//  because its per-post permission gate fires before input validation.)
 $generative_required = array(
-	'signal-and-noise/ai-generate-page-note-summary'  => 'post_id',
 	'signal-and-noise/ai-suggest-block-pattern'       => 'draft_content',
 	'signal-and-noise/ai-validate-brand-alignment'    => 'content',
 	'signal-and-noise/ai-generate-pattern-content'    => 'pattern_name', // also requires topic
@@ -577,6 +634,14 @@ foreach ( $generative_required as $slug => $required_key ) {
 	ap_true( is_wp_error( $res ), "$slug: missing $required_key → WP_Error" );
 	ap_eq( 'rest_invalid_param', $res->get_error_code(), "$slug: missing required code is rest_invalid_param" );
 }
+
+// ai-generate-page-note-summary gates per-post: a missing post_id means
+// current_user_can('edit_post', 0) → denied at the permission stage BEFORE
+// input validation, so the contract is rest_forbidden (matching the plugin's
+// post-scoped abilities), not rest_invalid_param.
+$res = wp_get_ability( 'signal-and-noise/ai-generate-page-note-summary' )->execute( array() );
+ap_true( is_wp_error( $res ), 'ai-generate-page-note-summary: missing post_id → WP_Error' );
+ap_eq( 'rest_forbidden', is_wp_error( $res ) ? $res->get_error_code() : '(not-error)', 'ai-generate-page-note-summary: missing post_id denied per-post before validation' );
 
 // Invalid enum on intensity (ai-rewrite-in-brand-voice).
 $res = wp_get_ability( 'signal-and-noise/ai-rewrite-in-brand-voice' )->execute( array(

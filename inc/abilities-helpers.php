@@ -141,14 +141,43 @@ function sn_theme_perm_read() {
 /**
  * Named permission callable: `edit_posts` capability.
  *
- * Used by all 5 generative abilities. Replaces the `$permission_edit_posts`
- * closure from inc/abilities-registration.php pre-v9.1.7. `edit_posts` is
- * the contributor-and-up cap — appropriate for AI-generative endpoints
- * since they can produce content destined for posts.
+ * Used by the 4 content-string generative abilities (ai-suggest-block-pattern,
+ * ai-validate-brand-alignment, ai-generate-pattern-content, ai-rewrite-in-brand-voice)
+ * — they take a raw content/draft string, not a post reference, so the blanket
+ * contributor-and-up cap is appropriate. The post-scoped ability
+ * (ai-generate-page-note-summary) uses sn_theme_perm_edit_post() instead — see
+ * below. Replaces the `$permission_edit_posts` closure from
+ * inc/abilities-registration.php pre-v9.1.7.
  *
  * @since 9.1.7
  * @return bool
  */
 function sn_theme_perm_edit_posts() {
 	return current_user_can( 'edit_posts' );
+}
+
+/**
+ * Named permission callable: `edit_post` capability on `$input['post_id']`.
+ *
+ * Used by ai-generate-page-note-summary — the one generative ability that
+ * reads a SPECIFIC post's content rather than taking a raw content string.
+ * The blanket `edit_posts` cap (sn_theme_perm_edit_posts) would let any
+ * contributor summarize — and thereby exfiltrate — the body of any draft,
+ * pending, scheduled, or private post by enumerating `post_id`; gating
+ * per-post with `edit_post` (the meta-cap WordPress maps to the post's author
+ * + status) closes that IDOR. Mirrors the plugin's snt_ability_perm_edit_post()
+ * — the convention every post-scoped plugin ability already uses.
+ *
+ * The Abilities API passes the validated input to the permission_callback
+ * (verified against WordPress/abilities-api includes/abilities-api.php); the
+ * input_schema fires first, but `$input` can still arrive null for callers
+ * with no input, so guard with isset() — post_id 0 then denies via edit_post(0).
+ *
+ * @since 9.15.3
+ * @param array|null $input
+ * @return bool
+ */
+function sn_theme_perm_edit_post( $input ) {
+	$post_id = isset( $input['post_id'] ) ? (int) $input['post_id'] : 0;
+	return current_user_can( 'edit_post', $post_id );
 }

@@ -2,6 +2,25 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [9.15.3] - 2026-06-09 — Security: per-post gate on the /notes-summary ability (IDOR fix)
+
+**Headline:** Closes an IDOR in the `ai-generate-page-note-summary` WP ability surfaced by a whole-codebase security back-audit. The ability gated on the blanket `edit_posts` capability, so any Contributor-level account could summarize — and thereby read the body of — **any** draft, pending, scheduled, or private post by passing its `post_id`, regardless of authorship. It now checks the per-post `edit_post` capability, matching the convention every post-scoped ability in the companion plugin already uses.
+
+### Fixed
+
+- **IDOR — arbitrary draft/private post-content disclosure via the /notes summary ability.** `ai-generate-page-note-summary` read `get_post($post_id)->post_content` after a permission check (`sn_theme_perm_edit_posts` → `current_user_can('edit_posts')`) that never inspected `post_id`. A Contributor could enumerate `post_id` and receive AI summaries of posts they cannot view. Now gated by a new `sn_theme_perm_edit_post($input)` callable doing `current_user_can('edit_post', (int) $input['post_id'])` — denying access to posts the user cannot edit (`rest_forbidden`, AI helper never invoked). ([inc/abilities-ai-generation.php](inc/abilities-ai-generation.php), [inc/abilities-helpers.php](inc/abilities-helpers.php))
+
+### Improvements
+
+- **Regression test pins the per-post gate.** [tests/abilities-integration.php](tests/abilities-integration.php) now asserts a Contributor who can edit their own post is denied on another author's draft (`rest_forbidden`, zero AI calls), allowed on their own, and that the named callable returns false for non-editable / null / missing `post_id`. Suite 85 → 94 assertions, 0 failures; PHPCS falsification-verified (security ruleset proven live).
+- **The 4 content-string generative abilities are unchanged** — they take a raw content/draft string (no post reference), so the blanket `edit_posts` cap remains correct for them. Only the one post-reading ability moved to the per-post gate.
+
+### Docs
+
+- **Security back-audit report** ([docs/superpowers/audits/2026-06-09-security-back-audit.md](docs/superpowers/audits/2026-06-09-security-back-audit.md)) — 12-dimension whole-codebase audit with 3-lens adversarial verification: this IDOR (MEDIUM) plus four plugin LOW hardening items and a JSON-LD encoder note (queued for a plugin patch), and the surfaces verified clean.
+
+> **Why PATCH:** a security bug fix that removes unintended access — no new capability, no public-API or settings-schema change, and no legitimate workflow depended on the over-broad permission. Per the project's "majors/minors gate on capability" rule, this is a patch.
+
 ## [9.15.2] - 2026-06-08 — Two-track width system across all pages
 
 **Released:** 2026-06-08.
