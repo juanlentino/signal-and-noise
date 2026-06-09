@@ -1,7 +1,7 @@
 # Handoff — Anthropic tooling adoption (spec + plan + CI PRs)
 
 **Date:** 2026-06-08
-**Status:** Spec + plan on `main`. Phase 2 CI files built + reviewed on **two open PR branches** (theme + plugin). SDK spike (Phase 3) scaffolded + surface-confirmed; decision pending owner. Phase 1 + activation are owner-only.
+**Status:** Spec + plan on `main`. Phase 2 CI files built + reviewed on **two open PR branches** (theme + plugin). SDK spike (Phase 3) evaluated → **PARKED**. Phase 1 + activation are owner-only (gated on the API key). `main` now has tier-1 branch protection (force-push + deletion blocked) on both repos.
 
 ## Canonical docs (on theme `main`)
 - **Spec:** `docs/superpowers/specs/2026-06-08-anthropic-tooling-adoption-design.md` (`804b6e1`)
@@ -19,9 +19,11 @@ Both repos, branch `claude/anthropic-tooling` (PRs opened, **not merged**):
 
 **Review (adversarial, public-repo CI):** APPROVED. Security clean — safe `pull_request` trigger (not `pull_request_target`), fork-guard blocks fork-PR secret access, no script-injection vector (the `run:` step only `cat`s a trusted in-repo file into `$GITHUB_OUTPUT`), least-privilege perms, real 40-char SHA pins. One LOW finding fixed: theme path scope `functions.php` → `*.php` (`1d41b16`). No theme/plugin version bump (CI/dev tooling).
 
-## SDK spike (Phase 3) — surface confirmed, decision PENDING
+## SDK spike (Phase 3) — PARKED
 
-Throwaway `/tmp/sdk-php-spike` (not committed). `anthropic-ai/sdk` v0.27.0, vendor 9.5 MB, `php -l` clean. Confirmed from vendored source: `new \Anthropic\Client(apiKey:)` (PSR-18 auto-discovered via php-http/discovery), `messages->create/createStream/countTokens`, `messages->batches->*`, tool-use, vision, structured output, Beta surface, Bedrock/Vertex sub-clients. Candidate out-of-band uses (NOT in-WP): (1) Railway worker bulk-generating SEO meta off a queue; (2) GHA release-notes/changelog drafter on tag push; (3) content-audit CLI via cron. **Owner decides graduate (→ own `juanlentino/<name>-worker` repo + spec) vs park (stay on wp-ai-client).** `/tmp/sdk-php-spike/NOTES.md` has the decision template.
+Evaluated `anthropic-ai/sdk` v0.27.0 (throwaway `/tmp/sdk-php-spike`, now removed). Surface confirmed from vendored source: `new \Anthropic\Client(apiKey:)` (PSR-18 auto-discovered via php-http/discovery), `messages->create/createStream/countTokens`, `messages->batches->*`, tool-use, vision, structured output, Beta surface, Bedrock/Vertex sub-clients. Vendor 9.5 MB, `php -l` clean.
+
+**Decision: PARK** — stay on `wp-ai-client` in-WP; do not adopt the SDK now. Rationale: (1) in-WP AI is served by the standardized `wp-ai-client` (the SDK is explicitly *not* for the plugin — competes with it + forces vendoring a PSR-18 client into a no-build deploy); (2) none of the candidate out-of-band uses *require* PHP-outside-WP, the SDK's only distinct niche — the most appealing (a release-notes drafter) is better served by `claude-code-action` (just adopted); the others (a Railway SEO-meta worker, a content-audit CLI) are nice-to-haves that don't justify a new repo + maintenance for a solo dev. **Revisit only** if a concrete PHP-specific bulk/out-of-band need emerges — then `countTokens` (spend pre-estimate) + Batches (50% cheaper) make it worthwhile, and it graduates to its own `juanlentino/<name>-worker` repo with its own spec (never a plugin tab, never inside `signal-and-noise-tools`).
 
 ## ⚠️ Owner-only to ACTIVATE (Phase 1 + Task 0 + Task 5)
 
