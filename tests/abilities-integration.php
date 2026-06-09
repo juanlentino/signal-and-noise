@@ -627,10 +627,14 @@ ap_true( is_array( $res ) && isset( $res['minutes'] ), 'reading-time oracle: non
 ap_eq( 0, $res['minutes'], 'reading-time oracle: a draft a subscriber cannot read returns minutes=0 (no real length leaks)' );
 $res2 = wp_get_ability( 'signal-and-noise/get-reading-time-for-slug' )->execute( array( 'slug' => 'no-such-slug-xyz' ) );
 ap_eq( 0, $res2['minutes'], 'reading-time oracle: a missing slug also returns minutes=0 (indistinguishable from unreadable)' );
-// An authorized reader (editor/author who CAN read the draft) still gets the real time.
+// v9.15.6: the ability is now PUBLIC-ONLY, matching the plugin v4.14.5
+// [sn_reading_time] resolver (which returns empty for ANY non-public post,
+// regardless of the caller's read_post cap). So even a read_post-authorized
+// user gets minutes=0 for a non-public page — the theme gate and the plugin
+// resolver share one policy and can't diverge.
 $GLOBALS['__test_readable_posts'] = array( 301 );
 $res3 = wp_get_ability( 'signal-and-noise/get-reading-time-for-slug' )->execute( array( 'slug' => 'secret-draft' ) );
-ap_eq( 9, $res3['minutes'], 'reading-time oracle: a user who can read_post the draft still gets its real reading time' );
+ap_eq( 0, $res3['minutes'], 'reading-time oracle: even a read_post-authorized user gets minutes=0 for a non-public page (public-only policy, consistent with the plugin v4.14.5 resolver)' );
 // A publicly-viewable page is unchanged for everyone.
 $GLOBALS['__test_readable_posts'] = array();
 $res4 = wp_get_ability( 'signal-and-noise/get-reading-time-for-slug' )->execute( array( 'slug' => 'provenance/over-detection' ) );
