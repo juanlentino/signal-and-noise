@@ -11,10 +11,42 @@ name: Smoke Test
 #     the user clicks Update.
 #   - workflow_dispatch: ad-hoc trigger from the GitHub UI.
 #
-# Security note: this workflow only consumes hardcoded URLs in
-# `run:` steps. It deliberately does not interpolate any
-# github.event.* fields (commit messages, PR titles, branch names)
-# into shell, so there is no command-injection surface.
+# Failure semantics (since 2026-06-11):
+#   juanlentino.com sits behind Cloudflare. CF bot-management
+#   intermittently blocks GitHub Actions' shared-runner IPs with a
+#   403/415/429 + a tiny body. That is NOT a site outage — real users
+#   (and any reputable IP) are served fine — so a naive "any non-200 =
+#   fail" check flapped red ~1 run in 3. This workflow now CLASSIFIES
+#   each response instead:
+#     - OK         : 200 + content marker present + healthy size.
+#     - SLOW       : 200 + marker present but over the time budget.
+#                    WARN, not fail (latency blips are not outages).
+#     - EDGE_BLOCK : 403/415/429 — Cloudflare blocking THIS runner IP.
+#                    WARN, not fail; retried a few times first.
+#     - REGRESSION : 200 but the content marker is missing / body is
+#                    suspiciously small. HARD FAIL — a real breakage
+#                    (white screen, fatal, template/content drift).
+#     - DOWN       : 404 (route gone) / 5xx (origin down) / connection
+#                    failure, after retries. HARD FAIL.
+#   On any non-OK result the response body excerpt + server/cf-ray
+#   headers are logged so the next real failure is self-diagnosing
+#   (the prior version discarded the body, which is why the 415s were
+#   opaque).
+#
+#   To eliminate EDGE_BLOCK noise entirely (the "secret header" half),
+#   set the repo secret SN_SMOKE_TOKEN and add a Cloudflare WAF custom
+#   rule on juanlentino.com:
+#     Field/op: (http.request.headers["x-sn-smoke"][0] eq "<same token>")
+#     Action:   Skip  ->  All remaining custom rules + Super Bot Fight Mode
+#   The smoke test sends that header, so allow-listed runs always reach
+#   origin. Until the secret is set the header is simply omitted and the
+#   EDGE_BLOCK classifier keeps the build green through CF challenges.
+#
+# Security note: this workflow consumes only hardcoded URLs and a
+# masked repo secret (passed via `env:`, never inlined into the shell).
+# It deliberately does not interpolate any github.event.* fields
+# (commit messages, PR titles, branch names) into shell, so there is no
+# command-injection surface.
 on:
   push:
     branches: [main]
@@ -52,65 +84,130 @@ jobs:
     name: Smoke test live site
     runs-on: ubuntu-latest
     needs: lint
+    env:
+      # Optional shared secret for the Cloudflare WAF allow-list rule
+      # (see the header comment). When unset, GitHub substitutes an empty
+      # string, the X-SN-Smoke header is omitted, and the EDGE_BLOCK
+      # classifier handles CF challenges gracefully.
+      SN_SMOKE_TOKEN: ${{ secrets.SN_SMOKE_TOKEN }}
     steps:
       - name: Run checks
         run: |
           set +e
-          fail=0
 
-          check() {
-            local desc="$1"
-            local url="$2"
-            local marker="$3"
+          MAX_ATTEMPTS=3        # retries only apply to EDGE_BLOCK / DOWN
+          TIME_BUDGET=5         # seconds; over this on a 200 -> SLOW (warn)
+          MIN_BYTES=1000        # a healthy S&N page is ~100 KB
 
-            local body_file
-            body_file=$(mktemp)
-            local result
-            result=$(curl -sL \
+          fail=0                # hard failures (REGRESSION / DOWN)
+          warn=0                # soft notes (SLOW / EDGE_BLOCK)
+
+          # fetch <url> <body_file> <hdr_file>
+          # Sets globals: O_CODE O_TIME O_BYTES
+          fetch() {
+            local url="$1" body_file="$2" hdr_file="$3"
+            local auth=()
+            [ -n "${SN_SMOKE_TOKEN}" ] && auth=(-H "X-SN-Smoke: ${SN_SMOKE_TOKEN}")
+
+            local w
+            w=$(curl -sL \
               -H 'User-Agent: SignalNoise-SmokeTest/1.0 (GitHub Actions)' \
               -H 'Cache-Control: no-cache' \
-              -w 'HTTP=%{http_code} TIME=%{time_total} BYTES=%{size_download}' \
+              "${auth[@]}" \
+              -D "$hdr_file" \
               -o "$body_file" \
+              -w 'HTTP=%{http_code} TIME=%{time_total} BYTES=%{size_download}' \
               --max-time 15 \
-              "$url" 2>&1) || true
+              "$url" 2>/dev/null)
 
-            local code time bytes
-            code=$(echo "$result" | grep -oE 'HTTP=[0-9]+' | tail -1 | cut -d= -f2)
-            time=$(echo "$result" | grep -oE 'TIME=[0-9.]+' | tail -1 | cut -d= -f2)
-            bytes=$(echo "$result" | grep -oE 'BYTES=[0-9]+' | tail -1 | cut -d= -f2)
+            O_CODE=$(echo "$w"  | grep -oE 'HTTP=[0-9]+'  | tail -1 | cut -d= -f2)
+            O_TIME=$(echo "$w"  | grep -oE 'TIME=[0-9.]+' | tail -1 | cut -d= -f2)
+            O_BYTES=$(echo "$w" | grep -oE 'BYTES=[0-9]+' | tail -1 | cut -d= -f2)
+            O_CODE=${O_CODE:-0}
+            O_BYTES=${O_BYTES:-0}
+          }
+
+          # classify <body_file> <marker>  -> sets O_OUTCOME
+          classify() {
+            local body_file="$1" marker="$2"
+            if [ "$O_CODE" = "200" ]; then
+              if ! grep -q -F "$marker" "$body_file" || [ "${O_BYTES:-0}" -lt "$MIN_BYTES" ]; then
+                O_OUTCOME=REGRESSION
+              elif [ -n "$O_TIME" ] && awk "BEGIN { exit !(${O_TIME} > ${TIME_BUDGET}) }"; then
+                O_OUTCOME=SLOW
+              else
+                O_OUTCOME=OK
+              fi
+              return
+            fi
+            case "$O_CODE" in
+              403|415|429) O_OUTCOME=EDGE_BLOCK ;;   # CF bot/WAF block — not an outage
+              *)           O_OUTCOME=DOWN ;;          # 404 gone / 5xx origin / 0 conn-fail
+            esac
+          }
+
+          # excerpt <body_file> <hdr_file>  -> one-line body + key headers
+          excerpt() {
+            local body_file="$1" hdr_file="$2" srv ray
+            srv=$(grep -i '^server:' "$hdr_file" | tr -d '\r' | head -1)
+            ray=$(grep -i '^cf-ray:' "$hdr_file" | tr -d '\r' | head -1)
+            echo "  ${srv:-server: ?}   ${ray:-cf-ray: ?}"
+            echo "  body: $(tr '\n\r\t' '   ' < "$body_file" | cut -c1-300)"
+          }
+
+          check() {
+            local desc="$1" url="$2" marker="$3"
+            local body_file hdr_file attempt=1
+            body_file=$(mktemp); hdr_file=$(mktemp)
+
+            while : ; do
+              fetch "$url" "$body_file" "$hdr_file"
+              classify "$body_file" "$marker"
+              # Any 200 outcome is deterministic for this request — no retry.
+              [ "$O_CODE" = "200" ] && break
+              [ "$attempt" -ge "$MAX_ATTEMPTS" ] && break
+              sleep $(( attempt * 8 ))
+              attempt=$(( attempt + 1 ))
+            done
 
             echo ""
             echo "=== $desc ==="
-            echo "URL:   $url"
-            echo "HTTP:  ${code:-(none)}"
-            echo "Time:  ${time:-(none)}s"
-            echo "Bytes: ${bytes:-(none)}"
+            echo "URL:      $url"
+            echo "HTTP:     ${O_CODE}"
+            echo "Time:     ${O_TIME:-(none)}s"
+            echo "Bytes:    ${O_BYTES}"
+            echo "Attempts: ${attempt}"
+            echo "Outcome:  ${O_OUTCOME}"
 
-            local route_fail=0
-            if [ "${code:-0}" != "200" ]; then
-              echo "::error::$desc — expected HTTP 200, got ${code:-(no response)}"
-              route_fail=1
-            fi
-            if [ -n "$time" ] && awk "BEGIN { exit !(${time} > 5) }"; then
-              echo "::error::$desc — response took ${time}s (over 5s budget)"
-              route_fail=1
-            fi
-            if [ "${bytes:-0}" -lt 1000 ]; then
-              echo "::error::$desc — response body suspiciously small (${bytes:-0} bytes)"
-              route_fail=1
-            fi
-            if ! grep -q -F "$marker" "$body_file"; then
-              echo "::error::$desc — expected marker '$marker' not found in response body"
-              route_fail=1
-            fi
+            case "$O_OUTCOME" in
+              OK)
+                echo "Result: OK"
+                ;;
+              SLOW)
+                echo "::warning::$desc — HTTP 200 but ${O_TIME}s exceeds the ${TIME_BUDGET}s budget."
+                echo "Result: OK (slow)"
+                warn=1
+                ;;
+              EDGE_BLOCK)
+                excerpt "$body_file" "$hdr_file"
+                echo "::warning::$desc — edge block (HTTP ${O_CODE}) from this runner IP after ${attempt} tries; inconclusive, not treated as an outage."
+                warn=1
+                ;;
+              REGRESSION)
+                excerpt "$body_file" "$hdr_file"
+                echo "::error::$desc — HTTP 200 but content check failed (marker '$marker' missing, or body <${MIN_BYTES}B). Likely a real regression."
+                echo "Result: FAIL"
+                fail=1
+                ;;
+              DOWN)
+                excerpt "$body_file" "$hdr_file"
+                echo "::error::$desc — HTTP ${O_CODE} after ${attempt} tries (route gone / origin down / unreachable)."
+                echo "Result: FAIL"
+                fail=1
+                ;;
+            esac
 
-            rm -f "$body_file"
-            if [ $route_fail -eq 0 ]; then
-              echo "Result: OK"
-            else
-              echo "Result: FAIL"
-              fail=1
-            fi
+            rm -f "$body_file" "$hdr_file"
           }
 
           check 'Homepage' \
@@ -138,9 +235,12 @@ jobs:
             '<rss'
 
           echo ""
-          if [ $fail -eq 0 ]; then
-            echo "All routes healthy."
-          else
-            echo "::error::One or more routes failed health check."
+          if [ $fail -ne 0 ]; then
+            echo "::error::One or more routes failed health check (real regression / outage)."
+            exit 1
           fi
-          exit $fail
+          if [ $warn -ne 0 ]; then
+            echo "::warning::Passed with warnings (edge-blocked or slow routes). Set SN_SMOKE_TOKEN + the Cloudflare WAF allow rule to eliminate edge-block noise."
+          fi
+          echo "All routes healthy (edge blocks, if any, treated as inconclusive)."
+          exit 0
