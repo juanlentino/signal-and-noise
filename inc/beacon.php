@@ -42,6 +42,8 @@ function sn_beacon_token() {
 /**
  * Enqueue the beacon site-wide (deferred, footer) and inject its config
  * island before the module runs.
+ *
+ * @return void
  */
 function sn_beacon_enqueue() {
 	if ( ! sn_beacon_enabled() ) {
@@ -60,6 +62,9 @@ function sn_beacon_enqueue() {
 		'id'       => (int) get_the_ID(),
 	);
 	$json = wp_json_encode( $cfg, JSON_HEX_TAG | JSON_UNESCAPED_SLASHES );
+	if ( false === $json ) {
+		return;
+	}
 	wp_add_inline_script( 'sn-beacon', 'window.SN_BEACON=' . $json . ';', 'before' );
 }
 

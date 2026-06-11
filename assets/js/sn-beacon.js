@@ -13,8 +13,7 @@
   if (dnt || navigator.globalPrivacyControl === true) return;
 
   function send(payload) {
-    payload.k = cfg.k;
-    var json = JSON.stringify(payload);
+    var json = JSON.stringify(Object.assign({ k: cfg.k }, payload));
     if (navigator.sendBeacon) {
       var ok = navigator.sendBeacon(cfg.endpoint, new Blob([json], { type: 'application/json' }));
       if (ok) return;
@@ -63,5 +62,5 @@
     send({ e: 'tm', u: location.pathname, ms: Math.round(visibleMs) });
   }
   window.addEventListener('pagehide', flush);
-  window.addEventListener('pageshow', function (ev) { if (ev.persisted) { flushed = false; visibleMs = 0; lastVisible = performance.now(); } });
+  window.addEventListener('pageshow', function (ev) { if (ev.persisted) { flushed = false; visibleMs = 0; lastVisible = performance.now(); sent = {}; window.addEventListener('scroll', onScroll, { passive: true }); } });
 })();

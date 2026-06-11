@@ -37,7 +37,8 @@ if ( ! function_exists( 'apply_filters' ) ) {
 if ( ! function_exists( 'wp_json_encode' ) ) {
 	function wp_json_encode( $d, $flags = 0 ) { return json_encode( $d, $flags ); }
 }
-if ( ! function_exists( 'get_the_ID' ) ) { function get_the_ID() { return 42; } }
+if ( ! function_exists( 'get_the_ID' ) ) { function get_the_ID() { return $GLOBALS['__post_id'] ?? 42; } }
+$GLOBALS['__post_id'] = 42;
 if ( ! function_exists( 'add_action' ) ) { function add_action() {} }
 if ( ! function_exists( 'add_filter' ) ) { function add_filter() {} }
 if ( ! defined( 'JSON_HEX_TAG' ) ) { define( 'JSON_HEX_TAG', 1 ); }
@@ -70,6 +71,16 @@ ok( strpos( (string) ( $inline['data'] ?? '' ), 'window.SN_BEACON=' ) !== false,
 ok( strpos( (string) ( $inline['data'] ?? '' ), '"endpoint"' ) !== false, 'island carries an endpoint' );
 ok( strpos( (string) ( $inline['data'] ?? '' ), '/_sn/px' ) !== false, 'endpoint is the worker route /_sn/px' );
 ok( strpos( (string) ( $inline['data'] ?? '' ), '"k"' ) !== false, 'island carries the site token field k' );
+ok( strpos( (string) ( $inline['data'] ?? '' ), '"id":42' ) !== false, 'island carries id:42' );
+
+// Zero id (archives/home/404 where get_the_ID() returns 0) — island still emitted with id:0.
+$GLOBALS['__post_id'] = 0;
+reset_state();
+sn_beacon_enqueue();
+$inline_zero = $GLOBALS['__inline']['sn-beacon'] ?? null;
+ok( $inline_zero !== null, 'island still emitted when id=0' );
+ok( strpos( (string) ( $inline_zero['data'] ?? '' ), '"id":0' ) !== false, 'island carries id:0 (not false)' );
+$GLOBALS['__post_id'] = 42;
 
 // Disabled via filter → nothing enqueued.
 reset_state();
