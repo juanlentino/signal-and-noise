@@ -448,12 +448,8 @@ function sn_theme_ability_theme_version() {
 
 		$is_block = function_exists( 'wp_is_block_theme' ) ? (bool) wp_is_block_theme() : false;
 
-		// wp_get_wp_version() exists on WP 6.7+; fall back to $wp_version global.
-		if ( function_exists( 'wp_get_wp_version' ) ) {
-			$wp_version = (string) wp_get_wp_version();
-		} else {
-			$wp_version = isset( $GLOBALS['wp_version'] ) ? (string) $GLOBALS['wp_version'] : '';
-		}
+		// v10.0.0: the WP 7.0 floor guarantees wp_get_wp_version() (added in 6.7).
+		$wp_version = (string) wp_get_wp_version();
 
 		return array(
 			'theme_version'  => $theme_version,
