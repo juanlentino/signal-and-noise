@@ -2,6 +2,21 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.0.0] - 2026-06-10 — Modernization major: WordPress 7.0 floor
+
+**Headline:** The theme half of the paired modernization major (with plugin **v5.0.0**). v10.0.0 hard-raises the WordPress floor to 7.0 — no new features; the floor raise is itself the breaking change (the theme's first major since v9.0.0). Drops the now-obsolete WP<7.0 pre-warning notice + dead pre-6.7 compat.
+
+### Removed
+
+- **WordPress < 7.0 is no longer supported** — `Requires at least: 7.0` in [style.css](style.css). WordPress refuses to load the theme on older versions.
+- **The WP<7.0 pre-warning admin notice** (`inc/admin-notice-wp-version.php`, deleted) — obsolete now that 7.0 is enforced (its own docblock scheduled it for v10.0.0 deletion).
+
+### Changed
+
+- **Simplified the diagnostics WP-version read** — `wp_get_wp_version()` (added in WP 6.7) is always available on the 7.0 floor, so the `$wp_version`-global fallback in `get-system-status` ([inc/abilities-diagnostics.php](inc/abilities-diagnostics.php)) is dropped.
+
+> **Why MAJOR:** the WP-floor raise is a SemVer breaking change requiring user action (install/update refuses below 7.0). `theme.json` stays v3 — WordPress hasn't shipped the v4 schema, so that migration defers to v11.0.0. No flagship — pure modernization, paired with plugin v5.0.0. New guard `tests/manifest-floor.php`; 30 suites green; PHPCS falsification-verified.
+
 ## [9.15.6] - 2026-06-09 — Reconcile reading-time ability with the v4.14.5 resolver (public-only)
 
 **Headline:** A consistency fix following plugin **v4.14.5**, which closed the same reading-time existence oracle at the `[sn_reading_time]` shortcode-resolver layer (it now returns empty for *any* non-public post, regardless of cap). The theme's v9.15.5 `get-reading-time-for-slug` gate allowed a `read_post`-authorized user through — intending to still return a draft's real reading time — but the v4.14.5 resolver blocks that downstream, so the branch was **dead** and left the two layers with divergent policies. The ability is now **public-only**, matching the resolver.
