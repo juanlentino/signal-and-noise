@@ -160,8 +160,7 @@ add_action( 'after_switch_theme', function() {
  *   sn_purge_all_caches_result         → count cleared (int)
  *   sn_clear_template_overrides_result → count cleared (int)
  *
- * See docs/superpowers/specs/2026-05-15-companion-plugin-phase-1-design.md
- * + docs/WORDPRESS-REFERENCE.md §10.0.
+ * See docs/WORDPRESS-REFERENCE.md §10.0.
  */
 
 /**

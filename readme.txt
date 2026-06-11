@@ -1,9 +1,9 @@
 === Signal & Noise ===
 Contributors: Juan Lentino
-Requires at least: 6.4
+Requires at least: 7.0
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 9.15.2
+Stable tag: 10.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -43,7 +43,7 @@ All design tokens are controlled through theme.json. Current palette (since v2.0
 
 Modify in the Site Editor under Styles → Colors.
 
-WCAG AA contrast: every text pairing clears 4.5:1 normal-text threshold. See `docs/superpowers/specs/2026-05-26-audit-d-perf-a11y-findings.md` §4 for measured ratios.
+WCAG AA contrast: every text pairing clears the 4.5:1 normal-text threshold.
 
 == Recommended Plugins ==
 

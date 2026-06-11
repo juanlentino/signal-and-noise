@@ -15,3 +15,19 @@ composer.lock
 
 # Claude Code session state (worktree-local; never committed)
 .claude/
+
+# Internal AI-assisted-development scaffolding (handoffs, plans, audits, session notes) — local only
+docs/superpowers/
+_claude/
+
+# AI-assisted-dev tooling + internal working docs — kept local, excluded from the public repo
+CLAUDE.md
+.github/workflows/claude-review.yml
+.github/workflows/release-notes.yml
+.github/workflows/security-review.yml
+docs/SECURITY-BACK-AUDIT.md
+docs/WP-STANDARDS-AUDIT.md
+docs/CONTENT-AUDIT.md
+docs/AUDIT-THEME-HANDBOOK.md
+docs/WP-7.0-CHECKLIST.md
+docs/VOICE-GUIDE.md
