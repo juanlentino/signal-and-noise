@@ -39,6 +39,26 @@
 	</div>
 	<!-- /wp:buttons -->
 
+	<!-- wp:spacer {"height":"var:preset|spacing|50"} -->
+	<div style="height:var(--wp--preset--spacing--50)" aria-hidden="true" class="wp-block-spacer"></div>
+	<!-- /wp:spacer -->
+
+	<!-- wp:html -->
+	<form class="sn-404-search" role="search" method="get" action="/notes/">
+		<label class="screen-reader-text" for="sn-404-q">Search notes</label>
+		<input id="sn-404-q" class="sn-404-search__input" type="search" name="s" placeholder="Search notes&hellip;" />
+		<button class="sn-404-search__submit" type="submit">Search</button>
+	</form>
+	<!-- /wp:html -->
+
+	<!-- wp:shortcode -->
+	[sn_404_suggestions]
+	<!-- /wp:shortcode -->
+
+	<!-- wp:paragraph {"className":"sn-404-browse"} -->
+	<p class="sn-404-browse"><a href="/notes/">Browse all notes &rarr;</a></p>
+	<!-- /wp:paragraph -->
+
 </main>
 <!-- /wp:group -->
 
