@@ -87,5 +87,30 @@ ok( strpos( $out, '<a href="#method">Method</a>' ) !== false, 'links to #method'
 ok( strpos( $out, '<h2 class="wp-block-heading" id="intro">Intro</h2>' ) !== false, 'id injected into the Intro heading' );
 ok( strpos( $out, '<h2 class="wp-block-heading" id="result">Result</h2>' ) !== false, 'id injected into the Result heading' );
 
+// ── Duplicate heading text → unique ids (-2 suffix) ───────────────────
+$dupe = h2( 'Notes' ) . $p . h2( 'Notes' ) . $p . h2( 'Notes' ) . $p;
+$dout = sn_article_toc_apply( $dupe );
+ok( strpos( $dout, 'id="notes"' ) !== false, 'first duplicate keeps the bare slug' );
+ok( strpos( $dout, 'id="notes-2"' ) !== false, 'second duplicate gets -2' );
+ok( strpos( $dout, 'id="notes-3"' ) !== false, 'third duplicate gets -3' );
+ok( strpos( $dout, '<a href="#notes-2">Notes</a>' ) !== false, 'TOC links the deduped id' );
+
+// ── Author-set id is preserved, not re-slugged ────────────────────────
+$auth = '<h2 id="custom-anchor">Alpha</h2>' . $p . h2( 'Beta' ) . $p . h2( 'Gamma' ) . $p;
+$aout = sn_article_toc_apply( $auth );
+ok( strpos( $aout, '<h2 id="custom-anchor">Alpha</h2>' ) !== false, 'author id left untouched on the heading' );
+ok( strpos( $aout, '<a href="#custom-anchor">Alpha</a>' ) !== false, 'TOC links the author id' );
+ok( strpos( $aout, 'id="custom-anchor" id=' ) === false, 'no second id injected onto an already-anchored heading' );
+
+// ── Inline markup in a heading → clean label + slug ───────────────────
+$inline = '<h2 class="wp-block-heading"><em>Hello</em> <code>World</code></h2>' . $p . h2( 'Two' ) . $p . h2( 'Three' ) . $p;
+$iout = sn_article_toc_apply( $inline );
+ok( strpos( $iout, 'id="hello-world"' ) !== false, 'slug derived from stripped heading text' );
+ok( strpos( $iout, '<a href="#hello-world">Hello World</a>' ) !== false, 'TOC label is the stripped text' );
+
+// ── Empty heading is skipped; remaining count still gates ─────────────
+$empty = h2( 'One' ) . $p . h2( '' ) . $p . h2( 'Two' ) . $p;
+ok( sn_article_toc_apply( $empty ) === $empty, 'two non-empty + one empty H2 → below threshold, unchanged' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
