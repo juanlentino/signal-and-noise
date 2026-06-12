@@ -2,6 +2,14 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.2.0] - 2026-06-12 — /notes paged title (pagination R2)
+
+**Headline:** The theme half of `/notes` pagination **Release 2**. The `/notes` index `<title>` now appends "— Page N" on paginated views (`/notes/?paged=2` → "Notes — Juan Lentino — Page 2"), so paged pages are distinguishable in search results and browser tabs. **Single owner:** the theme's `pre_get_document_title` filter is the sole authority for the suffix — it short-circuits the plugin's `document_title_parts` (verified against WP core), so no double-append is possible. Pairs with plugin **v5.1.0**'s paged self-canonical + Notes-per-page knob. R1 shipped in v9.6.0.
+
+### Improvements
+
+- **Paged `/notes` `<title>` suffix** — the `pre_get_document_title` filter for the Notes index appends "— Page N" for N>1, extracted into a named `sn_notes_index_title()` builder. The paged read is inlined (reads `get_query_var('paged')` with a `$_GET` fallback) so it has no load-order dependency on the render file. New `tests/notes-title-paged.php` (4 assertions); `/notes` build marker bumped. PHPCS clean (security ruleset).
+
 ## [10.1.0] - 2026-06-12 — Reader wayfinding: in-article TOC + helpful 404 recovery
 
 **Headline:** Two reader-facing front-end additions. Long notes (3+ H2 sections) get an automatic table-of-contents card at the article top plus a thin reading-progress bar under the header; the 404 page becomes a recovery surface — a search box into Notes plus a recent-notes list — instead of a dead end. No admin surface, no settings; both work without JS and honor `prefers-reduced-motion`. 32 suites / 844 assertions green; PHPCS falsification-verified.
