@@ -2,6 +2,12 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [Unreleased]
+
+### New
+
+- **Helpful 404 recovery** — the 404 page now offers a search box (into Notes) and a list of recent notes instead of a dead end. New [inc/404-recovery.php](inc/404-recovery.php) (`[sn_404_suggestions]`) + enriched [templates/404.html](templates/404.html) + styles in [components.css](assets/css/components.css); `tests/404-recovery.php` (19 assertions). PHPCS falsification-verified.
+
 ## [10.0.0] - 2026-06-10 — Modernization major: WordPress 7.0 floor
 
 **Headline:** The theme half of the paired modernization major (with plugin **v5.0.0**). v10.0.0 hard-raises the WordPress floor to 7.0 — no new features; the floor raise is itself the breaking change (the theme's first major since v9.0.0). Drops the now-obsolete WP<7.0 pre-warning notice + dead pre-6.7 compat.
