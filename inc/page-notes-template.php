@@ -52,7 +52,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * effect?" was answered by behavioural inference, which has lied to
  * us across multiple incidents on this exact page.
  */
-const SN_NOTES_OVERRIDE_BUILD = '2026-06-05-notes-search-v11';
+const SN_NOTES_OVERRIDE_BUILD = '2026-06-05-notes-search-v12';
 
 /**
  * Detect whether the current request is the /notes index page.
@@ -143,6 +143,27 @@ add_action( 'wp_footer', function() {
 }, 999 );
 
 /**
+ * Build the /notes index document title: "Notes — Site", plus "— Page N" for
+ * paginated views (N>1). THIS IS THE SINGLE OWNER of the paged suffix — the
+ * plugin's document_title_parts filter never fires for /notes because this
+ * pre_get_document_title return short-circuits wp_get_document_title() (verified
+ * against WP core). The paged read is inlined here (not via the render file's
+ * sn_notes_current_page) so it has no load-order dependency on that file.
+ */
+function sn_notes_index_title() {
+	$site  = get_bloginfo( 'name' );
+	$title = $site ? 'Notes — ' . $site : 'Notes';
+	$paged = (int) get_query_var( 'paged' );
+	if ( $paged < 1 && isset( $_GET['paged'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only pagination index, no state change.
+		$paged = (int) $_GET['paged']; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	}
+	if ( $paged > 1 ) {
+		$title .= ' — Page ' . $paged;
+	}
+	return $title;
+}
+
+/**
  * Set the document `<title>` for the /notes index page.
  *
  * Why this is needed: when our `template_redirect` short-circuit
@@ -156,11 +177,7 @@ add_action( 'wp_footer', function() {
  * the site (`Page Title — Site Name`).
  */
 add_filter( 'pre_get_document_title', function( $title ) {
-	if ( ! sn_notes_is_index_request() ) {
-		return $title;
-	}
-	$site = get_bloginfo( 'name' );
-	return $site ? 'Notes — ' . $site : 'Notes';
+	return sn_notes_is_index_request() ? sn_notes_index_title() : $title;
 }, 999 );
 
 /**
