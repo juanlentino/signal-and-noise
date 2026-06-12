@@ -2,6 +2,12 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [Unreleased]
+
+### New
+
+- **In-article table of contents + reading-progress bar** on long notes. A `the_content` filter (single notes with 3+ H2 sections) auto-renders a "Contents" card of jump links at the top of the article, and a thin blood-red reading-progress bar pins under the header. Front-end only, no admin surface — H2 anchors are slugged + deduped (author-set ids respected), the TOC works with JS disabled, and the smooth-scroll honors `prefers-reduced-motion`. New [inc/article-toc.php](inc/article-toc.php) + [assets/js/article-toc.js](assets/js/article-toc.js) + styles in [components.css](assets/css/components.css); `tests/article-toc.php` (23 assertions). PHPCS falsification-verified.
+
 ## [10.0.0] - 2026-06-10 — Modernization major: WordPress 7.0 floor
 
 **Headline:** The theme half of the paired modernization major (with plugin **v5.0.0**). v10.0.0 hard-raises the WordPress floor to 7.0 — no new features; the floor raise is itself the breaking change (the theme's first major since v9.0.0). Drops the now-obsolete WP<7.0 pre-warning notice + dead pre-6.7 compat.
