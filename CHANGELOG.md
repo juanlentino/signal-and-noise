@@ -7,6 +7,7 @@ All notable changes to Signal & Noise are documented here.
 ### New
 
 - **In-article table of contents + reading-progress bar** on long notes. A `the_content` filter (single notes with 3+ H2 sections) auto-renders a "Contents" card of jump links at the top of the article, and a thin blood-red reading-progress bar pins under the header. Front-end only, no admin surface — H2 anchors are slugged + deduped (author-set ids respected), the TOC works with JS disabled, and the smooth-scroll honors `prefers-reduced-motion`. New [inc/article-toc.php](inc/article-toc.php) + [assets/js/article-toc.js](assets/js/article-toc.js) + styles in [components.css](assets/css/components.css); `tests/article-toc.php` (23 assertions). PHPCS falsification-verified.
+- **Helpful 404 recovery** — the 404 page now offers a search box (into Notes) and a list of recent notes instead of a dead end. New [inc/404-recovery.php](inc/404-recovery.php) (`[sn_404_suggestions]`) + enriched [templates/404.html](templates/404.html) + styles in [components.css](assets/css/components.css); `tests/404-recovery.php` (19 assertions). PHPCS falsification-verified.
 
 ## [10.0.0] - 2026-06-10 — Modernization major: WordPress 7.0 floor
 

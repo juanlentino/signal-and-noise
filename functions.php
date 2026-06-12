@@ -25,6 +25,7 @@
  *   inc/feed-json.php            — JSON Feed 1.1 for the Notes corpus (v9.11.0)
  *   inc/feed-enrichment.php      — RSS media:content + reading-time enrichment, plugin-guarded (v9.11.0)
  *   inc/command-palette.php      — reader-facing Notes-scoped ⌘K/"/" command palette (v9.11.0)
+ *   inc/404-recovery.php         — helpful 404: search + recent-notes suggestions ([sn_404_suggestions])
  *   (inc/page-notes-render.php   — full PHP render of /notes index; loaded by page-notes-template.php, not here)
  *
  * Operational tooling — REST surface, Plausible integration, admin UI, security
@@ -67,6 +68,7 @@ require_once __DIR__ . '/inc/post-frontmatter.php';
 require_once __DIR__ . '/inc/block-bindings.php';
 require_once __DIR__ . '/inc/post-updated-date.php';
 require_once __DIR__ . '/inc/related-notes.php';
+require_once __DIR__ . '/inc/404-recovery.php';
 require_once __DIR__ . '/inc/post-share.php';
 require_once __DIR__ . '/inc/article-toc.php';
 require_once __DIR__ . '/inc/feed-json.php';
