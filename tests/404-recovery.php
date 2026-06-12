@@ -68,6 +68,28 @@ if ( ! function_exists( 'esc_html' ) ) {
 if ( ! function_exists( 'esc_attr' ) ) {
 	function esc_attr( $s ) { return htmlspecialchars( (string) $s, ENT_QUOTES ); }
 }
+if ( ! function_exists( 'wp_spaces_regexp' ) ) {
+	function wp_spaces_regexp() { return '[\r\n\t ]|\xC2\xA0|&nbsp;'; }
+}
+if ( ! function_exists( 'shortcode_unautop' ) ) {
+	function shortcode_unautop( $text ) {
+		global $shortcode_tags;
+		if ( empty( $shortcode_tags ) || ! is_array( $shortcode_tags ) ) { return $text; }
+		$tagregexp = implode( '|', array_map( 'preg_quote', array_keys( $shortcode_tags ) ) );
+		$spaces    = wp_spaces_regexp();
+		$pattern   = '/<p>(?:' . $spaces . ')*+(\\[(' . $tagregexp . ')(?![\\w-])[^\\]\\/]*(?:\\/(?!\\])[^\\]\\/]*)*?(?:\\/\\]|\\](?:[^\\[]*+(?:\\[(?!\\/\\2\\])[^\\[]*+)*+\\[\\/\\2\\])?))(?:' . $spaces . ')*+<\\/p>/';
+		return preg_replace( $pattern, '$1', $text );
+	}
+}
+if ( ! function_exists( 'do_shortcode' ) ) {
+	function do_shortcode( $content ) {
+		$GLOBALS['__do_shortcode_ran'] = true;
+		if ( false !== strpos( $content, '[sn_404_suggestions]' ) ) {
+			$content = str_replace( '[sn_404_suggestions]', sn_404_suggestions_shortcode(), $content );
+		}
+		return $content;
+	}
+}
 
 // Stub WP_Query: returns $POSTS (minus post__not_in) sorted by date DESC,
 // sliced to posts_per_page. The 404 recent-notes query passes no tax_query.
@@ -91,6 +113,11 @@ if ( ! class_exists( 'WP_Query' ) ) {
 
 define( 'SN_404_RECOVERY_TEST', true );
 require __DIR__ . '/../inc/404-recovery.php';
+
+// shortcode_unautop() recognises only REGISTERED shortcodes (reads
+// $shortcode_tags). The require above is test-guarded, so register the token
+// here exactly as the runtime does.
+$GLOBALS['shortcode_tags']['sn_404_suggestions'] = 'sn_404_suggestions_shortcode';
 
 $pass = 0; $fail = 0;
 function ok( $cond, $label ) {
@@ -136,6 +163,23 @@ mk_post( 3, 4000, 'C', 'https://x/notes/3/' );
 $GLOBALS['__filters']['sn_404_suggestions_count'] = 2;
 sn_404_suggestions_shortcode();
 ok( (int) $GLOBALS['__last_qargs']['posts_per_page'] === 2, 'count: honors sn_404_suggestions_count filter' );
+
+// ── BRIDGE: a wpautop-shaped token resolves without a <p> wrapper ─────
+$GLOBALS['POSTS'] = array();
+mk_post( 1, 5000, 'A note', 'https://x/notes/1/' );
+$GLOBALS['__do_shortcode_ran'] = false;
+
+$out = sn_404_suggestions_render_block_bridge( '<p>[sn_404_suggestions]</p>', array() );
+ok( ! empty( $GLOBALS['__do_shortcode_ran'] ), 'bridge: do_shortcode runs when token present' );
+ok( strpos( $out, '<nav class="sn-404-suggestions"' ) !== false, 'bridge: token resolved to the real <nav>' );
+ok( strpos( $out, '[sn_404_suggestions]' ) === false, 'bridge: raw token gone after resolution' );
+ok( strpos( $out, '<p><nav' ) === false, 'bridge: <nav> not directly wrapped in <p>' );
+ok( strpos( $out, '<p>' ) === false, 'bridge: no leftover <p> around the block-level output' );
+
+$GLOBALS['__do_shortcode_ran'] = false;
+$untouched = sn_404_suggestions_render_block_bridge( '<p>no token here</p>', array() );
+ok( empty( $GLOBALS['__do_shortcode_ran'] ), 'bridge: do_shortcode NOT run when token absent' );
+ok( $untouched === '<p>no token here</p>', 'bridge: content returned unchanged when token absent' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
