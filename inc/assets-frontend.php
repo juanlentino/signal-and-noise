@@ -275,3 +275,26 @@ function sn_enqueue_discography() {
 	}
 }
 add_action( 'wp_enqueue_scripts', 'sn_enqueue_discography', 30 );
+
+/**
+ * In-article TOC reading-progress bar + smooth-scroll (single notes).
+ *
+ * Loaded only on single posts, footer + deferred so it never blocks first
+ * paint. The script self-gates on the presence of the server-rendered
+ * <nav class="sn-article-toc"> (inc/article-toc.php) — short notes that get
+ * no TOC also get no bar. Pure progressive enhancement: the TOC and its anchor
+ * links work with this script absent. Named (not a closure) and mirrors
+ * sn_enqueue_note_share above.
+ */
+function sn_enqueue_article_toc() {
+	if ( is_singular( 'post' ) ) {
+		wp_enqueue_script(
+			'sn-article-toc',
+			get_theme_file_uri( 'assets/js/article-toc.js' ),
+			array(),
+			sn_asset_ver( 'assets/js/article-toc.js' ),
+			array( 'in_footer' => true, 'strategy' => 'defer' )
+		);
+	}
+}
+add_action( 'wp_enqueue_scripts', 'sn_enqueue_article_toc', 30 );
