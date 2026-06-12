@@ -2,7 +2,9 @@
 
 All notable changes to Signal & Noise are documented here.
 
-## [Unreleased]
+## [10.1.0] - 2026-06-12 — Reader wayfinding: in-article TOC + helpful 404 recovery
+
+**Headline:** Two reader-facing front-end additions. Long notes (3+ H2 sections) get an automatic table-of-contents card at the article top plus a thin reading-progress bar under the header; the 404 page becomes a recovery surface — a search box into Notes plus a recent-notes list — instead of a dead end. No admin surface, no settings; both work without JS and honor `prefers-reduced-motion`. 32 suites / 844 assertions green; PHPCS falsification-verified.
 
 ### New
 
