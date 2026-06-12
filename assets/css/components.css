@@ -1033,3 +1033,63 @@
 	width: 100%;
 	border: 0;
 }
+
+/* ── In-article TOC + reading-progress bar ─────────────────────────────
+ * Card at the article top + a thin fixed progress bar under the header.
+ * Tokens mirror .sn-provenance-toc; blood-red active state. JS injects the
+ * progress bar element (assets/js/article-toc.js). */
+.sn-article-toc {
+	margin: 0 0 var(--wp--preset--spacing--40, 2rem);
+	padding: var(--wp--preset--spacing--20, 1rem) var(--wp--preset--spacing--30, 1.5rem);
+	border: 1px solid var(--wp--preset--color--bone, #000);
+}
+.sn-article-toc__label {
+	margin: 0 0 0.5rem;
+	font-family: var(--wp--preset--font-family--heading, "Bebas Neue"), sans-serif;
+	text-transform: uppercase;
+	letter-spacing: var(--wp--custom--letter-spacing--wide, 0.15em);
+	font-size: var(--wp--preset--font-size--small, 0.8rem);
+	color: var(--wp--preset--color--rust, #666);
+}
+.sn-article-toc__list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	font-family: var(--wp--preset--font-family--body, "DM Mono"), monospace;
+	font-size: var(--wp--preset--font-size--small, 0.8rem);
+	line-height: 1.9;
+}
+.sn-article-toc__list a {
+	color: var(--wp--preset--color--bone, #000);
+	text-decoration: underline;
+	text-decoration-color: var(--wp--preset--color--concrete, #d9d9d9);
+	text-underline-offset: 0.2em;
+}
+.sn-article-toc__list a:hover,
+.sn-article-toc__list a:focus-visible {
+	color: var(--wp--preset--color--blood, #e00404);
+	text-decoration-color: var(--wp--preset--color--blood, #e00404);
+}
+
+.sn-article-progress {
+	position: fixed;
+	top: 108px; /* desktop header height */
+	left: 0;
+	right: 0;
+	height: 3px;
+	z-index: 9999; /* below the fixed header (10000), above content */
+	background: var(--wp--preset--color--asphalt, #f5f5f5);
+	pointer-events: none;
+}
+.sn-article-progress__fill {
+	display: block;
+	height: 100%;
+	width: 0;
+	background: var(--wp--preset--color--blood, #e00404);
+}
+@media (prefers-reduced-motion: no-preference) {
+	.sn-article-progress__fill { transition: width 80ms linear; }
+}
+@media (max-width: 781px) {
+	.sn-article-progress { top: 80px; } /* tablet/mobile header height */
+}
