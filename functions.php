@@ -21,6 +21,7 @@
  *   inc/post-frontmatter.php     — long-form post frontmatter rendering
  *   inc/block-bindings.php       — signal-noise/post-field Block Bindings source (reading_time|pillar|canonical|og_title) (v9.11.0)
  *   inc/post-updated-date.php    — [sn_updated_date] "Updated YYYY.MM.DD" line for materially-revised notes (v9.10.0)
+ *   inc/article-toc.php          — in-article TOC + reading-progress bar (the_content filter, single notes ≥3 H2s)
  *   inc/feed-json.php            — JSON Feed 1.1 for the Notes corpus (v9.11.0)
  *   inc/feed-enrichment.php      — RSS media:content + reading-time enrichment, plugin-guarded (v9.11.0)
  *   inc/command-palette.php      — reader-facing Notes-scoped ⌘K/"/" command palette (v9.11.0)
@@ -67,6 +68,7 @@ require_once __DIR__ . '/inc/block-bindings.php';
 require_once __DIR__ . '/inc/post-updated-date.php';
 require_once __DIR__ . '/inc/related-notes.php';
 require_once __DIR__ . '/inc/post-share.php';
+require_once __DIR__ . '/inc/article-toc.php';
 require_once __DIR__ . '/inc/feed-json.php';
 require_once __DIR__ . '/inc/feed-enrichment.php';
 require_once __DIR__ . '/inc/command-palette.php';
