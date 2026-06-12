@@ -2,6 +2,14 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.3.0] - 2026-06-12 — First-party analytics beacon (ships inert)
+
+**Headline:** The theme half of the first-party, cookieless edge-analytics arc. Adds a tiny front-end **beacon** ([assets/js/sn-beacon.js](assets/js/sn-beacon.js) + [inc/beacon.php](inc/beacon.php)) that emits pageview / scroll-depth / time-on-page hits to a same-origin Cloudflare Worker (`/_sn/px`) → Analytics Engine. **Ships dormant:** the beacon JS no-ops entirely until `SN_BEACON_TOKEN` is defined in `wp-config.php` (and must equal the Worker's `SN_PX_TOKEN`), so installing this changes nothing on the live site until the token is wired. Honors Do-Not-Track / Global-Privacy-Control. Pairs with plugin **v5.2.0** (the read-side dashboard). `tests/beacon.php` (25 assertions); full theme suite green.
+
+### New
+
+- **First-party analytics beacon** — `sn_beacon_enqueue()` ([inc/beacon.php](inc/beacon.php)) localizes a `window.SN_BEACON` island (same-origin `/_sn/px` endpoint + public site token + post id) and enqueues [assets/js/sn-beacon.js](assets/js/sn-beacon.js), which sends `pv`/`sc`/`tm` hits via `navigator.sendBeacon` (fetch fallback). **Inert until `SN_BEACON_TOKEN` is set** — no token, no island, no requests. Respects `navigator.doNotTrack` / `globalPrivacyControl`. Cookieless; the Worker derives a daily-rotating visitor hash at the edge. `tests/beacon.php` (25 assertions). Wired in [functions.php](functions.php).
+
 ## [10.2.0] - 2026-06-12 — /notes paged title (pagination R2)
 
 **Headline:** The theme half of `/notes` pagination **Release 2**. The `/notes` index `<title>` now appends "— Page N" on paginated views (`/notes/?paged=2` → "Notes — Juan Lentino — Page 2"), so paged pages are distinguishable in search results and browser tabs. **Single owner:** the theme's `pre_get_document_title` filter is the sole authority for the suffix — it short-circuits the plugin's `document_title_parts` (verified against WP core), so no double-append is possible. Pairs with plugin **v5.1.0**'s paged self-canonical + Notes-per-page knob. R1 shipped in v9.6.0.

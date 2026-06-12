@@ -76,3 +76,4 @@ require_once __DIR__ . '/inc/feed-enrichment.php';
 require_once __DIR__ . '/inc/command-palette.php';
 require_once __DIR__ . '/inc/discography-render.php';
 require_once __DIR__ . '/inc/music-featured-render.php'; // v9.15.0: [sn_music_featured] hero player (reads sn_music_featured filter)
+require_once __DIR__ . '/inc/beacon.php'; // P1: first-party edge analytics beacon enqueue
