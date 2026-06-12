@@ -1033,3 +1033,76 @@
 	width: 100%;
 	border: 0;
 }
+
+/* ── 404 recovery — search + recent-notes suggestions ──────────────────
+ * Beneath the "SIGNAL LOST" hero. Suggestions reuse .sn-notes-row; this adds
+ * the search form + section spacing. Blood-red accents, brutalist tokens. */
+.sn-404-search {
+	display: flex;
+	gap: var(--wp--preset--spacing--20, 1rem);
+	align-items: baseline;
+	max-width: 760px;
+	margin: 0 0 var(--wp--preset--spacing--40, 2rem);
+}
+.sn-404-search__input {
+	flex: 1 1 auto;
+	min-width: 0;
+	padding: 0.4rem 0;
+	border: 0;
+	border-bottom: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+	background: transparent;
+	font-family: var(--wp--preset--font-family--body, "DM Mono"), monospace;
+	font-size: var(--wp--preset--font-size--medium, 1rem);
+	color: var(--wp--preset--color--bone, #000);
+}
+.sn-404-search__input:focus-visible {
+	outline: none;
+	border-bottom-color: var(--wp--preset--color--blood, #e00404);
+}
+.sn-404-search__submit {
+	flex: 0 0 auto;
+	padding: 0.4rem 1rem;
+	border: 1px solid var(--wp--preset--color--bone, #000);
+	background: transparent;
+	font-family: var(--wp--preset--font-family--heading, "Bebas Neue"), sans-serif;
+	text-transform: uppercase;
+	letter-spacing: var(--wp--custom--letter-spacing--wide, 0.15em);
+	color: var(--wp--preset--color--bone, #000);
+	cursor: pointer;
+}
+.sn-404-search__submit:hover,
+.sn-404-search__submit:focus-visible {
+	color: var(--wp--preset--color--void, #fff);
+	background: var(--wp--preset--color--blood, #e00404);
+	border-color: var(--wp--preset--color--blood, #e00404);
+}
+
+.sn-404-suggestions {
+	max-width: 760px;
+	margin: 0 0 var(--wp--preset--spacing--30, 1.5rem);
+}
+.sn-404-suggestions__label {
+	margin: 0 0 0.5rem;
+	font-family: var(--wp--preset--font-family--heading, "Bebas Neue"), sans-serif;
+	text-transform: uppercase;
+	letter-spacing: var(--wp--custom--letter-spacing--wide, 0.15em);
+	font-size: var(--wp--preset--font-size--small, 0.8rem);
+	color: var(--wp--preset--color--rust, #666);
+}
+.sn-404-suggestions__list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.sn-404-browse {
+	font-family: var(--wp--preset--font-family--body, "DM Mono"), monospace;
+	font-size: var(--wp--preset--font-size--small, 0.8rem);
+}
+.sn-404-browse a {
+	color: var(--wp--preset--color--blood, #e00404);
+	text-decoration: none;
+}
+.sn-404-browse a:hover,
+.sn-404-browse a:focus-visible {
+	text-decoration: underline;
+}
