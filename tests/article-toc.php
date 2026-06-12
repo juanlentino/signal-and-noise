@@ -112,5 +112,20 @@ ok( strpos( $iout, '<a href="#hello-world">Hello World</a>' ) !== false, 'TOC la
 $empty = h2( 'One' ) . $p . h2( '' ) . $p . h2( 'Two' ) . $p;
 ok( sn_article_toc_apply( $empty ) === $empty, 'two non-empty + one empty H2 → below threshold, unchanged' );
 
+// ── Filter guard: secondary / non-post content is never touched ───────
+$body = h2( 'A' ) . $p . h2( 'B' ) . $p . h2( 'C' ) . $p;
+
+$GLOBALS['__is_singular_post'] = false; $GLOBALS['__in_the_loop'] = true; $GLOBALS['__is_main_query'] = true;
+ok( sn_article_toc_the_content( $body ) === $body, 'guard: not is_singular(post) → unchanged' );
+
+$GLOBALS['__is_singular_post'] = true; $GLOBALS['__in_the_loop'] = false; $GLOBALS['__is_main_query'] = true;
+ok( sn_article_toc_the_content( $body ) === $body, 'guard: outside the loop (e.g. excerpt) → unchanged' );
+
+$GLOBALS['__is_singular_post'] = true; $GLOBALS['__in_the_loop'] = true; $GLOBALS['__is_main_query'] = false;
+ok( sn_article_toc_the_content( $body ) === $body, 'guard: secondary query → unchanged' );
+
+$GLOBALS['__is_singular_post'] = true; $GLOBALS['__in_the_loop'] = true; $GLOBALS['__is_main_query'] = true;
+ok( strpos( sn_article_toc_the_content( $body ), '<nav class="sn-article-toc"' ) === 0, 'guard: main single-post query → TOC applied' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
