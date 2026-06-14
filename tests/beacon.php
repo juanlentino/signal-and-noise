@@ -107,5 +107,18 @@ ok( $stub_pos !== false, 'beacon defines a no-op cfg.event stub' );
 ok( $gate_pos !== false, 'beacon has the DNT/GPC privacy gate' );
 ok( $stub_pos !== false && $gate_pos !== false && $stub_pos < $gate_pos, 'no-op event stub is set BEFORE the privacy gate (callable under DNT/GPC)' );
 
+// v10.4.0: the real sender on the tracked path. Assert its shape, the ce event
+// type, the name + property/value clamps, and the 4-prop cap.
+ok( strpos( $js, 'cfg.event = function (name, props)' ) !== false, 'beacon defines the real event(name, props) sender' );
+ok( strpos( $js, "e: 'ce'" ) !== false || strpos( $js, 'e:"ce"' ) !== false, 'real event() sends a ce payload' );
+ok( strpos( $js, 'String(name || \'\').slice(0, 64)' ) !== false || strpos( $js, 'slice(0, 64)' ) !== false, 'real event() clamps name to 64' );
+ok( strpos( $js, 'slice(0, 60)' ) !== false, 'real event() clamps property key to 60' );
+ok( strpos( $js, 'slice(0, 180)' ) !== false, 'real event() clamps property value to 180' );
+ok( preg_match( '/c\+\+\s*>=\s*4/', $js ) === 1 || strpos( $js, '>= 4) break' ) !== false, 'real event() caps props at 4' );
+ok( strpos( $js, 'if (!n) return' ) !== false || strpos( $js, 'if(!n)return' ) !== false, 'real event() ignores an empty name' );
+// The real sender must come AFTER the privacy gate (reassigns the stub only on the tracked path).
+$real_pos = strpos( $js, 'cfg.event = function (name, props)' );
+ok( $real_pos !== false && $gate_pos !== false && $real_pos > $gate_pos, 'real event() sender is assigned AFTER the privacy gate' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

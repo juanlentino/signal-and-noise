@@ -3,6 +3,8 @@
  * Cookieless. No-ops entirely under DNT/GPC. Posts same-origin to the
  * Cloudflare Worker route (window.SN_BEACON.endpoint). See P1 plan + spec
  * docs/superpowers/specs/2026-06-11-first-party-edge-analytics-design.md.
+ * v10.4.0: adds window.SN_BEACON.event(name, props) for named custom events
+ * (a 'ce' beacon → worker ce/cp rows). The API is a no-op under DNT/GPC.
  */
 (function () {
   var cfg = window.SN_BEACON;
@@ -69,4 +71,22 @@
   }
   window.addEventListener('pagehide', flush);
   window.addEventListener('pageshow', function (ev) { if (ev.persisted) { flushed = false; visibleMs = 0; lastVisible = performance.now(); sent = {}; window.addEventListener('scroll', onScroll, { passive: true }); } });
+
+  // 4) Custom events — window.SN_BEACON.event(name, props). On the tracked path
+  // this replaces the no-op stub. Clamps name (64) + up to 4 string→string props
+  // (key 60, value 180), then posts a 'ce' beacon. The worker writes a 'ce' base
+  // row + one 'cp' row per property.
+  cfg.event = function (name, props) {
+    var n = String(name || '').slice(0, 64);
+    if (!n) return;
+    var pr = {};
+    if (props && typeof props === 'object') {
+      var c = 0;
+      for (var k in props) {
+        if (c++ >= 4) break;
+        pr[String(k).slice(0, 60)] = String(props[k]).slice(0, 180);
+      }
+    }
+    send({ e: 'ce', u: location.pathname, r: document.referrer || '', n: n, pr: pr });
+  };
 })();
