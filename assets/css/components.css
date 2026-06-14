@@ -782,8 +782,11 @@
 /* Controls rail: count + role chips (sticky). */
 .sn-disco-controls {
 	position: sticky;
-	top: 0;
-	z-index: 5;
+	/* Stick BELOW the fixed header (108/80/65px staircase), not at top:0 where the
+	   header (z-index 10000) occluded the rail mid-scroll. z-index sits above page
+	   content but below the footer (9990). Responsive top overrides below. */
+	top: 108px;
+	z-index: 9985;
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
@@ -953,7 +956,7 @@
 	font-family: 'Bebas Neue', Impact, sans-serif;
 	font-weight: 400;
 	font-size: clamp(1.45rem, 2.4vw, 1.9rem);
-	line-height: 0.95;
+	line-height: 1.0;
 	letter-spacing: -0.005em;
 	color: var(--wp--preset--color--bone, #000);
 	margin: 0;
@@ -1098,7 +1101,14 @@
 	.sn-article-progress__fill { transition: width 80ms linear; }
 }
 @media (max-width: 781px) {
-	.sn-article-progress { top: 80px; } /* tablet/mobile header height */
+	.sn-article-progress { top: 80px; } /* tablet header height */
+	.sn-disco-controls   { top: 80px; }
+}
+@media (max-width: 480px) {
+	.sn-article-progress { top: 65px; } /* mobile header height */
+	.sn-disco-controls   { top: 65px; }
+	/* TOC: tighten + allow hyphenation so long headings don't overflow the ~240px rail. */
+	.sn-article-toc__list { line-height: 1.6; hyphens: auto; }
 }
 
 /* ── 404 recovery — search + recent-notes suggestions ──────────────────

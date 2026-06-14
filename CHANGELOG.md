@@ -2,6 +2,23 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.4.2] - 2026-06-14 — Front-end polish
+
+**Headline:** Visual + responsive refinements from the comprehensive audit.
+
+### Fixed
+
+- **Discography controls rail no longer hides behind the header.** The sticky role-filter rail stuck at `top:0` under the fixed header (z-index 10000) and went unclickable mid-scroll; it now sticks below the header (108/80/65px staircase) at a z-index above page content. [assets/css/components.css](assets/css/components.css)
+- **Reading-progress bar sits flush under the header on mobile.** It was 15px too high at ≤480px (using the 80px tablet offset against the 65px mobile header); now matched.
+- **Discography card titles** use `line-height: 1.0` (was 0.95, which clipped descenders when a title wrapped to two lines).
+- **Article TOC** tightens (line-height 1.6 + hyphenation) at ≤480px so long section headings don't overflow the narrow rail.
+
+### Improvements
+
+- **Single-post reading measure** capped to ~68ch (body paragraphs ran ~90ch in the 760px column with DM Mono); headings, quotes, and patterns keep the full column width for editorial scale contrast. [assets/css/critical.css](assets/css/critical.css)
+
+> **Why PATCH:** presentation fixes + one reading-measure refinement to existing surfaces — no new features, no markup change.
+
 ## [10.4.1] - 2026-06-14 — Accessibility pass (front-end)
 
 **Headline:** Front-end accessibility refinements from the comprehensive audit — touch targets, reduced-motion, screen-reader state, and the 11px text floor.
