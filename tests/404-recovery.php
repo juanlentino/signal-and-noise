@@ -143,6 +143,8 @@ ok( strpos( $html, 'Recent notes' ) !== false, 'render: visible label present' )
 ok( strpos( $html, 'sn-notes-row' ) !== false, 'render: reuses the .sn-notes-row idiom' );
 ok( strpos( $html, 'https://x/notes/1/' ) !== false, 'render: newest permalink present' );
 ok( substr_count( $html, '<li class="sn-notes-row"' ) === 3, 'render: one row per recent note' );
+ok( strpos( $html, '<h2 class="sn-notes-row-title">' ) !== false, 'a11y: note titles are h2 (page has h1 SIGNAL LOST → no skipped level)' );
+ok( strpos( $html, '<h3' ) === false, 'a11y: no h3 — heading order stays h1→h2 (WCAG 1.3.1)' );
 
 // ── Escaping ─────────────────────────────────────────────────────────
 $GLOBALS['POSTS'] = array();

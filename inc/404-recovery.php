@@ -65,7 +65,7 @@ function sn_404_suggestions_shortcode() {
 			? '<span class="sn-notes-row-rt">' . esc_html( $rt ) . '</span>'
 			: '';
 		$rows     .= sprintf(
-			'<li class="sn-notes-row"><div class="sn-notes-row-spec"><time class="sn-notes-row-date" datetime="%1$s">%2$s</time>%3$s</div><div class="sn-notes-row-content"><h3 class="sn-notes-row-title"><a href="%4$s">%5$s</a></h3></div></li>',
+			'<li class="sn-notes-row"><div class="sn-notes-row-spec"><time class="sn-notes-row-date" datetime="%1$s">%2$s</time>%3$s</div><div class="sn-notes-row-content"><h2 class="sn-notes-row-title"><a href="%4$s">%5$s</a></h2></div></li>',
 			esc_attr( get_the_date( 'c', $p ) ),
 			esc_html( get_the_date( 'Y.m.d', $p ) ),
 			$rt_markup,

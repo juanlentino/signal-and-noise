@@ -494,7 +494,7 @@ main { view-transition-name: sn-main; }
 
 .sn-pull-quote__attribution {
 	font-family: var(--wp--preset--font-family--body);
-	font-size: 0.7rem;
+	font-size: max(0.7rem, 11px);
 	letter-spacing: 0.1em;
 	text-transform: uppercase;
 	margin: 0;
@@ -539,7 +539,7 @@ main { view-transition-name: sn-main; }
 
 .sn-compare__label {
 	font-family: var(--wp--preset--font-family--body);
-	font-size: 0.7rem;
+	font-size: max(0.7rem, 11px);
 	letter-spacing: 0.12em;
 	text-transform: uppercase;
 	margin: 0 0 0.75rem 0;
@@ -572,7 +572,7 @@ main { view-transition-name: sn-main; }
 
 .sn-steps__label {
 	font-family: var(--wp--preset--font-family--body);
-	font-size: 0.7rem;
+	font-size: max(0.7rem, 11px);
 	letter-spacing: 0.12em;
 	text-transform: uppercase;
 	margin: 0 0 1.5rem 0;
@@ -632,7 +632,7 @@ main { view-transition-name: sn-main; }
 
 .sn-post-closing__tags {
 	font-family: var(--wp--preset--font-family--body);
-	font-size: 0.75rem;
+	font-size: max(0.75rem, 11px);
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
 	color: var(--wp--preset--color--rust);
@@ -647,7 +647,7 @@ main { view-transition-name: sn-main; }
 .sn-post-closing__next-label,
 .sn-post-closing__prev-label {
 	font-family: var(--wp--preset--font-family--body);
-	font-size: 0.7rem;
+	font-size: max(0.7rem, 11px);
 	letter-spacing: 0.12em;
 	text-transform: uppercase;
 	color: var(--wp--preset--color--rust);
@@ -836,7 +836,7 @@ main { view-transition-name: sn-main; }
 		margin-bottom: 1rem;
 		padding-left: 1rem;
 		font-family: 'DM Mono', 'Courier New', monospace;
-		font-size: 0.75rem;
+		font-size: max(0.75rem, 11px);
 		line-height: 1.45;
 		color: var(--wp--preset--color--rust, #666);
 		text-align: left;
@@ -870,7 +870,7 @@ main { view-transition-name: sn-main; }
 }
 .sn-post-frontmatter > * {
 	font-family: 'DM Mono', 'Courier New', monospace;
-	font-size: 0.75rem;
+	font-size: max(0.75rem, 11px);
 	letter-spacing: 0.15em;
 	text-transform: uppercase;
 	margin: 0;
