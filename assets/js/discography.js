@@ -132,8 +132,10 @@
 				chip.addEventListener( 'click', function () {
 					for ( var j = 0; j < chips.length; j++ ) {
 						chips[ j ].classList.remove( 'is-active' );
+						chips[ j ].setAttribute( 'aria-pressed', 'false' );
 					}
 					chip.classList.add( 'is-active' );
+					chip.setAttribute( 'aria-pressed', 'true' );
 					apply( chip.getAttribute( 'data-role' ) );
 				} );
 			} )( chips[ c ] );

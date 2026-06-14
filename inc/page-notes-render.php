@@ -440,7 +440,7 @@ wp_head();
 }
 .sn-notes-pillar-cta {
 	font-family: 'DM Mono', 'Courier New', monospace;
-	font-size: 0.75rem;
+	font-size: max(0.75rem, 11px);
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
 	color: var(--wp--preset--color--bone, #000);
@@ -448,6 +448,8 @@ wp_head();
 	display: inline-flex;
 	align-items: center;
 	gap: 0.5rem;
+	min-height: 44px;
+	padding: 0.6rem 0;
 	transition: color 0.2s ease, gap 0.2s ease;
 }
 .sn-notes-pillar-cta::after {
@@ -622,7 +624,11 @@ wp_head();
 	flex: 0 0 auto;
 	border: 0;
 	background: transparent;
-	padding: 0 0.4rem;
+	padding: 0.75rem 0.6rem;
+	min-height: 44px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
 	cursor: pointer;
 	color: var(--wp--preset--color--bone, #000);
 	font-family: 'DM Mono', 'Courier New', monospace;

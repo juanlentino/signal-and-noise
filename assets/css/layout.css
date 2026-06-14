@@ -99,6 +99,18 @@ body {
 	height: 28px !important;
 }
 
+/* WCAG 2.5.5: the hamburger + overlay-close are the only mobile nav affordance;
+   the 28px SVG alone gives a 28px target. Grow the button hit area to 44px while
+   the icon stays 28px inside. */
+.wp-block-navigation__responsive-container-open,
+.wp-block-navigation__responsive-container-close {
+	min-width: 44px;
+	min-height: 44px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
 /* Full-screen overlay */
 .wp-block-navigation__responsive-container.is-menu-open {
 	position: fixed !important;
@@ -260,6 +272,17 @@ body {
 	.sn-hero-subtitle { animation: fadeInUp 1s ease-out 0.5s both; }
 	.sn-hero-accent   { animation: fadeInUp 1s ease-out 0.65s both; }
 	.sn-hero-cta      { animation: fadeInUp 1s ease-out 0.8s both; }
+}
+
+/* Reduced-motion: the entrance animations above are already gated behind
+   no-preference, but the scroll-shrink transitions (logo width/height,
+   header padding, nav-underline width) fire unconditionally. Suppress the
+   layout-triggering ones for reduce users; opacity is not motion, so it
+   stays. The .is-scrolled state still applies — just instantly. */
+@media (prefers-reduced-motion: reduce) {
+	.sn-logo-img                  { transition: opacity 0.3s ease; }
+	.sn-header                    { transition: none; }
+	.wp-block-navigation a::after { transition: none; }
 }
 
 /* Hero centring via inner markup wrapper. See critical.css for rationale. */

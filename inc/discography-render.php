@@ -122,9 +122,9 @@ function sn_discography_shortcode() {
 	$out .= '</p>';
 
 	$out .= '<div class="sn-disco-filters" role="group" aria-label="' . esc_attr( 'Filter by role' ) . '">';
-	$out .= '<button type="button" class="sn-disco-chip is-active" data-role="*">' . esc_html__( 'All', 'signal-noise' ) . '</button>';
+	$out .= '<button type="button" class="sn-disco-chip is-active" data-role="*" aria-pressed="true">' . esc_html__( 'All', 'signal-noise' ) . '</button>';
 	foreach ( $roles as $role ) {
-		$out .= '<button type="button" class="sn-disco-chip" data-role="' . esc_attr( $role ) . '">' . esc_html( $role ) . '</button>';
+		$out .= '<button type="button" class="sn-disco-chip" data-role="' . esc_attr( $role ) . '" aria-pressed="false">' . esc_html( $role ) . '</button>';
 	}
 	$out .= '</div>'; // .sn-disco-filters
 	$out .= '</div>'; // .sn-disco-controls

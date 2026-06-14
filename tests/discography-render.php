@@ -93,6 +93,8 @@ ok( strpos( $html, '2005' ) !== false && strpos( $html, '2024' ) !== false, 'cou
 // Filter chips: All + one per PRESENT role; none for absent roles.
 ok( strpos( $html, 'data-role="*"' ) !== false, 'All chip present (data-role="*")' );
 ok( strpos( $html, 'is-active' ) !== false, 'All chip is active by default' );
+ok( preg_match( '/sn-disco-chip is-active"[^>]*aria-pressed="true"/', $html ) === 1, 'a11y: All chip exposes aria-pressed="true"' );
+ok( preg_match( '/data-role="Producer"[^>]*aria-pressed="false"/', $html ) === 1, 'a11y: inactive role chips expose aria-pressed="false"' );
 ok( strpos( $html, 'data-role="Producer"' ) !== false, 'chip for present role Producer' );
 ok( strpos( $html, 'data-role="Mixing"' ) !== false, 'chip for present role Mixing' );
 ok( strpos( $html, 'data-role="Engineer"' ) !== false, 'chip for present role Engineer' );

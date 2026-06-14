@@ -2,6 +2,21 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.4.1] - 2026-06-14 — Accessibility pass (front-end)
+
+**Headline:** Front-end accessibility refinements from the comprehensive audit — touch targets, reduced-motion, screen-reader state, and the 11px text floor.
+
+### Fixed
+
+- **Reduced motion now honored on scroll.** The header padding-shrink, logo width/height resize, and nav-underline transitions fired unconditionally; they're now suppressed under `prefers-reduced-motion: reduce` (opacity stays — it isn't motion; the scrolled state still applies, just instantly). [assets/css/layout.css](assets/css/layout.css)
+- **Touch targets meet the 44px floor (WCAG 2.5.5).** The mobile hamburger / overlay-close (was 28px — the sole mobile-nav affordance), discography role-filter chips (28px), note-share COPY/SHARE buttons (29px), the /notes search submit (18px), and the pillar "Read essay" CTA (14px) all grow to a ≥44px hit area while the visible glyphs stay compact. Verified at 44px in a headless browser.
+- **11px text floor applied to 10 small-text rules.** Pull-quote attribution, compare/steps labels, post-closing tags + prev/next labels, sidenote, post-frontmatter, catalog eyebrow/meta, and the pillar CTA used bare `0.7–0.75rem` (9.8–10.5px at a 14px base); now wrapped in `max(…, 11px)` to match the guard already used elsewhere. [assets/css/critical.css](assets/css/critical.css), [components.css](assets/css/components.css), [inc/page-notes-render.php](inc/page-notes-render.php)
+- **Discography filter chips expose `aria-pressed`** so assistive tech announces the active filter (markup + the JS toggle). [inc/discography-render.php](inc/discography-render.php), [assets/js/discography.js](assets/js/discography.js)
+- **404 page semantics:** the primary `<nav>` now carries `aria-label="Main navigation"` (it sat unlabeled beside the named "Recent notes" nav), and the recent-notes titles are `<h2>` (was `<h3>`, skipping a level under the `SIGNAL LOST` h1). [parts/header.html](parts/header.html), [inc/404-recovery.php](inc/404-recovery.php)
+- **404 search input** restores a visible 2px focus outline (was `outline:none` with only a 1px border-colour change). [assets/css/components.css](assets/css/components.css)
+
+> **Why PATCH:** accessibility-conformance fixes to existing surfaces — no new features; the only change for sighted mouse users is larger hit areas.
+
 ## [10.4.0] - 2026-06-14 — Beacon custom-event API
 
 **Headline:** Extends the first-party beacon with a public, privacy-respecting custom-event API. Pairs with plugin **v6.10.0** (the `ce`/`cp` rollups + Events-tab display) and worker **v1.2.0** (`ce`/`cp` capture).
