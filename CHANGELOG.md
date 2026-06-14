@@ -2,6 +2,14 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.4.0] - 2026-06-14 — Beacon custom-event API
+
+**Headline:** Extends the first-party beacon with a public, privacy-respecting custom-event API. Pairs with plugin **v6.10.0** (the `ce`/`cp` rollups + Events-tab display) and worker **v1.2.0** (`ce`/`cp` capture).
+
+### New
+
+- **`window.SN_BEACON.event(name, props)`** ([assets/js/sn-beacon.js](assets/js/sn-beacon.js)) — fire a named custom event (e.g. `subscribe-click`, `code-copy`) from any page. Posts a `ce` beacon to the same-origin Worker; **no-op under DNT/GPC** (a no-op stub is installed *before* the privacy gate, so `window.SN_BEACON.event(…)` is always safe to call). Name clamped to 64 chars; up to 4 string properties (key ≤60, value ≤180). `tests/beacon.php` extended (36 assertions).
+
 ## [10.3.0] - 2026-06-12 — First-party analytics beacon (ships inert)
 
 **Headline:** The theme half of the first-party, cookieless edge-analytics arc. Adds a tiny front-end **beacon** ([assets/js/sn-beacon.js](assets/js/sn-beacon.js) + [inc/beacon.php](inc/beacon.php)) that emits pageview / scroll-depth / time-on-page hits to a same-origin Cloudflare Worker (`/_sn/px`) → Analytics Engine. **Ships dormant:** the beacon JS no-ops entirely until `SN_BEACON_TOKEN` is defined in `wp-config.php` (and must equal the Worker's `SN_PX_TOKEN`), so installing this changes nothing on the live site until the token is wired. Honors Do-Not-Track / Global-Privacy-Control. Pairs with plugin **v5.2.0** (the read-side dashboard). `tests/beacon.php` (25 assertions); full theme suite green.
