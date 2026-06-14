@@ -99,5 +99,13 @@ ok( strpos( $js, 'pagehide' ) !== false, 'beacon flushes on pagehide' );
 ok( strpos( $js, "'sc'" ) !== false || strpos( $js, '"sc"' ) !== false, 'beacon sends scroll (sc) events' );
 ok( strpos( $js, "'tm'" ) !== false || strpos( $js, '"tm"' ) !== false, 'beacon sends time (tm) events' );
 
+// v10.4.0: custom-event API. A no-op stub MUST be assigned before the privacy
+// gate's early return, so window.SN_BEACON.event(...) is always callable.
+$gate_pos  = strpos( $js, 'globalPrivacyControl === true) return' );
+$stub_pos  = strpos( $js, 'cfg.event = function () {}' );
+ok( $stub_pos !== false, 'beacon defines a no-op cfg.event stub' );
+ok( $gate_pos !== false, 'beacon has the DNT/GPC privacy gate' );
+ok( $stub_pos !== false && $gate_pos !== false && $stub_pos < $gate_pos, 'no-op event stub is set BEFORE the privacy gate (callable under DNT/GPC)' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

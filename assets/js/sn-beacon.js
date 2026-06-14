@@ -8,6 +8,12 @@
   var cfg = window.SN_BEACON;
   if (!cfg || !cfg.endpoint || !cfg.k) return;
 
+  // Custom-event API: a no-op stub set BEFORE the privacy gate so callers can
+  // always invoke window.SN_BEACON.event(name, props) without a guard. Under
+  // DNT/GPC the beacon bails entirely and this stays a no-op; on the tracked
+  // path it is reassigned to the real sender at the end of the IIFE.
+  cfg.event = function () {};
+
   // Privacy gate — bail completely (no listeners, no beacon) when opted out.
   var dnt = navigator.doNotTrack === '1' || window.doNotTrack === '1' || navigator.msDoNotTrack === '1';
   if (dnt || navigator.globalPrivacyControl === true) return;
