@@ -243,7 +243,61 @@ function sn_discography_render_card( $entry ) {
 	}
 	$out .= '</div>'; // .sn-disco-meta
 
+	$out .= sn_discography_render_liner( $entry );
+
 	$out .= '</article>';
+
+	return $out;
+}
+
+/**
+ * B1: the expandable liner-notes panel for a card — a native <details> disclosure
+ * (keyboard-accessible, works with JS off) listing the tracklist with per-track
+ * role credits and, where a 30-sec preview exists, a cookieless play button that
+ * assets/js/discography.js wires to a native <audio>. Returns '' when the entry
+ * carries no tracks (old store entries before a re-sync, or a track-less single).
+ *
+ * @param array<string,mixed> $entry One normalized store entry.
+ * @return string The <details> panel HTML, or ''.
+ */
+function sn_discography_render_liner( $entry ) {
+	$tracks = isset( $entry['tracks'] ) && is_array( $entry['tracks'] ) ? $entry['tracks'] : array();
+	$tracks = array_values( array_filter( $tracks, static function ( $t ) {
+		return is_array( $t ) && '' !== (string) ( $t['title'] ?? '' );
+	} ) );
+	if ( empty( $tracks ) ) {
+		return '';
+	}
+
+	$count = count( $tracks );
+	$out   = '<details class="sn-disco-liner">';
+	$out  .= '<summary class="sn-disco-liner__summary"><span class="sn-disco-liner__label">'
+		. esc_html__( 'Liner notes', 'signal-noise' ) . '</span> <span class="sn-disco-liner__count">'
+		. esc_html( sprintf( _n( '%d track', '%d tracks', $count, 'signal-noise' ), $count ) ) . '</span></summary>';
+	$out  .= '<ol class="sn-disco-tracklist">';
+	foreach ( $tracks as $track ) {
+		$t_title = (string) ( $track['title'] ?? '' );
+		$t_roles = isset( $track['roles'] ) && is_array( $track['roles'] )
+			? implode( ' · ', array_values( array_filter( array_map( 'strval', $track['roles'] ) ) ) )
+			: '';
+		$t_prev  = (string) ( $track['preview_url'] ?? '' );
+
+		$out .= '<li class="sn-disco-track">';
+		if ( '' !== $t_prev ) {
+			$out .= '<button type="button" class="sn-disco-track__play" data-preview="' . esc_url( $t_prev )
+				. '" aria-pressed="false" aria-label="' . esc_attr( sprintf( __( 'Play a 30-second preview of %s', 'signal-noise' ), $t_title ) )
+				. '"><span class="sn-disco-track__icon" aria-hidden="true"></span></button>';
+		} else {
+			$out .= '<span class="sn-disco-track__noplay" aria-hidden="true"></span>';
+		}
+		$out .= '<span class="sn-disco-track__title">' . esc_html( $t_title ) . '</span>';
+		if ( '' !== $t_roles ) {
+			$out .= '<span class="sn-disco-track__roles">' . esc_html( $t_roles ) . '</span>';
+		}
+		$out .= '</li>';
+	}
+	$out .= '</ol>';
+	$out .= '</details>';
 
 	return $out;
 }

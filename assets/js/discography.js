@@ -198,9 +198,72 @@
 		}
 	}
 
+	// ── Liner-notes 30-sec previews (cookieless native <audio>) ──────────────
+	// One shared Audio element, one track at a time. No Spotify embed, no cookie.
+	// If a preview 404s (the p.scdn.co deprecation path) the button disables itself.
+	function initLiner() {
+		var buttons = document.querySelectorAll( '.sn-disco-track__play' );
+		if ( ! buttons.length ) {
+			return;
+		}
+		var audio = null;
+		var current = null;
+
+		function clear() {
+			if ( current ) {
+				current.classList.remove( 'is-playing' );
+				current.setAttribute( 'aria-pressed', 'false' );
+				current = null;
+			}
+		}
+		function stop() {
+			if ( audio ) {
+				audio.pause();
+			}
+			clear();
+		}
+
+		for ( var i = 0; i < buttons.length; i++ ) {
+			( function ( btn ) {
+				btn.addEventListener( 'click', function () {
+					var url = btn.getAttribute( 'data-preview' );
+					if ( ! url ) {
+						return;
+					}
+					if ( current === btn ) { // toggle the playing track off.
+						stop();
+						return;
+					}
+					stop();
+					if ( ! audio ) {
+						audio = new Audio();
+						audio.addEventListener( 'ended', stop );
+						audio.addEventListener( 'error', function () {
+							// Dead preview — retire this control rather than fail loudly.
+							if ( current ) {
+								current.classList.add( 'is-dead' );
+								current.setAttribute( 'disabled', '' );
+							}
+							stop();
+						} );
+					}
+					audio.src = url;
+					current = btn;
+					btn.classList.add( 'is-playing' );
+					btn.setAttribute( 'aria-pressed', 'true' );
+					var played = audio.play();
+					if ( played && played.catch ) {
+						played.catch( function () { stop(); } );
+					}
+				} );
+			} )( buttons[ i ] );
+		}
+	}
+
 	function init() {
 		initPlay();
 		initFilter();
+		initLiner();
 	}
 
 	if ( document.readyState === 'loading' ) {

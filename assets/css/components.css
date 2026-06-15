@@ -1014,11 +1014,153 @@
 	text-transform: uppercase;
 	color: var(--wp--preset--color--rust, #666);
 }
+/* B1: expandable liner-notes panel (native <details>) — tracklist + per-track
+   credits + cookieless 30-sec preview buttons. Brutalist, preset tokens, 11px floor. */
+.sn-disco-liner {
+	margin-top: 0.8rem;
+	border-top: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+	padding-top: 0.6rem;
+}
+.sn-disco-liner__summary {
+	list-style: none;
+	cursor: pointer;
+	display: flex;
+	align-items: baseline;
+	gap: 0.5rem;
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: 0.6875rem; /* 11px floor */
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--bone, #000);
+}
+.sn-disco-liner__summary::-webkit-details-marker {
+	display: none;
+}
+.sn-disco-liner__summary::before {
+	content: '+';
+	display: inline-block;
+	width: 1em;
+	color: var(--wp--preset--color--blood, #e00404);
+}
+.sn-disco-liner[open] .sn-disco-liner__summary::before {
+	content: '\2212'; /* minus */
+}
+.sn-disco-liner__summary:hover,
+.sn-disco-liner__summary:focus-visible {
+	color: var(--wp--preset--color--blood, #e00404);
+	outline: none;
+}
+.sn-disco-liner__summary:focus-visible {
+	outline: 2px solid var(--wp--preset--color--bone, #000);
+	outline-offset: 2px;
+}
+.sn-disco-liner__count {
+	color: var(--wp--preset--color--rust, #666);
+}
+.sn-disco-tracklist {
+	list-style: none;
+	margin: 0.6rem 0 0.2rem;
+	padding: 0;
+}
+.sn-disco-track {
+	display: grid;
+	grid-template-columns: 1.9rem 1fr;
+	column-gap: 0.6rem;
+	row-gap: 0.1rem;
+	align-items: center;
+	padding: 0.5rem 0;
+	border-bottom: 1px solid color-mix( in srgb, var(--wp--preset--color--concrete, #d9d9d9) 55%, transparent );
+}
+.sn-disco-track:last-child {
+	border-bottom: 0;
+}
+.sn-disco-track__play,
+.sn-disco-track__noplay {
+	grid-column: 1;
+	grid-row: 1 / span 2;
+	align-self: center;
+	width: 1.9rem;
+	height: 1.9rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.sn-disco-track__play {
+	padding: 0;
+	border: 1px solid var(--wp--preset--color--bone, #000);
+	background: transparent;
+	cursor: pointer;
+	transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.sn-disco-track__play:hover,
+.sn-disco-track__play:focus-visible,
+.sn-disco-track__play.is-playing {
+	background: var(--wp--preset--color--blood, #e00404);
+	border-color: var(--wp--preset--color--blood, #e00404);
+	outline: none;
+}
+.sn-disco-track__play:focus-visible {
+	outline: 2px solid var(--wp--preset--color--bone, #000);
+	outline-offset: 2px;
+}
+.sn-disco-track__play.is-dead {
+	opacity: 0.3;
+	cursor: default;
+	background: transparent;
+	border-color: var(--wp--preset--color--concrete, #d9d9d9);
+}
+/* play triangle (idle) → swaps to white on the blood hover/playing state */
+.sn-disco-track__icon {
+	width: 0;
+	height: 0;
+	border-style: solid;
+	border-width: 5px 0 5px 8px;
+	border-color: transparent transparent transparent var(--wp--preset--color--bone, #000);
+	margin-left: 2px;
+}
+.sn-disco-track__play:hover .sn-disco-track__icon,
+.sn-disco-track__play:focus-visible .sn-disco-track__icon {
+	border-left-color: var(--wp--preset--color--void, #fff);
+}
+/* playing → two pause bars (white on blood) */
+.sn-disco-track__play.is-playing .sn-disco-track__icon {
+	width: 9px;
+	height: 11px;
+	border: 0;
+	margin-left: 0;
+	border-left: 3px solid var(--wp--preset--color--void, #fff);
+	border-right: 3px solid var(--wp--preset--color--void, #fff);
+}
+.sn-disco-track__noplay::before {
+	content: '';
+	width: 4px;
+	height: 4px;
+	background: var(--wp--preset--color--concrete, #d9d9d9);
+}
+.sn-disco-track__title {
+	grid-column: 2;
+	grid-row: 1;
+	font-family: var(--wp--preset--font-family--body, sans-serif);
+	font-size: 0.82rem;
+	line-height: 1.3;
+	color: var(--wp--preset--color--bone, #000);
+}
+.sn-disco-track__roles {
+	grid-column: 2;
+	grid-row: 2;
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: 0.6875rem; /* 11px floor */
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--rust, #666);
+}
+
 @media (prefers-reduced-motion: reduce) {
 	.sn-disco-card,
 	.sn-disco-art,
 	.sn-disco-chip,
 	.sn-disco-play-badge,
+	.sn-disco-track__play,
 	.sn-disco-credits {
 		transition: none;
 	}

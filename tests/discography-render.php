@@ -52,6 +52,12 @@ if ( ! function_exists( 'esc_html' ) ) {
 if ( ! function_exists( 'esc_html__' ) ) {
 	function esc_html__( $s, $d = 'default' ) { return htmlspecialchars( (string) $s, ENT_QUOTES ); }
 }
+if ( ! function_exists( '__' ) ) {
+	function __( $s, $d = 'default' ) { return (string) $s; }
+}
+if ( ! function_exists( '_n' ) ) {
+	function _n( $single, $plural, $n, $d = 'default' ) { return 1 === (int) $n ? $single : $plural; }
+}
 
 require __DIR__ . '/../inc/discography-render.php';
 
@@ -180,6 +186,45 @@ ok( preg_match( "/get\(\s*'role'\s*\)/", $djs ) === 1, "discography.js reads the
 ok( strpos( $djs, 'pushState' ) !== false, 'discography.js writes the role to history (pushState)' );
 ok( strpos( $djs, 'popstate' ) !== false, 'discography.js restores the filter on back/forward (popstate)' );
 ok( preg_match( "/getAttribute\(\s*'data-role'\s*\)/", $djs ) === 1, 'role is matched against chip data-role values (no selector built from the raw param)' );
+
+// ── B1: liner-notes panel (sn_discography_render_liner) ──────────────
+ok( function_exists( 'sn_discography_render_liner' ), 'sn_discography_render_liner() is defined' );
+ok( sn_discography_render_liner( array( 'title' => 'X', 'tracks' => array() ) ) === '', 'no tracks → no liner panel' );
+ok( sn_discography_render_liner( array( 'title' => 'X' ) ) === '', 'missing tracks key → no liner panel (back-compat)' );
+
+$liner = sn_discography_render_liner( array( 'title' => 'Rec', 'tracks' => array(
+	array( 'title' => 'Opener', 'roles' => array( 'Producer', 'Mixing' ), 'preview_url' => 'https://p.scdn.co/mp3-preview/o', 'spotify_id' => 's1' ),
+	array( 'title' => 'No Preview Track', 'roles' => array( 'Engineer' ), 'preview_url' => '', 'spotify_id' => '' ),
+) ) );
+ok( strpos( $liner, '<details class="sn-disco-liner"' ) !== false, 'renders a native <details> disclosure (works JS-off)' );
+ok( strpos( $liner, '<summary' ) !== false && strpos( $liner, '2 tracks' ) !== false, 'summary shows the track count' );
+ok( strpos( $liner, 'sn-disco-tracklist' ) !== false, 'renders the tracklist <ol>' );
+ok( strpos( $liner, 'Opener' ) !== false && strpos( $liner, 'Producer · Mixing' ) !== false, 'per-track title + middot-joined credits' );
+ok( strpos( $liner, 'data-preview="https://p.scdn.co/mp3-preview/o"' ) !== false, 'a previewable track carries a play button with data-preview' );
+ok( substr_count( $liner, 'sn-disco-track__play"' ) === 1, 'only the track WITH a preview gets a play button' );
+ok( strpos( $liner, 'sn-disco-track__noplay' ) !== false, 'a track without a preview gets a no-play spacer (titles stay aligned)' );
+ok( strpos( $liner, 'aria-pressed="false"' ) !== false, 'play button is a toggle (aria-pressed)' );
+
+// Escaping: every track field is escaped at the sink.
+$evil_liner = sn_discography_render_liner( array( 'title' => 'X', 'tracks' => array(
+	array( 'title' => 'Bad <b>x</b>', 'roles' => array( '<script>r</script>' ), 'preview_url' => 'https://x/"onerror="alert(1)', 'spotify_id' => 'z' ),
+) ) );
+ok( strpos( $evil_liner, '<b>x</b>' ) === false, 'hostile track title escaped' );
+ok( strpos( $evil_liner, '<script>r</script>' ) === false, 'hostile track role escaped' );
+ok( strpos( $evil_liner, '"onerror="alert(1)' ) === false, 'hostile preview_url esc_url\'d' );
+
+// End-to-end: the shortcode renders the panel for an entry carrying tracks.
+$GLOBALS['__test_filters']['sn_discography_entries'] = array( function () {
+	return array( array( 'id' => 'e1', 'title' => 'Album', 'year' => 2024, 'type' => 'album', 'spotify_id' => '', 'tracks' => array(
+		array( 'title' => 'Track A', 'roles' => array( 'Producer' ), 'preview_url' => 'https://p.scdn.co/mp3-preview/a', 'spotify_id' => 'sa' ),
+	) ) );
+} );
+ok( strpos( sn_discography_shortcode(), 'sn-disco-liner' ) !== false, 'shortcode: an entry with tracks renders the liner panel' );
+
+// JS contract: the player is wired (cookieless native Audio, one-at-a-time).
+$djs2 = file_get_contents( __DIR__ . '/../assets/js/discography.js' );
+ok( strpos( $djs2, 'sn-disco-track__play' ) !== false && strpos( $djs2, 'new Audio' ) !== false, 'discography.js wires a native Audio() for previews (no embed/cookie)' );
+ok( strpos( $djs2, "addEventListener( 'error'" ) !== false, 'discography.js retires a dead preview on the audio error event' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
