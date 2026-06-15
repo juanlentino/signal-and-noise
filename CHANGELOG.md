@@ -2,6 +2,17 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.6.0] - 2026-06-14 — Editorial blocks: epigraph + references
+
+**Headline:** Two new opt-in editorial block styles + insertable patterns — a quiet epigraph opener and a hanging-indent references list — extending the brutalist block vocabulary for citation-bearing essays.
+
+### New
+
+- **Epigraph block style (D2)** — a `core/quote` style ("Epigraph") for a quiet framing quotation to open an essay: italic grey body, a thin concrete left rule (no field), small-caps attribution. The opener counterpart to the Signal quote's mid-text emphasis. Ships with an insertable `signal-noise/epigraph` pattern. [inc/block-styles.php](inc/block-styles.php), [patterns/epigraph.php](patterns/epigraph.php)
+- **References block style (D3)** — a `core/list` style ("References") for a hanging-indent bibliography: first line flush, continuation lines indented, long source URLs wrapped. A print rule keeps each entry whole (`break-inside: avoid`) and reveals the source URL after each link so a printed page is self-contained. Ships with an insertable `signal-noise/references` pattern. [inc/block-styles.php](inc/block-styles.php), [patterns/references.php](patterns/references.php)
+
+> **Why MINOR:** two new opt-in, user-visible block styles + patterns — additive, no markup change to existing content, no settings-schema change, no user action required. Both remain unselected until an author chooses them in the editor.
+
 ## [10.5.0] - 2026-06-14 — Head + craft cluster
 
 **Headline:** Machine-readable identity in `<head>`, a humans.txt, a live build colophon, and prose typography polish — additions cluster 2 (theme head + craft).
