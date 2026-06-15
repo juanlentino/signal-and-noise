@@ -2,6 +2,23 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.5.0] - 2026-06-14 — Head + craft cluster
+
+**Headline:** Machine-readable identity in `<head>`, a humans.txt, a live build colophon, and prose typography polish — additions cluster 2 (theme head + craft).
+
+### New
+
+- **`<link rel="me">` identity links (A4).** The configured social profiles now emit `rel="me"` head links for IndieAuth / Mastodon verification. Reads the companion plugin's `sn_settings` → `social.same_as` directly (the documented `sn_schema_same_as` filter passes its default inline, so calling it yields nothing on its own), passing the list *through* that filter as an override hook. Standalone-safe: zero links and no fatal when the plugin is absent. New module [inc/identity-rels.php](inc/identity-rels.php).
+- **`/humans.txt` + maker's mark (C4).** A flat humans.txt (humanstxt.org / IndieWeb convention) served as a `template_redirect` virtual route — owner/theme facts read from `wp_get_theme()` so they never drift, stack lines in lockstep with the colophon. Advertised with a `rel="author"` autodiscovery link, plus one dry maker's-mark comment in `<head>`. New module [inc/humans-txt.php](inc/humans-txt.php).
+- **Live colophon build line (C2).** The /colophon page now shows real build provenance — theme version, companion-plugin version (`SNT_VERSION`), git short SHA, and deploy time — via a `[sn_build]` shortcode resolved through the existing `render_block` bridge. The git short SHA is read straight off `.git` (no shell-out — process spawning is disabled on Cloudways; `.git` is preserved on-server) handling loose-ref, packed-refs, and detached-HEAD layouts. Every segment degrades independently; never fatals. New module [inc/colophon-meta.php](inc/colophon-meta.php), pattern token in [patterns/colophon.php](patterns/colophon.php).
+
+### Improvements
+
+- **Head-sweep (A4).** Dropped the dead `rsd_link` (EditURI/RSD) and `wlwmanifest_link` from `<head>` — both advertised the disabled xmlrpc surface — and added a brand `<meta name="theme-color" content="#e00404">` for mobile browser chrome (single value, pinned to the `blood` palette slug; no dark variant by design). [inc/frontend-filters.php](inc/frontend-filters.php), [inc/assets-frontend.php](inc/assets-frontend.php)
+- **Typographic detailing (C1).** Broadened `hanging-punctuation` from single-post body copy to the pull-quote prose root (a real refinement on Safari; silently ignored elsewhere). Added `font-variant-numeric: tabular-nums` on the numeric columns and an opt-in `.sn-frac` diagonal-fractions utility. Honest note: the body face (DM Mono) is monospaced and its subset carries no `tnum`, so tabular-nums is a forward-compat / intent declaration today, not a visible change; the `.sn-frac` utility is dormant until fraction content exists. [assets/css/critical.css](assets/css/critical.css)
+
+> **Why MINOR:** new user-visible capabilities (rel=me, humans.txt, live colophon) plus additive head/typography refinements — no markup break, no settings-schema change, no user action required. A3 is inert until social profiles are configured; the live colophon degrades to the theme version alone when `.git`/plugin are absent.
+
 ## [10.4.2] - 2026-06-14 — Front-end polish
 
 **Headline:** Visual + responsive refinements from the comprehensive audit.
