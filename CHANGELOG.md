@@ -2,6 +2,20 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.8.0] - 2026-06-15 — Liner notes: tracklists, per-track credits & cookieless previews (B1)
+
+**Headline:** Each `/music` release now expands to a liner-notes panel — the tracklist, the per-track role credits, and a 30-second audio preview per track played from a cookieless native `<audio>` (no Spotify embed, no cookie). Pairs with plugin v6.14.0, which carries the per-track data.
+
+### New
+
+- **Expandable liner notes on each discography card (B1).** A native `<details>` disclosure (keyboard-accessible, works with JS off) reveals the tracklist with each track's own role credits and, where a preview exists, a play button. Tracks come from the entry's `tracks[]` (plugin v6.14.0+); a release with no track data simply shows no panel, so old/un-synced entries and a plugin-absent install degrade cleanly. [inc/discography-render.php](inc/discography-render.php) (`sn_discography_render_liner()`)
+- **Cookieless 30-second previews.** One shared native `Audio` element plays a track's `p.scdn.co` preview MP3 — one track at a time, click-to-toggle, no third-party embed or cookie. A dead preview (should Spotify ever pull a URL) retires its own button via the `audio` error event rather than failing loudly; the album-level Spotify embed (cover click-to-play) is unchanged. [assets/js/discography.js](assets/js/discography.js)
+- **Brutalist tracklist styling** in the existing `.sn-disco-*` vocabulary — mono credits, a blood play/pause control, hairline rows, `prefers-reduced-motion` honoured, 11px floor. [assets/css/components.css](assets/css/components.css)
+
+> **Why MINOR:** a new user-visible capability on existing cards; additive, no markup change to non-music content, no settings-schema change, no user action required. Inert (no panel) until the plugin supplies `tracks[]`.
+>
+> **Post-deploy:** the previews load audio from `p.scdn.co` — confirm the live Cloudflare CSP `media-src` allows it (the CSP is edge-set, not in this repo). Without it the `<audio>` is blocked and previews won't play (the tracklist + credits still render).
+
 ## [10.7.0] - 2026-06-14 — Wayfinding cluster: /index dossier, music URL facets, keyboard nav
 
 **Headline:** Three reader-facing wayfinding additions (cluster 5) — a whole-site `/index` dossier, URL-addressable music role filters with per-role counts, and `j`/`k` keyboard navigation between notes with a `?` cheat-sheet.
