@@ -25,6 +25,7 @@
  *   inc/feed-json.php            — JSON Feed 1.1 for the Notes corpus (v9.11.0)
  *   inc/feed-enrichment.php      — RSS media:content + reading-time enrichment, plugin-guarded (v9.11.0)
  *   inc/command-palette.php      — reader-facing Notes-scoped ⌘K/"/" command palette (v9.11.0)
+ *   inc/keyboard-nav.php         — single-note j/k prev/next + "?" keyboard cheat-sheet (C5, v10.7.0)
  *   inc/404-recovery.php         — helpful 404: search + recent-notes suggestions ([sn_404_suggestions])
  *   inc/identity-rels.php        — <link rel="me"> head links from sn_settings social.same_as (A4, v10.5.0)
  *   inc/humans-txt.php           — /humans.txt virtual route + rel=author autodiscovery + maker's-mark comment (C4, v10.5.0)
@@ -62,6 +63,7 @@ require_once __DIR__ . '/inc/wp-update-git-preservation.php';
 
 require_once __DIR__ . '/inc/template-maintenance.php';
 require_once __DIR__ . '/inc/page-notes-template.php';
+require_once __DIR__ . '/inc/page-index-template.php'; // C3 (v10.7.0): /index whole-site dossier virtual route (loads inc/page-index-render.php)
 require_once __DIR__ . '/inc/patterns.php';
 require_once __DIR__ . '/inc/blocks-register.php';
 require_once __DIR__ . '/inc/block-styles.php';
@@ -77,6 +79,7 @@ require_once __DIR__ . '/inc/article-toc.php';
 require_once __DIR__ . '/inc/feed-json.php';
 require_once __DIR__ . '/inc/feed-enrichment.php';
 require_once __DIR__ . '/inc/command-palette.php';
+require_once __DIR__ . '/inc/keyboard-nav.php'; // C5 (v10.7.0): single-note j/k prev/next + "?" keyboard cheat-sheet
 require_once __DIR__ . '/inc/discography-render.php';
 require_once __DIR__ . '/inc/music-featured-render.php'; // v9.15.0: [sn_music_featured] hero player (reads sn_music_featured filter)
 require_once __DIR__ . '/inc/beacon.php'; // P1: first-party edge analytics beacon enqueue

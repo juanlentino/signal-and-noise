@@ -149,5 +149,37 @@ ok( strpos( $evil, '<script>r</script>' ) === false, 'hostile role escaped' );
 ok( strpos( $evil, '"onerror="alert(1)' ) === false, 'hostile image URL esc_url\'d' );
 ok( strpos( $evil, 'id"><img src=x>' ) === false, 'hostile spotify_id esc_attr\'d' );
 
+// ── B2: PER-ROLE COUNTS (v10.7.0) ─────────────────────────────────────
+// Roles deliberately repeat so counts vary (a count that is always 1 is a
+// weak assertion). Mixing×3, Producer×2, total 4.
+$counted = array(
+	array( 'id' => 'm1', 'title' => 'Mix One',   'roles' => array( 'Mixing' ),               'year' => 2024, 'type' => 'album', 'spotify_id' => '' ),
+	array( 'id' => 'm2', 'title' => 'Mix Two',   'roles' => array( 'Mixing', 'Producer' ),   'year' => 2023, 'type' => 'album', 'spotify_id' => '' ),
+	array( 'id' => 'm3', 'title' => 'Mix Three', 'roles' => array( 'Mixing' ),               'year' => 2022, 'type' => 'album', 'spotify_id' => '' ),
+	array( 'id' => 'p1', 'title' => 'Prod One',  'roles' => array( 'Producer' ),             'year' => 2021, 'type' => 'album', 'spotify_id' => '' ),
+);
+ok( function_exists( 'sn_discography_count_for_role' ), 'sn_discography_count_for_role() is defined' );
+ok( sn_discography_count_for_role( $counted, 'Mixing' ) === 3, 'count helper: Mixing credited on 3 releases' );
+ok( sn_discography_count_for_role( $counted, 'Producer' ) === 2, 'count helper: Producer credited on 2 releases' );
+ok( sn_discography_count_for_role( $counted, 'Mastering' ) === 0, 'count helper: absent role counts 0' );
+
+$GLOBALS['__test_filters']['sn_discography_entries'] = array( function () use ( $counted ) { return $counted; } );
+$ch = sn_discography_shortcode();
+ok( preg_match( '/data-role="\*"[^>]*data-count="4"/', $ch ) === 1, 'All chip carries the total count (data-count="4")' );
+ok( preg_match( '/data-role="Mixing"[^>]*data-count="3"/', $ch ) === 1, 'Mixing chip carries its per-role count (data-count="3")' );
+ok( preg_match( '/data-role="Producer"[^>]*data-count="2"/', $ch ) === 1, 'Producer chip carries its per-role count (data-count="2")' );
+ok( strpos( $ch, 'sn-disco-chip__count' ) !== false, 'chips render a visible count badge (.sn-disco-chip__count)' );
+ok( preg_match( '/sn-disco-chip__count">3</', $ch ) === 1, 'Mixing badge shows the visible figure (3)' );
+// data-count is still between data-role and aria-pressed → existing a11y assertion holds.
+ok( preg_match( '/data-role="Producer"[^>]*aria-pressed="false"/', $ch ) === 1, 'a11y: per-role chips keep aria-pressed="false" with the count present' );
+
+// ── B2: URL-ADDRESSABLE FILTER (discography.js static contract) ───────
+$djs = file_get_contents( __DIR__ . '/../assets/js/discography.js' );
+ok( strpos( $djs, 'URLSearchParams' ) !== false, 'discography.js reads the query string via URLSearchParams' );
+ok( preg_match( "/get\(\s*'role'\s*\)/", $djs ) === 1, "discography.js reads the ?role= param" );
+ok( strpos( $djs, 'pushState' ) !== false, 'discography.js writes the role to history (pushState)' );
+ok( strpos( $djs, 'popstate' ) !== false, 'discography.js restores the filter on back/forward (popstate)' );
+ok( preg_match( "/getAttribute\(\s*'data-role'\s*\)/", $djs ) === 1, 'role is matched against chip data-role values (no selector built from the raw param)' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

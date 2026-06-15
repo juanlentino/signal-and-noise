@@ -2,6 +2,21 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.7.0] - 2026-06-14 — Wayfinding cluster: /index dossier, music URL facets, keyboard nav
+
+**Headline:** Three reader-facing wayfinding additions (cluster 5) — a whole-site `/index` dossier, URL-addressable music role filters with per-role counts, and `j`/`k` keyboard navigation between notes with a `?` cheat-sheet.
+
+### New
+
+- **`/index` whole-site dossier (C3).** A new server-rendered `/index` page collects the entire site into one brutalist dossier — the Notes corpus, the standalone Pages, and the discography — in the tabular row idiom. A postless `template_redirect` virtual route (no add_rewrite_rule), forcing HTTP 200 so the page isn't served under WP's inherited 404 (WORDPRESS-REFERENCE gotcha #40). Usable with JS off; the music section reads the same cross-package filter as `/music`, so it degrades cleanly when the plugin is absent. New modules [inc/page-index-template.php](inc/page-index-template.php) + [inc/page-index-render.php](inc/page-index-render.php), [assets/css/index.css](assets/css/index.css).
+- **Keyboard navigation on notes (C5).** On a single note, `j` jumps to the next note and `k` to the previous (following the post-closing prev/next links), and `?` opens a keyboard cheat-sheet overlay. All skipped while typing in a form field (the same `isFormField` guard as the command palette, kept in lockstep). Pure progressive enhancement, single-post only; the overlay fade is gated under `prefers-reduced-motion: no-preference`. New module [inc/keyboard-nav.php](inc/keyboard-nav.php), [assets/js/keyboard-nav.js](assets/js/keyboard-nav.js), [assets/css/keyboard-nav.css](assets/css/keyboard-nav.css).
+
+### Improvements
+
+- **URL-addressable music role filters + per-role counts (B2).** The `/music` discography role chips are now deep-linkable: selecting a role writes `?role=Mixing` via the History API (back/forward restore the filter, the URL is shareable), and each chip carries a per-role count badge ("MIXING · 6"). The role from the URL is validated against the actual chips — a stray or hostile `?role=` value falls back to "All", and no selector is ever built from the raw param. Server-rendered counts (work with JS off); progressive — without the History API the chips still filter. [inc/discography-render.php](inc/discography-render.php), [assets/js/discography.js](assets/js/discography.js), [assets/css/components.css](assets/css/components.css)
+
+> **Why MINOR:** three new user-visible capabilities (a new route, deep-linkable filters, keyboard navigation) — additive, no public-API removal, no settings-schema change, no user action required. Existing pages and content are unchanged.
+
 ## [10.6.0] - 2026-06-14 — Editorial blocks: epigraph + references
 
 **Headline:** Two new opt-in editorial block styles + insertable patterns — a quiet epigraph opener and a hanging-indent references list — extending the brutalist block vocabulary for citation-bearing essays.

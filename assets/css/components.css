@@ -839,6 +839,21 @@
 	border-color: var(--wp--preset--color--blood, #e00404);
 }
 
+/* B2: per-role count badge ("MIXING · 6"). Dimmed (rust) when idle; follows the
+   chip's blood/active colour on hover + when selected. The middot separator is
+   CSS-only so the screen-reader label reads "Mixing 6", not "Mixing · 6". */
+.sn-disco-chip__count {
+	color: var(--wp--preset--color--rust, #666);
+}
+.sn-disco-chip__count::before {
+	content: '·';
+	margin: 0 0.3em 0 0.15em;
+}
+.sn-disco-chip:hover .sn-disco-chip__count,
+.sn-disco-chip.is-active .sn-disco-chip__count {
+	color: inherit;
+}
+
 /* Year sections. */
 .sn-disco-year {
 	margin: clamp(2rem, 4vw, 3.25rem) 0;
