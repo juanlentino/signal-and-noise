@@ -46,6 +46,20 @@ remove_action( 'wp_head', 'wp_generator' );
 add_filter( 'the_generator', '__return_empty_string' );
 
 /**
+ * Head-sweep (A4): drop the legacy xmlrpc-era discovery links core still
+ * emits at wp_head priority 10. Both advertise surfaces this site does not
+ * serve:
+ *   - rsd_link()         → <link rel="EditURI" … xmlrpc.php?rsd> (Really Simple
+ *                          Discovery — points at the disabled xmlrpc.php).
+ *   - wlwmanifest_link() → <link rel="wlwmanifest" … wlwmanifest.xml> (Windows
+ *                          Live Writer, retired in 2017).
+ * No explicit priority arg is needed: core registers both at the default
+ * priority 10, which is what remove_action() matches when omitted.
+ */
+remove_action( 'wp_head', 'rsd_link' );
+remove_action( 'wp_head', 'wlwmanifest_link' );
+
+/**
  * Work around a WordPress core bug in render_block_core_social_link()
  * (wp-includes/blocks/social-link.php). Core prepends "https://" to any
  * URL that has no scheme and doesn't start with "//" or "#" — but it

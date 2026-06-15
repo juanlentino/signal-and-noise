@@ -60,10 +60,18 @@ function signal_noise_current_year() {
 add_shortcode( 'current_year', 'signal_noise_current_year' );
 
 /**
- * Process shortcodes inside block template parts.
+ * Process shortcodes inside block template parts + patterns.
+ *
+ * Gated on a literal-token check so do_shortcode() only runs on blocks that
+ * actually carry one of our tokens (avoids paying do_shortcode on every block).
+ * Add new theme tokens here when introducing them:
+ *   [current_year] — footer copyright (parts/footer.html)
+ *   [sn_build]     — live colophon build line (patterns/colophon.php, C2)
  */
 add_filter( 'render_block', function( $block_content, $block ) {
-	if ( strpos( $block_content, '[current_year]' ) !== false ) {
+	if ( strpos( $block_content, '[current_year]' ) !== false
+		|| strpos( $block_content, '[sn_build]' ) !== false
+	) {
 		$block_content = do_shortcode( $block_content );
 	}
 	return $block_content;

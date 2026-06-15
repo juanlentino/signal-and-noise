@@ -26,6 +26,9 @@
  *   inc/feed-enrichment.php      — RSS media:content + reading-time enrichment, plugin-guarded (v9.11.0)
  *   inc/command-palette.php      — reader-facing Notes-scoped ⌘K/"/" command palette (v9.11.0)
  *   inc/404-recovery.php         — helpful 404: search + recent-notes suggestions ([sn_404_suggestions])
+ *   inc/identity-rels.php        — <link rel="me"> head links from sn_settings social.same_as (A4, v10.5.0)
+ *   inc/humans-txt.php           — /humans.txt virtual route + rel=author autodiscovery + maker's-mark comment (C4, v10.5.0)
+ *   inc/colophon-meta.php        — [sn_build] live colophon line: theme+plugin version, git short SHA, deploy time (C2, v10.5.0)
  *   (inc/page-notes-render.php   — full PHP render of /notes index; loaded by page-notes-template.php, not here)
  *
  * Operational tooling — REST surface, Plausible integration, admin UI, security
@@ -77,3 +80,6 @@ require_once __DIR__ . '/inc/command-palette.php';
 require_once __DIR__ . '/inc/discography-render.php';
 require_once __DIR__ . '/inc/music-featured-render.php'; // v9.15.0: [sn_music_featured] hero player (reads sn_music_featured filter)
 require_once __DIR__ . '/inc/beacon.php'; // P1: first-party edge analytics beacon enqueue
+require_once __DIR__ . '/inc/identity-rels.php'; // A4 (v10.5.0): <link rel="me"> head links from sn_settings social.same_as
+require_once __DIR__ . '/inc/humans-txt.php'; // C4 (v10.5.0): /humans.txt virtual route + rel=author autodiscovery + maker's-mark comment
+require_once __DIR__ . '/inc/colophon-meta.php'; // C2 (v10.5.0): [sn_build] live colophon line (theme+plugin version, git short SHA, deploy time)

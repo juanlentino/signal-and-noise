@@ -976,15 +976,43 @@ main { view-transition-name: sn-main; }
 	}
 }
 
-/* --- HANGING PUNCTUATION ---
-   Not viewport-gated — applies at all widths. Safari renders
-   correctly (full support since Safari 10, 2017). Chrome/Firefox/
-   Edge ignore the property as of 2026-05; punctuation stays
-   inside the text edge (graceful degradation, no fallback rule
-   needed). */
+/* --- TYPOGRAPHIC DETAILING (C1) ---
+   critical.css is inlined globally, so these refinements reach every
+   surface (single notes, the /notes catalog, discography, related notes)
+   from one place. */
 
-.single-post .wp-block-post-content {
+/* Hanging punctuation across editorial prose. Not viewport-gated. Safari
+   renders it (full support since Safari 10, 2017); Chrome/Firefox/Edge
+   silently ignore the property as of 2026-06 — punctuation just stays
+   inside the text edge (graceful degradation, no fallback rule needed).
+   Broadened from single-post body copy to the pull-quote prose root;
+   deliberately NOT applied to body{} so mono UI chrome (nav, eyebrows,
+   specs) keeps its punctuation on the text edge. */
+.wp-block-post-content,
+.sn-pull-quote__body {
 	hanging-punctuation: first last allow-end;
+}
+
+/* Tabular figures on numeric columns. NOTE: the body face (DM Mono) is
+   monospaced and its subset carries no `tnum`, so figures are already
+   fixed-width — this is a forward-compat / intent declaration today, not a
+   visible change. It becomes a real column-alignment win only if the body
+   face is ever set to a proportional family. Harmless now. */
+.sn-post-frontmatter__date,
+.sn-post-frontmatter__rt,
+.sn-notes-row-date,
+.sn-notes-row-rt,
+.sn-notes-pagination,
+.sn-disco-count,
+.sn-disco-year__count {
+	font-variant-numeric: tabular-nums;
+}
+
+/* Opt-in diagonal fractions. DM Mono DOES carry `frac`, so wrapping a
+   genuine fraction — e.g. <span class="sn-frac">4/4</span> — renders it as a
+   proper diagonal fraction. Dormant utility until fraction content exists. */
+.sn-frac {
+	font-variant-numeric: diagonal-fractions;
 }
 
 /* v9.12.0: command-palette kill-switch (sn_palette_enabled=false -> body.sn-cmdk-off). */

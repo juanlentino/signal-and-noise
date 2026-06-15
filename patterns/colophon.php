@@ -36,5 +36,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	</ul>
 	<!-- /wp:list -->
 
+	<!-- wp:paragraph {"className":"sn-colophon__build","style":{"typography":{"fontSize":"0.78rem","letterSpacing":"0.04em"}},"textColor":"steel"} -->
+	<p class="sn-colophon__build has-steel-color has-text-color" style="font-size:0.78rem;letter-spacing:0.04em">[sn_build]</p>
+	<!-- /wp:paragraph -->
+
 </section>
 <!-- /wp:group -->
