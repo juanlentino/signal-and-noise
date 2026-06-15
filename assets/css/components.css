@@ -1201,6 +1201,31 @@
 	border: 0;
 }
 
+/* ── Availability line (D5) — Contact/Services hero status ──────────────
+ * Mirrors the .sn-music-featured__label + dot idiom: a small uppercase
+ * status line with a leading signal dot. Rendered by [sn_availability]
+ * (inc/availability.php) from the plugin's identity.availability setting;
+ * absent/empty → the shortcode emits nothing, so no rule ever applies to
+ * an empty element. */
+.sn-availability {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.55rem;
+	margin: 1.2rem 0 0;
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.72rem, 11px);
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--bone, #000);
+}
+.sn-availability__dot {
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: var(--wp--preset--color--signal, #ff4c47);
+	flex: 0 0 auto;
+}
+
 /* ── In-article TOC + reading-progress bar ─────────────────────────────
  * Card at the article top + a thin fixed progress bar under the header.
  * Tokens mirror .sn-provenance-toc; blood-red active state. JS injects the

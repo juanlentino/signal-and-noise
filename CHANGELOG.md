@@ -2,6 +2,17 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.9.0] - 2026-06-15 — Availability line + WebSub feed push (D5 + D4, theme half)
+
+**Headline:** The `/contact` and `/services` heroes now show an owner-edited **availability line** ("Available for select mixing work") when set, and the RSS2 + Atom feeds advertise a **WebSub hub** so feed readers can subscribe for instant push. Pairs with plugin v6.17.0 (the setting + the hub ping).
+
+### New
+
+- **`[sn_availability]` line (D5).** A new shortcode placed in the `/contact` and `/services` page heroes that surfaces the owner-edited availability string from the companion plugin's `sn_settings` (subtree `identity.availability`, set on Site → Identity & SEO). A small uppercase status line with a leading signal dot — mirrors the `.sn-music-featured__label` idiom. Standalone-safe: plugin/option absent or the string empty → renders nothing (no empty box); the value is `esc_html()`'d at output. [inc/availability.php](inc/availability.php), [assets/css/components.css](assets/css/components.css), [templates/page-contact.html](templates/page-contact.html), [templates/page-services.html](templates/page-services.html)
+- **WebSub feed advertisement (D4).** The RSS2 + Atom feeds now advertise a hub via `<atom:link rel="hub">` / `<link rel="hub">`, the discovery half of WebSub (PubSubHubbub). Default hub is the public `https://pubsubhubbub.appspot.com/`, overridable via the `sn_websub_hub` filter — the same filter (and identical default literal) the plugin reads to ping that hub, keeping the advertised and pinged hub in sync. Filtering the hub to `''` advertises nothing (opt-out); the href is `esc_url()`'d. [inc/feed-websub.php](inc/feed-websub.php)
+
+> **Why MINOR:** two additive front-end capabilities; no template/markup removal, no breaking change, no user action required. Both degrade to nothing when unconfigured. Theme and plugin use distinct function/const names (sharing only the `sn_websub_hub` filter tag) so both can load in one runtime without a redeclare.
+
 ## [10.8.0] - 2026-06-15 — Liner notes: tracklists, per-track credits & cookieless previews (B1)
 
 **Headline:** Each `/music` release now expands to a liner-notes panel — the tracklist, the per-track role credits, and a 30-second audio preview per track played from a cookieless native `<audio>` (no Spotify embed, no cookie). Pairs with plugin v6.14.0, which carries the per-track data.
