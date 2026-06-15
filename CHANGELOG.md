@@ -2,6 +2,17 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.10.0] - 2026-06-15 — /about/uses gear page (D6)
+
+**Headline:** A new `/about/uses` page — the indie-web "what I use" list, nested under the About (bio) page — rendering the studio hardware, instruments, and software behind the work, grouped and server-rendered in the brutalist row idiom.
+
+### New
+
+- **`/about/uses` virtual route (D6).** A postless `template_redirect` route nested under the About/bio page (mirrors `/index` + `/humans.txt`: `status_header(200)` for the gotcha-#40 404 inheritance, `template_include` fallback, custom document title, route-scoped stylesheet; priority 0 also beats `redirect_canonical` so the nested path isn't stripped to `/about`). Renders the kit grouped by category — Interface & control, Microphones, Headphones, Instruments & keys, Software & licensing — each item a name + optional quiet qualifier. No JS, no external links (link-rot-free), every field `esc_html`'d. [inc/page-uses-template.php](inc/page-uses-template.php), [inc/page-uses-render.php](inc/page-uses-render.php), [assets/css/uses.css](assets/css/uses.css)
+- **Editable gear data + `sn_uses_groups` filter seam.** The list lives in a plain, grouped PHP array in [inc/uses-data.php](inc/uses-data.php) (the edit surface — add a piece of gear in one line). `sn_uses_groups()` applies the `sn_uses_groups` filter and normalizes the result (prunes label-less/empty groups + nameless items; accepts bare-string items), so the companion plugin — or any `add_filter` — can supply the list later without a theme change (the deferred-admin-UI seam). Standalone-safe: an empty list renders the page with no sections, no fatal.
+
+> **Why MINOR:** a new additive front-end page; no removal, no breaking change, no user action. No plugin dependency (theme-only).
+
 ## [10.9.0] - 2026-06-15 — Availability line + WebSub feed push (D5 + D4, theme half)
 
 **Headline:** The `/contact` and `/services` heroes now show an owner-edited **availability line** ("Available for select mixing work") when set, and the RSS2 + Atom feeds advertise a **WebSub hub** so feed readers can subscribe for instant push. Pairs with plugin v6.17.0 (the setting + the hub ping).
