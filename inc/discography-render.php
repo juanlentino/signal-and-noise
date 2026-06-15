@@ -75,6 +75,29 @@ function sn_discography_collect_roles( $entries ) {
 }
 
 /**
+ * Count how many entries credit a given role. Used for the per-chip count
+ * badge ("Mixing · 6") and the chip's data-count attribute. A release that
+ * credits the role more than once still counts once.
+ *
+ * @param array<int,array<string,mixed>> $entries Normalized entries.
+ * @param string                         $role    Exact role label.
+ * @return int
+ */
+function sn_discography_count_for_role( $entries, $role ) {
+	$n = 0;
+	foreach ( $entries as $entry ) {
+		$roles = isset( $entry['roles'] ) && is_array( $entry['roles'] ) ? $entry['roles'] : array();
+		foreach ( $roles as $r ) {
+			if ( trim( (string) $r ) === $role ) {
+				$n++;
+				break;
+			}
+		}
+	}
+	return $n;
+}
+
+/**
  * [sn_discography] — cover-grid gallery for the /music page.
  *
  * Reads the cached entries off the standalone-safe filter and renders them
@@ -121,10 +144,17 @@ function sn_discography_shortcode() {
 	}
 	$out .= '</p>';
 
+	// Per-role count badges ("Mixing · 6"). The middot separator is added in CSS
+	// (::before on .sn-disco-chip__count) so the screen-reader label stays clean.
 	$out .= '<div class="sn-disco-filters" role="group" aria-label="' . esc_attr( 'Filter by role' ) . '">';
-	$out .= '<button type="button" class="sn-disco-chip is-active" data-role="*" aria-pressed="true">' . esc_html__( 'All', 'signal-noise' ) . '</button>';
+	$out .= '<button type="button" class="sn-disco-chip is-active" data-role="*" data-count="' . (int) $count . '" aria-pressed="true">'
+		. esc_html__( 'All', 'signal-noise' )
+		. ' <span class="sn-disco-chip__count">' . (int) $count . '</span></button>';
 	foreach ( $roles as $role ) {
-		$out .= '<button type="button" class="sn-disco-chip" data-role="' . esc_attr( $role ) . '" aria-pressed="false">' . esc_html( $role ) . '</button>';
+		$role_count = sn_discography_count_for_role( $entries, $role );
+		$out .= '<button type="button" class="sn-disco-chip" data-role="' . esc_attr( $role ) . '" data-count="' . (int) $role_count . '" aria-pressed="false">'
+			. esc_html( $role )
+			. ' <span class="sn-disco-chip__count">' . (int) $role_count . '</span></button>';
 	}
 	$out .= '</div>'; // .sn-disco-filters
 	$out .= '</div>'; // .sn-disco-controls

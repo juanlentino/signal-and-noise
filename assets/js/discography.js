@@ -127,18 +127,74 @@
 			}
 		}
 
+		// URL sync is progressive — without History/URLSearchParams the chips
+		// still filter, they just don't write the role into the address bar.
+		var canUrl = !! ( window.history && window.history.pushState && window.URLSearchParams );
+
+		// Reflect the active role across the chips' pressed state.
+		function setActiveChip( role ) {
+			for ( var j = 0; j < chips.length; j++ ) {
+				var on = ( chips[ j ].getAttribute( 'data-role' ) === role );
+				chips[ j ].classList.toggle( 'is-active', on );
+				chips[ j ].setAttribute( 'aria-pressed', on ? 'true' : 'false' );
+			}
+		}
+
+		// Only honour a role an actual chip exposes; a stray/hostile ?role=
+		// falls back to "All". We never build a selector from the raw value,
+		// so there is nothing to inject — match it against known chips instead.
+		function isKnownRole( role ) {
+			if ( role === '*' ) { return true; }
+			for ( var j = 0; j < chips.length; j++ ) {
+				if ( chips[ j ].getAttribute( 'data-role' ) === role ) { return true; }
+			}
+			return false;
+		}
+
+		function roleFromUrl() {
+			if ( ! canUrl ) { return '*'; }
+			var r = new URLSearchParams( window.location.search ).get( 'role' );
+			return r ? r : '*';
+		}
+
+		function urlForRole( role ) {
+			var params = new URLSearchParams( window.location.search );
+			if ( role === '*' ) {
+				params.delete( 'role' );
+			} else {
+				params.set( 'role', role );
+			}
+			var qs = params.toString();
+			return window.location.pathname + ( qs ? '?' + qs : '' ) + window.location.hash;
+		}
+
+		function selectRole( role, push ) {
+			if ( ! isKnownRole( role ) ) { role = '*'; }
+			setActiveChip( role );
+			apply( role );
+			if ( push && canUrl ) {
+				window.history.pushState( { snRole: role }, '', urlForRole( role ) );
+			}
+		}
+
 		for ( var c = 0; c < chips.length; c++ ) {
 			( function ( chip ) {
 				chip.addEventListener( 'click', function () {
-					for ( var j = 0; j < chips.length; j++ ) {
-						chips[ j ].classList.remove( 'is-active' );
-						chips[ j ].setAttribute( 'aria-pressed', 'false' );
-					}
-					chip.classList.add( 'is-active' );
-					chip.setAttribute( 'aria-pressed', 'true' );
-					apply( chip.getAttribute( 'data-role' ) );
+					selectRole( chip.getAttribute( 'data-role' ), true );
 				} );
 			} )( chips[ c ] );
+		}
+
+		if ( canUrl ) {
+			window.addEventListener( 'popstate', function () {
+				selectRole( roleFromUrl(), false );
+			} );
+		}
+
+		// Deep link: honour ?role= on first load (no history push).
+		var initial = roleFromUrl();
+		if ( initial !== '*' ) {
+			selectRole( initial, false );
 		}
 	}
 
