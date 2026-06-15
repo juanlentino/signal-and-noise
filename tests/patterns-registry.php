@@ -95,6 +95,8 @@ $expected_patterns = array(
 	'compare-columns'     => array( 'Slug' => 'signal-noise/compare-columns' ),
 	'steps-enumerated'    => array( 'Slug' => 'signal-noise/steps-enumerated' ),
 	'sidenote'            => array( 'Slug' => 'signal-noise/sidenote' ),
+	'epigraph'            => array( 'Slug' => 'signal-noise/epigraph' ),
+	'references'          => array( 'Slug' => 'signal-noise/references' ),
 );
 
 foreach ( $expected_patterns as $basename => $expected ) {

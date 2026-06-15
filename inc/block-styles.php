@@ -110,4 +110,76 @@ function signal_noise_register_block_styles() {
 				'}',
 		)
 	);
+
+	// Epigraph quote (D2): a QUIET framing opener — the counterpart to the
+	// Signal quote's mid-text emphasis. Italic grey body, a thin concrete left
+	// rule (no field), small-caps attribution. Deliberately restrained so it
+	// reads as an essay's epigraph, not a callout.
+	register_block_style(
+		'core/quote',
+		array(
+			'name'         => 'epigraph',
+			'label'        => 'Epigraph',
+			'inline_style' =>
+				'.wp-block-quote.is-style-epigraph{' .
+					'border:0;' .
+					'border-left:1px solid var(--wp--preset--color--concrete);' .
+					'margin-block:clamp(1.5rem,3vw,2.5rem);' .
+					'padding:0.1rem 0 0.1rem 1.25rem;' .
+					'max-width:46ch;' .
+					'font-style:italic;' .
+					'font-size:max(0.95rem,14px);' .
+					'line-height:1.6;' .
+					'color:var(--wp--preset--color--rust);' .
+				'}' .
+				'.wp-block-quote.is-style-epigraph cite{' .
+					'display:block;' .
+					'margin-top:0.6rem;' .
+					'font-style:normal;' .
+					'font-size:max(0.7rem,11px);' .
+					'text-transform:uppercase;' .
+					'letter-spacing:0.08em;' .
+					'color:var(--wp--preset--color--rust);' .
+				'}',
+		)
+	);
+
+	// References list (D3): a hanging-indent bibliography for citation-bearing
+	// essays. First line flush, continuation lines indented (text-indent
+	// negative + matching padding). Long source URLs wrap; the print rule keeps
+	// each entry whole and reveals the URL after the link so a printed page is
+	// self-contained.
+	register_block_style(
+		'core/list',
+		array(
+			'name'         => 'references',
+			'label'        => 'References',
+			'inline_style' =>
+				'.wp-block-list.is-style-references{' .
+					'list-style:none;' .
+					'margin-left:0;' .
+					'padding-left:0;' .
+					'font-size:max(0.85rem,12px);' .
+					'line-height:1.6;' .
+				'}' .
+				'.wp-block-list.is-style-references li{' .
+					'padding-left:1.5rem;' .
+					'text-indent:-1.5rem;' .
+					'margin-bottom:0.6rem;' .
+					'color:var(--wp--preset--color--bone);' .
+				'}' .
+				'.wp-block-list.is-style-references li a{' .
+					'overflow-wrap:break-word;' .
+				'}' .
+				'@media print{' .
+					'.wp-block-list.is-style-references li{break-inside:avoid;}' .
+					'.wp-block-list.is-style-references li a[href]::after{' .
+						'content:" (" attr(href) ")";' .
+						'font-size:0.85em;' .
+						'color:var(--wp--preset--color--rust);' .
+						'word-break:break-all;' .
+					'}' .
+				'}',
+		)
+	);
 }

@@ -123,7 +123,7 @@ function ha_luminance( $hex ) {
 
 // --- Test 0: exactly two styles registered -----------------------------
 echo "\nTest: two block-style variations registered\n";
-ha_eq( 2, count( $GLOBALS['__test_registered_block_styles'] ), 'exactly 2 register_block_style calls' );
+ha_eq( 4, count( $GLOBALS['__test_registered_block_styles'] ), 'exactly 4 register_block_style calls' );
 
 // --- Test 1: core/separator -> hairline --------------------------------
 echo "\nTest: core/separator \"hairline\"\n";
@@ -203,6 +203,37 @@ if ( $signal ) {
 			'FIX 4: Signal is light-field/dark-text (NOT the old inverted black-box/white-text)'
 		);
 	}
+}
+
+// --- Test 3: core/quote -> epigraph (D2) -------------------------------
+echo "\nTest: core/quote \"epigraph\"\n";
+$epigraph = ha_find_style( 'core/quote', 'epigraph' );
+ha_true( null !== $epigraph, 'registered against core/quote with name "epigraph"' );
+if ( $epigraph ) {
+	$ecss = (string) ( $epigraph['props']['inline_style'] ?? '' );
+	ha_eq( 'Epigraph', $epigraph['props']['label'] ?? null, 'label is "Epigraph"' );
+	ha_true( '' !== trim( $ecss ), 'inline_style is non-empty' );
+	ha_true( false !== strpos( $ecss, 'is-style-epigraph' ), 'inline_style targets .is-style-epigraph' );
+	ha_true( false !== strpos( $ecss, 'var(--wp--preset--color--' ), 'inline_style uses a theme color custom property' );
+	ha_true( false !== strpos( $ecss, 'font-style:italic' ), 'epigraph body is italic (the defining quiet-opener trait)' );
+	ha_true( ! isset( $epigraph['props']['is_default'] ), 'opt-in: no is_default key' );
+}
+
+// --- Test 4: core/list -> references (D3) ------------------------------
+echo "\nTest: core/list \"references\"\n";
+$references = ha_find_style( 'core/list', 'references' );
+ha_true( null !== $references, 'registered against core/list with name "references"' );
+if ( $references ) {
+	$rcss = (string) ( $references['props']['inline_style'] ?? '' );
+	ha_eq( 'References', $references['props']['label'] ?? null, 'label is "References"' );
+	ha_true( '' !== trim( $rcss ), 'inline_style is non-empty' );
+	ha_true( false !== strpos( $rcss, 'is-style-references' ), 'inline_style targets .is-style-references' );
+	ha_true(
+		(bool) preg_match( '/text-indent\s*:\s*-/', $rcss ),
+		'references uses a negative text-indent (hanging indent — the defining trait)'
+	);
+	ha_true( false !== strpos( $rcss, '@media print' ), 'references carries a print rule (@media print)' );
+	ha_true( ! isset( $references['props']['is_default'] ), 'opt-in: no is_default key' );
 }
 
 echo "\nResult: $pass passed, $fail failed.\n";
