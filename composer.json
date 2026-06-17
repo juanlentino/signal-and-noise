@@ -1,8 +1,14 @@
 {
-    "name": "syntharchy/signal-and-noise",
+    "name": "juanlentino/signal-and-noise",
     "description": "Signal & Noise — WordPress FSE theme",
     "type": "wordpress-theme",
     "license": "GPL-2.0-or-later",
+    "authors": [
+        {
+            "name": "Juan Lentino",
+            "homepage": "https://juanlentino.com"
+        }
+    ],
     "require": {
         "php": ">=8.0"
     },
