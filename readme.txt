@@ -3,13 +3,15 @@ Contributors: Juan Lentino
 Requires at least: 7.0
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 10.0.0
+Stable tag: 10.10.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 == Description ==
 
 Signal & Noise is a white-first, brutalist WordPress block theme for juanlentino.com — inspired by nin.com. Black text on white, generous whitespace, blood-red accents, Bebas Neue display + DM Mono editorial pairing.
+
+README.md in the repository root is the canonical, fuller doc (templates, virtual routes, front-end features); this file is a WordPress-format summary.
 
 Features:
 * Full Site Editing (FSE) — block templates, template parts, patterns
@@ -31,25 +33,13 @@ This theme is distributed via GitHub releases, not the WordPress.org directory. 
 
 == Color Palette ==
 
-All design tokens are controlled through theme.json. Current palette (since v2.0.0 inversion):
-
-- `void` (#ffffff) — primary background
-- `asphalt` (#f5f5f5) — secondary background
-- `concrete` (#d9d9d9) — borders, decorative dividers
-- `rust` (#666666) — secondary text
-- `bone` (#000000) — primary text
-- `blood` (#e00404) — brand accent
-- `signal` (#ff4c47) — hover/active accent
-
-Modify in the Site Editor under Styles → Colors.
-
-WCAG AA contrast: every text pairing clears the 4.5:1 normal-text threshold.
+All design tokens live in theme.json — a white-first palette (`void`/`bone` with `blood` + `signal` red accents), editable in the Site Editor under Styles → Colors. Every text pairing clears WCAG AA (4.5:1). Full token reference: README.md and docs/ACCESSIBILITY.md.
 
 == Recommended Plugins ==
 
-* **Signal & Noise Tools** (companion plugin) — owns SEO emission, login hardening, admin tooling, AI-health surfaces. Required.
+* **Signal & Noise Tools** (companion plugin) — owns SEO emission, login hardening, admin tooling, analytics, and AI-health surfaces. Recommended for the full feature set; the theme is standalone-safe and degrades gracefully without it.
 * **Contact Form 7** (with Cloudflare Turnstile) — contact-page form. Optional but recommended.
 
 == Changelog ==
 
-See [CHANGELOG.md](CHANGELOG.md) in the repository root for the full, current release history. The `Stable tag:` field above is the single source of truth for the installed version.
+See [CHANGELOG.md](CHANGELOG.md) in the repository root for the full, current release history. The canonical installed version is the `Version:` header in style.css (what the self-updater reads); the `Stable tag:` above mirrors it.
