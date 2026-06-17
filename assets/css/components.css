@@ -1208,7 +1208,11 @@
  * absent/empty → the shortcode emits nothing, so no rule ever applies to
  * an empty element. */
 .sn-availability {
-	display: inline-flex;
+	/* Block-level flex (NOT inline-flex): the Contact/Services hero is a
+	 * constrained group that centers children via margin-inline:auto, which is a
+	 * no-op on inline-level boxes — inline-flex would fall to the page gutter
+	 * instead of aligning with the hero column. (v10.10.1) */
+	display: flex;
 	align-items: center;
 	gap: 0.55rem;
 	margin: 1.2rem 0 0;

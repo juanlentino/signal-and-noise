@@ -59,5 +59,21 @@ ok( strpos( $out, '&lt;script&gt;' ) !== false, 'T5 escaping: value is HTML-esca
 $GLOBALS['__options'] = array( 'sn_settings' => array( 'identity' => array( 'availability' => array( 'nope' ) ) ) );
 ok( sn_availability_text() === '' && sn_availability_shortcode() === '', 'T6 robustness: non-string availability degrades to nothing' );
 
+// T7 — layout regression guard (v10.10.1). The shortcode renders inside the
+// constrained 760px Contact/Services hero group, which centers its children with
+// margin-inline:auto. That auto-margin is a NO-OP on inline-level boxes, so an
+// inline-flex .sn-availability is never centered — it falls to the full-width
+// group's left edge (the page gutter) instead of aligning with the hero column.
+// It MUST be block-level flex so the constrained layout centers it.
+$css = file_get_contents( __DIR__ . '/../assets/css/components.css' );
+ok( is_string( $css ) && '' !== $css, 'T7: components.css readable' );
+if ( preg_match( '/\.sn-availability\s*\{([^}]*)\}/', (string) $css, $m ) ) {
+	$rule = $m[1];
+	ok( false !== strpos( $rule, 'display: flex' ), 'T7: .sn-availability is display:flex (block-level → constrained hero centers it)' );
+	ok( false === strpos( $rule, 'display: inline-flex' ), 'T7: .sn-availability declares NO display:inline-flex (inline-flex defeats margin-inline:auto → gutter)' );
+} else {
+	ok( false, 'T7: .sn-availability rule present in components.css' );
+}
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
