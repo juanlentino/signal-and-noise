@@ -51,6 +51,10 @@ if ( ! function_exists( 'wp_remote_retrieve_response_code' ) ) {
 if ( ! function_exists( 'wp_remote_retrieve_body' ) ) {
     function wp_remote_retrieve_body( $r ) { return $r['body'] ?? ''; }
 }
+if ( ! function_exists( 'remove_filter' ) ) { function remove_filter() {} }
+if ( ! function_exists( 'download_url' ) ) {
+    function download_url( $url ) { $GLOBALS['__download_url'] = $url; return '/tmp/fake.zip'; }
+}
 
 require __DIR__ . '/../inc/wp-update-integration.php';
 
@@ -69,6 +73,10 @@ function last_headers() {
     return $reqs ? ( $reqs[ count( $reqs ) - 1 ]['args']['headers'] ?? array() ) : array();
 }
 
+// ── Package URL: NO token → public auto-generated archive (unchanged) ──
+ok( sn_gh_theme_package_url( 'v9.9.9' ) === 'https://github.com/juanlentino/signal-and-noise/archive/refs/tags/v9.9.9.zip',
+    'no token → public archive package URL' );
+
 // ── Case 1: token DEFINED → Authorization: Bearer present ──
 define( 'SNT_GITHUB_TOKEN', 'ghp_faketoken123' );
 $h = last_headers();
@@ -76,6 +84,22 @@ ok( isset( $h['Authorization'] ),                          'token defined → Au
 ok( ( $h['Authorization'] ?? '' ) === 'Bearer ghp_faketoken123', 'Authorization is "Bearer <token>"' );
 ok( ( $h['Accept'] ?? '' ) === 'application/vnd.github+json',     'Accept header preserved' );
 ok( isset( $h['User-Agent'] ),                            'User-Agent header preserved' );
+
+// ── Package URL: token → authenticated API zipball (private-repo capable) ──
+ok( sn_gh_theme_package_url( 'v9.9.9' ) === 'https://api.github.com/repos/juanlentino/signal-and-noise/zipball/v9.9.9',
+    'token defined → authenticated API zipball package URL' );
+
+// ── Download auth: Bearer scoped to api.github.com, NEVER forwarded to codeload ──
+$api_args = sn_gh_theme_inject_token_header( array( 'headers' => array() ), 'https://api.github.com/repos/juanlentino/signal-and-noise/zipball/v9.9.9' );
+ok( ( $api_args['headers']['Authorization'] ?? '' ) === 'Bearer ghp_faketoken123', 'download auth: Bearer added for api.github.com request' );
+$cl_args = sn_gh_theme_inject_token_header( array( 'headers' => array() ), 'https://codeload.github.com/juanlentino/signal-and-noise/legacy.zip/refs/tags/v9.9.9' );
+ok( ! isset( $cl_args['headers']['Authorization'] ), 'download auth: Bearer NOT forwarded to codeload redirect target (no token leak)' );
+
+// ── upgrader_pre_download: intercept ONLY our zipball ──
+ok( sn_gh_theme_authenticated_download( false, 'https://example.com/other.zip' ) === false,
+    'pre_download: foreign package not intercepted (returns $reply)' );
+ok( sn_gh_theme_authenticated_download( false, 'https://api.github.com/repos/juanlentino/signal-and-noise/zipball/v9.9.9' ) === '/tmp/fake.zip',
+    'pre_download: our zipball → authenticated download returns temp path' );
 
 // ── Case 2 (documented): when the constant is UNDEFINED, no Authorization. ──
 // Can't undefine a constant mid-process, so this is asserted structurally:
