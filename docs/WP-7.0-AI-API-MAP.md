@@ -4,6 +4,8 @@
 **WP 7.0 release:** 2026-05-20 (3 days out)
 **Status:** Pre-staging — plugin v1.16.0 ships function_exists-gated scaffolding that activates the moment 7.0 lands
 
+> **⚠️ Historical planning doc (superseded).** This was the pre-implementation plan for the AI-features arc. It shipped — the theme's Abilities API surface landed in **v9.1.0** (2026-05-24) and has evolved since (now v10.10.1; ability namespace is `signal-and-noise/*`). The Phase 12 files and "future" scaffolding named below do not reflect current code. Kept for provenance; for current abilities read `inc/abilities-*.php` and [CHANGELOG.md](../CHANGELOG.md).
+
 This doc is the **execution reference** for the AI-features arc. It supersedes the "Skip AI Client entirely" stance in `docs/WP-API-MAP.md` lines 22 + 53-55 (those were written when the theme was a single-author surface with no admin-side workflows — the v8.5 + plugin v1.10+ work created exactly the admin workflows that benefit from AI assistance).
 
 Verified against the **actual source** of every primitive used here, not handbook prose:

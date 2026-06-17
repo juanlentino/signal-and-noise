@@ -18,7 +18,7 @@ This doc is the project's **WCAG 2.1 AA accessibility baseline**. It records the
 
 ## Current palette — measured ratios
 
-Measured against `theme.json` v9.4.5 palette. Color tokens are defined in `theme.json` under `settings.color.palette` and exposed as CSS custom properties `--wp--preset--color--<slug>`.
+Measured against the current `theme.json` palette. Color tokens are defined in `theme.json` under `settings.color.palette` and exposed as CSS custom properties `--wp--preset--color--<slug>`.
 
 ### Primary text pairings
 
@@ -115,4 +115,4 @@ Audit D verified the following as ✅ PASS (recorded here as a discoverable summ
 - **ARIA** — landmark roles + `aria-current` (since v4.4.4) + `aria-label` on icon-only links + `aria-hidden` on decorative elements all verified correct across templates + render callbacks.
 - **Keyboard navigation** — footnote popover supports both pointer hover AND keyboard focus (since v9.4.5).
 - **Reduced motion** — hero entrance, view transitions, `/notes` reveals, and (since v9.4.4) service-card + button hover transforms all honour `prefers-reduced-motion: reduce`.
-- **Heading hierarchy** — clean on `/notes/` index. **One known content-side WCAG 1.3.1 failure on single-note posts** (h1→h3 skip in published notes); content fix recipe in `docs/superpowers/handoffs/2026-05-26-audits-c-d-cycle-shipped.md` §3.
+- **Heading hierarchy** — clean on `/notes/` index. **One known content-side WCAG 1.3.1 failure on single-note posts** (h1→h3 skip in published notes) — a content-authoring issue (use sequential heading levels in the note body), not a theme defect.

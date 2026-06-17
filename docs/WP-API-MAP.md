@@ -5,6 +5,8 @@ Researcher: Claude (R2 research pass)
 Repo: juanlentino/signal-and-noise
 Theme version at audit: v7.2.7
 
+> **⚠️ Historical planning doc (superseded).** Written against theme **v7.2.7** to decide which WordPress APIs to adopt. Those decisions shipped — Block Bindings, Block Patterns, and Style Variations are all in the theme now (v9.1.0+), and the operational APIs discussed here (REST, Plausible, cron, transients, HTTP) moved to the companion plugin. Kept for provenance, **not** as a current map. For current state see [CHANGELOG.md](../CHANGELOG.md) and [WORDPRESS-REFERENCE.md](WORDPRESS-REFERENCE.md).
+
 ## Purpose
 
 This document maps every developer-facing WordPress API in the [Common APIs Handbook](https://developer.wordpress.org/apis/) (plus 6.9 and 7.0 dev-note additions) to a specific adoption decision for the Signal & Noise theme. Refresh this doc when a new major WP version ships.

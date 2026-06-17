@@ -3,6 +3,8 @@
 How HTML caching works for `juanlentino.com` across the four caching
 layers, why default Cloudflare doesn't cache HTML, and how to opt in.
 
+> **Status (v8.2.0+):** Cloudflare purge and its admin UI now live in the **companion plugin** ([signal-and-noise-tools](https://github.com/juanlentino/signal-and-noise-tools)), not the theme. Where this doc says to configure Cloudflare under *Appearance → Signal & Noise* or references an `inc/cloudflare-purge.php` "in this theme," read that as the plugin — the theme only triggers the purge through a filter contract (`inc/template-maintenance.php`). The caching-layer architecture below is otherwise current.
+
 ## The four caching layers (in path order)
 
 1. **Browser cache** — set via `Cache-Control` and `ETag` response
