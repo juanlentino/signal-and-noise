@@ -2,6 +2,16 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.11.0] - 2026-06-17 — Self-updater: authenticated downloads (private-repo capable)
+
+**Headline:** The WP-native self-updater can now install from a **private** GitHub repo. When `SNT_GITHUB_TOKEN` is set, the version check *and* the package download both authenticate, so wp-admin → Dashboard → Updates keeps working if this repo goes private. With no token (public repo), behaviour is unchanged.
+
+### New
+
+- **Authenticated update downloads.** [inc/wp-update-integration.php](inc/wp-update-integration.php) now builds the package URL from the GitHub **API zipball** endpoint when `SNT_GITHUB_TOKEN` is defined (`sn_gh_theme_package_url()`), and an `upgrader_pre_download` handler (`sn_gh_theme_authenticated_download()`) performs the download with a `Bearer` token. The token is scoped to `api.github.com` only (`sn_gh_theme_inject_token_header()`) — **never** forwarded to the pre-signed `codeload.github.com` host the zipball 302-redirects to (no credential leak on redirect). Without a token the updater falls back to the public archive URL (unchanged), and the existing `upgrader_source_selection` rename is dir-name-agnostic so the install lands at the correct slug either way. Guarded by new assertions in [tests/updater-github-auth.php](tests/updater-github-auth.php) (incl. the codeload no-leak property + foreign-package non-interception).
+
+> **Why MINOR:** a new user-visible capability — the site can self-update from a private repo. No settings-schema change, no public-API removal; public-repo behaviour is unchanged when no token is set. The private path requires a fine-grained `SNT_GITHUB_TOKEN` (Contents: read) in `wp-config.php`.
+
 ## [10.10.1] - 2026-06-17 — Availability line alignment fix
 
 **Headline:** The `/contact` + `/services` availability status line (the red-dot "Available for…" line) now sits inside the hero column under the intro, where it belongs — it had been falling into the far-left page gutter.
