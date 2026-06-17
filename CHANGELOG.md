@@ -2,6 +2,16 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.10.1] - 2026-06-17 — Availability line alignment fix
+
+**Headline:** The `/contact` + `/services` availability status line (the red-dot "Available for…" line) now sits inside the hero column under the intro, where it belongs — it had been falling into the far-left page gutter.
+
+### Fixed
+
+- **Availability line rendered in the page gutter instead of the hero column.** `[sn_availability]` is placed inside the constrained 760px Contact/Services hero group, which centers its children with `margin-inline: auto`. `.sn-availability` was `display: inline-flex`, and auto inline-margins are a no-op on inline-level boxes — so it was never centered and fell to the full-width group's left edge (the gutter) while keeping its in-flow vertical position. Switched to block-level `display: flex` so the constrained layout centers it and it aligns with the eyebrow / heading / intro. CSS-only; no markup or shortcode change. Guarded by a new layout-regression assertion (tests/availability.php T7). [assets/css/components.css](assets/css/components.css)
+
+> **Why PATCH:** a one-property CSS fix to an existing feature's layout — no new capability, no markup/API/settings change.
+
 ## [10.10.0] - 2026-06-15 — /about/uses gear page (D6)
 
 **Headline:** A new `/about/uses` page — the indie-web "what I use" list, nested under the About (bio) page — rendering the studio hardware, instruments, and software behind the work, grouped and server-rendered in the brutalist row idiom.
