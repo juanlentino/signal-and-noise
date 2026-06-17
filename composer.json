@@ -2,7 +2,7 @@
     "name": "syntharchy/signal-and-noise",
     "description": "Signal & Noise — WordPress FSE theme",
     "type": "wordpress-theme",
-    "license": "proprietary",
+    "license": "GPL-2.0-or-later",
     "require": {
         "php": ">=8.0"
     },
