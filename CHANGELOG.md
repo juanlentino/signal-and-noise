@@ -2,6 +2,20 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.11.1] - 2026-06-17 — Colophon: credit Claude; fix the stale readme Stable tag
+
+**Headline:** The `/colophon` page now names **Claude (Anthropic)** in its tooling list, as a plain factual credit in keeping with the colophon's "stack, type, tooling, build — anti-self-promotion by design" ethos. Also corrects the `readme.txt` Stable tag, which had drifted a version behind `style.css`.
+
+### New
+
+- **AI-assistance line on the Colophon.** Added one list item to [patterns/colophon.php](patterns/colophon.php): "AI assistance — engineered with Claude (Anthropic) as a pair-programmer." Build-scoped (it sits in the tooling/build list, so it credits the site's engineering, not the music), un-versioned (durable as the model line moves; the live `[sn_build]` line carries the time-specific snapshot), and dry to match the existing entries. Renders live — `templates/page-colophon.html` references the pattern by slug (`wp:pattern`), so the file is the source of truth.
+
+### Fixed
+
+- **`readme.txt` Stable tag drift.** It read `10.10.1` while `style.css` was `10.11.0` (the v10.11.0 / #24 bump updated the header but missed the readme mirror). Both are now `10.11.1`. readme.txt states the Stable tag mirrors the `Version:` header — this restores that invariant.
+
+> **Why PATCH:** content/copy refinement of a shipped theme pattern (delivered via the version-gated self-updater, so it must bump) + a docs-mirror fix. No new capability, no template/markup-structure change, no settings change. The colophon structural tests ([tests/colophon-template.php](tests/colophon-template.php)) stay green (they assert structure + the pattern-slug round-trip, not copy).
+
 ## [10.11.0] - 2026-06-17 — Self-updater: authenticated downloads (private-repo capable)
 
 **Headline:** The WP-native self-updater can now install from a **private** GitHub repo. When `SNT_GITHUB_TOKEN` is set, the version check *and* the package download both authenticate, so wp-admin → Dashboard → Updates keeps working if this repo goes private. With no token (public repo), behaviour is unchanged.
