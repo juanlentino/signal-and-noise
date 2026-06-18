@@ -241,17 +241,36 @@ add_filter( 'upgrader_pre_download', 'sn_gh_theme_authenticated_download', 10, 4
  * keyed by stylesheet, values are associative arrays (not stdClass as
  * the plugin transient uses). See WP core's _maybe_update_themes().
  */
+/**
+ * Whether a forced (cache-bypassing) update check was requested.
+ *
+ * A ?force-check= cache-bust triggers a live GitHub API call — a real side
+ * effect that spends the rate-limit budget — so the query-string path is gated
+ * on the update_themes capability. Without that gate, any logged-in user (or a
+ * CSRF <img> pointing at an admin URL) could force repeated API calls and
+ * exhaust the token's hourly budget. WP's own "Check Again" flow sets
+ * WP_FORCE_UPDATE_CHECK and is already capability-gated, so that path is trusted.
+ *
+ * @since 10.11.2
+ * @return bool
+ */
+function sn_gh_theme_force_refresh_requested() {
+	if ( defined( 'WP_FORCE_UPDATE_CHECK' ) && WP_FORCE_UPDATE_CHECK ) {
+		return true;
+	}
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only cache-buster, capability-gated on this line.
+	return ! empty( $_GET['force-check'] ) && current_user_can( 'update_themes' );
+}
+
 add_filter( 'pre_set_site_transient_update_themes', function( $transient ) {
 	if ( empty( $transient ) || ! is_object( $transient ) ) {
 		$transient = new stdClass();
 	}
 
-	// v8.5.3: honor WP's "Check Again" button. WP sets the WP_FORCE_UPDATE_CHECK
-	// constant during the wp-admin/update-core.php?force-check=1 flow.
-	// Without this, our cached value persists even when the user explicitly
-	// asks for a fresh check. Mirrors plugin v1.11.1.
-	$force_refresh = ( defined( 'WP_FORCE_UPDATE_CHECK' ) && WP_FORCE_UPDATE_CHECK )
-		|| ! empty( $_GET['force-check'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only cache-buster; presence-only boolean, no state change.
+	// v8.5.3: honor WP's "Check Again" button (WP_FORCE_UPDATE_CHECK), and a
+	// capability-gated ?force-check= cache-bust. Without this, our cached value
+	// persists even when the user explicitly asks for a fresh check.
+	$force_refresh = sn_gh_theme_force_refresh_requested();
 
 	$latest_tag = sn_gh_latest_theme_tag( $force_refresh );
 	if ( $latest_tag === null ) {

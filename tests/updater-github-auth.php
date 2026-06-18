@@ -55,6 +55,10 @@ if ( ! function_exists( 'remove_filter' ) ) { function remove_filter() {} }
 if ( ! function_exists( 'download_url' ) ) {
     function download_url( $url ) { $GLOBALS['__download_url'] = $url; return '/tmp/fake.zip'; }
 }
+$GLOBALS['__caps'] = array(); // cap => bool, controllable
+if ( ! function_exists( 'current_user_can' ) ) {
+    function current_user_can( $cap ) { return ! empty( $GLOBALS['__caps'][ $cap ] ); }
+}
 
 require __DIR__ . '/../inc/wp-update-integration.php';
 
@@ -108,6 +112,27 @@ ok( sn_gh_theme_authenticated_download( false, 'https://api.github.com/repos/jua
 $src = file_get_contents( __DIR__ . '/../inc/wp-update-integration.php' );
 ok( strpos( $src, "defined( 'SNT_GITHUB_TOKEN' )" ) !== false, 'token application is guarded by defined() (graceful unauth fallback)' );
 ok( preg_match( '/Authorization.*Bearer.*SNT_GITHUB_TOKEN/s', $src ) === 1, 'Authorization built from SNT_GITHUB_TOKEN' );
+
+// ── force-check must be capability-gated (no unauth GitHub API spend / CSRF cache-bust) ──
+ok( function_exists( 'sn_gh_theme_force_refresh_requested' ), 'force-refresh decision helper is defined' );
+
+unset( $_GET['force-check'] );
+$GLOBALS['__caps'] = array();
+ok( sn_gh_theme_force_refresh_requested() === false, 'force-refresh: false when nothing is set' );
+
+$_GET['force-check'] = '1';
+$GLOBALS['__caps'] = array(); // logged in, but lacks update_themes
+ok( sn_gh_theme_force_refresh_requested() === false, 'force-refresh: ?force-check IGNORED without update_themes cap (no API spend / CSRF)' );
+
+$_GET['force-check'] = '1';
+$GLOBALS['__caps'] = array( 'update_themes' => true );
+ok( sn_gh_theme_force_refresh_requested() === true, 'force-refresh: ?force-check honored WITH update_themes cap' );
+unset( $_GET['force-check'] );
+
+// WP's own "Check Again" flow is already capability-gated → the constant forces regardless.
+define( 'WP_FORCE_UPDATE_CHECK', true );
+$GLOBALS['__caps'] = array();
+ok( sn_gh_theme_force_refresh_requested() === true, 'force-refresh: WP_FORCE_UPDATE_CHECK constant forces regardless of $_GET/caps' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

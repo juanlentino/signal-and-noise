@@ -2,6 +2,21 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.11.2] - 2026-06-17 — Notes hero accuracy + two defense-in-depth hardenings
+
+**Headline:** Three small fixes from a post-ship audit: the `/notes` hero now reports the **whole-corpus** entry count on every page (it read the per-page slice on page 2+), the self-updater's `?force-check` cache-bust is now **capability-gated**, and the colophon's git-ref reader rejects path traversal in a tampered `.git/HEAD`.
+
+### Fixed
+
+- **`/notes` hero "N entries" is now the corpus total on every page.** The hero meta read `$query->post_count` (this page's ≤per-page slice), so on page 2+ it showed e.g. "8 entries" instead of the real total; the section count below already used `found_posts`. Extracted a testable `sn_notes_hero_stats()` using `found_posts`; "Last updated" now shows only when the first post is genuinely the newest (page 1), rather than a wrong date on deeper pages. [inc/page-notes-render.php](inc/page-notes-render.php).
+
+### Security
+
+- **`?force-check` update-check cache-bust is capability-gated.** The `pre_set_site_transient_update_themes` handler honored a raw `?force-check=` query param, so any logged-in user — or a CSRF `<img>` to an admin URL — could force live GitHub API calls and spend the rate-limit budget. The query-string path now requires `current_user_can('update_themes')` (extracted as `sn_gh_theme_force_refresh_requested()`); WP's own capability-gated "Check Again" (`WP_FORCE_UPDATE_CHECK`) path is unchanged. [inc/wp-update-integration.php](inc/wp-update-integration.php).
+- **Colophon git-ref reader rejects path traversal.** `sn_colophon_resolve_ref()` used the `.git/HEAD` ref string as a filesystem path segment; a tampered `HEAD` (e.g. `ref: refs/heads/../../…`) could point a read outside `refs/`. Now validated against `^refs/[A-Za-z0-9._/-]+$` with an explicit `..` bar, failing closed. Exploiting it requires write access to `.git` (server compromise) and the output is only a 7-char hex SHA, so this is defense-in-depth. [inc/colophon-meta.php](inc/colophon-meta.php).
+
+> **Why PATCH:** one correctness fix + two defense-in-depth hardenings; no new capability, no settings-schema or public-API change. Each is locked by a failing-first test (RED→GREEN): `tests/notes-pagination.php` (+6, corpus count + page-2 suppression), `tests/updater-github-auth.php` (+5, the capability gate), `tests/colophon-meta.php` (+3, a planted-file traversal that the guard fails closed). 44 suites green, WPCS falsified-clean.
+
 ## [10.11.1] - 2026-06-17 — Colophon: credit Claude; fix the stale readme Stable tag
 
 **Headline:** The `/colophon` page now names **Claude (Anthropic)** in its tooling list, as a plain factual credit in keeping with the colophon's "stack, type, tooling, build — anti-self-promotion by design" ethos. Also corrects the `readme.txt` Stable tag, which had drifted a version behind `style.css`.

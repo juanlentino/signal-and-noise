@@ -40,6 +40,15 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return array{sha:string,mtime:int}|array{} Empty if unresolved.
  */
 function sn_colophon_resolve_ref( $refs_dir, $ref ) {
+	// Harden against a tampered .git/HEAD: $ref is used as a path segment below
+	// ("$refs_dir/$ref"), so reject anything that isn't a plain refs/* path with
+	// no ".." traversal. A real ref is "refs/heads/main", "refs/tags/v1.0", etc.
+	// Fail closed (no SHA) on anything else — the char-class allows "." for
+	// dotted branch/tag names but the strpos check still bars traversal.
+	if ( ! preg_match( '#^refs/[A-Za-z0-9._/-]+$#', (string) $ref ) || false !== strpos( (string) $ref, '..' ) ) {
+		return array();
+	}
+
 	// 1) Loose ref file.
 	$loose = $refs_dir . '/' . $ref;
 	if ( is_file( $loose ) ) {
