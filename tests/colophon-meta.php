@@ -135,6 +135,29 @@ ok( strpos( $setup_src, '[sn_build]' ) !== false, 'render_block bridge (setup.ph
 $colophon_src = (string) file_get_contents( $root . '/patterns/colophon.php' );
 ok( strpos( $colophon_src, '[sn_build]' ) !== false, 'colophon pattern emits the [sn_build] token' );
 
+// --- Path-traversal hardening: a tampered HEAD ref must not escape refs_dir ---
+// Plant a 40-hex file reachable from .git/refs/heads ONLY via "..". Pre-guard,
+// resolve_ref() would read it and return a (bogus) short SHA; post-guard it fails
+// closed. Requires a write to .git/HEAD to exploit (server compromise) — this is
+// defense-in-depth against using an untrusted ref string as a path segment.
+// NB: include a real refs/heads/main so the `.git/refs/heads/` dir EXISTS — else
+// the "../../planted" path has a missing intermediate component and is_file()
+// fails for the wrong reason (a false green that hides a missing guard).
+$trav = mkfix( array(
+	'.git/HEAD'            => "ref: refs/heads/main\n",
+	'.git/refs/heads/main' => $SHA_B . "\n",
+	'.git/planted'         => $SHA_A . "\n",
+) );
+ok( sn_colophon_resolve_ref( $trav, 'refs/heads/../../planted' ) === array(),
+	'resolve_ref: ".." traversal to a planted 40-hex file is rejected (fail-closed)' );
+ok( sn_colophon_resolve_ref( $trav, '/etc/hosts' ) === array(),
+	'resolve_ref: absolute / non-refs path rejected' );
+
+// Positive control: a legit ref with dots + slashes still resolves post-guard.
+$gdot = mkfix( array( '.git/HEAD' => "ref: refs/heads/release-1.0\n", '.git/refs/heads/release-1.0' => $SHA_B . "\n" ) );
+ok( ( sn_colophon_read_git_dir( $gdot )['sha'] ?? '' ) === substr( $SHA_B, 0, 7 ),
+	'legit ref with a dot (refs/heads/release-1.0) still resolves post-guard' );
+
 // --- Cleanup ---
 foreach ( $GLOBALS['__fixtures'] as $root ) {
 	@array_map( 'unlink', glob( $root . '/.git/{,refs/heads/}*', GLOB_BRACE ) );

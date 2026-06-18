@@ -171,6 +171,32 @@ function sn_notes_pagination_add_args( $term = '' ) {
 	return ( '' !== $term ) ? array( 's' => rawurlencode( $term ) ) : array();
 }
 
+/**
+ * Corpus-level hero stats for the /notes archive header: total entry count and
+ * the newest note's date. Extracted (and kept above the SN_NOTES_RENDER_TEST
+ * guard) so it's unit-testable, and so the count is the CORPUS total rather than
+ * the current page's slice.
+ *
+ * - count: $query->found_posts — the whole result set, NOT $query->post_count
+ *   (only this page's ≤per_page slice, which mis-read "N entries" on page 2+,
+ *   e.g. "8 entries" on a short final page).
+ * - latest_date: the newest note's date. The query is date-DESC, so on page 1
+ *   posts[0] IS the newest (free). On page 2+ posts[0] is this page's first row,
+ *   not the corpus newest, so the "Last updated" line is suppressed rather than
+ *   show a wrong date. (The hero renders in browse mode only.)
+ *
+ * @param WP_Query $query The notes archive query.
+ * @return array{count:int,latest_date:string}
+ */
+function sn_notes_hero_stats( $query ) {
+	$count       = isset( $query->found_posts ) ? (int) $query->found_posts : 0;
+	$latest_date = '';
+	if ( $count > 0 && sn_notes_current_page() <= 1 && ! empty( $query->posts ) ) {
+		$latest_date = wp_date( 'Y.m.d', (int) get_the_time( 'U', $query->posts[0] ) );
+	}
+	return array( 'count' => $count, 'latest_date' => $latest_date );
+}
+
 // Under test (tests/notes-pagination.php), the helper functions above are
 // now declared; stop here so the render body (which echoes HTML + runs
 // WP_Query) doesn't execute. Placement matters: this return MUST be below
@@ -184,14 +210,12 @@ if ( defined( 'SN_NOTES_RENDER_TEST' ) && SN_NOTES_RENDER_TEST ) {
 $query = sn_notes_query_posts();
 $sn_term      = sn_notes_search_term();
 $sn_searching = ( '' !== $sn_term );
-$entry_count = (int) $query->post_count;
-
-// Latest-post date for the meta line.
-$latest_date = '';
-if ( $entry_count > 0 ) {
-	$latest = $query->posts[0];
-	$latest_date = wp_date( 'Y.m.d', (int) get_the_time( 'U', $latest ) );
-}
+// Hero meta (browse mode only): corpus-level stats via the testable helper —
+// found_posts, not the per-page post_count, so "N entries" is the whole corpus
+// on every page; "Last updated" shows only when posts[0] is genuinely newest.
+$sn_hero_stats = sn_notes_hero_stats( $query );
+$entry_count   = $sn_hero_stats['count'];
+$latest_date   = $sn_hero_stats['latest_date'];
 
 // PRE-RENDER the header and footer template parts so their block-
 // layout CSS (e.g. `.wp-container-core-group-is-layout-... { flex-
