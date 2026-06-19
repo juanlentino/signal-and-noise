@@ -1358,6 +1358,56 @@
 	padding: 0;
 	list-style: none;
 }
+/* A COMPACT recovery list — NOT the giant notes-index heading treatment. The
+   shortcode reuses .sn-notes-row markup, but the compact title rule is
+   .sn-related-notes-scoped, so on the 404 the <h2> titles fall back to the full
+   heading step (the "huge fonts"). Scope a small, scannable treatment here. */
+.sn-404-suggestions .sn-notes-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0.3rem 1rem;
+	padding: 0.55rem 0;
+	border-top: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+}
+.sn-404-suggestions .sn-notes-row:last-child {
+	border-bottom: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+}
+.sn-404-suggestions .sn-notes-row-spec {
+	flex: 0 0 auto;
+	display: flex;
+	gap: 0.6rem;
+	align-items: baseline;
+	font-family: var(--wp--preset--font-family--body, "DM Mono"), monospace;
+	font-size: max(0.68rem, 11px);
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--rust, #666);
+}
+.sn-404-suggestions .sn-notes-row-date {
+	color: var(--wp--preset--color--bone, #000);
+}
+.sn-404-suggestions .sn-notes-row-content {
+	flex: 1 1 14rem;
+	min-width: 0;
+}
+.sn-404-suggestions .sn-notes-row-title {
+	margin: 0;
+	font-family: var(--wp--preset--font-family--heading, "Bebas Neue"), sans-serif;
+	font-weight: 400;
+	font-size: 1.2rem;
+	line-height: 1.1;
+	letter-spacing: 0.01em;
+}
+.sn-404-suggestions .sn-notes-row-title a {
+	color: var(--wp--preset--color--bone, #000);
+	text-decoration: none;
+}
+.sn-404-suggestions .sn-notes-row-title a:hover,
+.sn-404-suggestions .sn-notes-row-title a:focus-visible {
+	color: var(--wp--preset--color--blood, #e00404);
+	text-decoration: underline;
+}
 .sn-404-browse {
 	font-family: var(--wp--preset--font-family--body, "DM Mono"), monospace;
 	font-size: var(--wp--preset--font-size--small, 0.8rem);

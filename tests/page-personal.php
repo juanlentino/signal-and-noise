@@ -10,8 +10,9 @@
  * rendered through do_blocks). Like every postless route it MUST force HTTP 200
  * (WORDPRESS-REFERENCE gotcha #40). Mirrors tests/page-uses.php.
  *
- * The content contract is unit-tested here: the Personal page body carries
- * EXACTLY ONE hyperlink (LinkedIn), and the Casey Neistat credit footnote uses
+ * The content contract is unit-tested here: the Personal page body carries ONE
+ * contact channel (LinkedIn) plus two outbound reference links (Paul Graham,
+ * Ryan Holiday) and no email channel, and the Casey Neistat credit footnote uses
  * the theme's smallest font-size preset + muted colour preset (no inline values).
  *
  * @since theme v10.12.0
@@ -70,11 +71,16 @@ ok( function_exists( 'sn_personal_content_blocks' ), 'sn_personal_content_blocks
 $body = sn_personal_content_blocks();
 ok( is_string( $body ) && '' !== $body, 'sn_personal_content_blocks() returns a non-empty string' );
 
-// EXACTLY ONE hyperlink in the page content (LinkedIn) — the deliberate friction.
+// Link contract: ONE contact channel (LinkedIn) + TWO outbound REFERENCE links
+// (Paul Graham, Ryan Holiday). The friction is "one channel to reach me", not
+// "one link" — reference essays don't make me any more reachable.
 $anchor_count = substr_count( $body, '<a ' );
-ok( 1 === $anchor_count, 'page content carries EXACTLY ONE anchor (got ' . $anchor_count . ')' );
-ok( strpos( $body, 'https://www.linkedin.com/in/juanlentino/' ) !== false, 'the one link points to the LinkedIn profile' );
-ok( strpos( $body, '>LinkedIn</a>' ) !== false, 'the linked text is the word "LinkedIn"' );
+ok( 3 === $anchor_count, 'page content carries exactly THREE anchors — LinkedIn + 2 references (got ' . $anchor_count . ')' );
+ok( strpos( $body, 'https://www.linkedin.com/in/juanlentino/' ) !== false, 'the contact channel points to the LinkedIn profile' );
+ok( strpos( $body, '>LinkedIn</a>' ) !== false, 'the contact link text is the word "LinkedIn"' );
+ok( strpos( $body, 'https://www.paulgraham.com/makersschedule.html' ) !== false, "links Paul Graham's Maker's Schedule essay" );
+ok( strpos( $body, 'ryanholiday.net/to-everyone-who-asks-for-just-a-little-of-your-time' ) !== false, "links Ryan Holiday's essay" );
+ok( substr_count( $body, 'mailto:' ) === 0, 'still no email channel — the deliberate contact friction holds' );
 
 // Footnote uses theme presets (smallest font-size + muted colour) — NOT inline values.
 ok( strpos( $body, 'has-small-font-size' ) !== false, 'footnote uses the small font-size preset (smallest type step)' );
@@ -89,7 +95,7 @@ ok( strpos( $body, 'wp-block-spacer' ) !== false, 'a spacer separates the body f
 ok( strpos( $body, 'the answer is no' ) !== false, 'paragraph 2 ("the answer is no") is present' );
 ok( strpos( $body, "That doesn't change the answer." ) !== false, 'paragraph 3 is present' );
 ok( strpos( $body, 'finishing an MBA in August 2026' ) !== false, 'paragraph 4 (MBA, Aug 2026) is present' );
-ok( strpos( $body, "Yes doesn't fit in the week." ) !== false, 'paragraph 4 closes verbatim' );
+ok( strpos( $body, "they don't take appointments." ) !== false, 'paragraph 4 closes verbatim (reworded off Casey)' );
 
 // Masthead present + accessible (an H1 the page would otherwise lack).
 ok( strpos( $body, '<h1' ) !== false, 'the page has an H1 (masthead)' );

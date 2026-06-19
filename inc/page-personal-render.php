@@ -11,8 +11,10 @@
  * theme's typography, colour, spacing and layout presets with no bespoke CSS —
  * the masthead mirrors templates/page-contact.html, and the Casey-Neistat credit
  * footnote uses the smallest font-size preset (`small`) + the muted colour preset
- * (`rust`). EXACTLY ONE hyperlink in the body (LinkedIn) — the deliberate
- * scraper/effort friction; the URL to this page on /contact is plain text.
+ * (`rust`). ONE contact channel in the body (LinkedIn) — the deliberate
+ * scraper/effort friction — plus two outbound REFERENCE links (Paul Graham's
+ * "Maker's Schedule" + Ryan Holiday's essay) that make the case for the no; the
+ * URL to this page on /contact is itself a worded link, not a contact channel.
  *
  * Mirrors inc/page-uses-render.php (the /about/uses precedent): header + footer
  * are pre-rendered via do_blocks BEFORE wp_head() so their block-layout CSS
@@ -89,7 +91,11 @@ function sn_personal_content_blocks() {
 		<!-- /wp:paragraph -->
 
 		<!-- wp:paragraph {"style":{"typography":{"fontSize":"1rem","lineHeight":"1.8"}},"textColor":"bone","fontFamily":"body"} -->
-		<p class="has-bone-color has-text-color has-body-font-family" style="font-size:1rem;line-height:1.8">The reason is structural. I run Panacea Studio. I'm building a couple of music infrastructure projects alone. I'm finishing an MBA in August 2026, and there's a family at home. What's left after all of that is mine, in small amounts and not on demand. Yes doesn't fit in the week.</p>
+		<p class="has-bone-color has-text-color has-body-font-family" style="font-size:1rem;line-height:1.8">The reason is structural. I run Panacea Studio. I'm building a couple of music infrastructure projects alone. I'm finishing an MBA in August 2026, and there's a family at home. After all of that, the week is already spent. The hours that remain are few, and they don't take appointments.</p>
+		<!-- /wp:paragraph -->
+
+		<!-- wp:paragraph {"style":{"typography":{"fontSize":"1rem","lineHeight":"1.8"}},"textColor":"bone","fontFamily":"body"} -->
+		<p class="has-bone-color has-text-color has-body-font-family" style="font-size:1rem;line-height:1.8">Two people argued this better than I can. Paul Graham, on why a single meeting fractures a <a href="https://www.paulgraham.com/makersschedule.html" target="_blank" rel="noopener">maker's whole day</a>, not just the hour it takes. And Ryan Holiday, on the real arithmetic of <a href="https://ryanholiday.net/to-everyone-who-asks-for-just-a-little-of-your-time-heres-what-it-costs-to-say-yes/" target="_blank" rel="noopener">"just a little" of your time</a> once everyone asks for it. If the no still reads as cold, read them.</p>
 		<!-- /wp:paragraph -->
 
 		<!-- wp:spacer {"height":"var:preset|spacing|40"} -->

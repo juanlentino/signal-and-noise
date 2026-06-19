@@ -2,6 +2,21 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.13.1] - 2026-06-19 — 404 recovery list + contact-page link fixes
+
+**Headline:** Three front-end fixes. The 404 page's "Recent notes" recovery list was rendering each note title at the full notes-index heading step (huge red Bebas) — fixed to a compact, scannable list. The `/contact` link to the personal page now reads as a worded link, not a pasted URL. And `/contact/personal` gains the two essays it was paraphrasing without crediting — Paul Graham's "Maker's Schedule" and Ryan Holiday's piece on "just a little" of your time — with the closest-to-Casey lines reworked.
+
+### Fixed
+
+- **404 "Recent notes" list is compact again** ([assets/css/components.css](assets/css/components.css)). The `[sn_404_suggestions]` shortcode reuses `.sn-notes-row` markup, but the compact title rule is scoped to `.sn-related-notes`, so on the 404 the `<h2>` titles fell back to the full heading step (the oversized red headings). Added a `.sn-404-suggestions .sn-notes-row` treatment: a hairline-ruled list with a mono date spec and a small (1.2rem) title — de-emphasised recovery content, not a second hero.
+- **`/contact` → personal-page link is a worded link** ([templates/page-contact.html](templates/page-contact.html)). "read **the next page** before reaching out" instead of pasting `juanlentino.com/contact/personal` as the anchor text.
+
+### Improvements
+
+- **`/contact/personal` cites its sources** ([inc/page-personal-render.php](inc/page-personal-render.php)). The page borrows Casey Neistat's structure (credited in the footnote) but was missing the two essays he points to. Added a paragraph linking **Paul Graham — Maker's Schedule** and **Ryan Holiday — "just a little of your time"** (in original wording, not Casey's), and reworked the para-4 closing that most echoed his phrasing. The contact friction is unchanged — still one contact channel (LinkedIn), no email; the two new links are outbound references, not ways to reach me.
+
+> **Why PATCH:** visual/content fixes and a small reference addition — no new capability, no template restructure, no schema change. The link contract test ([tests/page-personal.php](tests/page-personal.php)) updated 1 → 3 anchors (LinkedIn + 2 references) with a `mailto:`-absent assertion so the no-email friction stays locked. 46 suites green (1245 assertions), WPCS clean. **Note:** the 404 + personal-page rendering can't be exercised in a local preview (FSE + virtual route) — verify on the live site after install.
+
 ## [10.13.0] - 2026-06-19 — Machine-readable full pass (theme half)
 
 **Headline:** The theme half of a coordinated machine-readable hardening pass (plugin **v6.24.0** is the other half). Adds a `security.txt`, brings the JSON Feed up to par with the RSS enrichment, and — driven by a live audit — fixes the two routes that were shipping with no description and (for `/about/uses`) no structured data at all, by answering the plugin's new SEO route filters.
