@@ -66,6 +66,7 @@ require_once __DIR__ . '/inc/page-notes-template.php';
 require_once __DIR__ . '/inc/page-index-template.php'; // C3 (v10.7.0): /index whole-site dossier virtual route (loads inc/page-index-render.php)
 require_once __DIR__ . '/inc/uses-data.php'; // D6 (v10.10.0): /uses gear data + sn_uses_groups() filter seam (edit surface)
 require_once __DIR__ . '/inc/page-uses-template.php'; // D6 (v10.10.0): /uses gear page virtual route (loads inc/page-uses-render.php)
+require_once __DIR__ . '/inc/page-personal-template.php'; // v10.12.0: /contact/personal virtual route — child of /contact (loads inc/page-personal-render.php)
 require_once __DIR__ . '/inc/patterns.php';
 require_once __DIR__ . '/inc/blocks-register.php';
 require_once __DIR__ . '/inc/block-styles.php';
