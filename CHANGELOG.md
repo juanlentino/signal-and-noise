@@ -2,6 +2,16 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.13.2] - 2026-06-19 — Straight quotes (disable wptexturize)
+
+**Headline:** WordPress's `wptexturize()` was auto-converting the straight quotes and dashes the source actually contains into curly "smart" quotes + en/em-dashes on every render — a typographic accident in a DM-Mono / brutalist setting (and a foot-gun for byte-level tooling). Disabled site-wide with the one canonical filter.
+
+### Fixed
+
+- **Straight quotes everywhere** ([inc/disable-smart-quotes.php](inc/disable-smart-quotes.php)). `add_filter( 'run_wptexturize', '__return_false' )` — one line, the canonical gate, no per-route plumbing, fully reversible. Source is authored with straight quotes; they now render verbatim. Intentional literal design separators (the eyebrow middot `·`) are unaffected — they're literal characters in the templates, not texturize output.
+
+> **Why PATCH:** a rendering fix, not a new capability — neutralises an unwanted core auto-conversion. No structural/layout change; the only visible delta is `"` `'` `--` rendering as themselves instead of `"` `'` `—`. Locked by [tests/disable-smart-quotes.php](tests/disable-smart-quotes.php) (the `run_wptexturize` gate resolves to false for any input). 47 suites green (1248 assertions), WPCS clean.
+
 ## [10.13.1] - 2026-06-19 — 404 recovery list + contact-page link fixes
 
 **Headline:** Three front-end fixes. The 404 page's "Recent notes" recovery list was rendering each note title at the full notes-index heading step (huge red Bebas) — fixed to a compact, scannable list. The `/contact` link to the personal page now reads as a worded link, not a pasted URL. And `/contact/personal` gains the two essays it was paraphrasing without crediting — Paul Graham's "Maker's Schedule" and Ryan Holiday's piece on "just a little" of your time — with the closest-to-Casey lines reworked.
