@@ -2,6 +2,16 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.12.1] - 2026-06-19 — Contact: make the routing destinations clickable
+
+**Headline:** Reverses the v10.12.0 plain-text-only choice on `/contact` — at the owner's call, the destinations are now **hyperlinks**: the five inquiry emails are `mailto:` links, and the three URLs (`juanlentino.com/provenance`, `panaceastud.io`, `juanlentino.com/contact/personal`) are links. Usability over the anti-scraper friction; Proton's filtering remains the spam backstop.
+
+### Changed
+
+- **`/contact` destinations are linked.** [templates/page-contact.html](templates/page-contact.html): the four inquiry emails (`research@`, `press@`, `speaking@`, `role@`) become `mailto:` links; `juanlentino.com/provenance` → `/provenance` and `juanlentino.com/contact/personal` → `/contact/personal` (internal); `panaceastud.io` → external (`target="_blank" rel="noopener"`). Visible text is unchanged (the addresses/URLs read exactly as before) — only the markup gained `<a>` wrappers. Copy, masthead, and the availability line are untouched. The Personal page already carried its single LinkedIn link.
+
+> **Why PATCH:** a markup refinement of the just-shipped v10.12.0 contact page — no new capability, no settings-schema or public-API change, no structural/layout change. It bumps because the version-gated self-updater is the only path to the live site (same rationale as v10.11.1). Note: `mailto:` links re-expose the addresses to scrapers, which the v10.12.0 plain-text version deliberately avoided — an accepted trade for usability.
+
 ## [10.12.0] - 2026-06-18 — Contact: a two-page Proton-alias routing system (replaces the CF7 form)
 
 **Headline:** `/contact` is no longer a Contact Form 7 form — it's a **plain-text routing directory**. Each kind of inquiry (research, press, speaking, studio, recruiting) is pointed at a dedicated filtered Proton alias, written as plain text with **zero hyperlinks** so the address has to be typed: the friction is the spam filter, and Proton's own filtering is the backstop. A new child page, **`/contact/personal`**, holds the honest "your synchronous-time ask is a no, and here's why" note for everything else — its structure borrowed, with credit, from Casey Neistat's contact page.
