@@ -91,7 +91,7 @@ function sn_personal_content_blocks() {
 		<!-- /wp:paragraph -->
 
 		<!-- wp:paragraph {"style":{"typography":{"fontSize":"1rem","lineHeight":"1.8"}},"textColor":"bone","fontFamily":"body"} -->
-		<p class="has-bone-color has-text-color has-body-font-family" style="font-size:1rem;line-height:1.8">The reason is structural. I run Panacea Studio. I'm building a couple of music infrastructure projects alone. I'm finishing an MBA in August 2026, and there's a family at home. After all of that, the week is already spent. The hours that remain are few, and they don't take appointments.</p>
+		<p class="has-bone-color has-text-color has-body-font-family" style="font-size:1rem;line-height:1.8">The reason is structural. I run Panacea Studio. I'm building a couple of music infrastructure projects alone. I'm finishing an MBA in August 2026. After all of that, the week is already spent. The hours that remain are few, and they don't take appointments.</p>
 		<!-- /wp:paragraph -->
 
 		<!-- wp:paragraph {"style":{"typography":{"fontSize":"1rem","lineHeight":"1.8"}},"textColor":"bone","fontFamily":"body"} -->
