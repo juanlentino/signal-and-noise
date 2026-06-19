@@ -433,9 +433,10 @@ body {
 	display: none !important;
 }
 
-/* v8.5.6 critical.css pruning: CF7 form label + submit button rules
-   were here but forms are never above-the-fold; full definitions live
-   in assets/css/forms.css (deferred). Removing ~32 LOC. */
+/* v8.5.6 critical.css pruning: CF7 form label + submit button rules were
+   here but forms are never above-the-fold. The full CF7 stylesheet
+   (assets/css/forms.css) was later removed wholesale in v10.12.2 when the
+   contact form was retired — no form styling ships anywhere now. */
 
 /* ─── v9.0.0: View Transitions (browser-native, NOT WP 7.0) ───────────
  *

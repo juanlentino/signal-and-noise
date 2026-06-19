@@ -2,6 +2,31 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.12.2] - 2026-06-19 — Remove the dead Contact Form 7 asset code
+
+**Headline:** v10.12.0 turned `/contact` into a routing directory and deliberately left the CF7 + Flamingo plugins active-but-unused, to be removed once the new pages were verified live. Both render correctly (confirmed on `juanlentino.com/contact` and `/contact/personal` — no form, no 404), so this release deletes the now-dead CF7 plumbing from the theme. A grep of **both** the theme and the `signal-and-noise-tools` plugin confirmed Contact Form 7 was the **only** consumer of every removed hook: nothing else enqueues `contact-form-7` / `wpcf7`, and nothing else loads the Cloudflare Turnstile SDK.
+
+### Removed
+
+- **`assets/css/forms.css`** — 225 lines of exclusively `.wpcf7-*` / `.wp-block-contact-form-7-*` / `.cf-turnstile` styling. The redesigned `/contact` has no `<form>` (linked text, never a form), so the file styled nothing. Removed wholesale, along with its `sn-forms` enqueue in [inc/assets-frontend.php](inc/assets-frontend.php) and its entry in the `add_editor_style()` list in [inc/setup.php](inc/setup.php).
+- **The `is_page('contact')` CF7 asset gate** in [inc/assets-frontend.php](inc/assets-frontend.php) — it dequeued `contact-form-7` / `wpcf7-recaptcha` styles + scripts on non-contact pages. Dead: no plugin enqueues those handles anymore.
+- **`contact-form-7` from the `style_loader_tag` defer list** — the `media='print'` onload deferral now applies only to the handles that still exist (`wp-block-library`, `trp-language-switcher`).
+- **The Cloudflare Turnstile strip filters** in [inc/frontend-filters.php](inc/frontend-filters.php) — a `script_loader_tag` filter that blanked the Turnstile `<script>` on non-contact pages, plus a `wp_resource_hints` filter that dropped its dns-prefetch hint. CF7 was the sole Turnstile consumer site-wide, so both matched nothing; worse, they whitelisted `/contact`, a page that no longer has a form.
+
+### Changed
+
+- **The CSS cascade is now four stylesheets, not five.** `sn-responsive` now depends on `sn-components` (was `sn-forms`), preserving load order base → layout → components → responsive. No visual change — `forms.css` only ever styled CF7 markup that no longer renders.
+
+### Tests
+
+- **[tests/cf7-removal.php](tests/cf7-removal.php)** (new, +13) — a behavioral regression guard that **runs** the real `wp_enqueue_scripts` and `style_loader_tag` hook closures from `inc/assets-frontend.php` (captured via stubbed `add_action` / `add_filter`, not string-matched) and asserts: `forms.css` is gone, `sn-forms` is not enqueued, `sn-responsive` depends on `sn-components`, nothing dequeues `contact-form-7`, `contact-form-7` is no longer deferred while `wp-block-library` still is, and `inc/setup.php` + `inc/frontend-filters.php` carry no CF7/Turnstile references. RED → GREEN (11 of 13 assertions failed before the removal).
+
+### Note
+
+- **The CF7 + Flamingo plugins themselves are deactivated and deleted on the live site as a separate wp-admin action** — plugins are not part of this repo, so that step is not a code change. The dormant `[contact-form-7 …]` shortcode left in the `/contact` DB page body is inert (the template no longer outputs `wp:post-content`, so it never renders) and may be cleaned in the same wp-admin pass.
+
+> **Why PATCH:** pure dead-code removal — no new capability, no public-API removal (the deleted hooks are anonymous closures, not exported functions), no settings-schema change, no WP-floor change, no user-visible behaviour change (the removed CSS and filters only ever affected CF7 markup that no longer renders). Locked RED → GREEN by [tests/cf7-removal.php](tests/cf7-removal.php); full standalone sweep 46 suites / 1198 assertions green; WPCS falsified-clean.
+
 ## [10.12.1] - 2026-06-19 — Contact: make the routing destinations clickable
 
 **Headline:** Reverses the v10.12.0 plain-text-only choice on `/contact` — at the owner's call, the destinations are now **hyperlinks**: the five inquiry emails are `mailto:` links, and the three URLs (`juanlentino.com/provenance`, `panaceastud.io`, `juanlentino.com/contact/personal`) are links. Usability over the anti-scraper friction; Proton's filtering remains the spam backstop.

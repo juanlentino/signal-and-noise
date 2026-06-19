@@ -9,10 +9,9 @@
  *   - critical.css inlined in <head> for first paint
  *   - custom.css enqueued normally (Breeze strips onload from deferred)
  *   - Bebas Neue @font-face inlined and preloaded; browser uses it immediately
- *   - wp-block-library + CF7 + translatepress CSS converted to media="print"
+ *   - wp-block-library + translatepress CSS converted to media="print"
  *     onload swap so they don't render-block
  *   - Script modules from @wordpress/* tagged fetchpriority="low"
- *   - CF7 fully dequeued on non-contact pages
  *
  * @package SignalNoise
  */
@@ -89,7 +88,7 @@ add_action( 'wp_head', function() {
 }, 50 );
 
 /**
- * Performance: Load the five modular stylesheets in cascade order.
+ * Performance: Load the four modular stylesheets in cascade order.
  * Critical CSS (above) covers first paint; these fill in the rest.
  *
  * Loaded normally (not deferred) because Breeze minification strips
@@ -97,15 +96,16 @@ add_action( 'wp_head', function() {
  * concatenate them in production anyway.
  *
  * Dependency chain enforces load order: base → layout → components
- * → forms → responsive. Responsive @media rules must come last so
- * they can override the earlier layout/component defaults.
+ * → responsive. Responsive @media rules must come last so they can
+ * override the earlier layout/component defaults. (The forms.css
+ * stylesheet was CF7-only and removed in v10.12.2 with the contact
+ * form; keep this list in sync with inc/setup.php add_editor_style.)
  */
 add_action( 'wp_enqueue_scripts', function() {
 	wp_enqueue_style( 'sn-base',       get_theme_file_uri( 'assets/css/base.css' ),       array(),                  sn_asset_ver( 'assets/css/base.css' ) );
 	wp_enqueue_style( 'sn-layout',     get_theme_file_uri( 'assets/css/layout.css' ),     array( 'sn-base' ),       sn_asset_ver( 'assets/css/layout.css' ) );
 	wp_enqueue_style( 'sn-components', get_theme_file_uri( 'assets/css/components.css' ), array( 'sn-layout' ),     sn_asset_ver( 'assets/css/components.css' ) );
-	wp_enqueue_style( 'sn-forms',      get_theme_file_uri( 'assets/css/forms.css' ),      array( 'sn-components' ), sn_asset_ver( 'assets/css/forms.css' ) );
-	wp_enqueue_style( 'sn-responsive', get_theme_file_uri( 'assets/css/responsive.css' ), array( 'sn-forms' ),      sn_asset_ver( 'assets/css/responsive.css' ) );
+	wp_enqueue_style( 'sn-responsive', get_theme_file_uri( 'assets/css/responsive.css' ), array( 'sn-components' ), sn_asset_ver( 'assets/css/responsive.css' ) );
 }, 10 );
 
 /**
@@ -137,24 +137,12 @@ add_action( 'wp_head', function() {
 }, 2 );
 
 /**
- * Performance: Make Contact Form 7 CSS non-render-blocking.
- * Dequeue on non-contact pages; defer on the contact page.
- */
-add_action( 'wp_enqueue_scripts', function() {
-	if ( ! is_page( 'contact' ) ) {
-		wp_dequeue_style( 'contact-form-7' );
-		wp_dequeue_script( 'contact-form-7' );
-		wp_dequeue_script( 'wpcf7-recaptcha' );
-	}
-}, 20 );
-
-/**
  * Performance: Defer render-blocking WordPress core CSS.
  * Converts wp-block-library from render-blocking to non-blocking using
  * the media='print' onload pattern. Saves ~300ms on mobile.
  */
 add_filter( 'style_loader_tag', function( $html, $handle ) {
-	$defer_handles = array( 'wp-block-library', 'contact-form-7', 'trp-language-switcher' );
+	$defer_handles = array( 'wp-block-library', 'trp-language-switcher' );
 	if ( in_array( $handle, $defer_handles, true ) ) {
 		$html = str_replace(
 			" media='all'",
