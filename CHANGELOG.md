@@ -2,6 +2,16 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.13.3] - 2026-06-19 — /contact/personal: drop the inaccurate "family at home" line
+
+**Headline:** The `/contact/personal` "why the answer is no" paragraph asserted "there's a family at home" — factually wrong (the owner is single, no kids). Removed. The studio, the solo infrastructure projects, and the MBA already carry the structural reason; the line added nothing true.
+
+### Fixed
+
+- **Removed the false "family at home" clause** ([inc/page-personal-render.php](inc/page-personal-render.php)). Was inherited from the original v10.12.0 copy and carried through the v10.13.1 rewrite unchallenged. The paragraph now reads "…projects alone. I'm finishing an MBA in August 2026. After all of that, the week is already spent." — accurate, same rhythm.
+
+> **Why PATCH:** a one-clause factual copy correction. It would normally be a "content edit doesn't bump" case, but the theme ships through the version-gated updater, so a PATCH is the only way to land it on the live site. No markup/logic change; the page-personal contract test still passes unchanged (no asserted phrase touched). 47 suites green, WPCS clean.
+
 ## [10.13.2] - 2026-06-19 — Straight quotes (disable wptexturize)
 
 **Headline:** WordPress's `wptexturize()` was auto-converting the straight quotes and dashes the source actually contains into curly "smart" quotes + en/em-dashes on every render — a typographic accident in a DM-Mono / brutalist setting (and a foot-gun for byte-level tooling). Disabled site-wide with the one canonical filter.
