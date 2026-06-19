@@ -39,6 +39,27 @@ function sn_feed_json_query_args() {
 }
 
 /**
+ * Top-level JSON Feed 1.1 `authors` block. Pure + testable. Site identity +
+ * the /about page as the author URL, plus the site icon as an avatar when set.
+ * Applies to every item by default (JSON Feed inherits feed-level authors), so
+ * per-item authors are intentionally omitted.
+ *
+ * @since 10.13.0
+ * @return array<int,array<string,string>>
+ */
+function sn_feed_json_authors() {
+	$author = array(
+		'name' => get_bloginfo( 'name' ),
+		'url'  => home_url( '/about/' ),
+	);
+	$icon = function_exists( 'get_site_icon_url' ) ? (string) get_site_icon_url( 512 ) : '';
+	if ( '' !== $icon ) {
+		$author['avatar'] = $icon;
+	}
+	return array( $author );
+}
+
+/**
  * do_feed_json callback. Core invokes it as ($is_comment_feed, $feed_name).
  */
 function sn_feed_json_render( $is_comment_feed = false, $feed = 'json' ) {
@@ -61,6 +82,8 @@ function sn_feed_json_render( $is_comment_feed = false, $feed = 'json' ) {
 		'feed_url'      => home_url( '/?feed=json' ),
 		'description'   => get_bloginfo( 'description' ),
 		'language'      => get_bloginfo( 'language' ),
+		// v10.13.0: feed-level authors (applies to all items per JSON Feed 1.1).
+		'authors'       => sn_feed_json_authors(),
 		'items'         => $items,
 	);
 	header( 'Content-Type: application/feed+json; charset=' . get_option( 'blog_charset' ) );
@@ -97,6 +120,12 @@ function sn_feed_json_build_item( $post ) {
 	if ( has_excerpt( $post ) ) {
 		$ex = get_the_excerpt( $post );
 		if ( '' !== $ex ) { $item['summary'] = $ex; }
+	}
+	// v10.13.0: the item's main image (featured thumbnail) so readers like
+	// NetNewsWire / Reeder / Feedbin render a thumbnail. Omitted when absent.
+	$thumb = get_the_post_thumbnail_url( $post, 'large' );
+	if ( is_string( $thumb ) && '' !== $thumb ) {
+		$item['image'] = $thumb;
 	}
 	return $item;
 }

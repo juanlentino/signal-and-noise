@@ -2,6 +2,23 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.13.0] - 2026-06-19 — Machine-readable full pass (theme half)
+
+**Headline:** The theme half of a coordinated machine-readable hardening pass (plugin **v6.24.0** is the other half). Adds a `security.txt`, brings the JSON Feed up to par with the RSS enrichment, and — driven by a live audit — fixes the two routes that were shipping with no description and (for `/about/uses`) no structured data at all, by answering the plugin's new SEO route filters.
+
+### New
+
+- **`/.well-known/security.txt` (RFC 9116)** ([inc/security-txt.php](inc/security-txt.php)). A flat security-policy file (and the legacy top-level `/security.txt` some scanners probe), served via the same flush-free virtual-route mechanism as `/humans.txt` (`template_redirect` priority 0 + `status_header(200)`). The mandatory `Expires` field is derived ~1 year ahead of request time, so it never silently expires and needs zero recurring maintenance; `Contact`/`Canonical` are built from `home_url()`.
+- **Route SEO descriptions + `/about/uses` meta** ([inc/seo-route-meta.php](inc/seo-route-meta.php)). Answers the plugin's new `sn_seo_singular_description` filter with descriptions for the template-driven Pages (`/about`, `/contact`, `/colophon`, `/music`) — which carry no excerpt and previously shipped with **no description** — and the `sn_seo_route_meta` filter with full title/description/url/breadcrumb for the postless `/about/uses` route, which previously emitted **zero** og/canonical/JSON-LD. Copy is filterable via `sn_seo_page_descriptions`.
+
+### Improvements
+
+- **JSON Feed parity with the RSS enrichment** ([inc/feed-json.php](inc/feed-json.php)): a feed-level `authors` block (name + `/about/` url + site-icon avatar, applies to every item per JSON Feed 1.1) and a per-item `image` from the featured thumbnail, so readers like NetNewsWire / Reeder / Feedbin render thumbnails. Both omitted when absent.
+
+> **Why MINOR:** new user-visible capabilities (a new well-known file + richer feed + route descriptions); no breaking change, no template restructure. The route-meta module is inert until the companion plugin v6.24.0 (which defines the filters) is installed, and every addition is omitted when its data is absent. RED→GREEN: new [tests/security-txt.php](tests/security-txt.php) (17) + [tests/seo-route-meta.php](tests/seo-route-meta.php) (17), and [tests/feed-json.php](tests/feed-json.php) (+7: authors + per-item image). 46 suites green (1242 assertions), WPCS falsified-clean.
+>
+> **Held (considered, not shipped):** an h-card microformat on `/about`. It touches the brutalist front-end markup for near-zero consumer benefit (webmention-receiving is an intentional permanent anti-feature, so the only consumer is external IndieWeb parsers reading the site as a source) — the audit's own recommendation was "lean skip."
+
 ## [10.12.3] - 2026-06-19 — Contact: make the inline links actually look like links
 
 **Headline:** The v10.12.1 links were present and clickable but rendered as **plain black text** — no colour, no underline. Root cause: WordPress core emits `:where(p.has-text-color:not(.has-link-color)) a{color:inherit}`, which (same specificity as the theme's `elements.link` rule but emitted later) forces inline links inside any colour-bearing paragraph to inherit the body text colour. The contact + personal body paragraphs have `has-text-color` (from `textColor:"bone"`) but no `has-link-color`, so every link went black. Fixed with a scoped class.

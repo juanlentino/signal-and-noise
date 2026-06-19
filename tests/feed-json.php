@@ -23,6 +23,8 @@ function apply_filters( $h, $v ) { return array_key_exists( $h, $GLOBALS['__filt
 function get_bloginfo( $k ) { return 'Signal & Noise'; }
 function home_url( $p = '' ) { return 'https://x.test' . $p; }
 function get_option( $k ) { return 'UTF-8'; }
+function get_the_post_thumbnail_url( $p = null, $size = '' ) { return $GLOBALS['__thumb'] ?? ''; }
+function get_site_icon_url( $s = 512 ) { return $GLOBALS['__icon'] ?? ''; }
 if ( ! function_exists( 'wp_json_encode' ) ) { function wp_json_encode( $v, $flags = 0, $depth = 512 ) { return json_encode( $v, $flags, $depth ); } }
 
 require __DIR__ . '/../inc/feed-json.php';
@@ -34,6 +36,24 @@ ok( is_string( $item['id'] ) && $item['id'] !== '', 'item id is a non-empty stri
 ok( isset( $item['content_html'] ) && $item['content_html'] !== '', 'content_html present + non-empty (required field)' );
 ok( preg_match( '/^\d{4}-\d{2}-\d{2}T/', $item['date_published'] ) === 1, 'date_published is RFC 3339 shape' );
 ok( in_array( 'analysis', $item['tags'], true ), 'tags carries category names' );
+
+// v10.13.0: per-item image from the featured thumbnail (omitted when absent).
+ok( ! isset( $item['image'] ), 'item has no image when there is no featured thumbnail' );
+$GLOBALS['__thumb'] = 'https://x.test/wp-content/uploads/card.jpg';
+$with_img = sn_feed_json_build_item( (object) array( 'ID' => 9, 'post_content' => 'x' ) );
+ok( ( $with_img['image'] ?? null ) === 'https://x.test/wp-content/uploads/card.jpg', 'item carries the featured-thumbnail image when present' );
+unset( $GLOBALS['__thumb'] );
+
+// v10.13.0: feed-level authors (JSON Feed 1.1) — name + /about url + site-icon avatar.
+$authors = sn_feed_json_authors();
+ok( is_array( $authors ) && count( $authors ) === 1, 'authors is a one-entry array' );
+ok( ( $authors[0]['name'] ?? null ) === 'Signal & Noise', 'author name from site identity' );
+ok( ( $authors[0]['url'] ?? null ) === 'https://x.test/about/', 'author url points at /about/' );
+ok( ! isset( $authors[0]['avatar'] ), 'no avatar when the site icon is unset' );
+$GLOBALS['__icon'] = 'https://x.test/wp-content/uploads/icon.png';
+$authors2 = sn_feed_json_authors();
+ok( ( $authors2[0]['avatar'] ?? null ) === 'https://x.test/wp-content/uploads/icon.png', 'avatar from the site icon when set' );
+unset( $GLOBALS['__icon'] );
 
 // Whole-feed shape + escaping discipline (JSON, not esc_html).
 $feed = array(
