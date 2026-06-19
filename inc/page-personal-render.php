@@ -73,8 +73,8 @@ function sn_personal_content_blocks() {
 	</div>
 	<!-- /wp:group -->
 
-	<!-- wp:group {"style":{"spacing":{"padding":{"top":"var:preset|spacing|20","bottom":"var:preset|spacing|50","left":"var:preset|spacing|40","right":"var:preset|spacing|40"}}},"backgroundColor":"void","layout":{"type":"constrained","contentSize":"760px"}} -->
-	<div class="wp-block-group has-void-background-color has-background" style="padding-top:var(--wp--preset--spacing--20);padding-right:var(--wp--preset--spacing--40);padding-bottom:var(--wp--preset--spacing--50);padding-left:var(--wp--preset--spacing--40)">
+	<!-- wp:group {"className":"sn-prose-links","style":{"spacing":{"padding":{"top":"var:preset|spacing|20","bottom":"var:preset|spacing|50","left":"var:preset|spacing|40","right":"var:preset|spacing|40"}}},"backgroundColor":"void","layout":{"type":"constrained","contentSize":"760px"}} -->
+	<div class="wp-block-group sn-prose-links has-void-background-color has-background" style="padding-top:var(--wp--preset--spacing--20);padding-right:var(--wp--preset--spacing--40);padding-bottom:var(--wp--preset--spacing--50);padding-left:var(--wp--preset--spacing--40)">
 
 		<!-- wp:paragraph {"style":{"typography":{"fontSize":"1rem","lineHeight":"1.8"}},"textColor":"bone","fontFamily":"body"} -->
 		<p class="has-bone-color has-text-color has-body-font-family" style="font-size:1rem;line-height:1.8">If you want to say hello or share something you're working on, <a href="https://www.linkedin.com/in/juanlentino/" target="_blank" rel="noopener">LinkedIn</a> is the right place. I see what comes in there, and I read it when I can.</p>

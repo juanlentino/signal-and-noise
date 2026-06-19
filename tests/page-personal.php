@@ -94,6 +94,16 @@ ok( strpos( $body, "Yes doesn't fit in the week." ) !== false, 'paragraph 4 clos
 // Masthead present + accessible (an H1 the page would otherwise lack).
 ok( strpos( $body, '<h1' ) !== false, 'the page has an H1 (masthead)' );
 
+// Link visibility fix: the body group carries .sn-prose-links so its inline
+// links escape WP core's `p.has-text-color:not(.has-link-color) a{color:inherit}`
+// (which otherwise renders them as plain black body text).
+ok( strpos( $body, 'sn-prose-links' ) !== false, 'body group carries the sn-prose-links class (link-colour fix)' );
+
+// CSS contract: components.css defines the prose-link colour rule.
+$css = file_get_contents( __DIR__ . '/../assets/css/components.css' );
+ok( is_string( $css ) && strpos( $css, '.sn-prose-links a' ) !== false, 'components.css defines .sn-prose-links a' );
+ok( is_string( $css ) && strpos( $css, '--wp--preset--color--blood' ) !== false && strpos( $css, '.sn-prose-links' ) !== false, '.sn-prose-links links use the blood colour preset' );
+
 // ── functions.php wires the module ────────────────────────────────────
 $fn = file_get_contents( __DIR__ . '/../functions.php' );
 ok( strpos( $fn, 'inc/page-personal-template.php' ) !== false, 'functions.php requires inc/page-personal-template.php' );

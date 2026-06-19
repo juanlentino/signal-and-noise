@@ -2,6 +2,16 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.12.3] - 2026-06-19 — Contact: make the inline links actually look like links
+
+**Headline:** The v10.12.1 links were present and clickable but rendered as **plain black text** — no colour, no underline. Root cause: WordPress core emits `:where(p.has-text-color:not(.has-link-color)) a{color:inherit}`, which (same specificity as the theme's `elements.link` rule but emitted later) forces inline links inside any colour-bearing paragraph to inherit the body text colour. The contact + personal body paragraphs have `has-text-color` (from `textColor:"bone"`) but no `has-link-color`, so every link went black. Fixed with a scoped class.
+
+### Fixed
+
+- **Inline content links now show the theme's `blood` link colour.** Added `.sn-prose-links a` to [assets/css/components.css](assets/css/components.css) (specificity 0,1,1 — beats core's 0,0,1 regardless of source order; no `!important`): `blood` at rest, `signal` + underline on hover/focus, mirroring the existing `.sn-404-browse` / `.sn-prov-*` link idiom. The class is applied to the `/contact` routing group ([templates/page-contact.html](templates/page-contact.html)) and the `/contact/personal` body group ([inc/page-personal-render.php](inc/page-personal-render.php)). `blood` on `bone` body text is a ~4.2:1 luminance ratio, so the links are distinguishable by colour alone (WCAG 1.4.1) even before the hover underline. Contract locked in [tests/page-personal.php](tests/page-personal.php) (class present + CSS rule present).
+
+> **Why PATCH:** a CSS/markup fix to the just-shipped contact pages — no new capability, no schema/API/structural change. Diagnosed from the live emitted CSS, not guessed. Note (latent, not fixed here): the `Panacea` link on `/about` has the same `has-text-color`-without-`has-link-color` pattern and would benefit from the same class — deferred as out of scope. Bumps because the version-gated self-updater is the only path to live.
+
 ## [10.12.2] - 2026-06-19 — Remove the dead Contact Form 7 asset code
 
 **Headline:** v10.12.0 turned `/contact` into a routing directory and deliberately left the CF7 + Flamingo plugins active-but-unused, to be removed once the new pages were verified live. Both render correctly (confirmed on `juanlentino.com/contact` and `/contact/personal` — no form, no 404), so this release deletes the now-dead CF7 plumbing from the theme. A grep of **both** the theme and the `signal-and-noise-tools` plugin confirmed Contact Form 7 was the **only** consumer of every removed hook: nothing else enqueues `contact-form-7` / `wpcf7`, and nothing else loads the Cloudflare Turnstile SDK.

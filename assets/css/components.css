@@ -1370,3 +1370,23 @@
 .sn-404-browse a:focus-visible {
 	text-decoration: underline;
 }
+
+/* ============================================
+   EDITORIAL PROSE LINKS (v10.12.2)
+   Inline links inside colour-bearing body paragraphs (the /contact routing
+   directory + the /contact/personal note). WordPress core emits
+   `:where(p.has-text-color:not(.has-link-color)) a{color:inherit}` (specificity
+   0,0,1, AFTER the theme's elements.link rule which is also 0,0,1), so a "naked"
+   <a> in a paragraph that has a text colour but no link colour renders as plain
+   body text. A class selector (0,1,1) decisively wins, restoring the theme's
+   blood -> signal link colour. Mirrors the .sn-404-browse / .sn-prov-* idiom.
+   ============================================ */
+.sn-prose-links a {
+	color: var(--wp--preset--color--blood, #e00404);
+	text-decoration: none;
+}
+.sn-prose-links a:hover,
+.sn-prose-links a:focus-visible {
+	color: var(--wp--preset--color--signal, #ff4c47);
+	text-decoration: underline;
+}
