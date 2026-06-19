@@ -23,17 +23,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 	<!-- /wp:heading -->
 
 	<!-- wp:paragraph {"style":{"typography":{"fontSize":"1rem","lineHeight":"1.8"}},"textColor":"bone"} -->
-	<p class="has-bone-color has-text-color" style="font-size:1rem;line-height:1.8">Signal &amp; Noise is a custom WordPress block theme — Full Site Editing, no page builder, no framework. Type is set in Bebas Neue and DM Mono. Built and maintained in the open, one author, no team.</p>
+	<p class="has-bone-color has-text-color" style="font-size:1rem;line-height:1.8">Signal &amp; Noise is a custom WordPress block theme - Full Site Editing, no page builder, no framework. Type is set in Bebas Neue and DM Mono. Built and maintained in the open, one author, no team.</p>
 	<!-- /wp:paragraph -->
 
 	<!-- wp:list {"style":{"typography":{"fontSize":"0.95rem","lineHeight":"1.9"}},"textColor":"bone"} -->
 	<ul class="wp-block-list has-bone-color has-text-color" style="font-size:0.95rem;line-height:1.9">
-		<!-- wp:list-item --><li>Platform — WordPress Full Site Editing (block theme)</li><!-- /wp:list-item -->
-		<!-- wp:list-item --><li>Type — Bebas Neue (display), DM Mono (body &amp; UI)</li><!-- /wp:list-item -->
-		<!-- wp:list-item --><li>Build — buildless: hand-written PHP, theme.json, vanilla ES5. No bundler.</li><!-- /wp:list-item -->
-		<!-- wp:list-item --><li>Hosting — Cloudways, Cloudflare CDN &amp; DNS</li><!-- /wp:list-item -->
-		<!-- wp:list-item --><li>Tooling — companion plugin Signal &amp; Noise Tools for SEO, search &amp; ops</li><!-- /wp:list-item -->
-		<!-- wp:list-item --><li>AI assistance — engineered with Claude (Anthropic) as a pair-programmer</li><!-- /wp:list-item -->
+		<!-- wp:list-item --><li>Platform - WordPress Full Site Editing (block theme)</li><!-- /wp:list-item -->
+		<!-- wp:list-item --><li>Type - Bebas Neue (display), DM Mono (body &amp; UI)</li><!-- /wp:list-item -->
+		<!-- wp:list-item --><li>Build - buildless: hand-written PHP, theme.json, vanilla ES5. No bundler.</li><!-- /wp:list-item -->
+		<!-- wp:list-item --><li>Hosting - Cloudways, Cloudflare CDN &amp; DNS</li><!-- /wp:list-item -->
+		<!-- wp:list-item --><li>Tooling - companion plugin Signal &amp; Noise Tools for SEO, search &amp; ops</li><!-- /wp:list-item -->
+		<!-- wp:list-item --><li>AI assistance - engineered with Claude (Anthropic) as a pair-programmer</li><!-- /wp:list-item -->
 	</ul>
 	<!-- /wp:list -->
 

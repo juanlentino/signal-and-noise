@@ -51,7 +51,7 @@ function sn_humans_txt_body() {
 
 	$lines = array(
 		'/* TEAM */',
-		$author . ' — author, producer, audio engineer',
+		$author . ' - author, producer, audio engineer',
 		'Site: https://juanlentino.com',
 		'Contact: https://juanlentino.com/contact/',
 		'',
@@ -59,13 +59,14 @@ function sn_humans_txt_body() {
 		'https://open.spotify.com/intl-es/artist/2R3HjldxV2PpYp9DQwMPq0',
 		'https://www.linkedin.com/in/juanlentino/',
 		'https://www.instagram.com/juan_lentino/',
+		'https://x.com/juan_lentino',
 		'',
 		'/* TECHNOLOGY */',
-		'Standards — HTML5, CSS3, WordPress Full Site Editing, PHP 8.0+',
-		'Type — Bebas Neue (display), DM Mono (body & UI)',
-		'Build — buildless: hand-written PHP, theme.json, vanilla ES5. No bundler.',
-		'Hosting — Cloudways, Cloudflare CDN & DNS',
-		'Tooling — companion plugin Signal & Noise Tools for SEO, search & ops',
+		'Standards - HTML5, CSS3, WordPress Full Site Editing, PHP 8.0+',
+		'Type - Bebas Neue (display), DM Mono (body & UI)',
+		'Build - buildless: hand-written PHP, theme.json, vanilla ES5. No bundler.',
+		'Hosting - Cloudways, Cloudflare CDN & DNS',
+		'Tooling - companion plugin Signal & Noise Tools for SEO, search & ops',
 		'',
 		'/* THEME */',
 		$name . ' v' . $version,
@@ -115,7 +116,7 @@ function sn_humans_txt_maybe_serve() {
  */
 function sn_humans_txt_head_links() {
 	printf( '<link rel="author" type="text/plain" href="%s">' . "\n", esc_url( home_url( '/humans.txt' ) ) );
-	echo "<!-- Signal & Noise — built by Juan Lentino · juanlentino.com · /humans.txt -->\n";
+	echo "<!-- Signal & Noise - built by Juan Lentino · juanlentino.com · /humans.txt -->\n";
 }
 
 if ( ! defined( 'SN_HUMANS_TXT_TEST' ) || ! SN_HUMANS_TXT_TEST ) {
