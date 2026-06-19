@@ -62,6 +62,8 @@ ok( strpos( $body, 'WordPress' ) !== false, 'body references the platform (WordP
 ok( strpos( $body, 'Signal & Noise' ) !== false, 'body references the theme name' );
 ok( strpos( $body, '10.5.0' ) !== false, 'body carries the theme version (read from wp_get_theme, no drift)' );
 ok( strpos( $body, 'open.spotify.com' ) !== false, 'body lists the Spotify profile (lockstep with footer)' );
+ok( strpos( $body, 'x.com/juan_lentino' ) !== false, 'body lists the X profile (v10.13.4, lockstep with footer)' );
+ok( false === strpos( $body, "\xE2\x80\x94" ), 'body uses straight ASCII, no em-dash U+2014 (v10.13.4)' );
 
 // --- Head links: rel=author autodiscovery + maker's mark ---
 ok( function_exists( 'sn_humans_txt_head_links' ), 'sn_humans_txt_head_links() is defined' );

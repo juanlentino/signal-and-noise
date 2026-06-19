@@ -2,6 +2,20 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.13.4] - 2026-06-19 — Literal em-dashes → straight hyphens + X footer link
+
+**Headline:** Completes the v10.13.2 "smart quotes and em-dashes" fix. That release stopped WordPress from *auto-creating* curly glyphs, but the bio/colophon/humans.txt prose still had **literal em-dashes typed into the source** — `wptexturize` never touched those. Replaced them with straight hyphens across all rendered prose. Also adds the X profile to the footer.
+
+### Fixed
+
+- **Literal em-dashes are now straight hyphens** in rendered prose — `/about`, `/services`, `/music`, `/colophon`, `/humans.txt`, and the logo `aria-label` ([templates/page-about.html](templates/page-about.html), [page-services.html](templates/page-services.html), [page-music.html](templates/page-music.html), [patterns/colophon.php](patterns/colophon.php), [inc/humans-txt.php](inc/humans-txt.php), [parts/header.html](parts/header.html)). Docblocks/PHP comments were intentionally left untouched (they don't render), and the eyebrow middots (`·`) are preserved — they're intentional design separators, not dashes.
+
+### Added
+
+- **X profile in the footer** ([parts/footer.html](parts/footer.html)) — a Gutenberg `wp:social-link` `x` block at `x.com/juan_lentino`, so the row reads Spotify · LinkedIn · Instagram · X · RSS. Mirrored into the humans.txt PROFILES list to keep the two surfaces in lockstep. X was previously schema-only (`twitter:site` / `sameAs`); it's now surfaced visibly.
+
+> **Why PATCH:** the em-dash sweep is the completion of the v10.13.2 typography fix (the literal-glyph half `wptexturize` couldn't reach), and the X icon is a single `social-link` block added to the existing row — no new surface, no template restructure. Bundled into one patch per the owner's call. Locked by [tests/humans-txt.php](tests/humans-txt.php) (X profile present + no `U+2014` in the body). 47 suites green (1250 assertions), WPCS clean. The `/about` / `/colophon` rendering can't be exercised in a local preview (FSE) — verify live after install.
+
 ## [10.13.3] - 2026-06-19 — /contact/personal: drop the inaccurate "family at home" line
 
 **Headline:** The `/contact/personal` "why the answer is no" paragraph asserted "there's a family at home" — factually wrong (the owner is single, no kids). Removed. The studio, the solo infrastructure projects, and the MBA already carry the structural reason; the line added nothing true.
