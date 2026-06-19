@@ -2,6 +2,25 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.12.0] - 2026-06-18 — Contact: a two-page Proton-alias routing system (replaces the CF7 form)
+
+**Headline:** `/contact` is no longer a Contact Form 7 form — it's a **plain-text routing directory**. Each kind of inquiry (research, press, speaking, studio, recruiting) is pointed at a dedicated filtered Proton alias, written as plain text with **zero hyperlinks** so the address has to be typed: the friction is the spam filter, and Proton's own filtering is the backstop. A new child page, **`/contact/personal`**, holds the honest "your synchronous-time ask is a no, and here's why" note for everything else — its structure borrowed, with credit, from Casey Neistat's contact page.
+
+### New
+
+- **`/contact/personal` page** — a postless virtual route (child of `/contact`), built the same way `/about/uses` is: [inc/page-personal-template.php](inc/page-personal-template.php) matches `REQUEST_URI` at `template_redirect` priority 0 (beats `redirect_canonical`, no rewrite flush) and [inc/page-personal-render.php](inc/page-personal-render.php) emits the document, forcing HTTP 200 for the postless path (WORDPRESS-REFERENCE gotcha #40). The body is authored as block markup in `sn_personal_content_blocks()` (the edit surface) and rendered through `do_blocks`, so it reuses the theme's type/colour/spacing presets with no bespoke CSS. Exactly one hyperlink in the body — **LinkedIn** — the only asynchronous channel offered; everything else is a "no". Wired in [functions.php](functions.php); contract locked by [tests/page-personal.php](tests/page-personal.php) (route matcher, forced-200, exactly-one-link, footnote presets, verbatim copy).
+- **Casey Neistat credit.** A de-emphasised footnote on `/contact/personal` ("The structure here is borrowed from Casey Neistat's contact page. He worked out the honest version of this first."), set in the theme's smallest font-size preset (`small`) + muted colour preset (`rust`) — named presets, no inline values — separated from the body by a spacer.
+
+### Changed
+
+- **`/contact` is now a routing directory, not a form.** [templates/page-contact.html](templates/page-contact.html) drops the `wp:post-content` form area (which rendered the CF7 shortcode) and the social-links "Connect" block, and replaces them with six plain-text paragraphs that route each inquiry type to its Proton alias. The masthead (eyebrow + `CONTACT` + availability line) is unchanged. Emails and URLs are rendered as plain text — never auto-linked (the theme hooks no `make_clickable`, and the one `the_content` filter is gated to single posts, so a heading-less page is exempt). Product names are kept generic (Panacea Studio, "music infrastructure projects") for compartmentalisation. No email is configured in WordPress — routing is entirely Proton-side.
+
+### Removed
+
+- **The Contact Form 7 form no longer renders on `/contact`.** Because the template no longer outputs `wp:post-content`, the CF7 shortcode in the page's DB body is dormant (never rendered) — the "archive" without a DB edit. The CF7 + Flamingo **plugins are intentionally left active and untouched**; their removal (and the now-dead `is_page('contact')` CF7 asset gate in [inc/assets-frontend.php](inc/assets-frontend.php)) is deferred to a separate session, after this ships and is verified live.
+
+> **Why MINOR:** a new user-visible page (`/contact/personal`) plus a redesigned `/contact` — new capability, no public-API removal and no settings-schema change. The `/contact` URL is unchanged, so inbound links (nav, sitemap) keep resolving. RED→GREEN via [tests/page-personal.php](tests/page-personal.php). All standalone suites green, WPCS falsified-clean.
+
 ## [10.11.2] - 2026-06-17 — Notes hero accuracy + two defense-in-depth hardenings
 
 **Headline:** Three small fixes from a post-ship audit: the `/notes` hero now reports the **whole-corpus** entry count on every page (it read the per-page slice on page 2+), the self-updater's `?force-check` cache-bust is now **capability-gated**, and the colophon's git-ref reader rejects path traversal in a tampered `.git/HEAD`.
