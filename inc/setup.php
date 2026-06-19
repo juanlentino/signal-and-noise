@@ -32,7 +32,6 @@ function signal_noise_after_setup_theme() {
 		// critical.css carries the sidenote + pull-quote block styling (v9.11.0);
 		// without it the custom blocks render unstyled in the editor canvas.
 		'assets/css/critical.css',
-		'assets/css/forms.css',
 		'assets/css/responsive.css',
 	) );
 
