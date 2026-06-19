@@ -89,6 +89,7 @@ require_once __DIR__ . '/inc/beacon.php'; // P1: first-party edge analytics beac
 require_once __DIR__ . '/inc/identity-rels.php'; // A4 (v10.5.0): <link rel="me"> head links from sn_settings social.same_as
 require_once __DIR__ . '/inc/humans-txt.php'; // C4 (v10.5.0): /humans.txt virtual route + rel=author autodiscovery + maker's-mark comment
 require_once __DIR__ . '/inc/security-txt.php'; // v10.13.0: /.well-known/security.txt (RFC 9116) virtual route
+require_once __DIR__ . '/inc/disable-smart-quotes.php'; // v10.13.2: straight quotes — disable wptexturize site-wide
 require_once __DIR__ . '/inc/seo-route-meta.php'; // v10.13.0: route descriptions + /about/uses meta for the plugin's sn_seo_* filters
 require_once __DIR__ . '/inc/colophon-meta.php'; // C2 (v10.5.0): [sn_build] live colophon line (theme+plugin version, git short SHA, deploy time)
 require_once __DIR__ . '/inc/availability.php'; // D5 (v10.9.0): [sn_availability] line in the /contact + /services heroes (reads sn_settings identity.availability)
