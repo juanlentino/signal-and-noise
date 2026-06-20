@@ -2,6 +2,17 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.14.1] - 2026-06-20 — Note typography: ragged-right body + de-duplicated tags
+
+**Headline:** Two single-Note fixes. Body paragraphs are no longer justified — on the DM Mono body face, `text-align: justify` could only stretch inter-word spaces (every glyph is one width), so the slack collapsed into visible "rivers" and `hyphens: auto` chopped words mid-line (need-ed, journal-ist). Ragged-right (left-aligned) reads cleanly on a monospace measure. And tags, which rendered in both the top spec-row *and* the closing footer, now appear once — in the top spec-row only.
+
+### Fixed
+
+- **Body copy is ragged-right** ([assets/css/critical.css](assets/css/critical.css)): removed the desktop-only (`min-width: 1024px`) `text-align: justify` + `-webkit-hyphens` / `hyphens: auto` on single-note body paragraphs. The drop cap and the ~68ch measure are unchanged. Fixes the stretched word-spacing + mid-word hyphenation across every paragraph.
+- **Tags de-duplicated** ([parts/post-closing.html](parts/post-closing.html)): removed the `wp:post-terms` "Tagged …" block from the closing footer — tags already render in the top spec-row ([parts/post-frontmatter.html](parts/post-frontmatter.html), v9.3.0). The footer keeps its prev/next nav + share. The orphaned `.sn-post-closing__tags` CSS rule was removed too.
+
+> **Why PATCH:** visual refinement + a redundant-render fix; no new capability, no settings/schema change, no template-structure break (the closing part stays dynamic via the prev/next `post-navigation-link`). [tests/patterns-registry.php](tests/patterns-registry.php) Test 3 updated — the closing part's dynamic-block assertion now accepts `post-navigation-link`; frontmatter tag rendering is unchanged. 49 suites green (1258 asserts).
+
 ## [10.14.0] - 2026-06-19 — Field Core Web Vitals beacon (real-user LCP/INP/CLS)
 
 **Headline:** The beacon now measures **real-user (field) Core Web Vitals** — LCP, INP, CLS — and reports them to the first-party collector, so the dashboard shows what actual visitors experience (and what Google ranks on via CrUX), not just the synthetic Lighthouse lab score. Lever 4 (final) of the CF-analytics-headroom program; the plugin half (worker v1.8.0 capture + a "Core Web Vitals (field)" panel) ships alongside.

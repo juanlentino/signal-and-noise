@@ -631,14 +631,8 @@ main { view-transition-name: sn-main; }
 	background: none;
 }
 
-.sn-post-closing__tags {
-	font-family: var(--wp--preset--font-family--body);
-	font-size: max(0.75rem, 11px);
-	letter-spacing: 0.08em;
-	text-transform: uppercase;
-	color: var(--wp--preset--color--rust);
-	margin: 0 0 1.5rem 0;
-}
+/* .sn-post-closing__tags removed in v10.14.1 — tags now render only in the
+   top spec-row (parts/post-frontmatter.html), not the closing footer. */
 
 .sn-post-closing__next,
 .sn-post-closing__prev {
@@ -960,22 +954,13 @@ main { view-transition-name: sn-main; }
    patterns (pull-quote, sidenote, steps-enumerated list items,
    footnote list items, code blocks). Those keep their own alignment. */
 
-/* --- JUSTIFIED TEXT + HYPHENATION ---
-   Gated @media (min-width: 1024px) — below that, body paragraphs
-   cascade to left-aligned (the WP default) to avoid ragged spacing
-   on narrow viewports.
-
-   Safari (macOS + iOS) still requires the -webkit-hyphens prefix
-   as of 2026-05; pair both declarations so all major browsers see
-   hyphenation consistently. */
-
-@media (min-width: 1024px) {
-	.single-post .wp-block-post-content > p:not(.sn-sidenote) {
-		text-align: justify;
-		-webkit-hyphens: auto;
-		hyphens: auto;
-	}
-}
+/* --- BODY ALIGNMENT (ragged-right) ---
+   Body paragraphs stay left-aligned. v10.14.1 removed the desktop-only
+   `text-align: justify` + `hyphens: auto`: on the DM Mono body face, justify
+   can only stretch the inter-word spaces (every glyph is the same width), so
+   the slack collapsed into visible rivers, and auto-hyphenation then chopped
+   words (need-ed, journal-ist) trying to fill the gaps. Ragged-right reads
+   cleaner on a monospace measure. */
 
 /* --- TYPOGRAPHIC DETAILING (C1) ---
    critical.css is inlined globally, so these refinements reach every
