@@ -735,13 +735,11 @@ main { view-transition-name: sn-main; }
 	margin-bottom: 0.4em;
 }
 
-/* Reading measure: cap body paragraphs to ~68ch (toward the 65–75ch optimum —
-   DM Mono runs ~90ch in the full 760px column). Headings, quotes, figures, and
-   patterns keep the full column width, so the editorial scale contrast survives.
-   Refinement audit B6. */
-.single-post .wp-block-post-content > p {
-	max-width: 68ch;
-}
+/* v10.14.2: body paragraphs use the full content column (760px) — the same
+   width as the headings, title, and rules — so the prose reads uniform width
+   throughout. Previously capped to ~68ch as a reading measure, but the
+   narrower-and-centred cap left paragraphs visibly indented from the
+   full-width headings. (Was Refinement audit B6.) */
 
 /* --- DROP CAPS ---
    First paragraph of single-note posts. :first-of-type ensures posts

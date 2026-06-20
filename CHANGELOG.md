@@ -2,6 +2,16 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.14.2] - 2026-06-20 — Uniform Note prose width (drop the 68ch paragraph cap)
+
+**Headline:** Body paragraphs on single Notes were capped at a `max-width: 68ch` reading measure while the title, headings, and rules used the full 760px content column. Because the constrained layout centres blocks, the narrower paragraphs sat **indented** from the full-width headings — the width mismatch that read as inconsistent indentation. Paragraphs now use the same 760px column, so the prose is uniform width throughout. (Trade-off: lines run wider — ~90ch in DM Mono — since the reading-measure cap is gone; deliberate, per request.)
+
+### Changed
+
+- **Body paragraphs use the full content column** ([assets/css/critical.css](assets/css/critical.css)): removed `max-width: 68ch` from `.single-post .wp-block-post-content > p`. Paragraphs fall back to the WP constrained-layout content-size (760px), matching the headings/title/rules — same left edge, same width. The drop cap and ragged-right alignment (v10.14.1) are unchanged.
+
+> **Why PATCH:** a visual refinement aligning paragraph width to the column; no capability, settings/schema, or template-structure change. 49 suites green (1258 asserts). `style.css` + `readme.txt` Stable tag → 10.14.2.
+
 ## [10.14.1] - 2026-06-20 — Note typography: ragged-right body + de-duplicated tags
 
 **Headline:** Two single-Note fixes. Body paragraphs are no longer justified — on the DM Mono body face, `text-align: justify` could only stretch inter-word spaces (every glyph is one width), so the slack collapsed into visible "rivers" and `hyphens: auto` chopped words mid-line (need-ed, journal-ist). Ragged-right (left-aligned) reads cleanly on a monospace measure. And tags, which rendered in both the top spec-row *and* the closing footer, now appear once — in the top spec-row only.
