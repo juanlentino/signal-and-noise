@@ -49,10 +49,20 @@ function sn_beacon_enqueue() {
 	if ( ! sn_beacon_enabled() ) {
 		return;
 	}
+	// web-vitals (vendored, self-hosted) powers the beacon's field-CWV section: it
+	// must define window.webVitals before the beacon runs, so the beacon depends on
+	// it. Both deferred + footer → they execute in dependency order. (v10.14.0)
+	wp_enqueue_script(
+		'sn-web-vitals',
+		get_theme_file_uri( 'assets/js/web-vitals.iife.js' ),
+		array(),
+		sn_asset_ver( 'assets/js/web-vitals.iife.js' ),
+		array( 'in_footer' => true, 'strategy' => 'defer' )
+	);
 	wp_enqueue_script(
 		'sn-beacon',
 		get_theme_file_uri( 'assets/js/sn-beacon.js' ),
-		array(),
+		array( 'sn-web-vitals' ),
 		sn_asset_ver( 'assets/js/sn-beacon.js' ),
 		array( 'in_footer' => true, 'strategy' => 'defer' )
 	);

@@ -2,6 +2,17 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.14.0] - 2026-06-19 — Field Core Web Vitals beacon (real-user LCP/INP/CLS)
+
+**Headline:** The beacon now measures **real-user (field) Core Web Vitals** — LCP, INP, CLS — and reports them to the first-party collector, so the dashboard shows what actual visitors experience (and what Google ranks on via CrUX), not just the synthetic Lighthouse lab score. Lever 4 (final) of the CF-analytics-headroom program; the plugin half (worker v1.8.0 capture + a "Core Web Vitals (field)" panel) ships alongside.
+
+### New
+
+- **Vendored `web-vitals` v4.2.4** ([assets/js/web-vitals.iife.js](assets/js/web-vitals.iife.js)) — Google's battle-tested CWV library (Apache-2.0), **self-hosted** (no CDN), ~2.6 KB gzipped, with a provenance header. Enqueued deferred + in-footer as a **dependency of the beacon** so `window.webVitals` is defined before the beacon's CWV section runs.
+- **Field-CWV section in the beacon** ([assets/js/sn-beacon.js](assets/js/sn-beacon.js)) — wires `onLCP`/`onINP`/`onCLS`; each metric posts its own tiny event as the library finalizes it (on interaction / page-hide): `vl`=LCP, `vi`=INP, `vc`=CLS (CLS sent ×1000 as an integer). Guarded — a no-op if the library is absent. Async, no render-blocking; one `sendBeacon` per metric on page lifecycle.
+
+> **Why MINOR:** a new user-visible analytics capability (field CWV) with one new self-hosted asset; no template/markup change, no breaking change, and it honors the existing DNT/GPC privacy gate (CWV beacons are suppressed for opted-out visitors like every other event). Cost is small + async (the perf-conscious choice the owner approved). RED→GREEN: [tests/beacon.php](tests/beacon.php) (+8: web-vitals enqueue + dep wiring, the `window.webVitals` guard, `onLCP/onINP/onCLS`, the `vl/vi/vc` events, vendored-file provenance). Theme suites green; JS syntax-checked.
+
 ## [10.13.4] - 2026-06-19 — Literal em-dashes → straight hyphens + X footer link
 
 **Headline:** Completes the v10.13.2 "smart quotes and em-dashes" fix. That release stopped WordPress from *auto-creating* curly glyphs, but the bio/colophon/humans.txt prose still had **literal em-dashes typed into the source** — `wptexturize` never touched those. Replaced them with straight hyphens across all rendered prose. Also adds the X profile to the footer.

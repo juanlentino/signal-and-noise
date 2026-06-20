@@ -89,4 +89,20 @@
     }
     send({ e: 'ce', u: location.pathname, r: document.referrer || '', n: n, pr: pr });
   };
+
+  // 5) Core Web Vitals (field) — real-user LCP/INP/CLS via the web-vitals lib
+  // (window.webVitals, enqueued before this script). Each metric is sent as its own
+  // tiny event when the library finalizes it (on interaction / page-hide): vl=LCP,
+  // vi=INP, vc=CLS. CLS is unitless → sent x1000 as an integer so it stores cleanly.
+  // No-op when the lib is absent (e.g. an unsupported browser).
+  if (window.webVitals) {
+    var reportVital = function (ev, scale) {
+      return function (metric) {
+        send({ e: ev, u: location.pathname, v: Math.round(metric.value * scale) });
+      };
+    };
+    window.webVitals.onLCP(reportVital('vl', 1));
+    window.webVitals.onINP(reportVital('vi', 1));
+    window.webVitals.onCLS(reportVital('vc', 1000));
+  }
 })();

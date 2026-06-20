@@ -64,6 +64,14 @@ ok( is_array( $s['args'] ?? null ) && ( $s['args']['strategy'] ?? '' ) === 'defe
 ok( is_array( $s['args'] ?? null ) && ( $s['args']['in_footer'] ?? false ) === true, 'enqueued in footer' );
 ok( ( $s['ver'] ?? false ) !== false, 'carries a cache-bust version (sn_asset_ver)' );
 
+// v10.14.0: web-vitals is vendored + enqueued as a dependency of the beacon so
+// window.webVitals exists before the field-CWV section runs.
+$wv = $GLOBALS['__enqueued_scripts']['sn-web-vitals'] ?? null;
+ok( $wv !== null, 'sn-web-vitals enqueued' );
+ok( strpos( (string) ( $wv['src'] ?? '' ), 'assets/js/web-vitals.iife.js' ) !== false, 'web-vitals src points at the vendored self-hosted file' );
+ok( ( $wv['args']['strategy'] ?? '' ) === 'defer' && ( $wv['args']['in_footer'] ?? false ) === true, 'web-vitals deferred + footer (matches the beacon)' );
+ok( in_array( 'sn-web-vitals', (array) ( $s['deps'] ?? array() ), true ), 'sn-beacon DEPENDS on sn-web-vitals (load + execution order)' );
+
 $inline = $GLOBALS['__inline']['sn-beacon'] ?? null;
 ok( $inline !== null, 'data island injected on sn-beacon' );
 ok( ( $inline['position'] ?? '' ) === 'before', 'island injected BEFORE the deferred module' );
@@ -98,6 +106,12 @@ ok( strpos( $js, 'visibilitychange' ) !== false, 'beacon flushes on visibilitych
 ok( strpos( $js, 'pagehide' ) !== false, 'beacon flushes on pagehide' );
 ok( strpos( $js, "'sc'" ) !== false || strpos( $js, '"sc"' ) !== false, 'beacon sends scroll (sc) events' );
 ok( strpos( $js, "'tm'" ) !== false || strpos( $js, '"tm"' ) !== false, 'beacon sends time (tm) events' );
+// v10.14.0: field Core Web Vitals via web-vitals (guarded; sends vl/vi/vc).
+ok( strpos( $js, 'window.webVitals' ) !== false, 'beacon reads window.webVitals (guarded)' );
+ok( strpos( $js, 'onLCP' ) !== false && strpos( $js, 'onINP' ) !== false && strpos( $js, 'onCLS' ) !== false, 'beacon wires onLCP/onINP/onCLS' );
+ok( strpos( $js, "'vl'" ) !== false && strpos( $js, "'vi'" ) !== false && strpos( $js, "'vc'" ) !== false, 'beacon sends vl/vi/vc CWV events' );
+$wvjs = (string) @file_get_contents( realpath( __DIR__ . '/..' ) . '/assets/js/web-vitals.iife.js' );
+ok( strpos( $wvjs, 'webVitals' ) !== false && strpos( $wvjs, 'web-vitals v4' ) !== false, 'vendored web-vitals.iife.js present with provenance header' );
 
 // v10.4.0: custom-event API. A no-op stub MUST be assigned before the privacy
 // gate's early return, so window.SN_BEACON.event(...) is always callable.
