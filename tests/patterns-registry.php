@@ -142,9 +142,14 @@ if ( file_exists( $part_path ) ) {
 		false !== strpos( $part_contents, '<!-- wp:' ),
 		'contains WordPress block markup (<!-- wp:)'
 	);
+	// v10.14.1: post-terms moved out of the closing footer (tags now render
+	// only in the top spec-row, parts/post-frontmatter.html). The closing part
+	// is still dynamic via the prev/next post-navigation-link blocks.
 	ha_true(
-		false !== strpos( $part_contents, 'wp:post-terms' ) || false !== strpos( $part_contents, 'wp:post-date' ),
-		'contains a dynamic post-data block (post-terms or post-date)'
+		false !== strpos( $part_contents, 'wp:post-navigation-link' )
+			|| false !== strpos( $part_contents, 'wp:post-terms' )
+			|| false !== strpos( $part_contents, 'wp:post-date' ),
+		'contains a dynamic post-data block (post-navigation-link, post-terms, or post-date)'
 	);
 }
 
