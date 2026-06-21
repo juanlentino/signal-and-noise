@@ -122,20 +122,38 @@ function sn_notes_current_page() {
  * No taxonomy filter needed.
  */
 function sn_notes_query_posts() {
+	$tag_id        = sn_notes_current_tag_id();
+	$start_here_id = sn_notes_start_here_id();
 	$args = array(
-		'post_type'      => 'post',
-		'post_status'    => 'publish',
-		'posts_per_page' => sn_notes_per_page(),
-		'paged'          => sn_notes_current_page(),
-		'orderby'        => 'date',
-		'order'          => 'DESC',
-		'no_found_rows'  => false, // pagination needs found_posts / max_num_pages
+		'post_type'           => 'post',
+		'post_status'         => 'publish',
+		'posts_per_page'      => sn_notes_per_page(),
+		'paged'               => sn_notes_current_page(),
+		'orderby'             => 'date',
+		'order'               => 'DESC',
+		'no_found_rows'       => false, // pagination needs found_posts / max_num_pages
+		'ignore_sticky_posts' => true,  // the sticky is floated into the Start-here card, never the list
 	);
 	// Notes-only by construction (post_type=post = the whole Notes corpus;
 	// Pages are never queried here). Add the search term only when present.
 	$term = sn_notes_search_term();
 	if ( '' !== $term ) {
 		$args['s'] = $term;
+	}
+	if ( $tag_id > 0 ) {
+		// Tag-archive mode: constrain to the queried post_tag.
+		$args['tax_query'] = array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- single-term tag archive, the page's sole query.
+			array(
+				'taxonomy' => 'post_tag',
+				'field'    => 'term_id',
+				'terms'    => $tag_id,
+			),
+		);
+	} elseif ( $start_here_id > 0 ) {
+		// Browse mode: the Start-here post is shown as the pinned card above;
+		// keep it out of the chronological list (every page) so it never
+		// appears twice. Consistent across pages → honest found_posts count.
+		$args['post__not_in'] = array( $start_here_id );
 	}
 	return new WP_Query( $args );
 }
@@ -197,8 +215,119 @@ function sn_notes_hero_stats( $query ) {
 	return array( 'count' => $count, 'latest_date' => $latest_date );
 }
 
-// Under test (tests/notes-pagination.php), the helper functions above are
-// now declared; stop here so the render body (which echoes HTML + runs
+/**
+ * Sticky-post ids, defensively cast to int. Empty when none are set or the
+ * option is absent. The function_exists guard keeps the standalone fixtures
+ * (which don't stub get_option) resolving to "no sticky".
+ *
+ * @return int[]
+ */
+function sn_notes_sticky_ids() {
+	if ( ! function_exists( 'get_option' ) ) {
+		return array();
+	}
+	$ids = get_option( 'sticky_posts' );
+	return is_array( $ids ) ? array_map( 'intval', $ids ) : array();
+}
+
+/**
+ * The queried post_tag term id for a /notes tag-archive request, else 0.
+ * Reads the queried object only when is_tag() is true; guarded so the
+ * fixtures (no is_tag stub) resolve to browse mode (0).
+ *
+ * @return int
+ */
+function sn_notes_current_tag_id() {
+	if ( ! function_exists( 'is_tag' ) || ! is_tag() ) {
+		return 0;
+	}
+	$obj = function_exists( 'get_queried_object' ) ? get_queried_object() : null;
+	return ( $obj && isset( $obj->term_id ) ) ? (int) $obj->term_id : 0;
+}
+
+/**
+ * Is $post_id a published Note (post_type=post)? Guarded for the test
+ * harness — returns false when the WP accessors are absent.
+ *
+ * @param int $post_id
+ * @return bool
+ */
+function sn_notes_is_published_post( $post_id ) {
+	$post_id = (int) $post_id;
+	if ( $post_id < 1 || ! function_exists( 'get_post_status' ) ) {
+		return false;
+	}
+	if ( 'publish' !== get_post_status( $post_id ) ) {
+		return false;
+	}
+	if ( function_exists( 'get_post_type' ) && 'post' !== get_post_type( $post_id ) ) {
+		return false;
+	}
+	return true;
+}
+
+/**
+ * The "Start here" front-door post id: the first published sticky, but ONLY
+ * in pure browse mode (no search, no tag) — search/tag views hide the card.
+ * 0 when there's no eligible sticky. The owner stickies the post they want
+ * pinned; this is the editorial control for the card.
+ *
+ * @return int
+ */
+function sn_notes_start_here_id() {
+	if ( '' !== sn_notes_search_term() || sn_notes_current_tag_id() > 0 ) {
+		return 0;
+	}
+	foreach ( sn_notes_sticky_ids() as $sid ) {
+		if ( sn_notes_is_published_post( $sid ) ) {
+			return (int) $sid;
+		}
+	}
+	return 0;
+}
+
+/**
+ * All non-empty post_tag terms, name-ascending — the /notes "Topics"
+ * directory. Guarded [] for the fixtures; get_terms() returns a WP_Error
+ * (not an array) on failure, which is_array() filters to [].
+ *
+ * @return array
+ */
+function sn_notes_all_tags() {
+	if ( ! function_exists( 'get_terms' ) ) {
+		return array();
+	}
+	$terms = get_terms( array(
+		'taxonomy'   => 'post_tag',
+		'hide_empty' => true,
+		'orderby'    => 'name',
+		'order'      => 'ASC',
+	) );
+	return is_array( $terms ) ? $terms : array();
+}
+
+/**
+ * Pagination base URL: the tag-archive permalink in tag mode, the bare
+ * /notes/ index otherwise. Both paginate via ?paged=%#% (the exact-path
+ * router strips the query string before matching, so ?paged= is safe on
+ * both routes).
+ *
+ * @return string
+ */
+function sn_notes_pagination_base() {
+	$tag_id = sn_notes_current_tag_id();
+	if ( $tag_id > 0 && function_exists( 'get_term_link' ) ) {
+		$link = get_term_link( $tag_id, 'post_tag' );
+		if ( is_string( $link ) && '' !== $link ) {
+			return $link;
+		}
+	}
+	return home_url( '/notes/' );
+}
+
+// Under test (tests/notes-pagination.php, tests/notes-search.php,
+// tests/notes-topic-reframe.php), the helper functions above are now
+// declared; stop here so the render body (which echoes HTML + runs
 // WP_Query) doesn't execute. Placement matters: this return MUST be below
 // every helper declaration (PHP does not declare a function written after
 // a return that runs). Verified empirically during plan authoring.

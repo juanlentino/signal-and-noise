@@ -88,6 +88,28 @@ function sn_notes_is_index_request() {
 }
 
 /**
+ * Detect a /notes tag-archive request (/notes/tag/{slug}/).
+ *
+ * All post_tag archives live under the /notes permalink front (the
+ * `/notes/%postname%/` structure carries onto the tag base), so is_tag()
+ * alone identifies the route. The gate also requires a REAL queried term:
+ * a non-existent tag slug resolves to no term (WP sets the 404), so we
+ * never short-circuit it — and never force a bogus tag to HTTP 200.
+ *
+ * When true, the same template_include short-circuit that owns /notes
+ * renders the catalog with a tag filter (inc/page-notes-render.php),
+ * keeping one styling source of truth instead of the generic index.html
+ * fallback.
+ */
+function sn_notes_is_tag_request() {
+	if ( ! function_exists( 'is_tag' ) || ! is_tag() ) {
+		return false;
+	}
+	$obj = function_exists( 'get_queried_object' ) ? get_queried_object() : null;
+	return (bool) ( $obj && isset( $obj->term_id ) && (int) $obj->term_id > 0 );
+}
+
+/**
  * PRIMARY override: short-circuit on `template_redirect`, render
  * the PHP file directly, and exit. This sidesteps the entire WP
  * template-include pipeline so nothing downstream can cache, mask,
@@ -102,7 +124,7 @@ function sn_notes_is_index_request() {
  * (eventually) load templates/page-notes.html as a safety net.
  */
 add_action( 'template_redirect', function() {
-	if ( ! sn_notes_is_index_request() ) {
+	if ( ! sn_notes_is_index_request() && ! sn_notes_is_tag_request() ) {
 		return;
 	}
 	$render = get_theme_file_path( 'inc/page-notes-render.php' );
@@ -120,7 +142,7 @@ add_action( 'template_redirect', function() {
  * outcome.
  */
 add_filter( 'template_include', function( $template ) {
-	if ( ! sn_notes_is_index_request() ) {
+	if ( ! sn_notes_is_index_request() && ! sn_notes_is_tag_request() ) {
 		return $template;
 	}
 	$render = get_theme_file_path( 'inc/page-notes-render.php' );
@@ -164,6 +186,20 @@ function sn_notes_index_title() {
 }
 
 /**
+ * Build the /notes tag-archive document title: "Notes — {Tag} — {Site}".
+ * Same single-owner contract as sn_notes_index_title(): the renderer's
+ * short-circuit means this pre_get_document_title return is authoritative
+ * for the route. Falls back to "Notes" when the term name is unavailable.
+ */
+function sn_notes_tag_title() {
+	$site = get_bloginfo( 'name' );
+	$obj  = function_exists( 'get_queried_object' ) ? get_queried_object() : null;
+	$name = ( $obj && isset( $obj->name ) ) ? $obj->name : '';
+	$base = $name ? 'Notes — ' . $name : 'Notes';
+	return $site ? $base . ' — ' . $site : $base;
+}
+
+/**
  * Set the document `<title>` for the /notes index page.
  *
  * Why this is needed: when our `template_redirect` short-circuit
@@ -177,7 +213,13 @@ function sn_notes_index_title() {
  * the site (`Page Title — Site Name`).
  */
 add_filter( 'pre_get_document_title', function( $title ) {
-	return sn_notes_is_index_request() ? sn_notes_index_title() : $title;
+	if ( sn_notes_is_index_request() ) {
+		return sn_notes_index_title();
+	}
+	if ( sn_notes_is_tag_request() ) {
+		return sn_notes_tag_title();
+	}
+	return $title;
 }, 999 );
 
 /**
