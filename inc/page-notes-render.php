@@ -358,6 +358,15 @@ if ( $sn_tag ) {
 $sn_filtered      = $sn_searching || $sn_tag;
 $sn_start_here_id = $sn_filtered ? 0 : sn_notes_start_here_id();
 
+// The stickied note is floated to the TOP of the index (page 1) and is
+// excluded from $query (post__not_in) so it never appears twice; page 2+ does
+// not repeat it — standard WP sticky semantics, which a secondary WP_Query
+// does not provide on its own. Add it back into the displayed corpus count.
+$sn_pin_on_page1 = ( $sn_start_here_id > 0 && sn_notes_current_page() <= 1 );
+if ( $sn_start_here_id > 0 ) {
+	$entry_count += 1;
+}
+
 // The router only short-circuits a tag archive for a REAL term, so force
 // HTTP 200 here — even a valid-but-empty tag archive should be 200, not the
 // 404 WP may have committed before template_redirect (WORDPRESS-REFERENCE #40).
@@ -922,27 +931,15 @@ wp_head();
 	.sn-notes-search { transition: none; }
 	.sn-notes-search button { transition: none; transform: none; }
 	.sn-notes-topic { transition: none; }
-	.sn-notes-pillar--start::before { transition: none; }
 }
 
-/* START-HERE CARD — the pinned front door (sticky-driven). Same
-   .sn-notes-pillar family as the featured essays, but the blood rail (the
-   catalog's emphasis primitive) sits permanently expanded so it reads as
-   PRIMARY without leaving the vocabulary; the ▸ glyph replaces the pillars'
-   № to distinguish it. Hierarchy comes from the rail + its own section
-   label, not added decoration. */
-.sn-notes-start-section {
-	margin-bottom: clamp(1.5rem, 3vw, 2rem);
-}
-.sn-notes-pillar--start::before {
-	width: 8px;
-}
-.sn-notes-pillar--start:hover::before {
-	width: 14px;
-}
-.sn-notes-pillar--start .sn-notes-pillar-number {
+/* PINNED ROW — the stickied "Start here" note floated to the top of the
+   index (page 1). The blood "Start here" label in the spec column signals the
+   out-of-date-order placement is intentional (a sticky), not a sort bug; the
+   row is otherwise an ordinary .sn-notes-row. */
+.sn-notes-row-pin {
 	color: var(--wp--preset--color--blood, #e00404);
-	font-size: clamp(1.1rem, 1.6vw, 1.35rem);
+	font-weight: 500;
 }
 
 /* TOPICS — browse-by-tag directory. The corpus organizes around subject now,
@@ -1069,36 +1066,6 @@ echo $sn_header_html;
 		</header>
 
 		<?php if ( ! $sn_filtered ) : ?>
-
-		<?php // START HERE — the pinned front door. Sticky-driven: the post the
-		      // owner stickies becomes this card (sn_notes_start_here_id), and it
-		      // is excluded from the index list below so it never doubles. Sits
-		      // above the pillars in the right rail: orientation order is Start
-		      // here (primary) → pillars (supporting). Page 1 only.
-		if ( $sn_start_here_id > 0 && sn_notes_current_page() <= 1 ) :
-			$sh_title   = get_the_title( $sn_start_here_id );
-			$sh_url     = get_permalink( $sn_start_here_id );
-			$sh_excerpt = get_the_excerpt( $sn_start_here_id );
-		?>
-		<section class="sn-notes-start-section" aria-labelledby="sn-start-heading">
-			<div class="sn-notes-section-wrap">
-				<p class="sn-notes-section-label" id="sn-start-heading">New Here</p>
-				<span class="sn-notes-section-count">Start</span>
-			</div>
-			<article class="sn-notes-pillar sn-notes-pillar--start">
-				<span class="sn-notes-pillar-number" aria-hidden="true">&#9656;</span>
-				<div class="sn-notes-pillar-body">
-					<p class="sn-notes-pillar-eyebrow">Start Here</p>
-					<h2 class="sn-notes-pillar-title"><?php echo esc_html( $sh_title ); ?></h2>
-					<?php if ( $sh_excerpt ) : ?>
-					<p class="sn-notes-pillar-dek"><?php echo esc_html( wp_strip_all_tags( $sh_excerpt ) ); ?></p>
-					<?php endif; ?>
-					<a class="sn-notes-pillar-cta" href="<?php echo esc_url( $sh_url ); ?>">Read first</a>
-				</div>
-			</article>
-		</section>
-		<?php endif; ?>
-
 		<section class="sn-notes-pillars-section" aria-labelledby="sn-pillars-heading">
 			<div class="sn-notes-section-wrap">
 				<p class="sn-notes-section-label" id="sn-pillars-heading">Pillar Essays &mdash; Featured</p>
@@ -1179,7 +1146,7 @@ echo $sn_header_html;
 				<a class="sn-notes-section-clear" href="<?php echo esc_url( home_url( '/notes/' ) ); ?>">All notes</a>
 			<?php else : ?>
 				<p class="sn-notes-section-label" id="sn-index-heading">Notes &mdash; Index</p>
-				<span class="sn-notes-section-count"><?php echo esc_html( sprintf( '%02d', (int) $query->found_posts ) ); ?></span>
+				<span class="sn-notes-section-count"><?php echo esc_html( sprintf( '%02d', (int) $entry_count ) ); ?></span>
 			<?php endif; ?>
 		</div>
 
@@ -1189,8 +1156,30 @@ echo $sn_header_html;
 			<p class="sn-notes-search-summary"><?php echo esc_html( sprintf( _n( '%d note tagged', '%d notes tagged', (int) $query->found_posts, 'signal-noise' ), (int) $query->found_posts ) ); ?></p>
 		<?php endif; ?>
 
-		<?php if ( $query->have_posts() ) : ?>
+		<?php if ( $query->have_posts() || $sn_pin_on_page1 ) : ?>
 			<ol class="sn-notes-index-list">
+			<?php
+			// PINNED ROW — the stickied note, floated to the top of page 1. Same
+			// .sn-notes-row markup as the chronological rows; a blood "Start here"
+			// label flags that the out-of-date-order position is intentional.
+			if ( $sn_pin_on_page1 ) :
+				$sn_pin_post = get_post( $sn_start_here_id );
+				if ( $sn_pin_post ) :
+			?>
+				<li class="sn-notes-row is-pinned">
+					<div class="sn-notes-row-spec" aria-hidden="false">
+						<span class="sn-notes-row-pin">Start here</span>
+						<time class="sn-notes-row-date" datetime="<?php echo esc_attr( get_the_date( 'c', $sn_pin_post ) ); ?>"><?php echo sn_notes_render_date( $sn_pin_post ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- helper returns esc_html()'d output; escaping again would double-encode. ?></time>
+						<span class="sn-notes-row-rt"><?php echo esc_html( sn_notes_render_reading_time( $sn_pin_post->ID ) ); ?></span>
+					</div>
+					<div class="sn-notes-row-content">
+						<h3 class="sn-notes-row-title"><a href="<?php echo esc_url( get_permalink( $sn_pin_post ) ); ?>"><?php echo esc_html( get_the_title( $sn_pin_post ) ); ?></a></h3>
+						<?php $sn_pin_excerpt = get_the_excerpt( $sn_pin_post ); if ( $sn_pin_excerpt ) : ?>
+							<p class="sn-notes-row-excerpt"><?php echo esc_html( wp_strip_all_tags( $sn_pin_excerpt ) ); ?></p>
+						<?php endif; ?>
+					</div>
+				</li>
+			<?php endif; endif; ?>
 			<?php while ( $query->have_posts() ) : $query->the_post(); $p = get_post(); ?>
 				<li class="sn-notes-row">
 					<div class="sn-notes-row-spec" aria-hidden="false">
