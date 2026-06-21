@@ -2,6 +2,15 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.15.1] - 2026-06-21 — Remove the /notes topics tag cloud
+
+**Headline:** v10.15.0 added a browse-by-topic tag list to the `/notes` index on the assumption of a small, curated tag set. In practice every Note carries ~5 tags across ~17 Notes, so `hide_empty` returned **60+ terms** and the "Topics" row rendered as a massive tag cloud — visual noise that overwhelmed the page. Removed entirely; no replacement widget. Tags stay reachable from each Note's own frontmatter/closing links, and those still land on the branded tag archives shipped in v10.15.0.
+
+### Removed
+- **The `/notes` "Topics" tag list** (`inc/page-notes-render.php`) — the `.sn-notes-topics` nav + its CSS, and the now-dead `sn_notes_all_tags()` helper (and its two test assertions). The pinned "Start here" row, the dropped "Vol. 01" eyebrow, and the branded `/notes/tag/{slug}/` archives from v10.15.0 are all unchanged.
+
+> **Why PATCH:** removes a just-shipped UI element that was a UX regression; no API change, no behavioural shift requiring user action. `sn_notes_all_tags()` was internal/unreleased-helper-grade (one caller, removed in the same change) — not a public-contract removal.
+
 ## [10.15.0] - 2026-06-21 — /notes: time → topic (drop "Vol. 01", pin Start-here, tag browsing + branded tag archives)
 
 **Headline:** The owner added a "Start here" post and tags on every Note, shifting the `/notes` index from a time axis (a periodical with "Vol. 01") to a topic axis (an evergreen body you enter by Start-here or by subject). The page now matches that: the misleading "Vol. 01" eyebrow is gone, the stickied "Start here" note pins to the top of the index (standard WP sticky behavior the custom PHP renderer didn't provide on its own — a secondary `WP_Query` doesn't float stickies), a browse-by-topic tag list appears on the index, and `/notes/tag/{slug}/` archives now render through the catalog renderer instead of the generic `index.html` fallback. Theme-only, no JS, no build step.

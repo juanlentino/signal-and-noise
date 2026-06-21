@@ -287,26 +287,6 @@ function sn_notes_start_here_id() {
 }
 
 /**
- * All non-empty post_tag terms, name-ascending — the /notes "Topics"
- * directory. Guarded [] for the fixtures; get_terms() returns a WP_Error
- * (not an array) on failure, which is_array() filters to [].
- *
- * @return array
- */
-function sn_notes_all_tags() {
-	if ( ! function_exists( 'get_terms' ) ) {
-		return array();
-	}
-	$terms = get_terms( array(
-		'taxonomy'   => 'post_tag',
-		'hide_empty' => true,
-		'orderby'    => 'name',
-		'order'      => 'ASC',
-	) );
-	return is_array( $terms ) ? $terms : array();
-}
-
-/**
  * Pagination base URL: the tag-archive permalink in tag mode, the bare
  * /notes/ index otherwise. Both paginate via ?paged=%#% (the exact-path
  * router strips the query string before matching, so ?paged= is safe on
@@ -930,7 +910,6 @@ wp_head();
 	.sn-notes-row { transition: none; }
 	.sn-notes-search { transition: none; }
 	.sn-notes-search button { transition: none; transform: none; }
-	.sn-notes-topic { transition: none; }
 }
 
 /* PINNED ROW — the stickied "Start here" note floated to the top of the
@@ -940,55 +919,6 @@ wp_head();
 .sn-notes-row-pin {
 	color: var(--wp--preset--color--blood, #e00404);
 	font-weight: 500;
-}
-
-/* TOPICS — browse-by-tag directory. The corpus organizes around subject now,
-   so this is the primary alternative to date order. Mono uppercase chips in
-   the catalog spec vocabulary: rust resting, blood on hover, and a solid
-   bone fill when the chip is the active tag archive (the strongest emphasis
-   the brutalist palette has). */
-.sn-notes-topics {
-	margin: 0 0 clamp(2rem, 4vw, 3rem);
-}
-.sn-notes-topics-label {
-	margin-bottom: 0.85rem;
-}
-.sn-notes-topics-list {
-	list-style: none;
-	margin: 0;
-	padding: 0;
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.5rem 0.6rem;
-}
-.sn-notes-topic {
-	display: inline-flex;
-	align-items: center;
-	min-height: 32px;
-	padding: 0.35rem 0.75rem;
-	font-family: 'DM Mono', 'Courier New', monospace;
-	font-size: max(0.7rem, 11px);
-	letter-spacing: 0.12em;
-	text-transform: uppercase;
-	color: var(--wp--preset--color--rust, #666);
-	text-decoration: none;
-	border: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
-	transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
-}
-.sn-notes-topic:hover {
-	color: var(--wp--preset--color--blood, #e00404);
-	border-color: var(--wp--preset--color--blood, #e00404);
-}
-.sn-notes-topic:focus-visible {
-	color: var(--wp--preset--color--blood, #e00404);
-	border-color: var(--wp--preset--color--blood, #e00404);
-	outline: 2px solid var(--wp--preset--color--blood, #e00404);
-	outline-offset: 3px;
-}
-.sn-notes-topic.is-active {
-	color: var(--wp--preset--color--void, #fff);
-	background: var(--wp--preset--color--bone, #000);
-	border-color: var(--wp--preset--color--bone, #000);
 }
 
 /* PAGINATION — numbered control below the notes index.
@@ -1103,31 +1033,6 @@ echo $sn_header_html;
 	<?php if ( ! $sn_searching ) : ?>
 	<hr class="sn-notes-rule" aria-hidden="true">
 	<?php endif; ?>
-
-	<?php
-	// TOPICS — browse-by-tag directory. Shown in browse + tag mode (the axis
-	// the corpus now organizes around); hidden during free-text search. In tag
-	// mode the active topic is flagged so the row doubles as a tag switcher.
-	if ( ! $sn_searching ) :
-		$sn_tags = sn_notes_all_tags();
-		if ( ! empty( $sn_tags ) ) :
-	?>
-	<nav class="sn-notes-topics" aria-label="Browse notes by topic">
-		<p class="sn-notes-section-label sn-notes-topics-label">Topics</p>
-		<ul class="sn-notes-topics-list">
-			<?php
-			foreach ( $sn_tags as $sn_t ) :
-				$sn_t_link = get_term_link( $sn_t );
-				if ( is_wp_error( $sn_t_link ) ) {
-					continue;
-				}
-				$sn_t_active = ( $sn_tag && (int) $sn_t->term_id === $sn_tag_id );
-			?>
-			<li><a class="sn-notes-topic<?php echo $sn_t_active ? ' is-active' : ''; ?>" href="<?php echo esc_url( $sn_t_link ); ?>"<?php echo $sn_t_active ? ' aria-current="page"' : ''; ?>><?php echo esc_html( $sn_t->name ); ?></a></li>
-			<?php endforeach; ?>
-		</ul>
-	</nav>
-	<?php endif; endif; ?>
 
 	<section class="sn-notes-index-section" aria-labelledby="sn-index-heading">
 
