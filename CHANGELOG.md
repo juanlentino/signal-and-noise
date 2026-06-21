@@ -2,6 +2,15 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.16.1] - 2026-06-21 — Contact aliases assemble into a clickable mailto link (still scraper-safe)
+
+**Headline:** v10.16.0 rendered the assembled `/contact` aliases as plain text. They are now assembled into a **clickable `mailto:` link** instead — but the link is built entirely client-side in the DOM (`assets/js/contact-aliases.js`), so the scraper protection is unchanged: the served HTML still contains only the split base64 `data-*` attributes + the `user [at] domain [dot] com` fallback. The contiguous `user@domain` string and the `mailto:` only ever exist at runtime, after JS runs — a non-JS bulk harvester (and Cloudflare's edge email scan) still sees nothing, and Cloudflare email obfuscation stays enabled. Restores the one-click "reach out" affordance without putting a harvestable address in the source.
+
+### Changed
+- **`assets/js/contact-aliases.js`** — on `DOMContentLoaded`, each `.sn-email` span's `[at]/[dot]` fallback is replaced with `<a href="mailto:user@domain">user@domain</a>` created via `document.createElement` (never written into markup). The link inherits the existing `.sn-prose-links a` blood→signal styling. With JS off (or malformed data) the readable `[at]/[dot]` fallback stays in place — just not clickable.
+
+> **Why PATCH:** a refinement of the v10.16.0 contact-alias rendering (plain text → clickable), client-side only. No source-surface change (the template + `sn_email_markup()` output are byte-identical — still no `@`, no `mailto`, no contiguous address), no API/schema change, no required user action. `tests/contact-email.php` updated (47 assertions): the source leak-guards are unchanged; the JS-contract assertions now verify the runtime-built anchor + `mailto:` href.
+
 ## [10.16.0] - 2026-06-21 — Scraper-proof the /contact email aliases (client-side assembly)
 
 **Headline:** The four `/contact` aliases (research@, press@, speaking@, role@) were plain `mailto:` links — a contiguous `user@domain` string sitting in the page source for any bulk email harvester to regex out. They are now assembled client-side: each address is split into user + domain, base64-encoded into `data-*` attributes, with a readable but non-harvestable `user [at] domain [dot] com` fallback as the visible text. A small enqueued script writes the clean address as plain text on `DOMContentLoaded` — no `mailto:`, no anchor (the no-link design is intentional). An email regex over the HTML, meta, OG, JSON-LD, or RSS now matches nothing for the four aliases. Cloudflare email obfuscation stays enabled as a second layer.

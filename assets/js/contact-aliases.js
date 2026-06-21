@@ -3,10 +3,16 @@
  *
  * Each .sn-email span ships a base64 user (data-eu) + domain (data-ed) and a
  * readable "user [at] domain [dot] tld" fallback as its text. On load we decode
- * the parts and write the clean address as PLAIN TEXT — never a clickable link
- * (the no-link design on /contact is intentional). The contiguous user@domain
- * string only ever exists at runtime, after this script runs; it is never in
- * the page source. Without JS the [at]/[dot] fallback stays readable.
+ * the parts and replace that fallback with a CLICKABLE mailto: link, built
+ * entirely at runtime via the DOM.
+ *
+ * Scraper protection is intact: the contiguous user@domain string AND the
+ * "mailto:" only ever exist in the live DOM after this script runs — never in
+ * the served HTML source. A non-JS bulk harvester (and Cloudflare's edge email
+ * scan) sees only the split base64 attributes + the "[at]/[dot]" span, so an
+ * email regex over the source gets nothing. Without JS the fallback stays
+ * readable (just not clickable). The residual JS-executing scraper is handled
+ * downstream by the Proton aliases + Cloudflare obfuscation (kept enabled).
  *
  * Enqueued only on /contact (inc/contact-email.php), footer + deferred.
  */
@@ -30,7 +36,12 @@
 			if (!user || !domain) {
 				continue; // malformed → keep the [at]/[dot] fallback in place
 			}
-			el.textContent = user + '@' + domain;
+			var address = user + '@' + domain;
+			var link = document.createElement('a');
+			link.href = 'mailto:' + address;
+			link.textContent = address;
+			el.textContent = ''; // clear the [at]/[dot] fallback
+			el.appendChild(link); // clickable address — assembled only at runtime
 		}
 	}
 

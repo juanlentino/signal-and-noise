@@ -112,15 +112,19 @@ $GLOBALS['__enqueued_scripts'] = array(); $GLOBALS['__page_slug'] = 'music';
 sn_enqueue_contact_aliases();
 ok( ! isset( $GLOBALS['__enqueued_scripts']['sn-contact-aliases'] ), 'NOT enqueued off the /contact page' );
 
-// ── JS contract: client-side assembly, plain text, never an anchor ────
+// ── JS contract: client-side assembly into a CLICKABLE mailto link ────
+// The scraper invariant lives in the SOURCE (the markup + template guards
+// above/below). The JS builds the @-joined address AND the mailto: link only
+// at runtime, so a non-JS harvester over the served HTML still gets nothing.
 $js = (string) @file_get_contents( realpath( __DIR__ . '/..' ) . '/assets/js/contact-aliases.js' );
 ok( '' !== $js, 'contact-aliases.js is readable' );
 ok( strpos( $js, '.sn-email' ) !== false, 'JS targets .sn-email' );
 ok( strpos( $js, 'atob' ) !== false, 'JS base64-decodes the parts' );
-ok( strpos( $js, 'textContent' ) !== false, 'JS writes plain text (textContent)' );
 ok( strpos( $js, 'DOMContentLoaded' ) !== false, 'JS assembles on DOMContentLoaded' );
-ok( stripos( $js, 'mailto' ) === false, 'JS LEAK GUARD: never builds a mailto' );
-ok( strpos( $js, "createElement('a')" ) === false && strpos( $js, 'createElement("a")' ) === false, 'JS never creates an anchor' );
+ok( strpos( $js, "createElement('a')" ) !== false, 'JS builds a clickable anchor at runtime' );
+ok( strpos( $js, "'mailto:'" ) !== false, 'JS sets a mailto: href (runtime only)' );
+ok( strpos( $js, '.href' ) !== false, 'JS assigns the href client-side' );
+ok( strpos( $js, 'appendChild' ) !== false, 'JS injects the link into the .sn-email span' );
 
 // ── TEMPLATE contract: no mailto / no contiguous alias for the four ──
 $tpl = (string) @file_get_contents( realpath( __DIR__ . '/..' ) . '/templates/page-contact.html' );
