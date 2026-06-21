@@ -24,7 +24,6 @@ $GLOBALS['__query_vars']  = array(); // query var => value
 $GLOBALS['__opt_sticky']  = array(); // get_option('sticky_posts')
 $GLOBALS['__is_tag']      = false;   // is_tag()
 $GLOBALS['__queried']     = null;    // get_queried_object()
-$GLOBALS['__terms']       = array(); // get_terms() return
 $GLOBALS['__term_links']  = array(); // term_id => url for get_term_link()
 $GLOBALS['__post_status'] = array(); // id => status
 $GLOBALS['__post_type']   = array(); // id => type
@@ -37,7 +36,6 @@ function get_query_var( $v, $d = '' ) { return $GLOBALS['__query_vars'][ $v ] ??
 function get_option( $k ) { return 'sticky_posts' === $k ? $GLOBALS['__opt_sticky'] : false; }
 function is_tag() { return (bool) $GLOBALS['__is_tag']; }
 function get_queried_object() { return $GLOBALS['__queried']; }
-function get_terms( $args = array() ) { return $GLOBALS['__terms']; }
 function get_term_link( $t, $tax = '' ) {
 	$id = is_object( $t ) ? (int) $t->term_id : (int) $t;
 	return $GLOBALS['__term_links'][ $id ] ?? new WP_Error();
@@ -132,13 +130,6 @@ sn_notes_query_posts(); $a = $GLOBALS['__wpquery_args'];
 ok( isset( $a['tax_query'] ) && $a['tax_query'][0]['taxonomy'] === 'post_tag' && $a['tax_query'][0]['terms'] === 12, 'tax_query on post_tag in tag mode' );
 ok( ! isset( $a['post__not_in'] ), 'no start-here exclusion in tag mode' );
 $GLOBALS['__is_tag'] = false; $GLOBALS['__queried'] = null;
-
-// ── sn_notes_all_tags() ───────────────────────────────────────────────
-$GLOBALS['__terms'] = array( (object) array( 'term_id' => 1, 'name' => 'A' ), (object) array( 'term_id' => 2, 'name' => 'B' ) );
-ok( count( sn_notes_all_tags() ) === 2, 'all_tags returns the terms' );
-$GLOBALS['__terms'] = new WP_Error();
-ok( sn_notes_all_tags() === array(), 'all_tags returns [] on WP_Error' );
-$GLOBALS['__terms'] = array();
 
 // ── sn_notes_pagination_base() ────────────────────────────────────────
 $GLOBALS['__is_tag'] = true; $GLOBALS['__queried'] = (object) array( 'term_id' => 12, 'name' => 'AI' );
