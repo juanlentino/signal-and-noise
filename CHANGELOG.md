@@ -2,6 +2,24 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.15.0] - 2026-06-21 — /notes: time → topic (drop "Vol. 01", pin Start-here, tag browsing + branded tag archives)
+
+**Headline:** The owner added a "Start here" post and tags on every Note, shifting the `/notes` index from a time axis (a periodical with "Vol. 01") to a topic axis (an evergreen body you enter by Start-here or by subject). The page now matches that: the misleading "Vol. 01" eyebrow is gone, the stickied "Start here" note pins to the top of the index (standard WP sticky behavior the custom PHP renderer didn't provide on its own — a secondary `WP_Query` doesn't float stickies), a browse-by-topic tag list appears on the index, and `/notes/tag/{slug}/` archives now render through the catalog renderer instead of the generic `index.html` fallback. Theme-only, no JS, no build step.
+
+### New
+- **Browse-by-topic tag list** on the `/notes` index (`inc/page-notes-render.php`, `sn_notes_all_tags()`) — every non-empty `post_tag`, name-ascending, as mono-uppercase chips linking to its archive. Shown in browse + tag mode (hidden during free-text search); the active tag is flagged with `aria-current` and a solid bone fill so the row doubles as a tag switcher.
+- **Branded tag archives** — `/notes/tag/{slug}/` now routes through the PHP catalog renderer (`sn_notes_is_tag_request()` joins the `template_redirect` / `template_include` short-circuits) with a `post_tag` `tax_query`, a `Notes — Tag · "{name}"` header + "All notes" clear link + count, a tag-aware empty state, tag-correct pagination (`sn_notes_pagination_base()`), and the document title `Notes — {tag} — {site}`. A non-existent tag slug fails the gate so WordPress still serves its 404 (we never force a bogus tag to 200); a real-but-empty tag archive is forced to 200 (WORDPRESS-REFERENCE gotcha #40).
+- **Pinned "Start here" row** — the stickied note (`sn_notes_start_here_id()`, reads `get_option('sticky_posts')`) floats to the top of the index on page 1, rendered as an ordinary `.sn-notes-row` with a blood "Start here" label so the out-of-date-order position reads as intentional. Excluded from its chronological slot (`post__not_in`) so it never doubles; page 2+ doesn't repeat it; the corpus count includes it. Editorial control: stick a different post to move the pin, no code change.
+
+### Changed
+- **The `/notes` eyebrow drops "Vol. 01"** — `Index · {year}` in browse mode, `Topic · {name}` on a tag archive. The volume framing promised a periodical with discrete issues, which contradicts the evergreen, continuously-revised framing of the corpus.
+- **`sn_notes_query_posts()`** gains `ignore_sticky_posts => true` (the sticky is floated explicitly, never by WP), a `post_tag` `tax_query` in tag mode, and a `post__not_in` for the pinned note in browse mode — all additive; existing query-shape contracts unchanged.
+
+### Tests
+- New `tests/notes-topic-reframe.php` (23 assertions, RED→GREEN): the sticky/tag/start-here helpers, the additive query branches, the `sn_notes_is_tag_request()` matcher (incl. the bogus-slug → no-short-circuit gate), and the tag document title. The four existing notes suites (`notes-pagination`, `notes-search`, `notes-redirect`, `notes-title-paged`) stay green — every new WP-function touch is `function_exists`-guarded so the standalone fixtures don't need new stubs. Full sweep: 50 suites, 0 failures; phpcs falsified (a real `EscapeOutput` violation is caught) before trusting clean.
+
+> **Why MINOR:** new user-visible capabilities (tag browsing, branded tag archives, the pinned front-door row) with no breaking change — no public API removed/renamed, no settings-schema migration, no WP-floor change, no required user action. The pinned row and tag list degrade to nothing when there's no sticky / no tags.
+
 ## [10.14.2] - 2026-06-20 — Uniform Note prose width (drop the 68ch paragraph cap)
 
 **Headline:** Body paragraphs on single Notes were capped at a `max-width: 68ch` reading measure while the title, headings, and rules used the full 760px content column. Because the constrained layout centres blocks, the narrower paragraphs sat **indented** from the full-width headings — the width mismatch that read as inconsistent indentation. Paragraphs now use the same 760px column, so the prose is uniform width throughout. (Trade-off: lines run wider — ~90ch in DM Mono — since the reading-measure cap is gone; deliberate, per request.)

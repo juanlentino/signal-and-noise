@@ -381,6 +381,8 @@ now strictly tag-aligned.
 
 The `/notes` route lives off normal FSE template resolution. [inc/page-notes-template.php](../inc/page-notes-template.php) hooks `template_include` and returns [inc/page-notes-render.php](../inc/page-notes-render.php) when the request matches `is_page('notes')` OR has request URI `/notes` / `/notes/`. WP's normal block-template chain (file ↔ DB ↔ object cache ↔ registry) never runs for this page when our hook fires.
 
+**Since v10.15.0 the same short-circuit ALSO serves `/notes` tag archives.** `sn_notes_is_tag_request()` (true when `is_tag()` resolves to a real `post_tag` term) joins the guard, so `/notes/tag/{slug}/` renders through the catalog renderer with a tag-filtered query instead of the generic `index.html` fallback. The gate requires a REAL term — a non-existent tag slug fails it, so WordPress still serves its own 404 (we never force a bogus tag to 200); the renderer forces 200 only for a real-but-empty tag archive (gotcha #40). Implication of the §10.4 rule: editing `templates/index.html` / `templates/home.html` to style tag archives is now a dead edit too — the catalog renderer owns them.
+
 **Why it exists:** three incidents (2026-04 and two in 2026-05) where `/notes` rendered stale content despite `main` being correct. Each had a different proximate cause (silent deploy skip, broken self-heal, stale `wp_template` DB row surviving migration) but the common surface was WP's block-template resolution chain having too many layers that drift independently. Pulling the page off that chain entirely eliminated the failure mode.
 
 **Defense layers (canonical order):**
@@ -398,7 +400,7 @@ The `/notes` route lives off normal FSE template resolution. [inc/page-notes-tem
 
 **When the override hook DOESN'T fire:** the fallback renders. Legitimate causes: file missing post-deploy, fatal PHP error before the hook registers, theme switched. All three are real failure modes; the fallback is the safety net.
 
-**Could there be more `template_include` short-circuits?** Currently only `/notes`. If someone adds a second one (e.g., the homepage), this section needs a second subsection — the gotcha generalizes: greppable answer is `grep -rn 'template_include' inc/`.
+**Could there be more `template_include` short-circuits?** [inc/page-notes-template.php](../inc/page-notes-template.php) now matches TWO conditions — the `/notes` index and `/notes` tag archives (v10.15.0) — both served by the same render file. If someone adds a third route (e.g., the homepage), this section needs another subsection — the gotcha generalizes: greppable answer is `grep -rn 'template_include' inc/`.
 
 ### 10.5 The WP-native update integration (v8.5.0 → v8.5.3, mirror plugin v1.10.1 → v1.11.2)
 
