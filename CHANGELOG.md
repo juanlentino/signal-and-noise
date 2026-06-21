@@ -2,6 +2,22 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.16.0] - 2026-06-21 — Scraper-proof the /contact email aliases (client-side assembly)
+
+**Headline:** The four `/contact` aliases (research@, press@, speaking@, role@) were plain `mailto:` links — a contiguous `user@domain` string sitting in the page source for any bulk email harvester to regex out. They are now assembled client-side: each address is split into user + domain, base64-encoded into `data-*` attributes, with a readable but non-harvestable `user [at] domain [dot] com` fallback as the visible text. A small enqueued script writes the clean address as plain text on `DOMContentLoaded` — no `mailto:`, no anchor (the no-link design is intentional). An email regex over the HTML, meta, OG, JSON-LD, or RSS now matches nothing for the four aliases. Cloudflare email obfuscation stays enabled as a second layer.
+
+### New
+- **`[sn_email user="…" domain="…"]` shortcode** (`inc/contact-email.php`) — renders one scraper-resistant alias: `<span class="sn-email" data-eu="<b64 user>" data-ed="<b64 domain>">user [at] domain [dot] com</span>`. `domain` defaults to `juanlentino.com`; a missing user renders nothing. A `render_block` bridge (mirroring `inc/related-notes.php`) guarantees resolution of the inline-in-paragraph token regardless of render path.
+- **`assets/js/contact-aliases.js`** — vanilla IIFE, enqueued only on `/contact` (footer + deferred, `is_page('contact')`-gated, mirroring `sn_enqueue_discography`). Decodes the parts and writes `user@domain` via `textContent` (plain text, never an anchor); leaves the `[at]/[dot]` fallback in place if JS is off or the data is malformed.
+
+### Changed
+- **`templates/page-contact.html`** — the four alias `mailto:` anchors are replaced by `[sn_email]` tokens. The surrounding routing copy, sentence structure, and the parent/child (`/contact` → `/contact/personal`) routing are unchanged; the other links (`/provenance`, `panaceastud.io`) are untouched. (This reverses the v10.12.1 decision to make the aliases clickable, in favor of anti-scraping per request.)
+
+### Security
+- No contiguous `user@domain` and no `mailto:` for the four aliases appears in any rendered source surface; the parts are stored separately and only joined at runtime in JS. Defeats non-JS bulk harvesters; the filtered Proton aliases + Cloudflare email obfuscation (untouched) handle the residual JS-executing scraper. New `tests/contact-email.php` (46 assertions) is built around leak guards (no `@`, no contiguous domain, no `mailto`, no anchor) plus the enqueue gating + JS/template contracts; full sweep 51 suites / 0 failures; phpcs falsified-clean.
+
+> **Why MINOR:** a new user-visible capability (the `[sn_email]` shortcode + client-assembled aliases) with no breaking change — no public API removed, no settings-schema migration, no required user action. Degrades to the readable `[at]/[dot]` form without JS.
+
 ## [10.15.1] - 2026-06-21 — Remove the /notes topics tag cloud
 
 **Headline:** v10.15.0 added a browse-by-topic tag list to the `/notes` index on the assumption of a small, curated tag set. In practice every Note carries ~5 tags across ~17 Notes, so `hide_empty` returned **60+ terms** and the "Topics" row rendered as a massive tag cloud — visual noise that overwhelmed the page. Removed entirely; no replacement widget. Tags stay reachable from each Note's own frontmatter/closing links, and those still land on the branded tag archives shipped in v10.15.0.
