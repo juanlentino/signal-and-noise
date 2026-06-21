@@ -346,6 +346,25 @@ $sn_hero_stats = sn_notes_hero_stats( $query );
 $entry_count   = $sn_hero_stats['count'];
 $latest_date   = $sn_hero_stats['latest_date'];
 
+// Tag-archive context. $sn_filtered (search OR tag) hides the pillars +
+// Start-here card and collapses the top composition to a single column.
+$sn_tag_id   = sn_notes_current_tag_id();
+$sn_tag      = ( $sn_tag_id > 0 );
+$sn_tag_name = '';
+if ( $sn_tag ) {
+	$sn_tag_obj  = get_queried_object();
+	$sn_tag_name = ( $sn_tag_obj && isset( $sn_tag_obj->name ) ) ? $sn_tag_obj->name : '';
+}
+$sn_filtered      = $sn_searching || $sn_tag;
+$sn_start_here_id = $sn_filtered ? 0 : sn_notes_start_here_id();
+
+// The router only short-circuits a tag archive for a REAL term, so force
+// HTTP 200 here — even a valid-but-empty tag archive should be 200, not the
+// 404 WP may have committed before template_redirect (WORDPRESS-REFERENCE #40).
+if ( $sn_tag && function_exists( 'status_header' ) ) {
+	status_header( 200 );
+}
+
 // PRE-RENDER the header and footer template parts so their block-
 // layout CSS (e.g. `.wp-container-core-group-is-layout-... { flex-
 // wrap, justify-content, … }`) gets registered with WP_Style_Engine
@@ -902,6 +921,77 @@ wp_head();
 	.sn-notes-row { transition: none; }
 	.sn-notes-search { transition: none; }
 	.sn-notes-search button { transition: none; transform: none; }
+	.sn-notes-topic { transition: none; }
+	.sn-notes-pillar--start::before { transition: none; }
+}
+
+/* START-HERE CARD — the pinned front door (sticky-driven). Same
+   .sn-notes-pillar family as the featured essays, but the blood rail (the
+   catalog's emphasis primitive) sits permanently expanded so it reads as
+   PRIMARY without leaving the vocabulary; the ▸ glyph replaces the pillars'
+   № to distinguish it. Hierarchy comes from the rail + its own section
+   label, not added decoration. */
+.sn-notes-start-section {
+	margin-bottom: clamp(1.5rem, 3vw, 2rem);
+}
+.sn-notes-pillar--start::before {
+	width: 8px;
+}
+.sn-notes-pillar--start:hover::before {
+	width: 14px;
+}
+.sn-notes-pillar--start .sn-notes-pillar-number {
+	color: var(--wp--preset--color--blood, #e00404);
+	font-size: clamp(1.1rem, 1.6vw, 1.35rem);
+}
+
+/* TOPICS — browse-by-tag directory. The corpus organizes around subject now,
+   so this is the primary alternative to date order. Mono uppercase chips in
+   the catalog spec vocabulary: rust resting, blood on hover, and a solid
+   bone fill when the chip is the active tag archive (the strongest emphasis
+   the brutalist palette has). */
+.sn-notes-topics {
+	margin: 0 0 clamp(2rem, 4vw, 3rem);
+}
+.sn-notes-topics-label {
+	margin-bottom: 0.85rem;
+}
+.sn-notes-topics-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem 0.6rem;
+}
+.sn-notes-topic {
+	display: inline-flex;
+	align-items: center;
+	min-height: 32px;
+	padding: 0.35rem 0.75rem;
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.7rem, 11px);
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--rust, #666);
+	text-decoration: none;
+	border: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+	transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+.sn-notes-topic:hover {
+	color: var(--wp--preset--color--blood, #e00404);
+	border-color: var(--wp--preset--color--blood, #e00404);
+}
+.sn-notes-topic:focus-visible {
+	color: var(--wp--preset--color--blood, #e00404);
+	border-color: var(--wp--preset--color--blood, #e00404);
+	outline: 2px solid var(--wp--preset--color--blood, #e00404);
+	outline-offset: 3px;
+}
+.sn-notes-topic.is-active {
+	color: var(--wp--preset--color--void, #fff);
+	background: var(--wp--preset--color--bone, #000);
+	border-color: var(--wp--preset--color--bone, #000);
 }
 
 /* PAGINATION — numbered control below the notes index.
@@ -953,17 +1043,17 @@ echo $sn_header_html;
 
 <main class="sn-notes-page" id="wp--skip-link--target">
 
-	<div class="sn-notes-top<?php echo $sn_searching ? ' is-search' : ''; ?>">
+	<div class="sn-notes-top<?php echo $sn_filtered ? ' is-search' : ''; ?>">
 
 		<header class="sn-notes-hero">
-			<p class="sn-notes-eyebrow">Index &middot; Vol. 01 &middot; <?php echo esc_html( wp_date( 'Y' ) ); ?></p>
+			<p class="sn-notes-eyebrow"><?php if ( $sn_tag ) : ?>Topic &middot; <?php echo esc_html( $sn_tag_name ); ?><?php else : ?>Index &middot; <?php echo esc_html( wp_date( 'Y' ) ); ?><?php endif; ?></p>
 			<h1 class="sn-notes-headline">Notes.</h1>
 			<p class="sn-notes-dek">Working notes on music, AI, and the infrastructure underneath. Written when there&rsquo;s something worth writing.</p>
-			<?php if ( ! $sn_searching ) : ?>
-			<?php // Corpus stats: entry count + last-updated. Suppressed in search
-			      // state — there $entry_count is the page's result count and
-			      // $latest_date is the newest match, so "entries"/"Last updated"
-			      // would mislabel them (the result count lives in the search
+			<?php if ( ! $sn_filtered ) : ?>
+			<?php // Corpus stats: entry count + last-updated. Suppressed in
+			      // search/tag state — there $entry_count is the filtered result
+			      // count and $latest_date is the newest match, so "entries"/
+			      // "Last updated" would mislabel them (the count lives in the
 			      // summary line below). Hero stays as page identity only. ?>
 			<p class="sn-notes-meta">
 				<span><?php echo esc_html( sprintf( _n( '%d entry', '%d entries', $entry_count, 'signal-noise' ), $entry_count ) ); ?></span>
@@ -978,7 +1068,37 @@ echo $sn_header_html;
 			</p>
 		</header>
 
-		<?php if ( ! $sn_searching ) : ?>
+		<?php if ( ! $sn_filtered ) : ?>
+
+		<?php // START HERE — the pinned front door. Sticky-driven: the post the
+		      // owner stickies becomes this card (sn_notes_start_here_id), and it
+		      // is excluded from the index list below so it never doubles. Sits
+		      // above the pillars in the right rail: orientation order is Start
+		      // here (primary) → pillars (supporting). Page 1 only.
+		if ( $sn_start_here_id > 0 && sn_notes_current_page() <= 1 ) :
+			$sh_title   = get_the_title( $sn_start_here_id );
+			$sh_url     = get_permalink( $sn_start_here_id );
+			$sh_excerpt = get_the_excerpt( $sn_start_here_id );
+		?>
+		<section class="sn-notes-start-section" aria-labelledby="sn-start-heading">
+			<div class="sn-notes-section-wrap">
+				<p class="sn-notes-section-label" id="sn-start-heading">New Here</p>
+				<span class="sn-notes-section-count">Start</span>
+			</div>
+			<article class="sn-notes-pillar sn-notes-pillar--start">
+				<span class="sn-notes-pillar-number" aria-hidden="true">&#9656;</span>
+				<div class="sn-notes-pillar-body">
+					<p class="sn-notes-pillar-eyebrow">Start Here</p>
+					<h2 class="sn-notes-pillar-title"><?php echo esc_html( $sh_title ); ?></h2>
+					<?php if ( $sh_excerpt ) : ?>
+					<p class="sn-notes-pillar-dek"><?php echo esc_html( wp_strip_all_tags( $sh_excerpt ) ); ?></p>
+					<?php endif; ?>
+					<a class="sn-notes-pillar-cta" href="<?php echo esc_url( $sh_url ); ?>">Read first</a>
+				</div>
+			</article>
+		</section>
+		<?php endif; ?>
+
 		<section class="sn-notes-pillars-section" aria-labelledby="sn-pillars-heading">
 			<div class="sn-notes-section-wrap">
 				<p class="sn-notes-section-label" id="sn-pillars-heading">Pillar Essays &mdash; Featured</p>
@@ -1017,6 +1137,31 @@ echo $sn_header_html;
 	<hr class="sn-notes-rule" aria-hidden="true">
 	<?php endif; ?>
 
+	<?php
+	// TOPICS — browse-by-tag directory. Shown in browse + tag mode (the axis
+	// the corpus now organizes around); hidden during free-text search. In tag
+	// mode the active topic is flagged so the row doubles as a tag switcher.
+	if ( ! $sn_searching ) :
+		$sn_tags = sn_notes_all_tags();
+		if ( ! empty( $sn_tags ) ) :
+	?>
+	<nav class="sn-notes-topics" aria-label="Browse notes by topic">
+		<p class="sn-notes-section-label sn-notes-topics-label">Topics</p>
+		<ul class="sn-notes-topics-list">
+			<?php
+			foreach ( $sn_tags as $sn_t ) :
+				$sn_t_link = get_term_link( $sn_t );
+				if ( is_wp_error( $sn_t_link ) ) {
+					continue;
+				}
+				$sn_t_active = ( $sn_tag && (int) $sn_t->term_id === $sn_tag_id );
+			?>
+			<li><a class="sn-notes-topic<?php echo $sn_t_active ? ' is-active' : ''; ?>" href="<?php echo esc_url( $sn_t_link ); ?>"<?php echo $sn_t_active ? ' aria-current="page"' : ''; ?>><?php echo esc_html( $sn_t->name ); ?></a></li>
+			<?php endforeach; ?>
+		</ul>
+	</nav>
+	<?php endif; endif; ?>
+
 	<section class="sn-notes-index-section" aria-labelledby="sn-index-heading">
 
 		<form class="sn-notes-search" role="search" method="get" action="<?php echo esc_url( home_url( '/notes/' ) ); ?>">
@@ -1029,6 +1174,9 @@ echo $sn_header_html;
 			<?php if ( $sn_searching ) : ?>
 				<p class="sn-notes-section-label" id="sn-index-heading">Notes &mdash; Search &middot; &ldquo;<?php echo esc_html( $sn_term ); ?>&rdquo;</p>
 				<a class="sn-notes-section-clear" href="<?php echo esc_url( home_url( '/notes/' ) ); ?>">Clear &times;</a>
+			<?php elseif ( $sn_tag ) : ?>
+				<p class="sn-notes-section-label" id="sn-index-heading">Notes &mdash; Tag &middot; &ldquo;<?php echo esc_html( $sn_tag_name ); ?>&rdquo;</p>
+				<a class="sn-notes-section-clear" href="<?php echo esc_url( home_url( '/notes/' ) ); ?>">All notes</a>
 			<?php else : ?>
 				<p class="sn-notes-section-label" id="sn-index-heading">Notes &mdash; Index</p>
 				<span class="sn-notes-section-count"><?php echo esc_html( sprintf( '%02d', (int) $query->found_posts ) ); ?></span>
@@ -1037,6 +1185,8 @@ echo $sn_header_html;
 
 		<?php if ( $sn_searching ) : ?>
 			<p class="sn-notes-search-summary"><?php echo esc_html( sprintf( _n( '%d note found', '%d notes found', (int) $query->found_posts, 'signal-noise' ), (int) $query->found_posts ) ); ?></p>
+		<?php elseif ( $sn_tag ) : ?>
+			<p class="sn-notes-search-summary"><?php echo esc_html( sprintf( _n( '%d note tagged', '%d notes tagged', (int) $query->found_posts, 'signal-noise' ), (int) $query->found_posts ) ); ?></p>
 		<?php endif; ?>
 
 		<?php if ( $query->have_posts() ) : ?>
@@ -1058,6 +1208,8 @@ echo $sn_header_html;
 			</ol>
 		<?php elseif ( $sn_searching ) : ?>
 			<p class="sn-notes-empty">No notes match &ldquo;<?php echo esc_html( $sn_term ); ?>&rdquo;.</p>
+		<?php elseif ( $sn_tag ) : ?>
+			<p class="sn-notes-empty">No notes tagged &ldquo;<?php echo esc_html( $sn_tag_name ); ?>&rdquo;.</p>
 		<?php else : ?>
 			<p class="sn-notes-empty">No notes published yet. Check back soon.</p>
 		<?php endif; ?>
@@ -1066,7 +1218,7 @@ echo $sn_header_html;
 			<nav class="sn-notes-pagination" aria-label="Notes pages">
 				<?php
 				$sn_notes_links = paginate_links( array(
-					'base'      => esc_url_raw( add_query_arg( 'paged', '%#%', home_url( '/notes/' ) ) ),
+					'base'      => esc_url_raw( add_query_arg( 'paged', '%#%', sn_notes_pagination_base() ) ),
 					'format'    => '',
 					'current'   => sn_notes_current_page(),
 					'total'     => (int) $query->max_num_pages,
