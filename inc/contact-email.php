@@ -3,13 +3,15 @@
  * Signal & Noise — [sn_email] scraper-resistant contact aliases.
  *
  * Renders the four /contact email aliases (research@, press@, speaking@, role@)
- * as client-assembled plain text so the contiguous user@domain string never
- * appears in the page HTML, meta/OG, JSON-LD, or RSS. Each alias is split into
- * user + domain, base64-encoded into data-* attributes, with a human-readable
- * but non-harvestable "user [at] domain [dot] tld" fallback as the visible text.
- * assets/js/contact-aliases.js decodes + writes the clean address on
- * DOMContentLoaded as PLAIN TEXT — never a mailto anchor (the no-link design on
- * /contact is intentional; the routing copy tells people what each alias is for).
+ * client-assembled so the contiguous user@domain string never appears in the
+ * page HTML, meta/OG, JSON-LD, or RSS. Each alias is split into user + domain,
+ * base64-encoded into data-* attributes, with a human-readable but
+ * non-harvestable "user [at] domain [dot] tld" fallback as the visible text.
+ * assets/js/contact-aliases.js decodes the parts on DOMContentLoaded and
+ * replaces the fallback with a CLICKABLE mailto: link built entirely in the DOM
+ * (v10.16.1) — the user@domain string AND the "mailto:" only ever exist at
+ * runtime, never in the served source, so a non-JS harvester (and Cloudflare's
+ * edge scan) sees only the split base64 + [at]/[dot] span.
  *
  * THREAT MODEL: defeat non-JS bulk email harvesters (a regex over the rendered
  * source + feeds gets nothing). A determined, JS-executing scraper can still
