@@ -258,7 +258,11 @@ function sn_theme_ability_page_notes_pillars() {
 			$last_modified = '';
 			if ( function_exists( 'get_page_by_path' ) ) {
 				$post = get_page_by_path( $p['last_path'], OBJECT, 'post' );
-				if ( $post && isset( $post->post_modified ) ) {
+				// Only surface the mtime of a PUBLICLY-VIEWABLE post — defense in
+				// depth so a draft/private pillar never leaks its modification date
+				// over the read-gated /wp-abilities run-path (parity with v9.15.x).
+				if ( $post && isset( $post->post_modified )
+					&& ( ! function_exists( 'is_post_publicly_viewable' ) || is_post_publicly_viewable( $post ) ) ) {
 					$last_modified = substr( (string) $post->post_modified, 0, 10 );
 				}
 			}

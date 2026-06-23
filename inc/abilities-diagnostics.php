@@ -82,7 +82,7 @@ function sn_theme_register_diagnostics_abilities() {
 
 	wp_register_ability( 'signal-and-noise/get-theme-version', array(
 		'label'               => 'Get theme + WP version',
-		'description'         => 'Returns the active theme name + version + parent template + is_block_theme flag + WP version. Use to detect drift between published roadmap docs and the live site.',
+		'description'         => 'Returns the active theme name + version + parent template + is_block_theme flag + supports_fse flag (alias of is_block_theme) + WP version. Use to detect drift between published roadmap docs and the live site.',
 		'category'            => 'diagnostics',
 		'permission_callback' => 'sn_theme_perm_read',
 		'execute_callback'    => 'sn_theme_ability_theme_version',
@@ -253,7 +253,7 @@ function sn_theme_register_diagnostics_abilities() {
 				'properties'           => array(
 					'force_refresh' => array(
 						'type'        => 'boolean',
-						'description' => 'Bypass the cached tag and force a fresh GitHub API call. Default false.',
+						'description' => 'Bypass the cached tag and force a fresh GitHub API call. Honored only for callers who can manage_options; ignored (cached tag returned) otherwise. Default false.',
 						'default'     => false,
 					),
 				),
@@ -585,7 +585,11 @@ function sn_theme_ability_get_latest_theme_tag( $input ) {
 	if ( ! function_exists( 'sn_gh_latest_theme_tag' ) ) {
 		return array( 'ok' => false, 'tag' => null );
 	}
-	$force_refresh = is_array( $input ) && ! empty( $input['force_refresh'] );
+	// force_refresh triggers a fresh outbound GitHub API call. Honor it ONLY for
+	// operators (manage_options) so a read-capable subscriber cannot drive
+	// unthrottled outbound calls via the core /wp-abilities run-path. Everyone
+	// else gets the cached tag, keeping the ability readable for agents.
+	$force_refresh = is_array( $input ) && ! empty( $input['force_refresh'] ) && current_user_can( 'manage_options' );
 	$tag = sn_gh_latest_theme_tag( $force_refresh );
 	if ( ! is_string( $tag ) || '' === $tag ) {
 		return array( 'ok' => false, 'tag' => null );

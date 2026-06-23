@@ -2,6 +2,21 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.16.2] - 2026-06-23 — Harden two diagnostic abilities (subscriber-safe)
+
+**Headline:** A non-AI abilities audit found the theme surface clean (no IDOR; the theme `signal-and-noise/` and plugin `signal-noise/` ability namespaces are distinct and complementary), but two read-gated theme abilities exposed a little more than they should over the WP 7.0 `/wp-abilities` run-path. `get-latest-theme-tag` let any read-capable subscriber pass `force_refresh:true` to drive unthrottled outbound GitHub API calls; it now honors `force_refresh` only for operators, while still returning the cached tag to everyone. And `get-page-notes-pillars` now withholds a pillar's `last_modified` date unless the resolved post is publicly viewable.
+
+> **Why PATCH:** security hardening + contract fixes on existing abilities. No new capability, no API removed (the abilities stay readable; only the privileged `force_refresh` path tightened).
+
+### Fixed
+
+- **`get-latest-theme-tag` force_refresh is operator-gated** ([inc/abilities-diagnostics.php](inc/abilities-diagnostics.php)): the fresh-outbound-GitHub-call path now requires `manage_options`; a read-capable subscriber gets the cached tag instead of a way to hammer the GitHub API. Schema description updated to match.
+- **`get-page-notes-pillars` viewability gate** ([inc/abilities-content.php](inc/abilities-content.php)): `last_modified` is emitted only when the resolved post is publicly viewable (defense in depth, parity with the v9.15.x sibling fixes), so a draft or private pillar never leaks its mtime.
+
+### Changed
+
+- **`get-theme-version` contract drift** ([inc/abilities-diagnostics.php](inc/abilities-diagnostics.php)): the description now documents the `supports_fse` output key (an alias of `is_block_theme`) it already returns.
+
 ## [10.16.1] - 2026-06-21 — Contact aliases assemble into a clickable mailto link (still scraper-safe)
 
 **Headline:** v10.16.0 rendered the assembled `/contact` aliases as plain text. They are now assembled into a **clickable `mailto:` link** instead — but the link is built entirely client-side in the DOM (`assets/js/contact-aliases.js`), so the scraper protection is unchanged: the served HTML still contains only the split base64 `data-*` attributes + the `user [at] domain [dot] com` fallback. The contiguous `user@domain` string and the `mailto:` only ever exist at runtime, after JS runs — a non-JS bulk harvester (and Cloudflare's edge email scan) still sees nothing, and Cloudflare email obfuscation stays enabled. Restores the one-click "reach out" affordance without putting a harvestable address in the source.
