@@ -77,6 +77,14 @@ function last_headers() {
     return $reqs ? ( $reqs[ count( $reqs ) - 1 ]['args']['headers'] ?? array() ) : array();
 }
 
+/** Fetch the most recent captured request's full $args, after a forced (uncached) call. */
+function last_args() {
+    $GLOBALS['__captured_requests'] = array();
+    sn_gh_latest_theme_tag( true ); // force_refresh = bypass cache
+    $reqs = $GLOBALS['__captured_requests'];
+    return $reqs ? ( $reqs[ count( $reqs ) - 1 ]['args'] ?? array() ) : array();
+}
+
 // ── Package URL: NO token → public auto-generated archive (unchanged) ──
 ok( sn_gh_theme_package_url( 'v9.9.9' ) === 'https://github.com/juanlentino/signal-and-noise/archive/refs/tags/v9.9.9.zip',
     'no token → public archive package URL' );
@@ -88,6 +96,14 @@ ok( isset( $h['Authorization'] ),                          'token defined → Au
 ok( ( $h['Authorization'] ?? '' ) === 'Bearer ghp_faketoken123', 'Authorization is "Bearer <token>"' );
 ok( ( $h['Accept'] ?? '' ) === 'application/vnd.github+json',     'Accept header preserved' );
 ok( isset( $h['User-Agent'] ),                            'User-Agent header preserved' );
+
+// ── v10.16.3 hardening (audit LOW-1): the /tags poll must pin redirection => 0 so the
+//    Bearer token can NEVER be forwarded to a 3xx redirect target. WP's HTTP layer otherwise
+//    re-sends the same $args (incl. Authorization) on a redirect. Mirrors the plugin's
+//    outbound peers and this file's own host-scoped download path (sn_gh_theme_inject_token_header). ──
+$a = last_args();
+ok( array_key_exists( 'redirection', $a ) && (int) $a['redirection'] === 0,
+    'tag-fetch pins redirection => 0 (Bearer token cannot leak via a redirect)' );
 
 // ── Package URL: token → authenticated API zipball (private-repo capable) ──
 ok( sn_gh_theme_package_url( 'v9.9.9' ) === 'https://api.github.com/repos/juanlentino/signal-and-noise/zipball/v9.9.9',

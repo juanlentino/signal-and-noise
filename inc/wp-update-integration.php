@@ -86,6 +86,13 @@ function sn_gh_latest_theme_tag( $force_refresh = false ) {
 	$response = wp_remote_get( $url, array(
 		'timeout' => 8,
 		'headers' => $headers,
+		// v10.16.3 (audit LOW-1): pin to a single hop. On a 3xx, WP's HTTP layer
+		// re-issues the request with the SAME $args — including the Bearer header
+		// above — to whatever host the redirect names. api.github.com/tags returns
+		// 200 (no redirect), so this is behaviour-preserving; it just guarantees the
+		// SNT_GITHUB_TOKEN can never be forwarded off-host. Mirrors the host-scoped
+		// download path (sn_gh_theme_inject_token_header) + the plugin's outbound peers.
+		'redirection' => 0,
 	) );
 
 	if ( is_wp_error( $response ) || wp_remote_retrieve_response_code( $response ) !== 200 ) {
