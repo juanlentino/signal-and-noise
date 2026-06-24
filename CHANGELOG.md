@@ -2,6 +2,16 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.16.3] - 2026-06-23 — Updater /tags poll pins redirection => 0 (no PAT forwarding)
+
+**Headline:** A post-ship security audit of v10.16.2 found the theme clean except for one defense-in-depth drift in the self-updater. The GitHub `/tags` poll attaches a `Bearer SNT_GITHUB_TOKEN` header on private-repo installs but did not cap redirects, so on a 3xx WordPress's HTTP layer would re-issue the request (with the same args, including that header) to whatever host the redirect named. `api.github.com/.../tags` returns `200` and never redirects, so there is no live exploit. This pins the request to a single hop so the token can never be forwarded off-host, matching the host-scoped download path (`sn_gh_theme_inject_token_header`) and the plugin's hardened outbound peers.
+
+> **Why PATCH:** security hardening on an existing outbound call. Behaviour-preserving (the `/tags` endpoint does not redirect), no new capability, no API removed, no required user action.
+
+### Fixed
+
+- **Updater `/tags` poll pins `redirection => 0`** ([inc/wp-update-integration.php](inc/wp-update-integration.php)): the authenticated tag-fetch sets `redirection => 0` so the `Authorization: Bearer SNT_GITHUB_TOKEN` header can never be forwarded to a redirect target. `tests/updater-github-auth.php` adds a regression assertion (now 18 assertions) that the captured request args carry `redirection => 0`.
+
 ## [10.16.2] - 2026-06-23 — Harden two diagnostic abilities (subscriber-safe)
 
 **Headline:** A non-AI abilities audit found the theme surface clean (no IDOR; the theme `signal-and-noise/` and plugin `signal-noise/` ability namespaces are distinct and complementary), but two read-gated theme abilities exposed a little more than they should over the WP 7.0 `/wp-abilities` run-path. `get-latest-theme-tag` let any read-capable subscriber pass `force_refresh:true` to drive unthrottled outbound GitHub API calls; it now honors `force_refresh` only for operators, while still returning the cached tag to everyone. And `get-page-notes-pillars` now withholds a pillar's `last_modified` date unless the resolved post is publicly viewable.
