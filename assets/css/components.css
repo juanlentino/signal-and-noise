@@ -276,6 +276,75 @@
 }
 
 /* ============================================
+   PROVENANCE: SUB-PILLAR subordinate card
+   A smaller, rail-connected child of a pillar card. Nests INSIDE its
+   parent .sn-prov-paper-card (after the long-form link), indented with a
+   blood left-rail so the parent -> child relationship reads at a glance.
+   Decimal-numbered (No 01.1) with an "Extends <parent title>" eyebrow.
+
+   A sub-pillar is pillar-weight long-form with no paper of its own and is
+   NOT featured on /notes. To add the next child (01.2, 02.1): duplicate
+   this card's markup under the relevant parent card and edit the number,
+   title, href, and blurb. No dynamic system, by design.
+   ============================================ */
+
+.sn-prov-subcard {
+	margin-top: var(--wp--preset--spacing--40);
+	margin-left: var(--wp--preset--spacing--30);
+	padding-left: var(--wp--preset--spacing--30);
+	border-left: 2px solid var(--wp--preset--color--blood);
+}
+
+.sn-prov-subcard-eyebrow {
+	font-weight: 400;
+}
+
+/* Title sits one step under the parent .sn-prov-paper-title ceiling so it
+   reads subordinate without leaving the type scale. Explicit colour (not
+   `inherit`) to win over theme.json's global link colour, matching the
+   .sn-prov-paper-title rationale above; clean word-boundary wraps. */
+.sn-prov-subcard-title,
+.sn-prov-subcard-title a {
+	color: var(--wp--preset--color--bone);
+	hyphens: none;
+	word-break: normal;
+	overflow-wrap: normal;
+}
+
+.sn-prov-subcard-title a {
+	text-decoration: none;
+	border-bottom: 1px solid transparent;
+	transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.sn-prov-subcard-title a:hover {
+	color: var(--wp--preset--color--blood);
+	border-bottom-color: currentColor;
+}
+
+.sn-prov-subcard-blurb {
+	line-height: var(--wp--custom--line-height--normal, 1.7);
+}
+
+/* "Read the essay ->" uses the same italic-rust secondary affordance as
+   the parent card's .sn-prov-paper-longform. */
+.sn-prov-subcard-more,
+.sn-prov-subcard-more a {
+	color: var(--wp--preset--color--rust);
+}
+
+.sn-prov-subcard-more a {
+	text-decoration: none;
+	border-bottom: 1px solid transparent;
+	transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.sn-prov-subcard-more a:hover {
+	color: var(--wp--preset--color--blood);
+	border-bottom-color: currentColor;
+}
+
+/* ============================================
    PROVENANCE — inline TOC at top of pillar essay
    Muted italic single-line link strip. Hairline-grey underline that
    strengthens to red on hover so it reads as quiet navigation rather

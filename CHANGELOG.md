@@ -2,6 +2,16 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.17.0] - 2026-06-25: Provenance sub-pillar subordinate-card design component
+
+**Headline:** Adds the `.sn-prov-subcard` component to the brutalist card system: a smaller, rail-connected variant of a `.sn-prov-paper-card` that nests inside a parent pillar card on the `/provenance` hub to present a "sub-pillar" (a pillar-weight, talk-derived or applied essay with no paper of its own, decimal-numbered after its parent, e.g. № 01.1). The component carries the indent, blood left-rail, title-colour override, and secondary-link affordance; per-instance type sizing stays inline in the page markup, matching how the existing pillar cards are authored. It is dormant until a hub page references it. No template, post type, taxonomy, or query loop is involved. Adding a future child (01.2, 02.1) is a copy-the-markup job, by design.
+
+> **Why MINOR:** new user-visible design capability (a card treatment the theme did not previously provide), purely additive. No API removed or renamed, no settings-schema change, no required user action.
+
+### New
+
+- **`.sn-prov-subcard` subordinate-card component** ([assets/css/components.css](assets/css/components.css)): an indent plus a 2px `blood` left-rail signalling the parent/child relationship, a `bone` title-colour override (beats theme.json's global link colour at 0,0,1, mirroring the `.sn-prov-paper-title` rationale) with `blood` on hover, a `.sn-prov-subcard-blurb` normal line-height, and a `.sn-prov-subcard-more` italic-rust "Read the essay →" affordance matching `.sn-prov-paper-longform`. A tablet/phone rule ([assets/css/responsive.css](assets/css/responsive.css), `max-width: 781px`) eases the indent back to the `--20` spacing step so the rail keeps breathing room at the 11px floor. The first instance (the № 01.1 sub-pillar "Honesty has to be the cheap option", nested under № 01 on `/provenance`) lives in the hub page in the database, not in this repo.
+
 ## [10.16.3] - 2026-06-23 — Updater /tags poll pins redirection => 0 (no PAT forwarding)
 
 **Headline:** A post-ship security audit of v10.16.2 found the theme clean except for one defense-in-depth drift in the self-updater. The GitHub `/tags` poll attaches a `Bearer SNT_GITHUB_TOKEN` header on private-repo installs but did not cap redirects, so on a 3xx WordPress's HTTP layer would re-issue the request (with the same args, including that header) to whatever host the redirect named. `api.github.com/.../tags` returns `200` and never redirects, so there is no live exploit. This pins the request to a single hop so the token can never be forwarded off-host, matching the host-scoped download path (`sn_gh_theme_inject_token_header`) and the plugin's hardened outbound peers.

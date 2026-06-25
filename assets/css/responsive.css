@@ -337,6 +337,13 @@
 	.sn-prov-paper-card {
 		padding: var(--wp--preset--spacing--20);
 	}
+
+	/* Sub-pillar rail/indent eases back so the indented child still has
+	   breathing room at the 11px floor on phones. */
+	.sn-prov-subcard {
+		margin-left: var(--wp--preset--spacing--20);
+		padding-left: var(--wp--preset--spacing--20);
+	}
 }
 
 /* ============================================
