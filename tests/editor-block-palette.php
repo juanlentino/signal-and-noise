@@ -126,6 +126,11 @@ foreach ( $authoring_primitives as $slug ) {
 // GutenbergBlock.php register_block_type('fluentfom/guten-block', ...)).
 ha_true( in_array( 'fluentfom/guten-block', $result, true ), 'allowlist includes the contact-form block slug (fluentfom/guten-block)' );
 
+// The companion plugin's date-window content-gate block (signal-and-noise-tools
+// v6.40.0, register_block_type('signal-noise/scheduled', ...)). Without it the
+// block is curated out of the page/post inserter and flagged not-allowed on paste.
+ha_true( in_array( 'signal-noise/scheduled', $result, true ), 'allowlist includes the companion scheduled block (signal-noise/scheduled)' );
+
 // FIX 6: the reusable / synced Patterns block must stay insertable, else any
 // synced pattern the author created vanishes from the inserter.
 ha_true( in_array( 'core/block', $result, true ), 'FIX 6: allowlist includes core/block (synced/reusable Pattern)' );

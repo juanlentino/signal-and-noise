@@ -2,6 +2,16 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.18.0] - 2026-06-26 — Allow the companion plugin's scheduled block in the page editor
+
+**Headline:** The companion plugin (signal-and-noise-tools v6.40.0) shipped a dynamic block, `signal-noise/scheduled`, a date-window content gate. But this theme curates the post/page inserter through an `allowed_block_types_all` allowlist (`inc/editor-block-palette.php`), and the new block was not on it. On this site that meant the block was invisible in the inserter and flagged not-allowed on paste, making the whole scheduled-content subsystem unusable. This adds the one block to the curated allowlist so it becomes insertable again. The firewall (Site Editor by name, post-less contexts, already-an-array bail) and every existing core/contact entry are untouched. Conservative by design: exactly one block added.
+
+> **Why MINOR:** a new user-visible authoring capability (the Scheduled block becomes insertable in the page/post editor) that was previously curated out. Purely additive. No API removed or renamed, no settings-schema change, no required user action.
+
+### New
+
+- **`signal-noise/scheduled` joins the curated inserter allowlist** ([inc/editor-block-palette.php](inc/editor-block-palette.php)): a new `$companion` group (mirroring the existing `$contact` group) carries the companion plugin's date-window content-gate block into the post/page `allowed_block_types_all` list. Without it the block was hidden from the inserter and rejected on paste. `tests/editor-block-palette.php` gains an assertion (now 47 passing) that the curated post-editor allowlist includes the slug; the firewall cases (Site Editor, post-less contexts), the already-an-array bail, and the core-block coverage assertions are unchanged.
+
 ## [10.17.0] - 2026-06-25: Provenance sub-pillar subordinate-card design component
 
 **Headline:** Adds the `.sn-prov-subcard` component to the brutalist card system: a smaller, rail-connected variant of a `.sn-prov-paper-card` that nests inside a parent pillar card on the `/provenance` hub to present a "sub-pillar" (a pillar-weight, talk-derived or applied essay with no paper of its own, decimal-numbered after its parent, e.g. № 01.1). The component carries the indent, blood left-rail, title-colour override, and secondary-link affordance; per-instance type sizing stays inline in the page markup, matching how the existing pillar cards are authored. It is dormant until a hub page references it. No template, post type, taxonomy, or query loop is involved. Adding a future child (01.2, 02.1) is a copy-the-markup job, by design.
