@@ -137,6 +137,13 @@ function sn_theme_allowed_blocks( $allowed, $context ) {
 	// (The "fluentfom" spelling is Fluent Forms' own namespace, not a typo here.)
 	$contact = array( 'fluentfom/guten-block' );
 
-	return array_values( array_unique( array_merge( $used, $authoring, $contact ) ) );
+	// The companion plugin's blocks (signal-and-noise-tools). Right now that's the
+	// 'signal-noise/scheduled' date-window content gate shipped in plugin v6.40.0.
+	// Without it the block is curated out of the page/post inserter AND flagged
+	// not-allowed on paste, making the scheduled-content subsystem unusable on
+	// this site. Keep in sync if the companion plugin ships more author-facing blocks.
+	$companion = array( 'signal-noise/scheduled' );
+
+	return array_values( array_unique( array_merge( $used, $authoring, $contact, $companion ) ) );
 }
 add_filter( 'allowed_block_types_all', 'sn_theme_allowed_blocks', 10, 2 );
