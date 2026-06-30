@@ -200,3 +200,46 @@ summary:focus-visible {
 ::-webkit-scrollbar-thumb:hover {
 	background: var(--wp--preset--color--blood);
 }
+
+/* ── Forced colours / high contrast (a11y, v10.20.0) ─────────────────────
+ * Windows High Contrast Mode (forced-colors: active) replaces the palette with
+ * the user's system colours. The brutalist black-on-white base is already
+ * maximal contrast, so this pins only the two things the OS override could
+ * weaken: the keyboard focus ring (custom outline colours get remapped — pin
+ * the Highlight system colour and widen it) and the reading-progress fill
+ * (conveys scroll position via colour, so keep it a system colour instead of
+ * letting it flatten into the system background). The sanctioned high-contrast
+ * answer to the deliberately-omitted dark mode. */
+@media (forced-colors: active) {
+	a:focus-visible,
+	button:focus-visible,
+	[role="button"]:focus-visible,
+	[role="link"]:focus-visible,
+	input[type="submit"]:focus-visible,
+	input[type="button"]:focus-visible,
+	input[type="checkbox"]:focus-visible,
+	input[type="radio"]:focus-visible,
+	.wp-block-button__link:focus-visible,
+	summary:focus-visible {
+		outline: 3px solid Highlight;
+		outline-offset: 2px;
+	}
+
+	.sn-article-progress__fill {
+		background: Highlight;
+	}
+}
+
+/* prefers-contrast: more — the base is already maximal black-on-white, so the
+ * one meaningful lever is a heavier keyboard focus ring for users who ask for
+ * more contrast without forcing system colours. */
+@media (prefers-contrast: more) {
+	a:focus-visible,
+	button:focus-visible,
+	[role="button"]:focus-visible,
+	[role="link"]:focus-visible,
+	.wp-block-button__link:focus-visible,
+	summary:focus-visible {
+		outline-width: 3px;
+	}
+}

@@ -2,6 +2,16 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.20.0] - 2026-06-30 — Forced-colors / high-contrast accessibility (Batch B)
+
+**Headline:** Adds a `@media (forced-colors: active)` block (Windows High Contrast Mode) plus a `@media (prefers-contrast: more)` block to [assets/css/base.css](assets/css/base.css) — the one genuinely-bare item from Batch B (source-verified: the theme already respects `prefers-reduced-motion` across CSS *and* JS, so that part was a non-gap). The brutalist black-on-white base is already maximal contrast, so the block is deliberately narrow: it pins the keyboard focus ring to the `Highlight` system colour (custom outline colours get remapped by the OS, which can weaken the ring) and preserves the reading-progress fill as a system colour (it conveys scroll position via colour and would otherwise flatten into the system background). This is the sanctioned high-contrast answer to the deliberately-omitted dark mode.
+
+> **Why MINOR:** a new user-visible accessibility capability (respecting two OS contrast preferences). Purely additive CSS — no markup, API, or settings change; no required user action.
+
+### New
+
+- **`forced-colors` + `prefers-contrast` support** ([assets/css/base.css](assets/css/base.css)): under Windows High Contrast Mode, the focus ring on links/buttons/inputs/`.wp-block-button__link`/`summary` becomes a 3px `Highlight` outline and the `.sn-article-progress__fill` stays a system colour; under `prefers-contrast: more`, the focus ring widens to 3px. `tests/forced-colors.php` (5 assertions) guards that the block ships and targets the focus rings + progress fill with system colours.
+
 ## [10.19.0] - 2026-06-30 — Agent-readable discoverability files: llms.txt, GPC declaration, OpenSearch
 
 **Headline:** Three new root-served virtual routes that make the site legible to AI answer engines, privacy agents, and browsers — the reader-facing half of Batch A's discoverability push (the plugin's v6.53.0 ships the matching robots.txt AI-crawler policy). `/llms.txt` (+ `/llms-full.txt`) follows the llmstxt.org convention, pointing LLM crawlers at the canonical pages and feeds; `/.well-known/gpc.json` is the server-side Global Privacy Control declaration that matches the beacon's existing client-side GPC bail; `/opensearch.xml` (+ a `rel="search"` head link) lets browsers register the site as a search provider over the owned `/notes/?s=` route. All three clone the established flush-free virtual-route idiom of `inc/humans-txt.php` / `inc/security-txt.php` — `template_redirect` priority 0, `status_header(200)` so a postless path is not served under a 404 (WORDPRESS-REFERENCE #40).
