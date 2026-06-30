@@ -2,6 +2,18 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.19.0] - 2026-06-30 — Agent-readable discoverability files: llms.txt, GPC declaration, OpenSearch
+
+**Headline:** Three new root-served virtual routes that make the site legible to AI answer engines, privacy agents, and browsers — the reader-facing half of Batch A's discoverability push (the plugin's v6.53.0 ships the matching robots.txt AI-crawler policy). `/llms.txt` (+ `/llms-full.txt`) follows the llmstxt.org convention, pointing LLM crawlers at the canonical pages and feeds; `/.well-known/gpc.json` is the server-side Global Privacy Control declaration that matches the beacon's existing client-side GPC bail; `/opensearch.xml` (+ a `rel="search"` head link) lets browsers register the site as a search provider over the owned `/notes/?s=` route. All three clone the established flush-free virtual-route idiom of `inc/humans-txt.php` / `inc/security-txt.php` — `template_redirect` priority 0, `status_header(200)` so a postless path is not served under a 404 (WORDPRESS-REFERENCE #40).
+
+> **Why MINOR:** three new user-visible/agent-visible capabilities (three new served routes + an OpenSearch autodiscovery head tag). Purely additive — no API removed or renamed, no settings-schema change, no required user action.
+
+### New
+
+- **`/llms.txt` + `/llms-full.txt`** ([inc/llms-txt.php](inc/llms-txt.php)): the llmstxt.org AEO discoverability file. `/llms.txt` is a curated markdown index (About, Notes, Résumé, Music, Uses, Contact + RSS/JSON feeds); `/llms-full.txt` additionally appends a Notes section of recent published posts (title + permalink + summary, via `WP_Query`). Body built from `home_url()` + `get_bloginfo()` so it stays portable. `tests/llms-txt.php` (15 assertions): variant matcher, body structure, full-vs-basic divergence, and a `status_header(200)` behavioral assertion on the send handler.
+- **`/.well-known/gpc.json`** ([inc/gpc-json.php](inc/gpc-json.php)): the Global Privacy Control support resource (`{"gpc":true,"lastUpdate":"…"}`) — the server-side declaration counterpart to the analytics beacon's client-side GPC bail. `lastUpdate` is a fixed date (not request-time) so the JSON is byte-stable and edge-cacheable. `tests/gpc-json.php` (9 assertions).
+- **`/opensearch.xml` + `rel="search"` autodiscovery** ([inc/opensearch.php](inc/opensearch.php)): an OpenSearch Description Document targeting the owned `/notes/?s={searchTerms}` route, plus a `<link rel="search">` head tag so browsers can register the site as a search provider. The `{searchTerms}` token is preserved literal through `esc_url()` via an alnum sentinel. `tests/opensearch.php` (12 assertions).
+
 ## [10.18.0] - 2026-06-26 — Allow the companion plugin's scheduled block in the page editor
 
 **Headline:** The companion plugin (signal-and-noise-tools v6.40.0) shipped a dynamic block, `signal-noise/scheduled`, a date-window content gate. But this theme curates the post/page inserter through an `allowed_block_types_all` allowlist (`inc/editor-block-palette.php`), and the new block was not on it. On this site that meant the block was invisible in the inserter and flagged not-allowed on paste, making the whole scheduled-content subsystem unusable. This adds the one block to the curated allowlist so it becomes insertable again. The firewall (Site Editor by name, post-less contexts, already-an-array bail) and every existing core/contact entry are untouched. Conservative by design: exactly one block added.
