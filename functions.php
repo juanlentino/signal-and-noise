@@ -29,6 +29,9 @@
  *   inc/404-recovery.php         — helpful 404: search + recent-notes suggestions ([sn_404_suggestions])
  *   inc/identity-rels.php        — <link rel="me"> head links from sn_settings social.same_as (A4, v10.5.0)
  *   inc/humans-txt.php           — /humans.txt virtual route + rel=author autodiscovery + maker's-mark comment (C4, v10.5.0)
+ *   inc/llms-txt.php             — /llms.txt + /llms-full.txt AEO discoverability virtual routes (v10.19.0)
+ *   inc/gpc-json.php             — /.well-known/gpc.json Global Privacy Control declaration (v10.19.0)
+ *   inc/opensearch.php           — /opensearch.xml OSDD + rel=search autodiscovery over /notes/?s= (v10.19.0)
  *   inc/colophon-meta.php        — [sn_build] live colophon line: theme+plugin version, git short SHA, deploy time (C2, v10.5.0)
  *   (inc/page-notes-render.php   — full PHP render of /notes index; loaded by page-notes-template.php, not here)
  *
@@ -89,6 +92,9 @@ require_once __DIR__ . '/inc/beacon.php'; // P1: first-party edge analytics beac
 require_once __DIR__ . '/inc/identity-rels.php'; // A4 (v10.5.0): <link rel="me"> head links from sn_settings social.same_as
 require_once __DIR__ . '/inc/humans-txt.php'; // C4 (v10.5.0): /humans.txt virtual route + rel=author autodiscovery + maker's-mark comment
 require_once __DIR__ . '/inc/security-txt.php'; // v10.13.0: /.well-known/security.txt (RFC 9116) virtual route
+require_once __DIR__ . '/inc/llms-txt.php'; // v10.19.0: /llms.txt + /llms-full.txt virtual routes (llmstxt.org AEO discoverability)
+require_once __DIR__ . '/inc/gpc-json.php'; // v10.19.0: /.well-known/gpc.json virtual route (Global Privacy Control declaration)
+require_once __DIR__ . '/inc/opensearch.php'; // v10.19.0: /opensearch.xml virtual route + rel=search autodiscovery (search provider over /notes/?s=)
 require_once __DIR__ . '/inc/disable-smart-quotes.php'; // v10.13.2: straight quotes — disable wptexturize site-wide
 require_once __DIR__ . '/inc/seo-route-meta.php'; // v10.13.0: route descriptions + /about/uses meta for the plugin's sn_seo_* filters
 require_once __DIR__ . '/inc/colophon-meta.php'; // C2 (v10.5.0): [sn_build] live colophon line (theme+plugin version, git short SHA, deploy time)
