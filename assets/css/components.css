@@ -664,18 +664,22 @@
 	padding: 1rem 0;
 }
 
-/* ── RELATED NOTES (single.html footer) ──────────────────────────
+/* ── RELATED NOTES + CITED BY (single.html footers) ───────────────
    v9.10.0: shared-tag "More on this" footer below prev/next. Reuses
    the /notes index .sn-notes-row two-column idiom (mono date + reading
    time spec column / Bebas-Neue linked title). The .sn-notes-row rules
    are inline-injected only on the /notes page, so the layout vocabulary
-   is restated here scoped to .sn-related-notes for single-post context. */
-.sn-related-notes {
+   is restated here scoped to .sn-related-notes for single-post context.
+   v10.21.0: .sn-cited-by (the reverse-link footer) shares every rule —
+   grouped selectors, one source of truth for the row idiom. */
+.sn-related-notes,
+.sn-cited-by {
 	margin-top: clamp(2rem, 4vw, 3rem);
 	padding-top: clamp(1.5rem, 3vw, 2rem);
 	border-top: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
 }
-.sn-related-notes__label {
+.sn-related-notes__label,
+.sn-cited-by__label {
 	font-family: 'DM Mono', 'Courier New', monospace;
 	font-size: max(0.7rem, 11px);
 	font-weight: 500;
@@ -684,12 +688,14 @@
 	color: var(--wp--preset--color--rust, #666);
 	margin: 0 0 clamp(1rem, 2vw, 1.5rem);
 }
-.sn-related-notes__list {
+.sn-related-notes__list,
+.sn-cited-by__list {
 	list-style: none;
 	margin: 0;
 	padding: 0;
 }
-.sn-related-notes .sn-notes-row {
+.sn-related-notes .sn-notes-row,
+.sn-cited-by .sn-notes-row {
 	display: grid;
 	grid-template-columns: 1fr;
 	gap: 0.5rem;
@@ -697,20 +703,24 @@
 	border-bottom: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
 	transition: padding 0.2s ease;
 }
-.sn-related-notes .sn-notes-row:last-child {
+.sn-related-notes .sn-notes-row:last-child,
+.sn-cited-by .sn-notes-row:last-child {
 	border-bottom: 0;
 }
 @media (min-width: 720px) {
-	.sn-related-notes .sn-notes-row {
+	.sn-related-notes .sn-notes-row,
+	.sn-cited-by .sn-notes-row {
 		grid-template-columns: 140px 1fr;
 		gap: 2rem;
 		align-items: start;
 	}
 }
-.sn-related-notes .sn-notes-row:hover {
+.sn-related-notes .sn-notes-row:hover,
+.sn-cited-by .sn-notes-row:hover {
 	padding-left: 6px;
 }
-.sn-related-notes .sn-notes-row-spec {
+.sn-related-notes .sn-notes-row-spec,
+.sn-cited-by .sn-notes-row-spec {
 	font-family: 'DM Mono', 'Courier New', monospace;
 	font-size: max(0.7rem, 11px);
 	letter-spacing: 0.14em;
@@ -723,25 +733,31 @@
 	transition: color 0.2s ease;
 }
 @media (min-width: 720px) {
-	.sn-related-notes .sn-notes-row-spec {
+	.sn-related-notes .sn-notes-row-spec,
+	.sn-cited-by .sn-notes-row-spec {
 		flex-direction: column;
 		gap: 0.4rem;
 	}
 }
-.sn-related-notes .sn-notes-row-date {
+.sn-related-notes .sn-notes-row-date,
+.sn-cited-by .sn-notes-row-date {
 	color: var(--wp--preset--color--bone, #000);
 	font-weight: 500;
 }
-.sn-related-notes .sn-notes-row-rt {
+.sn-related-notes .sn-notes-row-rt,
+.sn-cited-by .sn-notes-row-rt {
 	color: var(--wp--preset--color--rust, #666);
 }
-.sn-related-notes .sn-notes-row:hover .sn-notes-row-date {
+.sn-related-notes .sn-notes-row:hover .sn-notes-row-date,
+.sn-cited-by .sn-notes-row:hover .sn-notes-row-date {
 	color: var(--wp--preset--color--blood, #e00404);
 }
-.sn-related-notes .sn-notes-row-content {
+.sn-related-notes .sn-notes-row-content,
+.sn-cited-by .sn-notes-row-content {
 	min-width: 0;
 }
-.sn-related-notes .sn-notes-row-title {
+.sn-related-notes .sn-notes-row-title,
+.sn-cited-by .sn-notes-row-title {
 	font-family: 'Bebas Neue', Impact, sans-serif;
 	font-weight: 400;
 	font-size: clamp(1.35rem, 2vw, 1.75rem);
@@ -749,7 +765,8 @@
 	letter-spacing: -0.005em;
 	margin: 0;
 }
-.sn-related-notes .sn-notes-row-title a {
+.sn-related-notes .sn-notes-row-title a,
+.sn-cited-by .sn-notes-row-title a {
 	color: var(--wp--preset--color--bone, #000);
 	text-decoration: none;
 	background-image: linear-gradient(currentColor, currentColor);
@@ -759,13 +776,16 @@
 	transition: background-size 0.3s ease, color 0.2s ease;
 	padding-bottom: 2px;
 }
-.sn-related-notes .sn-notes-row-title a:hover {
+.sn-related-notes .sn-notes-row-title a:hover,
+.sn-cited-by .sn-notes-row-title a:hover {
 	color: var(--wp--preset--color--blood, #e00404);
 	background-size: 100% 1px;
 }
 @media (prefers-reduced-motion: reduce) {
 	.sn-related-notes .sn-notes-row,
-	.sn-related-notes .sn-notes-row-title a {
+	.sn-related-notes .sn-notes-row-title a,
+	.sn-cited-by .sn-notes-row,
+	.sn-cited-by .sn-notes-row-title a {
 		transition: none;
 	}
 }

@@ -79,6 +79,7 @@ require_once __DIR__ . '/inc/post-frontmatter.php';
 require_once __DIR__ . '/inc/block-bindings.php';
 require_once __DIR__ . '/inc/post-updated-date.php';
 require_once __DIR__ . '/inc/related-notes.php';
+require_once __DIR__ . '/inc/cited-by.php'; // v10.21.0: [sn_cited_by] reverse-link footer (complement to deliberately-dead pingbacks)
 require_once __DIR__ . '/inc/404-recovery.php';
 require_once __DIR__ . '/inc/post-share.php';
 require_once __DIR__ . '/inc/article-toc.php';
