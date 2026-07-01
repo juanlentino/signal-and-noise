@@ -1,0 +1,66 @@
+/**
+ * Signal & Noise — /accessibility statement page (v10.21.0).
+ *
+ * Brutalist/white-first, preset tokens only. Same hero vocabulary as /now
+ * (Bebas headline, mono eyebrow, rust dek) with a prose section idiom for
+ * the statement body, scoped under .sn-a11y-page. Loaded only on the
+ * /accessibility route. 11px type floor honoured.
+ */
+
+.sn-a11y-page {
+	max-width: 60rem;
+	margin: 0 auto;
+	padding: clamp(2.5rem, 6vw, 5rem) clamp(1.25rem, 4vw, 3rem) clamp(4rem, 8vw, 7rem);
+}
+
+/* ── Hero ─────────────────────────────────────────────────────────────── */
+.sn-a11y-eyebrow {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.7rem, 11px);
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--rust, #666);
+	margin: 0 0 0.75rem;
+}
+.sn-a11y-headline {
+	font-family: 'Bebas Neue', Impact, sans-serif;
+	font-weight: 400;
+	font-size: clamp(3.5rem, 12vw, 7rem);
+	line-height: 0.9;
+	letter-spacing: -0.01em;
+	color: var(--wp--preset--color--bone, #000);
+	margin: 0;
+}
+.sn-a11y-dek {
+	font-size: clamp(1rem, 1.4vw, 1.15rem);
+	line-height: 1.55;
+	color: var(--wp--preset--color--rust, #666);
+	max-width: 52ch;
+	margin: 1rem 0 0;
+}
+
+/* ── Statement sections ───────────────────────────────────────────────── */
+.sn-a11y-section {
+	margin-top: clamp(2rem, 4vw, 3rem);
+	max-width: 62ch;
+}
+.sn-a11y-section-label {
+	font-family: 'Bebas Neue', Impact, sans-serif;
+	font-weight: 400;
+	font-size: clamp(1.4rem, 3vw, 2rem);
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--bone, #000);
+	padding-bottom: 0.6rem;
+	border-bottom: 2px solid var(--wp--preset--color--bone, #000);
+	margin: 0 0 1rem;
+}
+.sn-a11y-paragraph {
+	font-size: max(0.95rem, 11px);
+	line-height: 1.7;
+	color: var(--wp--preset--color--bone, #000);
+	margin: 0 0 0.85rem;
+}
+.sn-a11y-paragraph a {
+	color: var(--wp--preset--color--blood, #e00404);
+}

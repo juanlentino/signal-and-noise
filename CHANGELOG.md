@@ -2,6 +2,23 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.21.0] - 2026-07-01 — Interlinking batch: cited-by footer, /now, /accessibility, provenance backlink CSS
+
+**Headline:** Four owner-approved surfaces in one release. (1) `[sn_cited_by]` ([inc/cited-by.php](inc/cited-by.php)) — the reverse of related-notes: up to 5 published notes whose body links to the current note, mounted in [templates/single.html](templates/single.html) beside `[sn_related_notes]`; boundary-aware `/notes/<slug>` matching (a link to `/notes/craft-two` is not a citation of `craft`, mirrored in the plugin's v7.4.0 unlinked-mentions check); empty renders no chrome. Pingbacks are the native answer but deliberately dead here (XML-RPC + pings_open killed by the plugin), so this bounded reverse query is the complement. (2) `/now` — an indie-web now page as a /uses-style virtual-route trio with an owner-editable data file ([inc/now-data.php](inc/now-data.php)) carrying its own `updated` date so staleness is honest. (3) `/accessibility` — a statement page (WCAG 2.1 AA target, genuinely shipped measures, honest limitations, /contact feedback channel). (4) `.sn-provenance-extended-by` — the sub-pillar launch-kit backlink class finally has a treatment (mono-uppercase rust lead-in, blood link, hairline top rule; the kit's inline font-size deliberately left in charge of the cascade), so the July launch needs no theme release. Both new pages force `status_header(200)` (WP-REF gotcha #40) with behavioral tests, join llms.txt and the footer chrome, and register `sn_seo_route_meta` entries.
+
+> **Why MINOR:** four new user-visible surfaces (a shortcode footer, two pages, a styled component), no breaking change.
+
+### New
+- `[sn_cited_by]` shortcode + render_block bridge; `.sn-cited-by` grouped into the related-notes row idiom in [assets/css/components.css](assets/css/components.css) + hidden in print.
+- `/now` virtual page: [inc/now-data.php](inc/now-data.php) (edit surface + `sn_now_sections` filter seam), [inc/page-now-template.php](inc/page-now-template.php), [inc/page-now-render.php](inc/page-now-render.php), [assets/css/now.css](assets/css/now.css).
+- `/accessibility` virtual page: [inc/page-accessibility-template.php](inc/page-accessibility-template.php), [inc/page-accessibility-render.php](inc/page-accessibility-render.php), [assets/css/accessibility.css](assets/css/accessibility.css).
+- Footer chrome links to /now + /accessibility; llms.txt lines for both; `sn_seo_route_meta` filters for both routes ([inc/seo-route-meta.php](inc/seo-route-meta.php)).
+- `.sn-provenance-extended-by` treatment in [assets/css/components.css](assets/css/components.css) with a CSS-contract test.
+- Test suites: [tests/cited-by.php](tests/cited-by.php), [tests/page-now.php](tests/page-now.php), [tests/page-accessibility.php](tests/page-accessibility.php), [tests/provenance-extended-by.php](tests/provenance-extended-by.php); assertions added to [tests/llms-txt.php](tests/llms-txt.php) + [tests/seo-route-meta.php](tests/seo-route-meta.php).
+
+### Fixed
+- llms.txt pointed Uses at `/uses/`, which 404s — the route lives at `/about/uses` ([inc/llms-txt.php](inc/llms-txt.php)).
+
 ## [10.20.0] - 2026-06-30 — Forced-colors / high-contrast accessibility (Batch B)
 
 **Headline:** Adds a `@media (forced-colors: active)` block (Windows High Contrast Mode) plus a `@media (prefers-contrast: more)` block to [assets/css/base.css](assets/css/base.css) — the one genuinely-bare item from Batch B (source-verified: the theme already respects `prefers-reduced-motion` across CSS *and* JS, so that part was a non-gap). The brutalist black-on-white base is already maximal contrast, so the block is deliberately narrow: it pins the keyboard focus ring to the `Highlight` system colour (custom outline colours get remapped by the OS, which can weaken the ring) and preserves the reading-progress fill as a system colour (it conveys scroll position via colour and would otherwise flatten into the system background). This is the sanctioned high-contrast answer to the deliberately-omitted dark mode.

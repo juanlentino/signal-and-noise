@@ -47,6 +47,12 @@ ok( strpos( $body, 'https://juanlentino.com/about/' ) !== false, 'links the Abou
 ok( strpos( $body, "\n## " ) !== false, 'has at least one H2 section' );
 ok( substr( $body, -1 ) === "\n", 'body ends with a trailing newline' );
 
+// --- v10.21.0 surface-list contract: real routes only ---
+ok( strpos( $body, 'https://juanlentino.com/about/uses/' ) !== false, 'Uses line points at the REAL route /about/uses (bare /uses/ 404s)' );
+ok( strpos( $body, '](https://juanlentino.com/uses/)' ) === false, 'stale bare /uses/ link is gone' );
+ok( strpos( $body, '[Now](https://juanlentino.com/now/)' ) !== false, 'Now surface listed' );
+ok( strpos( $body, '[Accessibility](https://juanlentino.com/accessibility/)' ) !== false, 'Accessibility surface listed' );
+
 // --- Full variant appends a Notes section from injected rows (no WP_Query in tests) ---
 $rows = array(
 	array( 'title' => 'A Test Note', 'url' => 'https://juanlentino.com/notes/a-test-note/', 'summary' => 'A short summary.' ),
