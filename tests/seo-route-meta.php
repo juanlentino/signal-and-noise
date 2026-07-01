@@ -23,6 +23,12 @@ function home_url( $p = '' ) { return 'https://juanlentino.com' . $p; }
 $GLOBALS['__is_uses'] = false;
 function sn_uses_is_uses_request() { return (bool) $GLOBALS['__is_uses']; }
 function sn_uses_title() { return 'Uses — Juan Lentino'; }
+$GLOBALS['__is_now'] = false;
+function sn_now_is_now_request() { return (bool) $GLOBALS['__is_now']; }
+function sn_now_title() { return 'Now — Juan Lentino'; }
+$GLOBALS['__is_a11y'] = false;
+function sn_a11y_is_a11y_request() { return (bool) $GLOBALS['__is_a11y']; }
+function sn_a11y_title() { return 'Accessibility — Juan Lentino'; }
 
 require __DIR__ . '/../inc/seo-route-meta.php';
 
@@ -55,6 +61,26 @@ ok( 'Uses' === ( $rm['breadcrumb'][1]['name'] ?? null ), 'last breadcrumb crumb 
 // Already-resolved meta is never clobbered.
 $preset = array( 'title' => 'X', 'url' => 'https://x/' );
 ok( sn_seo_route_meta_for_uses( $preset ) === $preset, 'an already-resolved route meta passes through unchanged' );
+
+// --- Route-meta filters for /now + /accessibility (v10.21.0) ---
+$GLOBALS['__is_now'] = false;
+ok( sn_seo_route_meta_for_now( null ) === null, 'not on /now → null' );
+$GLOBALS['__is_now'] = true;
+$nm = sn_seo_route_meta_for_now( null );
+ok( is_array( $nm ) && 'Now — Juan Lentino' === ( $nm['title'] ?? null ), '/now → meta with sn_now_title()' );
+ok( 'https://juanlentino.com/now' === ( $nm['url'] ?? null ), '/now route meta url' );
+ok( is_array( $nm['breadcrumb'] ?? null ) && 'Now' === ( $nm['breadcrumb'][0]['name'] ?? null ), '/now breadcrumb is a single Now crumb' );
+ok( sn_seo_route_meta_for_now( $preset ) === $preset, '/now: already-resolved meta passes through' );
+$GLOBALS['__is_now'] = false;
+
+$GLOBALS['__is_a11y'] = false;
+ok( sn_seo_route_meta_for_accessibility( null ) === null, 'not on /accessibility → null' );
+$GLOBALS['__is_a11y'] = true;
+$am = sn_seo_route_meta_for_accessibility( null );
+ok( is_array( $am ) && 'Accessibility — Juan Lentino' === ( $am['title'] ?? null ), '/accessibility → meta with sn_a11y_title()' );
+ok( 'https://juanlentino.com/accessibility' === ( $am['url'] ?? null ), '/accessibility route meta url' );
+ok( is_array( $am['breadcrumb'] ?? null ) && 'Accessibility' === ( $am['breadcrumb'][0]['name'] ?? null ), '/accessibility breadcrumb crumb' );
+ok( sn_seo_route_meta_for_accessibility( $preset ) === $preset, '/accessibility: already-resolved meta passes through' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
