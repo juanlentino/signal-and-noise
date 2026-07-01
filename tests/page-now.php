@@ -64,6 +64,13 @@ ok( sn_now_title() === 'Now — Signal & Noise', 'title is "Now — <site>"' );
 // ── Data + filter seam ────────────────────────────────────────────────
 ok( function_exists( 'sn_now_sections' ), 'sn_now_sections() is defined' );
 ok( 1 === preg_match( '/^\d{4}-\d{2}-\d{2}$/', sn_now_updated() ), 'sn_now_updated() is a YYYY-MM-DD date' );
+
+// v10.21.1: the updated date is filterable (sn_now_updated) so the plugin's
+// Now editor can supply the live save-stamp — completing the plugin seam
+// that sn_now_sections already had.
+$GLOBALS['__filters']['sn_now_updated'] = '2030-12-31';
+ok( '2030-12-31' === sn_now_updated(), 'sn_now_updated honors the sn_now_updated filter (plugin seam)' );
+$GLOBALS['__filters'] = array();
 $sections = sn_now_sections();
 ok( is_array( $sections ) && count( $sections ) >= 3, 'sn_now_sections() returns a non-empty section list' );
 $shape_ok = true;

@@ -310,6 +310,26 @@ body {
 	transition: color 0.3s ease;
 }
 
+/* Meta-nav line (Now · Accessibility · Colophon) — quiet rust links that
+   inherit the paragraph color (core has-text-color behavior); blood returns
+   on hover only. v10.21.1: replaces three separate loud text links. */
+.sn-footer__meta-nav a {
+	text-decoration: none;
+	border-bottom: 1px solid transparent;
+	transition: color 0.3s ease, border-color 0.2s ease;
+}
+
+.sn-footer__meta-nav a:hover {
+	color: var(--wp--preset--color--blood, #e00404);
+	border-bottom-color: currentColor;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.sn-footer__meta-nav a {
+		transition: none;
+	}
+}
+
 /* Social icons — minimum 44x44 touch target (WCAG) */
 .sn-footer .wp-block-social-link-anchor {
 	min-width: 44px;
