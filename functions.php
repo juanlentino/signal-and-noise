@@ -98,6 +98,8 @@ require_once __DIR__ . '/inc/gpc-json.php'; // v10.19.0: /.well-known/gpc.json v
 require_once __DIR__ . '/inc/opensearch.php'; // v10.19.0: /opensearch.xml virtual route + rel=search autodiscovery (search provider over /notes/?s=)
 require_once __DIR__ . '/inc/disable-smart-quotes.php'; // v10.13.2: straight quotes — disable wptexturize site-wide
 require_once __DIR__ . '/inc/seo-route-meta.php'; // v10.13.0: route descriptions + /about/uses meta for the plugin's sn_seo_* filters
+require_once __DIR__ . '/inc/now-data.php'; // v10.21.0: /now page data (owner edit surface + sn_now_sections filter seam)
+require_once __DIR__ . '/inc/page-now-template.php'; // v10.21.0: /now virtual route (indie-web now page)
 require_once __DIR__ . '/inc/colophon-meta.php'; // C2 (v10.5.0): [sn_build] live colophon line (theme+plugin version, git short SHA, deploy time)
 require_once __DIR__ . '/inc/availability.php'; // D5 (v10.9.0): [sn_availability] line in the /contact + /services heroes (reads sn_settings identity.availability)
 require_once __DIR__ . '/inc/contact-email.php'; // v10.16.0: [sn_email] scraper-resistant /contact aliases (client-side assembly, no plaintext/mailto in source)
