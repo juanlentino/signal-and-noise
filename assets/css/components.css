@@ -492,6 +492,43 @@
 }
 
 /* ============================================
+   PROVENANCE — "Extended by" backlink (v10.21.0)
+   The sub-pillar launch-kit markup closes each extension note with
+   <p class="sn-provenance-extended-by" style="…font-size:0.85rem">
+     Extended by <a href="/provenance/…">title →</a></p>
+   The kit's INLINE style owns font-size + margins (inline wins the
+   cascade — do not restate them here). This rule supplies the rest:
+   mono uppercase tracked lead-in in rust, blood link with the
+   pillar-link hover, thin top rule against the note body.
+   ============================================ */
+
+.sn-provenance-extended-by {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--rust, #666);
+	border-top: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+	padding-top: var(--wp--preset--spacing--20, 1rem);
+}
+
+.sn-provenance-extended-by a {
+	color: var(--wp--preset--color--blood, #e00404);
+	text-decoration: none;
+	border-bottom: 1px solid transparent;
+	transition: border-color 0.2s ease;
+}
+
+.sn-provenance-extended-by a:hover {
+	border-bottom-color: currentColor;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.sn-provenance-extended-by a {
+		transition: none;
+	}
+}
+
+/* ============================================
    PROVENANCE DIAGRAM (Section 2)
    Two side-by-side panels. Stacks below 640px (see responsive.css).
    Colours pulled from the theme palette via currentColor + accent class.
