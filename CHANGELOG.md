@@ -2,6 +2,18 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.21.1] - 2026-07-01 — Footer meta-nav treatment + /now updated-date plugin seam
+
+**Headline:** Owner feedback on v10.21.0's footer: three separate bare text links (Now / Accessibility / Colophon) beside the copyright read as clutter, rendered in the loud global blood link color. Root cause found in passing: the footer paragraphs' `textColor:"steel"` is a phantom slug — `steel` exists nowhere in theme.json or CSS, so the color silently never applied and links fell through to the global link color. Fix: ONE quiet meta-nav paragraph (`.sn-footer__meta-nav`) with middot separators, colored with the real `rust` slug (links inherit it via core's has-text-color behavior; a scoped hover rule brings blood back deliberately, reduced-motion guarded). The © line gets the same rust correction. Also completes the /now plugin seam: `sn_now_updated()` is now filterable (`sn_now_updated`) so the companion plugin's upcoming Now editor can supply its live save-stamp alongside the `sn_now_sections` content it was already able to feed.
+
+> **Why PATCH:** a visual-treatment fix + a filter-seam completion on an existing surface — no new user-visible capability.
+
+### Fixed
+- Footer: Now/Accessibility/Colophon folded into one middot-separated meta-nav line; phantom `steel` slug replaced with the real `rust` palette slug ([parts/footer.html](parts/footer.html), [assets/css/layout.css](assets/css/layout.css)); contract suite [tests/footer-meta-nav.php](tests/footer-meta-nav.php) guards against future phantom slugs.
+
+### Improvements
+- `sn_now_updated()` applies the `sn_now_updated` filter ([inc/now-data.php](inc/now-data.php)) — the plugin-editor seam, asserted in [tests/page-now.php](tests/page-now.php).
+
 ## [10.21.0] - 2026-07-01 — Interlinking batch: cited-by footer, /now, /accessibility, provenance backlink CSS
 
 **Headline:** Four owner-approved surfaces in one release. (1) `[sn_cited_by]` ([inc/cited-by.php](inc/cited-by.php)) — the reverse of related-notes: up to 5 published notes whose body links to the current note, mounted in [templates/single.html](templates/single.html) beside `[sn_related_notes]`; boundary-aware `/notes/<slug>` matching (a link to `/notes/craft-two` is not a citation of `craft`, mirrored in the plugin's v7.4.0 unlinked-mentions check); empty renders no chrome. Pingbacks are the native answer but deliberately dead here (XML-RPC + pings_open killed by the plugin), so this bounded reverse query is the complement. (2) `/now` — an indie-web now page as a /uses-style virtual-route trio with an owner-editable data file ([inc/now-data.php](inc/now-data.php)) carrying its own `updated` date so staleness is honest. (3) `/accessibility` — a statement page (WCAG 2.1 AA target, genuinely shipped measures, honest limitations, /contact feedback channel). (4) `.sn-provenance-extended-by` — the sub-pillar launch-kit backlink class finally has a treatment (mono-uppercase rust lead-in, blood link, hairline top rule; the kit's inline font-size deliberately left in charge of the cascade), so the July launch needs no theme release. Both new pages force `status_header(200)` (WP-REF gotcha #40) with behavioral tests, join llms.txt and the footer chrome, and register `sn_seo_route_meta` entries.
