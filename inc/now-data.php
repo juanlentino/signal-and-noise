@@ -21,10 +21,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * The date the /now content was last edited (rendered on the page).
  *
+ * Filterable (v10.21.1): the companion plugin's Now editor supplies its
+ * save-stamp here, completing the plugin seam sn_now_sections already had.
+ * The literal below is the FILE-content fallback date — keep it honest when
+ * editing sn_now_data() directly.
+ *
  * @return string YYYY-MM-DD.
  */
 function sn_now_updated() {
-	return '2026-07-01';
+	return (string) apply_filters( 'sn_now_updated', '2026-07-01' );
 }
 
 /**

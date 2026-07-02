@@ -40,20 +40,19 @@
 		<button type="button" class="sn-cmdk-trigger" aria-haspopup="dialog" aria-keyshortcuts="Control+K Meta+K /"><span class="sn-cmdk-trigger-label">Search</span><kbd class="sn-cmdk-hint" aria-hidden="true">&#8984;K</kbd></button>
 		<!-- /wp:html -->
 
-		<!-- wp:paragraph {"className":"sn-footer__now","style":{"typography":{"fontSize":"0.7rem"},"spacing":{"margin":{"top":"0","bottom":"0"}}},"textColor":"steel"} -->
-		<p class="sn-footer__now has-steel-color has-text-color" style="font-size:0.7rem;margin-top:0;margin-bottom:0"><a href="/now">Now</a></p>
+		<!-- v10.21.1: one quiet meta-nav line (was three separate paragraphs —
+		     three bare blood-red links beside the © read as clutter). textColor
+		     uses the REAL rust slug: the previous "steel" existed nowhere in
+		     theme.json, so the paragraphs silently fell back and the links took
+		     the global link color. With a real palette color the links inherit
+		     rust (core has-text-color behavior); .sn-footer__meta-nav a:hover
+		     in layout.css brings blood back deliberately. -->
+		<!-- wp:paragraph {"className":"sn-footer__meta-nav","style":{"typography":{"fontSize":"0.7rem"},"spacing":{"margin":{"top":"0","bottom":"0"}}},"textColor":"rust"} -->
+		<p class="sn-footer__meta-nav has-rust-color has-text-color" style="font-size:0.7rem;margin-top:0;margin-bottom:0"><a href="/now">Now</a> &middot; <a href="/accessibility">Accessibility</a> &middot; <a href="/colophon/">Colophon</a></p>
 		<!-- /wp:paragraph -->
 
-		<!-- wp:paragraph {"className":"sn-footer__accessibility","style":{"typography":{"fontSize":"0.7rem"},"spacing":{"margin":{"top":"0","bottom":"0"}}},"textColor":"steel"} -->
-		<p class="sn-footer__accessibility has-steel-color has-text-color" style="font-size:0.7rem;margin-top:0;margin-bottom:0"><a href="/accessibility">Accessibility</a></p>
-		<!-- /wp:paragraph -->
-
-		<!-- wp:paragraph {"className":"sn-footer__colophon","style":{"typography":{"fontSize":"0.7rem"},"spacing":{"margin":{"top":"0","bottom":"0"}}},"textColor":"steel"} -->
-		<p class="sn-footer__colophon has-steel-color has-text-color" style="font-size:0.7rem;margin-top:0;margin-bottom:0"><a href="/colophon/">Colophon</a></p>
-		<!-- /wp:paragraph -->
-
-		<!-- wp:paragraph {"style":{"typography":{"fontSize":"0.7rem"},"spacing":{"margin":{"top":"0","bottom":"0"}}},"textColor":"steel"} -->
-		<p class="has-steel-color has-text-color" style="font-size:0.7rem;margin-top:0;margin-bottom:0">© Juan Lentino [current_year]</p>
+		<!-- wp:paragraph {"style":{"typography":{"fontSize":"0.7rem"},"spacing":{"margin":{"top":"0","bottom":"0"}}},"textColor":"rust"} -->
+		<p class="has-rust-color has-text-color" style="font-size:0.7rem;margin-top:0;margin-bottom:0">© Juan Lentino [current_year]</p>
 		<!-- /wp:paragraph -->
 
 	</div>
