@@ -32,7 +32,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<!-- wp:list-item --><li>Type - Bebas Neue (display), DM Mono (body &amp; UI)</li><!-- /wp:list-item -->
 		<!-- wp:list-item --><li>Build - buildless: hand-written PHP, theme.json, vanilla ES5. No bundler.</li><!-- /wp:list-item -->
 		<!-- wp:list-item --><li>Hosting - Cloudways, Cloudflare CDN &amp; DNS</li><!-- /wp:list-item -->
-		<!-- wp:list-item --><li>Federation - notes federate via ActivityPub; follow @juanlentino@juanlentino.com from any fediverse account</li><!-- /wp:list-item -->
 		<!-- wp:list-item --><li>Tooling - companion plugin Signal &amp; Noise Tools for SEO, search &amp; ops</li><!-- /wp:list-item -->
 		<!-- wp:list-item --><li>AI assistance - engineered with Claude (Anthropic) as a pair-programmer</li><!-- /wp:list-item -->
 	</ul>
