@@ -460,8 +460,10 @@ mv wp-content/upgrade/sn-signal-and-noise-tools-git-backup wp-content/plugins/si
 
 Recap from [CLAUDE.md](../CLAUDE.md) and [docs/VERSIONING.md](VERSIONING.md):
 
-- **Caps OVERRIDE global:** patch cap 7 per minor, minor cap 5 per major.
-- **`7.5.6` → next minor would be `7.6`, which exceeds the 5-cap → rolls to `8.0.0`.**
+- **No caps** (dropped 2026-05-26 — they forced fictional majors; see [VERSIONING.md](VERSIONING.md)
+  for the audit that killed them). Patch and minor numbers grow as high as needed; MAJOR gates
+  on an *actual* SemVer break (removed/renamed public API, settings-schema change without
+  migration, WP-floor raise), never on counter math.
 - **What bumps:** code, CSS, FSE templates with structural changes, dbDelta migrations.
 - **What doesn't bump:** `docs/`, `CLAUDE.md`, content-only copy edits inside existing blocks, CHANGELOG-only commits.
 - **Commit format:** `vX.Y.Z: short summary`

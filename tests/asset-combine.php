@@ -157,6 +157,31 @@ ac_true( is_array( $info6b ), 'combine proceeds with quoted data:, https:, and a
 $built6b = is_array( $info6b ) ? (string) file_get_contents( $info6b['file'] ) : '';
 ac_true( false !== strpos( $built6b, "url('data:image/svg+xml;utf8,<svg/>')" ), 'quoted data: URI survives into the combined file' );
 
+// ─── Test 6c: percent-encoded dot-segments must trip the guard ────────
+// 2026-07-02 audit MEDIUM: the v10.21.8 guard allowlisted bare `%` (for
+// url(%23noise) inside the grain texture's encoded SVG data: payload), but
+// the WHATWG URL Standard treats %2e / %2e%2e as the literal dot-segments
+// . and .. — so url(%2e%2e/x.png) is a RELATIVE path the guard waved
+// through, baking a reference into uploads/sn-css/ that resolves wrong.
+// Only %23 (an encoded '#', location-independent fragment) is safe to
+// allow; every other %-start fails open to the per-file enqueues.
+echo "\nTest 6c: percent-encoded dot-segment url()s abort the combine\n";
+ac_reset_memo();
+file_put_contents( $css_dir . '/base.css', ".w { background: url(%2e%2e/fonts/x.woff2); }" );
+touch( $css_dir . '/base.css', time() + 300 );
+clearstatcache();
+ac_eq( null, sn_css_ensure_combined(), 'combine aborts on url(%2e%2e/…) — encoded ../' );
+ac_reset_memo();
+file_put_contents( $css_dir . '/base.css', ".w { background: url(%2E/fonts/x.woff2); }" );
+touch( $css_dir . '/base.css', time() + 360 );
+clearstatcache();
+ac_eq( null, sn_css_ensure_combined(), 'combine aborts on url(%2E/…) — encoded ./, case-insensitive' );
+ac_reset_memo();
+file_put_contents( $css_dir . '/base.css', $fixtures['base.css'] );
+touch( $css_dir . '/base.css', time() + 420 );
+clearstatcache();
+ac_true( is_array( sn_css_ensure_combined() ), 'url(%23noise) inside the grain data: payload still combines (the one legit %-start)' );
+
 // ─── Test 7: missing source → null signature (fail open) ──────────────
 echo "\nTest 7: missing source\n";
 ac_reset_memo();

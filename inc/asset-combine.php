@@ -140,19 +140,22 @@ function sn_css_ensure_combined() {
 			if ( false === $raw ) {
 				return null;
 			}
-			if ( preg_match( '~url\(\s*(?![\'"]?(?:data:|https?:|//|/|#|%))~i', $raw ) ) {
+			if ( preg_match( '~url\(\s*(?![\'"]?(?:data:|https?:|//|/|#|%23))~i', $raw ) ) {
 				// A relative url() would resolve against uploads/sn-css/,
 				// not the theme's css dir. No rewriter exists (no current
 				// source needs one) — fail open to the per-file enqueues.
 				// Allowed prefixes = location-independent references only:
 				// data:/https?:/protocol-relative/absolute, plus `#`
-				// (same-document SVG fragment, not a file fetch) and `%`
-				// (percent-encoded content — url(%23noise) INSIDE an
-				// encoded SVG data: payload is what base.css's grain
-				// texture contains; it bit v10.21.7 because the guard
-				// scans every url( occurrence, including ones inside an
-				// already-safe data: URI). Real relative paths start with
-				// letters or dots and still trip the guard.
+				// (same-document SVG fragment, not a file fetch) and `%23`
+				// (the ENCODED '#' — url(%23noise) INSIDE an encoded SVG
+				// data: payload is what base.css's grain texture contains;
+				// it bit v10.21.7 because the guard scans every url(
+				// occurrence, including ones inside an already-safe data:
+				// URI). %23 specifically, NOT bare `%`: the WHATWG URL
+				// Standard normalizes %2e/%2e%2e to the dot-segments ./..
+				// so a bare-% allowance waves through percent-encoded
+				// RELATIVE paths (2026-07-02 audit). Any other %-start
+				// fails open — safe by contract.
 				// v10.21.7 history: the optional quote must live INSIDE
 				// the lookahead — outside it backtracks to empty and the
 				// guard false-positives on every quoted url().
@@ -160,7 +163,11 @@ function sn_css_ensure_combined() {
 			}
 			$css .= '/* ' . $rel . " */\n" . sn_css_minify( $raw ) . "\n";
 		}
-		$tmp = $target . '.tmp';
+		// PID-suffixed so two concurrent cold-cache builders never share a
+		// temp path (identical bytes either way, but interleaved writes to
+		// one shared .tmp are wasted I/O; the glob prune below only matches
+		// *.css so orphaned temps are never collected as build artifacts).
+		$tmp = $target . '.' . getmypid() . '.tmp';
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- direct write + atomic rename into uploads; WP_Filesystem adds credential-prompt failure modes for zero benefit on this same-host path.
 		if ( false === file_put_contents( $tmp, $css ) ) {
 			return null;
@@ -175,6 +182,15 @@ function sn_css_ensure_combined() {
 			if ( $old !== $target ) {
 				// phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink -- pruning our own previous-hash artifacts.
 				unlink( $old );
+			}
+		}
+		foreach ( (array) glob( $dir . '/sn-styles-*.tmp' ) as $orphan ) {
+			// Crash-orphaned temps only — age-gated so a concurrent
+			// builder's LIVE temp is never deleted mid-write (that would
+			// fail its rename and force a needless per-file fallback).
+			if ( filemtime( $orphan ) < time() - 3600 ) {
+				// phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink -- cleanup of our own crash-orphaned temp files.
+				unlink( $orphan );
 			}
 		}
 	}

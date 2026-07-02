@@ -2,6 +2,20 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.21.9] - 2026-07-02 — Combined mode: restore the five stylesheets that depended on sn-components
+
+**Headline:** The first CMA diff-audit of the v10.21.3–v10.21.8 arc found the combined-CSS branch registered only `sn-styles`, while five unchanged sibling modules — keyboard-nav (every single post) plus the /now, /index, /accessibility, and /uses routes — still hard-depend on `sn-components`, a handle only the fallback branch registers. WordPress silently drops a handle whose dependency was never registered (no `<link>`, just a `_doing_it_wrong()` nobody sees), so all five stylesheets vanished on production whenever the combiner worked as designed — verified live before fixing (`/now` rendered with no page CSS). The fix is core's own alias pattern: one false-src `sn-components` registration depending on `sn-styles`, and every dependent resolves again with zero call-site changes. A classic blast-radius miss: the diff's own tests were green; the bug lived where new code met unchanged code.
+
+> **Why PATCH:** restores the v10.21.6 feature's intended behavior at five pre-existing call sites; no API change.
+
+### Fixed
+- Combined mode registers `sn-components` as a false-src alias of `sn-styles`, so `sn-keyboard-nav`, `sn-now`, `sn-index`, `sn-a11y`, and `sn-uses` print again (`inc/assets-frontend.php`). New suite `tests/assets-frontend.php` exercises BOTH enqueue branches — the combined branch had zero coverage; every prior suite only ever reached the fallback.
+- url() guard: bare `%` allowance narrowed to `%23` (encoded `#`, the grain texture's one legit case). The WHATWG URL Standard normalizes `%2e`/`%2e%2e` to `.`/`..`, so bare-`%` waved percent-encoded RELATIVE paths into the combined file instead of failing open (`inc/asset-combine.php`; fixtures for `url(%2e%2e/…)` + `url(%2E/…)` in `tests/asset-combine.php`).
+- Phantom `steel` color slug (the `rust` swatch's display name typed as its slug) replaced with `rust` in the six occurrences the v10.21.1 footer fix never covered: `patterns/colophon.php` ×1, `templates/page-services.html` ×4, `templates/page-music.html` ×1. New suite `tests/color-slug-integrity.php` validates EVERY named-color reference in templates/parts/patterns against the theme.json palette — closes the class, not the instance.
+
+### Improvements
+- Combiner temp file is PID-suffixed (concurrent cold-cache builders never share a temp path) with age-gated cleanup of crash-orphaned temps (`inc/asset-combine.php`).
+
 ## [10.21.8] - 2026-07-02 — Combiner url() guard: allow fragment + percent-encoded references
 
 **Headline:** The v10.21.7 guard fix was still one prefix short: base.css's grain texture embeds an inline SVG whose encoded payload contains `url(%23noise)` (a percent-encoded `url(#noise)` filter reference), and the guard scans every `url(` occurrence, including ones inside an already-safe `data:` URI. Production stayed on the per-file fallback and the combined file was never built. The guard now also allows `#` (same-document SVG fragments, not file fetches) and `%` (percent-encoded payload content); real relative paths start with letters or dots and still trip it. Validated against the five actual production stylesheets before shipping, not just constructed cases.

@@ -107,6 +107,16 @@ add_action( 'wp_enqueue_scripts', function() {
 	$combined = function_exists( 'sn_css_ensure_combined' ) ? sn_css_ensure_combined() : null;
 	if ( null !== $combined ) {
 		wp_enqueue_style( 'sn-styles', $combined['url'], array(), $combined['ver'] );
+		// Alias for the five sibling modules (keyboard-nav + the
+		// now/index/accessibility/uses routes) that declare a hard
+		// dependency on 'sn-components' — a handle only the fallback
+		// branch registers. WP_Dependencies silently drops any handle
+		// whose dependency is unregistered (no <link>, only a
+		// _doing_it_wrong), so without this alias every one of those
+		// stylesheets vanished in combined mode (shipped v10.21.6–.8).
+		// A false src makes this a pure alias per _WP_Dependency: it
+		// prints nothing itself and resolves dependents to sn-styles.
+		wp_register_style( 'sn-components', false, array( 'sn-styles' ) );
 		return;
 	}
 	wp_enqueue_style( 'sn-base',       get_theme_file_uri( 'assets/css/base.css' ),       array(),                  sn_asset_ver( 'assets/css/base.css' ) );
