@@ -110,7 +110,9 @@ function sn_css_combine_signature() {
  * @return array{file: string, url: string, ver: string}|null
  */
 function sn_css_ensure_combined() {
-	if ( isset( $GLOBALS['sn_css_combined_memo'] ) ) {
+	// array_key_exists, not isset: a memoized NULL (fallback mode) must
+	// also short-circuit — isset() reports false for stored nulls.
+	if ( array_key_exists( 'sn_css_combined_memo', $GLOBALS ) ) {
 		return $GLOBALS['sn_css_combined_memo'];
 	}
 	$GLOBALS['sn_css_combined_memo'] = null;
@@ -138,10 +140,16 @@ function sn_css_ensure_combined() {
 			if ( false === $raw ) {
 				return null;
 			}
-			if ( preg_match( '~url\(\s*[\'"]?(?!data:|https?:|//|/)~i', $raw ) ) {
+			if ( preg_match( '~url\(\s*(?![\'"]?(?:data:|https?:|//|/))~i', $raw ) ) {
 				// A relative url() would resolve against uploads/sn-css/,
 				// not the theme's css dir. No rewriter exists (no current
 				// source needs one) — fail open to the per-file enqueues.
+				// v10.21.7: the optional quote lives INSIDE the lookahead.
+				// The v10.21.6 shape ~url\(\s*['"]?(?!...)~ let the quote
+				// backtrack to empty so the lookahead tested the quote
+				// character itself — the guard false-positived on EVERY
+				// quoted url() (data:, https:, absolute), which is why
+				// production never built a combined file.
 				return null;
 			}
 			$css .= '/* ' . $rel . " */\n" . sn_css_minify( $raw ) . "\n";

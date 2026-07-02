@@ -2,7 +2,15 @@
 
 All notable changes to Signal & Noise are documented here.
 
-## [10.21.6] - 2026-07-02 — Theme-owned combined + minified stylesheet delivery
+## [10.21.7] - 2026-07-02 — Fix the combiner's url() guard (false positive on every quoted url)
+
+**Headline:** v10.21.6's relative-url() guard let its optional quote backtrack to empty, so the negative lookahead tested the quote character itself and the guard fired on EVERY quoted url() — including the data: URIs live components.css actually contains. Production silently fell back to per-file enqueues (the fail-open contract worked exactly as designed; the site never lost styling) and no combined file was ever built. The quote now lives inside the lookahead; quoted data:/https:/absolute urls combine, relative urls still abort. Found via the computed-hash probe returning 404 on the expected uploads URL.
+
+> **Why PATCH:** regex fix restoring the v10.21.6 feature's intended behavior; no API change.
+
+### Fixed
+- `sn_css_ensure_combined()` url() guard regex: `url\(\s*(?!['"]?(?:data:|https?:|//|/))` (quote inside the lookahead, no backtracking hole). Regression fixtures: quoted data:/https:/absolute urls in a source must combine; relative urls (quoted or bare) must still fail open (`tests/asset-combine.php` Test 6b).
+- Memoized fallback verdicts now short-circuit correctly (`array_key_exists`, not `isset` — stored nulls report false to isset).
 
 **Headline:** The front-end loader has documented since the modular-CSS split that "Breeze will concatenate them in production anyway." It never did: the live site served six blocking stylesheets totaling ~100.4 KB, which is what Performance Lab's blocking-assets audit was flagging (source-verified thresholds: count > 10 OR bytes > 100,000, and the site tripped the SIZE half by 0.3%). The theme now owns its production delivery: one combined, lightly minified stylesheet built at runtime into uploads/sn-css/ (hash-named per source mtimes, so releases self-bust every cache layer), with a strict fail-open contract back to the per-file enqueues.
 
