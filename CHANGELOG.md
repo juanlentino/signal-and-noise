@@ -2,6 +2,17 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.22.0] - 2026-07-02 — Automatic cache purges: updates and Styles saves now ride the full chain
+
+**Headline:** Installing v10.21.9 and deleting one Additional-CSS rule left three cache layers (Breeze file cache → Varnish → Cloudflare) serving a morning-stale render through four manual layer-by-layer purges — and each outer purge re-cached the still-stale inner layer. The coordinated `sn_purge_all_caches()` chain already existed, in the right inner→outer order, wired to the admin-bar button; nothing fired it automatically. Now the two events that change rendered HTML outside a post save do: our own theme/plugin update completing triggers the full chain (once per request, Site Editor overrides untouched), and every Site Editor Styles save — including Additional CSS, which rides no other purge path — triggers a focused origin + CDN purge. The multi-console purge dance is gone.
+
+> **Why MINOR:** new user-visible capability (automatic purge behavior on two new triggers); no API change, no breaking change.
+
+### New
+- `sn_auto_purge_on_update()` on `upgrader_process_complete`: full-chain purge when the Signal & Noise theme or the signal-and-noise-tools plugin finishes updating (`template_overrides => false` — an update never nukes Site Editor edits; debounced once per request for batch updates). Runs in the updating request after new files land — safe for old-code execution, unlike migrations (`inc/template-maintenance.php`).
+- `sn_auto_purge_on_styles_save()` on `save_post_wp_global_styles`: focused Breeze + Varnish + Cloudflare purge on every Site Editor Styles save (the `wp_global_styles` CPT is invisible to Breeze's own post-save purging).
+- New suite `tests/template-maintenance.php`: trigger registration, full-chain assertions, debounce, negatives (foreign themes/plugins, installs, translations, malformed hook_extra), and the focused Styles-save profile.
+
 ## [10.21.9] - 2026-07-02 — Combined mode: restore the five stylesheets that depended on sn-components
 
 **Headline:** The first CMA diff-audit of the v10.21.3–v10.21.8 arc found the combined-CSS branch registered only `sn-styles`, while five unchanged sibling modules — keyboard-nav (every single post) plus the /now, /index, /accessibility, and /uses routes — still hard-depend on `sn-components`, a handle only the fallback branch registers. WordPress silently drops a handle whose dependency was never registered (no `<link>`, just a `_doing_it_wrong()` nobody sees), so all five stylesheets vanished on production whenever the combiner worked as designed — verified live before fixing (`/now` rendered with no page CSS). The fix is core's own alias pattern: one false-src `sn-components` registration depending on `sn-styles`, and every dependent resolves again with zero call-site changes. A classic blast-radius miss: the diff's own tests were green; the bug lived where new code met unchanged code.
