@@ -2,6 +2,15 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.21.3] - 2026-07-02 — Colophon: federation line
+
+**Headline:** The colophon's facts list gains one line: the site federates via ActivityPub, with the @juan@juanlentino.com handle for anyone who wants to follow from the fediverse. Sole reader-facing chrome of the ActivityPub adoption (by design: no footer icon, no follow widget).
+
+> **Why PATCH:** single template-pattern content addition, no code or style change.
+
+### New
+- Colophon facts list: "Federation" line with the fediverse handle (`patterns/colophon.php`).
+
 ## [10.21.2] - 2026-07-01 — Footer meta-nav: icons instead of text labels
 
 **Headline:** Owner request on the v10.21.1 footer line: icons instead of the Now / Accessibility / Colophon text labels, middot separators kept. Three mono stroke glyphs in the brutalist vocabulary — a clock for Now, the standard accessibility figure, and a pilcrow (a printer's mark — literally what a colophon is). Because "Now" and "Colophon" have no universal iconography, every link carries an aria-label and a hover title, the SVGs are decorative (aria-hidden, unfocusable), and each link keeps a 28px hit area (WCAG 2.5.8 target size). The markup rides a `wp:html` block (paragraph rich-text would strip inline SVG); icons draw with `currentColor` so the rust base + blood hover come from the same tokens as everything else.
