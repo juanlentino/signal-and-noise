@@ -55,7 +55,7 @@ mkdir( $css_dir, 0777, true );
 $fixtures = array(
 	'base.css'            => "/* base comment */\nbody {\n\tcolor : red ;\n}\n",
 	'layout.css'          => ".grid {\n  width: calc(100% - 20px);\n}\n",
-	'components.css'      => "/* big\n multiline\n comment */\n.card { margin : 0 ; }\n",
+	'components.css'      => "/* big\n multiline\n comment */\n.card { margin : 0 ; }\n.icon { mask: url('data:image/svg+xml;utf8,<svg/>'); }\n.hero { background: url(\"https://juanlentino.com/x.png\"); }\n.badge { background: url('/wp-content/uploads/y.png'); }\n",
 	'responsive.css'      => "@media (max-width: 600px) {\n  .card { margin: 4px; }\n}\n",
 	'command-palette.css' => ".sn-cmdk {\n  display: none;\n}\n",
 );
@@ -141,6 +141,21 @@ $guarded = sn_css_ensure_combined();
 ac_eq( null, $guarded, 'combine aborts on a relative url() reference' );
 file_put_contents( $css_dir . '/base.css', $fixtures['base.css'] );
 clearstatcache();
+
+// ─── Test 6b: QUOTED safe url()s must NOT trip the guard ──────────────
+// v10.21.7 regression: the v10.21.6 guard regex let its optional-quote
+// backtrack to empty, so the lookahead tested the QUOTE character and the
+// guard false-positived on every quoted url() — live components.css has
+// quoted data: URIs, so production silently fell back to per-file
+// enqueues and the combined file was never built.
+echo "\nTest 6b: quoted data:/https:/absolute url()s combine fine\n";
+ac_reset_memo();
+touch( $css_dir . '/base.css', time() + 240 );
+clearstatcache();
+$info6b = sn_css_ensure_combined();
+ac_true( is_array( $info6b ), 'combine proceeds with quoted data:, https:, and absolute url()s present' );
+$built6b = is_array( $info6b ) ? (string) file_get_contents( $info6b['file'] ) : '';
+ac_true( false !== strpos( $built6b, "url('data:image/svg+xml;utf8,<svg/>')" ), 'quoted data: URI survives into the combined file' );
 
 // ─── Test 7: missing source → null signature (fail open) ──────────────
 echo "\nTest 7: missing source\n";
