@@ -310,18 +310,42 @@ body {
 	transition: color 0.3s ease;
 }
 
-/* Meta-nav line (Now · Accessibility · Colophon) — quiet rust links that
-   inherit the paragraph color (core has-text-color behavior); blood returns
-   on hover only. v10.21.1: replaces three separate loud text links. */
+/* Meta-nav icons (Now · Accessibility · Colophon) — quiet rust stroke
+   glyphs, blood on hover only. v10.21.1 replaced three loud text links
+   with one rust line; v10.21.2 swaps the labels for mono icons (owner
+   request), middot separators kept. Each link keeps a >=24px hit area
+   (WCAG 2.5.8 target size); accessible names ride aria-label. */
+.sn-footer__meta-nav {
+	display: flex;
+	align-items: center;
+	gap: 0.15rem;
+	color: var(--wp--preset--color--rust, #666);
+	font-size: 0.7rem;
+}
+
 .sn-footer__meta-nav a {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 28px;
+	min-height: 28px;
+	color: inherit;
 	text-decoration: none;
-	border-bottom: 1px solid transparent;
-	transition: color 0.3s ease, border-color 0.2s ease;
+	transition: color 0.3s ease;
 }
 
 .sn-footer__meta-nav a:hover {
 	color: var(--wp--preset--color--blood, #e00404);
-	border-bottom-color: currentColor;
+}
+
+.sn-footer__meta-nav svg {
+	width: 15px;
+	height: 15px;
+	display: block;
+}
+
+.sn-footer__meta-sep {
+	opacity: 0.6;
 }
 
 @media (prefers-reduced-motion: reduce) {
