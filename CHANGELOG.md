@@ -2,6 +2,19 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.21.6] - 2026-07-02 — Theme-owned combined + minified stylesheet delivery
+
+**Headline:** The front-end loader has documented since the modular-CSS split that "Breeze will concatenate them in production anyway." It never did: the live site served six blocking stylesheets totaling ~100.4 KB, which is what Performance Lab's blocking-assets audit was flagging (source-verified thresholds: count > 10 OR bytes > 100,000, and the site tripped the SIZE half by 0.3%). The theme now owns its production delivery: one combined, lightly minified stylesheet built at runtime into uploads/sn-css/ (hash-named per source mtimes, so releases self-bust every cache layer), with a strict fail-open contract back to the per-file enqueues.
+
+> **Why PATCH:** delivery/perf mechanics; zero visual or API change.
+
+### New
+- `inc/asset-combine.php`: `sn_css_combine_sources()` / `sn_css_minify()` / `sn_css_combine_signature()` / `sn_css_ensure_combined()`. Safe-transform minifier (comments, whitespace runs, brace/semicolon trims; never touches colons, commas, or calc() spacing). Relative-url() build guard fails open (moving CSS to uploads/ would break relative references; no current source has any). Stale hash siblings pruned on rebuild. Suite: `tests/asset-combine.php`.
+
+### Changed
+- `inc/assets-frontend.php`: enqueues the single combined `sn-styles` handle when available; the original four-file cascade remains as the verbatim fallback.
+- `inc/command-palette.php`: palette CSS rides the combined file; its separate enqueue only fires in fallback mode.
+
 ## [10.21.5] - 2026-07-02 — Colophon: remove the federation line (ActivityPub adoption declined)
 
 **Headline:** The owner reassessed the ActivityPub adoption before anything federated and declined it: no fediverse presence, no need for the colophon line advertising a handle. The line added in v10.21.3 (corrected in v10.21.4) is removed; the colophon facts list returns to its pre-federation shape. The site keeps every collateral improvement from the arc (analytics UA classifiers, hardening fixes live in the companion plugin).

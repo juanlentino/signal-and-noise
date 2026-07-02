@@ -88,20 +88,27 @@ add_action( 'wp_head', function() {
 }, 50 );
 
 /**
- * Performance: Load the four modular stylesheets in cascade order.
- * Critical CSS (above) covers first paint; these fill in the rest.
+ * Performance: serve the modular stylesheets as ONE combined + minified
+ * file (inc/asset-combine.php). Critical CSS (above) covers first paint;
+ * the combined sheet fills in the rest. v10.21.6: the old comment here
+ * assumed "Breeze will concatenate them in production anyway" — it never
+ * did (Performance Lab audit, 2026-07-02), so the theme owns it now.
  *
- * Loaded normally (not deferred) because Breeze minification strips
- * the onload handler from deferred stylesheets, and Breeze will
- * concatenate them in production anyway.
- *
- * Dependency chain enforces load order: base → layout → components
- * → responsive. Responsive @media rules must come last so they can
- * override the earlier layout/component defaults. (The forms.css
- * stylesheet was CF7-only and removed in v10.12.2 with the contact
- * form; keep this list in sync with inc/setup.php add_editor_style.)
+ * Fail-open: when the combiner returns null (missing source, unwritable
+ * uploads, relative url() guard), fall back to the original four separate
+ * files in cascade order: base → layout → components → responsive.
+ * Responsive @media rules must come last so they can override the earlier
+ * layout/component defaults. (Keep the fallback list in sync with
+ * sn_css_combine_sources() and inc/setup.php add_editor_style; the
+ * command-palette stylesheet rides the combined file too — its fallback
+ * enqueue lives in inc/command-palette.php.)
  */
 add_action( 'wp_enqueue_scripts', function() {
+	$combined = function_exists( 'sn_css_ensure_combined' ) ? sn_css_ensure_combined() : null;
+	if ( null !== $combined ) {
+		wp_enqueue_style( 'sn-styles', $combined['url'], array(), $combined['ver'] );
+		return;
+	}
 	wp_enqueue_style( 'sn-base',       get_theme_file_uri( 'assets/css/base.css' ),       array(),                  sn_asset_ver( 'assets/css/base.css' ) );
 	wp_enqueue_style( 'sn-layout',     get_theme_file_uri( 'assets/css/layout.css' ),     array( 'sn-base' ),       sn_asset_ver( 'assets/css/layout.css' ) );
 	wp_enqueue_style( 'sn-components', get_theme_file_uri( 'assets/css/components.css' ), array( 'sn-layout' ),     sn_asset_ver( 'assets/css/components.css' ) );
