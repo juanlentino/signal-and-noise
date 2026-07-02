@@ -2,7 +2,14 @@
 
 All notable changes to Signal & Noise are documented here.
 
-## [10.21.7] - 2026-07-02 — Fix the combiner's url() guard (false positive on every quoted url)
+## [10.21.8] - 2026-07-02 — Combiner url() guard: allow fragment + percent-encoded references
+
+**Headline:** The v10.21.7 guard fix was still one prefix short: base.css's grain texture embeds an inline SVG whose encoded payload contains `url(%23noise)` (a percent-encoded `url(#noise)` filter reference), and the guard scans every `url(` occurrence, including ones inside an already-safe `data:` URI. Production stayed on the per-file fallback and the combined file was never built. The guard now also allows `#` (same-document SVG fragments, not file fetches) and `%` (percent-encoded payload content); real relative paths start with letters or dots and still trip it. Validated against the five actual production stylesheets before shipping, not just constructed cases.
+
+> **Why PATCH:** one-character-class guard calibration; restores the v10.21.6 feature's intended behavior.
+
+### Fixed
+- `sn_css_ensure_combined()` url() guard: exclusion set extended to `data:|https?:|//|/|#|%`. Regression fixture embeds the real grain-texture pattern (encoded SVG payload with internal `url(%23noise)`) plus a bare `url(#fragment)` (`tests/asset-combine.php`).
 
 **Headline:** v10.21.6's relative-url() guard let its optional quote backtrack to empty, so the negative lookahead tested the quote character itself and the guard fired on EVERY quoted url() — including the data: URIs live components.css actually contains. Production silently fell back to per-file enqueues (the fail-open contract worked exactly as designed; the site never lost styling) and no combined file was ever built. The quote now lives inside the lookahead; quoted data:/https:/absolute urls combine, relative urls still abort. Found via the computed-hash probe returning 404 on the expected uploads URL.
 
