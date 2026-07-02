@@ -154,6 +154,88 @@ add_action( 'after_switch_theme', function() {
 } );
 
 /**
+ * Automatic purge triggers (v10.22.0).
+ *
+ * 2026-07-02 incident: installing theme v10.21.9 plus deleting a Styles
+ * Additional-CSS rule left three cache layers (Breeze file cache → Varnish
+ * → Cloudflare) serving a morning-stale render through four manual
+ * layer-by-layer purges — sn_purge_all_caches() had the whole chain in the
+ * right order but nothing fired it. These triggers close the gap: the two
+ * events that actually change rendered HTML outside a post save (our own
+ * package updates, Site Editor Styles saves) now ride the chain
+ * automatically.
+ */
+
+/**
+ * Full-chain purge after OUR theme or companion plugin finishes updating.
+ *
+ * Fires on upgrader_process_complete, which runs in the updating request
+ * AFTER the new files land — old code runs this hook (the theme being
+ * replaced was loaded at request start), which is fine for a purge: it
+ * does not depend on new-version semantics, unlike migrations
+ * (WP-REFERENCE: install hooks cannot self-observe).
+ *
+ * @param object $upgrader   WP_Upgrader instance (unused).
+ * @param mixed  $hook_extra Package descriptor from the upgrader.
+ */
+function sn_auto_purge_on_update( $upgrader, $hook_extra ) {
+	if ( ! is_array( $hook_extra ) || 'update' !== ( $hook_extra['action'] ?? '' ) ) {
+		return;
+	}
+	$ours = false;
+	$type = $hook_extra['type'] ?? '';
+	if ( 'theme' === $type ) {
+		$themes = (array) ( $hook_extra['themes'] ?? array() );
+		$ours   = in_array( get_stylesheet(), $themes, true ) || in_array( get_template(), $themes, true );
+	} elseif ( 'plugin' === $type ) {
+		foreach ( (array) ( $hook_extra['plugins'] ?? array() ) as $file ) {
+			if ( 0 === strpos( (string) $file, 'signal-and-noise-tools/' ) ) {
+				$ours = true;
+				break;
+			}
+		}
+	}
+	if ( ! $ours ) {
+		return;
+	}
+	// Once per request: a batch update (theme + plugin together) fires
+	// upgrader_process_complete per package. A global, not a static, so
+	// the standalone tests can reset it between scenarios (the
+	// sn_css_combined_memo convention).
+	if ( ! empty( $GLOBALS['sn_auto_purge_done'] ) ) {
+		return;
+	}
+	$GLOBALS['sn_auto_purge_done'] = true;
+	// template_overrides=false — an update must never nuke Site Editor
+	// edits as a side effect (matches the dashboard button semantics).
+	sn_purge_all_caches( array( 'template_overrides' => false ) );
+}
+add_action( 'upgrader_process_complete', 'sn_auto_purge_on_update', 10, 2 );
+
+/**
+ * Focused origin-HTML + CDN purge when Site Editor global styles save —
+ * this includes Additional CSS edits, which change every page's rendered
+ * <style> block but ride NO other purge path (Breeze only watches post
+ * saves; the wp_global_styles CPT is invisible to it).
+ *
+ * Deliberately narrow: no object-cache flush, no transient prune, no
+ * update_themes churn, and never template overrides — a Styles save
+ * changes rendered CSS, nothing else.
+ *
+ * @param int    $post_id Global-styles post ID (unused).
+ * @param object $post    Post object (unused).
+ */
+function sn_auto_purge_on_styles_save( $post_id, $post ) {
+	sn_purge_all_caches( array(
+		'object_cache'       => false,
+		'sn_transients'      => false,
+		'template_overrides' => false,
+		'repopulate'         => false,
+	) );
+}
+add_action( 'save_post_wp_global_styles', 'sn_auto_purge_on_styles_save', 10, 2 );
+
+/**
  * Companion-plugin contract listeners (since v8.2.0).
  *
  * Two filter contracts owned by this module:
