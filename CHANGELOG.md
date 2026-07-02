@@ -2,6 +2,15 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.21.2] - 2026-07-01 — Footer meta-nav: icons instead of text labels
+
+**Headline:** Owner request on the v10.21.1 footer line: icons instead of the Now / Accessibility / Colophon text labels, middot separators kept. Three mono stroke glyphs in the brutalist vocabulary — a clock for Now, the standard accessibility figure, and a pilcrow (a printer's mark — literally what a colophon is). Because "Now" and "Colophon" have no universal iconography, every link carries an aria-label and a hover title, the SVGs are decorative (aria-hidden, unfocusable), and each link keeps a 28px hit area (WCAG 2.5.8 target size). The markup rides a `wp:html` block (paragraph rich-text would strip inline SVG); icons draw with `currentColor` so the rust base + blood hover come from the same tokens as everything else.
+
+> **Why PATCH:** a visual treatment change on an existing surface — no new capability.
+
+### Changed
+- Footer meta-nav: text labels → aria-labelled mono icons ([parts/footer.html](parts/footer.html), [assets/css/layout.css](assets/css/layout.css)); contract suite [tests/footer-meta-nav.php](tests/footer-meta-nav.php) rewritten for the icon form (accessible-name + hit-area + currentColor assertions).
+
 ## [10.21.1] - 2026-07-01 — Footer meta-nav treatment + /now updated-date plugin seam
 
 **Headline:** Owner feedback on v10.21.0's footer: three separate bare text links (Now / Accessibility / Colophon) beside the copyright read as clutter, rendered in the loud global blood link color. Root cause found in passing: the footer paragraphs' `textColor:"steel"` is a phantom slug — `steel` exists nowhere in theme.json or CSS, so the color silently never applied and links fell through to the global link color. Fix: ONE quiet meta-nav paragraph (`.sn-footer__meta-nav`) with middot separators, colored with the real `rust` slug (links inherit it via core's has-text-color behavior; a scoped hover rule brings blood back deliberately, reduced-motion guarded). The © line gets the same rust correction. Also completes the /now plugin seam: `sn_now_updated()` is now filterable (`sn_now_updated`) so the companion plugin's upcoming Now editor can supply its live save-stamp alongside the `sn_now_sections` content it was already able to feed.
