@@ -90,12 +90,19 @@ function sn_cmdk_enqueue() {
 	if ( ! sn_cmdk_enabled() ) {
 		return;
 	}
-	wp_enqueue_style(
-		'sn-command-palette',
-		get_theme_file_uri( 'assets/css/command-palette.css' ),
-		array( 'sn-components' ),
-		sn_asset_ver( 'assets/css/command-palette.css' )
-	);
+	// v10.21.6: the combined stylesheet (inc/asset-combine.php) already
+	// carries command-palette.css; only enqueue the separate file in the
+	// combiner's fail-open fallback mode (where the sn-components
+	// dependency handle also exists again).
+	$combined = function_exists( 'sn_css_ensure_combined' ) ? sn_css_ensure_combined() : null;
+	if ( null === $combined ) {
+		wp_enqueue_style(
+			'sn-command-palette',
+			get_theme_file_uri( 'assets/css/command-palette.css' ),
+			array( 'sn-components' ),
+			sn_asset_ver( 'assets/css/command-palette.css' )
+		);
+	}
 	wp_enqueue_script(
 		'sn-command-palette',
 		get_theme_file_uri( 'assets/js/command-palette.js' ),
