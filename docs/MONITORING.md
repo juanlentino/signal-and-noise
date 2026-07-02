@@ -118,6 +118,17 @@ Silence flips the heartbeat to an incident: site down, PHP dead, or
 WP-Cron stuck — the failure class Tier 2's outside-in probes share
 with this tier, plus the cron-only deaths they can't see.
 
+### In-admin status panel (plugin v8.2.0)
+
+The same monitor + heartbeat states render natively inside wp-admin:
+the "S&N Uptime" dashboard widget and a "Better Stack status" panel
+on Connections → Webhooks. Powered by a read-scoped Uptime API token
+pasted next to the heartbeat URL (or `SN_BETTERSTACK_API_TOKEN` in
+wp-config.php); data flows through the readonly
+`signal-noise/uptime-status` ability with a 90-second server-side
+cache. No iframe, no embed — and deliberately no public route: a
+status page served by the site it reports on dies with the site.
+
 ### Notification routing
 
 Better Stack alerts via e-mail and its mobile app push out of the
