@@ -1,15 +1,13 @@
 <?php
 /**
- * Contract tests for the footer meta-nav (v10.21.1).
+ * Contract tests for the footer meta-nav (v10.21.1, icons v10.21.2).
  *
- * Owner feedback on v10.21.0: three separate red text links (Now /
- * Accessibility / Colophon) beside the copyright read as clutter. Fix:
- * ONE quiet meta-nav paragraph with middot separators, colored with the
- * REAL `rust` palette slug (the previous `steel` slug is a phantom — it
- * exists nowhere in theme.json or CSS, so the paragraphs silently fell
- * back and the links took the loud global blood link color). With a real
- * palette color, core's has-text-color behavior makes the links inherit
- * rust; a scoped hover rule brings blood back deliberately.
+ * v10.21.1 folded Now/Accessibility/Colophon into one quiet rust line and
+ * purged the phantom `steel` slug. v10.21.2 (owner request): the three text
+ * labels become mono stroke ICONS (clock / accessibility figure / pilcrow),
+ * middot separators kept. Icon-only links MUST each carry an aria-label (and
+ * a title tooltip) — "Now" and "Colophon" have no universal glyph, so the
+ * accessible name is the only discoverable label.
  *
  * @since theme v10.21.1
  */
@@ -21,32 +19,44 @@ function ok( $c, $m ) { global $pass, $fail; if ( $c ) { $pass++; echo "PASS: $m
 $footer = file_get_contents( __DIR__ . '/../parts/footer.html' );
 ok( is_string( $footer ) && '' !== $footer, 'parts/footer.html readable' );
 
-// ── ONE meta-nav paragraph carries all three links, middot-separated ──
-ok( 1 === substr_count( $footer, 'sn-footer__meta-nav' ) * 0 + ( false !== strpos( $footer, 'class="sn-footer__meta-nav' ) ? 1 : 0 ), 'meta-nav paragraph present' );
-$nav_start = strpos( $footer, '<p class="sn-footer__meta-nav' );
-$nav_end   = false !== $nav_start ? strpos( $footer, '</p>', $nav_start ) : false;
-$nav       = ( false !== $nav_start && false !== $nav_end ) ? substr( $footer, $nav_start, $nav_end - $nav_start ) : '';
+// ── ONE meta-nav <nav> carries all three icon links, middot-separated ──
+$nav_start = strpos( $footer, '<nav class="sn-footer__meta-nav"' );
+ok( false !== $nav_start, 'meta-nav is a real <nav> element' );
+$nav_end = false !== $nav_start ? strpos( $footer, '</nav>', $nav_start ) : false;
+$nav     = ( false !== $nav_start && false !== $nav_end ) ? substr( $footer, $nav_start, $nav_end - $nav_start ) : '';
+ok( false !== strpos( $nav, 'aria-label="Site meta"' ), 'nav landmark is labelled' );
 ok( false !== strpos( $nav, 'href="/now"' ), 'meta-nav links /now' );
 ok( false !== strpos( $nav, 'href="/accessibility"' ), 'meta-nav links /accessibility' );
 ok( false !== strpos( $nav, 'href="/colophon/"' ), 'meta-nav links /colophon/' );
-ok( 2 === substr_count( $nav, '&middot;' ), 'links are middot-separated (2 separators for 3 links)' );
+ok( 3 === substr_count( $nav, '<svg' ), 'three inline icons' );
+ok( 2 === substr_count( $nav, '&middot;' ), 'middot separators kept (2 for 3 links)' );
+ok( 2 === substr_count( $nav, 'aria-hidden="true">&middot;' ), 'separators are aria-hidden (decorative)' );
 
-// ── the old three separate paragraphs are gone ──
-ok( false === strpos( $footer, 'sn-footer__now' ), 'separate sn-footer__now paragraph removed' );
-ok( false === strpos( $footer, 'sn-footer__accessibility' ), 'separate sn-footer__accessibility paragraph removed' );
-ok( false === strpos( $footer, 'sn-footer__colophon' ), 'separate sn-footer__colophon paragraph removed' );
+// ── icon-only links carry accessible names + tooltips ──
+ok( 3 === substr_count( $nav, 'aria-label="' ) - substr_count( $nav, 'aria-label="Site meta"' ), 'every icon link has an aria-label' );
+ok( 3 === substr_count( $nav, 'title="' ), 'every icon link has a hover tooltip' );
+ok( 3 === substr_count( $nav, 'aria-hidden="true" focusable="false"' ), 'every svg is decorative (aria-hidden + unfocusable)' );
+ok( substr_count( $nav, 'currentColor' ) >= 3, 'icons draw with currentColor (inherit rust, hover blood)' );
 
-// ── phantom `steel` slug purged: only REAL palette slugs in the footer ──
-ok( false === strpos( $footer, 'has-steel-color' ) && false === strpos( $footer, '"textColor":"steel"' ), 'phantom steel slug gone from footer markup (classes + attrs; prose comments exempt)' );
-ok( false !== strpos( $footer, 'has-rust-color' ), 'meta text uses the real rust palette slug' );
+// ── the v10.21.1 text-label paragraph form is gone ──
+ok( false === strpos( $footer, '>Now</a>' ) && false === strpos( $footer, '>Colophon</a>' ), 'text labels replaced by icons' );
+ok( false === strpos( $footer, '<p class="sn-footer__meta-nav' ), 'old paragraph wrapper gone (now a nav element)' );
+
+// ── phantom `steel` slug stays purged: only REAL palette slugs in the footer ──
+ok( false === strpos( $footer, 'has-steel-color' ) && false === strpos( $footer, '"textColor":"steel"' ), 'phantom steel slug still gone from footer markup' );
+ok( false !== strpos( $footer, 'has-rust-color' ), 'the © line keeps the real rust palette slug' );
 $theme_json = file_get_contents( __DIR__ . '/../theme.json' );
 ok( false !== strpos( $theme_json, '"slug": "rust"' ), 'rust IS a real theme.json palette slug (guards against another phantom)' );
 
-// ── scoped hover treatment exists ──
+// ── CSS: rust base, blood hover, sized icons, hit area ──
 $css = file_get_contents( __DIR__ . '/../assets/css/layout.css' );
 ok( false !== strpos( $css, '.sn-footer__meta-nav a' ), 'layout.css styles the meta-nav links' );
-$block_start = strpos( $css, '.sn-footer__meta-nav a:hover' );
-ok( false !== $block_start && false !== strpos( substr( $css, $block_start, 300 ), '--wp--preset--color--blood' ), 'hover brings blood back deliberately' );
+$hover = strpos( $css, '.sn-footer__meta-nav a:hover' );
+ok( false !== $hover && false !== strpos( substr( $css, $hover, 300 ), '--wp--preset--color--blood' ), 'hover brings blood back deliberately' );
+ok( false !== strpos( $css, '.sn-footer__meta-nav svg' ), 'icon size is pinned in CSS' );
+$nav_rule = strpos( $css, '.sn-footer__meta-nav {' );
+ok( false !== $nav_rule && false !== strpos( substr( $css, $nav_rule, 400 ), '--wp--preset--color--rust' ), 'nav base color is the rust token' );
+ok( false !== strpos( $css, 'min-height: 28px' ), 'icon links have a >=24px hit area (WCAG 2.5.8 target size)' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
