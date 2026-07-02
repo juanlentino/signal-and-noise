@@ -2,6 +2,15 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.21.5] - 2026-07-02 — Colophon: remove the federation line (ActivityPub adoption declined)
+
+**Headline:** The owner reassessed the ActivityPub adoption before anything federated and declined it: no fediverse presence, no need for the colophon line advertising a handle. The line added in v10.21.3 (corrected in v10.21.4) is removed; the colophon facts list returns to its pre-federation shape. The site keeps every collateral improvement from the arc (analytics UA classifiers, hardening fixes live in the companion plugin).
+
+> **Why PATCH:** single content-line removal in a template pattern.
+
+### Removed
+- Colophon facts list: the "Federation" line (`patterns/colophon.php`). ActivityPub adoption declined by owner decision, 2026-07-02.
+
 ## [10.21.4] - 2026-07-02 — Colophon: correct the fediverse handle
 
 **Headline:** The federation line shipped in v10.21.3 said @juan@juanlentino.com, but the handle derives from the WP user nicename, which is `juanlentino`; webfinger 404'd for @juan. Owner decision: keep the real handle (zero-risk, domain-consistent) rather than DB-edit the nicename. The line now reads @juanlentino@juanlentino.com, verified resolving via webfinger.
