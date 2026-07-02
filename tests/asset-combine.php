@@ -53,7 +53,7 @@ require_once __DIR__ . '/../inc/asset-combine.php';
 $css_dir = $GLOBALS['__test_root'] . '/theme/assets/css';
 mkdir( $css_dir, 0777, true );
 $fixtures = array(
-	'base.css'            => "/* base comment */\nbody {\n\tcolor : red ;\n}\n",
+	'base.css'            => "/* base comment */\nbody {\n\tcolor : red ;\n}\n.grain { background-image: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'/%3E%3Crect filter='url(%23noise)'/%3E%3C/svg%3E\"); }\n.ref { filter: url(#blur-me); }\n",
 	'layout.css'          => ".grid {\n  width: calc(100% - 20px);\n}\n",
 	'components.css'      => "/* big\n multiline\n comment */\n.card { margin : 0 ; }\n.icon { mask: url('data:image/svg+xml;utf8,<svg/>'); }\n.hero { background: url(\"https://juanlentino.com/x.png\"); }\n.badge { background: url('/wp-content/uploads/y.png'); }\n",
 	'responsive.css'      => "@media (max-width: 600px) {\n  .card { margin: 4px; }\n}\n",

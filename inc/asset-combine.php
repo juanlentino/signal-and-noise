@@ -140,16 +140,22 @@ function sn_css_ensure_combined() {
 			if ( false === $raw ) {
 				return null;
 			}
-			if ( preg_match( '~url\(\s*(?![\'"]?(?:data:|https?:|//|/))~i', $raw ) ) {
+			if ( preg_match( '~url\(\s*(?![\'"]?(?:data:|https?:|//|/|#|%))~i', $raw ) ) {
 				// A relative url() would resolve against uploads/sn-css/,
 				// not the theme's css dir. No rewriter exists (no current
 				// source needs one) — fail open to the per-file enqueues.
-				// v10.21.7: the optional quote lives INSIDE the lookahead.
-				// The v10.21.6 shape ~url\(\s*['"]?(?!...)~ let the quote
-				// backtrack to empty so the lookahead tested the quote
-				// character itself — the guard false-positived on EVERY
-				// quoted url() (data:, https:, absolute), which is why
-				// production never built a combined file.
+				// Allowed prefixes = location-independent references only:
+				// data:/https?:/protocol-relative/absolute, plus `#`
+				// (same-document SVG fragment, not a file fetch) and `%`
+				// (percent-encoded content — url(%23noise) INSIDE an
+				// encoded SVG data: payload is what base.css's grain
+				// texture contains; it bit v10.21.7 because the guard
+				// scans every url( occurrence, including ones inside an
+				// already-safe data: URI). Real relative paths start with
+				// letters or dots and still trip the guard.
+				// v10.21.7 history: the optional quote must live INSIDE
+				// the lookahead — outside it backtracks to empty and the
+				// guard false-positives on every quoted url().
 				return null;
 			}
 			$css .= '/* ' . $rel . " */\n" . sn_css_minify( $raw ) . "\n";
