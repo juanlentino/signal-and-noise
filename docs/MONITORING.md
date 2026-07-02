@@ -57,64 +57,78 @@ Routes covered:
 To trigger a manual run: GitHub → Actions → Smoke Test → "Run
 workflow" → choose `main` → run.
 
-## Tier 3: Uptime Kuma probes
+## Tier 3: Better Stack monitors
 
-Uptime Kuma is already running on Railway as part of the
-infrastructure stack. Add the following monitors via the UK web UI
-to get continuous external monitoring with notification routing
-that doesn't depend on opening GitHub.
+External monitoring lives on Better Stack Uptime — migrated from the
+self-hosted Uptime Kuma on Railway in July 2026 (arc 3). Two monitor
+classes: HTTP keyword probes hitting the site from outside, and a
+heartbeat the site pushes out (the "is WP-Cron alive" signal an HTTP
+probe can't see).
 
-### Monitors to add
+Better Stack probes send the User-Agent `Better Stack Better Uptime
+Bot Mozilla/5.0 …`. Both bot classifiers know it (plugin
+`inc/rss-feed-tracker.php` via the bare `bot` token, pinned in tests;
+analytics worker `BOT_UA` since v1.9.2), so probes never pollute
+subscriber or visitor counts. Probe IPs rotate without notice —
+match on User-Agent, never allowlist by IP.
 
-For each route below, in Uptime Kuma → New Monitor:
+### HTTP keyword monitors
 
-- **Monitor Type**: HTTP(s) - Keyword
-- **Method**: GET
-- **Heartbeat Interval**: per the table
-- **Heartbeat Retries**: 2 (avoid flapping on transient blips)
-- **Request Timeout**: 15 seconds
-- **Max Redirects**: 5
-- **HTTP Status Codes**: 200-299
-- **Notification**: assign your existing channel(s)
+For each route below, Better Stack → Uptime → Monitors → Create:
 
-| Name | URL | Keyword | Interval |
+- **Alert us when**: URL becomes unavailable
+- **Required keyword in response**: per the table — a keyword match
+  defeats false-positive 200s from cached error pages or empty shells
+- **Check frequency**: per the table (clamps to the plan minimum)
+- **Request timeout**: 15 seconds
+- **Confirmation period**: 30–60 s (the anti-flapping damper; the
+  Kuma "Retries: 2" equivalent)
+
+| Name | URL | Keyword | Frequency |
 |---|---|---|---|
-| juanlentino.com — Home | `https://juanlentino.com/` | `Juan Lentino` | 60 s |
-| juanlentino.com — /notes/ | `https://juanlentino.com/notes/` | `Notes` | 120 s |
-| juanlentino.com — /provenance/ | `https://juanlentino.com/provenance/` | `On Provenance` | 120 s |
-| juanlentino.com — /provenance/over-detection/ | `https://juanlentino.com/provenance/over-detection/` | `verification problem` | 300 s |
-| juanlentino.com — /provenance/as-substrate/ | `https://juanlentino.com/provenance/as-substrate/` | `identification problem` | 300 s |
-| juanlentino.com — /notes/feed/ | `https://juanlentino.com/notes/feed/` | `<rss` | 300 s |
+| Home | `https://juanlentino.com/` | `Juan Lentino` | 1 min (or plan min) |
+| /notes/ | `https://juanlentino.com/notes/` | `Notes` | 3 min |
+| /provenance/ | `https://juanlentino.com/provenance/` | `On Provenance` | 3 min |
+| /provenance/over-detection/ | `https://juanlentino.com/provenance/over-detection/` | `verification problem` | 5 min |
+| /provenance/as-substrate/ | `https://juanlentino.com/provenance/as-substrate/` | `identification problem` | 5 min |
+| /notes/feed/ | `https://juanlentino.com/notes/feed/` | `<rss` | 5 min |
+| login-guard freshness | `https://juanlentino.com/_sn/login-guard/status` | `"stale": false` | 15 min |
 
-The shorter intervals on the homepage and indexes reflect that
-those pages get the most traffic; long-form essays change rarely
-and probe-frequency can be lower.
+The shorter frequencies on the homepage and indexes reflect that those
+pages get the most traffic; long-form essays change rarely and probe
+frequency can be lower. The login-guard row watches the worker's
+derived freshness field: if the FireHOL denylist stops refreshing
+(>48 h without a successful compile) the JSON flips to
+`"stale": true`, the keyword match fails, and the monitor alerts.
+
+### WP-Cron heartbeat (push)
+
+The companion plugin GETs a heartbeat URL every 5 minutes from
+WP-Cron (`inc/uptime-heartbeat.php` in signal-and-noise-tools).
+Better Stack → Uptime → Heartbeats → Create:
+
+- **Expect a heartbeat every**: 5 minutes (matches the cron cadence)
+- **Grace period**: 5 minutes (one missed beat tolerated — WP-Cron
+  is traffic-dependent, so a quiet stretch can late-fire a beat)
+
+Paste the heartbeat URL into wp-admin → the plugin's Webhooks tab →
+Uptime monitoring → Heartbeat URL, and tick Enabled. The plugin
+appends `status=up` (Uptime Kuma legacy; Better Stack ignores it).
+Silence flips the heartbeat to an incident: site down, PHP dead, or
+WP-Cron stuck — the failure class Tier 2's outside-in probes share
+with this tier, plus the cron-only deaths they can't see.
 
 ### Notification routing
 
-Uptime Kuma collects data even without a notification channel, but
-won't alert you. At least one channel is recommended:
-
-- **Discord webhook** is the simplest if you have a personal
-  Discord — UK has built-in support; just paste the webhook URL.
-- **Email (SMTP)** works but you need to configure UK's SMTP
-  settings.
-- **Telegram** if you prefer mobile push without Discord.
-
-For each monitor, in the Notifications section, check the channel
-you want it to alert on.
+Better Stack alerts via e-mail and its mobile app push out of the
+box — no SMTP or webhook setup required. Add Slack/Telegram/webhook
+integrations per-monitor if wanted; escalation policies exist but
+are overkill for a solo project.
 
 ### Status page (optional)
 
-Uptime Kuma can publish a public status page summarizing all
-monitors. If you want one (e.g., `status.juanlentino.com`):
-
-1. UK → Status Pages → New Status Page
-2. Name: `juanlentino.com status`
-3. Slug: `jl` (or whatever)
-4. Add the monitors above to the page
-5. Optionally configure a custom domain
-
+Better Stack can publish a public status page from the monitors
+(optionally on a custom domain like `status.juanlentino.com`).
 Useful if anyone other than you needs to know whether the site is
 up. Optional for a solo project.
 
@@ -123,8 +137,9 @@ up. Optional for a solo project.
 Flagged for future iterations:
 
 - **Production error logging.** Forward Cloudways `error.log` to a
-  searchable destination (Loggly, BetterStack, or even just a
-  shared Dropbox file via cron). Would have shown the OG truncation
+  searchable destination — Better Stack Logs is the natural fit now
+  that Uptime lives there, but log ingestion is explicitly out of
+  scope until the owner asks. Would have shown the OG truncation
   loop firing repeatedly before user-visible impact.
 - **Local PHP runtime.** Install `wp-env` or a Docker-based local
   WordPress to exercise PHP changes before pushing. Closes the
@@ -136,9 +151,9 @@ Flagged for future iterations:
 
 ## Incident response
 
-When a smoke test fails or UK alerts:
+When a smoke test fails or Better Stack alerts:
 
-1. **Check what's red.** The workflow run or UK monitor names the
+1. **Check what's red.** The workflow run or Better Stack monitor names the
    broken route(s). All routes failing simultaneously usually
    means server-side (Cloudways down, Cloudflare issue, MySQL).
    Per-route failures usually mean a code or content issue scoped
