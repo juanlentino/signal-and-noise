@@ -2,6 +2,15 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.21.4] - 2026-07-02 — Colophon: correct the fediverse handle
+
+**Headline:** The federation line shipped in v10.21.3 said @juan@juanlentino.com, but the handle derives from the WP user nicename, which is `juanlentino`; webfinger 404'd for @juan. Owner decision: keep the real handle (zero-risk, domain-consistent) rather than DB-edit the nicename. The line now reads @juanlentino@juanlentino.com, verified resolving via webfinger.
+
+> **Why PATCH:** one-line content correction in a template pattern.
+
+### Fixed
+- Colophon Federation line: @juan → @juanlentino (the actual webfinger-resolving handle) in `patterns/colophon.php`.
+
 ## [10.21.3] - 2026-07-02 — Colophon: federation line
 
 **Headline:** The colophon's facts list gains one line: the site federates via ActivityPub, with the @juan@juanlentino.com handle for anyone who wants to follow from the fediverse. Sole reader-facing chrome of the ActivityPub adoption (by design: no footer icon, no follow widget).
