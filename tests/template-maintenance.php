@@ -40,6 +40,7 @@ $GLOBALS['__filters']       = array();
 $GLOBALS['__fired_actions'] = array();  // do_action recorder
 $GLOBALS['__cache_flushes'] = 0;
 $GLOBALS['__cf_purges']     = 0;
+$GLOBALS['__cf_verified']   = 0;        // sn_cf_purge_everything_verified calls
 $GLOBALS['__theme_updates'] = 0;        // wp_update_themes calls
 $GLOBALS['__posts_deleted'] = 0;
 
@@ -85,6 +86,14 @@ if ( ! function_exists( 'sn_cf_purge_everything' ) ) {
 		return true;
 	}
 }
+if ( ! function_exists( 'sn_cf_purge_everything_verified' ) ) {
+	// Plugin-side blocking variant (v8.7.0) — the verified purge path routes CF
+	// here instead of the non-blocking fn so it can read a real accept-confirmation.
+	function sn_cf_purge_everything_verified() {
+		$GLOBALS['__cf_verified']++;
+		return array( 'accepted' => true, 'http' => 200, 'cf_success' => true );
+	}
+}
 if ( ! function_exists( 'wp_update_themes' ) ) {
 	function wp_update_themes() {
 		$GLOBALS['__theme_updates']++;
@@ -124,6 +133,7 @@ function purge_counts() {
 		'breeze'  => count( array_keys( $GLOBALS['__fired_actions'], 'breeze_clear_all_cache', true ) ),
 		'varnish' => count( array_keys( $GLOBALS['__fired_actions'], 'breeze_clear_varnish', true ) ),
 		'cf'      => $GLOBALS['__cf_purges'],
+		'cf_verified' => $GLOBALS['__cf_verified'],
 		'flush'   => $GLOBALS['__cache_flushes'],
 		'repop'   => $GLOBALS['__theme_updates'],
 		'deleted' => $GLOBALS['__posts_deleted'],
@@ -133,9 +143,11 @@ function reset_counters() {
 	$GLOBALS['__fired_actions'] = array();
 	$GLOBALS['__cache_flushes'] = 0;
 	$GLOBALS['__cf_purges']     = 0;
+	$GLOBALS['__cf_verified']   = 0;
 	$GLOBALS['__theme_updates'] = 0;
 	$GLOBALS['__posts_deleted'] = 0;
 	unset( $GLOBALS['sn_auto_purge_done'] );
+	unset( $GLOBALS['sn_cf_verified_result'] );
 }
 function fire_upgrader( $hook_extra ) {
 	foreach ( $GLOBALS['__actions']['upgrader_process_complete'] ?? array() as $cb ) {
@@ -200,6 +212,30 @@ ok( 1 === $c['cf'], 'Cloudflare purge fired on styles save' );
 ok( 0 === $c['flush'], 'styles save does not flush the object cache' );
 ok( 0 === $c['repop'], 'styles save does not re-run update_themes' );
 ok( 0 === $c['deleted'], 'styles save never touches template overrides' );
+
+// ── 7. Verified purge routes CF to the blocking variant + fires the seams ──
+echo "\nScenario 7: a verified purge confirms CF + fires the before/after seams\n";
+reset_counters();
+$ret = sn_purge_all_caches( array( 'verified' => true, 'template_overrides' => false ) );
+$c   = purge_counts();
+$before_fired = count( array_keys( $GLOBALS['__fired_actions'], 'sn_before_cache_flush', true ) );
+$after_fired  = count( array_keys( $GLOBALS['__fired_actions'], 'sn_after_full_cache_flush', true ) );
+ok( is_int( $ret ), 'sn_purge_all_caches still returns an int (contract preserved)' );
+ok( 1 === $before_fired, 'sn_before_cache_flush seam fired once' );
+ok( 1 === $after_fired, 'sn_after_full_cache_flush seam fired once' );
+ok( 1 === $c['cf_verified'], 'verified purge calls the blocking CF variant' );
+ok( 0 === $c['cf'], 'verified purge does NOT call the non-blocking CF fn' );
+ok( isset( $GLOBALS['sn_cf_verified_result'] ) && ! empty( $GLOBALS['sn_cf_verified_result']['cf_success'] ),
+	'the blocking CF result is stashed for the report writer' );
+
+// ── 8. A non-verified purge keeps the fast non-blocking CF, still fires the seam ──
+echo "\nScenario 8: an auto (non-verified) purge stays fast\n";
+reset_counters();
+sn_purge_all_caches( array( 'template_overrides' => false ) );
+$c = purge_counts();
+ok( 1 === $c['cf'], 'auto purge uses the fast non-blocking CF fn' );
+ok( 0 === $c['cf_verified'], 'auto purge does NOT block on CF' );
+ok( 1 === count( array_keys( $GLOBALS['__fired_actions'], 'sn_before_cache_flush', true ) ), 'the before seam fires on auto purges too' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

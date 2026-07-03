@@ -66,6 +66,7 @@ require_once __DIR__ . '/inc/wp-update-integration.php';
 require_once __DIR__ . '/inc/wp-update-git-preservation.php';
 
 require_once __DIR__ . '/inc/template-maintenance.php';
+require_once __DIR__ . '/inc/purge-verify.php'; // v10.23.0: render-epoch marker + durable per-leg purge report (verified-purge Tier-1)
 require_once __DIR__ . '/inc/page-notes-template.php';
 require_once __DIR__ . '/inc/page-index-template.php'; // C3 (v10.7.0): /index whole-site dossier virtual route (loads inc/page-index-render.php)
 require_once __DIR__ . '/inc/uses-data.php'; // D6 (v10.10.0): /uses gear data + sn_uses_groups() filter seam (edit surface)
