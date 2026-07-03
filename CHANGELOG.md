@@ -2,6 +2,20 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.23.0] - 2026-07-03: Verified purge Tier-1: render-epoch marker + durable per-leg purge report
+
+**Headline:** The purge chain stops being fire-and-forget and starts leaving a record. A monotonic render-epoch now rides every page (`<meta name="sn-render-epoch">`), bumping at the start of every edge-affecting purge, so a still-stale edge carries the old value while a fresh origin render carries the new one: a universal freshness differential (any render change, not just CSS) the plugin's dashboard dot compares canonical-vs-cache-busted. The manual "Purge All Caches" now confirms its Cloudflare leg (a blocking read of CF's real `{success:true}` body) and writes a durable per-leg report (`sn_last_purge_report`) recording what Breeze, Cloudways Varnish, and Cloudflare each returned. This is Tier-1 of the verified-purge arc; the external-worker probe + verify-and-escalate loop (Tier-2) is deferred, because the analytics worker's workers.dev URL is off by security design and box-to-edge reachability is an on-box empirical. The browser-vantage dot is the freshness signal until then.
+
+> **Why MINOR:** new capability (render-epoch marker, verified-purge report, `sn_before_cache_flush` seam). The `sn_purge_all_caches_result` filter still returns int and every existing arg keeps its meaning, so nothing breaks.
+
+### New
+- `inc/purge-verify.php`: `sn_render_epoch()` / `sn_bump_render_epoch()` (autoload=no option, seeds 1) + `sn_render_epoch_meta()` on `wp_head`. The epoch bumps at the START of every edge-affecting purge via the new `sn_before_cache_flush` action, so a purge that fails to propagate is detectable. New suite `tests/purge-verify.php`.
+- Durable `sn_last_purge_report` option (NOT a transient: the purge itself deletes `_transient_sn_%`, so a transient report would erase itself). Captures per-leg state: the Breeze file listener, the Cloudways Varnish `{ok, operation_id}` (read from the plugin's `sn_cloudways_last_purge`), and the CF leg (a confirmed `{accepted, http, cf_success}` on a verified purge, dispatched-but-unconfirmed on a fast auto-purge). Written via `sn_after_full_cache_flush`.
+- `sn_before_cache_flush` action, fired at the top of `sn_purge_all_caches()`, symmetric with the existing `sn_after_full_cache_flush`.
+
+### Changed
+- `sn_purge_all_caches()` accepts `verified => true`: it routes the Cloudflare leg to the plugin's blocking `sn_cf_purge_everything_verified()` so the report carries a real accept-confirmation. The manual "Purge All Caches" / "Full reset" buttons pass it; fast auto-purges (theme/plugin update, Styles save) stay non-blocking so a save or update never waits on the CF API. `tests/template-maintenance.php` gains the verified-path + seam assertions.
+
 ## [10.22.0] - 2026-07-02 — Automatic cache purges: updates and Styles saves now ride the full chain
 
 **Headline:** Installing v10.21.9 and deleting one Additional-CSS rule left three cache layers (Breeze file cache → Varnish → Cloudflare) serving a morning-stale render through four manual layer-by-layer purges — and each outer purge re-cached the still-stale inner layer. The coordinated `sn_purge_all_caches()` chain already existed, in the right inner→outer order, wired to the admin-bar button; nothing fired it automatically. Now the two events that change rendered HTML outside a post save do: our own theme/plugin update completing triggers the full chain (once per request, Site Editor overrides untouched), and every Site Editor Styles save — including Additional CSS, which rides no other purge path — triggers a focused origin + CDN purge. The multi-console purge dance is gone.

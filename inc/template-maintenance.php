@@ -66,7 +66,14 @@ function sn_purge_all_caches( $args = array() ) {
 		'cloudflare'         => true,
 		'template_overrides' => true,
 		'repopulate'         => true,
+		'verified'           => false,
 	) );
+
+	// v10.23.0: symmetric with sn_after_full_cache_flush. inc/purge-verify.php
+	// hooks this to bump the render epoch at the START of an edge-affecting purge,
+	// so the post-purge origin re-render emits N+1 while a still-stale edge keeps
+	// serving N (the differential the dashboard dot compares).
+	do_action( 'sn_before_cache_flush', $args );
 
 	if ( $args['object_cache'] ) {
 		wp_cache_flush();
@@ -100,9 +107,18 @@ function sn_purge_all_caches( $args = array() ) {
 		do_action( 'breeze_clear_varnish' );
 	}
 
-	if ( $args['cloudflare'] && function_exists( 'sn_cf_purge_everything' ) ) {
-		// Gated on configuration internally; no-op if no token/zone set.
-		sn_cf_purge_everything();
+	if ( $args['cloudflare'] ) {
+		// v10.23.0: a verified purge (the manual "Purge All Caches" button) routes
+		// CF to the plugin's BLOCKING variant so the report can carry a real
+		// {success:true} accept-confirmation; the result is stashed for the report
+		// writer on sn_after_full_cache_flush. Fast auto-purges keep the
+		// non-blocking fn so a save/update request never waits on the CF API.
+		if ( ! empty( $args['verified'] ) && function_exists( 'sn_cf_purge_everything_verified' ) ) {
+			$GLOBALS['sn_cf_verified_result'] = sn_cf_purge_everything_verified();
+		} elseif ( function_exists( 'sn_cf_purge_everything' ) ) {
+			// Gated on configuration internally; no-op if no token/zone set.
+			sn_cf_purge_everything();
+		}
 	}
 
 	$cleared = 0;
