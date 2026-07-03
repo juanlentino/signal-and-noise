@@ -118,20 +118,29 @@ Silence flips the heartbeat to an incident: site down, PHP dead, or
 WP-Cron stuck — the failure class Tier 2's outside-in probes share
 with this tier, plus the cron-only deaths they can't see.
 
-### In-admin status panel (plugin v8.2.0; consolidated v8.3.0)
+### In-admin status surfaces (plugin v8.2.0 → v8.4.0)
 
-The same monitor + heartbeat states render natively inside wp-admin:
-an Uptime section at the bottom of the "S&N Health" dashboard widget
-(v8.3.0 folded the short-lived standalone "S&N Uptime" widget into
-it) and a "Better Stack status" panel on Connections → Webhooks.
-Each row shows current status plus 30-day availability, with
-incident counts and a checked-ago stamp in the tooltips. Powered by
-a read-scoped Uptime API token pasted next to the heartbeat URL (or
-`SN_BETTERSTACK_API_TOKEN` in wp-config.php); data flows through the
-readonly `signal-noise/uptime-status` ability with server-side
-caches (90 s statuses, 1 h availability). No iframe, no embed — and
-deliberately no public route: a status page served by the site it
-reports on dies with the site.
+The Better Stack states render natively inside wp-admin, split by
+altitude (owner-shaped across v8.2.0–v8.4.0):
+
+- **Glance** (statuses only): an Uptime section at the bottom of the
+  "S&N Health" dashboard widget, and a "Better Stack status" panel on
+  Connections → Webhooks. Name + up/down pill, nothing else.
+- **Review** (the monitor): Dashboard → Analytics gains a per-resource
+  table — status, 30-day and 90-day availability, average response
+  time over the last 24 h, checked-ago — plus a recent-incidents log
+  (ongoing incidents flagged, cause + duration). Deliberately NOT a
+  Better Stack console replica: charts, escalations, and monitor
+  config stay in their console.
+
+Powered by a read-scoped Uptime API token pasted next to the
+heartbeat URL (or `SN_BETTERSTACK_API_TOKEN` in wp-config.php); data
+flows through the readonly `signal-noise/uptime-status` ability
+(detail=true for the monitor tier) with independently cached,
+circuit-broken server-side tiers (90 s statuses, 1 h/6 h
+availability, 15 min response times, 5 min incidents). No iframe, no
+embed — and deliberately no public route: a status page served by
+the site it reports on dies with the site.
 
 ### Notification routing
 
