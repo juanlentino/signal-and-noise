@@ -153,7 +153,7 @@ function sn_write_purge_report( $args, $cleared = 0 ) {
 	}
 	unset( $GLOBALS['sn_cf_verified_result'] ); // one report per stashed result.
 
-	update_option( SN_LAST_PURGE_REPORT_OPT, array(
+	$report = array(
 		'time'               => time(),
 		'mode'               => $verified ? 'verified' : 'auto',
 		'epoch'              => sn_render_epoch(),
@@ -163,6 +163,129 @@ function sn_write_purge_report( $args, $cleared = 0 ) {
 			'cf'          => $cf,
 		),
 		'template_overrides' => (int) $cleared,
-	), false );
+	);
+
+	// Tier-2 (v10.24.0): a verified (manual) purge probes each cache-critical route
+	// through CF from the box — now that the box→CF path is confirmed reachable — and
+	// records per-route freshness + the escalation outcome, so the report proves the
+	// edge serves the current render instead of assuming it. Auto-purges skip the
+	// inline probe to stay fast (a deferred cron verify is a later slice).
+	if ( $verified ) {
+		$verify             = sn_purge_verify_routes( sn_render_epoch() );
+		$report['routes']   = $verify['routes'];
+		$report['resolved'] = $verify['resolved'];
+	}
+
+	update_option( SN_LAST_PURGE_REPORT_OPT, $report, false );
 }
 add_action( 'sn_after_full_cache_flush', 'sn_write_purge_report', 10, 2 );
+
+/**
+ * Cache-critical routes the verified purge probes + reports on. Filterable so the
+ * set grows without a code edit; root-relative paths with a leading slash.
+ *
+ * @return string[]
+ */
+function sn_verified_purge_routes() {
+	$routes = (array) apply_filters( 'sn_verified_purge_routes', array( '/', '/notes/', '/provenance/' ) );
+	$routes = array_filter( $routes, static function ( $r ) {
+		return is_string( $r ) && '' !== $r;
+	} );
+	return array_values( array_unique( $routes ) );
+}
+
+/**
+ * Probe one route through Cloudflare from the origin box (the box→CF path is
+ * confirmed reachable — verified-purge spec §12). Reads the served render-epoch out
+ * of the edge HTML and compares it to the epoch this purge bumped to: a stale edge
+ * carries an older N. Anonymous GET (no cookies) so it sees the PUBLIC cache state;
+ * redirects are followed so the final rendered page is measured. Carries no
+ * credential, so `redirection => 0` is intentionally NOT set (that guard is for
+ * credentialed calls; here it would misread a canonicalizing 3xx as "unknown").
+ *
+ * @param string $url          Absolute URL on our host.
+ * @param int    $expect_epoch The epoch the current purge bumped to.
+ * @return array{url:string,http:int,epoch_seen:?int,fresh:?bool,cf_cache_status:string}
+ *   fresh = true|false when the epoch is readable, null (unknown) on transport error
+ *   or a missing marker — never coerced to a pass.
+ */
+function sn_purge_probe( $url, $expect_epoch ) {
+	$res = wp_remote_get( $url, array( 'timeout' => 5, 'sslverify' => true ) );
+	if ( is_wp_error( $res ) ) {
+		return array( 'url' => $url, 'http' => 0, 'epoch_seen' => null, 'fresh' => null, 'cf_cache_status' => '' );
+	}
+	$http = (int) wp_remote_retrieve_response_code( $res );
+	$body = (string) wp_remote_retrieve_body( $res );
+	$cf   = (string) wp_remote_retrieve_header( $res, 'cf-cache-status' );
+
+	$epoch_seen = null;
+	if ( preg_match( '/<meta[^>]+name=["\']sn-render-epoch["\'][^>]+content=["\'](\d+)["\']/i', $body, $m ) ) {
+		$epoch_seen = (int) $m[1];
+	}
+	$fresh = ( null === $epoch_seen ) ? null : ( $epoch_seen >= (int) $expect_epoch );
+
+	return array(
+		'url'             => $url,
+		'http'            => $http,
+		'epoch_seen'      => $epoch_seen,
+		'fresh'           => $fresh,
+		'cf_cache_status' => $cf,
+	);
+}
+
+/**
+ * Probe every verified route; a route that reads stale is escalated — re-evict the
+ * CDN (the Cloudways Varnish leg already fired once this request under its
+ * per-request guard, so the resistant layer is CF re-seeding) + back off for
+ * propagation, then re-probe — up to a small attempt budget. Returns the per-route
+ * probe results + a `resolved` verdict (false iff any route is DEFINITIVELY stale;
+ * an unknown/unreachable route never flips resolved — it is surfaced honestly).
+ *
+ * Runs only on the synchronous manual purge (the owner watches), so the bounded
+ * backoff (≈1.5s × ≤2 escalations) is acceptable request latency.
+ *
+ * @param int      $expect_epoch The epoch the current purge bumped to.
+ * @param int      $attempts     Max probes per route (>=1).
+ * @param int|null $backoff_us   Microseconds between attempts; null = the filterable
+ *                               default (1.5s). Tests pass 0.
+ * @return array{routes:array<int,array>,resolved:bool}
+ */
+function sn_purge_verify_routes( $expect_epoch, $attempts = 3, $backoff_us = null ) {
+	if ( null === $backoff_us ) {
+		$backoff_us = (int) apply_filters( 'sn_purge_verify_backoff_us', 1500000 );
+	}
+	$attempts = max( 1, (int) $attempts );
+	$results  = array();
+	$resolved = true;
+
+	foreach ( sn_verified_purge_routes() as $route ) {
+		$url   = home_url( $route );
+		$probe = null;
+		for ( $i = 0; $i < $attempts; $i++ ) {
+			if ( $i > 0 ) {
+				// Escalate the resistant layer: re-evict CF (verified, blocking) so a
+				// re-seed from a briefly-stale inner cache is cleared, then wait.
+				if ( function_exists( 'sn_cf_purge_everything_verified' ) ) {
+					sn_cf_purge_everything_verified();
+				} elseif ( function_exists( 'sn_cf_purge_everything' ) ) {
+					sn_cf_purge_everything();
+				}
+				if ( $backoff_us > 0 ) {
+					usleep( $backoff_us ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions -- bounded, sync manual-purge only
+				}
+			}
+			$probe = sn_purge_probe( $url, $expect_epoch );
+			// Fresh, or unknown (re-purging can't resolve an unreachable / marker-less
+			// route) — stop escalating either way.
+			if ( true === $probe['fresh'] || null === $probe['fresh'] ) {
+				break;
+			}
+		}
+		$results[] = $probe;
+		if ( false === $probe['fresh'] ) {
+			$resolved = false;
+		}
+	}
+
+	return array( 'routes' => $results, 'resolved' => $resolved );
+}

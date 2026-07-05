@@ -78,6 +78,36 @@ if ( ! function_exists( 'esc_attr' ) ) {
 		return htmlspecialchars( (string) $s, ENT_QUOTES );
 	}
 }
+// ── Tier-2 stubs: filters, home_url, and a queued wp_remote_get ──
+if ( ! function_exists( 'apply_filters' ) ) {
+	function apply_filters( $tag, $value ) {
+		foreach ( $GLOBALS['__filters'][ $tag ] ?? array() as $cb ) { $value = call_user_func( $cb, $value ); }
+		return $value;
+	}
+}
+if ( ! function_exists( 'home_url' ) ) {
+	function home_url( $path = '' ) { return 'https://example.test' . $path; }
+}
+if ( ! class_exists( 'WP_Error' ) ) { class WP_Error {} }
+if ( ! function_exists( 'is_wp_error' ) ) { function is_wp_error( $t ) { return $t instanceof WP_Error; } }
+// FIFO queue of responses; each wp_remote_get shifts one. A response is either a
+// WP_Error or array( 'code'=>int, 'body'=>html, 'headers'=>[lowercase=>val] ).
+$GLOBALS['__http_queue'] = array();
+$GLOBALS['__http_gets']  = array(); // recorded request URLs
+function wp_remote_get( $url, $args = array() ) {
+	$GLOBALS['__http_gets'][] = $url;
+	return $GLOBALS['__http_queue'] ? array_shift( $GLOBALS['__http_queue'] ) : array( 'code' => 200, 'body' => '', 'headers' => array() );
+}
+function wp_remote_retrieve_response_code( $r ) { return is_array( $r ) ? (int) ( $r['code'] ?? 0 ) : 0; }
+function wp_remote_retrieve_body( $r ) { return is_array( $r ) ? (string) ( $r['body'] ?? '' ) : ''; }
+function wp_remote_retrieve_header( $r, $h ) { return is_array( $r ) ? (string) ( $r['headers'][ strtolower( $h ) ] ?? '' ) : ''; }
+// Plugin-side blocking CF purge — a counter so the escalate's re-evict is observable.
+$GLOBALS['__cf_verified'] = 0;
+if ( ! function_exists( 'sn_cf_purge_everything_verified' ) ) {
+	function sn_cf_purge_everything_verified() { $GLOBALS['__cf_verified']++; return array( 'accepted' => true, 'http' => 200, 'cf_success' => true ); }
+}
+// A page body carrying a render-epoch meta (what the probe parses out of the edge HTML).
+function epoch_html( $n ) { return "<html><head><meta name=\"sn-render-epoch\" content=\"$n\">\n</head><body>x</body></html>"; }
 
 require $theme_root . '/inc/purge-verify.php';
 
@@ -176,6 +206,74 @@ foreach ( array_keys( $GLOBALS['__options'] ) as $k ) {
 	if ( 0 === strpos( $k, '_transient_sn_' ) ) { unset( $GLOBALS['__options'][ $k ] ); }
 }
 ok( is_array( get_option( 'sn_last_purge_report', null ) ), 'report survives a _transient_sn_% prune (it is an option, not a transient)' );
+
+// ── 7. Verified route list (filterable, normalized) ──
+echo "\nScenario 7: verified-purge route list\n";
+$routes = sn_verified_purge_routes();
+ok( in_array( '/', $routes, true ) && in_array( '/notes/', $routes, true ) && in_array( '/provenance/', $routes, true ), 'default routes cover the cache-critical set' );
+$GLOBALS['__filters']['sn_verified_purge_routes'][] = function ( $r ) { $r[] = '/uses/'; $r[] = ''; $r[] = '/'; return $r; };
+$routes2 = sn_verified_purge_routes();
+ok( in_array( '/uses/', $routes2, true ), 'route list is filterable' );
+ok( ! in_array( '', $routes2, true ) && count( $routes2 ) === count( array_unique( $routes2 ) ), 'routes normalized (no empties, unique)' );
+
+// ── 8. Box-direct freshness probe ──
+echo "\nScenario 8: box-direct freshness probe\n";
+$GLOBALS['__http_queue'] = array( array( 'code' => 200, 'body' => epoch_html( 5 ), 'headers' => array( 'cf-cache-status' => 'HIT' ) ) );
+$p = sn_purge_probe( 'https://example.test/notes/', 5 );
+ok( true === $p['fresh'] && 5 === $p['epoch_seen'] && 'HIT' === $p['cf_cache_status'], 'epoch>=expected + reads cf-cache-status => fresh' );
+$GLOBALS['__http_queue'] = array( array( 'code' => 200, 'body' => epoch_html( 4 ), 'headers' => array() ) );
+ok( false === sn_purge_probe( 'https://example.test/', 5 )['fresh'], 'epoch behind expected => stale' );
+$GLOBALS['__http_queue'] = array( array( 'code' => 200, 'body' => '<html></html>', 'headers' => array() ) );
+$u = sn_purge_probe( 'https://example.test/', 5 );
+ok( null === $u['fresh'] && null === $u['epoch_seen'], 'no epoch meta => unknown (never coerced to fresh)' );
+$GLOBALS['__http_queue'] = array( new WP_Error() );
+ok( null === sn_purge_probe( 'https://example.test/', 5 )['fresh'], 'WP_Error => unknown, never a false pass' );
+
+// ── 9. Verify + bounded escalate ──
+echo "\nScenario 9: verify + bounded escalate\n";
+$GLOBALS['__filters']['sn_verified_purge_routes'] = array( function () { return array( '/' ); } );
+$GLOBALS['__cf_verified'] = 0;
+$GLOBALS['__http_queue']  = array( array( 'code' => 200, 'body' => epoch_html( 7 ), 'headers' => array( 'cf-cache-status' => 'MISS' ) ) );
+$v = sn_purge_verify_routes( 7, 3, 0 );
+ok( true === $v['resolved'] && 1 === count( $v['routes'] ) && true === $v['routes'][0]['fresh'], 'all-fresh => resolved, no escalation' );
+ok( 0 === $GLOBALS['__cf_verified'], 'a fresh route does not re-evict CF' );
+
+$GLOBALS['__cf_verified'] = 0;
+$GLOBALS['__http_queue']  = array(
+	array( 'code' => 200, 'body' => epoch_html( 6 ), 'headers' => array() ), // attempt 1: stale
+	array( 'code' => 200, 'body' => epoch_html( 7 ), 'headers' => array() ), // attempt 2 (post re-evict): fresh
+);
+$v = sn_purge_verify_routes( 7, 3, 0 );
+ok( true === $v['resolved'] && true === $v['routes'][0]['fresh'], 'stale-then-fresh escalation resolves' );
+ok( $GLOBALS['__cf_verified'] >= 1, 'a stale route re-evicts CF on escalation' );
+
+$GLOBALS['__cf_verified'] = 0;
+$GLOBALS['__http_queue']  = array(
+	array( 'code' => 200, 'body' => epoch_html( 5 ), 'headers' => array() ),
+	array( 'code' => 200, 'body' => epoch_html( 5 ), 'headers' => array() ),
+	array( 'code' => 200, 'body' => epoch_html( 5 ), 'headers' => array() ),
+);
+$v = sn_purge_verify_routes( 7, 3, 0 );
+ok( false === $v['resolved'] && false === $v['routes'][0]['fresh'], 'a persistently-stale route reports resolved:false' );
+
+// ── 10. Verified purge report carries routes + resolved; auto defers ──
+echo "\nScenario 10: verified report carries routes; auto defers the probe\n";
+$GLOBALS['__filters']['sn_verified_purge_routes']   = array( function () { return array( '/' ); } );
+$GLOBALS['__filters']['sn_purge_verify_backoff_us'] = array( function () { return 0; } );
+$GLOBALS['__options']['sn_render_epoch']            = 9;
+$GLOBALS['__options']['sn_cloudways_last_purge']    = array( 'ok' => true, 'http' => 200, 'operation_id' => 1 );
+$GLOBALS['sn_cf_verified_result']                   = array( 'accepted' => true, 'http' => 200, 'cf_success' => true );
+$GLOBALS['__http_queue']                            = array( array( 'code' => 200, 'body' => epoch_html( 9 ), 'headers' => array( 'cf-cache-status' => 'MISS' ) ) );
+fire( 'sn_after_full_cache_flush', array( 'origin_html' => true, 'cloudflare' => true, 'verified' => true ), 0 );
+$report = get_option( 'sn_last_purge_report', null );
+ok( isset( $report['routes'] ) && is_array( $report['routes'] ) && 1 === count( $report['routes'] ), 'verified report includes per-route probe results' );
+ok( true === ( $report['resolved'] ?? null ), 'verified report carries the resolved verdict' );
+
+$GLOBALS['__http_gets'] = array();
+fire( 'sn_after_full_cache_flush', array( 'origin_html' => true, 'cloudflare' => true ), 0 );
+$report = get_option( 'sn_last_purge_report', null );
+ok( ! isset( $report['routes'] ), 'an auto purge does not probe inline (routes deferred)' );
+ok( empty( $GLOBALS['__http_gets'] ), 'auto purge fires no probe HTTP' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
