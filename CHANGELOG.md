@@ -2,7 +2,17 @@
 
 All notable changes to Signal & Noise are documented here.
 
-## [10.23.0] - 2026-07-03: Verified purge Tier-1: render-epoch marker + durable per-leg purge report
+## [10.24.0] - 2026-07-03: Verified purge Tier-2: box-direct freshness probe + auto-heal
+
+**Headline:** The manual "Purge All Caches" now proves the edge actually serves the current render, instead of assuming it. After the purge legs fire, the box probes each cache-critical route (`/`, `/notes/`, `/provenance/`) straight through Cloudflare and compares the served `sn-render-epoch` against the epoch this purge bumped to. A route reading a stale (older) epoch is escalated: re-evict Cloudflare, back off for propagation, re-probe, up to a small budget. The durable `sn_last_purge_report` gains per-route rows (`fresh`/`stale`/`unknown` + `cf-cache-status`) and a `resolved` verdict, so a purge that doesn't fully land is reported honestly rather than fabricating success. This is the Tier-2 slice, unblocked by a live box-curl confirming the origin box reaches its own Cloudflare edge — so no analytics-worker endpoint is needed; the box probes directly.
+
+> **Why MINOR:** new capability (verified probe + auto-heal + per-route report rows). The `sn_last_purge_report` option only gains fields, the filter contract still returns int — nothing breaks. Auto-purges are untouched (the probe runs only on the synchronous manual purge; a deferred cron verify for auto-purges is a later slice).
+
+### New
+- `sn_purge_probe()` (`inc/purge-verify.php`): an anonymous, redirect-following GET of a route through CF from the box; parses the `sn-render-epoch` meta + reads `cf-cache-status`. Returns `fresh` = true/false, or `null` (unknown) on transport error / missing marker — never coerced to a pass.
+- `sn_purge_verify_routes()`: probes every route, escalates a stale one (re-evict CF + bounded backoff + re-probe), returns per-route results + a `resolved` verdict. Wired into the report writer for verified (manual) purges only.
+- `sn_verified_purge_routes()` filter (default `/`, `/notes/`, `/provenance/`) + `sn_purge_verify_backoff_us` filter (default 1.5s). `sn_last_purge_report` gains `routes[]` + `resolved` on a verified purge.
+- `tests/purge-verify.php` extended: route list, probe fresh/stale/unknown, escalate (all-fresh / stale-then-fresh / persistently-stale), report integration + the auto-purge-defers-the-probe guard.
 
 **Headline:** The purge chain stops being fire-and-forget and starts leaving a record. A monotonic render-epoch now rides every page (`<meta name="sn-render-epoch">`), bumping at the start of every edge-affecting purge, so a still-stale edge carries the old value while a fresh origin render carries the new one: a universal freshness differential (any render change, not just CSS) the plugin's dashboard dot compares canonical-vs-cache-busted. The manual "Purge All Caches" now confirms its Cloudflare leg (a blocking read of CF's real `{success:true}` body) and writes a durable per-leg report (`sn_last_purge_report`) recording what Breeze, Cloudways Varnish, and Cloudflare each returned. This is Tier-1 of the verified-purge arc; the external-worker probe + verify-and-escalate loop (Tier-2) is deferred, because the analytics worker's workers.dev URL is off by security design and box-to-edge reachability is an on-box empirical. The browser-vantage dot is the freshness signal until then.
 
