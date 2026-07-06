@@ -34,4 +34,4 @@ jobs:
           prompt: ${{ steps.prompt.outputs.content }}
           claude_args: |
             --model claude-sonnet-5
-            --max-turns 30
+            --max-turns 60
