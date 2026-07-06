@@ -1,0 +1,7 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Function snt_ai_generate_with_constraints not found\.$#'
+			identifier: function.notFound
+			count: 5
+			path: inc/abilities-ai-generation.php
