@@ -5,6 +5,13 @@
  * docs/superpowers/specs/2026-06-11-first-party-edge-analytics-design.md.
  * v10.4.0: adds window.SN_BEACON.event(name, props) for named custom events
  * (a 'ce' beacon → worker ce/cp rows). The API is a no-op under DNT/GPC.
+ * v10.26.0: auto-fires goal-action 'ce' events for conversion-relevant clicks,
+ * cookielessly, via one delegated listener (see section 6). Short, stable event
+ * names the plugin's funnels reference:
+ *   - outbound   {host}           — any cross-host http(s) link (hostname only)
+ *   - subscribe  {target:'rss'}   — any RSS/feed link (feed type / /feed/ / ?feed=)
+ *   - subscribe  {target:'<t>'}   — any element with data-sn-subscribe="<t>" (e.g. email)
+ *   - <name>                      — any element with data-sn-goal="<name>" (add goals, no JS change)
  */
 (function () {
   var cfg = window.SN_BEACON;
@@ -105,4 +112,53 @@
     window.webVitals.onINP(reportVital('vi', 1));
     window.webVitals.onCLS(reportVital('vc', 1000));
   }
+
+  // 6) Goal-action clicks (v10.26.0) — cookieless conversion signals via ONE
+  // delegated listener (no per-element binding, so goals added to the DOM later
+  // are tracked with zero JS changes). Each click fires AT MOST ONE 'ce' event
+  // through cfg.event() above, so nothing double-counts. Priority is author
+  // intent first, then automatic classification:
+  //   a) [data-sn-goal="<name>"]     → event('<name>')                (any element)
+  //   b) [data-sn-subscribe="<tgt>"] → event('subscribe',{target:tgt})(any element)
+  //   c) an RSS/feed link            → event('subscribe',{target:'rss'})
+  //   d) a cross-host http(s) link   → event('outbound',{host})       HOST ONLY
+  // Outbound sends the destination HOSTNAME ONLY — never the path or query — so no
+  // page/query-string PII ever leaves the browser. This whole section runs after
+  // the DNT/GPC gate, so an opted-out visitor never binds the listener; a mailto:
+  // or tel: link matches nothing (protocol isn't http/https), so DOM-built contact
+  // links are never miscounted as conversions.
+  function feedLink(a, url) {
+    var type = (a.getAttribute('type') || '').toLowerCase();
+    if (/(rss|atom)\+xml|feed\+json/.test(type)) return true;
+    if ('http:' !== url.protocol && 'https:' !== url.protocol) return false;
+    return /(^|\/)feed(\/|$)/i.test(url.pathname) || /[?&]feed=/i.test(url.search);
+  }
+  document.addEventListener('click', function (ev) {
+    var t = ev.target;
+    if (!t || !t.closest) return; // text/non-Element targets can't be conversions
+
+    // a) Explicit named goal — highest priority, works on ANY element.
+    var goalEl = t.closest('[data-sn-goal]');
+    if (goalEl) {
+      var goal = (goalEl.getAttribute('data-sn-goal') || '').trim();
+      if (goal) cfg.event(goal);
+      return; // matched an explicit goal → never fall through to link classification
+    }
+    // b) Explicit subscribe (e.g. an email-newsletter link), works on ANY element.
+    var subEl = t.closest('[data-sn-subscribe]');
+    if (subEl) {
+      var target = (subEl.getAttribute('data-sn-subscribe') || '').trim();
+      cfg.event('subscribe', target ? { target: target } : null);
+      return;
+    }
+    // c/d) Automatic link classification.
+    var a = t.closest('a[href]');
+    if (!a || !a.href) return;
+    var url;
+    try { url = new URL(a.href); } catch (e) { return; } // a.href is already absolute
+    if (feedLink(a, url)) { cfg.event('subscribe', { target: 'rss' }); return; }
+    if (('http:' === url.protocol || 'https:' === url.protocol) && url.hostname && url.hostname !== location.hostname) {
+      cfg.event('outbound', { host: url.hostname }); // hostname ONLY — no path, no query
+    }
+  });
 })();

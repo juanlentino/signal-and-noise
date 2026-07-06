@@ -134,5 +134,27 @@ ok( strpos( $js, 'if (!n) return' ) !== false || strpos( $js, 'if(!n)return' ) !
 $real_pos = strpos( $js, 'cfg.event = function (name, props)' );
 ok( $real_pos !== false && $gate_pos !== false && $real_pos > $gate_pos, 'real event() sender is assigned AFTER the privacy gate' );
 
+// v10.26.0: goal-action click tracking. One delegated click listener fires 'ce'
+// conversion events cookielessly, AT MOST once per click (priority: explicit
+// data-sn-goal / data-sn-subscribe, then RSS feed link, then cross-host outbound).
+ok( substr_count( $js, "addEventListener('click'" ) === 1, 'exactly one delegated click listener (no double-fire from multiple bindings)' );
+ok( strpos( $js, 'data-sn-goal' ) !== false, 'honors the data-sn-goal CTA convention (name = attribute value)' );
+ok( strpos( $js, 'data-sn-subscribe' ) !== false, 'honors the data-sn-subscribe convention (target = attribute value)' );
+ok( strpos( $js, "cfg.event('outbound'" ) !== false, 'fires an outbound goal event' );
+ok( strpos( $js, "cfg.event('subscribe'" ) !== false, 'fires a subscribe goal event' );
+ok( strpos( $js, "target: 'rss'" ) !== false, 'RSS/feed links map to subscribe target rss' );
+// Outbound MUST carry the destination HOSTNAME ONLY — never the path/query (no URL PII).
+ok( strpos( $js, 'host: url.hostname' ) !== false, 'outbound sends host: url.hostname (host only)' );
+ok( preg_match( '/cfg\.event\(\s*\'outbound\'\s*,\s*\{\s*host:[^}]*\}\s*\)/', $js ) === 1, 'outbound props carry ONLY a host key (no path/search leak)' );
+ok( strpos( $js, 'location.hostname' ) !== false, 'outbound is gated on a cross-host comparison (url.hostname !== location.hostname)' );
+// First-match-wins: explicit classification precedes the automatic outbound branch,
+// so a tagged link (e.g. an email-subscribe outbound link) never double-fires.
+$goal_pos  = strpos( $js, "closest('[data-sn-goal]')" );
+$out_pos   = strpos( $js, "cfg.event('outbound'" );
+ok( $goal_pos !== false && $out_pos !== false && $goal_pos < $out_pos, 'explicit goal/subscribe classification precedes outbound (first-match-wins)' );
+// The click section sits AFTER the DNT/GPC gate, so an opted-out visitor never binds it.
+$click_pos = strpos( $js, "addEventListener('click'" );
+ok( $click_pos !== false && $gate_pos !== false && $click_pos > $gate_pos, 'click listener is bound AFTER the DNT/GPC privacy gate' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
