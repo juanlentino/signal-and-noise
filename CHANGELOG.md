@@ -2,6 +2,18 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.27.1] - 2026-07-06: Drop the per-offering delivery-mode labels on /services
+
+**Headline:** v10.27.0 tagged each /services offering with a delivery-mode label ("In-studio · Buenos Aires" on production, "Remote · with me" on the rest). That was a mistake: delivery mode is a property of the engagement, not of the service. Production can happen remotely, and mixing or mastering can happen in-studio if a client travels to Buenos Aires, so a fixed per-card label mislabels the work (production was wrongly pinned to in-studio only). The two-mode story already lives where it is actually true: the page copy and the two-path closing CTA ("Record at Panacea, Buenos Aires" / "Work with me remotely"). The per-offering tags were both inaccurate and redundant, so they are removed.
+
+> **Why PATCH:** removes a copy/UI element added in the same day's minor; no API, route, schema, or capability change. The two-path CTA, the reconciled copy, and the machine-readable meta from v10.27.0 all stay.
+
+### Removed
+- The six `.sn-service-mode` delivery-mode tags under the /services offerings, and the `.sn-service-mode` / `.is-studio` CSS component (`templates/page-services.html`, `assets/css/components.css`).
+
+### Changed
+- `tests/services-routing.php`: the assertion flipped from "mode tags present" to "mode tags absent" — a regression guard so the mislabeling cannot creep back. The two-path routing contract (both pages reach panaceastud.io, /services links /contact, no "not here" framing) is unchanged.
+
 ## [10.27.0] - 2026-07-06: Reconcile /services and /contact into one principal, two delivery modes
 
 **Headline:** /services marketed production, mixing, and mastering in the first person and funnelled every inquiry to /contact through a "Tell me about your project" button, but /contact then told exactly those people they were in the wrong place ("that's the right channel for studio bookings, not here") and bounced them to panaceastud.io, while offering no route at all for remote music work. The two pages contradicted each other because both described the split as "me versus Panacea," which framed the owner's own Buenos Aires studio as an outside vendor. The reconciled model, matching how the work is actually delivered, is one principal with two delivery modes: hands-on recording and production happen in the room at Panacea in Buenos Aires (you travel in, and his partners execute under his direction), while mixing, mastering, songwriting, production direction, plus strategy and AI run remotely from the US. Both pages now tell that one story, and a new music@ route finally gives remote music work a home. It previously had none and fell into the /contact/personal catch-all, which is about time scarcity, not project intake. The machine-readable half is reconciled too: /services finally ships the meta description it never had (it was missing from the theme's route-description map while about/contact/colophon/music were present), and /contact's is updated from the pre-split wording, so search, social, and AI crawlers see the same two-mode story the humans do.

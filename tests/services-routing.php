@@ -14,9 +14,13 @@
  *   - /services offers BOTH a Panacea (studio) path AND a /contact (remote) path
  *     — never a single CTA that dead-ends studio inquiries at a page that
  *     rejects them.
- *   - /services signals delivery mode per offering (.sn-service-mode tags).
  *   - /contact and /services point studio work at the SAME destination
  *     (panaceastud.io), so the two pages cannot drift apart again.
+ *
+ * (v10.27.1 dropped the per-offering .sn-service-mode delivery tags: delivery
+ *  mode is a property of the engagement, not of a service — production can be
+ *  remote, mixing can be in-studio — so a fixed per-card label mislabels. The
+ *  two modes live in the copy + the two-path CTA, which this suite guards.)
  *
  * The music@ route itself (remote path on /contact) is leak-guarded in
  * tests/contact-email.php; this file owns the cross-page routing contract.
@@ -43,8 +47,10 @@ ok( '' !== $contact, 'page-contact.html is readable' );
 ok( strpos( $services, 'panaceastud.io' ) !== false, '/services offers the in-studio path (links to panaceastud.io)' );
 ok( strpos( $services, 'href="/contact"' ) !== false, '/services offers the remote path (links to /contact)' );
 
-// ── /services signals delivery mode per offering ──────────────────────
-ok( strpos( $services, 'sn-service-mode' ) !== false, '/services tags offerings with a delivery mode (.sn-service-mode)' );
+// ── the two-mode split lives in the CTA + copy, not per-offering labels ──
+// v10.27.1 removed the .sn-service-mode tags (mode is per-engagement, not per-
+// service). Guard that they do not creep back in.
+ok( strpos( $services, 'sn-service-mode' ) === false, '/services carries no per-offering delivery-mode labels' );
 
 // ── both pages point studio work at the SAME destination ──────────────
 ok( strpos( $contact, 'panaceastud.io' ) !== false, '/contact hands studio work to panaceastud.io' );

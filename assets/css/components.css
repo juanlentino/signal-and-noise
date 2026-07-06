@@ -675,29 +675,6 @@
 	margin: 0 0 0.5rem;
 }
 
-/* .sn-service-mode: delivery-mode tag under a service-card heading. Signals
-   WHERE each offering is delivered so /services and /contact tell the same
-   two-mode story: "Remote · with me" (default) vs the ".is-studio" variant
-   "In-studio · Buenos Aires" (travel to Panacea). Inline hairline tag in the
-   catalog vocabulary — body caps, 11px floor, concrete border. */
-.sn-service-mode {
-	display: inline-block;
-	font-family: var(--wp--preset--font-family--body);
-	font-size: max(0.65rem, 11px);
-	letter-spacing: 0.14em;
-	text-transform: uppercase;
-	color: var(--wp--preset--color--rust);
-	border: 1px solid var(--wp--preset--color--concrete);
-	border-radius: 2px;
-	padding: 0.3em 0.7em;
-	margin: 0 0 0.9rem;
-	line-height: 1;
-}
-.sn-service-mode.is-studio {
-	color: var(--wp--preset--color--blood);
-	border-color: var(--wp--preset--color--blood);
-}
-
 /* ── ON-SITE SEARCH ──────────────────────────────────────────────
    templates/search.html grouped results + header trigger. Brand
    vocabulary: DM Mono labels, Bebas titles (set on the blocks),
