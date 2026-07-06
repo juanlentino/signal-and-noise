@@ -2,8 +2,8 @@
 /**
  * Signal & Noise — [sn_email] scraper-resistant contact aliases.
  *
- * Renders the four /contact email aliases (research@, press@, speaking@, role@)
- * client-assembled so the contiguous user@domain string never appears in the
+ * Renders the five /contact email aliases (research@, press@, speaking@, role@,
+ * music@) client-assembled so the contiguous user@domain string never appears in the
  * page HTML, meta/OG, JSON-LD, or RSS. Each alias is split into user + domain,
  * base64-encoded into data-* attributes, with a human-readable but
  * non-harvestable "user [at] domain [dot] tld" fallback as the visible text.
@@ -40,8 +40,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Default domain for [sn_email] when `domain` is omitted. All four /contact
- * aliases are @juanlentino.com.
+ * Default domain for [sn_email] when `domain` is omitted. All five /contact
+ * aliases (research@, press@, speaking@, role@, music@) are @juanlentino.com.
  */
 const SN_EMAIL_DEFAULT_DOMAIN = 'juanlentino.com';
 

@@ -33,10 +33,11 @@ function sn_seo_page_descriptions() {
 	return (array) apply_filters(
 		'sn_seo_page_descriptions',
 		array(
-			'about'    => 'Music producer, mix engineer, and creative strategist based in Buenos Aires — the person behind the work, the studio, and the notes.',
-			'contact'  => 'How to reach Juan Lentino for mixing, production, and creative work — direct, no forms, no noise.',
+			'about'    => 'Music producer, mix engineer, and creative strategist based in Buenos Aires. The person behind the work, the studio, and the notes.',
+			'contact'  => 'How to reach Juan Lentino: remote mixing, mastering, and songwriting, or in-studio production at Panacea in Buenos Aires. Direct, no forms, no noise.',
 			'colophon' => 'How this site is built: the typography, tools, and engineering behind juanlentino.com.',
-			'music'    => 'Selected discography — releases produced, mixed, and engineered by Juan Lentino, with credits and streaming links.',
+			'music'    => 'Selected discography: releases produced, mixed, and engineered by Juan Lentino, with credits and streaming links.',
+			'services' => 'What Juan Lentino offers: production, mixing, mastering, songwriting, plus operations, AI strategy, and artist development, in-studio at Panacea or remote.',
 		)
 	);
 }
@@ -74,7 +75,7 @@ function sn_seo_route_meta_for_uses( $meta ) {
 	}
 	return array(
 		'title'       => function_exists( 'sn_uses_title' ) ? sn_uses_title() : 'Uses',
-		'description' => 'The hardware, software, and instruments behind the work — what Juan Lentino actually uses, grouped and listed.',
+		'description' => 'The hardware, software, and instruments behind the work: what Juan Lentino actually uses, grouped and listed.',
 		'url'         => home_url( '/about/uses' ),
 		'breadcrumb'  => array(
 			array( 'name' => 'About', 'url' => home_url( '/about/' ) ),
@@ -98,7 +99,7 @@ function sn_seo_route_meta_for_now( $meta ) {
 	}
 	return array(
 		'title'       => function_exists( 'sn_now_title' ) ? sn_now_title() : 'Now',
-		'description' => 'What Juan Lentino is focused on right now — current projects, writing, and inputs. Updated whenever it changes.',
+		'description' => 'What Juan Lentino is focused on right now: current projects, writing, and inputs. Updated whenever it changes.',
 		'url'         => home_url( '/now' ),
 		'breadcrumb'  => array(
 			array( 'name' => 'Now', 'url' => home_url( '/now' ) ),
@@ -121,7 +122,7 @@ function sn_seo_route_meta_for_accessibility( $meta ) {
 	}
 	return array(
 		'title'       => function_exists( 'sn_a11y_title' ) ? sn_a11y_title() : 'Accessibility',
-		'description' => 'Accessibility statement for juanlentino.com — WCAG 2.1 AA target, measures in place, known limitations, and how to report problems.',
+		'description' => 'Accessibility statement for juanlentino.com: WCAG 2.1 AA target, measures in place, known limitations, and how to report problems.',
 		'url'         => home_url( '/accessibility' ),
 		'breadcrumb'  => array(
 			array( 'name' => 'Accessibility', 'url' => home_url( '/accessibility' ) ),

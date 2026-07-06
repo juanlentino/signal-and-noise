@@ -34,9 +34,11 @@ require __DIR__ . '/../inc/seo-route-meta.php';
 
 // --- Page descriptions map ---
 $map = sn_seo_page_descriptions();
-ok( isset( $map['about'], $map['contact'], $map['colophon'], $map['music'] ), 'descriptions cover about/contact/colophon/music' );
+ok( isset( $map['about'], $map['contact'], $map['colophon'], $map['music'], $map['services'] ), 'descriptions cover about/contact/colophon/music/services' );
 foreach ( $map as $slug => $d ) {
 	ok( is_string( $d ) && strlen( $d ) > 40 && strlen( $d ) < 200, "$slug description is a sensible meta length" );
+	// House style: these are SERP/social/AI-facing strings — no em-dashes (use hyphens/colons/commas).
+	ok( strpos( $d, '—' ) === false, "$slug description carries no em-dash (house style)" );
 }
 
 // --- Singular-description filter ---
@@ -56,6 +58,7 @@ ok( is_array( $rm ), '/about/uses → returns a meta array' );
 ok( 'Uses — Juan Lentino' === ( $rm['title'] ?? null ), 'route meta title from sn_uses_title()' );
 ok( 'https://juanlentino.com/about/uses' === ( $rm['url'] ?? null ), 'route meta url is /about/uses' );
 ok( is_string( $rm['description'] ?? null ) && '' !== ( $rm['description'] ?? '' ), 'route meta carries a description' );
+ok( strpos( (string) ( $rm['description'] ?? '' ), '—' ) === false, '/about/uses description carries no em-dash' );
 ok( is_array( $rm['breadcrumb'] ?? null ) && count( $rm['breadcrumb'] ) === 2, 'route meta breadcrumb is About → Uses (2 crumbs)' );
 ok( 'Uses' === ( $rm['breadcrumb'][1]['name'] ?? null ), 'last breadcrumb crumb is Uses' );
 // Already-resolved meta is never clobbered.
@@ -68,6 +71,7 @@ ok( sn_seo_route_meta_for_now( null ) === null, 'not on /now → null' );
 $GLOBALS['__is_now'] = true;
 $nm = sn_seo_route_meta_for_now( null );
 ok( is_array( $nm ) && 'Now — Juan Lentino' === ( $nm['title'] ?? null ), '/now → meta with sn_now_title()' );
+ok( strpos( (string) ( $nm['description'] ?? '' ), '—' ) === false, '/now description carries no em-dash' );
 ok( 'https://juanlentino.com/now' === ( $nm['url'] ?? null ), '/now route meta url' );
 ok( is_array( $nm['breadcrumb'] ?? null ) && 'Now' === ( $nm['breadcrumb'][0]['name'] ?? null ), '/now breadcrumb is a single Now crumb' );
 ok( sn_seo_route_meta_for_now( $preset ) === $preset, '/now: already-resolved meta passes through' );
@@ -78,6 +82,7 @@ ok( sn_seo_route_meta_for_accessibility( null ) === null, 'not on /accessibility
 $GLOBALS['__is_a11y'] = true;
 $am = sn_seo_route_meta_for_accessibility( null );
 ok( is_array( $am ) && 'Accessibility — Juan Lentino' === ( $am['title'] ?? null ), '/accessibility → meta with sn_a11y_title()' );
+ok( strpos( (string) ( $am['description'] ?? '' ), '—' ) === false, '/accessibility description carries no em-dash' );
 ok( 'https://juanlentino.com/accessibility' === ( $am['url'] ?? null ), '/accessibility route meta url' );
 ok( is_array( $am['breadcrumb'] ?? null ) && 'Accessibility' === ( $am['breadcrumb'][0]['name'] ?? null ), '/accessibility breadcrumb crumb' );
 ok( sn_seo_route_meta_for_accessibility( $preset ) === $preset, '/accessibility: already-resolved meta passes through' );
