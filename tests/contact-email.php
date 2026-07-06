@@ -126,14 +126,17 @@ ok( strpos( $js, "'mailto:'" ) !== false, 'JS sets a mailto: href (runtime only)
 ok( strpos( $js, '.href' ) !== false, 'JS assigns the href client-side' );
 ok( strpos( $js, 'appendChild' ) !== false, 'JS injects the link into the .sn-email span' );
 
-// ── TEMPLATE contract: no mailto / no contiguous alias for the four ──
+// ── TEMPLATE contract: no mailto / no contiguous alias for the five ──
+// music@ is the remote-music route added when /services and /contact were
+// reconciled (in-studio at Panacea BA vs remote-with-me); it is a first-class
+// alias, so it must satisfy the same leak guards as the original four.
 $tpl = (string) @file_get_contents( realpath( __DIR__ . '/..' ) . '/templates/page-contact.html' );
 ok( '' !== $tpl, 'page-contact.html is readable' );
-foreach ( array( 'research', 'press', 'speaking', 'role' ) as $u ) {
+foreach ( array( 'research', 'press', 'speaking', 'role', 'music' ) as $u ) {
 	ok( strpos( $tpl, $u . '@juanlentino.com' ) === false, "TEMPLATE LEAK GUARD: no $u@juanlentino.com in source" );
 	ok( strpos( $tpl, '[sn_email user="' . $u . '"]' ) !== false, "template uses [sn_email user=\"$u\"]" );
 }
-ok( strpos( $tpl, 'mailto:research' ) === false && strpos( $tpl, 'mailto:press' ) === false && strpos( $tpl, 'mailto:speaking' ) === false && strpos( $tpl, 'mailto:role' ) === false, 'TEMPLATE LEAK GUARD: no mailto on the four aliases' );
+ok( strpos( $tpl, 'mailto:research' ) === false && strpos( $tpl, 'mailto:press' ) === false && strpos( $tpl, 'mailto:speaking' ) === false && strpos( $tpl, 'mailto:role' ) === false && strpos( $tpl, 'mailto:music' ) === false, 'TEMPLATE LEAK GUARD: no mailto on the five aliases' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
