@@ -49,7 +49,9 @@ const SN_EMAIL_DEFAULT_DOMAIN = 'juanlentino.com';
  * Build the scraper-resistant markup for one alias.
  *
  * Output (no contiguous address, no "@", no mailto anywhere):
- *   <span class="sn-email" data-eu="<b64 user>" data-ed="<b64 domain>">user [at] domain [dot] tld</span>
+ *   <span class="sn-email" data-sn-goal="contact-<user>" data-eu="<b64 user>" data-ed="<b64 domain>">user [at] domain [dot] tld</span>
+ * The data-sn-goal hook lets sn-beacon.js count a click on the runtime-assembled
+ * mailto anchor as a cookieless 'contact-<user>' conversion (feeds plugin funnels).
  *
  * @param string $user   Local part (left of @), e.g. 'research'.
  * @param string $domain Domain (right of @), e.g. 'juanlentino.com'.
@@ -69,11 +71,20 @@ function sn_email_markup( $user, $domain ) {
 	$fallback = ( '' !== $dom_tld )
 		? sprintf( '%s [at] %s [dot] %s', $user, $dom_main, $dom_tld )
 		: sprintf( '%s [at] %s', $user, $dom_main );
+	// Cookieless funnel hook (1:1 with plugin v8.8.0 conversion funnels).
+	// contact-aliases.js appends the runtime mailto anchor INSIDE this span, so a
+	// click bubbles to closest('[data-sn-goal]') and sn-beacon.js fires a named
+	// 'contact-<alias>' conversion — the one /contact conversion the beacon can't
+	// otherwise see (it deliberately ignores mailto:). Aggregate counter only: no
+	// address, and the beacon's DNT/GPC gate still suppresses opted-out visitors.
+	// Slugged so an odd alias can't emit a malformed event name.
+	$goal = 'contact-' . trim( preg_replace( '/[^a-z0-9]+/', '-', strtolower( $user ) ), '-' );
 	return sprintf(
-		'<span class="sn-email" data-eu="%1$s" data-ed="%2$s">%3$s</span>',
+		'<span class="sn-email" data-sn-goal="%4$s" data-eu="%1$s" data-ed="%2$s">%3$s</span>',
 		esc_attr( base64_encode( $user ) ),
 		esc_attr( base64_encode( $domain ) ),
-		esc_html( $fallback )
+		esc_html( $fallback ),
+		esc_attr( $goal )
 	);
 }
 

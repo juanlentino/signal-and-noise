@@ -2,6 +2,19 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.28.0] - 2026-07-07: Count contact-email clicks as cookieless conversions (1:1 with plugin funnels)
+
+**Headline:** The plugin's v8.8.0 shipped automatic conversion funnels that group the goal events the site already tracks. The theme's beacon (`assets/js/sn-beacon.js` §6) emits those goals — `data-sn-subscribe` on the Notes email links, plus auto-classified RSS `subscribe` and cross-host `outbound` — but the single most important conversion on the site was structurally invisible to it: the `/contact` email aliases. Those are `mailto:` links assembled at runtime by `contact-aliases.js`, and the beacon deliberately ignores `mailto:`/`tel:` (protocol isn't http/https) so DOM-built contact links are never *miscounted*. The consequence was that someone actually emailing to hire — the money event — fired nothing, and the plugin's new funnels had no `/contact` conversion to anchor on. This tags each alias with the beacon's author-intent escape hatch, `data-sn-goal`, so a click now fires a named `contact-<alias>` conversion. No plugin change is needed: the funnel surfaces any goal name it sees.
+
+> **Why MINOR:** new user-visible capability — the site now emits `contact-<alias>` conversion events that feed the plugin's funnels. Additive and on-pattern: the `data-sn-goal` hook lives in the same PHP-rendered `[sn_email]` markup as the existing `data-sn-subscribe` convention (never in static block markup, which would risk Gutenberg block-validation recovery). Cookieless and aggregate — a bare counter, no address leaves the browser, and the beacon's existing DNT/GPC gate still suppresses opted-out visitors. No API, route, or settings-schema change.
+
+### New
+- `[sn_email]` aliases now carry `data-sn-goal="contact-<alias>"` on the persistent `.sn-email` span (`inc/contact-email.php`). `contact-aliases.js` appends the runtime `mailto:` anchor *inside* that span, so a click bubbles to `closest('[data-sn-goal]')` and `sn-beacon.js` fires the named conversion. The `/contact` routes become: `contact-research`, `contact-press`, `contact-speaking`, `contact-music`, `contact-role`. Goal names are slugged so an odd alias can't emit a malformed event name.
+
+### Notes
+- The `/services` closing-CTA buttons were intentionally left untagged. "Record at Panacea" already fires an automatic `outbound` (cross-host to panaceastud.io), and "Work with me remotely" (→ `/contact`) is upstream navigation the plugin's v8.8.0 page-transition tracking already captures — so the funnel path `/services → /contact → contact-<alias>` is fully visible without adding `data-*` to static `core/button` markup (which would risk block-validation recovery).
+- No plugin- or worker-side change: the `SN_BEACON.event()` → worker `ce`/`cp` path and the plugin's goal-grouping already accept free-form goal names.
+
 ## [10.27.1] - 2026-07-06: Drop the per-offering delivery-mode labels on /services
 
 **Headline:** v10.27.0 tagged each /services offering with a delivery-mode label ("In-studio · Buenos Aires" on production, "Remote · with me" on the rest). That was a mistake: delivery mode is a property of the engagement, not of the service. Production can happen remotely, and mixing or mastering can happen in-studio if a client travels to Buenos Aires, so a fixed per-card label mislabels the work (production was wrongly pinned to in-studio only). The two-mode story already lives where it is actually true: the page copy and the two-path closing CTA ("Record at Panacea, Buenos Aires" / "Work with me remotely"). The per-offering tags were both inaccurate and redundant, so they are removed.

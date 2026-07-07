@@ -71,6 +71,19 @@ ok( strpos( $m, 'juanlentino.com' ) === false, 'LEAK GUARD: no contiguous domain
 ok( stripos( $m, 'mailto' ) === false, 'LEAK GUARD: no mailto' );
 ok( strpos( $m, '<a ' ) === false, 'LEAK GUARD: not an anchor' );
 
+// ── v10.28.0: funnel goal hook (1:1 with plugin v8.8.0 conversion funnels) ──
+// The beacon deliberately ignores mailto: links, and contact-aliases.js builds
+// the mailto anchor INSIDE the persistent .sn-email span. Tagging that span with
+// data-sn-goal lets a click bubble to closest('[data-sn-goal]') and fire a named
+// 'contact-<alias>' conversion — the one /contact conversion the plugin's funnels
+// could not otherwise see. Cookieless + aggregate: no address leaves the browser.
+ok( strpos( $m, 'data-sn-goal="contact-research"' ) !== false, 'markup tags the .sn-email span with a data-sn-goal conversion hook' );
+ok( preg_match( '/<span class="sn-email" data-sn-goal="contact-research"/', $m ) === 1, 'goal hook sits on the persistent .sn-email span (survives JS assembly)' );
+$m_press = sn_email_markup( 'press', 'juanlentino.com' );
+ok( strpos( $m_press, 'data-sn-goal="contact-press"' ) !== false, 'goal name derives from the alias user (contact-press)' );
+$m_slug = sn_email_markup( 'Odd User!', 'juanlentino.com' );
+ok( strpos( $m_slug, 'data-sn-goal="contact-odd-user"' ) !== false, 'goal name is slugged (lowercased, non-alnum collapses to a single dash, trimmed)' );
+
 // Multi-label domain reads naturally (last-dot split).
 $m2 = sn_email_markup( 'x', 'sub.example.co.uk' );
 ok( strpos( $m2, 'x [at] sub.example.co [dot] uk' ) !== false, 'multi-label domain splits on the LAST dot' );
