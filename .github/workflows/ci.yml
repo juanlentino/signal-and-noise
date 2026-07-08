@@ -142,3 +142,25 @@ jobs:
             echo "::error file=CHANGELOG.md::Version bumped to ${head_ver} but no '## [${head_ver}]' entry in CHANGELOG.md. Add one (see global rule: ALWAYS update CHANGELOG.md)."
             exit 1
           fi
+      - name: Assert readme.txt Stable tag matches style.css Version
+        run: |
+          set -e
+          # Close the drift class: readme.txt 'Stable tag' is hand-maintained and
+          # decoupled from the runtime version (wp_get_theme reads style.css), so it
+          # silently lags on a bump (bit us at v10.28.1 and again at v10.29.0).
+          css_ver=$(grep -m1 -E '^Version:' style.css | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+          readme_tag=$(grep -m1 -E '^Stable tag:' readme.txt | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || echo "")
+          echo "style.css Version: ${css_ver:-(unknown)}  readme.txt Stable tag: ${readme_tag:-(unknown)}"
+          if [ -z "$css_ver" ]; then
+            echo "::error file=style.css::could not parse 'Version:' from style.css"
+            exit 1
+          fi
+          if [ -z "$readme_tag" ]; then
+            echo "::error file=readme.txt::could not parse 'Stable tag:' from readme.txt"
+            exit 1
+          fi
+          if [ "$css_ver" != "$readme_tag" ]; then
+            echo "::error file=readme.txt::readme.txt 'Stable tag: ${readme_tag}' does not match style.css 'Version: ${css_ver}'. Bump both together."
+            exit 1
+          fi
+          echo "readme.txt Stable tag matches style.css Version (${css_ver})."

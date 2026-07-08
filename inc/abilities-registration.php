@@ -15,16 +15,16 @@
  *     callables (sn_theme_perm_read, sn_theme_perm_edit_posts).
  *   - inc/abilities-categories.php       — 3 category registrations on
  *     `wp_abilities_api_categories_init` (idempotent vs. plugin).
- *   - inc/abilities-diagnostics.php      — 5 abilities: get-active-template-
+ *   - inc/abilities-diagnostics.php      — 7 abilities: get-active-template-
  *     structure, get-theme-version, get-design-system-summary, get-design-tokens,
- *     get-latest-theme-tag (v9.9.0).
+ *     get-latest-theme-tag (v9.9.0), get-seo-route-meta, get-llms-txt (both v10.29.0).
  *   - inc/abilities-content.php          — 3 abilities: list-block-patterns,
  *     get-page-notes-pillars, get-reading-time-for-slug.
  *   - inc/abilities-ai-generation.php    — 5 abilities: ai-generate-page-note-summary,
  *     ai-suggest-block-pattern, ai-validate-brand-alignment,
  *     ai-generate-pattern-content, ai-rewrite-in-brand-voice.
  *
- * Total: 13 abilities + 3 categories. Each feature file owns its
+ * Total: 15 abilities + 3 categories. Each feature file owns its
  * `add_action( 'wp_abilities_api_init', ... )` registration block plus
  * the impl wrappers.
  *
