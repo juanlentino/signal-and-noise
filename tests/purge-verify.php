@@ -92,10 +92,12 @@ if ( ! class_exists( 'WP_Error' ) ) { class WP_Error {} }
 if ( ! function_exists( 'is_wp_error' ) ) { function is_wp_error( $t ) { return $t instanceof WP_Error; } }
 // FIFO queue of responses; each wp_remote_get shifts one. A response is either a
 // WP_Error or array( 'code'=>int, 'body'=>html, 'headers'=>[lowercase=>val] ).
-$GLOBALS['__http_queue'] = array();
-$GLOBALS['__http_gets']  = array(); // recorded request URLs
+$GLOBALS['__http_queue']    = array();
+$GLOBALS['__http_gets']     = array(); // recorded request URLs
+$GLOBALS['__http_get_args'] = array(); // recorded request args (v10.28.1: pin the redirection cap)
 function wp_remote_get( $url, $args = array() ) {
-	$GLOBALS['__http_gets'][] = $url;
+	$GLOBALS['__http_gets'][]     = $url;
+	$GLOBALS['__http_get_args'][] = $args;
 	return $GLOBALS['__http_queue'] ? array_shift( $GLOBALS['__http_queue'] ) : array( 'code' => 200, 'body' => '', 'headers' => array() );
 }
 function wp_remote_retrieve_response_code( $r ) { return is_array( $r ) ? (int) ( $r['code'] ?? 0 ) : 0; }
@@ -221,6 +223,12 @@ echo "\nScenario 8: box-direct freshness probe\n";
 $GLOBALS['__http_queue'] = array( array( 'code' => 200, 'body' => epoch_html( 5 ), 'headers' => array( 'cf-cache-status' => 'HIT' ) ) );
 $p = sn_purge_probe( 'https://example.test/notes/', 5 );
 ok( true === $p['fresh'] && 5 === $p['epoch_seen'] && 'HIT' === $p['cf_cache_status'], 'epoch>=expected + reads cf-cache-status => fresh' );
+// v10.28.1 SSRF hardening (audit LOW-1): redirects are CAPPED at one canonicalizing
+// hop, so a (hypothetical, admin-planted) open redirect on a probed route can't walk
+// the box down a chain to an internal endpoint. Not zeroed — one hop preserves the
+// deliberate trailing-slash/https canonicalization tolerance.
+$probe_args = end( $GLOBALS['__http_get_args'] );
+ok( 1 === ( $probe_args['redirection'] ?? -1 ), 'probe caps redirects at 1 (canonicalizing hop only; chain capped)' );
 $GLOBALS['__http_queue'] = array( array( 'code' => 200, 'body' => epoch_html( 4 ), 'headers' => array() ) );
 ok( false === sn_purge_probe( 'https://example.test/', 5 )['fresh'], 'epoch behind expected => stale' );
 $GLOBALS['__http_queue'] = array( array( 'code' => 200, 'body' => '<html></html>', 'headers' => array() ) );
