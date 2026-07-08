@@ -39,8 +39,12 @@ function sn_render_epoch() {
 }
 
 /**
- * Increment the render epoch and persist it NON-autoloaded (it is read only
- * during a purge + emitted in wp_head, never needed on every request's autoload).
+ * Increment the render epoch and persist it NON-autoloaded. It IS read on every
+ * front-end render (emitted in wp_head via sn_render_epoch_meta) plus during a
+ * purge, but kept off autoload deliberately: autoloading would pull it into
+ * `alloptions` on every admin/AJAX/cron/REST request where it is never read, to
+ * save a single cheap query on the front end (where most renders are edge-cached
+ * anyway). The trade favors the many non-front-end requests.
  *
  * @return int The new epoch.
  */
@@ -198,10 +202,13 @@ function sn_verified_purge_routes() {
  * Probe one route through Cloudflare from the origin box (the box→CF path is
  * confirmed reachable — verified-purge spec §12). Reads the served render-epoch out
  * of the edge HTML and compares it to the epoch this purge bumped to: a stale edge
- * carries an older N. Anonymous GET (no cookies) so it sees the PUBLIC cache state;
- * redirects are followed so the final rendered page is measured. Carries no
- * credential, so `redirection => 0` is intentionally NOT set (that guard is for
- * credentialed calls; here it would misread a canonicalizing 3xx as "unknown").
+ * carries an older N. Anonymous GET (no cookies) so it sees the PUBLIC cache state.
+ * Redirects are CAPPED at one hop (`redirection => 1`): the probe carries no
+ * credential (so the credential-forwarding reason for `=> 0` is moot here), but an
+ * uncapped chain is still SSRF-relevant. One canonicalizing 3xx (trailing-slash or
+ * http->https) is legitimate and must be followed to measure the final page; capping
+ * the chain stops a hypothetical open redirect on a probed route from walking the
+ * origin box down to an internal endpoint (AUDIT-CHECKLIST §1.3 outbound convention).
  *
  * @param string $url          Absolute URL on our host.
  * @param int    $expect_epoch The epoch the current purge bumped to.
@@ -210,7 +217,7 @@ function sn_verified_purge_routes() {
  *   or a missing marker — never coerced to a pass.
  */
 function sn_purge_probe( $url, $expect_epoch ) {
-	$res = wp_remote_get( $url, array( 'timeout' => 5, 'sslverify' => true ) );
+	$res = wp_remote_get( $url, array( 'timeout' => 5, 'sslverify' => true, 'redirection' => 1 ) );
 	if ( is_wp_error( $res ) ) {
 		return array( 'url' => $url, 'http' => 0, 'epoch_seen' => null, 'fresh' => null, 'cf_cache_status' => '' );
 	}

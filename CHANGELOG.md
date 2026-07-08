@@ -2,6 +2,19 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.28.1] - 2026-07-08: Cap the freshness-probe redirect chain (CMA audit follow-up)
+
+**Headline:** The 2026-07-08 CMA diff audit (v10.21.8→v10.28.0, verdict *satisfied*, 0 critical/high/medium) flagged one LOW: the box-direct freshness probe `sn_purge_probe()` followed redirects uncapped. It carries no credential (so the credential-forwarding case for `redirection => 0` is genuinely moot), and the precondition — a same-host open redirect planted on one of the three fixed probed routes (`/`, `/notes/`, `/provenance/`) — needs admin/misconfig, so it is not unprivileged-exploitable. But an uncapped chain is still SSRF-relevant, so the probe now caps at **one** hop: enough to follow a legitimate canonicalizing 3xx (trailing-slash / http→https) and measure the final page, while preventing a chain that walks the origin box toward an internal endpoint. Also folds in the audit's two INFO doc/hygiene notes.
+
+> **Why PATCH:** SSRF-hardening (a `redirection` cap on one existing outbound call) plus doc/readme corrections; no user-visible, route, template, or capability change. Same class as the plugin's v8.7.1/v8.8.5 outbound-hardening PATCHes.
+
+### Fixed
+- `sn_purge_probe()` ([inc/purge-verify.php](inc/purge-verify.php)) now passes `'redirection' => 1`, capping the freshness probe's redirect chain at a single canonicalizing hop (AUDIT-CHECKLIST §1.3). Pinned by a new assertion in `tests/purge-verify.php` (the stub now records request args, not just the URL).
+
+### Documentation
+- Corrected the `sn_bump_render_epoch()` docblock (audit INFO-1): the render epoch **is** read on every front-end `wp_head`, not "only during a purge" — the accurate rationale for keeping it non-autoloaded is to avoid loading it into `alloptions` on the many admin/AJAX/cron/REST requests where it is never read.
+- Synced `readme.txt` `Stable tag: 10.18.0` → `10.28.1` (audit INFO-2): it had drifted 10 minors behind `style.css` despite claiming to mirror it.
+
 ## [10.28.0] - 2026-07-07: Count contact-email clicks as cookieless conversions (1:1 with plugin funnels)
 
 **Headline:** The plugin's v8.8.0 shipped automatic conversion funnels that group the goal events the site already tracks. The theme's beacon (`assets/js/sn-beacon.js` §6) emits those goals — `data-sn-subscribe` on the Notes email links, plus auto-classified RSS `subscribe` and cross-host `outbound` — but the single most important conversion on the site was structurally invisible to it: the `/contact` email aliases. Those are `mailto:` links assembled at runtime by `contact-aliases.js`, and the beacon deliberately ignores `mailto:`/`tel:` (protocol isn't http/https) so DOM-built contact links are never *miscounted*. The consequence was that someone actually emailing to hire — the money event — fired nothing, and the plugin's new funnels had no `/contact` conversion to anchor on. This tags each alias with the beacon's author-intent escape hatch, `data-sn-goal`, so a click now fires a named `contact-<alias>` conversion. No plugin change is needed: the funnel surfaces any goal name it sees.
