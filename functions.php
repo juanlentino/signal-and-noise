@@ -17,7 +17,7 @@
  *   inc/patterns.php             — Block Pattern category registration
  *   inc/blocks-register.php      — custom sidenote + pull-quote dynamic blocks (v9.11.0)
  *   inc/blocks-view-transitions.php — view-transition opt-in for block markup
- *   inc/abilities-registration.php — 13 WP 7.0 Abilities (theme-owned: 8 read + 5 generative; v9.1.1, get-latest-theme-tag added v9.9.0)
+ *   inc/abilities-registration.php — 15 WP 7.0 Abilities (theme-owned: 10 read + 5 generative; v9.1.1, get-latest-theme-tag added v9.9.0, get-seo-route-meta/get-llms-txt added v10.29.0)
  *   inc/post-frontmatter.php     — long-form post frontmatter rendering
  *   inc/block-bindings.php       — signal-noise/post-field Block Bindings source (reading_time|pillar|canonical|og_title) (v9.11.0)
  *   inc/post-updated-date.php    — [sn_updated_date] "Updated YYYY.MM.DD" line for materially-revised notes (v9.10.0)

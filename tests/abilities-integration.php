@@ -482,7 +482,7 @@ echo "\nCategory: dispatch via wp_get_ability()\n";
 // Non-existent slug returns null.
 ap_true( null === wp_get_ability( 'signal-and-noise/does-not-exist' ), 'wp_get_ability returns null for unknown slug' );
 
-// All 12 abilities are registered.
+// All 15 abilities are registered.
 $expected_abilities = array(
 	'signal-and-noise/get-design-tokens',
 	'signal-and-noise/list-block-patterns',
@@ -491,6 +491,9 @@ $expected_abilities = array(
 	'signal-and-noise/get-page-notes-pillars',
 	'signal-and-noise/get-reading-time-for-slug',
 	'signal-and-noise/get-design-system-summary',
+	'signal-and-noise/get-latest-theme-tag',
+	'signal-and-noise/get-seo-route-meta',
+	'signal-and-noise/get-llms-txt',
 	'signal-and-noise/ai-generate-page-note-summary',
 	'signal-and-noise/ai-suggest-block-pattern',
 	'signal-and-noise/ai-validate-brand-alignment',

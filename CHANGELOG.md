@@ -2,6 +2,22 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.29.1] - 2026-07-08: Audit-hygiene patch — readme parity, ability-count comments, and a CI guard to close the drift class
+
+**Headline:** The 2026-07-08 CMA diff audit (v10.28.1→v10.29.0, verdict *satisfied*, 0 critical/high/medium) flagged one LOW and two INFO — all documentation/metadata drift introduced by v10.29.0. `readme.txt` `Stable tag` had slipped back to `10.28.1` (v10.29.0 bumped `style.css` but not the hand-maintained readme field — the same desync the v10.28.1 patch had just fixed), and several docblock comments still counted 13 abilities after the two SEO abilities took the theme to 15. This resyncs both and, per the audit's key recommendation, adds a CI guard so the readme/version desync can never recur silently.
+
+> **Why PATCH:** documentation/metadata corrections plus a CI check — no runtime, route, template, or capability change. The runtime version is derived from `style.css` (`wp_get_theme()`), so none of these edits alter behavior; they make the repo's self-description match reality and mechanically enforce it going forward.
+
+### Fixed
+- Synced `readme.txt` `Stable tag: 10.28.1` → `10.29.1` (audit LOW-1). The field is hand-maintained and decoupled from the runtime version, so it silently lagged when v10.29.0 bumped `style.css` — this is the second time the pair drifted (v10.28.1 fixed it; v10.29.0 re-broke it), which is why the CI guard below exists.
+
+### Changed
+- The `changelog` CI job ([.github/workflows/ci.yml](.github/workflows/ci.yml)) now also asserts `readme.txt` `Stable tag` **equals** `style.css` `Version` on every pull request, failing with a `readme.txt` annotation on a mismatch. This closes the drift *class*: the exact v10.29.0 slip (Version bumped, Stable tag forgotten) would now fail CI at PR time instead of surfacing in a later audit.
+
+### Documentation
+- Corrected stale ability-count comments after v10.29.0 took the theme from 13 to 15 abilities (audit INFO-1): [functions.php](functions.php) module map (13 → 15, 8 → 10 read), the `inc/abilities-registration.php` orchestrator docblock (diagnostics 5 → 7 with the two SEO abilities named; `Total: 13` → `15`), and the `tests/abilities-registration.php` header (13 → 15).
+- Completed the `tests/abilities-integration.php` registration roster (audit INFO-2): it asserted "All 12" while listing 12, missing `get-latest-theme-tag` (v9.9.0), `get-seo-route-meta`, and `get-llms-txt` (v10.29.0). All 15 registered slugs are now enumerated and checked.
+
 ## [10.29.0] - 2026-07-08: Two SEO abilities — expose the theme's route meta + llms.txt to agents
 
 **Headline:** The theme registers 13 WP Abilities across design-system, templates, content, and version — but its signature owned surface, **SEO**, had none. WordPress can't describe the theme's template-driven Pages (their content lives in FSE templates, not `post_content`, so there's no excerpt) or its AI-crawler manifest, so both were invisible to any agent introspecting the site. This adds two read-only abilities that expose exactly that: the per-route meta the theme supplies, and the llms.txt manifest it generates.
