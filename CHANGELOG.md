@@ -2,6 +2,18 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.29.0] - 2026-07-08: Two SEO abilities — expose the theme's route meta + llms.txt to agents
+
+**Headline:** The theme registers 13 WP Abilities across design-system, templates, content, and version — but its signature owned surface, **SEO**, had none. WordPress can't describe the theme's template-driven Pages (their content lives in FSE templates, not `post_content`, so there's no excerpt) or its AI-crawler manifest, so both were invisible to any agent introspecting the site. This adds two read-only abilities that expose exactly that: the per-route meta the theme supplies, and the llms.txt manifest it generates.
+
+> **Why MINOR:** two new agent-facing capabilities (public Abilities, `show_in_rest`), additive. Both are read-only (`readonly`/`idempotent` annotations), gated by the existing `sn_theme_perm_read` (`read` cap), and wrap generators that already exist (`sn_seo_page_descriptions()`, `sn_llms_txt_body()`) — no new query, route, or settings-schema.
+
+### New
+- **`signal-and-noise/get-seo-route-meta`** — returns the theme-supplied SEO descriptions for its template-driven Pages (about, contact, colophon, music, services). Pass a `slug` (`"services"` or `"/services"`) for one route, or omit it for the full route→description map — which doubles as a coverage check for a Page shipped without a description (the exact class of gap a prior release hit on `/services`). Reads `sn_seo_page_descriptions()`; content-free public copy.
+- **`signal-and-noise/get-llms-txt`** — returns the theme-generated `llms.txt` manifest, the site's machine-readable index/summary for LLMs and answer engines (the AEO counterpart to `robots.txt`/`sitemap.xml`). `full: true` appends the recent Notes corpus (queried only then, mirroring the live route); omit for the concise index. Reads `sn_llms_txt_body()`.
+
+Both join the `diagnostics` category (now 7 read abilities). `tests/abilities-registration.php` extended: registration + category + `readonly` annotation + execute-path assertions (slug filter incl. path-form input, unknown-slug empty, index-vs-full variant, notes-only-when-full).
+
 ## [10.28.1] - 2026-07-08: Cap the freshness-probe redirect chain (CMA audit follow-up)
 
 **Headline:** The 2026-07-08 CMA diff audit (v10.21.8→v10.28.0, verdict *satisfied*, 0 critical/high/medium) flagged one LOW: the box-direct freshness probe `sn_purge_probe()` followed redirects uncapped. It carries no credential (so the credential-forwarding case for `redirection => 0` is genuinely moot), and the precondition — a same-host open redirect planted on one of the three fixed probed routes (`/`, `/notes/`, `/provenance/`) — needs admin/misconfig, so it is not unprivileged-exploitable. But an uncapped chain is still SSRF-relevant, so the probe now caps at **one** hop: enough to follow a legitimate canonicalizing 3xx (trailing-slash / http→https) and measure the final page, while preventing a chain that walks the origin box toward an internal endpoint. Also folds in the audit's two INFO doc/hygiene notes.

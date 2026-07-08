@@ -2,12 +2,14 @@
 /**
  * Signal & Noise — Abilities API: diagnostics abilities.
  *
- * 5 read abilities in the 'diagnostics' category:
+ * 7 read abilities in the 'diagnostics' category:
  *   - signal-and-noise/get-active-template-structure
  *   - signal-and-noise/get-theme-version
  *   - signal-and-noise/get-design-system-summary
  *   - signal-and-noise/get-design-tokens
  *   - signal-and-noise/get-latest-theme-tag (added v9.9.0)
+ *   - signal-and-noise/get-seo-route-meta (added v10.29.0)
+ *   - signal-and-noise/get-llms-txt (added v10.29.0)
  *
  * Extracted from inc/abilities-registration.php by the v9.1.7 split (B-11
  * theme-side, companion to plugin v4.1.3). The first 4 impl functions are
@@ -275,6 +277,79 @@ function sn_theme_register_diagnostics_abilities() {
 				),
 			),
 		) );
+	wp_register_ability( 'signal-and-noise/get-seo-route-meta', array(
+		'label'               => 'Get SEO meta for template-driven routes',
+		'description'         => 'Returns the theme-supplied SEO meta descriptions for the template-driven Pages WordPress cannot describe on its own (about, contact, colophon, music, services) — their content lives in FSE templates, not post_content, so they carry no excerpt and the theme supplies the description. Pass `slug` to fetch one route; omit it for the full route→description map (useful for spotting a Page shipped without a description). Read-only.',
+		'category'            => 'diagnostics',
+		'permission_callback' => 'sn_theme_perm_read',
+		'execute_callback'    => 'sn_theme_ability_seo_route_meta',
+		'input_schema'        => array(
+			'type'       => array( 'object', 'null' ),
+			'properties' => array(
+				'slug' => array( 'type' => 'string', 'description' => 'A template-Page slug or path (e.g., "services" or "/services"). Omit to return every theme-owned route.' ),
+			),
+			'additionalProperties' => false,
+		),
+		'output_schema'       => array(
+			'type'       => 'object',
+			'required'   => array( 'routes', 'count' ),
+			'properties' => array(
+				'routes' => array(
+					'type'        => 'array',
+					'description' => 'Theme-owned routes and the SEO description each emits (one entry when `slug` matches, empty when it does not).',
+					'items'       => array(
+						'type'       => 'object',
+						'properties' => array(
+							'slug'        => array( 'type' => 'string', 'description' => 'Page slug.' ),
+							'path'        => array( 'type' => 'string', 'description' => 'Site path, e.g. "/services".' ),
+							'description' => array( 'type' => 'string', 'description' => 'The meta description the theme supplies for this route.' ),
+						),
+					),
+				),
+				'count'  => array( 'type' => 'integer', 'minimum' => 0, 'description' => 'Number of routes returned.' ),
+			),
+		),
+		'meta'                => array(
+			'show_in_rest' => true,
+			'annotations'  => array(
+				'idempotent'      => true,
+				'open_world_hint' => false,
+				'readonly'        => true,
+			),
+		),
+	) );
+
+	wp_register_ability( 'signal-and-noise/get-llms-txt', array(
+		'label'               => 'Get the llms.txt AI-crawler manifest',
+		'description'         => 'Returns the theme-generated llms.txt manifest — the site\'s machine-readable index and summary for LLMs and answer engines (the AEO counterpart to robots.txt / sitemap.xml). Pass `full: true` for the extended variant that appends the recent Notes corpus; omit for the concise index. Read-only.',
+		'category'            => 'diagnostics',
+		'permission_callback' => 'sn_theme_perm_read',
+		'execute_callback'    => 'sn_theme_ability_llms_txt',
+		'input_schema'        => array(
+			'type'       => array( 'object', 'null' ),
+			'properties' => array(
+				'full' => array( 'type' => 'boolean', 'description' => 'Return the extended variant (appends the recent Notes corpus). Default false (concise index).', 'default' => false ),
+			),
+			'additionalProperties' => false,
+		),
+		'output_schema'       => array(
+			'type'       => 'object',
+			'required'   => array( 'variant', 'content' ),
+			'properties' => array(
+				'variant' => array( 'type' => 'string', 'enum' => array( 'index', 'full' ), 'description' => 'Which manifest variant was rendered.' ),
+				'content' => array( 'type' => 'string', 'description' => 'The rendered llms.txt body (plain-text Markdown).' ),
+				'bytes'   => array( 'type' => 'integer', 'minimum' => 0, 'description' => 'Byte length of the rendered content.' ),
+			),
+		),
+		'meta'                => array(
+			'show_in_rest' => true,
+			'annotations'  => array(
+				'idempotent'      => true,
+				'open_world_hint' => false,
+				'readonly'        => true,
+			),
+		),
+	) );
 }
 add_action( 'wp_abilities_api_init', 'sn_theme_register_diagnostics_abilities' );
 
@@ -595,4 +670,76 @@ function sn_theme_ability_get_latest_theme_tag( $input ) {
 		return array( 'ok' => false, 'tag' => null );
 	}
 	return array( 'ok' => true, 'tag' => $tag );
+}
+
+/**
+ * Execute callback: signal-and-noise/get-seo-route-meta.
+ *
+ * Exposes sn_seo_page_descriptions() (inc/seo-route-meta.php) — the meta
+ * descriptions the theme supplies for its template-driven Pages, which have no
+ * post_content excerpt for the companion plugin's SEO layer to derive. Read-only;
+ * the map is content-free public copy, safe for any `read`-capable caller.
+ *
+ * @since 10.29.0
+ * @param mixed $input { slug?: string } or null.
+ * @return array{routes:array<int,array{slug:string,path:string,description:string}>,count:int}|WP_Error
+ */
+function sn_theme_ability_seo_route_meta( $input = array() ) {
+	try {
+		if ( ! function_exists( 'sn_seo_page_descriptions' ) ) {
+			return new WP_Error( 'theme_dependency_missing', 'sn_seo_page_descriptions() not available.', array( 'status' => 503 ) );
+		}
+		$filter = '';
+		if ( is_array( $input ) && isset( $input['slug'] ) ) {
+			// Accept "/services" or "services"; compare case-insensitively.
+			$filter = strtolower( trim( trim( (string) $input['slug'] ), '/' ) );
+		}
+		$routes = array();
+		foreach ( (array) sn_seo_page_descriptions() as $slug => $description ) {
+			$slug = (string) $slug;
+			if ( '' !== $filter && $slug !== $filter ) {
+				continue;
+			}
+			$routes[] = array(
+				'slug'        => $slug,
+				'path'        => '/' . $slug,
+				'description' => (string) $description,
+			);
+		}
+		return array( 'routes' => $routes, 'count' => count( $routes ) );
+	} catch ( \Throwable $e ) {
+		error_log( 'SN theme ability error in get-seo-route-meta: ' . $e->getMessage() );
+		return new WP_Error( 'theme_ability_error', sprintf( 'Theme ability failed: %s', $e->getMessage() ), array( 'status' => 500 ) );
+	}
+}
+
+/**
+ * Execute callback: signal-and-noise/get-llms-txt.
+ *
+ * Renders the theme's llms.txt manifest via sn_llms_txt_body() (inc/llms-txt.php)
+ * — the same body the /llms.txt route serves. The full variant appends the recent
+ * Notes corpus, queried only when requested (mirroring sn_llms_txt_send()).
+ * Read-only; the manifest is public content.
+ *
+ * @since 10.29.0
+ * @param mixed $input { full?: bool } or null.
+ * @return array{variant:string,content:string,bytes:int}|WP_Error
+ */
+function sn_theme_ability_llms_txt( $input = array() ) {
+	try {
+		if ( ! function_exists( 'sn_llms_txt_body' ) ) {
+			return new WP_Error( 'theme_dependency_missing', 'sn_llms_txt_body() not available.', array( 'status' => 503 ) );
+		}
+		$full  = is_array( $input ) && ! empty( $input['full'] );
+		$notes = ( $full && function_exists( 'sn_llms_txt_recent_notes' ) ) ? sn_llms_txt_recent_notes() : array();
+		$body  = (string) sn_llms_txt_body( $full, $notes );
+		return array(
+			'variant' => $full ? 'full' : 'index',
+			'content' => $body,
+			'bytes'   => strlen( $body ),
+		);
+	} catch ( \Throwable $e ) {
+		error_log( 'SN theme ability error in get-llms-txt: ' . $e->getMessage() );
+		return new WP_Error( 'theme_ability_error', sprintf( 'Theme ability failed: %s', $e->getMessage() ), array( 'status' => 500 ) );
+	}
 }

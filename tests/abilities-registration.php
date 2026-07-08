@@ -3,7 +3,7 @@
  * Standalone fixture tests for inc/abilities-registration.php (theme v9.1.0).
  *
  * Covers all 13 WP 7.0 abilities the theme registers:
- *   - 8 read abilities (design tokens, patterns, template, version,
+ *   - 10 read abilities (design tokens, patterns, template, version,
  *     /notes pillars, reading time, design-system summary, latest-theme-tag)
  *   - 5 generative abilities (page-note summary, pattern suggest,
  *     brand validate, pattern content, voice rewrite)
@@ -346,6 +346,26 @@ if ( ! function_exists( 'wp_register_ability' ) ) {
 	}
 }
 
+// Data-source stubs for the v10.29.0 SEO diagnostics abilities. The SUT
+// (abilities-registration.php) does not pull in seo-route-meta.php / llms-txt.php,
+// so these stand in for those modules' generators — deterministic fixtures the
+// execute_callbacks read at call time.
+if ( ! function_exists( 'sn_seo_page_descriptions' ) ) {
+	function sn_seo_page_descriptions() {
+		return array( 'about' => 'About desc.', 'services' => 'Services desc.', 'music' => 'Music desc.' );
+	}
+}
+if ( ! function_exists( 'sn_llms_txt_recent_notes' ) ) {
+	function sn_llms_txt_recent_notes( $limit = 40 ) {
+		return array( array( 'title' => 'Note one', 'url' => '/notes/one', 'summary' => 's' ) );
+	}
+}
+if ( ! function_exists( 'sn_llms_txt_body' ) ) {
+	function sn_llms_txt_body( $full = false, $notes = array() ) {
+		return $full ? ( "# llms-full\n" . count( (array) $notes ) . ' notes' ) : '# llms index';
+	}
+}
+
 // --- Load the system under test ---------------------------------------
 // Placed AFTER all WP + AI stubs so add_action / wp_register_ability
 // calls inside the SUT land on the no-op stubs above. Placed BEFORE the
@@ -475,6 +495,44 @@ ha_true( isset( $result['version'] ),    'output has version key' );
 ha_eq( '#ffffff', $result['colors']['void'],    'void color flattened from palette' );
 ha_eq( '#e00404', $result['colors']['blood'],   'blood color flattened from palette' );
 ha_eq( 2, count( $result['typography']['fontFamilies'] ), 'typography.fontFamilies passthrough' );
+
+// ─── Test: get-seo-route-meta (v10.29.0) ─────────────────────────
+echo "\nTest signal-and-noise/get-seo-route-meta\n";
+ha_reset();
+sn_theme_register_abilities();
+ha_true( isset( $GLOBALS['__test_registered_abilities']['signal-and-noise/get-seo-route-meta'] ), 'get-seo-route-meta is registered' );
+$ability = $GLOBALS['__test_registered_abilities']['signal-and-noise/get-seo-route-meta'];
+ha_eq( 'diagnostics', $ability['category'], 'category is diagnostics' );
+ha_true( true === ( $ability['meta']['annotations']['readonly'] ?? false ), 'annotated readonly' );
+ha_true( is_callable( $ability['execute_callback'] ), 'execute_callback is callable' );
+$all = call_user_func( $ability['execute_callback'], array() );
+ha_true( is_array( $all ) && isset( $all['routes'], $all['count'] ), 'returns routes + count' );
+ha_eq( 3, $all['count'], 'no filter → every route (stub map has 3)' );
+ha_eq( '/about', $all['routes'][0]['path'], 'path is /slug' );
+ha_eq( 'About desc.', $all['routes'][0]['description'], 'description passed through from the map' );
+$one = call_user_func( $ability['execute_callback'], array( 'slug' => '/services' ) );
+ha_eq( 1, $one['count'], 'a path-form slug filters to exactly one route' );
+ha_eq( 'services', $one['routes'][0]['slug'], 'the filtered route is the requested slug' );
+$none = call_user_func( $ability['execute_callback'], array( 'slug' => 'nope' ) );
+ha_eq( 0, $none['count'], 'unknown slug → empty (count 0)' );
+
+// ─── Test: get-llms-txt (v10.29.0) ───────────────────────────────
+echo "\nTest signal-and-noise/get-llms-txt\n";
+ha_reset();
+sn_theme_register_abilities();
+ha_true( isset( $GLOBALS['__test_registered_abilities']['signal-and-noise/get-llms-txt'] ), 'get-llms-txt is registered' );
+$ability = $GLOBALS['__test_registered_abilities']['signal-and-noise/get-llms-txt'];
+ha_eq( 'diagnostics', $ability['category'], 'category is diagnostics' );
+ha_true( is_callable( $ability['execute_callback'] ), 'execute_callback is callable' );
+$idx = call_user_func( $ability['execute_callback'], array() );
+ha_true( is_array( $idx ) && isset( $idx['variant'], $idx['content'], $idx['bytes'] ), 'returns variant + content + bytes' );
+ha_eq( 'index', $idx['variant'], 'default variant is index' );
+ha_true( strpos( $idx['content'], 'llms index' ) !== false, 'index content comes from the body builder' );
+ha_eq( strlen( $idx['content'] ), $idx['bytes'], 'bytes equals content length' );
+$full = call_user_func( $ability['execute_callback'], array( 'full' => true ) );
+ha_eq( 'full', $full['variant'], 'full=true → full variant' );
+ha_true( strpos( $full['content'], 'llms-full' ) !== false, 'full variant renders the full body' );
+ha_true( strpos( $full['content'], '1 notes' ) !== false, 'recent Notes are fetched + passed ONLY for the full variant' );
 
 // ─── Test: list-block-patterns ───────────────────────────────────
 echo "\nTest signal-and-noise/list-block-patterns\n";
