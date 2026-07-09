@@ -2,6 +2,21 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [Unreleased] - 2026-07-08: About page rebuild (five sections; Panacea founding year corrected)
+
+**Headline:** The `/about` page grew from two content sections to five. The bio (Who I Am) and the mentorship section keep their block structure with refreshed prose, and three new sections slot between them: Studio and Clients, Research, and Service. Each new section is cloned from the existing mentorship chassis (same group, columns, eyebrow, and heading classes; no new patterns; no `theme.json` change). Panacea's founding year is corrected from 2015 to 2016, verified against both resumes.
+
+> **No version bump.** This is a content-only edit to a single FSE template ([templates/page-about.html](templates/page-about.html)), with no code, route, capability, or `theme.json` change, so per [docs/VERSIONING.md](docs/VERSIONING.md) the theme `Version:` stays at **10.29.1**. There is no 10.29.2; do not go looking for a tag that was never cut. This entry sits under `[Unreleased]` and folds into the next release that does bump.
+
+### Changed
+- `/about` now renders five sections in order: Who I Am, Studio and Clients, Research, Service, Education & Mentorship. The three middle sections are new; the first and last keep their structure with new copy. All content lives in the template (the page has no `wp:post-content`), cloned verbatim from the mentorship section's group/columns/`sn-catalog-eyebrow`/`clamp()`-heading markup, with no invented classes, inline styles, or patterns.
+- Corrected Panacea's founding year from 2015 to 2016 in the bio's visible prose (the only visible occurrence of the year in the theme).
+- Softened the Service section's closing line at the owner's request, from "Taking it seriously means doing the unpaid part." to "That includes the work no one bills for.", stating the principle without an implied judgment of peers.
+
+### Notes
+- **Schema follow-up (separate repo, out of scope here):** the live page's JSON-LD emits `{"@type":"Organization","name":"Panacea","foundingDate":"2015"}` from the companion signal-and-noise-tools plugin, not this theme. It still reads 2015 and now mismatches the visible 2016. Correcting it is a plugin change and is flagged for a follow-up so schema and copy agree.
+- The `/about` meta description is theme-owned ([inc/seo-route-meta.php](inc/seo-route-meta.php), via `sn_seo_page_descriptions()`), carries no founding year, and is unchanged.
+
 ## [10.29.1] - 2026-07-08: Audit-hygiene patch — readme parity, ability-count comments, and a CI guard to close the drift class
 
 **Headline:** The 2026-07-08 CMA diff audit (v10.28.1→v10.29.0, verdict *satisfied*, 0 critical/high/medium) flagged one LOW and two INFO — all documentation/metadata drift introduced by v10.29.0. `readme.txt` `Stable tag` had slipped back to `10.28.1` (v10.29.0 bumped `style.css` but not the hand-maintained readme field — the same desync the v10.28.1 patch had just fixed), and several docblock comments still counted 13 abilities after the two SEO abilities took the theme to 15. This resyncs both and, per the audit's key recommendation, adds a CI guard so the readme/version desync can never recur silently.
