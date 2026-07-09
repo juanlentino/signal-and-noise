@@ -21,6 +21,7 @@
  *   inc/post-frontmatter.php     — long-form post frontmatter rendering
  *   inc/block-bindings.php       — signal-noise/post-field Block Bindings source (reading_time|pillar|canonical|og_title) (v9.11.0)
  *   inc/post-updated-date.php    — [sn_updated_date] "Updated YYYY.MM.DD" line for materially-revised notes (v9.10.0)
+ *   inc/provenance-surface.php   — [sn_prov_chip] byline pill + [sn_prov_panel] record: theme-side placement for the plugin's public provenance rendering, plugin-guarded (v10.30.0)
  *   inc/article-toc.php          — in-article TOC + reading-progress bar (the_content filter, single notes ≥3 H2s)
  *   inc/feed-json.php            — JSON Feed 1.1 for the Notes corpus (v9.11.0)
  *   inc/feed-enrichment.php      — RSS media:content + reading-time enrichment, plugin-guarded (v9.11.0)
@@ -81,6 +82,7 @@ require_once __DIR__ . '/inc/abilities-registration.php';
 require_once __DIR__ . '/inc/post-frontmatter.php';
 require_once __DIR__ . '/inc/block-bindings.php';
 require_once __DIR__ . '/inc/post-updated-date.php';
+require_once __DIR__ . '/inc/provenance-surface.php'; // v10.30.0: [sn_prov_chip] byline pill + [sn_prov_panel] record — theme-side placement for the plugin's public provenance rendering (plugin-guarded)
 require_once __DIR__ . '/inc/related-notes.php';
 require_once __DIR__ . '/inc/cited-by.php'; // v10.21.0: [sn_cited_by] reverse-link footer (complement to deliberately-dead pingbacks)
 require_once __DIR__ . '/inc/404-recovery.php';

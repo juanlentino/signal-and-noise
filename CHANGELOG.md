@@ -2,6 +2,21 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.30.0] - 2026-07-09: Provenance surfacing on public Notes (byline chip + closing record)
+
+**Headline:** The companion signal-and-noise-tools plugin already computes and renders the public provenance of each Note (its commit-chain byline chip and its expandable record panel), but nothing placed that output on the front end. This wires it in: a new theme module registers `[sn_prov_chip]` and `[sn_prov_panel]`, and the two single-Note template parts carry them — the chip joins the byline spec-row after the pillar slot, and the record sits in the closing footer between the rule and the prev/next nav. Both are thin placement seams: the plugin owns the markup, the theme only decides where it appears.
+
+> **Why MINOR:** a new user-visible surface (provenance now renders on public Notes) via two additive shortcodes and their template-part placement — no removed/renamed API, no `theme.json` change, no settings-schema change. Per [docs/VERSIONING.md](docs/VERSIONING.md), a new visible capability is a MINOR.
+
+### Added
+- [inc/provenance-surface.php](inc/provenance-surface.php): registers `[sn_prov_chip]` → `sn_prov_render_chip( get_the_ID() )` and `[sn_prov_panel]` → `sn_prov_render_panel( get_the_ID() )`, each `function_exists()`-guarded so the Note degrades cleanly to `''` when the companion plugin is absent — mirroring how [inc/related-notes.php](inc/related-notes.php) guards `sn_get_reading_time`. A `render_block` bridge (priority 10, 2 args) gated on the two literal tokens resolves them inside the block template parts, because `core/shortcode` only `wpautop()`s its content and never runs `do_shortcode` on block-template output; `shortcode_unautop()` strips the invalid `<p>` that would otherwise wrap the block-level panel. Structure mirrors `sn_related_notes_render_block_bridge` and `sn_404_suggestions_render_block_bridge`.
+- [parts/post-frontmatter.html](parts/post-frontmatter.html): a `wp:shortcode` block with `[sn_prov_chip]` at the end of the byline group, after `[sn_post_pillar]`.
+- [parts/post-closing.html](parts/post-closing.html): a `wp:shortcode` block with `[sn_prov_panel]` between the opening separator and the prev/next nav group.
+- [tests/provenance-surface.php](tests/provenance-surface.php): black-box fixture coverage — both shortcodes register, each returns the plugin helper's output (with `get_the_ID()` flowing through) when the plugin fn exists and `''` when it does not, and the bridge resolves `do_shortcode` only on blocks carrying a token (no-op otherwise, panel not `<p>`-wrapped). 23 assertions.
+
+### Notes
+- The provenance markup is plugin-owned (`sn_prov_render_chip` / `sn_prov_render_panel`) and both helpers already return `''` for non-Notes and for Notes without a chain, so the shortcodes stay inert off a provenance-bearing Note. The tokens live only in the two single-Note template parts (used solely by `templates/single.html`), and the `render_block` bridge — like its related-notes/404 siblings — matches on the literal token rather than the query, so the chip/panel cannot leak into related-note excerpts, the /notes index, or widgets.
+
 ## [10.29.2] - 2026-07-08: About page rebuild (five sections; Panacea founding year corrected)
 
 **Headline:** The `/about` page grew from two content sections to five. The bio (Who I Am) and the mentorship section keep their block structure with refreshed prose, and three new sections slot between them: Studio and Clients, Research, and Service. Each new section is cloned from the existing mentorship chassis (same group, columns, eyebrow, and heading classes; no new patterns; no `theme.json` change). Panacea's founding year is corrected from 2015 to 2016, verified against both resumes.
