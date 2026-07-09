@@ -2,11 +2,11 @@
 
 All notable changes to Signal & Noise are documented here.
 
-## [Unreleased] - 2026-07-08: About page rebuild (five sections; Panacea founding year corrected)
+## [10.29.2] - 2026-07-08: About page rebuild (five sections; Panacea founding year corrected)
 
 **Headline:** The `/about` page grew from two content sections to five. The bio (Who I Am) and the mentorship section keep their block structure with refreshed prose, and three new sections slot between them: Studio and Clients, Research, and Service. Each new section is cloned from the existing mentorship chassis (same group, columns, eyebrow, and heading classes; no new patterns; no `theme.json` change). Panacea's founding year is corrected from 2015 to 2016, verified against both resumes.
 
-> **No version bump.** This is a content-only edit to a single FSE template ([templates/page-about.html](templates/page-about.html)), with no code, route, capability, or `theme.json` change, so per [docs/VERSIONING.md](docs/VERSIONING.md) the theme `Version:` stays at **10.29.1**. There is no 10.29.2; do not go looking for a tag that was never cut. This entry sits under `[Unreleased]` and folds into the next release that does bump.
+> **Why PATCH:** the rebuild adds three new content sections as block-template markup (new `group`/`columns`/`heading`/`spacer` blocks that affect rendering), plus a factual date correction and a copy refinement. Per [docs/VERSIONING.md](docs/VERSIONING.md) a block-template markup change that affects rendering bumps, and this adds no new capability, API, route, or `theme.json` change, so it is a PATCH, not a MINOR. It ships now (rather than riding a later release) so the visible 2016 correction reaches production in the same window as the companion signal-and-noise-tools plugin's matching JSON-LD `foundingDate` fix, keeping the page and its structured data consistent. (The `/about` content was first merged under an `[Unreleased]` no-bump entry in `#86`; this promotes it to a cut release.)
 
 ### Changed
 - `/about` now renders five sections in order: Who I Am, Studio and Clients, Research, Service, Education & Mentorship. The three middle sections are new; the first and last keep their structure with new copy. All content lives in the template (the page has no `wp:post-content`), cloned verbatim from the mentorship section's group/columns/`sn-catalog-eyebrow`/`clamp()`-heading markup, with no invented classes, inline styles, or patterns.
