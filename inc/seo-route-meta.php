@@ -56,31 +56,6 @@ function sn_seo_route_singular_description( $description, $post ) {
 }
 
 /**
- * sn_seo_route_meta: full meta for the postless /about/uses virtual route.
- * Returns null for any other request so the plugin falls back to WP conditionals.
- *
- * @param array<string,mixed>|null $meta Meta resolved so far (null = unresolved).
- * @return array<string,mixed>|null
- */
-function sn_seo_route_meta_for_uses( $meta ) {
-	if ( null !== $meta ) {
-		return $meta;
-	}
-	if ( ! function_exists( 'sn_uses_is_uses_request' ) || ! sn_uses_is_uses_request() ) {
-		return null;
-	}
-	return array(
-		'title'       => function_exists( 'sn_uses_title' ) ? sn_uses_title() : 'Uses',
-		'description' => 'The hardware, software, and instruments behind the work: what Juan Lentino actually uses, grouped and listed.',
-		'url'         => home_url( '/about/uses' ),
-		'breadcrumb'  => array(
-			array( 'name' => 'About', 'url' => home_url( '/about/' ) ),
-			array( 'name' => 'Uses',  'url' => home_url( '/about/uses' ) ),
-		),
-	);
-}
-
-/**
  * sn_seo_route_meta: full meta for the postless /accessibility virtual route (v10.21.0).
  *
  * @param array<string,mixed>|null $meta Meta resolved so far (null = unresolved).
@@ -105,6 +80,5 @@ function sn_seo_route_meta_for_accessibility( $meta ) {
 
 if ( ! defined( 'SN_SEO_ROUTE_META_TEST' ) || ! SN_SEO_ROUTE_META_TEST ) {
 	add_filter( 'sn_seo_singular_description', 'sn_seo_route_singular_description', 10, 2 );
-	add_filter( 'sn_seo_route_meta', 'sn_seo_route_meta_for_uses' );
 	add_filter( 'sn_seo_route_meta', 'sn_seo_route_meta_for_accessibility' );
 }
