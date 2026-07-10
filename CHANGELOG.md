@@ -2,6 +2,16 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.31.0] - 2026-07-10: /about is now CMS-authored — template renders the Page body (pages-to-CMS flip, About pilot)
+
+**Headline:** The About page's content now lives in the WordPress editor (Pages → About), not in the template file. `templates/page-about.html` is slimmed to a designed frame — `header` + `<main>` + `wp:post-content` + `footer` — and renders the Page body that the companion plugin (v9.16.0) seeded into `post_content`. Same page, same widths, same design; now editable in wp-admin with a native Excerpt driving its SEO description. The visible page is unchanged.
+
+> **Why MINOR:** a new user-visible capability — About is now editable from the CMS and the front end reflects it. No settings-schema change. Requires the companion plugin at **v9.16.0+** (which seeds the Page body); deploy the plugin and confirm the About Page body before deploying this.
+
+### Changed
+- `templates/page-about.html` slimmed to `header` + `<main class="wp-block-group">` + `wp:post-content` + `footer`; the six content sections now come from the About Page's `post_content` (the design/widths moved with them — the `1400px` wide track is carried in the seeded body) ([templates/page-about.html](templates/page-about.html)).
+- Dropped the hardcoded `'about'` description from `sn_seo_page_descriptions()` — the About Page's native Excerpt now supplies its meta description via the plugin's resolver (excerpt precedes this filter). Other slugs (contact/colophon/music/services) are untouched pending their own flips ([inc/seo-route-meta.php](inc/seo-route-meta.php)).
+
 ## [10.30.0] - 2026-07-09: Provenance surfacing on public Notes (byline chip + closing record)
 
 **Headline:** The companion signal-and-noise-tools plugin already computes and renders the public provenance of each Note (its commit-chain byline chip and its expandable record panel), but nothing placed that output on the front end. This wires it in: a new theme module registers `[sn_prov_chip]` and `[sn_prov_panel]`, and the two single-Note template parts carry them — the chip joins the byline spec-row after the pillar slot, and the record sits in the closing footer between the rule and the prev/next nav. Both are thin placement seams: the plugin owns the markup, the theme only decides where it appears.

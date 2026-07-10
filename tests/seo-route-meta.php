@@ -33,8 +33,13 @@ function sn_a11y_title() { return 'Accessibility — Juan Lentino'; }
 require __DIR__ . '/../inc/seo-route-meta.php';
 
 // --- Page descriptions map ---
+// 'about' is deliberately absent: the About Page's post_content now carries the
+// seeded body + excerpt, so its description resolves upstream (from the Page
+// excerpt) before this filter ever runs. Real pages read from their Excerpt,
+// not this map.
 $map = sn_seo_page_descriptions();
-ok( isset( $map['about'], $map['contact'], $map['colophon'], $map['music'], $map['services'] ), 'descriptions cover about/contact/colophon/music/services' );
+ok( ! isset( $map['about'] ), 'about has no map entry (its description comes from the Page excerpt)' );
+ok( isset( $map['contact'], $map['colophon'], $map['music'], $map['services'] ), 'descriptions cover contact/colophon/music/services' );
 foreach ( $map as $slug => $d ) {
 	ok( is_string( $d ) && strlen( $d ) > 40 && strlen( $d ) < 200, "$slug description is a sensible meta length" );
 	// House style: these are SERP/social/AI-facing strings — no em-dashes (use hyphens/colons/commas).
@@ -43,8 +48,10 @@ foreach ( $map as $slug => $d ) {
 
 // --- Singular-description filter ---
 $about = (object) array( 'post_name' => 'about' );
-ok( sn_seo_route_singular_description( '', $about ) === $map['about'], 'fills /about description when none resolved upstream' );
-ok( sn_seo_route_singular_description( 'Existing excerpt', $about ) === 'Existing excerpt', 'does NOT override an upstream description (excerpt/override wins)' );
+ok( sn_seo_route_singular_description( '', $about ) === '', '/about has no map entry → unchanged (Page excerpt supplies it upstream)' );
+$contact = (object) array( 'post_name' => 'contact' );
+ok( sn_seo_route_singular_description( '', $contact ) === $map['contact'], 'fills /contact description when none resolved upstream' );
+ok( sn_seo_route_singular_description( 'Existing excerpt', $contact ) === 'Existing excerpt', 'does NOT override an upstream description (excerpt/override wins)' );
 $unknown = (object) array( 'post_name' => 'random-page' );
 ok( sn_seo_route_singular_description( '', $unknown ) === '', 'unmapped slug → unchanged (empty)' );
 ok( sn_seo_route_singular_description( '', null ) === '', 'null post → unchanged (no fatal)' );
