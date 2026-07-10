@@ -33,10 +33,8 @@ function sn_seo_page_descriptions() {
 	return (array) apply_filters(
 		'sn_seo_page_descriptions',
 		array(
-			'contact'  => 'How to reach Juan Lentino: remote mixing, mastering, and songwriting, or in-studio production at Panacea in Buenos Aires. Direct, no forms, no noise.',
 			'colophon' => 'How this site is built: the typography, tools, and engineering behind juanlentino.com.',
 			'music'    => 'Selected discography: releases produced, mixed, and engineered by Juan Lentino, with credits and streaming links.',
-			'services' => 'What Juan Lentino offers: production, mixing, mastering, songwriting, plus operations, AI strategy, and artist development, in-studio at Panacea or remote.',
 		)
 	);
 }
