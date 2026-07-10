@@ -60,7 +60,10 @@ foreach ( glob( "$root/templates/*.html" ) as $t ) {
 ok( empty( $offenders ), 'every template contentSize is on a track' . ( $offenders ? ' (offenders: ' . implode( ', ', $offenders ) . ')' : '' ) );
 
 // ── The wide-content pages actually carry the wide track ─────────────
-foreach ( array( 'page-music', 'page-services', 'page-resume', 'page-about', 'front-page' ) as $page ) {
+// page-about is excluded here: its body now lives in the About Page's
+// post_content (rendered via wp:post-content), not in the template file, so
+// the template itself carries no contentSize override to check.
+foreach ( array( 'page-music', 'page-services', 'page-resume', 'front-page' ) as $page ) {
 	$html = (string) file_get_contents( "$root/templates/$page.html" );
 	ok( strpos( $html, '"contentSize":"' . $wide . '"' ) !== false, "$page carries the wide track ($wide)" );
 }
