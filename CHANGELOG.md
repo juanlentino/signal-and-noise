@@ -2,6 +2,16 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.33.0] - 2026-07-10: /resume + /music render from the Page body (pages-to-CMS flip, Phase 1c — completes Phase 1)
+
+**Headline:** The last two Phase-1 templates. `templates/page-resume.html` and `templates/page-music.html` are slimmed to bare frames (`header` + `<main>` + `wp:post-content` + `footer`), rendering the merged bodies the companion plugin (v9.18.0) placed in each Page's `post_content`. This **also fixes a duplicate render**: because these templates already had a `wp:post-content` slot, once the plugin merged the prose into the DB the un-slimmed templates showed the hero (and Music's discography/credits) twice — slimming resolves it. Same pages, now fully CMS-authored. **Requires plugin v9.18.0+ and must deploy together with it** (the plugin merge and this slim are two halves of one change). With this, all five editorial pages (About/Contact/Services/Resume/Music) are CMS-authored.
+
+> **Why MINOR:** two more pages become CMS-authored on the front end. No settings-schema change. Requires plugin v9.18.0+.
+
+### Changed
+- `templates/page-resume.html` + `templates/page-music.html` slimmed to `header` + `<main class="wp-block-group">` + `wp:post-content` + `footer`; their bodies now render from the Pages' `post_content` (Resume: hero + PDF; Music: hero + featured player + `[sn_discography]` + Muso credits — all seeded/merged by the plugin) ([templates/page-resume.html](templates/page-resume.html), [templates/page-music.html](templates/page-music.html)).
+- Dropped the last hardcoded description (`'music'`) from `sn_seo_page_descriptions()` — only `'colophon'` (still file/pattern-based) remains; every flipped page now resolves SEO from its Page Excerpt ([inc/seo-route-meta.php](inc/seo-route-meta.php)).
+
 ## [10.32.0] - 2026-07-10: /contact + /services are now CMS-authored — templates render the Page bodies (pages-to-CMS flip, Phase 1b)
 
 **Headline:** Two more pages follow About into the WordPress editor. `templates/page-contact.html` and `templates/page-services.html` are slimmed to designed frames — `header` + `<main>` + `wp:post-content` + `footer` — and render the Page bodies the companion plugin (v9.17.0) seeded into `post_content`. Same pages, same design; now editable from Pages → …, with native Excerpts driving their SEO. Their `[sn_availability]` / `[sn_email]` shortcodes resolve unchanged inside `post_content`. The visible pages are unchanged.

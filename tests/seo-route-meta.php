@@ -38,8 +38,8 @@ require __DIR__ . '/../inc/seo-route-meta.php';
 // resolve upstream (from the Page excerpt) before this filter ever runs. Real
 // pages read from their Excerpt, not this map.
 $map = sn_seo_page_descriptions();
-ok( ! isset( $map['about'], $map['contact'], $map['services'] ), 'about/contact/services have no map entry (descriptions come from the Page excerpt)' );
-ok( isset( $map['colophon'], $map['music'] ) && 2 === count( $map ), 'descriptions cover only colophon/music' );
+ok( ! isset( $map['about'], $map['contact'], $map['services'], $map['music'] ), 'about/contact/services/music have no map entry (descriptions come from the Page excerpt)' );
+ok( isset( $map['colophon'] ) && 1 === count( $map ), 'descriptions cover only colophon' );
 foreach ( $map as $slug => $d ) {
 	ok( is_string( $d ) && strlen( $d ) > 40 && strlen( $d ) < 200, "$slug description is a sensible meta length" );
 	// House style: these are SERP/social/AI-facing strings — no em-dashes (use hyphens/colons/commas).

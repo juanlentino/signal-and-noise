@@ -34,7 +34,6 @@ function sn_seo_page_descriptions() {
 		'sn_seo_page_descriptions',
 		array(
 			'colophon' => 'How this site is built: the typography, tools, and engineering behind juanlentino.com.',
-			'music'    => 'Selected discography: releases produced, mixed, and engineered by Juan Lentino, with credits and streaming links.',
 		)
 	);
 }
