@@ -33,7 +33,6 @@ function sn_seo_page_descriptions() {
 	return (array) apply_filters(
 		'sn_seo_page_descriptions',
 		array(
-			'about'    => 'Music producer, mix engineer, and creative strategist based in Buenos Aires. The person behind the work, the studio, and the notes.',
 			'contact'  => 'How to reach Juan Lentino: remote mixing, mastering, and songwriting, or in-studio production at Panacea in Buenos Aires. Direct, no forms, no noise.',
 			'colophon' => 'How this site is built: the typography, tools, and engineering behind juanlentino.com.',
 			'music'    => 'Selected discography: releases produced, mixed, and engineered by Juan Lentino, with credits and streaming links.',
