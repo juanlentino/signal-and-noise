@@ -143,11 +143,17 @@ ok( strpos( $js, 'appendChild' ) !== false, 'JS injects the link into the .sn-em
 // music@ is the remote-music route added when /services and /contact were
 // reconciled (in-studio at Panacea BA vs remote-with-me); it is a first-class
 // alias, so it must satisfy the same leak guards as the original four.
+//
+// The routing directory (the five [sn_email] shortcodes) used to live inline
+// in page-contact.html; the Contact Page's post_content now carries it
+// (seeded by the companion plugin migration), so the template itself carries
+// no shortcode text to assert on. Mirrors the page-about exclusion in
+// tests/layout-width-system.php: the invariant still holds in production,
+// this static fixture just can't read the DB body.
 $tpl = (string) @file_get_contents( realpath( __DIR__ . '/..' ) . '/templates/page-contact.html' );
 ok( '' !== $tpl, 'page-contact.html is readable' );
 foreach ( array( 'research', 'press', 'speaking', 'role', 'music' ) as $u ) {
 	ok( strpos( $tpl, $u . '@juanlentino.com' ) === false, "TEMPLATE LEAK GUARD: no $u@juanlentino.com in source" );
-	ok( strpos( $tpl, '[sn_email user="' . $u . '"]' ) !== false, "template uses [sn_email user=\"$u\"]" );
 }
 ok( strpos( $tpl, 'mailto:research' ) === false && strpos( $tpl, 'mailto:press' ) === false && strpos( $tpl, 'mailto:speaking' ) === false && strpos( $tpl, 'mailto:role' ) === false && strpos( $tpl, 'mailto:music' ) === false, 'TEMPLATE LEAK GUARD: no mailto on the five aliases' );
 

@@ -2,6 +2,16 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.32.0] - 2026-07-10: /contact + /services are now CMS-authored — templates render the Page bodies (pages-to-CMS flip, Phase 1b)
+
+**Headline:** Two more pages follow About into the WordPress editor. `templates/page-contact.html` and `templates/page-services.html` are slimmed to designed frames — `header` + `<main>` + `wp:post-content` + `footer` — and render the Page bodies the companion plugin (v9.17.0) seeded into `post_content`. Same pages, same design; now editable from Pages → …, with native Excerpts driving their SEO. Their `[sn_availability]` / `[sn_email]` shortcodes resolve unchanged inside `post_content`. The visible pages are unchanged.
+
+> **Why MINOR:** two new user-visible capabilities — Contact + Services are CMS-authored and the front end reflects it. No settings-schema change. Requires the companion plugin at **v9.17.0+** (which seeds the Page bodies); deploy the plugin and confirm both Page bodies before deploying this.
+
+### Changed
+- `templates/page-contact.html` and `templates/page-services.html` slimmed to `header` + `<main class="wp-block-group">` + `wp:post-content` + `footer`; their content now comes from the respective Pages' `post_content` (design/widths carried in the seeded bodies) ([templates/page-contact.html](templates/page-contact.html), [templates/page-services.html](templates/page-services.html)).
+- Dropped the hardcoded `'contact'` and `'services'` descriptions from `sn_seo_page_descriptions()` — their native Excerpts now supply the meta description. `'colophon'` and `'music'` remain (not yet flipped) ([inc/seo-route-meta.php](inc/seo-route-meta.php)).
+
 ## [10.31.0] - 2026-07-10: /about is now CMS-authored — template renders the Page body (pages-to-CMS flip, About pilot)
 
 **Headline:** The About page's content now lives in the WordPress editor (Pages → About), not in the template file. `templates/page-about.html` is slimmed to a designed frame — `header` + `<main>` + `wp:post-content` + `footer` — and renders the Page body that the companion plugin (v9.16.0) seeded into `post_content`. Same page, same widths, same design; now editable in wp-admin with a native Excerpt driving its SEO description. The visible page is unchanged.

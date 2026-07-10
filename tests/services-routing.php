@@ -25,6 +25,16 @@
  * The music@ route itself (remote path on /contact) is leak-guarded in
  * tests/contact-email.php; this file owns the cross-page routing contract.
  *
+ * /services and /contact now render their bodies from post_content (the
+ * companion plugin migration seeded both Pages), so the routing/CTA copy
+ * this suite originally read out of the template files now lives in the DB
+ * body instead. Those content assertions are retired below — mirrors the
+ * page-about exclusion in tests/layout-width-system.php: the invariant still
+ * holds in production, this static fixture just can't read the DB body. The
+ * structural checks (file readability, no stale per-offering mode labels, no
+ * reintroduced "not here" framing) remain: they guard the template frame
+ * itself.
+ *
  * @since theme v10.27.0
  */
 
@@ -43,21 +53,14 @@ echo "Services <-> Contact routing suite — theme v10.27.0\n\n";
 ok( '' !== $services, 'page-services.html is readable' );
 ok( '' !== $contact, 'page-contact.html is readable' );
 
-// ── /services offers BOTH paths (no single dead-end CTA) ──────────────
-ok( strpos( $services, 'panaceastud.io' ) !== false, '/services offers the in-studio path (links to panaceastud.io)' );
-ok( strpos( $services, 'href="/contact"' ) !== false, '/services offers the remote path (links to /contact)' );
+// ── /services offers BOTH paths (no single dead-end CTA); both pages point
+//    studio work at the SAME destination — retired: this copy now lives in
+//    the Services/Contact Pages' post_content, not in these template files.
 
 // ── the two-mode split lives in the CTA + copy, not per-offering labels ──
 // v10.27.1 removed the .sn-service-mode tags (mode is per-engagement, not per-
 // service). Guard that they do not creep back in.
 ok( strpos( $services, 'sn-service-mode' ) === false, '/services carries no per-offering delivery-mode labels' );
-
-// ── both pages point studio work at the SAME destination ──────────────
-ok( strpos( $contact, 'panaceastud.io' ) !== false, '/contact hands studio work to panaceastud.io' );
-ok(
-	strpos( $services, 'panaceastud.io' ) !== false && strpos( $contact, 'panaceastud.io' ) !== false,
-	'both pages route in-studio work to the same place (panaceastud.io)'
-);
 
 // ── /contact no longer frames Panacea as an outside "not here" vendor ──
 ok( stripos( $contact, 'not here' ) === false, '/contact drops the third-party "not here" framing of Panacea' );
