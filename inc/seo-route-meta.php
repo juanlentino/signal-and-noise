@@ -81,29 +81,6 @@ function sn_seo_route_meta_for_uses( $meta ) {
 }
 
 /**
- * sn_seo_route_meta: full meta for the postless /now virtual route (v10.21.0).
- *
- * @param array<string,mixed>|null $meta Meta resolved so far (null = unresolved).
- * @return array<string,mixed>|null
- */
-function sn_seo_route_meta_for_now( $meta ) {
-	if ( null !== $meta ) {
-		return $meta;
-	}
-	if ( ! function_exists( 'sn_now_is_now_request' ) || ! sn_now_is_now_request() ) {
-		return null;
-	}
-	return array(
-		'title'       => function_exists( 'sn_now_title' ) ? sn_now_title() : 'Now',
-		'description' => 'What Juan Lentino is focused on right now: current projects, writing, and inputs. Updated whenever it changes.',
-		'url'         => home_url( '/now' ),
-		'breadcrumb'  => array(
-			array( 'name' => 'Now', 'url' => home_url( '/now' ) ),
-		),
-	);
-}
-
-/**
  * sn_seo_route_meta: full meta for the postless /accessibility virtual route (v10.21.0).
  *
  * @param array<string,mixed>|null $meta Meta resolved so far (null = unresolved).
@@ -129,6 +106,5 @@ function sn_seo_route_meta_for_accessibility( $meta ) {
 if ( ! defined( 'SN_SEO_ROUTE_META_TEST' ) || ! SN_SEO_ROUTE_META_TEST ) {
 	add_filter( 'sn_seo_singular_description', 'sn_seo_route_singular_description', 10, 2 );
 	add_filter( 'sn_seo_route_meta', 'sn_seo_route_meta_for_uses' );
-	add_filter( 'sn_seo_route_meta', 'sn_seo_route_meta_for_now' );
 	add_filter( 'sn_seo_route_meta', 'sn_seo_route_meta_for_accessibility' );
 }

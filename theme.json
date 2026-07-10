@@ -315,6 +315,7 @@
 		{ "name": "page-resume", "title": "Resume / CV", "postTypes": ["page"] },
 		{ "name": "page-notes", "title": "Notes Index", "postTypes": ["page"] },
 		{ "name": "page-provenance", "title": "Provenance Pillar", "postTypes": ["page"] },
-		{ "name": "page-colophon", "title": "Colophon", "postTypes": ["page"] }
+		{ "name": "page-colophon", "title": "Colophon", "postTypes": ["page"] },
+		{ "name": "page-now", "title": "Now", "postTypes": ["page"] }
 	]
 }
