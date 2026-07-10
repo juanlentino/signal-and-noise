@@ -20,9 +20,6 @@ function ok( $cond, $msg ) { global $pass, $fail; if ( $cond ) { $pass++; echo "
 function add_filter() { return true; }
 function apply_filters( $hook, $value, ...$args ) { return $value; }
 function home_url( $p = '' ) { return 'https://juanlentino.com' . $p; }
-$GLOBALS['__is_uses'] = false;
-function sn_uses_is_uses_request() { return (bool) $GLOBALS['__is_uses']; }
-function sn_uses_title() { return 'Uses — Juan Lentino'; }
 $GLOBALS['__is_a11y'] = false;
 function sn_a11y_is_a11y_request() { return (bool) $GLOBALS['__is_a11y']; }
 function sn_a11y_title() { return 'Accessibility — Juan Lentino'; }
@@ -53,21 +50,9 @@ $unknown = (object) array( 'post_name' => 'random-page' );
 ok( sn_seo_route_singular_description( '', $unknown ) === '', 'unmapped slug → unchanged (empty)' );
 ok( sn_seo_route_singular_description( '', null ) === '', 'null post → unchanged (no fatal)' );
 
-// --- Route-meta filter (/about/uses) ---
-$GLOBALS['__is_uses'] = false;
-ok( sn_seo_route_meta_for_uses( null ) === null, 'not on /about/uses → null (plugin uses WP conditionals)' );
-$GLOBALS['__is_uses'] = true;
-$rm = sn_seo_route_meta_for_uses( null );
-ok( is_array( $rm ), '/about/uses → returns a meta array' );
-ok( 'Uses — Juan Lentino' === ( $rm['title'] ?? null ), 'route meta title from sn_uses_title()' );
-ok( 'https://juanlentino.com/about/uses' === ( $rm['url'] ?? null ), 'route meta url is /about/uses' );
-ok( is_string( $rm['description'] ?? null ) && '' !== ( $rm['description'] ?? '' ), 'route meta carries a description' );
-ok( strpos( (string) ( $rm['description'] ?? '' ), '—' ) === false, '/about/uses description carries no em-dash' );
-ok( is_array( $rm['breadcrumb'] ?? null ) && count( $rm['breadcrumb'] ) === 2, 'route meta breadcrumb is About → Uses (2 crumbs)' );
-ok( 'Uses' === ( $rm['breadcrumb'][1]['name'] ?? null ), 'last breadcrumb crumb is Uses' );
-// Already-resolved meta is never clobbered.
+// /about/uses retired to a real child Page in v10.35.0 (and /now in v10.34.0);
+// only /accessibility remains a postless route. $preset covers the pass-through case.
 $preset = array( 'title' => 'X', 'url' => 'https://x/' );
-ok( sn_seo_route_meta_for_uses( $preset ) === $preset, 'an already-resolved route meta passes through unchanged' );
 
 // --- Route-meta filter for /accessibility (v10.21.0; /now retired to a real Page in v10.34.0) ---
 $GLOBALS['__is_a11y'] = false;
