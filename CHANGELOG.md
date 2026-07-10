@@ -2,6 +2,24 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.34.0] - 2026-07-10: /now is a real CMS Page (pages-to-CMS flip, Phase 2a: Now pilot)
+
+**Headline:** The first Phase-2 route. `/now` was a postless PHP virtual route; it is now a real Page rendered through a new `templates/page-now.html` frame (`header` + `<main>` + `wp:post-content` + `footer`). This release **removes the virtual-route interceptor** (`page-now-template.php`, its render + data files, and `now.css`) and the `sn_seo_route_meta_for_now` handler, so WordPress resolves the real Page, whose body (seeded by the companion plugin v9.19.0 from the Content → Now Page text box) renders with a native Excerpt + WebPage schema. The hero, including its automatic "Updated" byline (a `core/post-date` modified block), now lives in the editable Page body. **Requires plugin v9.19.0+ and must deploy after it** (the plugin creates the Page first; removing this interceptor before the Page exists would 404 `/now`).
+
+> **Why MINOR:** `/now` becomes CMS-authored on the front end. No settings-schema change. Requires plugin v9.19.0+.
+
+### Added
+- `templates/page-now.html`: the bare frame that renders the Now Page body via `wp:post-content` ([templates/page-now.html](templates/page-now.html)).
+- `page-now` registered in `theme.json` `customTemplates` (selectable in the Page → Template picker) ([theme.json](theme.json)).
+
+### Removed
+- The `/now` virtual route and its assets: `inc/page-now-template.php`, `inc/page-now-render.php`, `inc/now-data.php`, `assets/css/now.css`, and their `require_once` lines in `functions.php`. `/now` now resolves to the real Page ([functions.php](functions.php)).
+- `sn_seo_route_meta_for_now()` and its filter registration from `inc/seo-route-meta.php`. The Now Page's Excerpt supplies the meta description, and the plugin's `is_singular` schema branch emits its JSON-LD ([inc/seo-route-meta.php](inc/seo-route-meta.php)).
+
+### Notes
+- The footer nav link to `/now` is unchanged (still a valid URL).
+- Tests: `tests/page-now.php` removed (route retired); `tests/seo-route-meta.php` drops the `/now` assertions (keeps `/about/uses` + `/accessibility`). Full sweep 69 suites, 1659 assertions.
+
 ## [10.33.0] - 2026-07-10: /resume + /music render from the Page body (pages-to-CMS flip, Phase 1c — completes Phase 1)
 
 **Headline:** The last two Phase-1 templates. `templates/page-resume.html` and `templates/page-music.html` are slimmed to bare frames (`header` + `<main>` + `wp:post-content` + `footer`), rendering the merged bodies the companion plugin (v9.18.0) placed in each Page's `post_content`. This **also fixes a duplicate render**: because these templates already had a `wp:post-content` slot, once the plugin merged the prose into the DB the un-slimmed templates showed the hero (and Music's discography/credits) twice — slimming resolves it. Same pages, now fully CMS-authored. **Requires plugin v9.18.0+ and must deploy together with it** (the plugin merge and this slim are two halves of one change). With this, all five editorial pages (About/Contact/Services/Resume/Music) are CMS-authored.
