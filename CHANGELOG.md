@@ -2,6 +2,17 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.38.0] - 2026-07-11: Content-as-data — every Note and Page as JSON
+
+**Headline:** Append `.json` to any Note or Page URL (`/notes/some-note.json`, `/about.json`) to get a clean JSON representation of its content — title, canonical, breadcrumb, the body as `content_html` + `content_text`, and references to the page's schema.org graph and (for Notes) its provenance. Every URL is now dual-purpose. This is sub-project C of the machine-readability program; the `.json` convention is advertised per-page (a `<head>` link) and site-wide (in `/.well-known/agents.json`).
+
+> **Why MINOR:** a new agent-visible representation, additive. No public function/REST route removed or renamed, no settings-schema change, no WP-floor raise. A distinct `.json` URL is edge-cache-safe (its own cache key) and rides the plugin's existing per-URL purge via the `sn_cf_purge_urls_for_post` filter.
+
+### Added
+- `inc/content-json.php` — a flush-free `.json` virtual route (`template_redirect` priority 0, no rewrite flush): resolves `/<path>.json` to a **published, non-password-protected** singular Note/Page and serves `application/json`. Collection/listing paths (e.g. `/notes`, the front page) are excluded — the JSON Feed already serves the Notes collection. Advertises the twin from each singular page's `<head>` and in the `sn_agents_surfaces` manifest, and registers the `.json` URL for cache purging ([inc/content-json.php](inc/content-json.php)).
+- `inc/content-json-document.php` — the document builder: `content_html` + `content_text` (mirroring the JSON Feed convention), breadcrumb (Notes: Home → Notes → self; Pages: Home → ancestors → self), ISO-8601 dates, and schema/provenance references ([inc/content-json-document.php](inc/content-json-document.php)).
+- `tests/content-json.php` + `tests/content-json-document.php`, plus the `content-json` surface assertion in `tests/agents-manifest.php`.
+
 ## [10.37.0] - 2026-07-11: /.well-known/agents.json machine-surfaces discovery manifest
 
 **Headline:** A single machine-readable "front door." The site already exposes many machine surfaces — `llms.txt`, RSS + JSON feeds, OpenSearch, the sitemap, the Abilities API, provenance verification — but an agent or crawler had to know each convention independently. This adds one JSON index at `/.well-known/agents.json` that enumerates them all, so a machine discovers every surface from one entry point. The manifest is advertised from every page's `<head>` (an `alternate`/`json` `<link>`) and from a new `## Machine surfaces` section in `/llms.txt`. This is sub-project A of the machine-readability program; the surface list is filterable (`sn_agents_surfaces`) so later phases append their entry with no edit here.
