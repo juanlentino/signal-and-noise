@@ -95,7 +95,17 @@ ok(
 	'the item gap chains through all wrapper levels incl. __responsive-dialog (gap: inherit)'
 );
 
-// --- 8. The fallback is NOT merely the pre-existing is-menu-open overlay ----
+// --- 8. Nav link colour survives the drop (own it, don't rely on core) ------
+// Core's separate nav stylesheet supplies `color: inherit` on nav links; when
+// it is dropped the links fall back to the theme.json global link colour (red).
+// The theme's own `.wp-block-navigation a` rule must set color: inherit so the
+// header ink survives a dropped core stylesheet.
+ok(
+	preg_match( '/\.wp-block-navigation a\s*\{[^}]*color:\s*inherit/s', $css ) === 1,
+	'nav links own color: inherit (survive a core stylesheet drop, no red fallback)'
+);
+
+// --- 9. The fallback is NOT merely the pre-existing is-menu-open overlay ----
 // Strip every .is-menu-open rule; the remaining CSS must STILL mention the
 // responsive container (i.e. real closed-state fallback rules exist beyond the
 // overlay). A regression that deletes the fallback but keeps the overlay fails

@@ -2,6 +2,16 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.38.2] - 2026-07-11: Nav fallback keeps the header ink (no red flash)
+
+**Headline:** Completes the v10.38.1 fallback. When core's navigation stylesheet is dropped, the menu was rendering in the theme's red accent colour instead of black, because the theme relied on core's `color: inherit` rule to tint the links with the header ink — and that rule lives in the same dropped file. Reproduced live: with core's nav stylesheet disabled, the desktop menu fell back to the theme.json global link colour (blood/red). The theme now owns the nav link colour, so the menu stays black through a drop and the intermittent edge failure is invisible.
+
+> **Why PATCH:** finishes the same resilience fix as v10.38.1, additive CSS only. `color: inherit` on the theme's existing `.wp-block-navigation a` rule (specificity 0,1,1) beats the theme.json global link rule (0,0,1) and is identical to core's behaviour when core's stylesheet IS present, so it is a no-op in the normal case. No public API/schema/floor change.
+
+### Fixed
+- `assets/css/critical.css` and `assets/css/layout.css` — added `color: inherit` to `.wp-block-navigation a` so the desktop nav links inherit the header ink even when core's navigation stylesheet (which supplies the same `color: inherit`) is absent. Previously they fell back to the red global link colour ([assets/css/critical.css](assets/css/critical.css), [assets/css/layout.css](assets/css/layout.css)).
+- `tests/nav-responsive-fallback.php` — added an assertion (now 10) that the nav link colour fallback ships ([tests/nav-responsive-fallback.php](tests/nav-responsive-fallback.php)).
+
 ## [10.38.1] - 2026-07-11: Navigation survives a dropped core stylesheet
 
 **Headline:** The header menu no longer breaks when WordPress core's navigation-block stylesheet goes missing. That one separate file (`wp-includes/blocks/navigation/style.min.css`) is all that hid the `☰`/`✕` toggles on desktop, kept the closed menu dialog hidden, and stripped the list bullets — the theme owned none of it. When a CSS optimizer ("combine"/"remove unused CSS"), a CSP rule, or a network hiccup dropped that file, the header degraded into both toggles showing at every width plus a raw bulleted menu dumped over the page (reproduced live on the 404 page by disabling that one stylesheet — it matched the reported screenshot exactly). The always-inlined `critical.css` now carries the essential closed-state responsive rules itself, so the nav stays correct even without core's file.
