@@ -71,8 +71,7 @@ require_once __DIR__ . '/inc/purge-verify.php'; // v10.23.0: render-epoch marker
 require_once __DIR__ . '/inc/purge-verify-cron.php'; // v10.25.0: deferred WP-Cron route verify for auto-purges (folds routes/resolved back into the report)
 require_once __DIR__ . '/inc/page-notes-template.php';
 require_once __DIR__ . '/inc/page-index-template.php'; // C3 (v10.7.0): /index whole-site dossier virtual route (loads inc/page-index-render.php)
-require_once __DIR__ . '/inc/cms-page-styles.php'; // v10.35.0: per-Page dossier stylesheets (now.css on /now, uses.css on /about/uses)
-require_once __DIR__ . '/inc/page-personal-template.php'; // v10.12.0: /contact/personal virtual route — child of /contact (loads inc/page-personal-render.php)
+require_once __DIR__ . '/inc/cms-page-styles.php'; // v10.36.0: per-Page bespoke stylesheets (now.css on /now, uses.css on /about/uses, accessibility.css on /accessibility)
 require_once __DIR__ . '/inc/patterns.php';
 require_once __DIR__ . '/inc/blocks-register.php';
 require_once __DIR__ . '/inc/block-styles.php';
@@ -101,8 +100,7 @@ require_once __DIR__ . '/inc/llms-txt.php'; // v10.19.0: /llms.txt + /llms-full.
 require_once __DIR__ . '/inc/gpc-json.php'; // v10.19.0: /.well-known/gpc.json virtual route (Global Privacy Control declaration)
 require_once __DIR__ . '/inc/opensearch.php'; // v10.19.0: /opensearch.xml virtual route + rel=search autodiscovery (search provider over /notes/?s=)
 require_once __DIR__ . '/inc/disable-smart-quotes.php'; // v10.13.2: straight quotes — disable wptexturize site-wide
-require_once __DIR__ . '/inc/seo-route-meta.php'; // v10.13.0: route descriptions + /about/uses meta for the plugin's sn_seo_* filters
-require_once __DIR__ . '/inc/page-accessibility-template.php'; // v10.21.0: /accessibility statement virtual route
+require_once __DIR__ . '/inc/seo-route-meta.php'; // v10.13.0: template-driven Page descriptions for the plugin's sn_seo_singular_description filter (today /colophon)
 require_once __DIR__ . '/inc/colophon-meta.php'; // C2 (v10.5.0): [sn_build] live colophon line (theme+plugin version, git short SHA, deploy time)
 require_once __DIR__ . '/inc/availability.php'; // D5 (v10.9.0): [sn_availability] line in the /contact + /services heroes (reads sn_settings identity.availability)
 require_once __DIR__ . '/inc/contact-email.php'; // v10.16.0: [sn_email] scraper-resistant /contact aliases (client-side assembly, no plaintext/mailto in source)
