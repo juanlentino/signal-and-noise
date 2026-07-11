@@ -92,6 +92,44 @@ body::after {
 	display: none;
 }
 
+/* v10.38.3 — own the .screen-reader-text primitive. WordPress core ships this
+   accessibility utility ONLY inside its inline block styles (wp-block-library
+   + the skip-link block). The theme relied on those. When they don't take
+   effect (an optimizer that strips block CSS, or the edge serving a stripped/
+   older document), EVERY screen-reader-only label becomes visible text: the
+   footer social-link labels ("Spotify", "LinkedIn", …, from the logos-only
+   social-links style) and the search field's visually-hidden <label>, among
+   others. Owning the rule in the always-inlined critical.css guarantees it,
+   immune to that failure, and is a no-op duplicate when core's copy is present.
+   Standard WP screen-reader-text; the :focus reveal is kept for parity so any
+   focusable SR text still surfaces on keyboard focus. */
+.screen-reader-text {
+	border: 0;
+	clip-path: inset(50%);
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	padding: 0;
+	overflow: hidden;
+	position: absolute !important;
+	word-wrap: normal !important;
+}
+.screen-reader-text:focus {
+	background-color: #ddd;
+	clip-path: none;
+	color: #444;
+	display: block;
+	width: auto;
+	height: auto;
+	top: 5px;
+	left: 5px;
+	padding: 15px 23px 14px;
+	font-size: 1em;
+	line-height: normal;
+	text-decoration: none;
+	z-index: 100000;
+}
+
 /* v8.5.6 critical.css pruning: 5 @keyframes (fadeInUp, fadeIn,
    slideInLeft, glitchFlicker, pulseGlow) + block-level entrance
    animation lived here. Keyframes only need to load before the

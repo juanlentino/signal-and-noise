@@ -2,6 +2,16 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.38.3] - 2026-07-11: Theme owns .screen-reader-text (no exposed labels)
+
+**Headline:** Fixes visually-hidden labels showing as real text: the footer social links rendered as "Spotify / LinkedIn / Instagram / X / Subscribe via RSS" text instead of icons-only, and the search field's hidden `<label>` appeared before the input. Root cause is the same architectural flaw as the nav fixes: the `.screen-reader-text` accessibility utility that hides those labels ships **only** in WordPress core's inline block styles (`wp-block-library`, the skip-link block), and the theme relied on it without owning it. When those core inline styles don't take effect in a given environment (a CSS optimizer that strips block styles, or the edge serving a stripped document), every screen-reader-only label becomes visible. Reproduced live by removing core's inline `.screen-reader-text` and confirmed fixed by a theme-owned copy.
+
+> **Why PATCH:** same resilience class as v10.38.1/.2, additive CSS. The rule is the standard WordPress `.screen-reader-text` (visually-hidden + `:focus` reveal), placed in the always-inlined `critical.css` so it is guaranteed present; it is a no-op duplicate when core's copy is applied. No public API/schema/floor change.
+
+### Fixed
+- `assets/css/critical.css` — the theme now owns the `.screen-reader-text` primitive (visually-hidden hide + `:focus` reveal for keyboard parity), so visually-hidden labels stay hidden even when WordPress core's inline `.screen-reader-text` styles are absent. This keeps the footer social links icon-only and the search `<label>` hidden ([assets/css/critical.css](assets/css/critical.css)).
+- `tests/screen-reader-text-critical.php` — new standalone test (6 assertions) guarding the hide rule, its clip/1x1px technique, the `:focus` reveal, and that it targets the bare `.screen-reader-text` (not only the skip link) ([tests/screen-reader-text-critical.php](tests/screen-reader-text-critical.php)).
+
 ## [10.38.2] - 2026-07-11: Nav fallback keeps the header ink (no red flash)
 
 **Headline:** Completes the v10.38.1 fallback. When core's navigation stylesheet is dropped, the menu was rendering in the theme's red accent colour instead of black, because the theme relied on core's `color: inherit` rule to tint the links with the header ink — and that rule lives in the same dropped file. Reproduced live: with core's nav stylesheet disabled, the desktop menu fell back to the theme.json global link colour (blood/red). The theme now owns the nav link colour, so the menu stays black through a drop and the intermittent edge failure is invisible.
