@@ -25,7 +25,7 @@ if ( ! function_exists( 'get_the_modified_date' ) ) { function get_the_modified_
 if ( ! function_exists( 'get_post_ancestors' ) ) { function get_post_ancestors( $p ) { return array(); } }
 $GLOBALS['__urlmap'] = array( 'https://juanlentino.com/notes/some-note/' => 7 );
 if ( ! function_exists( 'url_to_postid' ) ) { function url_to_postid( $u ) { return $GLOBALS['__urlmap'][ $u ] ?? 0; } }
-$GLOBALS['__postobjs'] = array( 7 => (object) array( 'ID' => 7, 'post_type' => 'post', 'post_status' => 'publish', 'post_content' => '<p>Hi.</p>', 'post_title' => 'Some Note', 'post_parent' => 0 ) );
+$GLOBALS['__postobjs'] = array( 7 => (object) array( 'ID' => 7, 'post_type' => 'post', 'post_status' => 'publish', 'post_password' => '', 'post_content' => '<p>Hi.</p>', 'post_title' => 'Some Note', 'post_parent' => 0 ) );
 if ( ! function_exists( 'get_post' ) ) { function get_post( $id ) { return $GLOBALS['__postobjs'][ $id ] ?? null; } }
 if ( ! function_exists( 'setup_postdata' ) ) { function setup_postdata( $p ) { return true; } }
 if ( ! function_exists( 'wp_reset_postdata' ) ) { function wp_reset_postdata() { return true; } }
@@ -53,6 +53,10 @@ ok( sn_content_json_resolve( '/notes/some-note/' ) === 0, 'non-.json → 0' );
 $GLOBALS['__postobjs'][7]->post_status = 'draft';
 ok( sn_content_json_resolve( '/notes/some-note.json' ) === 0, 'draft post → 0 (not served)' );
 $GLOBALS['__postobjs'][7]->post_status = 'publish';
+$GLOBALS['__postobjs'][7]->post_password = 'secret';
+ok( sn_content_json_resolve( '/notes/some-note.json' ) === 0, 'password-protected post → 0 (content not leaked)' );
+$GLOBALS['__postobjs'][7]->post_password = '';
+ok( sn_content_json_resolve( '/notes.json' ) === 0, 'the /notes collection index is excluded (returns 0 → 404)' );
 
 // --- send sets 200 + emits valid JSON ---
 ob_start(); sn_content_json_send( get_post( 7 ) ); $out = ob_get_clean();

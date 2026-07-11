@@ -44,6 +44,13 @@ function sn_content_json_resolve( $uri ) {
 	if ( '' === $base ) {
 		return 0;
 	}
+	// Exclude collection/listing paths: the JSON Feed already serves the Notes
+	// collection, and the /notes index renders its listing from a template (not
+	// post_content), so its twin would be misleading. Filterable for future ones.
+	$excluded = (array) apply_filters( 'sn_content_json_excluded_paths', array( '/notes' ) );
+	if ( in_array( $base, $excluded, true ) ) {
+		return 0;
+	}
 	$post_id = url_to_postid( home_url( $base . '/' ) );
 	if ( ! $post_id ) {
 		$post_id = url_to_postid( home_url( $base ) );
@@ -52,7 +59,14 @@ function sn_content_json_resolve( $uri ) {
 		return 0;
 	}
 	$post = get_post( $post_id );
-	if ( ! $post || 'publish' !== $post->post_status || ! in_array( $post->post_type, array( 'post', 'page' ), true ) ) {
+	// Serve only published, non-password-protected singular posts/pages. A
+	// password-protected post is still status=publish (protection lives in
+	// post_password_required(), which the raw the_content render bypasses), so
+	// the password gate MUST be here or gated content leaks.
+	if ( ! $post
+		|| 'publish' !== $post->post_status
+		|| '' !== (string) $post->post_password
+		|| ! in_array( $post->post_type, array( 'post', 'page' ), true ) ) {
 		return 0;
 	}
 	return (int) $post_id;
@@ -98,6 +112,11 @@ function sn_content_json_maybe_serve() {
  * Advertise the .json twin from a singular page's <head>.
  */
 function sn_content_json_head_link() {
+	// The front page has no meaningful .json twin (its URL is the site root, so
+	// the derived twin would be a malformed "host.json").
+	if ( function_exists( 'is_front_page' ) && is_front_page() ) {
+		return;
+	}
 	if ( function_exists( 'is_singular' ) && ! is_singular( array( 'post', 'page' ) ) ) {
 		return;
 	}
@@ -140,7 +159,8 @@ function sn_content_json_advertise_surface( $surfaces ) {
 function sn_content_json_purge_url( $urls, $post_id, $post ) {
 	if ( $post && in_array( $post->post_type, array( 'post', 'page' ), true ) ) {
 		$permalink = get_permalink( $post_id );
-		if ( $permalink ) {
+		// Skip the site root (a static front page): its twin would be malformed.
+		if ( $permalink && rtrim( $permalink, '/' ) !== rtrim( home_url( '/' ), '/' ) ) {
 			$urls[] = rtrim( $permalink, '/' ) . '.json';
 		}
 	}
