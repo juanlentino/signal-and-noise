@@ -433,6 +433,77 @@ body {
 	display: none !important;
 }
 
+/* v10.38.1 — Nav responsive collapse: defensive fallback.
+   The is-menu-open OVERLAY above is critical-path (v8.5.7), but the
+   CLOSED-state collapse was left to WordPress core's navigation block
+   stylesheet (wp-includes/blocks/navigation/style.min.css) — a SEPARATE file
+   the theme does not control. A CSS optimizer ("combine" / "remove unused
+   CSS"), a CSP rule, or a dropped request can strip that one file; the header
+   then degrades badly — the open (hamburger) AND close toggles render at
+   EVERY width and the menu becomes a raw bulleted <ul> over the page
+   (layout.css even forces both toggles to display:inline-flex for a 44px
+   touch target, which makes the raw dump worse). Reproduced live by disabling
+   core's file.
+
+   These rules mirror core's ESSENTIAL visibility logic in the always-inlined
+   critical.css so the nav stays correct even when core's file is absent.
+   Core's exact selectors/specificity are reused so this is idempotent when
+   core IS present, and still beats layout.css's single-class inline-flex rule
+   when core is not. Scoped to the closed state only — the overlay above owns
+   is-menu-open. */
+.wp-block-navigation ul {
+	list-style: none;
+}
+/* Restore the flex row + item gap the closed DESKTOP menu gets from core:
+   core chains the nav's blockGap down via gap:inherit on every wrapper level,
+   and lays the item list out as a flex row (its layout vars fall back to sane
+   flex defaults). Without this the desktop fallback stacks vertically with no
+   gap. The theme's is-menu-open rules above override these to a centered
+   column when the overlay opens. Selectors/values mirror core verbatim. */
+.wp-block-navigation__container,
+.wp-block-navigation__responsive-close,
+.wp-block-navigation__responsive-container,
+.wp-block-navigation__responsive-container-content,
+.wp-block-navigation__responsive-dialog {
+	gap: inherit;
+}
+.wp-block-navigation__container {
+	align-items: var(--navigation-layout-align, initial);
+	display: flex;
+	flex-direction: var(--navigation-layout-direction, initial);
+	flex-wrap: var(--navigation-layout-wrap, wrap);
+	justify-content: var(--navigation-layout-justify, initial);
+	list-style: none;
+	margin: 0;
+	padding-left: 0;
+}
+/* Closed dialog hidden by default (mobile-closed). Core's base rule. */
+.wp-block-navigation__responsive-container {
+	display: none;
+	position: fixed;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+}
+@media (min-width: 600px) {
+	/* Desktop (core's overlayMenu:"mobile" breakpoint): inline menu row, with
+	   neither toggle showing. */
+	.wp-block-navigation__responsive-container-open:not(.always-shown) {
+		display: none;
+	}
+	.wp-block-navigation__responsive-container:not(.hidden-by-default):not(.is-menu-open) {
+		display: block;
+		position: relative;
+		width: 100%;
+		background-color: inherit;
+		z-index: auto;
+	}
+	.wp-block-navigation__responsive-container:not(.hidden-by-default):not(.is-menu-open) .wp-block-navigation__responsive-container-close {
+		display: none;
+	}
+}
+
 /* v8.5.6 critical.css pruning: CF7 form label + submit button rules were
    here but forms are never above-the-fold. The full CF7 stylesheet
    (assets/css/forms.css) was later removed wholesale in v10.12.2 when the

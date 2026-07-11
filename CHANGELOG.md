@@ -2,6 +2,16 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.38.1] - 2026-07-11: Navigation survives a dropped core stylesheet
+
+**Headline:** The header menu no longer breaks when WordPress core's navigation-block stylesheet goes missing. That one separate file (`wp-includes/blocks/navigation/style.min.css`) is all that hid the `☰`/`✕` toggles on desktop, kept the closed menu dialog hidden, and stripped the list bullets — the theme owned none of it. When a CSS optimizer ("combine"/"remove unused CSS"), a CSP rule, or a network hiccup dropped that file, the header degraded into both toggles showing at every width plus a raw bulleted menu dumped over the page (reproduced live on the 404 page by disabling that one stylesheet — it matched the reported screenshot exactly). The always-inlined `critical.css` now carries the essential closed-state responsive rules itself, so the nav stays correct even without core's file.
+
+> **Why PATCH:** a resilience/bug fix, no new capability. Pure additive CSS in the always-inlined critical layer; no public function/REST route/ability removed or renamed, no settings-schema change, no WP-floor raise. The rules mirror core's exact selectors and values, so they are idempotent when core's stylesheet IS present (the normal case) and only take effect when it is absent.
+
+### Fixed
+- `assets/css/critical.css` — added a defensive fallback for the navigation block's **closed-state** responsive collapse (the open-overlay counterpart was already made critical-path in v8.5.7). Mirrors core's essential visibility logic: hide the open (`☰`) and close (`✕`) toggles on desktop (the `min-width: 600px` breakpoint), keep the closed dialog hidden until opened, strip `<ul>` list chrome, and restore the desktop flex-row layout + item-gap chain. Reused core's exact selectors/specificity so it beats `layout.css`'s single-class `inline-flex` rule when core is gone, and is a no-op duplicate when core is present ([assets/css/critical.css](assets/css/critical.css)).
+- `tests/nav-responsive-fallback.php` — new standalone structural test (9 assertions) guarding that the closed-state fallback ships and is not merely the pre-existing `is-menu-open` overlay ([tests/nav-responsive-fallback.php](tests/nav-responsive-fallback.php)).
+
 ## [10.38.0] - 2026-07-11: Content-as-data — every Note and Page as JSON
 
 **Headline:** Append `.json` to any Note or Page URL (`/notes/some-note.json`, `/about.json`) to get a clean JSON representation of its content — title, canonical, breadcrumb, the body as `content_html` + `content_text`, and references to the page's schema.org graph and (for Notes) its provenance. Every URL is now dual-purpose. This is sub-project C of the machine-readability program; the `.json` convention is advertised per-page (a `<head>` link) and site-wide (in `/.well-known/agents.json`).
