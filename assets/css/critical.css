@@ -130,6 +130,25 @@ body::after {
 	z-index: 100000;
 }
 
+/* v10.38.4 — own the footer social icons' appearance. Same class as the rules
+   above: the base wp-block-social-links styling (remove the <li> disc markers,
+   colour the icons the footer's muted rust) is core CSS the theme leaned on.
+   When core's copy is absent the footer shows default list bullets ("big dots")
+   and black default glyphs. The theme owns its footer, so it styles them here,
+   in the always-inlined layer. Idempotent when core's copy is present. */
+.sn-footer .wp-block-social-links,
+.sn-footer .wp-block-social-links li {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+.sn-footer .wp-block-social-links .wp-social-link {
+	display: flex;
+}
+.sn-footer .wp-block-social-links svg {
+	fill: var(--wp--preset--color--rust, #666666);
+}
+
 /* v8.5.6 critical.css pruning: 5 @keyframes (fadeInUp, fadeIn,
    slideInLeft, glitchFlicker, pulseGlow) + block-level entrance
    animation lived here. Keyframes only need to load before the
