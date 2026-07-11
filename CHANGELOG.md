@@ -2,6 +2,25 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.36.0] - 2026-07-10: /accessibility + /contact/personal render from CMS Pages (pages-to-CMS flip, Phase 2c)
+
+**Headline:** The theme half of Phase 2c, completing the pages-to-CMS flip. The last two postless virtual routes — `/accessibility` (top-level) and `/contact/personal` (child of `/contact`) — become real CMS Pages. This adds their bare-frame templates, registers them as selectable, enqueues `accessibility.css` on the real `/accessibility` Page, and removes the four route files. It also retires the theme's last `sn_seo_route_meta` handler: with every former virtual route now a real Page, that filter chain is empty, so the postless-route SEO path is gone (real Pages resolve meta from their Excerpt and WebPage JSON-LD from `is_singular`). Deploy the paired plugin **v9.21.0 first** (it creates the Pages), then this.
+
+> **Why MINOR:** two former virtual routes become real, editable Pages rendered from their templates; a new `accessibility.css` enqueue keyed on the Page. No public function/REST removed (the retired `sn_seo_route_meta_for_accessibility` is an internal filter handler), no settings-schema change, no WP-floor raise.
+
+### Added
+- `templates/page-accessibility.html` + `templates/page-personal.html` (bare `header` + `<main>` + `wp:post-content` + `footer` frames) and matching `theme.json` `customTemplates` entries ([templates/](templates/), [theme.json](theme.json)).
+- `accessibility.css` enqueue on `is_page('accessibility')` in `inc/cms-page-styles.php` (mirrors the `now.css` / `uses.css` pattern; depends on `sn-components`). The seeded block content carries the `sn-a11y-*` classes, so the statement keeps its bespoke design while being block-editable ([inc/cms-page-styles.php](inc/cms-page-styles.php)).
+
+### Removed
+- The `/accessibility` and `/contact/personal` virtual-route machinery: `inc/page-accessibility-template.php`, `inc/page-accessibility-render.php`, `inc/page-personal-template.php`, `inc/page-personal-render.php`, and their `require_once` lines ([functions.php](functions.php)).
+- `sn_seo_route_meta_for_accessibility` and the `sn_seo_route_meta` filter registration — the theme no longer answers that postless-route filter (all former virtual routes are real Pages). `sn_seo_route_singular_description` + the `/colophon` description map stay ([inc/seo-route-meta.php](inc/seo-route-meta.php)).
+- `tests/page-accessibility.php` + `tests/page-personal.php` (the removed routes' fixtures).
+
+### Notes
+- `/accessibility`'s meta description now comes from its Page Excerpt (seeded by the plugin); `/contact/personal` gains `WebPage` JSON-LD as a real Page. `tests/seo-route-meta.php` updated to assert the route-meta handler is retired.
+- After the flip both pages are edited in the block editor (Gutenberg). Deploy order matters: plugin **v9.21.0 first**, then this theme release; theme-first would 404 the routes. Purge the edge cache after (a newly-created route can serve a stale pre-Page 404). Tests: full sweep 66 suites / 0 failures.
+
 ## [10.35.0] - 2026-07-10: /about/uses is a CMS Page + /now dossier design restored (pages-to-CMS flip, Phase 2b)
 
 **Headline:** `/about/uses` joins `/now` as a real CMS Page, and this restores the bespoke "dossier" design for both. The companion plugin (v9.20.0) now reproduces the original `sn-now-*` / `sn-uses-*` markup in the Page body, so this release brings back `now.css` (removed in v10.34.0) and enqueues `now.css` on `/now` and `uses.css` on `/about/uses`. It also adds `templates/page-uses.html` and removes the `/about/uses` virtual route. The result renders identically to the pre-flip pages, including any Site-Editor global styles that target those classes.

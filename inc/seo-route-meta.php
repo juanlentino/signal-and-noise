@@ -1,19 +1,20 @@
 <?php
 /**
- * Signal & Noise — SEO meta for theme-owned routes.
+ * Signal & Noise — SEO meta for theme-owned template-driven Pages.
  *
  * The companion plugin owns SEO/JSON-LD emission, but it can only describe what
- * WordPress hands it: real-Page conditionals (is_page) and excerpts. Two classes
- * of theme route fall through that net, so the plugin (v6.24.0) exposes filters
- * the theme answers here — the route COPY lives with the routes:
+ * WordPress hands it: real-Page conditionals (is_page) and excerpts. Template-
+ * driven Pages carry their content in FSE templates, not post_content, so they
+ * have no excerpt and shipped with no meta/og description. The plugin (v6.24.0)
+ * exposes `sn_seo_singular_description`, which the theme answers here — the route
+ * COPY lives with the routes.
  *
- *   - sn_seo_singular_description — template-driven Pages (/about, /contact,
- *     /colophon, /music) carry their content in FSE templates, not post_content,
- *     so they have no excerpt and shipped with no meta/og description. We supply
- *     one per slug.
- *   - sn_seo_route_meta — the postless virtual route /about/uses (no WP post at
- *     all) supplies its full title/description/url/breadcrumb so the plugin emits
- *     og + canonical + a connected JSON-LD @graph for it.
+ * NOTE: the theme no longer answers `sn_seo_route_meta` (the postless-route
+ * filter). Every former virtual route — /now, /about/uses, /accessibility,
+ * /contact/personal — is now a real CMS Page whose Excerpt supplies its meta
+ * description and whose WebPage JSON-LD the plugin builds from is_singular
+ * (pages-to-CMS flip, Phases 2a–2c). Only template-driven Pages with no excerpt
+ * remain here; today that is /colophon.
  *
  * @package SignalNoise
  * @since 10.13.0
@@ -55,30 +56,6 @@ function sn_seo_route_singular_description( $description, $post ) {
 	return isset( $map[ $slug ] ) ? (string) $map[ $slug ] : $description;
 }
 
-/**
- * sn_seo_route_meta: full meta for the postless /accessibility virtual route (v10.21.0).
- *
- * @param array<string,mixed>|null $meta Meta resolved so far (null = unresolved).
- * @return array<string,mixed>|null
- */
-function sn_seo_route_meta_for_accessibility( $meta ) {
-	if ( null !== $meta ) {
-		return $meta;
-	}
-	if ( ! function_exists( 'sn_a11y_is_a11y_request' ) || ! sn_a11y_is_a11y_request() ) {
-		return null;
-	}
-	return array(
-		'title'       => function_exists( 'sn_a11y_title' ) ? sn_a11y_title() : 'Accessibility',
-		'description' => 'Accessibility statement for juanlentino.com: WCAG 2.1 AA target, measures in place, known limitations, and how to report problems.',
-		'url'         => home_url( '/accessibility' ),
-		'breadcrumb'  => array(
-			array( 'name' => 'Accessibility', 'url' => home_url( '/accessibility' ) ),
-		),
-	);
-}
-
 if ( ! defined( 'SN_SEO_ROUTE_META_TEST' ) || ! SN_SEO_ROUTE_META_TEST ) {
 	add_filter( 'sn_seo_singular_description', 'sn_seo_route_singular_description', 10, 2 );
-	add_filter( 'sn_seo_route_meta', 'sn_seo_route_meta_for_accessibility' );
 }

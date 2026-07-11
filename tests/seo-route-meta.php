@@ -3,8 +3,10 @@
  * Standalone fixture tests for theme-owned SEO route meta (v10.13.0).
  *
  * inc/seo-route-meta.php answers the plugin's sn_seo_singular_description filter
- * (descriptions for template Pages /about, /contact, /colophon, /music) and the
- * sn_seo_route_meta filter (full meta for the postless /about/uses route).
+ * (descriptions for template-driven Pages with no excerpt; today only /colophon).
+ * The sn_seo_route_meta postless-route filter is no longer answered by the theme
+ * — every former virtual route (/now, /about/uses, /accessibility, /personal) is
+ * now a real CMS Page (pages-to-CMS flip, Phases 2a–2c).
  *
  * @since theme v10.13.0
  */
@@ -19,10 +21,6 @@ function ok( $cond, $msg ) { global $pass, $fail; if ( $cond ) { $pass++; echo "
 // --- Stubs ---
 function add_filter() { return true; }
 function apply_filters( $hook, $value, ...$args ) { return $value; }
-function home_url( $p = '' ) { return 'https://juanlentino.com' . $p; }
-$GLOBALS['__is_a11y'] = false;
-function sn_a11y_is_a11y_request() { return (bool) $GLOBALS['__is_a11y']; }
-function sn_a11y_title() { return 'Accessibility — Juan Lentino'; }
 
 require __DIR__ . '/../inc/seo-route-meta.php';
 
@@ -50,20 +48,8 @@ $unknown = (object) array( 'post_name' => 'random-page' );
 ok( sn_seo_route_singular_description( '', $unknown ) === '', 'unmapped slug → unchanged (empty)' );
 ok( sn_seo_route_singular_description( '', null ) === '', 'null post → unchanged (no fatal)' );
 
-// /about/uses retired to a real child Page in v10.35.0 (and /now in v10.34.0);
-// only /accessibility remains a postless route. $preset covers the pass-through case.
-$preset = array( 'title' => 'X', 'url' => 'https://x/' );
-
-// --- Route-meta filter for /accessibility (v10.21.0; /now retired to a real Page in v10.34.0) ---
-$GLOBALS['__is_a11y'] = false;
-ok( sn_seo_route_meta_for_accessibility( null ) === null, 'not on /accessibility → null' );
-$GLOBALS['__is_a11y'] = true;
-$am = sn_seo_route_meta_for_accessibility( null );
-ok( is_array( $am ) && 'Accessibility — Juan Lentino' === ( $am['title'] ?? null ), '/accessibility → meta with sn_a11y_title()' );
-ok( strpos( (string) ( $am['description'] ?? '' ), '—' ) === false, '/accessibility description carries no em-dash' );
-ok( 'https://juanlentino.com/accessibility' === ( $am['url'] ?? null ), '/accessibility route meta url' );
-ok( is_array( $am['breadcrumb'] ?? null ) && 'Accessibility' === ( $am['breadcrumb'][0]['name'] ?? null ), '/accessibility breadcrumb crumb' );
-ok( sn_seo_route_meta_for_accessibility( $preset ) === $preset, '/accessibility: already-resolved meta passes through' );
+// --- The postless route-meta handler is retired ---
+ok( ! function_exists( 'sn_seo_route_meta_for_accessibility' ), 'sn_seo_route_meta_for_accessibility is gone (chain retired; routes are real Pages)' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
