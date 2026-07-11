@@ -51,5 +51,25 @@ ok( sn_seo_route_singular_description( '', null ) === '', 'null post → unchang
 // --- The postless route-meta handler is retired ---
 ok( ! function_exists( 'sn_seo_route_meta_for_accessibility' ), 'sn_seo_route_meta_for_accessibility is gone (chain retired; routes are real Pages)' );
 
+// --- Recurrence guard: the get-seo-route-meta ability description stays in sync with the live map ---
+// Audit 2026-07-10 INFO-1: the ability's registered description in
+// inc/abilities-diagnostics.php hardcoded a stale route list (about/contact/
+// music/services) after the pages-to-CMS flip left the map with only /colophon.
+// The map (here) and the human-authored copy (there) live in separate files, so
+// drift is silent. Assert every live-map slug is named in that ability's
+// registration block, so adding/removing a route without updating the copy
+// fails loudly here.
+$abilities_src = @file_get_contents( __DIR__ . '/../inc/abilities-diagnostics.php' );
+ok( is_string( $abilities_src ) && '' !== $abilities_src, 'read inc/abilities-diagnostics.php for the description-sync guard' );
+$block_start = is_string( $abilities_src ) ? strpos( $abilities_src, "'signal-and-noise/get-seo-route-meta'" ) : false;
+$block_end   = ( false !== $block_start ) ? strpos( $abilities_src, "'signal-and-noise/get-llms-txt'", $block_start ) : false;
+ok( false !== $block_start && false !== $block_end, 'located the get-seo-route-meta registration block in source' );
+if ( false !== $block_start && false !== $block_end ) {
+	$seo_route_block = substr( $abilities_src, $block_start, $block_end - $block_start );
+	foreach ( array_keys( $map ) as $live_slug ) {
+		ok( strpos( $seo_route_block, $live_slug ) !== false, "get-seo-route-meta registration names the live route '$live_slug'" );
+	}
+}
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
