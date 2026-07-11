@@ -19,13 +19,16 @@ if ( ! function_exists( 'apply_filters' ) ) { function apply_filters( $h, $v ) {
 if ( ! function_exists( 'wp_strip_all_tags' ) ) { function wp_strip_all_tags( $s ) { return trim( preg_replace( '/<[^>]*>/', '', (string) $s ) ); } }
 if ( ! function_exists( 'get_post_type' ) ) { function get_post_type( $p ) { return is_object( $p ) ? $p->post_type : 'post'; } }
 if ( ! function_exists( 'get_the_title' ) ) { function get_the_title( $p ) { return is_object( $p ) ? $p->post_title : ''; } }
-if ( ! function_exists( 'get_permalink' ) ) { function get_permalink( $p = 0 ) { $id = is_object( $p ) ? $p->ID : (int) $p; return 'https://juanlentino.com/notes/some-note/'; } }
+if ( ! function_exists( 'get_permalink' ) ) { function get_permalink( $p = 0 ) { $id = is_object( $p ) ? $p->ID : (int) $p; return 3 === $id ? 'https://juanlentino.com/' : 'https://juanlentino.com/notes/some-note/'; } } // ID 3 = the static front page (permalink == site root)
 if ( ! function_exists( 'get_the_date' ) ) { function get_the_date( $f, $p ) { return '2026-07-01T00:00:00-04:00'; } }
 if ( ! function_exists( 'get_the_modified_date' ) ) { function get_the_modified_date( $f, $p ) { return '2026-07-01T00:00:00-04:00'; } }
 if ( ! function_exists( 'get_post_ancestors' ) ) { function get_post_ancestors( $p ) { return array(); } }
-$GLOBALS['__urlmap'] = array( 'https://juanlentino.com/notes/some-note/' => 7 );
+$GLOBALS['__urlmap'] = array( 'https://juanlentino.com/notes/some-note/' => 7, 'https://juanlentino.com/home/' => 3 );
 if ( ! function_exists( 'url_to_postid' ) ) { function url_to_postid( $u ) { return $GLOBALS['__urlmap'][ $u ] ?? 0; } }
-$GLOBALS['__postobjs'] = array( 7 => (object) array( 'ID' => 7, 'post_type' => 'post', 'post_status' => 'publish', 'post_password' => '', 'post_content' => '<p>Hi.</p>', 'post_title' => 'Some Note', 'post_parent' => 0 ) );
+$GLOBALS['__postobjs'] = array(
+	7 => (object) array( 'ID' => 7, 'post_type' => 'post', 'post_status' => 'publish', 'post_password' => '', 'post_content' => '<p>Hi.</p>', 'post_title' => 'Some Note', 'post_parent' => 0 ),
+	3 => (object) array( 'ID' => 3, 'post_type' => 'page', 'post_status' => 'publish', 'post_password' => '', 'post_content' => '<p>Home.</p>', 'post_title' => 'Home', 'post_parent' => 0 ), // static front page
+);
 if ( ! function_exists( 'get_post' ) ) { function get_post( $id ) { return $GLOBALS['__postobjs'][ $id ] ?? null; } }
 if ( ! function_exists( 'setup_postdata' ) ) { function setup_postdata( $p ) { return true; } }
 if ( ! function_exists( 'wp_reset_postdata' ) ) { function wp_reset_postdata() { return true; } }
@@ -57,6 +60,7 @@ $GLOBALS['__postobjs'][7]->post_password = 'secret';
 ok( sn_content_json_resolve( '/notes/some-note.json' ) === 0, 'password-protected post → 0 (content not leaked)' );
 $GLOBALS['__postobjs'][7]->post_password = '';
 ok( sn_content_json_resolve( '/notes.json' ) === 0, 'the /notes collection index is excluded (returns 0 → 404)' );
+ok( sn_content_json_resolve( '/home.json' ) === 0, 'the static front page is excluded (its twin would be a malformed host.json; advertise/purge already skip it)' );
 
 // --- send sets 200 + emits valid JSON ---
 ob_start(); sn_content_json_send( get_post( 7 ) ); $out = ob_get_clean();

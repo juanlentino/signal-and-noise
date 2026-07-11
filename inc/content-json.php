@@ -69,6 +69,13 @@ function sn_content_json_resolve( $uri ) {
 		|| ! in_array( $post->post_type, array( 'post', 'page' ), true ) ) {
 		return 0;
 	}
+	// Exclude the static front page: its twin derives from the site root (a
+	// malformed "host.json"), and the head-link + purge siblings already skip it.
+	// Same predicate as sn_content_json_purge_url(), so advertise/purge/serve agree.
+	$permalink = get_permalink( $post_id );
+	if ( $permalink && rtrim( $permalink, '/' ) === rtrim( home_url( '/' ), '/' ) ) {
+		return 0;
+	}
 	return (int) $post_id;
 }
 
