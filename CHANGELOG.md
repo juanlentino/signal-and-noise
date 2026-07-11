@@ -2,6 +2,16 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.38.4] - 2026-07-11: Footer social icons keep their look (no list dots)
+
+**Headline:** After v10.38.3 hid the exposed labels, the footer social links still showed default `<ul>` disc bullets ("big dots") between the icons and rendered the glyphs black instead of the muted rust. Same cause one layer out: the base `wp-block-social-links` styling that removes the list markers and colours the icons is core CSS the theme leaned on. The theme now owns its footer social-icon appearance, so the dots and black glyphs don't appear when core's copy is absent. Reproduced live and confirmed fixed.
+
+> **Why PATCH:** same resilience class as v10.38.1/.2/.3, additive CSS scoped to `.sn-footer`. It removes the `<li>` disc markers and sets the icon fill to the footer rust colour, in the always-inlined `critical.css`; a no-op duplicate when core's social-links styling is present. No public API/schema/floor change.
+
+### Fixed
+- `assets/css/critical.css` — the theme now owns the footer social-icon essentials under `.sn-footer .wp-block-social-links`: `list-style: none` on the list + items (kills the default disc bullets), `display: flex` on each `.wp-social-link` (the `<li>` is no longer a list-item), and an explicit icon `fill` (`var(--wp--preset--color--rust, #666666)`) so the glyphs stay muted rather than defaulting to black ([assets/css/critical.css](assets/css/critical.css)).
+- `tests/footer-social-critical.php` — new standalone test (4 assertions) guarding the marker removal, footer scoping, and icon fill ([tests/footer-social-critical.php](tests/footer-social-critical.php)).
+
 ## [10.38.3] - 2026-07-11: Theme owns .screen-reader-text (no exposed labels)
 
 **Headline:** Fixes visually-hidden labels showing as real text: the footer social links rendered as "Spotify / LinkedIn / Instagram / X / Subscribe via RSS" text instead of icons-only, and the search field's hidden `<label>` appeared before the input. Root cause is the same architectural flaw as the nav fixes: the `.screen-reader-text` accessibility utility that hides those labels ships **only** in WordPress core's inline block styles (`wp-block-library`, the skip-link block), and the theme relied on it without owning it. When those core inline styles don't take effect in a given environment (a CSS optimizer that strips block styles, or the edge serving a stripped document), every screen-reader-only label becomes visible. Reproduced live by removing core's inline `.screen-reader-text` and confirmed fixed by a theme-owned copy.
