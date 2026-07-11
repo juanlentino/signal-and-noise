@@ -279,14 +279,14 @@ function sn_theme_register_diagnostics_abilities() {
 		) );
 	wp_register_ability( 'signal-and-noise/get-seo-route-meta', array(
 		'label'               => 'Get SEO meta for template-driven routes',
-		'description'         => 'Returns the theme-supplied SEO meta descriptions for the template-driven Pages WordPress cannot describe on its own (about, contact, colophon, music, services) — their content lives in FSE templates, not post_content, so they carry no excerpt and the theme supplies the description. Pass `slug` to fetch one route; omit it for the full route→description map (useful for spotting a Page shipped without a description). Read-only.',
+		'description'         => 'Returns the theme-supplied SEO meta description for the template-driven Pages that ship without an excerpt for WordPress to describe them with. After the pages-to-CMS flip (Phases 2a–2c) every former virtual route (/now, /about/uses, /accessibility, /contact/personal) is now a real CMS Page whose Excerpt supplies its meta description, so this map now covers only excerpt-less template Pages: today that is just /colophon. Pass `slug` to fetch one route; omit it for the full route→description map (useful for spotting a template Page shipped without a description). Read-only.',
 		'category'            => 'diagnostics',
 		'permission_callback' => 'sn_theme_perm_read',
 		'execute_callback'    => 'sn_theme_ability_seo_route_meta',
 		'input_schema'        => array(
 			'type'       => array( 'object', 'null' ),
 			'properties' => array(
-				'slug' => array( 'type' => 'string', 'description' => 'A template-Page slug or path (e.g., "services" or "/services"). Omit to return every theme-owned route.' ),
+				'slug' => array( 'type' => 'string', 'description' => 'A template-Page slug or path (e.g., "colophon" or "/colophon"). Omit to return every theme-owned route.' ),
 			),
 			'additionalProperties' => false,
 		),
@@ -301,7 +301,7 @@ function sn_theme_register_diagnostics_abilities() {
 						'type'       => 'object',
 						'properties' => array(
 							'slug'        => array( 'type' => 'string', 'description' => 'Page slug.' ),
-							'path'        => array( 'type' => 'string', 'description' => 'Site path, e.g. "/services".' ),
+							'path'        => array( 'type' => 'string', 'description' => 'Site path, e.g. "/colophon".' ),
 							'description' => array( 'type' => 'string', 'description' => 'The meta description the theme supplies for this route.' ),
 						),
 					),
