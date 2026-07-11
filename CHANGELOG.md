@@ -2,6 +2,19 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.37.0] - 2026-07-11: /.well-known/agents.json machine-surfaces discovery manifest
+
+**Headline:** A single machine-readable "front door." The site already exposes many machine surfaces — `llms.txt`, RSS + JSON feeds, OpenSearch, the sitemap, the Abilities API, provenance verification — but an agent or crawler had to know each convention independently. This adds one JSON index at `/.well-known/agents.json` that enumerates them all, so a machine discovers every surface from one entry point. The manifest is advertised from every page's `<head>` (an `alternate`/`json` `<link>`) and from a new `## Machine surfaces` section in `/llms.txt`. This is sub-project A of the machine-readability program; the surface list is filterable (`sn_agents_surfaces`) so later phases append their entry with no edit here.
+
+> **Why MINOR:** a new agent-visible discovery surface, additive. No public function/REST route removed or renamed, no settings-schema change, no WP-floor raise. Same flush-free virtual-route mechanism as `/.well-known/gpc.json`.
+
+### Added
+- `inc/agents-manifest.php` — serves `/.well-known/agents.json` (200, `application/json`, byte-stable/edge-cacheable). A pure, filterable `sn_agents_surfaces()` builds the surface index `{type, url, title, description, format}`; `sn_agents_head_link()` advertises it via a `<head>` `<link rel="alternate" type="application/json">`. Mirrors `inc/gpc-json.php`'s `template_redirect` priority-0 route ([inc/agents-manifest.php](inc/agents-manifest.php), [functions.php](functions.php)).
+- `tests/agents-manifest.php` — 23 standalone assertions covering the request matcher, surface purity/absoluteness, the `sn_agents_surfaces` filter seam (proves a later phase can append an entry), defensive drop of malformed entries, JSON validity with unescaped slashes, and the head link ([tests/agents-manifest.php](tests/agents-manifest.php)).
+
+### Improvements
+- `/llms.txt` and `/llms-full.txt` gain a `## Machine surfaces` section pointing at the discovery manifest and the Abilities API, so an LLM reader is routed to the programmatic index ([inc/llms-txt.php](inc/llms-txt.php)).
+
 ## [10.36.0] - 2026-07-10: /accessibility + /contact/personal render from CMS Pages (pages-to-CMS flip, Phase 2c)
 
 **Headline:** The theme half of Phase 2c, completing the pages-to-CMS flip. The last two postless virtual routes — `/accessibility` (top-level) and `/contact/personal` (child of `/contact`) — become real CMS Pages. This adds their bare-frame templates, registers them as selectable, enqueues `accessibility.css` on the real `/accessibility` Page, and removes the four route files. It also retires the theme's last `sn_seo_route_meta` handler: with every former virtual route now a real Page, that filter chain is empty, so the postless-route SEO path is gone (real Pages resolve meta from their Excerpt and WebPage JSON-LD from `is_singular`). Deploy the paired plugin **v9.21.0 first** (it creates the Pages), then this.
