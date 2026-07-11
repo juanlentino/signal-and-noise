@@ -88,5 +88,11 @@ ob_start(); sn_agents_head_link(); $link = ob_get_clean();
 ok( false !== strpos( $link, '<link rel="alternate"' ) && false !== strpos( $link, 'type="application/json"' ), 'head link is a valid alternate/json link' );
 ok( false !== strpos( $link, '/.well-known/agents.json' ), 'head link points at the manifest' );
 
+// ── sub-project C advertises a content-json surface via the same filter seam ──
+if ( ! defined( 'SN_CONTENT_JSON_TEST' ) ) { define( 'SN_CONTENT_JSON_TEST', true ); }
+require_once __DIR__ . '/../inc/content-json.php';
+$c_surfaces = sn_content_json_advertise_surface( sn_agents_surfaces() );
+ok( in_array( 'content-json', array_column( $c_surfaces, 'type' ), true ), 'content-json surface can be advertised into the manifest' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
