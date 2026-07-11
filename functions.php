@@ -10,6 +10,7 @@
  *   inc/assets-frontend.php      — frontend CSS/JS/fonts/favicons + defer filters
  *   inc/frontend-filters.php     — skip link, oEmbed, generator-tag stripping, output buffer
  *   inc/og-fonts.php             — registers sn_og_font_paths filter (theme brand fonts → plugin's OG generator)
+ *   inc/notes-og-card.php        : bespoke 1200x630 /notes-index share card via the plugin's sn_og_image_url seam (v10.39.0, plugin-guarded)
  *   inc/wp-update-integration.php       — registers theme with WP's update transient (version visibility in wp-admin)
  *   inc/wp-update-git-preservation.php  — backs up/restores .git through WP UI installs (v8.5.2+)
  *   inc/template-maintenance.php — FSE template-override purge + sn_purge_all_caches_result/sn_clear_template_overrides_result filter listeners
@@ -66,6 +67,7 @@ require_once __DIR__ . '/inc/asset-combine.php'; // v10.21.6: combined+minified 
 require_once __DIR__ . '/inc/assets-frontend.php';
 require_once __DIR__ . '/inc/frontend-filters.php';
 require_once __DIR__ . '/inc/og-fonts.php';
+require_once __DIR__ . '/inc/notes-og-card.php'; // v10.39.0: bespoke 1200x630 /notes-index share card via the plugin's sn_og_image_url seam (plugin-guarded)
 require_once __DIR__ . '/inc/wp-update-integration.php';
 require_once __DIR__ . '/inc/wp-update-git-preservation.php';
 

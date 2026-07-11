@@ -2,6 +2,17 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.39.0] - 2026-07-11: Bespoke share card for the /notes index
+
+**Headline:** The `/notes` index now has its own 1200x630 social share card instead of falling back to the small square site logo. Sharing `juanlentino.com/notes` previews a card in the site's own design language (red tick, `JUANLENTINO.COM` eyebrow, a big Bebas `NOTES`, the notes dek in DM Mono, and a blood-red tagline) rather than a generic logo. This is the theme-side follow-up to plugin v9.25.4, which stopped non-singular views from borrowing a single Note's card and correctly fell them through to the site default; this gives the index a real card of its own. Single Notes, `/notes` tag archives, search results, and every other view are unchanged.
+
+> **Why MINOR:** a new user-visible capability (a bespoke share image for a route that previously had only the generic default), additive. No public function, REST route, or ability removed or renamed, no settings-schema change, no WP-floor raise. It plugs into the companion plugin's existing `sn_og_image_url` filter (present since plugin v9.3.0) at priority 20, so on the notes index the theme card wins and every other view passes through untouched; with the plugin absent the filter simply never fires.
+
+### New
+- `assets/images/og-notes-card.png`: a committed 1200x630 share card for the `/notes` index, baked in the plugin's card design language with the theme's own Bebas Neue + DM Mono OG fonts (`assets/fonts/og/`), so it is pixel-consistent with every per-post card. Copy is drawn from the site's notes description, split into a DM Mono dek and a red evergreen footer (no reading-time or post count that would go stale in a static asset).
+- `inc/notes-og-card.php`: listens on the plugin's `sn_og_image_url` filter at priority 20 and returns the bespoke card only when `sn_notes_is_index_request()` is true (the same matcher that owns the /notes render). Plugin-guarded via `function_exists`; a no-op when the plugin or filter is absent. The plugin declares the correct 1200x630 dimensions and `twitter:card=summary_large_image` on its own, so no dimensions filter is needed.
+- `tests/notes-og-card.php` (7 assertions): the index override, non-index passthrough, and that the committed asset is a valid 1200x630 PNG.
+
 ## [10.38.4] - 2026-07-11: Footer social icons keep their look (no list dots)
 
 **Headline:** After v10.38.3 hid the exposed labels, the footer social links still showed default `<ul>` disc bullets ("big dots") between the icons and rendered the glyphs black instead of the muted rust. Same cause one layer out: the base `wp-block-social-links` styling that removes the list markers and colours the icons is core CSS the theme leaned on. The theme now owns its footer social-icon appearance, so the dots and black glyphs don't appear when core's copy is absent. Reproduced live and confirmed fixed.
