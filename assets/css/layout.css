@@ -66,6 +66,11 @@ body {
 .wp-block-navigation a {
 	position: relative;
 	text-decoration: none !important;
+	/* v10.38.2: own the link colour rather than relying on core's separate nav
+	   stylesheet (which supplies color:inherit). When that file is dropped the
+	   links fell back to the theme.json global link colour (red); this restores
+	   the header ink. Mirrors the critical.css copy. */
+	color: inherit;
 	transition: color 0.3s ease;
 }
 

@@ -162,6 +162,14 @@ body {
 /* Navigation links — desktop underline effect */
 .wp-block-navigation a {
 	position: relative;
+	/* v10.38.2: own the link colour instead of relying on core's separate
+	   nav stylesheet. Core's `:where(...nav a){color:inherit}` (its file) is
+	   the ONLY thing that made these inherit the header's ink; when that file
+	   is dropped (optimizer/CSP/edge), the links fell back to the theme.json
+	   global link colour (blood/red). This 0,1,1 rule beats that 0,0,1 global
+	   and is identical to core when core is present. Pairs with the closed-
+	   state fallback below. */
+	color: inherit;
 	transition: color 0.3s ease;
 }
 
