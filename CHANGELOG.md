@@ -2,6 +2,18 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.39.1] - 2026-07-11: Content-JSON excludes the static front page's twin
+
+**Headline:** Closes a consistency gap the family-close CMA audit flagged (INFO-1). The `.json` content-twin resolver served `/<front-page-slug>.json` for a static front page, even though the same module deliberately never advertises it (the `<head>` link skips `is_front_page()`) and never purges it (a static front page's twin derives from the site root, a malformed `host.json`). The resolver now excludes the front page too, so advertise, purge, and serve agree on one rule. No data was ever exposed: the twin only served the already-public home page's own content. This stops a front-page edit from leaving a stale, unpurgeable twin in the edge cache, and makes the three call sites consistent.
+
+> **Why PATCH:** a consistency/hardening fix to one resolver, no new capability. No public function, REST route, or ability removed or renamed, no settings-schema change, no WP-floor raise. It reuses the exact site-root predicate already in `sn_content_json_purge_url()`.
+
+### Fixed
+- [inc/content-json.php](inc/content-json.php): `sn_content_json_resolve()` returns `0` for the static front page (permalink equal to the site root), matching the front-page skip already in `sn_content_json_head_link()` and `sn_content_json_purge_url()`. A `/<front-slug>.json` request now 404s like any other non-twin path instead of serving an unadvertised, unpurgeable twin.
+
+### Tests
+- [tests/content-json.php](tests/content-json.php): new assertion that the static front page resolves to `0` (16 assertions total). Full theme sweep 74 suites / 0 failed; PHPCS falsified-clean; PHPStan clean.
+
 ## [10.39.0] - 2026-07-11: Bespoke share card for the /notes index
 
 **Headline:** The `/notes` index now has its own 1200x630 social share card instead of falling back to the small square site logo. Sharing `juanlentino.com/notes` previews a card in the site's own design language (red tick, `JUANLENTINO.COM` eyebrow, a big Bebas `NOTES`, the notes dek in DM Mono, and a blood-red tagline) rather than a generic logo. This is the theme-side follow-up to plugin v9.25.4, which stopped non-singular views from borrowing a single Note's card and correctly fell them through to the site default; this gives the index a real card of its own. Single Notes, `/notes` tag archives, search results, and every other view are unchanged.
