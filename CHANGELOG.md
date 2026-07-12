@@ -2,6 +2,21 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.42.0] - 2026-07-11: UTM campaign attribution (named params only)
+
+**Headline:** The first-party beacon now captures campaign attribution. On the **first pageview only**, it reads the five named `utm_*` params (`utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content`) from the query string and attaches them to the pageview payload as a compact `utm` object. This is the deliberate, disclosed exception to the beacon's "the query string never leaves the browser" stance: it sends **only those five named marketing tags** — the ones the site owner puts on their own campaign links — and never the raw query string. The pageview path stays `location.pathname` as before. A plain in-memory flag remembers the capture fired, so no web storage is touched (the storageless invariant holds) and a Back-button/bfcache restore never re-attributes the same landing. This is the theme-side half of the cookieless campaign-attribution pipeline; the analytics worker packs these into the row's last free field and the companion plugin surfaces a Source/Campaign breakdown.
+
+> **Why MINOR:** a new user-visible capability (campaign attribution the beacon never captured before), additive. No public function, template, or ability removed or renamed, no settings-schema change, no WP-floor raise. Pageviews with no UTM params are byte-for-byte unchanged on the wire; the payload only grows when a campaign tag is actually present.
+
+### New
+- [assets/js/sn-beacon.js](assets/js/sn-beacon.js): `readUtm()` parses the five named params via `URLSearchParams`, trims and length-clamps (128) each value, and returns a compact `{ s, m, c, t, o }` object (or nothing when none are present). `pageview()` attaches it on the first call, gated by an in-memory `utmSent` flag — no `sessionStorage`/`localStorage`.
+
+### Privacy
+Consistent with the cookieless, storageless beacon. Only the five explicitly-named `utm_*` params are transmitted — never arbitrary query keys, never the raw query string. These are disclosed in the site privacy policy's analytics section.
+
+### Tests
+- [tests/beacon.php](tests/beacon.php): eight assertions covering the `URLSearchParams` read, all five named params, the `pv.utm` attach, the once flag, first-pageview-only capture, the no-web-storage (storageless) guarantee, the pathname-only pv path (no raw-query leak), and the value length clamp. Beacon suite 68/68.
+
 ## [10.41.0] - 2026-07-11: Privacy policy link in the footer meta-nav
 
 **Headline:** The footer meta-nav gains a fourth icon — a shield linking to `/privacy-policy` — joining Now, Accessibility, and Colophon on the right side of the footer (owner request). It reuses the exact icon-link pattern already there: a mono stroke glyph drawn in `currentColor` (quiet rust, blood on hover), a middot separator, a `>=28px` WCAG target, an `aria-label` + `title` for its accessible name, and a decorative `aria-hidden` SVG. No CSS change was needed — `.sn-footer__meta-nav` styling is generic and the new link inherits every token for free.

@@ -167,5 +167,27 @@ ok( strpos( $js, "a.hasAttribute('download')" ) !== false, 'download also honors
 $dl_pos = strpos( $js, "cfg.event('download'" );
 ok( $dl_pos !== false && $out_pos !== false && $dl_pos < $out_pos, 'download classification precedes outbound (a cross-host file → download, not outbound)' );
 
+// v10.42.0: UTM campaign attribution. On the FIRST pageview only, the beacon reads
+// the five named utm_* params from the query and attaches them to the pv payload as
+// a compact `utm` object (short keys s/m/c/t/o). It sends ONLY those named params —
+// never the raw query string — and remembers it fired with an in-memory flag, so no
+// storage is touched (storageless invariant) and a bfcache restore never re-attributes.
+ok( strpos( $js, 'URLSearchParams' ) !== false, 'reads campaign tags via URLSearchParams(location.search)' );
+ok(
+	strpos( $js, 'utm_source' ) !== false && strpos( $js, 'utm_medium' ) !== false &&
+	strpos( $js, 'utm_campaign' ) !== false && strpos( $js, 'utm_term' ) !== false &&
+	strpos( $js, 'utm_content' ) !== false,
+	'captures all five named utm params (source/medium/campaign/term/content)'
+);
+ok( preg_match( '/\.utm\s*=/', $js ) === 1, 'attaches a utm object to the pv payload' );
+ok( strpos( $js, 'utmSent' ) !== false, 'guards UTM capture with an in-memory once flag' );
+ok( strpos( $js, 'if (!utmSent)' ) !== false || strpos( $js, 'if(!utmSent)' ) !== false, 'UTM is captured on the FIRST pageview only' );
+// Storageless invariant: the once flag is a plain variable, never web storage.
+ok( strpos( $js, 'sessionStorage' ) === false && strpos( $js, 'localStorage' ) === false, 'UTM once flag uses no web storage (storageless)' );
+// No raw-query leak: the pv path stays location.pathname; the query is consumed only
+// through URLSearchParams to extract the named params, never sent wholesale.
+ok( strpos( $js, 'u: location.pathname' ) !== false, 'pv path is still location.pathname (raw query never sent as u)' );
+ok( strpos( $js, 'clamps' ) !== false || preg_match( '/slice\(0,\s*128\)/', $js ) === 1, 'clamps each utm value length (128)' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
