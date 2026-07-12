@@ -39,8 +39,32 @@
     } catch (e) { /* fire-and-forget */ }
   }
 
+  // UTM campaign attribution (v10.42.0). Marketing tags the site owner puts on
+  // their OWN campaign links. Read on the FIRST pageview only and attached to the
+  // pv payload as a compact `utm` object (short keys s/m/c/t/o). Only these five
+  // NAMED params ever leave the browser — never the raw query string, which is why
+  // the pv path stays location.pathname. The privacy policy discloses utm_*.
+  var utmSent = false; // in-memory once flag — NO web storage (storageless invariant)
+  var UTM_KEYS = { s: 'utm_source', m: 'utm_medium', c: 'utm_campaign', t: 'utm_term', o: 'utm_content' };
+  function readUtm() {
+    var q;
+    try { q = new URLSearchParams(location.search); } catch (e) { return null; }
+    var out = {}, any = false;
+    for (var key in UTM_KEYS) {
+      var v = q.get(UTM_KEYS[key]);
+      if (v) { out[key] = String(v).trim().slice(0, 128); any = true; } // clamps each value to 128
+    }
+    return any ? out : null;
+  }
+
   function pageview() {
-    send({ e: 'pv', u: location.pathname, r: document.referrer || '' });
+    var pv = { e: 'pv', u: location.pathname, r: document.referrer || '' };
+    if (!utmSent) { // first pageview only; a bfcache restore never re-attributes
+      utmSent = true;
+      var utm = readUtm();
+      if (utm) pv.utm = utm;
+    }
+    send(pv);
   }
 
   // 1) Pageview on load + on bfcache restore (Back button = a new view).
