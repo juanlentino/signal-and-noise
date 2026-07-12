@@ -2,6 +2,18 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.41.0] - 2026-07-11: Privacy policy link in the footer meta-nav
+
+**Headline:** The footer meta-nav gains a fourth icon — a shield linking to `/privacy-policy` — joining Now, Accessibility, and Colophon on the right side of the footer (owner request). It reuses the exact icon-link pattern already there: a mono stroke glyph drawn in `currentColor` (quiet rust, blood on hover), a middot separator, a `>=28px` WCAG target, an `aria-label` + `title` for its accessible name, and a decorative `aria-hidden` SVG. No CSS change was needed — `.sn-footer__meta-nav` styling is generic and the new link inherits every token for free.
+
+> **Why MINOR:** a new user-visible capability (a footer link that did not exist), additive. No public function, REST route, or ability removed or renamed, no settings-schema change, no WP-floor raise. The `/privacy-policy` href is a raw `<a>` (not a `core/social-link`), so it resolves natively against the current origin like the sibling Now/Accessibility/Colophon links.
+
+### New
+- [parts/footer.html](parts/footer.html): a Privacy policy link (shield glyph → `/privacy-policy`) appended to the `sn-footer__meta-nav`, with a middot separator, `aria-label="Privacy policy"`, `title="Privacy"`, and a decorative shield SVG that draws with `currentColor` so it inherits the rust base and blood hover.
+
+### Tests
+- [tests/footer-meta-nav.php](tests/footer-meta-nav.php): assertions raised from three links to four (four icons, three separators, four accessible names/tooltips/decorative SVGs) plus a new `href="/privacy-policy"` check. Full theme sweep 74 suites / 0 failed.
+
 ## [10.40.0] - 2026-07-11: File-download tracking (extension only)
 
 **Headline:** The first-party beacon now records file downloads. Its delegated click listener already classified feed subscriptions and cross-host outbound clicks; it now also recognises links to downloadable files — any link whose path ends in a known download extension (`.pdf`, `.zip`, office/media/archive formats, …) or any link carrying an explicit `download` attribute — and fires a `download` event carrying **only the extension** (e.g. `{ ext: 'pdf' }`). Never the filename, path, or query, exactly consistent with the host-only stance the outbound event already takes. Download is the more specific classification, so a cross-host file link (`example.com/report.pdf`) is counted as a download, not an outbound. This flows through the existing custom-event (`ce`) pipeline the worker and companion plugin already handle, so no worker or plugin change is required to receive it.

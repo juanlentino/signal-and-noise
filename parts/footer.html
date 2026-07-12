@@ -43,15 +43,17 @@
 		<!-- v10.21.2: icon meta-nav (owner request — icons instead of text,
 		     middot separators kept). Mono stroke glyphs in the brutalist
 		     vocabulary: clock = Now, the standard accessibility figure, a
-		     pilcrow (printer's mark) = Colophon. "Now" and "Colophon" have no
-		     universal glyph, so every link carries an aria-label + title and
-		     each svg is decorative (aria-hidden). Raw SVG rides a wp:html
-		     block (paragraph rich-text would strip it). Color: CSS sets the
-		     nav to rust, icons draw with currentColor, hover brings blood
-		     (.sn-footer__meta-nav rules in layout.css). v10.21.1 history: the
-		     old text links used the phantom "steel" slug that exists nowhere
-		     in theme.json, which is why they rendered in the loud global link
-		     color. -->
+		     pilcrow (printer's mark) = Colophon, a shield = Privacy policy
+		     (added v10.41.0, owner request). None of these have a universal
+		     glyph, so every link carries an aria-label + title and each svg
+		     is decorative (aria-hidden). Raw SVG rides a wp:html block
+		     (paragraph rich-text would strip it). Color: CSS sets the nav to
+		     rust, icons draw with currentColor, hover brings blood
+		     (.sn-footer__meta-nav rules in layout.css). The path-relative
+		     hrefs (raw <a>, not core/social-link) resolve natively against
+		     the current origin. v10.21.1 history: the old text links used the
+		     phantom "steel" slug that exists nowhere in theme.json, which is
+		     why they rendered in the loud global link color. -->
 		<!-- wp:html -->
 		<nav class="sn-footer__meta-nav" aria-label="Site meta">
 			<a href="/now" aria-label="Now — what I&#8217;m focused on" title="Now"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="6.25"/><path d="M8 4.75V8l2.25 1.5"/></svg></a>
@@ -59,6 +61,8 @@
 			<a href="/accessibility" aria-label="Accessibility statement" title="Accessibility"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="2.9" r="1.4" fill="currentColor" stroke="none"/><path d="M2.9 5.6c3.4 1 6.8 1 10.2 0"/><path d="M8 6.4v3.4"/><path d="M8 9.8 5.9 13.6"/><path d="M8 9.8l2.1 3.8"/></svg></a>
 			<span class="sn-footer__meta-sep" aria-hidden="true">&middot;</span>
 			<a href="/colophon/" aria-label="Colophon — how this site is made" title="Colophon"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><path d="M12.7 2.9H6.4a3 3 0 0 0 0 6h2.3"/><path d="M8.7 2.9v10.2"/><path d="M11.3 2.9v10.2"/></svg></a>
+			<span class="sn-footer__meta-sep" aria-hidden="true">&middot;</span>
+			<a href="/privacy-policy" aria-label="Privacy policy" title="Privacy"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><path d="M8 2 3 3.9v4c0 3 2.1 5.2 5 6.2 2.9-1 5-3.2 5-6.2v-4L8 2Z"/><path d="M6 7.9 7.4 9.3 10.2 6.3"/></svg></a>
 		</nav>
 		<!-- /wp:html -->
 
