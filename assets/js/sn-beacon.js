@@ -133,6 +133,10 @@
     if ('http:' !== url.protocol && 'https:' !== url.protocol) return false;
     return /(^|\/)feed(\/|$)/i.test(url.pathname) || /[?&]feed=/i.test(url.search);
   }
+  // Downloadable file extensions (v10.40.0). A link to one of these — or any link
+  // carrying a `download` attribute — fires 'download' with the EXTENSION ONLY, never
+  // the filename or path, staying consistent with the host-only outbound stance.
+  var DOWNLOAD_EXT = /\.(pdf|zip|docx?|xlsx?|pptx?|csv|rtf|odt|ods|odp|mp3|wav|mp4|mov|avi|mkv|dmg|exe|pkg|deb|rpm|apk|gz|tgz|tar|rar|7z|epub|mobi)$/i;
   document.addEventListener('click', function (ev) {
     var t = ev.target;
     if (!t || !t.closest) return; // text/non-Element targets can't be conversions
@@ -157,8 +161,18 @@
     var url;
     try { url = new URL(a.href); } catch (e) { return; } // a.href is already absolute
     if (feedLink(a, url)) { cfg.event('subscribe', { target: 'rss' }); return; }
-    if (('http:' === url.protocol || 'https:' === url.protocol) && url.hostname && url.hostname !== location.hostname) {
-      cfg.event('outbound', { host: url.hostname }); // hostname ONLY — no path, no query
+    if ('http:' === url.protocol || 'https:' === url.protocol) {
+      // c1) File download (same- or cross-host) — extension ONLY, more specific than
+      // 'outbound', so it wins for a cross-host file link. No filename/path/query.
+      var dext = (url.pathname.match(/\.([a-z0-9]{1,8})$/i) || [])[1];
+      if (a.hasAttribute('download') || (dext && DOWNLOAD_EXT.test('.' + dext.toLowerCase()))) {
+        cfg.event('download', dext ? { ext: dext.toLowerCase() } : null);
+        return;
+      }
+      // d) Cross-host outbound link — hostname ONLY, no path, no query.
+      if (url.hostname && url.hostname !== location.hostname) {
+        cfg.event('outbound', { host: url.hostname });
+      }
     }
   });
 })();
