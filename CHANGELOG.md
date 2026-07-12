@@ -2,6 +2,18 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.40.0] - 2026-07-11: File-download tracking (extension only)
+
+**Headline:** The first-party beacon now records file downloads. Its delegated click listener already classified feed subscriptions and cross-host outbound clicks; it now also recognises links to downloadable files — any link whose path ends in a known download extension (`.pdf`, `.zip`, office/media/archive formats, …) or any link carrying an explicit `download` attribute — and fires a `download` event carrying **only the extension** (e.g. `{ ext: 'pdf' }`). Never the filename, path, or query, exactly consistent with the host-only stance the outbound event already takes. Download is the more specific classification, so a cross-host file link (`example.com/report.pdf`) is counted as a download, not an outbound. This flows through the existing custom-event (`ce`) pipeline the worker and companion plugin already handle, so no worker or plugin change is required to receive it.
+
+> **Why MINOR:** a new user-visible capability (a `download` conversion the beacon never emitted before), additive. No public function, template, or ability removed or renamed, no settings-schema change, no WP-floor raise. The listener path is unchanged for every non-download link; downloads are simply classified ahead of outbound. With the analytics worker/plugin absent the event is a no-op, as with every other beacon event.
+
+### New
+- [assets/js/sn-beacon.js](assets/js/sn-beacon.js): a `DOWNLOAD_EXT` allow-list and a download branch in the click listener. A same- or cross-host link to a matching file (or one with a `download` attribute) fires `cfg.event('download', { ext })` — extension only — and returns before the outbound check, so downloads and outbounds never double-count and no filename/path/query ever leaves the browser.
+
+### Tests
+- [tests/beacon.php](tests/beacon.php): five assertions covering the download event, the extension allow-list, the extension-only prop shape (no filename/path leak), the explicit `download`-attribute path, and that download classification precedes outbound. Beacon suite 60/60.
+
 ## [10.39.1] - 2026-07-11: Content-JSON excludes the static front page's twin
 
 **Headline:** Closes a consistency gap the family-close CMA audit flagged (INFO-1). The `.json` content-twin resolver served `/<front-page-slug>.json` for a static front page, even though the same module deliberately never advertises it (the `<head>` link skips `is_front_page()`) and never purges it (a static front page's twin derives from the site root, a malformed `host.json`). The resolver now excludes the front page too, so advertise, purge, and serve agree on one rule. No data was ever exposed: the twin only served the already-public home page's own content. This stops a front-page edit from leaving a stale, unpurgeable twin in the edge cache, and makes the three call sites consistent.

@@ -156,5 +156,16 @@ ok( $goal_pos !== false && $out_pos !== false && $goal_pos < $out_pos, 'explicit
 $click_pos = strpos( $js, "addEventListener('click'" );
 ok( $click_pos !== false && $gate_pos !== false && $click_pos > $gate_pos, 'click listener is bound AFTER the DNT/GPC privacy gate' );
 
+// v10.40.0: file-download tracking. A link to a downloadable file (or one carrying a
+// `download` attribute) fires 'download' with the EXTENSION ONLY — never the
+// filename/path/query — consistent with the host-only outbound stance.
+ok( strpos( $js, "cfg.event('download'" ) !== false, 'fires a download event for file links' );
+ok( strpos( $js, 'DOWNLOAD_EXT' ) !== false, 'recognises downloadable file extensions' );
+ok( preg_match( '/cfg\.event\(\s*\'download\'\s*,\s*[^;]*ext:/', $js ) === 1, 'download props carry an ext key (extension only, no filename/path leak)' );
+ok( strpos( $js, "a.hasAttribute('download')" ) !== false, 'download also honors the explicit download attribute' );
+// Download is more specific than outbound → classified first for a cross-host file link.
+$dl_pos = strpos( $js, "cfg.event('download'" );
+ok( $dl_pos !== false && $out_pos !== false && $dl_pos < $out_pos, 'download classification precedes outbound (a cross-host file → download, not outbound)' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
