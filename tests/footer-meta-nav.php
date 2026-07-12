@@ -5,9 +5,10 @@
  * v10.21.1 folded Now/Accessibility/Colophon into one quiet rust line and
  * purged the phantom `steel` slug. v10.21.2 (owner request): the three text
  * labels become mono stroke ICONS (clock / accessibility figure / pilcrow),
- * middot separators kept. Icon-only links MUST each carry an aria-label (and
- * a title tooltip) — "Now" and "Colophon" have no universal glyph, so the
- * accessible name is the only discoverable label.
+ * middot separators kept. v10.41.0 (owner request): a fourth icon — a shield
+ * (Privacy policy, /privacy-policy) — joins the line. Icon-only links MUST
+ * each carry an aria-label (and a title tooltip) — none of these have a
+ * universal glyph, so the accessible name is the only discoverable label.
  *
  * @since theme v10.21.1
  */
@@ -28,15 +29,16 @@ ok( false !== strpos( $nav, 'aria-label="Site meta"' ), 'nav landmark is labelle
 ok( false !== strpos( $nav, 'href="/now"' ), 'meta-nav links /now' );
 ok( false !== strpos( $nav, 'href="/accessibility"' ), 'meta-nav links /accessibility' );
 ok( false !== strpos( $nav, 'href="/colophon/"' ), 'meta-nav links /colophon/' );
-ok( 3 === substr_count( $nav, '<svg' ), 'three inline icons' );
-ok( 2 === substr_count( $nav, '&middot;' ), 'middot separators kept (2 for 3 links)' );
-ok( 2 === substr_count( $nav, 'aria-hidden="true">&middot;' ), 'separators are aria-hidden (decorative)' );
+ok( false !== strpos( $nav, 'href="/privacy-policy"' ), 'meta-nav links /privacy-policy' );
+ok( 4 === substr_count( $nav, '<svg' ), 'four inline icons' );
+ok( 3 === substr_count( $nav, '&middot;' ), 'middot separators kept (3 for 4 links)' );
+ok( 3 === substr_count( $nav, 'aria-hidden="true">&middot;' ), 'separators are aria-hidden (decorative)' );
 
 // ── icon-only links carry accessible names + tooltips ──
-ok( 3 === substr_count( $nav, 'aria-label="' ) - substr_count( $nav, 'aria-label="Site meta"' ), 'every icon link has an aria-label' );
-ok( 3 === substr_count( $nav, 'title="' ), 'every icon link has a hover tooltip' );
-ok( 3 === substr_count( $nav, 'aria-hidden="true" focusable="false"' ), 'every svg is decorative (aria-hidden + unfocusable)' );
-ok( substr_count( $nav, 'currentColor' ) >= 3, 'icons draw with currentColor (inherit rust, hover blood)' );
+ok( 4 === substr_count( $nav, 'aria-label="' ) - substr_count( $nav, 'aria-label="Site meta"' ), 'every icon link has an aria-label' );
+ok( 4 === substr_count( $nav, 'title="' ), 'every icon link has a hover tooltip' );
+ok( 4 === substr_count( $nav, 'aria-hidden="true" focusable="false"' ), 'every svg is decorative (aria-hidden + unfocusable)' );
+ok( substr_count( $nav, 'currentColor' ) >= 4, 'icons draw with currentColor (inherit rust, hover blood)' );
 
 // ── the v10.21.1 text-label paragraph form is gone ──
 ok( false === strpos( $footer, '>Now</a>' ) && false === strpos( $footer, '>Colophon</a>' ), 'text labels replaced by icons' );
