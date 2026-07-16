@@ -2,6 +2,15 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.42.2] - 2026-07-16: Reading-time helper reaches REST/MCP
+
+**Headline:** `get-reading-time-for-slug` errored over the plugin's MCP server (`sn_notes_reading_time_for_slug() unavailable — theme module not loaded`), and `get-page-notes-pillars` silently returned the "5 min" fallback instead of real reading times. Both Abilities run over REST, but the helper they call lived in [inc/page-notes-render.php](inc/page-notes-render.php) — a full-page renderer that runs top-level output at include time and is therefore loaded ONLY on the `/notes` `template_include`, never in a REST request. The helper is now extracted to a dependency-free, always-required file ([inc/notes-reading-time.php](inc/notes-reading-time.php)); the renderer keeps calling the same function name. Found live via the MCP server.
+
+> **Why PATCH:** bug fix — an Ability that errored now works, and a second one returns real data instead of a fallback. No new capability, no behavior change on the `/notes` route.
+
+### Fixed
+- The reading-time helper is available in every request context, not just the `/notes` template route. New [tests/notes-reading-time.php](tests/notes-reading-time.php) (6 asserts: no render side effects on include, the shortcode wrap, esc_attr on the slug, the "5 min" fallback); the renderer's own tests stay green (no redeclare). Full sweep 76 files / 1,708 asserts / 0 failed.
+
 ## [10.42.1] - 2026-07-15: Design-token abilities read real tokens — and refuse to fabricate
 
 **Headline:** The `get-design-tokens` MCP/ability read was **born broken**: `wp_get_global_settings()` returns presets keyed by ORIGIN (`default`/`theme`/`custom`), and the reader iterated those origin buckets as if they were token entries — so colors resolved to nothing, and fontFamilies/fontSizes/spacingSizes returned arrays of buckets (the live tell: exactly 1/2/2 "entries", all fields empty — the origin counts, not tokens). Downstream, `get-design-system-summary` faithfully formatted that hollow shell into a plausible empty document — a silent fabrication, since nothing ever threw. Fixed in layered order in [inc/abilities-diagnostics.php](inc/abilities-diagnostics.php): **first** the summary gains an anti-fabrication gate (hollow tokens → `WP_Error('design_tokens_empty')` in all three formats — surface the failure, never invent a valid-looking answer), **then** the reader unwraps origins with core precedence (default → theme → custom, later wins by slug) into flat token entries, erroring itself when a read is genuinely hollow so the class dies at the source too. `spacingScale` is a resolved value, not a preset list — passthrough pinned unchanged. Cross-consumer `ai-validate-brand-alignment` verified safe by reading (its existing guards degrade gracefully).
