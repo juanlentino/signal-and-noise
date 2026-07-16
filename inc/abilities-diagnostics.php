@@ -20,6 +20,13 @@
  * calls sn_theme_ability_design_tokens() (also in this file — same-file
  * call). No other diagnostics ability has external dependencies.
  *
+ * v10.42.x: sn_theme_ability_design_tokens() unwraps wp_get_global_settings()'s
+ * per-origin ('default'/'theme'/'custom') preset buckets into flat entries
+ * (see sn_theme_flatten_preset_origins()) and refuses to return a hollow
+ * token set (see sn_theme_design_tokens_has_content()) — both the reader
+ * and the summary formatter surface a design_tokens_empty WP_Error instead
+ * of a plausible-looking empty document.
+ *
  * @package SignalNoise
  * @since 9.1.7 (content from 9.1.0)
  */
@@ -354,6 +361,98 @@ function sn_theme_register_diagnostics_abilities() {
 add_action( 'wp_abilities_api_init', 'sn_theme_register_diagnostics_abilities' );
 
 /**
+ * True when a design-tokens payload has enough real content to be usable.
+ *
+ * Guards BOTH sn_theme_ability_design_tokens() (dies at the source) and
+ * sn_theme_ability_design_system_summary() (refuses to format a hollow
+ * document) against fabricating a plausible-looking empty result when the
+ * underlying theme.json read comes back with nothing real — a genuinely
+ * tokenless settings tree, or the origin-bucket misread the reader's own
+ * fix guards against.
+ *
+ * @since 10.42.1
+ * @param array $tokens The sn_theme_ability_design_tokens() output shape.
+ * @return bool
+ */
+function sn_theme_design_tokens_has_content( $tokens ) {
+	if ( ! empty( $tokens['colors'] ) ) {
+		return true;
+	}
+	$font_families = isset( $tokens['typography']['fontFamilies'] ) ? (array) $tokens['typography']['fontFamilies'] : array();
+	foreach ( $font_families as $ff ) {
+		if ( is_array( $ff ) && ! empty( $ff['slug'] ) ) {
+			return true;
+		}
+	}
+	$font_sizes = isset( $tokens['typography']['fontSizes'] ) ? (array) $tokens['typography']['fontSizes'] : array();
+	foreach ( $font_sizes as $fs ) {
+		if ( is_array( $fs ) && ! empty( $fs['slug'] ) ) {
+			return true;
+		}
+	}
+	return false;
+}
+
+/**
+ * Merges a theme.json preset array across WP core's origin buckets.
+ *
+ * wp_get_global_settings() presets that use the "append" merge strategy
+ * (color.palette, typography.fontFamilies, typography.fontSizes,
+ * spacing.spacingSizes) come back keyed by ORIGIN — 'default' (core),
+ * 'theme' (theme.json), 'custom' (user Global Styles) — not as a flat
+ * list of entries. Reading a bucket as if it were a single preset entry
+ * is how this ability shipped born-broken: colors silently dropped to
+ * zero (a bucket has no 'slug'/'color' pair of its own) and fontFamilies/
+ * fontSizes/spacingSizes reported a count equal to the number of origin
+ * keys present, never the number of real presets.
+ *
+ * Core's own precedence is default -> theme -> custom: a later origin's
+ * entry overrides an earlier one of the SAME slug (a theme.json palette
+ * color overrides core's default of that slug; a user's Global Styles
+ * pick overrides the theme's).
+ *
+ * Tolerates an ALREADY-flat entry list (no recognized origin key present)
+ * by passing it through unchanged — defensive for callers/fixtures that
+ * hand back a pre-resolved list directly.
+ *
+ * @since 10.42.1
+ * @param mixed $value Raw preset value from wp_get_global_settings().
+ * @return array<int,array> Flat list of preset entries.
+ */
+function sn_theme_flatten_preset_origins( $value ) {
+	$value = (array) $value;
+	if ( empty( $value ) ) {
+		return array();
+	}
+
+	$origin_order    = array( 'default', 'theme', 'custom' );
+	$is_origin_keyed = false;
+	foreach ( $origin_order as $origin ) {
+		if ( array_key_exists( $origin, $value ) ) {
+			$is_origin_keyed = true;
+			break;
+		}
+	}
+
+	if ( ! $is_origin_keyed ) {
+		return array_values( $value );
+	}
+
+	$merged = array();
+	foreach ( $origin_order as $origin ) {
+		if ( ! isset( $value[ $origin ] ) || ! is_array( $value[ $origin ] ) ) {
+			continue;
+		}
+		foreach ( $value[ $origin ] as $entry ) {
+			if ( is_array( $entry ) && isset( $entry['slug'] ) ) {
+				$merged[ (string) $entry['slug'] ] = $entry;
+			}
+		}
+	}
+	return array_values( $merged );
+}
+
+/**
  * Execute callback: signal-and-noise/get-design-tokens.
  *
  * @since 9.1.0
@@ -371,10 +470,10 @@ function sn_theme_ability_design_tokens() {
 
 		$settings = wp_get_global_settings();
 
-		$colors = array();
-		$palette = isset( $settings['color']['palette'] ) ? (array) $settings['color']['palette'] : array();
-		foreach ( $palette as $entry ) {
-			if ( isset( $entry['slug'], $entry['color'] ) ) {
+		$colors      = array();
+		$palette_raw = isset( $settings['color']['palette'] ) ? $settings['color']['palette'] : array();
+		foreach ( sn_theme_flatten_preset_origins( $palette_raw ) as $entry ) {
+			if ( is_array( $entry ) && isset( $entry['slug'], $entry['color'] ) ) {
 				$colors[ (string) $entry['slug'] ] = (string) $entry['color'];
 			}
 		}
@@ -382,21 +481,42 @@ function sn_theme_ability_design_tokens() {
 		$typography = isset( $settings['typography'] ) ? (array) $settings['typography'] : array();
 		$spacing    = isset( $settings['spacing'] )    ? (array) $settings['spacing']    : array();
 
+		// spacingScale is a single resolved SETTING VALUE, not an append-merge
+		// preset list — origins override it outright rather than appending, so
+		// wp_get_global_settings() already hands back one value. No origin
+		// unwrap needed here; pass through as before.
+		$spacing_scale = isset( $spacing['spacingScale'] ) ? (array) $spacing['spacingScale'] : array();
+
 		$theme   = function_exists( 'wp_get_theme' ) ? wp_get_theme() : null;
 		$version = $theme && method_exists( $theme, 'get' ) ? (string) $theme->get( 'Version' ) : '';
 
-		return array(
+		$tokens = array(
 			'colors'     => $colors,
 			'typography' => array(
-				'fontFamilies' => isset( $typography['fontFamilies'] ) ? array_values( (array) $typography['fontFamilies'] ) : array(),
-				'fontSizes'    => isset( $typography['fontSizes'] )    ? array_values( (array) $typography['fontSizes'] )    : array(),
+				'fontFamilies' => sn_theme_flatten_preset_origins( isset( $typography['fontFamilies'] ) ? $typography['fontFamilies'] : array() ),
+				'fontSizes'    => sn_theme_flatten_preset_origins( isset( $typography['fontSizes'] )    ? $typography['fontSizes']    : array() ),
 			),
 			'spacing'    => array(
-				'spacingScale' => isset( $spacing['spacingScale'] ) ? (array) $spacing['spacingScale'] : array(),
-				'spacingSizes' => isset( $spacing['spacingSizes'] ) ? array_values( (array) $spacing['spacingSizes'] ) : array(),
+				'spacingScale' => $spacing_scale,
+				'spacingSizes' => sn_theme_flatten_preset_origins( isset( $spacing['spacingSizes'] ) ? $spacing['spacingSizes'] : array() ),
 			),
 			'version'    => $version,
 		);
+
+		// The read must fail LOUDLY, not hand back a plausible-looking empty
+		// token set: a genuinely hollow theme.json (or a future regression of
+		// the origin unwrap above) is a read failure, not an empty design
+		// system. Dies at the source so every consumer — get-design-tokens
+		// callers AND get-design-system-summary — sees the same signal.
+		if ( ! sn_theme_design_tokens_has_content( $tokens ) ) {
+			return new WP_Error(
+				'design_tokens_empty',
+				'Design tokens read as empty: theme.json presets (color.palette, typography.fontFamilies, typography.fontSizes) resolved to zero real entries. Treating this as a read failure rather than an empty design system.',
+				array( 'status' => 500 )
+			);
+		}
+
+		return $tokens;
 	} catch ( \Throwable $e ) {
 		error_log( 'SN theme ability error in get-design-tokens: ' . $e->getMessage() );
 		return new WP_Error(
@@ -559,6 +679,19 @@ function sn_theme_ability_design_system_summary( $input = array() ) {
 		$tokens = sn_theme_ability_design_tokens();
 		if ( is_wp_error( $tokens ) ) {
 			return $tokens;
+		}
+
+		// Never format a plausible-looking empty document. A hollow read (no
+		// colors, no named font family/size) is a failure of the read, not an
+		// empty design system — surface it as the SAME design_tokens_empty
+		// error sn_theme_ability_design_tokens() itself guards against, so
+		// this holds even if that guard is ever bypassed or regresses.
+		if ( ! sn_theme_design_tokens_has_content( $tokens ) ) {
+			return new WP_Error(
+				'design_tokens_empty',
+				'Cannot summarize: the design-tokens read came back empty (no colors, font families, or font sizes). Refusing to format a plausible-looking empty summary.',
+				array( 'status' => 500 )
+			);
 		}
 
 		$summary = '';
