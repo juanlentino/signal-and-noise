@@ -74,6 +74,7 @@ require_once __DIR__ . '/inc/wp-update-git-preservation.php';
 require_once __DIR__ . '/inc/template-maintenance.php';
 require_once __DIR__ . '/inc/purge-verify.php'; // v10.23.0: render-epoch marker + durable per-leg purge report (verified-purge Tier-1)
 require_once __DIR__ . '/inc/purge-verify-cron.php'; // v10.25.0: deferred WP-Cron route verify for auto-purges (folds routes/resolved back into the report)
+require_once __DIR__ . '/inc/notes-reading-time.php'; // v10.42.2: reading-time helper, extracted from page-notes-render.php so it is available in REST/MCP (the /notes renderer is template-route-only)
 require_once __DIR__ . '/inc/page-notes-template.php';
 require_once __DIR__ . '/inc/page-index-template.php'; // C3 (v10.7.0): /index whole-site dossier virtual route (loads inc/page-index-render.php)
 require_once __DIR__ . '/inc/cms-page-styles.php'; // v10.36.0: per-Page bespoke stylesheets (now.css on /now, uses.css on /about/uses, accessibility.css on /accessibility)

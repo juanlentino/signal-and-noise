@@ -32,20 +32,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-/**
- * Return the formatted reading-time string for a post by slug.
- * Mirrors the [sn_reading_time slug="..."] shortcode but called
- * directly from PHP. Falls back to "5 min" if the slug doesn't
- * resolve (won't happen in practice, both pillar slugs are seeded).
- */
-function sn_notes_reading_time_for_slug( $slug ) {
-	if ( ! function_exists( 'do_shortcode' ) ) {
-		return '5 min';
-	}
-	$out = do_shortcode( '[sn_reading_time slug="' . esc_attr( $slug ) . '"]' );
-	$out = trim( wp_strip_all_tags( (string) $out ) );
-	return '' !== $out ? $out : '5 min';
-}
+// sn_notes_reading_time_for_slug() moved to inc/notes-reading-time.php
+// (v10.42.2) so it is available in REST/MCP requests, not just this
+// template-route-only renderer. This file still calls it below.
 
 /**
  * Format a post date for the catalog layout.
