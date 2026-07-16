@@ -2,6 +2,28 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.42.3] - 2026-07-16: The theme stops borrowing the plugin's immune system
+
+**Headline:** Desktop Mode's AI Copilot auto-enrols **every** read-only ability on the site, with no opt-out — and this theme's ability schemas would 400 it dead. They never did, but only because the companion plugin happened to be active and was normalizing the whole tool list on the theme's behalf. Deactivate the plugin, or run this theme without it, and Ask AI dies site-wide from the theme's own schemas.
+
+That was an undeclared cross-dependency, and nothing recorded it. A theme cannot rely on a plugin being active to stay compatible with a *third* plugin. The theme now owns its conformance: [inc/desktop-mode-copilot-schema.php](inc/desktop-mode-copilot-schema.php) is deliberately self-contained and does **not** call the plugin's normalizer. Both running is harmless — normalizing is idempotent, so the second pass is a no-op.
+
+**The three shapes, all of them load-bearing here:**
+
+| Shape | Where it lives in this theme | Provider error |
+|---|---|---|
+| `'type' => array( 'object', 'null' )` | the GET/null run-path | `type: Input should be 'object'` |
+| top-level `anyOf` | `get-active-template-structure` — "post_id **or** slug" | `does not support oneOf, allOf, or anyOf at the top level` |
+| `'properties' => array()` | no-args abilities (PHP has no empty-map literal) | `properties: Input should be an object` |
+
+**Nothing is weakened.** This projects an ability into a *tool* schema; the ability is untouched. `WP_Ability::execute()` still validates against the real schema and `permission_callback` still gates it, so a stripped `anyOf` is still enforced server-side — the model is told in prose (the description) rather than in schema. Only top-level combinators are removed; a nested `anyOf` is a real constraint the provider accepts and is preserved.
+
+Registered at `PHP_INT_MAX` so nothing can inject a tool downstream of it, and with no "already looks fine, skip it" guard — that guard is what turned one bug into three releases in the companion plugin. The list of unsupported constructs belongs to the provider, not to us.
+
+Upstream: [WordPress/desktop-mode#362](https://github.com/WordPress/desktop-mode/issues/362) (still open — the converter passes `input_schema` through raw).
+
+**Tests** ([tests/desktop-mode-copilot-schema.php](tests/desktop-mode-copilot-schema.php)) never define the plugin's normalizer — standing alone *is* the property under test. They also assert `functions.php` actually loads the module, and that assertion was mutation-checked: remove the `require_once` and the suite goes red. Without it, every other test would pass while the module sat dead in production.
+
 ## [10.42.2] - 2026-07-16: Reading-time helper reaches REST/MCP
 
 **Headline:** `get-reading-time-for-slug` errored over the plugin's MCP server (`sn_notes_reading_time_for_slug() unavailable — theme module not loaded`), and `get-page-notes-pillars` silently returned the "5 min" fallback instead of real reading times. Both Abilities run over REST, but the helper they call lived in [inc/page-notes-render.php](inc/page-notes-render.php) — a full-page renderer that runs top-level output at include time and is therefore loaded ONLY on the `/notes` `template_include`, never in a REST request. The helper is now extracted to a dependency-free, always-required file ([inc/notes-reading-time.php](inc/notes-reading-time.php)); the renderer keeps calling the same function name. Found live via the MCP server.
