@@ -49,6 +49,177 @@ const SN_GH_THEME_CACHE_KEY     = 'sn_gh_latest_theme';
 const SN_GH_THEME_CACHE_TTL     = HOUR_IN_SECONDS; // v8.5.3: 12h → 1h (mirrors plugin v1.11.1)
 const SN_GH_THEME_STYLESHEET    = 'signal-and-noise';
 const SN_GH_THEME_LAST_SEEN_OPT = 'sn_last_seen_theme_version';
+/**
+ * Why the last tag fetch failed, in prose, for the Dashboard card. Lives beside
+ * the negative cache and shares its lifetime.
+ *
+ * @since theme v10.43.0
+ */
+const SN_GH_THEME_ERROR_KEY     = 'sn_gh_latest_theme_error';
+/**
+ * Failure-cache TTLs, split by whether re-asking could get a different answer.
+ * Transient mirrors the companion plugin's SN_GH_FAIL_TTL_TRANSIENT and
+ * github-actions-api.php's SNT_GH_RUNS_FAIL_TTL — the value that rode out the
+ * 2026-07-16 GitHub incident without ever going dark.
+ *
+ * @since theme v10.43.0
+ */
+const SN_GH_THEME_FAIL_TTL_TRANSIENT = 5 * MINUTE_IN_SECONDS;
+const SN_GH_THEME_FAIL_TTL_DURABLE   = HOUR_IN_SECONDS;
+
+/**
+ * Will this failure plausibly have fixed itself in five minutes?
+ *
+ * WHY THIS EXISTS (theme v10.43.0 — porting plugin v9.54.1)
+ *
+ * 2026-07-16 22:51 UTC GitHub declared "Degraded REST API Availability" — ~35%
+ * of REST requests failing. Both S&N version cards went red four minutes later.
+ * The 503 was GitHub's; the SIXTY MINUTES of blindness were ours. Every failure
+ * cached the empty sentinel for HOUR_IN_SECONDS, so a one-second blip cost an
+ * hour, and the next hourly poll had another ~35% chance of re-arming it.
+ *
+ * The tell was on the same dashboard: "Recent deploys" stayed live throughout
+ * because its fetch caches failures for FIVE minutes and self-heals. Same host,
+ * same token, same timeout — only the failure TTL differed.
+ *
+ * So classify by whether re-asking could plausibly get a different answer:
+ *   - 5xx / 429 / network / timeout → the far end is unwell; it recovers.
+ *   - 401 / 404                     → nothing changes in an hour. Don't hammer.
+ *
+ * @since theme v10.43.0
+ * @param int|null $code HTTP status, 0 for a WP_Error, null when unknown.
+ * @return bool
+ */
+function sn_gh_theme_failure_is_transient( $code ) {
+	$code = (int) $code;
+	return 0 === $code || 429 === $code || $code >= 500;
+}
+
+/**
+ * How long to hold a failure before asking GitHub again.
+ *
+ * @since theme v10.43.0
+ * @param int|null $code
+ * @return int Seconds.
+ */
+function sn_gh_theme_failure_ttl( $code ) {
+	return sn_gh_theme_failure_is_transient( $code )
+		? SN_GH_THEME_FAIL_TTL_TRANSIENT
+		: SN_GH_THEME_FAIL_TTL_DURABLE;
+}
+
+/**
+ * Strip anything token-shaped out of a message before it can reach a screen.
+ *
+ * The reason is rendered in wp-admin. An HTTP driver message is not ours and
+ * could in principle quote a request header back at us. Redact defensively
+ * rather than reason about whether cURL ever does: the cost is a regex, the
+ * failure mode is a leaked credential.
+ *
+ * @since theme v10.43.0
+ * @param string $message
+ * @return string
+ */
+function sn_gh_theme_redact_secrets( $message ) {
+	return (string) preg_replace(
+		'/\b(gh[pousr]_[A-Za-z0-9]{16,}|github_pat_[A-Za-z0-9_]{20,}|Bearer\s+\S+)/i',
+		'[redacted]',
+		(string) $message
+	);
+}
+
+/**
+ * Turn a failed tags fetch into a short sentence a human can act on.
+ *
+ * WHY (theme v10.43.0): on 2026-07-16 the PLUGIN's card said "GitHub returned
+ * an unexpected HTTP 503" and that one line ended an hour of confident, wrong
+ * theorising (an expired token; then a response-size timeout). The THEME's card
+ * said nothing — a bare red "unknown" — because this function did not exist.
+ * Same outage, same second, same screen: one surface could explain itself and
+ * the other could not. Never silent.
+ *
+ * @since theme v10.43.0
+ * @param array|WP_Error $response
+ * @return string Never contains a credential.
+ */
+function sn_gh_theme_fetch_failure_reason( $response ) {
+	if ( is_wp_error( $response ) ) {
+		// No HTTP response at all — timeout, DNS, TLS. Carry the real driver
+		// message ("cURL error 28: Operation timed out after 8001 ms"): the
+		// number in it is the actual diagnosis.
+		return sn_gh_theme_redact_secrets( sprintf(
+			/* translators: %s: underlying HTTP error message. */
+			__( 'could not reach GitHub — %s', 'signal-noise' ),
+			$response->get_error_message()
+		) );
+	}
+
+	$code = (int) wp_remote_retrieve_response_code( $response );
+	switch ( $code ) {
+		case 401:
+			return __( 'GitHub rejected the credential (401) — SNT_GITHUB_TOKEN in wp-config.php is invalid, expired, or revoked', 'signal-noise' );
+		case 403:
+			return __( 'GitHub refused the request (403) — usually a rate limit; set SNT_GITHUB_TOKEN in wp-config.php to raise 60/h to 5000/h', 'signal-noise' );
+		case 404:
+			return __( 'GitHub returned 404 — the repository was renamed, deleted, or made private', 'signal-noise' );
+		case 200:
+			return __( 'GitHub returned 200 but the body was not a readable tag list', 'signal-noise' );
+		default:
+			return sprintf(
+				/* translators: %d: HTTP status code. */
+				__( 'GitHub returned an unexpected HTTP %d', 'signal-noise' ),
+				$code
+			);
+	}
+}
+
+/**
+ * Record why a fetch failed, alongside the empty-sentinel negative cache, for
+ * a duration proportional to how likely the failure is to persist.
+ *
+ * @since theme v10.43.0
+ * @param string   $reason
+ * @param int|null $code
+ * @return null Always null — callers `return sn_gh_theme_record_fetch_failure(...)`.
+ */
+function sn_gh_theme_record_fetch_failure( $reason, $code = null ) {
+	$ttl = sn_gh_theme_failure_ttl( $code );
+	set_site_transient( SN_GH_THEME_CACHE_KEY, '', $ttl );
+	set_site_transient( SN_GH_THEME_ERROR_KEY, $reason, $ttl );
+	return null;
+}
+
+/**
+ * Why the last theme tag fetch failed, or '' if the last one succeeded.
+ *
+ * @since theme v10.43.0
+ * @return string
+ */
+function sn_gh_latest_theme_tag_error() {
+	$reason = get_site_transient( SN_GH_THEME_ERROR_KEY );
+	return is_string( $reason ) ? $reason : '';
+}
+
+/**
+ * Answer the companion plugin's Dashboard card.
+ *
+ * The plugin's snt_deploy_status_for('theme') asks
+ * `apply_filters( 'sn_gh_latest_theme_tag_error_result', '' )` — a seam it
+ * opened in v9.54.0 and, at the time, only implemented for itself. Without a
+ * listener the filter returns '' forever and the theme's card renders a bare,
+ * unexplained red dot. That is precisely what the owner stared at during the
+ * 2026-07-16 outage while the plugin's card, six inches away, named the cause.
+ *
+ * Mirrors the tag filter's contract: the theme owns its data, the plugin owns
+ * the card. (The plugin never calls a theme function directly — see
+ * WORDPRESS-REFERENCE.md §10 and the sn_gh_latest_theme_tag_result seam.)
+ *
+ * @since theme v10.43.0
+ */
+add_filter( 'sn_gh_latest_theme_tag_error_result', function ( $reason ) {
+	$own = sn_gh_latest_theme_tag_error();
+	return '' !== $own ? $own : $reason;
+} );
 
 /**
  * Fetch the highest semver-formatted tag from GitHub. Returns the tag
@@ -83,7 +254,7 @@ function sn_gh_latest_theme_tag( $force_refresh = false ) {
 	if ( defined( 'SNT_GITHUB_TOKEN' ) && SNT_GITHUB_TOKEN ) {
 		$headers['Authorization'] = 'Bearer ' . SNT_GITHUB_TOKEN;
 	}
-	$response = wp_remote_get( $url, array(
+	$args = array(
 		'timeout' => 8,
 		'headers' => $headers,
 		// v10.16.3 (audit LOW-1): pin to a single hop. On a 3xx, WP's HTTP layer
@@ -93,17 +264,32 @@ function sn_gh_latest_theme_tag( $force_refresh = false ) {
 		// SNT_GITHUB_TOKEN can never be forwarded off-host. Mirrors the host-scoped
 		// download path (sn_gh_theme_inject_token_header) + the plugin's outbound peers.
 		'redirection' => 0,
-	) );
+	);
 
-	if ( is_wp_error( $response ) || wp_remote_retrieve_response_code( $response ) !== 200 ) {
-		set_site_transient( SN_GH_THEME_CACHE_KEY, '', HOUR_IN_SECONDS );
-		return null;
+	$response = wp_remote_get( $url, $args );
+	$code     = is_wp_error( $response ) ? 0 : (int) wp_remote_retrieve_response_code( $response );
+
+	// v10.43.0: ONE retry, transient failures only. During the 2026-07-16 GitHub
+	// incident (~35% of REST requests failing, independently) a single retry
+	// recovers ~65% of the polls that would otherwise blind the card. Durable
+	// failures (401/404) are never retried — the second answer is the first.
+	if ( 200 !== $code && sn_gh_theme_failure_is_transient( $code ) ) {
+		$response = wp_remote_get( $url, $args );
+		$code     = is_wp_error( $response ) ? 0 : (int) wp_remote_retrieve_response_code( $response );
+	}
+
+	if ( 200 !== $code ) {
+		return sn_gh_theme_record_fetch_failure( sn_gh_theme_fetch_failure_reason( $response ), $code );
 	}
 
 	$tags = json_decode( wp_remote_retrieve_body( $response ), true );
 	if ( ! is_array( $tags ) ) {
-		set_site_transient( SN_GH_THEME_CACHE_KEY, '', HOUR_IN_SECONDS );
-		return null;
+		// A 200 whose body isn't a tag list means we reached SOMETHING that
+		// wasn't GitHub's API — an intermediary, an incident error page. Far
+		// likelier a blip than a permanent contract change, so classify
+		// TRANSIENT (0 = "no usable answer"). The reason still reports the
+		// literal 200 we saw; the code only drives retry policy.
+		return sn_gh_theme_record_fetch_failure( sn_gh_theme_fetch_failure_reason( $response ), 0 );
 	}
 
 	$highest = '';
@@ -118,10 +304,19 @@ function sn_gh_latest_theme_tag( $force_refresh = false ) {
 	}
 
 	if ( $highest === '' ) {
-		set_site_transient( SN_GH_THEME_CACHE_KEY, '', HOUR_IN_SECONDS );
-		return null;
+		// DURABLE, and distinct from "no update available": we reached GitHub,
+		// it answered correctly, and the repo simply has nothing tagged vX.Y.Z.
+		// Re-asking in five minutes gets the same answer.
+		return sn_gh_theme_record_fetch_failure(
+			__( 'GitHub returned no tags matching vX.Y.Z — nothing to compare against', 'signal-noise' ),
+			200
+		);
 	}
 
+	// Success CLEARS the reason. Without this the fix becomes the next bug: a
+	// stale caption would sit on the card after GitHub recovered, and the owner
+	// would go hunting for a problem that had already resolved itself.
+	delete_site_transient( SN_GH_THEME_ERROR_KEY );
 	set_site_transient( SN_GH_THEME_CACHE_KEY, $highest, SN_GH_THEME_CACHE_TTL );
 	return $highest;
 }

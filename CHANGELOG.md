@@ -2,6 +2,34 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.43.0] - 2026-07-16: The theme's card learns to say why
+
+**Headline:** During the 2026-07-16 GitHub outage, the two S&N version cards sat six inches apart on the same dashboard. The **plugin's** said:
+
+> GitHub returned an unexpected HTTP 503
+
+The **theme's** said nothing at all — a bare red **"unknown"**. Same outage, same second, same screen: one surface could explain itself and the other could not. The plugin's v9.54.0 opened the seam for exactly this (`sn_gh_latest_theme_tag_error_result`) and then only implemented its own side. This closes it.
+
+**What GitHub did:** at 22:51 UTC, [Degraded REST API Availability](https://www.githubstatus.com) — *"approximately 35% of REST API requests to fail."* The owner noticed four minutes later. Not the token, not a timeout, not this theme.
+
+**What was ours:** the theme cached **every** failure for `HOUR_IN_SECONDS`, so a one-second blip cost sixty minutes — and the next hourly poll had another ~35% chance of re-arming it. The tell sat on the same dashboard the whole time: "Recent deploys" rode out the entire incident because *its* fetch caches failures for **five minutes** and self-heals. Same host, same token, same timeout — only the failure TTL differed.
+
+**Both halves now match the plugin (v9.54.0 + v9.54.1):**
+
+| Failure | Reads as | Cached | Retry |
+|---|---|---|---|
+| 5xx, 429, network/timeout | **transient** — the far end is unwell; it recovers | **5 min** | **once** |
+| 401 | *"GitHub rejected the credential (401) — SNT_GITHUB_TOKEN…"* | 1 hour | never |
+| 404 | repo renamed/deleted/made private | 1 hour | never |
+| 200 + unparseable body | we reached *something* that wasn't the API | 5 min | once |
+| 200 + no `vX.Y.Z` tags | GitHub answered fine; nothing is tagged | 1 hour | never |
+
+A `WP_Error` carries the real driver message (`cURL error 28: Operation timed out after 8001 ms`) rather than a generic string — the number in it *is* the diagnosis. Reasons are redacted against token-shaped strings before reaching a screen, and **success clears the reason**, or a stale caption would outlive the fix and send someone hunting for a problem that already resolved itself.
+
+Against ~35% independent failures, the single retry recovers roughly two-thirds of the polls that would otherwise blind the card.
+
+**Tests** ([tests/updater-failure-modes.php](tests/updater-failure-modes.php), 24 asserts) were verified RED first and **mutation-checked twice**: remove the filter listener → the card-reads-it assertion goes red; collapse the TTLs back to durable-only → the 60-minute bug's assertions go red. The `wp_remote_get` stub models the actual incident (503, then 200 on the second call), because a stub returning one fixed response cannot express *"flaky"* — a retry test written against it would pass without a retry ever happening. Three sibling suites needed `MINUTE_IN_SECONDS` / `delete_site_transient()` / `__()` stubs, caught by the full 78-suite sweep rather than the feature's own tests.
+
 ## [10.42.3] - 2026-07-16: The theme stops borrowing the plugin's immune system
 
 **Headline:** Desktop Mode's AI Copilot auto-enrols **every** read-only ability on the site, with no opt-out — and this theme's ability schemas would 400 it dead. They never did, but only because the companion plugin happened to be active and was normalizing the whole tool list on the theme's behalf. Deactivate the plugin, or run this theme without it, and Ask AI dies site-wide from the theme's own schemas.
