@@ -2,6 +2,15 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.42.1] - 2026-07-15: Design-token abilities read real tokens — and refuse to fabricate
+
+**Headline:** The `get-design-tokens` MCP/ability read was **born broken**: `wp_get_global_settings()` returns presets keyed by ORIGIN (`default`/`theme`/`custom`), and the reader iterated those origin buckets as if they were token entries — so colors resolved to nothing, and fontFamilies/fontSizes/spacingSizes returned arrays of buckets (the live tell: exactly 1/2/2 "entries", all fields empty — the origin counts, not tokens). Downstream, `get-design-system-summary` faithfully formatted that hollow shell into a plausible empty document — a silent fabrication, since nothing ever threw. Fixed in layered order in [inc/abilities-diagnostics.php](inc/abilities-diagnostics.php): **first** the summary gains an anti-fabrication gate (hollow tokens → `WP_Error('design_tokens_empty')` in all three formats — surface the failure, never invent a valid-looking answer), **then** the reader unwraps origins with core precedence (default → theme → custom, later wins by slug) into flat token entries, erroring itself when a read is genuinely hollow so the class dies at the source too. `spacingScale` is a resolved value, not a preset list — passthrough pinned unchanged. Cross-consumer `ai-validate-brand-alignment` verified safe by reading (its existing guards degrade gracefully).
+
+> **Why PATCH:** bug fix, non-breaking — the abilities now return what their contracts always promised.
+
+### Fixed
+- Origin-unwrap + hollow-read errors + the summary's anti-fabrication gate. New [tests/design-tokens.php](tests/design-tokens.php) (**26 asserts**: real origin-keyed fixtures with a 3-way precedence pin and bucket-count-decoy entry counts, hollow → WP_Error in every format, spacingScale passthrough); full theme sweep 75 files / **1,702 assertions / 0 failed**; RED-verified in T1→T2 order; adversarial probe review SHIP with zero findings.
+
 ## [10.42.0] - 2026-07-11: UTM campaign attribution (named params only)
 
 **Headline:** The first-party beacon now captures campaign attribution. On the **first pageview only**, it reads the five named `utm_*` params (`utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content`) from the query string and attaches them to the pageview payload as a compact `utm` object. This is the deliberate, disclosed exception to the beacon's "the query string never leaves the browser" stance: it sends **only those five named marketing tags** — the ones the site owner puts on their own campaign links — and never the raw query string. The pageview path stays `location.pathname` as before. A plain in-memory flag remembers the capture fired, so no web storage is touched (the storageless invariant holds) and a Back-button/bfcache restore never re-attributes the same landing. This is the theme-side half of the cookieless campaign-attribution pipeline; the analytics worker packs these into the row's last free field and the companion plugin surfaces a Source/Campaign breakdown.
