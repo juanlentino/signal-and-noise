@@ -2,6 +2,25 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.44.3] - 2026-07-16: Not the jail I thought it was — no scp, rsync over the ssh shell
+
+**No theme code change.** Byte-identical to 10.44.2 apart from this version header.
+
+v10.44.2 moved staging out of `$HOME` and into `/tmp`, on the theory that home wasn't writable. The next dispatch disproved it:
+
+```
+Remote stage: /tmp/…-stage.uJf12C          ← ssh CREATED it, successfully
+scp: dest open "/tmp/…-stage.uJf12C/payload.tar.gz": No such file or directory
+```
+
+The `ssh` session created that directory. The `scp` a moment later couldn't see it.
+
+**`scp` runs over the SFTP subsystem, which on this host is jailed differently from the interactive SSH shell.** One cause explains both earlier failures: `~` rejected as "Permission denied" *and* a `/tmp` path the shell had just created reported as missing. **"Home isn't writable" was a story that fit the evidence and was wrong** — the real invariant is that anything `scp` touches is a different world from anything `ssh` touches.
+
+**So: no `scp`, and no remote staging at all.** `rsync -e ssh` runs over the SSH *shell*, sidesteps the sftp jail entirely, and needs no staging area — extract on the runner, sync straight into the live directory. The result is **simpler than what it replaces**: one fewer moving part, no temp dir to create, guard, or clean up.
+
+**Four dispatches, three real bugs, zero impact on the live site.** Every failure landed before a single file was written.
+
 ## [10.44.2] - 2026-07-16: The SSH user's home is not writable — and our own deleted comment said so
 
 **No theme code change.** Byte-identical to 10.44.1 apart from this version header.

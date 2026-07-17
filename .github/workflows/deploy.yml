@@ -112,66 +112,55 @@ jobs:
           printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
-      - name: Ship the payload + rsync into place
+      - name: Rsync the payload into place
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}
           TAG_REF: ${{ github.ref_name }}
         run: |
           set -euo pipefail
-          # The SSH user's HOME is NOT writable. Cloudways' restricted
-          # "additional SSH user" (sn-plugin) has a root-owned home — even ~/.ssh
-          # is root-owned and read-only, which is why the deploy key lives in
-          # ~/.openssh. The workflow this replaced said so in a comment; scp'ing
-          # to ~ anyway earned "scp: dest open: Permission denied" on the first
-          # real dispatch (2026-07-16). Stage in a remote mktemp -d instead: it
-          # lands under /tmp, created 0700 and owned by us, so it is writable AND
-          # safe from a symlink race on a shared host.
-          STAGE=$(ssh "$SSH_USER@$SSH_HOST" 'mktemp -d /tmp/sn-theme-stage.XXXXXX')
-          [ -n "$STAGE" ] || { echo "::error::could not create a remote staging dir"; exit 1; }
-          echo "Remote stage: $STAGE"
-          scp -q payload.tar.gz "$SSH_USER@$SSH_HOST:$STAGE/payload.tar.gz"
-          ssh "$SSH_USER@$SSH_HOST" bash -s -- "$TAG_REF" "$STAGE" <<'REMOTE'
-          set -euo pipefail
-          TAG_REF="$1"
-          STAGE="$2"
-          # Auto-discover the theme path — Cloudways uses random per-app dir
-          # names (e.g. nffqxsrgxz). Same lookup the plugin's deploy uses.
-          THEME_DIR=$(ls -d /home/master/applications/*/public_html/wp-content/themes/signal-and-noise 2>/dev/null | head -1)
-          [ -z "$THEME_DIR" ] && { echo "ERROR: theme dir not found"; exit 1; }
+          # NO scp, NO remote staging. Two dispatches died proving why:
+          #
+          #   scp: dest open "~/payload.tar.gz": Permission denied
+          #   scp: dest open "/tmp/…-stage.uJf12C/payload.tar.gz": No such file or directory
+          #
+          # The second is the tell: the ssh session had JUST created that /tmp
+          # dir successfully, and scp could not see it. scp runs over the SFTP
+          # SUBSYSTEM, which on this host is jailed differently from the
+          # interactive SSH shell — so anything scp touches is a different world
+          # from anything ssh touches. (The first failure looked like "home is
+          # not writable"; that story fit the evidence and was wrong.)
+          #
+          # rsync -e ssh runs over the SSH SHELL, so it sidesteps the sftp jail
+          # entirely AND needs no staging area: extract on the runner, sync
+          # straight into the live directory.
+          mkdir -p stage
+          tar -xzf payload.tar.gz -C stage
+          [ -f "stage/signal-and-noise/style.css" ] || { echo "::error::payload did not extract as expected"; exit 1; }
+
+          THEME_DIR=$(ssh "$SSH_USER@$SSH_HOST" 'ls -d /home/master/applications/*/public_html/wp-content/themes/signal-and-noise 2>/dev/null | head -1')
+          [ -n "$THEME_DIR" ] || { echo "::error::theme dir not found on the server"; exit 1; }
           echo "Theme dir: $THEME_DIR"
-          echo "Before: $(grep -m1 -E '^Version:' "$THEME_DIR/style.css" || echo '(unreadable)')"
-
-          command -v rsync >/dev/null 2>&1 || { echo "ERROR: rsync not on PATH"; exit 1; }
-
-          # STAGE was created (and is owned) by us under /tmp — HOME is not writable.
-          # shellcheck disable=SC2064
-          trap "rm -rf '$STAGE'" EXIT
-          tar -xzf "$STAGE/payload.tar.gz" -C "$STAGE"
-          [ -f "$STAGE/signal-and-noise/style.css" ] || { echo "ERROR: payload did not extract as expected"; exit 1; }
+          ssh "$SSH_USER@$SSH_HOST" "command -v rsync >/dev/null 2>&1" \
+            || { echo "::error::rsync not on PATH for the remote user"; exit 1; }
+          echo "Before: $(ssh "$SSH_USER@$SSH_HOST" "grep -m1 -E '^Version:' '$THEME_DIR/style.css' || echo '(unreadable)'")"
 
           # -rlptD, NOT -a: `-a` implies -o/-g (owner/group), which only work as
-          # root, and this runs as Cloudways' restricted app-scoped SSH user.
-          #
-          # --exclude='.git/' is DELIBERATE and differs from the plugin's deploy.
-          # That .git may be Cloudways' own git integration — the mechanism this
-          # replaces. Deleting it would burn the old fallback before the new one
-          # has ever run against the live server. Harmless if absent.
-          rsync -rlptD --delete --exclude='.git/' "$STAGE/signal-and-noise/" "$THEME_DIR/"
+          # root, and this runs as Cloudways' restricted app-scoped SSH user —
+          # file ownership is exactly what defeated the footprint janitor.
+          rsync -rlptD --delete --exclude='.git/' -e ssh "stage/signal-and-noise/" "$SSH_USER@$SSH_HOST:$THEME_DIR/"
 
-          echo "After:  $(grep -m1 -E '^Version:' "$THEME_DIR/style.css")"
-          # The assertion that makes `--ref vX.Y.Z` finally MEAN something: prove
-          # the code that landed is the tag we were asked to ship. The old
-          # Cloudways git/pull could not have made this claim — it always pulled
-          # main, whatever main happened to be.
-          DEPLOYED=$(grep -m1 -E '^Version:' "$THEME_DIR/style.css" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+          AFTER=$(ssh "$SSH_USER@$SSH_HOST" "grep -m1 -E '^Version:' '$THEME_DIR/style.css'")
+          echo "After:  $AFTER"
+          # A deploy that silently lands the wrong code is worse than one that
+          # fails: it looks successful. Prove the landed code IS the tag.
+          DEPLOYED=$(printf '%s' "$AFTER" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
           EXPECTED="${TAG_REF#v}"
           if [ "$DEPLOYED" != "$EXPECTED" ]; then
-            echo "ERROR: deployed $DEPLOYED but expected $EXPECTED from tag $TAG_REF"
+            echo "::error::deployed $DEPLOYED but expected $EXPECTED from tag $TAG_REF"
             exit 1
           fi
           echo "OK: $THEME_DIR is now $DEPLOYED (tag $TAG_REF)"
-          REMOTE
 
       - name: Purge caches via WP-CLI in-process (no App Password required)
         # v9.1.4: the purge work (object cache + Breeze + Varnish + Cloudflare +
