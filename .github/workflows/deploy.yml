@@ -119,10 +119,22 @@ jobs:
           TAG_REF: ${{ github.ref_name }}
         run: |
           set -euo pipefail
-          scp -q payload.tar.gz "$SSH_USER@$SSH_HOST:~/sn-theme-payload.tar.gz"
-          ssh "$SSH_USER@$SSH_HOST" bash -s -- "$TAG_REF" <<'REMOTE'
+          # The SSH user's HOME is NOT writable. Cloudways' restricted
+          # "additional SSH user" (sn-plugin) has a root-owned home — even ~/.ssh
+          # is root-owned and read-only, which is why the deploy key lives in
+          # ~/.openssh. The workflow this replaced said so in a comment; scp'ing
+          # to ~ anyway earned "scp: dest open: Permission denied" on the first
+          # real dispatch (2026-07-16). Stage in a remote mktemp -d instead: it
+          # lands under /tmp, created 0700 and owned by us, so it is writable AND
+          # safe from a symlink race on a shared host.
+          STAGE=$(ssh "$SSH_USER@$SSH_HOST" 'mktemp -d /tmp/sn-theme-stage.XXXXXX')
+          [ -n "$STAGE" ] || { echo "::error::could not create a remote staging dir"; exit 1; }
+          echo "Remote stage: $STAGE"
+          scp -q payload.tar.gz "$SSH_USER@$SSH_HOST:$STAGE/payload.tar.gz"
+          ssh "$SSH_USER@$SSH_HOST" bash -s -- "$TAG_REF" "$STAGE" <<'REMOTE'
           set -euo pipefail
           TAG_REF="$1"
+          STAGE="$2"
           # Auto-discover the theme path — Cloudways uses random per-app dir
           # names (e.g. nffqxsrgxz). Same lookup the plugin's deploy uses.
           THEME_DIR=$(ls -d /home/master/applications/*/public_html/wp-content/themes/signal-and-noise 2>/dev/null | head -1)
@@ -132,10 +144,10 @@ jobs:
 
           command -v rsync >/dev/null 2>&1 || { echo "ERROR: rsync not on PATH"; exit 1; }
 
-          STAGE=$(mktemp -d ~/sn-theme-stage.XXXXXX)
+          # STAGE was created (and is owned) by us under /tmp — HOME is not writable.
           # shellcheck disable=SC2064
-          trap "rm -rf '$STAGE' ~/sn-theme-payload.tar.gz" EXIT
-          tar -xzf ~/sn-theme-payload.tar.gz -C "$STAGE"
+          trap "rm -rf '$STAGE'" EXIT
+          tar -xzf "$STAGE/payload.tar.gz" -C "$STAGE"
           [ -f "$STAGE/signal-and-noise/style.css" ] || { echo "ERROR: payload did not extract as expected"; exit 1; }
 
           # -rlptD, NOT -a: `-a` implies -o/-g (owner/group), which only work as
