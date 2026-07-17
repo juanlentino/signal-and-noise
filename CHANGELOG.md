@@ -2,6 +2,36 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.44.0] - 2026-07-16: The emergency fallback can finally ship a tag — and the theme install halves
+
+**Headline:** `deploy.yml`'s own header told you to run `gh workflow run deploy.yml --ref vX.Y.Z`. **That instruction was a lie**, and the lie was the bug.
+
+The workflow POSTed to Cloudways' `/git/pull` API with a **hardcoded `branch_name=main`**. It could not deploy a tag. Ever. `--ref` only selected which *version of the workflow file* ran — the deploy target was always `main`.
+
+So `--ref v10.42.3` would have shown **"v10.42.3"** in the Dashboard's Recent deploys row while pulling `main`: a precise, confident, wrong label. On 2026-07-16 it shipped `main` and was safe only by luck — main happened to equal the tag commit. **The honest display, the one that read `main` and looked broken, was the only thing telling the truth.**
+
+**Now it builds the payload on the runner with `git archive`** (byte-identical to what WP's native updater installs from the tag archive) and rsyncs it over the SSH channel this workflow already used. That makes `--ref` real:
+
+- Deploys the **exact tag dispatched**, and **asserts** the landed `style.css` `Version:` matches it. A deploy that silently lands the wrong code is worse than one that fails — it looks successful. The old `git/pull` could never have made that claim.
+- A **tag guard** rejects a branch ref. The plugin's guard caught a bare `gh workflow run deploy.yml` (which defaults to `main`) on 2026-07-16; this workflow had none, accepted it, and shipped a branch to production.
+- **No Cloudways API dependency** — the `CLOUDWAYS_*` secrets are now unused here.
+- **No server → GitHub dependency**: the GitHub REST outage that made this fallback necessary would not have blocked it.
+
+**Deliberately different from the plugin's deploy:** this one rsyncs with `--exclude='.git/'`. The plugin *deletes* `.git` on purpose (its footprint janitor targets it, and a restored one would just be deleted again). Here, `.git` may be Cloudways' own git integration — the mechanism this replaces. Wiping it would burn the old fallback before the new one has ever run against the live server. Harmless if absent; a second fallback if present.
+
+**The theme install halves.** [.gitattributes](.gitattributes) now carries the plugin's proven `export-ignore` list (first live at its v9.42.0):
+
+| | Before | After |
+|---|---|---|
+| Payload | 812 KB | **396 KB** |
+| Files | 266 | **157** |
+
+`tests/` alone was **79 files / ~591 KB**, shipped to production on every single theme update, for no reason — plus `docs/` at ~170 KB. This affects the WP updater too, not just the deploy: the next theme update installs less than half of what the last one did.
+
+**Safety:** verified by **tokenizing** every runtime PHP file — comments stripped — that no runtime code references any export-ignored path. `manifest ∩ runtime = ∅`. That check mattered: a plain grep reported hits in seven files, and **every single one was a comment**. Never widen the list without re-running it.
+
+**Not yet exercised against the live server.** The first dispatch is the real test. Failure is safe and loud: nothing lands, and the version assertion refuses to lie.
+
 ## [10.43.0] - 2026-07-16: The theme's card learns to say why
 
 **Headline:** During the 2026-07-16 GitHub outage, the two S&N version cards sat six inches apart on the same dashboard. The **plugin's** said:

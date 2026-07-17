@@ -1,75 +1,92 @@
 name: Deploy to Cloudways
 
-# v8.5.1+: tag pushes no longer auto-deploy. Theme updates land via
-# the WP admin Updates page (inc/wp-update-integration.php registers
-# the theme with WP's native update system and renames the unpacked
-# GitHub archive so WP installs to the correct stylesheet slug).
-# workflow_dispatch remains as a manual emergency-hotfix fallback —
-# trigger from the GitHub Actions UI or via:
+# v8.5.1+: tag pushes no longer auto-deploy. Theme updates land via the WP admin
+# Updates page (inc/wp-update-integration.php registers the theme with WP's
+# native update system and renames the unpacked GitHub archive to the correct
+# stylesheet slug). workflow_dispatch remains a manual emergency fallback:
+#
 #   gh workflow run deploy.yml --ref vX.Y.Z
+#
+# --ref IS MANDATORY AND MUST BE A TAG, and as of v10.44.0 that instruction is
+# finally TRUE.
+#
+# ── v10.44.0: it used to be a lie, and the lie was the bug ──────────────────
+#
+# This workflow POSTed to Cloudways' /git/pull API with a hardcoded
+# `branch_name=main`. It could not deploy a tag. Ever. `--ref` only selected
+# which VERSION OF THIS FILE ran — the deploy target was always `main`.
+#
+# So `--ref v10.42.3` would have displayed "v10.42.3" in the Dashboard's Recent
+# deploys row while pulling `main`: a precise, confident, wrong label. On
+# 2026-07-16 it shipped `main` and was safe only by luck (main happened to equal
+# the tag commit). The honest display — the one that said `main` and looked
+# broken — was the only thing telling the truth.
+#
+# It now builds the payload on the runner with `git archive` (applying
+# .gitattributes export-ignore, byte-identical to what WP's native updater
+# installs from the tag archive) and rsyncs it over SSH. That makes the tag real:
+#   - deploys the EXACT tag dispatched, and ASSERTS the landed style.css Version
+#     matches it — a deploy that silently lands the wrong code is worse than one
+#     that fails, because it looks successful
+#   - no Cloudways API dependency (CLOUDWAYS_* secrets are now unused here)
+#   - no server -> GitHub dependency: the 2026-07-16 GitHub REST outage that
+#     broke the update checker would not have blocked this
+#   - tests/ (79 files, ~591 KB) and docs/ stop being deployed at all
+#
+# DELIBERATE DIFFERENCE FROM THE PLUGIN'S deploy.yml: it rsyncs with
+# --exclude='.git/'. The plugin DELETES .git on purpose (its footprint janitor
+# targets it, and a restored .git would just be deleted again). Here, .git may be
+# Cloudways' own git integration — the mechanism this replaces. Wiping it would
+# burn the old fallback before the new one has ever run against the live server.
+# Keep it: harmless if absent, a second fallback if present.
 on:
   workflow_dispatch:
 
-# Serialise deploys: if a new tag fires while one is in flight, queue
-# rather than cancel — never drop a release.
+# Serialise deploys: if another fires while one is in flight, queue rather than
+# cancel — never drop a release.
 concurrency:
   group: deploy
   cancel-in-progress: false
 
 jobs:
   deploy:
-    name: Trigger Cloudways git pull + SSH cache purge
+    name: Archive deploy + cache purge
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Authenticate with Cloudways
-        id: auth
+      - name: Guard the ref (must be a tag)
         env:
-          CW_EMAIL: ${{ secrets.CLOUDWAYS_EMAIL }}
-          CW_API_KEY: ${{ secrets.CLOUDWAYS_API_KEY }}
+          TAG_REF: ${{ github.ref_name }}
         run: |
           set -euo pipefail
-          response=$(curl -sS -w '\n%{http_code}' -X POST 'https://api.cloudways.com/api/v1/oauth/access_token' \
-            -H 'User-Agent: signal-and-noise-deploy/1.0 (GitHub Actions)' \
-            -H 'Accept: application/json' \
-            --data-urlencode "email=$CW_EMAIL" \
-            --data-urlencode "api_key=$CW_API_KEY")
-          status=$(printf '%s' "$response" | tail -n1)
-          body=$(printf '%s' "$response" | sed '$d')
-          printf 'HTTP %s\n' "$status"
-          if [ "$status" != "200" ]; then
-            printf 'Auth failed. Body: %s\n' "$body"
-            exit 1
-          fi
-          token=$(printf '%s' "$body" | jq -r '.access_token // empty')
-          if [ -z "$token" ]; then
-            printf 'Token extraction failed. Body: %s\n' "$body"
-            exit 1
-          fi
-          printf '::add-mask::%s\n' "$token"
-          printf 'token=%s\n' "$token" >> "$GITHUB_OUTPUT"
-
-      - name: Trigger git pull (theme deploy path)
-        env:
-          CW_TOKEN: ${{ steps.auth.outputs.token }}
-          CW_SERVER_ID: ${{ secrets.CLOUDWAYS_SERVER_ID }}
-          CW_APP_ID: ${{ secrets.CLOUDWAYS_APP_ID }}
-        run: |
-          set -euo pipefail
-          response=$(curl -sS -w '\n%{http_code}' -X POST 'https://api.cloudways.com/api/v1/git/pull' \
-            -H "Authorization: Bearer $CW_TOKEN" \
-            --data-urlencode "server_id=$CW_SERVER_ID" \
-            --data-urlencode "app_id=$CW_APP_ID" \
-            --data-urlencode "branch_name=main" \
-            --data-urlencode "deploy_path=wp-content/themes/signal-and-noise")
-          status=$(printf '%s' "$response" | tail -n1)
-          body=$(printf '%s' "$response" | sed '$d')
-          printf 'HTTP %s\n' "$status"
-          printf '%s\n' "$body"
-          case "$status" in
-            200|202) ;;
-            *) exit 1 ;;
+          # The plugin's guard rejected a bare `gh workflow run deploy.yml`
+          # (which defaults to main) on 2026-07-16. This workflow had no guard,
+          # accepted it, and shipped a branch to production. Now it doesn't.
+          case "$TAG_REF" in
+            v[0-9]*) ;;
+            *) echo "::error::invalid tag ref: '$TAG_REF'. Dispatch ON a tag: gh workflow run deploy.yml --ref vX.Y.Z"; exit 1 ;;
           esac
+          echo "Deploying tag: $TAG_REF"
+
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Build the release payload (identical to the WP updater's)
+        run: |
+          set -euo pipefail
+          git archive --format=tar.gz --prefix=signal-and-noise/ HEAD -o payload.tar.gz
+          echo "Payload: $(du -h payload.tar.gz | cut -f1)"
+          # Fail loudly if export-ignore stops applying: shipping tests/ to a
+          # live site is one of the things v10.44.0 exists to stop.
+          if tar -tzf payload.tar.gz | grep -qE '^signal-and-noise/(tests|\.github|docs)/'; then
+            echo "::error::payload contains dev-only paths — .gitattributes export-ignore is not applying"
+            exit 1
+          fi
+          # A theme without style.css is not a theme: WP reads its Version header.
+          tar -tzf payload.tar.gz | grep -q '^signal-and-noise/style.css$' \
+            || { echo "::error::payload has no style.css"; exit 1; }
 
       - name: Configure SSH for Cloudways
         env:
@@ -84,64 +101,90 @@ jobs:
           printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
+      - name: Ship the payload + rsync into place
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          TAG_REF: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          scp -q payload.tar.gz "$SSH_USER@$SSH_HOST:~/sn-theme-payload.tar.gz"
+          ssh "$SSH_USER@$SSH_HOST" bash -s -- "$TAG_REF" <<'REMOTE'
+          set -euo pipefail
+          TAG_REF="$1"
+          # Auto-discover the theme path — Cloudways uses random per-app dir
+          # names (e.g. nffqxsrgxz). Same lookup the plugin's deploy uses.
+          THEME_DIR=$(ls -d /home/master/applications/*/public_html/wp-content/themes/signal-and-noise 2>/dev/null | head -1)
+          [ -z "$THEME_DIR" ] && { echo "ERROR: theme dir not found"; exit 1; }
+          echo "Theme dir: $THEME_DIR"
+          echo "Before: $(grep -m1 -E '^Version:' "$THEME_DIR/style.css" || echo '(unreadable)')"
+
+          command -v rsync >/dev/null 2>&1 || { echo "ERROR: rsync not on PATH"; exit 1; }
+
+          STAGE=$(mktemp -d ~/sn-theme-stage.XXXXXX)
+          # shellcheck disable=SC2064
+          trap "rm -rf '$STAGE' ~/sn-theme-payload.tar.gz" EXIT
+          tar -xzf ~/sn-theme-payload.tar.gz -C "$STAGE"
+          [ -f "$STAGE/signal-and-noise/style.css" ] || { echo "ERROR: payload did not extract as expected"; exit 1; }
+
+          # -rlptD, NOT -a: `-a` implies -o/-g (owner/group), which only work as
+          # root, and this runs as Cloudways' restricted app-scoped SSH user.
+          #
+          # --exclude='.git/' is DELIBERATE and differs from the plugin's deploy.
+          # That .git may be Cloudways' own git integration — the mechanism this
+          # replaces. Deleting it would burn the old fallback before the new one
+          # has ever run against the live server. Harmless if absent.
+          rsync -rlptD --delete --exclude='.git/' "$STAGE/signal-and-noise/" "$THEME_DIR/"
+
+          echo "After:  $(grep -m1 -E '^Version:' "$THEME_DIR/style.css")"
+          # The assertion that makes `--ref vX.Y.Z` finally MEAN something: prove
+          # the code that landed is the tag we were asked to ship. The old
+          # Cloudways git/pull could not have made this claim — it always pulled
+          # main, whatever main happened to be.
+          DEPLOYED=$(grep -m1 -E '^Version:' "$THEME_DIR/style.css" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+          EXPECTED="${TAG_REF#v}"
+          if [ "$DEPLOYED" != "$EXPECTED" ]; then
+            echo "ERROR: deployed $DEPLOYED but expected $EXPECTED from tag $TAG_REF"
+            exit 1
+          fi
+          echo "OK: $THEME_DIR is now $DEPLOYED (tag $TAG_REF)"
+          REMOTE
+
       - name: Purge caches via WP-CLI in-process (no App Password required)
-        # v9.1.4 architecture change: replaces the HTTP REST-based purge that
-        # required WP_DEPLOY_USER + WP_DEPLOY_APP_PASSWORD. The actual purge
-        # work (object cache + Breeze + Varnish + Cloudflare + template
-        # overrides) lives in the theme's `sn_purge_all_caches_result`
-        # filter at inc/template-maintenance.php. We invoke it via `wp eval`
-        # over SSH using the same app-scoped sn-plugin SSH user the plugin
-        # repo uses — auth is established via the deploy SSH key, so no HTTP
-        # Basic Auth and no rotatable App Password is involved. After
-        # v9.1.4 ships, WP_DEPLOY_USER and WP_DEPLOY_APP_PASSWORD GH secrets
-        # can be deleted.
+        # v9.1.4: the purge work (object cache + Breeze + Varnish + Cloudflare +
+        # template overrides) lives in the theme's `sn_purge_all_caches_result`
+        # filter at inc/template-maintenance.php, invoked via `wp eval` over the
+        # same SSH connection used above.
         #
-        # NOTE on the empty `array()` arg: theme deploys explicitly want
-        # `template_overrides => true` (the default inside
-        # sn_purge_all_caches), because theme updates are precisely the case
-        # where stale wp_template / wp_template_part DB records mask the
-        # updated theme files. The plugin repo's deploy passes
-        # `template_overrides => false` because plugin updates don't touch
-        # theme files; the theme deploy is the opposite case. The 2026-05-07
-        # "/notes still showing one card after Update" incident (documented
-        # in inc/template-maintenance.php) is exactly why this default exists.
+        # NOTE on the empty array() arg: theme deploys explicitly want
+        # template_overrides => true (the default inside sn_purge_all_caches),
+        # because theme updates are precisely the case where stale wp_template /
+        # wp_template_part DB records mask the updated files. The plugin's deploy
+        # passes false — plugin updates don't touch theme files. The 2026-05-07
+        # "/notes still showing one card after Update" incident is why.
         #
-        # Continue-on-error mirrors the plugin pattern: the git pull above
-        # has already landed the files on Cloudways, and a missed cache
-        # purge is a latency artifact, not a deploy failure. If wp-cli is
-        # unavailable or the filter fails, CF edge revalidates naturally via
-        # last-modified headers on every theme asset.
+        # continue-on-error: the rsync above already landed the files; a missed
+        # purge is a latency artifact, not a deploy failure.
         continue-on-error: true
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}
         run: |
           set -euo pipefail
-          # Let Cloudways' git pull settle + OPcache invalidate.
+          # Let OPcache pick up the new files (validate_timestamps gates this).
           sleep 5
           ssh "$SSH_USER@$SSH_HOST" bash -s <<'REMOTE'
           set -euo pipefail
-          # Auto-discover the app's public_html. Cloudways uses random
-          # per-app directory names (e.g. nffqxsrgxz); the sn-plugin SSH
-          # user has read access only to its own app, so this glob matches
-          # exactly one entry — same lookup pattern as the plugin's deploy.
           APP_PUBLIC=$(ls -d /home/master/applications/*/public_html 2>/dev/null | head -1)
           if [ -z "$APP_PUBLIC" ]; then
             echo "::warning::Could not locate app public_html for wp-cli."
             exit 1
           fi
           cd "$APP_PUBLIC"
-          # Verify wp-cli is on PATH (Cloudways ships it for app-scoped
-          # SSH users on all apps; explicit check survives a future
-          # Cloudways base-image change).
           if ! command -v wp >/dev/null 2>&1; then
             echo "::warning::wp-cli not found on PATH for SSH_USER. CF edge will revalidate naturally."
             exit 1
           fi
-          # Call SN's purge filter in-process. The theme's
-          # inc/template-maintenance.php registers a filter handler that
-          # purges object cache + Breeze + Varnish + Cloudflare + DB
-          # template overrides (defaults all true). Returns purged count.
           count=$(wp eval 'echo (int) apply_filters("sn_purge_all_caches_result", 0, array());' 2>&1)
           echo "Purged $count caches via sn_purge_all_caches_result filter (template_overrides=true)."
           REMOTE
