@@ -2,6 +2,31 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.44.1] - 2026-07-16: The first real dispatch found a flaky guard
+
+**No theme code change.** The payload is byte-identical to 10.44.0 apart from this version header. v10.44.0's rewritten `deploy.yml` was dispatched for the first time and **died at its own guard**:
+
+```
+tar: stdout: write error
+##[error]payload has no style.css
+```
+
+The payload **contained** `style.css`. The guard was:
+
+```bash
+tar -tzf payload.tar.gz | grep -q '^signal-and-noise/style.css$' || { echo "::error::…"; exit 1; }
+```
+
+Under `set -o pipefail`, `grep -q` exits on its **first match**, `tar` takes SIGPIPE (`tar: stdout: write error`), and pipefail propagates **tar's** failure — even though grep **succeeded**. It's a **race**: it depends on whether `tar` finished writing before `grep` quit. That's exactly why it passed local verification on a small payload and failed on the runner.
+
+**A guard that fires at random is worse than no guard** — it reads as "CI being weird" and gets ignored. Both repos' workflows had the pattern; both now capture the listing once and match against the variable, with no pipe from the producer and no race.
+
+Reproduced deterministically by forcing the stream large: `seq 1 500000 | grep -q '^1$'` under pipefail **fails despite the match existing**; `L=$(seq 1 500000); grep -q '^1$' <<<"$L"` passes.
+
+**Why a version bump for a workflow fix:** a tag-guarded deploy workflow can only be exercised by a tag cut *after* it lands — `workflow_dispatch --ref X` runs the workflow file as it exists at X, and the guard rejects non-tag refs. v10.44.0 carries the broken guard, so proving the fix needs this tag. Mirrors the plugin's v9.54.2.
+
+**This is what testing a dormant fallback buys.** The guards were verified locally and passed. Only a real dispatch surfaced the race.
+
 ## [10.44.0] - 2026-07-16: The emergency fallback can finally ship a tag — and the theme install halves
 
 **Headline:** `deploy.yml`'s own header told you to run `gh workflow run deploy.yml --ref vX.Y.Z`. **That instruction was a lie**, and the lie was the bug.
