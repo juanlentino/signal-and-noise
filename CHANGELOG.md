@@ -2,6 +2,26 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.44.2] - 2026-07-16: The SSH user's home is not writable — and our own deleted comment said so
+
+**No theme code change.** Byte-identical to 10.44.1 apart from this version header.
+
+With v10.44.1's guard fix in, the next dispatch got further — past the payload build, past the four guards, past SSH setup — and died shipping the payload:
+
+```
+scp: dest open "…-payload.tar.gz": Permission denied
+```
+
+**The SSH user's home isn't writable.** The workflow this rewrite *replaced* said so, in a comment removed along with the mechanism:
+
+> *"The deploy runs as Cloudways' restricted 'additional SSH user'. Their `~/.ssh` is root-owned and read-only, so the GitHub deploy key lives in the user-writable `~/.openssh/` directory (Cloudways convention)."*
+
+The old code **knew** home was hostile and worked around it explicitly. The rewrite `scp`'d into `~` **and** then `mktemp -d ~/…` on top — two writes to a directory that rejects them. The code being replaced was itself the documentation, and it was treated as obsolete rather than as evidence.
+
+Both repos now stage in a **remote `mktemp -d /tmp/…`** — created `0700` and owned by us, so it's writable *and* safe from a symlink race on a shared host. Nothing touches `$HOME`.
+
+**Three dispatches, two real bugs, zero impact on the live site.** Every failure landed before a single file was written. That is the whole argument for exercising a dormant fallback on a quiet evening instead of during the next outage — which is exactly how tonight started.
+
 ## [10.44.1] - 2026-07-16: The first real dispatch found a flaky guard
 
 **No theme code change.** The payload is byte-identical to 10.44.0 apart from this version header. v10.44.0's rewritten `deploy.yml` was dispatched for the first time and **died at its own guard**:
