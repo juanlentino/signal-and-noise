@@ -23,6 +23,8 @@ if ( PHP_SAPI !== 'cli' && ! defined( 'WP_CLI' ) ) {
 
 define( 'ABSPATH', '/' );
 define( 'HOUR_IN_SECONDS', 3600 );
+// v10.43.0: the transient/durable failure TTLs are expressed in minutes.
+define( 'MINUTE_IN_SECONDS', 60 );
 
 // ── Capture buffer: every wp_remote_get records its $args here. ──
 $GLOBALS['__captured_requests'] = array();
@@ -36,7 +38,11 @@ if ( ! function_exists( 'get_site_transient' ) ) {
 }
 if ( ! function_exists( 'set_site_transient' ) ) {
     function set_site_transient( $k, $v, $ttl = 0 ) { $GLOBALS['__transients'][ $k ] = $v; return true; }
+}// v10.43.0: a successful fetch now CLEARS the recorded failure reason.
+if ( ! function_exists( 'delete_site_transient' ) ) {
+    function delete_site_transient( $k ) { unset( $GLOBALS['__transients'][ $k ] ); return true; }
 }
+
 if ( ! function_exists( 'is_wp_error' ) ) { function is_wp_error( $t ) { return $t instanceof WP_Error; } }
 if ( ! function_exists( 'wp_remote_get' ) ) {
     function wp_remote_get( $url, $args = array() ) {

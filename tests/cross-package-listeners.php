@@ -66,6 +66,11 @@ if ( ! function_exists( 'add_action' ) ) {
 		return true;
 	}
 }
+// v10.43.0: the updater's failure reasons are translatable prose, so requiring
+// inc/wp-update-integration.php now pulls in __().
+if ( ! function_exists( '__' ) ) {
+	function __( $text, $domain = null ) { return $text; }
+}
 if ( ! function_exists( 'do_action' ) ) {
 	function do_action( $hook /*, ...args */ ) {
 		$args      = array_slice( func_get_args(), 1 );
@@ -161,6 +166,8 @@ if ( ! function_exists( 'is_wp_error' ) ) {
 }
 if ( ! defined( 'HOUR_IN_SECONDS' ) ) {
 	define( 'HOUR_IN_SECONDS', 3600 );
+	// v10.43.0: the transient/durable failure TTLs are expressed in minutes.
+	define( 'MINUTE_IN_SECONDS', 60 );
 }
 if ( ! defined( 'DAY_IN_SECONDS' ) ) {
 	define( 'DAY_IN_SECONDS', 86400 );
