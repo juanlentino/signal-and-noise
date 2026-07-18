@@ -87,18 +87,29 @@
   window.addEventListener('scroll', onScroll, { passive: true });
   checkScroll();
 
-  // 3) Visible time-on-page; accumulate only while visible; flush once on exit.
+  // 3) Visible time-on-page — DELTA semantics (v10.44.4). Accumulate only while
+  // visible; on each visibilitychange→hidden or pagehide send the engaged ms
+  // accrued SINCE THE LAST FLUSH, then reset the accumulator, and re-arm when
+  // the tab becomes visible again. The plugin rollup SUMS tm.ms per view, so
+  // per-flush deltas add up to the true engaged total (sending accumulated
+  // totals would double-count). Pre-10.44.4 the 'flushed' flag never reset
+  // except on bfcache restore, so only the FIRST hide ever sent — time engaged
+  // after returning to the tab was tracked but never reported. A zero/negative
+  // delta is never sent: it carries no signal and would inflate the flush count.
   var visibleMs = 0, lastVisible = document.visibilityState === 'visible' ? performance.now() : null, flushed = false;
   function accumulate() { if (lastVisible !== null) { visibleMs += performance.now() - lastVisible; lastVisible = null; } }
   document.addEventListener('visibilitychange', function () {
-    if (document.visibilityState === 'hidden') { accumulate(); flush(); }
-    else { lastVisible = performance.now(); }
+    if (document.visibilityState === 'hidden') { flush(); }
+    else { flushed = false; lastVisible = performance.now(); } // visible again → re-arm + resume counting
   });
   function flush() {
-    if (flushed) return;
-    flushed = true;
+    if (flushed) return; // one send per hidden episode (hidden + pagehide both fire on exit)
     accumulate();
-    send({ e: 'tm', u: location.pathname, ms: Math.round(visibleMs) });
+    var delta = Math.round(visibleMs);
+    if (delta <= 0) return; // nothing newly engaged — never send a zero/negative delta
+    flushed = true;
+    visibleMs = 0; // the next flush reports only time engaged after this one
+    send({ e: 'tm', u: location.pathname, ms: delta });
   }
   window.addEventListener('pagehide', flush);
   window.addEventListener('pageshow', function (ev) { if (ev.persisted) { flushed = false; visibleMs = 0; lastVisible = performance.now(); sent = {}; window.addEventListener('scroll', onScroll, { passive: true }); } });

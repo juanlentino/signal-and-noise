@@ -189,5 +189,31 @@ ok( strpos( $js, 'sessionStorage' ) === false && strpos( $js, 'localStorage' ) =
 ok( strpos( $js, 'u: location.pathname' ) !== false, 'pv path is still location.pathname (raw query never sent as u)' );
 ok( strpos( $js, 'clamps' ) !== false || preg_match( '/slice\(0,\s*128\)/', $js ) === 1, 'clamps each utm value length (128)' );
 
+// v10.44.4: engaged-time DELTA semantics. Pre-10.44.4 the 'flushed' flag never
+// reset except on bfcache restore, so only the FIRST visibilitychange→hidden
+// ever sent a 'tm' — time engaged after returning to the tab was tracked but
+// never reported. Now each hide/exit sends the delta since the last flush
+// (the plugin rollup SUMS tm.ms per view, so deltas add up to the true total),
+// the accumulator resets after a send, becoming visible re-arms the flush, and
+// a zero/negative delta is never sent.
+$flush_fn_pos = strpos( $js, 'function flush()' );
+ok( $flush_fn_pos !== false, 'beacon defines flush()' );
+// Re-arm: the visible branch clears the flushed flag AND resumes counting.
+ok( strpos( $js, 'flushed = false; lastVisible = performance.now()' ) !== false, 'returning to visible RE-ARMS the flush (flushed=false) and resumes counting' );
+// Delta: flush computes the per-flush delta, guards zero/negative, resets, sends.
+$delta_pos = strpos( $js, 'var delta = Math.round(visibleMs)', (int) $flush_fn_pos );
+$guard_pos = strpos( $js, 'if (delta <= 0) return', (int) $flush_fn_pos );
+$reset_pos = strpos( $js, 'visibleMs = 0;', (int) $flush_fn_pos );
+$sendtm_pos = strpos( $js, "send({ e: 'tm', u: location.pathname, ms: delta })", (int) $flush_fn_pos );
+ok( $delta_pos !== false, 'flush() computes a per-flush delta from the accumulator' );
+ok( $guard_pos !== false, 'flush() never sends a zero/negative delta' );
+ok( $sendtm_pos !== false, 'tm payload shape unchanged ({e,u,ms}) with ms = the per-flush DELTA' );
+ok( $reset_pos !== false && $sendtm_pos !== false && $guard_pos !== false && $guard_pos < $reset_pos && $reset_pos < $sendtm_pos, 'accumulator resets INSIDE flush() after the guard and before the send (next flush reports only new time)' );
+// Double-fire guard: hidden + pagehide both fire on exit → still one send per episode.
+$episode_pos = strpos( $js, 'if (flushed) return', (int) $flush_fn_pos );
+ok( $episode_pos !== false, 'flushed flag still guards one send per hidden episode (hidden + pagehide both fire on exit)' );
+// bfcache restore still fully resets the engaged-time state (a restore = a new view).
+ok( strpos( $js, 'flushed = false; visibleMs = 0; lastVisible = performance.now()' ) !== false, 'bfcache restore resets flushed + accumulator + visible clock' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
