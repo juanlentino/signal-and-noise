@@ -2,6 +2,24 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.44.4] - 2026-07-18: Engaged-time beacon re-arms after the first tab switch — per-flush deltas
+
+### Fixed
+
+The `tm` engaged-time event in [assets/js/sn-beacon.js](assets/js/sn-beacon.js) fired ONCE per view, at the first `visibilitychange→hidden`: the `flushed` flag never reset except on a bfcache restore. Engaged time kept accumulating after the visitor returned to the tab — but it was never sent. Every tab-switch-heavy visit permanently under-reported engaged time.
+
+**Old timeline** (read 60s → switch away → return, read 90s more → close): one `tm` with `ms≈60000` at the first hide; the further 90s tracked, never sent. **New timeline**: `tm ms≈60000` at the first hide, then `tm ms≈90000` on close — the rollup sums them to the true ~150s.
+
+Fix: **delta semantics.** On each `visibilitychange→hidden` or `pagehide`, flush sends the engaged ms accrued *since the last successful flush*, resets the accumulator, and re-arms (`flushed = false`) when the page becomes visible again. Deltas — not accumulated totals — because the plugin rollup **SUMS** `tm.ms` per view; sending totals would double-count every episode before the last.
+
+Unchanged: the DNT/GPC gate, the transport (sendBeacon → fetch keepalive), and the payload shape `{e:'tm',u,ms}` — `ms` just becomes a per-flush delta, which is already what the rollup arithmetic assumes.
+
+### Changed
+
+- A zero/negative delta is never sent. A background-opened tab that is closed unviewed no longer emits a `tm ms:0` (previously it did).
+- **Metric-semantics note:** `time_events` now counts flush episodes, not views (a view can flush several times), so any per-event mean (`time_avg` = sum/`time_events`) shifts from "engaged ms per view-exit" to "engaged ms per visibility episode" — smaller per-event values on tab-switch-heavy visits, while the SUM becomes complete and correct for the first time.
+- [tests/beacon.php](tests/beacon.php): 8 new content-contract assertions pin the delta flow — re-arm on visible, per-flush delta, zero/negative guard, reset-before-send ordering, the one-send-per-hidden-episode guard, and the bfcache full reset (76 total, all green; full sweep 78 suites / 1758 assertions green).
+
 ## [10.44.3] - 2026-07-16: Not the jail I thought it was — no scp, rsync over the ssh shell
 
 **No theme code change.** Byte-identical to 10.44.2 apart from this version header.
