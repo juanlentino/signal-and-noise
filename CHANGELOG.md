@@ -2,6 +2,16 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [Repository operations] - 2026-07-20: Hard CI gates and lower Actions spend
+
+**No theme package change.** PHPStan is now a hard failure instead of an
+advisory result. The live-site smoke schedule moves from every 15 minutes to
+hourly, and scheduled probes skip the unrelated PHP checkout/setup/lint job.
+This reduces scheduled job executions from roughly 192 per day to 24 while
+preserving push-time lint and smoke checks. GitHub secret scanning, push
+protection, and Dependabot security updates are enabled; the existing main
+branch deletion and non-fast-forward protections remain active.
+
 ## [10.44.4] - 2026-07-18: Engaged-time beacon re-arms after the first tab switch — per-flush deltas
 
 ### Fixed
