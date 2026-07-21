@@ -2,6 +2,16 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.44.5] - 2026-07-21: The scroll-milestone contract gets the same pins as engaged time
+
+**Headline:** the beacon's `sc` scroll-milestone behavior is now test-pinned in the same detail as the v10.44.4 `tm` delta contract, because the plugin's durable `scroll_sum` load-bears on it.
+
+### Improvements
+
+- [tests/beacon.php](tests/beacon.php) pins the full `sc` contract the plugin's durable analytics re-based on (signal-and-noise-tools v9.64.0/v9.66.0: `scroll_sum` = 25 × scroll_events): the exact `[25, 50, 75, 100]` milestone array, cumulative `pct >= m` firing, the `sent[m]` at-most-once-per-view guard, the `{e,u,d}` payload shape, short-page `pct=100` behavior, listener detach after 100, and the sent-map reset firing only on a bfcache restore. Previously the suite asserted only that the literal `'sc'` appeared in the source — an edit to milestone spacing or the once-guard would have passed the tests while silently corrupting the plugin's durable table. Falsified: mutating the milestone array makes the suite fail.
+
+> **Why PATCH:** test-only hardening of existing shipped behavior; no runtime change.
+
 ## [Repository operations] - 2026-07-20: Hard CI gates and lower Actions spend
 
 **No theme package change.** PHPStan is now a hard failure instead of an
