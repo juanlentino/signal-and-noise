@@ -2,6 +2,20 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.45.0] - 2026-07-21: The .json twin republishes the Note uid — paste-a-URL verification becomes possible
+
+**Headline:** a Note's public `.json` twin now carries `provenance.note_uid` and points `provenance.verify_url` at that Note's own /verify docket, giving the verifier (and any external tool) the key it needs to resolve a pasted Note URL into a credential; plus tap-target sizing fixes across the discography and note frontmatter.
+
+### New
+
+- [inc/content-json-document.php](inc/content-json-document.php) republishes the plugin-owned `_sn_prov_uid` meta as `provenance.note_uid` in every Note twin, and upgrades `provenance.verify_url` from the static how-to page to the per-note `/verify?note=<uid>` docket when a uid exists. This was the missing half of the verifier's paste-a-URL affordance: the plugin's resolver probes `provenance.note_uid` first, and no deployed twin carried it under any name — so pasting a Note URL into /verify could never resolve (found in this session's live sweep; the plugin ships the companion resolver fix in signal-and-noise-tools v9.75.0). Uid-less Notes keep the how-to link and never fabricate a uid. Pinned in [tests/content-json-document.php](tests/content-json-document.php).
+
+### Fixed
+
+- Tap targets: the discography's "Credits ↗" links and "Liner notes" disclosure toggles ([assets/css/components.css](assets/css/components.css)) and the note-frontmatter tag links + pillar chip ([assets/css/critical.css](assets/css/critical.css)) measured 16–22px tall — under the 24px standalone-target minimum. All now reach ≥24px via padding cancelled by equal negative margins (pure hit-area growth, zero layout shift; the pillar chip's visible box grows ~4px because its border IS the hit box).
+
+> **Why MINOR:** a new machine-readable capability in the public twin schema (additive field + smarter verify_url); the tap-target work alone would be PATCH.
+
 ## [10.44.5] - 2026-07-21: The scroll-milestone contract gets the same pins as engaged time
 
 **Headline:** the beacon's `sc` scroll-milestone behavior is now test-pinned in the same detail as the v10.44.4 `tm` delta contract, because the plugin's durable `scroll_sum` load-bears on it.

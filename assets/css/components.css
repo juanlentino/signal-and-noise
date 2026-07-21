@@ -1124,7 +1124,11 @@
 	text-transform: uppercase;
 	color: var(--wp--preset--color--rust, #666);
 	text-decoration: none;
-	margin: 0.55rem 0 0;
+	/* Hit-area, not layout: the bare 11px line measured ~19px tall — under the
+	   24px standalone-target minimum. Padding grows the clickable box; the
+	   margins keep the card's visual rhythm exactly where it was. */
+	padding: 0.45rem 0.25rem;
+	margin: 0.1rem 0 -0.45rem -0.25rem;
 	transition: color 0.2s ease;
 }
 .sn-disco-credits:hover,
@@ -1158,6 +1162,11 @@
 	letter-spacing: 0.12em;
 	text-transform: uppercase;
 	color: var(--wp--preset--color--bone, #000);
+	/* Hit-area, not layout: this is the details toggle — a ~19px-tall control.
+	   Padding cancelled by equal negative margins reaches the 24px minimum
+	   without shifting the card. */
+	padding: 0.4rem 0;
+	margin: -0.4rem 0;
 }
 .sn-disco-liner__summary::-webkit-details-marker {
 	display: none;

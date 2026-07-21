@@ -1031,6 +1031,14 @@ main { view-transition-name: sn-main; }
 	color: var(--wp--preset--color--rust, #666);
 	text-decoration: none;
 }
+.sn-post-frontmatter__tags a {
+	/* Hit-area, not layout: bare 16px-tall tag links are standalone targets
+	   (not prose), so they get the 24px minimum via padding cancelled by
+	   equal negative margins — the byline row doesn't move. */
+	display: inline-block;
+	padding: 0.35rem 0.15rem;
+	margin: -0.35rem -0.15rem;
+}
 .sn-post-frontmatter__tags a:hover {
 	color: var(--wp--preset--color--blood, #e00404);
 }
@@ -1039,7 +1047,11 @@ main { view-transition-name: sn-main; }
 	text-decoration: none;
 	font-weight: 500;
 	margin-left: auto;
-	padding: 0.15rem 0.5rem;
+	/* 0.28rem vertical (was 0.15): the bordered pill is the visible hit box,
+	   so it must itself clear ~24px; the negative margins keep row height. */
+	padding: 0.28rem 0.5rem;
+	margin-top: -0.13rem;
+	margin-bottom: -0.13rem;
 	border: 1px solid var(--wp--preset--color--bone, #000);
 	transition: color 0.15s ease, background 0.15s ease;
 }

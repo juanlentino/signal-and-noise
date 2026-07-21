@@ -19,6 +19,8 @@ if ( ! function_exists( 'get_permalink' ) ) { function get_permalink( $p ) { $id
 if ( ! function_exists( 'get_the_date' ) ) { function get_the_date( $f, $p ) { return '2026-07-01T14:32:00-04:00'; } }
 if ( ! function_exists( 'get_the_modified_date' ) ) { function get_the_modified_date( $f, $p ) { return '2026-07-05T09:10:00-04:00'; } }
 if ( ! function_exists( 'get_post_ancestors' ) ) { function get_post_ancestors( $p ) { $o = is_object( $p ) ? $p : ( $GLOBALS['__posts'][ $p ] ?? null ); return ( $o && $o->post_parent ) ? array( $o->post_parent ) : array(); } }
+$GLOBALS['__meta'] = array();
+if ( ! function_exists( 'get_post_meta' ) ) { function get_post_meta( $id, $key, $single = false ) { return $GLOBALS['__meta'][ $id ][ $key ] ?? ''; } }
 
 require __DIR__ . '/../inc/content-json-document.php';
 
@@ -47,6 +49,19 @@ ok( ( $dp['schema']['type'] ?? '' ) === 'WebPage', 'schema type WebPage for a Pa
 ok( ! isset( $dp['provenance'] ), 'no provenance key for a Page' );
 $names = array_map( function( $c ) { return $c['name']; }, $dp['breadcrumb'] );
 ok( $names === array( 'Home', 'About', 'Uses' ), 'Page breadcrumb walks ancestors: Home → About → Uses' );
+
+// Provenance uid republication (v10.45.0): the /verify page resolves a pasted
+// Note URL by probing the twin's provenance.note_uid — without it, paste-a-URL
+// could never work (caught live 2026-07-21). The plugin owns _sn_prov_uid;
+// the twin republishes it and points verify_url at the per-note docket.
+$GLOBALS['__meta'][1] = array( '_sn_prov_uid' => 'DEADBEEF-dead-4eef-8eef-deadbeefdead' );
+$dv = sn_content_json_document( $note );
+ok( ( $dv['provenance']['note_uid'] ?? '' ) === 'deadbeef-dead-4eef-8eef-deadbeefdead', 'twin republishes the Note uid (lowercased) when the plugin meta exists' );
+ok( ( $dv['provenance']['verify_url'] ?? '' ) === 'https://juanlentino.com/verify?note=deadbeef-dead-4eef-8eef-deadbeefdead', 'verify_url points at the per-note /verify docket when a uid exists' );
+$GLOBALS['__meta'] = array();
+$dn = sn_content_json_document( $note );
+ok( ! isset( $dn['provenance']['note_uid'] ), 'no fabricated note_uid when the meta is absent' );
+ok( ( $dn['provenance']['verify_url'] ?? '' ) === 'https://juanlentino.com/provenance/verify/', 'uid-less Notes keep the how-to verify_url' );
 
 // valid JSON
 ok( json_decode( json_encode( $d ), true ) !== null, 'document round-trips through JSON' );
