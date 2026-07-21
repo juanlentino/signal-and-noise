@@ -215,5 +215,18 @@ ok( $episode_pos !== false, 'flushed flag still guards one send per hidden episo
 // bfcache restore still fully resets the engaged-time state (a restore = a new view).
 ok( strpos( $js, 'flushed = false; visibleMs = 0; lastVisible = performance.now()' ) !== false, 'bfcache restore resets flushed + accumulator + visible clock' );
 
+// Scroll-milestone (sc) contract pins. The plugin's durable scroll_sum is
+// RE-BASED on the identity "25 × scroll_events = sum of per-view max depths"
+// (signal-and-noise-tools v9.64.0/v9.66.0, DB v6 retroactive): it load-bears on
+// exactly four cumulative milestones, 25 apart, each fired AT MOST ONCE per
+// view. Any edit to the spacing, the once-guard, or cumulative firing silently
+// corrupts the durable table — these pins make such an edit fail loudly here.
+ok( strpos( $js, '[25, 50, 75, 100].forEach' ) !== false, 'sc milestones are exactly [25, 50, 75, 100] (the plugin identity: 25 x scroll_events = max depth)' );
+ok( strpos( $js, 'if (pct >= m && !sent[m]) { sent[m] = 1;' ) !== false, 'sc fires CUMULATIVELY (pct >= m) and AT MOST ONCE per view per milestone (sent[m] guard)' );
+ok( strpos( $js, "send({ e: 'sc', u: location.pathname, d: m })" ) !== false, 'sc payload shape unchanged ({e,u,d}) with d = the milestone value' );
+ok( strpos( $js, 'scrollable <= 0 ? 100' ) !== false, 'short unscrollable pages report pct=100 (all four milestones fire, preserving the identity)' );
+ok( strpos( $js, 'if (sent[100]) window.removeEventListener' ) !== false, 'scroll listener detaches after the 100 milestone (no further sc this view)' );
+ok( strpos( $js, 'sent = {};' ) !== false && strpos( $js, "if (ev.persisted) { flushed = false" ) !== false, 'sent map resets ONLY on bfcache restore (a restore re-fires pv, so it IS a new view)' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
