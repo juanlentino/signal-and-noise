@@ -50,7 +50,10 @@
 .sn-notes-pillar {
 	position: relative;
 	display: grid;
-	grid-template-columns: 48px 1fr;
+	/* auto, not a fixed 48px: the number column must FIT the owner's
+	   designation ("No. 1.01", someday "No. 10.02") — the card clips
+	   overflow, so a fixed column truncated designations mid-digit. */
+	grid-template-columns: auto 1fr;
 	gap: 0;
 	background: var(--wp--preset--color--asphalt, #f5f5f5);
 	color: var(--wp--preset--color--bone, #000);
@@ -77,9 +80,10 @@
 	font-family: 'DM Mono', 'Courier New', monospace;
 	font-size: clamp(0.95rem, 1.4vw, 1.15rem);
 	color: var(--wp--preset--color--blood, #e00404);
-	padding: clamp(1.1rem, 2vw, 1.4rem) 0 0 1.1rem;
+	padding: clamp(1.1rem, 2vw, 1.4rem) 0.9rem 0 1.1rem;
 	letter-spacing: 0.05em;
 	font-weight: 500;
+	white-space: nowrap;
 }
 .sn-notes-pillar-body {
 	padding: clamp(1.1rem, 2vw, 1.4rem) clamp(1.25rem, 2.5vw, 1.6rem) clamp(1.1rem, 2vw, 1.4rem) 0;
