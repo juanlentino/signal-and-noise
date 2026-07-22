@@ -137,10 +137,13 @@ function sn_theme_pillar_designation_parts( $designation ) {
  * major.minor first, numerically by (major, minor); empty/unparseable
  * designations after, date ASC among themselves. Sort is stable.
  *
- * FALLBACK (zero flagged Pages anywhere): the v10.46.0 derivation, the
+ * FALLBACK (only when the meta system has NEVER seeded — zero Pages carry
+ * the _sn_pillar key with ANY value): the v10.46.0 derivation, the
  * published child Pages of the /provenance/ hub, date ASC, the 'verify'
  * how-to child excluded, designation '' on every entry. Keeps the live
- * site identical until the owner flags Pages.
+ * site identical until the owner flags Pages. v10.48.0: an explicitly
+ * EMPTIED curation (every essay unflagged, key rows still present) yields
+ * an empty set — it never resurrects the derived list.
  *
  * Dek: the Page excerpt, tag-stripped. An empty excerpt stays an empty
  * dek (no fabricated copy). Honest empty when seams or sources are
@@ -152,6 +155,28 @@ function sn_theme_pillar_designation_parts( $designation ) {
  * @return array<int, array{slug:string, title:string, dek:string, last_path:string, date:string, designation:string}>
  */
 function sn_theme_pillar_descriptors() {
+	// v10.48.0: memoized per request — the command palette derives on EVERY
+	// front-end request (inc/command-palette.php), and the pillar block plus
+	// the pillars Ability can run in the same request; each derivation costs
+	// 1-2 meta queries. A global, not a static, so the standalone tests (and
+	// any future invalidation seam) can clear it between scenarios — the
+	// sn_css_combined_memo precedent in inc/asset-combine.php.
+	if ( array_key_exists( 'sn_theme_pillar_descriptors_memo', $GLOBALS ) ) {
+		return $GLOBALS['sn_theme_pillar_descriptors_memo'];
+	}
+	$out = sn_theme_pillar_descriptors_derive();
+	$GLOBALS['sn_theme_pillar_descriptors_memo'] = $out;
+	return $out;
+}
+
+/**
+ * Uncached derivation behind sn_theme_pillar_descriptors(). Split out in
+ * v10.48.0 so the memo wrapper stays trivially readable.
+ *
+ * @since 10.48.0
+ * @return array<int, array{slug:string, title:string, dek:string, last_path:string, date:string, designation:string}>
+ */
+function sn_theme_pillar_descriptors_derive() {
 	if ( ! function_exists( 'get_posts' ) ) {
 		return array();
 	}
@@ -167,6 +192,27 @@ function sn_theme_pillar_descriptors() {
 	) );
 	if ( is_array( $flagged ) && array() !== $flagged ) {
 		return sn_theme_pillar_sort( array_values( array_filter( array_map( 'sn_theme_pillar_descriptor_from_page', $flagged ) ) ) );
+	}
+
+	// v10.48.0 explicit-empty gate: the hub-children fallback exists only for
+	// a NEVER-seeded meta system (the one-shot seed sentinel lives plugin-side
+	// and is invisible here). The closest theme-visible signal: any Page
+	// carrying the _sn_pillar key AT ALL (flag '0'/'' after the owner unflags
+	// the last essay) means curation is live, so an empty flagged set is a
+	// DELIBERATE empty — resurrecting the derived list would fail open. Only
+	// a corpus with zero _sn_pillar rows (never written, or every row deleted)
+	// still falls back. Bounded ids-only existence probe; any post_status so a
+	// drafted flagged Page still counts as "the system has seeded".
+	$seeded = get_posts( array(
+		'post_type'      => 'page',
+		'post_status'    => 'any',
+		'posts_per_page' => 1,
+		'no_found_rows'  => true,
+		'fields'         => 'ids',
+		'meta_key'       => '_sn_pillar', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- bounded corpus (site Pages), single indexed existence probe.
+	) );
+	if ( is_array( $seeded ) && array() !== $seeded ) {
+		return array();
 	}
 
 	// FALLBACK: the v10.46.0 hub-children derivation, unchanged in
@@ -223,7 +269,12 @@ function sn_theme_pillar_descriptor_from_page( $page ) {
 		return null;
 	}
 	$slug = $name;
-	if ( function_exists( 'get_page_uri' ) ) {
+	// v10.48.0: get_page_uri() walks the ancestor chain regardless of status,
+	// so a flagged child of a DRAFTED/PRIVATE parent would republish the
+	// unpublished parent's slug in the block CTA + Ability payload. Only take
+	// the hierarchical URI when every ancestor is published; otherwise the
+	// bare post_name stands.
+	if ( function_exists( 'get_page_uri' ) && sn_theme_pillar_ancestors_published( $page ) ) {
 		$uri = trim( (string) get_page_uri( $page ), '/' );
 		if ( '' !== $uri ) {
 			$slug = $uri;
@@ -241,6 +292,32 @@ function sn_theme_pillar_descriptor_from_page( $page ) {
 		'date'        => (string) ( $page->post_date ?? '' ),
 		'designation' => $designation,
 	);
+}
+
+/**
+ * True when every ancestor of the Page is published.
+ *
+ * Backs the v10.48.0 slug gate in sn_theme_pillar_descriptor_from_page():
+ * a non-published ancestor's slug is gated content and must not leak into
+ * public surfaces. When the ancestor seams are absent (standalone tests),
+ * there is nothing to verify and the URI is trusted — real WP always has
+ * both functions.
+ *
+ * @since 10.48.0
+ * @param object $page Page post object.
+ * @return bool
+ */
+function sn_theme_pillar_ancestors_published( $page ) {
+	if ( ! function_exists( 'get_post_ancestors' ) || ! function_exists( 'get_post' ) ) {
+		return true;
+	}
+	foreach ( (array) get_post_ancestors( $page ) as $ancestor_id ) {
+		$ancestor = get_post( $ancestor_id );
+		if ( ! $ancestor || 'publish' !== (string) ( $ancestor->post_status ?? '' ) ) {
+			return false;
+		}
+	}
+	return true;
 }
 
 /**

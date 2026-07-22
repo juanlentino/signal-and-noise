@@ -19,8 +19,11 @@ function ok( $c, $m ) { global $pass, $fail; if ( $c ) { $pass++; echo "PASS: $m
 function add_action( $h, $cb, $p = 10, $a = 1 ) { return true; }
 function add_filter( $h, $cb, $p = 10, $a = 1 ) { return true; }
 function esc_url( $u ) { return $u; }
-function esc_html( $s ) { return $s; }
-function esc_attr( $s ) { return $s; }
+// Real escaping semantics, not a passthrough, so the noteUid escaping assertions
+// below can catch an unescaped sink.
+function esc_html( $s ) { return htmlspecialchars( (string) $s, ENT_QUOTES ); }
+function esc_attr( $s ) { return htmlspecialchars( (string) $s, ENT_QUOTES ); }
+function get_post_meta( $id, $key, $single = false ) { return $GLOBALS['__pm'][ (int) $id ][ $key ] ?? ''; }
 $GLOBALS['__thumb'] = 'https://x.test/og/7.png';
 function get_post_thumbnail_id( $id ) { return $GLOBALS['__has_thumb'] ? 99 : 0; }
 function wp_get_attachment_image_url( $aid, $size ) { return $GLOBALS['__thumb']; }
@@ -48,6 +51,21 @@ ok( strpos( $item, '<sn:readingTimeMinutes>6</sn:readingTimeMinutes>' ) !== fals
 $GLOBALS['__has_thumb'] = false;
 ob_start(); sn_rss_item_enrich(); $item2 = ob_get_clean();
 ok( strpos( $item2, '<media:content' ) === false, 'no media:content when there is no featured image' );
+
+// v10.48.0: <sn:noteUid> mirrors the plugin-owned _sn_prov_uid under the
+// already-declared sn: namespace, so RSS subscribers can verify without a
+// second fetch. Absent uid → NO element (item2 above had no uid meta).
+ok( strpos( $item2, '<sn:noteUid>' ) === false, 'no <sn:noteUid> when the post carries no _sn_prov_uid meta' );
+$GLOBALS['__pm'][7]['_sn_prov_uid'] = 'AB12cd34';
+ob_start(); sn_rss_item_enrich(); $item3 = ob_get_clean();
+ok( strpos( $item3, '<sn:noteUid>ab12cd34</sn:noteUid>' ) !== false,
+	'rss2_item emits a well-formed, paired <sn:noteUid> with the lowercased uid' );
+// Escaping at the sink: a hostile uid value must not break the XML open.
+$GLOBALS['__pm'][7]['_sn_prov_uid'] = 'x<y&z';
+ob_start(); sn_rss_item_enrich(); $item4 = ob_get_clean();
+ok( strpos( $item4, '<sn:noteUid>x&lt;y&amp;z</sn:noteUid>' ) !== false && strpos( $item4, '<sn:noteUid>x<y' ) === false,
+	'noteUid value is escaped at the sink (esc_html), never raw' );
+unset( $GLOBALS['__pm'] );
 
 echo "Result: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
