@@ -1,0 +1,15 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "signal-noise/pillar-essays",
+	"title": "Pillar Essays",
+	"category": "signal-noise",
+	"icon": "excerpt-view",
+	"description": "Owner-placeable rail of pillar essays derived from published Pages flagged with the plugin's _sn_pillar meta. Renders nothing when no pillars exist.",
+	"keywords": ["pillar", "essays", "rail", "provenance"],
+	"textdomain": "signal-noise",
+	"supports": { "html": false },
+	"editorScript": "signal-noise-blocks-editor",
+	"render": "file:./render.php",
+	"style": "file:./style.css"
+}

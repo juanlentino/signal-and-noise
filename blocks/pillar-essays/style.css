@@ -1,0 +1,140 @@
+/* ──────────────────────────────────────────────────────────────
+   signal-noise/pillar-essays — self-contained rail styling.
+
+   Moved out of inc/page-notes-render.php's inline stylesheet in
+   v10.47.0: the block is owner-placeable on ANY page (the
+   /provenance/ hub does not load the notes-index inline CSS), so
+   everything the rail needs ships here. The section-header rules
+   (.sn-notes-section-wrap / -label / -count) are block-scoped
+   copies under .sn-notes-pillars-section so they can never fight
+   the notes index's own instances. Colors ride the site-wide
+   theme.json presets (--wp--preset--color--*) with the same hex
+   fallbacks the notes renderer used.
+   ────────────────────────────────────────────────────────────── */
+
+/* SECTION HEADER — chapter heading on a hairline (block-scoped). */
+
+.sn-notes-pillars-section .sn-notes-section-wrap {
+	display: grid;
+	grid-template-columns: 1fr auto;
+	align-items: end;
+	gap: 1rem;
+	margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+	padding-bottom: 0.5rem;
+	border-bottom: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+}
+.sn-notes-pillars-section .sn-notes-section-label {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.7rem, 11px);
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--rust, #666);
+	margin: 0;
+}
+.sn-notes-pillars-section .sn-notes-section-count {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.7rem, 11px);
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--rust, #666);
+}
+
+/* PILLAR CARDS ─────────────────────────────────────────────── */
+
+.sn-notes-pillars {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: clamp(0.75rem, 1.5vw, 1rem);
+}
+
+.sn-notes-pillar {
+	position: relative;
+	display: grid;
+	grid-template-columns: 48px 1fr;
+	gap: 0;
+	background: var(--wp--preset--color--asphalt, #f5f5f5);
+	color: var(--wp--preset--color--bone, #000);
+	text-decoration: none;
+	overflow: hidden;
+	transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.sn-notes-pillar::before {
+	/* Left rail — blood accent. Expands on hover. */
+	content: '';
+	position: absolute;
+	inset: 0 auto 0 0;
+	width: 4px;
+	background: var(--wp--preset--color--blood, #e00404);
+	transition: width 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.sn-notes-pillar:hover::before {
+	width: 10px;
+}
+.sn-notes-pillar:hover {
+	transform: translateX(2px);
+}
+.sn-notes-pillar-number {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: clamp(0.95rem, 1.4vw, 1.15rem);
+	color: var(--wp--preset--color--blood, #e00404);
+	padding: clamp(1.1rem, 2vw, 1.4rem) 0 0 1.1rem;
+	letter-spacing: 0.05em;
+	font-weight: 500;
+}
+.sn-notes-pillar-body {
+	padding: clamp(1.1rem, 2vw, 1.4rem) clamp(1.25rem, 2.5vw, 1.6rem) clamp(1.1rem, 2vw, 1.4rem) 0;
+}
+.sn-notes-pillar-eyebrow {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: 0.7rem;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--blood, #e00404);
+	margin: 0 0 0.5rem;
+}
+.sn-notes-pillar-title {
+	font-family: 'Bebas Neue', Impact, sans-serif;
+	font-weight: 400;
+	font-size: clamp(1.4rem, 2.4vw, 1.9rem);
+	line-height: 1;
+	letter-spacing: -0.005em;
+	margin: 0 0 0.65rem;
+	color: var(--wp--preset--color--bone, #000);
+}
+.sn-notes-pillar-dek {
+	font-size: clamp(0.85rem, 1vw, 0.95rem);
+	line-height: 1.5;
+	color: var(--wp--preset--color--rust, #666);
+	margin: 0 0 0.85rem;
+	max-width: 42ch;
+}
+.sn-notes-pillar-cta {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.75rem, 11px);
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--bone, #000);
+	text-decoration: none;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	min-height: 44px;
+	padding: 0.6rem 0;
+	transition: color 0.2s ease, gap 0.2s ease;
+}
+.sn-notes-pillar-cta::after {
+	content: '→';
+	display: inline-block;
+	transition: transform 0.2s ease;
+}
+.sn-notes-pillar-cta:hover {
+	color: var(--wp--preset--color--blood, #e00404);
+}
+.sn-notes-pillar-cta:hover::after {
+	transform: translateX(4px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.sn-notes-pillar { transition: none; }
+	.sn-notes-pillar::before { transition: none; }
+}

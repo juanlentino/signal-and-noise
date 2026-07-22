@@ -8,12 +8,13 @@
  * template resolution entirely.
  *
  * Layout direction: "Industrial Catalog" — the page is presented as
- * a directory listing for the brand. Numbered pillar essays with a
- * blood-red left rail (NIN-influenced), tabular note rows in mono
- * with a date+meta column pulled left like a magazine spec line, a
+ * a directory listing for the brand. Tabular note rows in mono with
+ * a date+meta column pulled left like a magazine spec line, a
  * terminal-status RSS footer with a blinking cursor. Stays inside
  * the existing brutalist white/asphalt/blood vocabulary but adds
- * editorial precision.
+ * editorial precision. (The numbered pillar-essay rail left this
+ * index in v10.47.0: it is now the owner-placeable
+ * signal-noise/pillar-essays block, see blocks/pillar-essays/.)
  *
  * Design tokens (from theme.json):
  *   void     #ffffff   page background
@@ -315,8 +316,8 @@ $sn_hero_stats = sn_notes_hero_stats( $query );
 $entry_count   = $sn_hero_stats['count'];
 $latest_date   = $sn_hero_stats['latest_date'];
 
-// Tag-archive context. $sn_filtered (search OR tag) hides the pillars +
-// Start-here card and collapses the top composition to a single column.
+// Tag-archive context. $sn_filtered (search OR tag) hides the hero corpus
+// stats and the Start-here pinned card (both mislabel filtered results).
 $sn_tag_id   = sn_notes_current_tag_id();
 $sn_tag      = ( $sn_tag_id > 0 );
 $sn_tag_name = '';
@@ -404,30 +405,13 @@ wp_head();
 	margin: 0 auto;
 }
 
-/* TOP COMPOSITION ─────────────────────────────────────────────
-   Hero (left) + pillar essays (right) on desktop. Stacks
-   vertically below the breakpoint. align-items: start so the
-   "Notes." headline anchors the top-left and the pillar cards
-   begin at the same baseline on the right. */
-
-.sn-notes-top {
-	display: grid;
-	grid-template-columns: 1fr;
-	gap: clamp(2.5rem, 5vw, 4rem);
-	margin-bottom: clamp(2rem, 4vw, 3rem);
-}
-@media (min-width: 980px) {
-	.sn-notes-top {
-		grid-template-columns: 5fr 7fr;
-		gap: clamp(3rem, 6vw, 5rem);
-		align-items: start;
-	}
-}
-
-/* HERO ────────────────────────────────────────────────────────── */
+/* HERO ────────────────────────────────────────────────────────
+   Full-width since v10.47.0: the pillar rail that shared a
+   two-column top composition with the hero moved to the
+   owner-placeable signal-noise/pillar-essays block. */
 
 .sn-notes-hero {
-	margin-bottom: 0; /* gap handled by .sn-notes-top */
+	margin-bottom: clamp(2rem, 4vw, 3rem);
 }
 .sn-notes-eyebrow,
 .sn-notes-meta,
@@ -451,14 +435,6 @@ wp_head();
 	letter-spacing: -0.02em;
 	margin: 0 0 1.25rem;
 	color: var(--wp--preset--color--bone, #000);
-}
-@media (min-width: 980px) {
-	/* Hero now lives in a ~5fr column. Cap the headline so
-	   "Notes." stays inside the column at desktop widths
-	   (Bebas Neue at 11rem would overflow a ~480px column). */
-	.sn-notes-headline {
-		font-size: clamp(5rem, 9vw, 8.5rem);
-	}
 }
 .sn-notes-dek {
 	font-size: clamp(1rem, 1.4vw, 1.15rem);
@@ -509,109 +485,6 @@ wp_head();
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
 	color: var(--wp--preset--color--rust, #666);
-}
-
-/* PILLAR ESSAYS ──────────────────────────────────────────────── */
-
-.sn-notes-pillars {
-	display: grid;
-	grid-template-columns: 1fr;
-	gap: clamp(0.75rem, 1.5vw, 1rem);
-}
-/* Pillar cards stay in a single column even when the hero+pillars
-   composition splits (≥980px) — they live in the right-hand cell
-   and stack vertically there, paired with the hero on the left. */
-
-/* Pillar cards live BESIDE the hero, not below it as a hero-equivalent
-   feature. The hero already carries the page's identity — these cards
-   should feel ELEVATED but not OVERPOWERING. Compact treatment so the
-   notes index below doesn't feel relegated. */
-
-.sn-notes-pillar {
-	position: relative;
-	display: grid;
-	grid-template-columns: 48px 1fr;
-	gap: 0;
-	background: var(--wp--preset--color--asphalt, #f5f5f5);
-	color: var(--wp--preset--color--bone, #000);
-	text-decoration: none;
-	overflow: hidden;
-	transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-.sn-notes-pillar::before {
-	/* Left rail — blood accent. Expands on hover. */
-	content: '';
-	position: absolute;
-	inset: 0 auto 0 0;
-	width: 4px;
-	background: var(--wp--preset--color--blood, #e00404);
-	transition: width 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-.sn-notes-pillar:hover::before {
-	width: 10px;
-}
-.sn-notes-pillar:hover {
-	transform: translateX(2px);
-}
-.sn-notes-pillar-number {
-	font-family: 'DM Mono', 'Courier New', monospace;
-	font-size: clamp(0.95rem, 1.4vw, 1.15rem);
-	color: var(--wp--preset--color--blood, #e00404);
-	padding: clamp(1.1rem, 2vw, 1.4rem) 0 0 1.1rem;
-	letter-spacing: 0.05em;
-	font-weight: 500;
-}
-.sn-notes-pillar-body {
-	padding: clamp(1.1rem, 2vw, 1.4rem) clamp(1.25rem, 2.5vw, 1.6rem) clamp(1.1rem, 2vw, 1.4rem) 0;
-}
-.sn-notes-pillar-eyebrow {
-	font-family: 'DM Mono', 'Courier New', monospace;
-	font-size: 0.7rem;
-	letter-spacing: 0.18em;
-	text-transform: uppercase;
-	color: var(--wp--preset--color--blood, #e00404);
-	margin: 0 0 0.5rem;
-}
-.sn-notes-pillar-title {
-	font-family: 'Bebas Neue', Impact, sans-serif;
-	font-weight: 400;
-	font-size: clamp(1.4rem, 2.4vw, 1.9rem);
-	line-height: 1;
-	letter-spacing: -0.005em;
-	margin: 0 0 0.65rem;
-	color: var(--wp--preset--color--bone, #000);
-}
-.sn-notes-pillar-dek {
-	font-size: clamp(0.85rem, 1vw, 0.95rem);
-	line-height: 1.5;
-	color: var(--wp--preset--color--rust, #666);
-	margin: 0 0 0.85rem;
-	max-width: 42ch;
-}
-.sn-notes-pillar-cta {
-	font-family: 'DM Mono', 'Courier New', monospace;
-	font-size: max(0.75rem, 11px);
-	letter-spacing: 0.18em;
-	text-transform: uppercase;
-	color: var(--wp--preset--color--bone, #000);
-	text-decoration: none;
-	display: inline-flex;
-	align-items: center;
-	gap: 0.5rem;
-	min-height: 44px;
-	padding: 0.6rem 0;
-	transition: color 0.2s ease, gap 0.2s ease;
-}
-.sn-notes-pillar-cta::after {
-	content: '→';
-	display: inline-block;
-	transition: transform 0.2s ease;
-}
-.sn-notes-pillar-cta:hover {
-	color: var(--wp--preset--color--blood, #e00404);
-}
-.sn-notes-pillar-cta:hover::after {
-	transform: translateX(4px);
 }
 
 /* NOTES INDEX — tabular ──────────────────────────────────────── */
@@ -792,12 +665,6 @@ wp_head();
 	transform: translateX(2px);
 }
 
-/* Search state: hero spans full width (pillars hidden). Specificity
-   (0,2,0) beats the .sn-notes-top media rule (0,1,0) at all widths. */
-.sn-notes-top.is-search {
-	grid-template-columns: 1fr;
-}
-
 /* Clear link replaces the count in the section header during search. */
 .sn-notes-section-clear {
 	font-family: 'DM Mono', 'Courier New', monospace;
@@ -894,8 +761,6 @@ wp_head();
 @media (prefers-reduced-motion: reduce) {
 	.sn-notes-page > * { animation: none; }
 	.sn-notes-cursor { animation: none; opacity: 0.6; }
-	.sn-notes-pillar { transition: none; }
-	.sn-notes-pillar::before { transition: none; }
 	.sn-notes-row { transition: none; }
 	.sn-notes-search { transition: none; }
 	.sn-notes-search button { transition: none; transform: none; }
@@ -959,67 +824,28 @@ echo $sn_header_html;
 
 <main class="sn-notes-page" id="wp--skip-link--target">
 
-	<div class="sn-notes-top<?php echo $sn_filtered ? ' is-search' : ''; ?>">
-
-		<header class="sn-notes-hero">
-			<p class="sn-notes-eyebrow"><?php if ( $sn_tag ) : ?>Topic &middot; <?php echo esc_html( $sn_tag_name ); ?><?php else : ?>Index &middot; <?php echo esc_html( wp_date( 'Y' ) ); ?><?php endif; ?></p>
-			<h1 class="sn-notes-headline">Notes.</h1>
-			<p class="sn-notes-dek">Working notes on music, AI, and the infrastructure underneath. Written when there&rsquo;s something worth writing.</p>
-			<?php if ( ! $sn_filtered ) : ?>
-			<?php // Corpus stats: entry count + last-updated. Suppressed in
-			      // search/tag state — there $entry_count is the filtered result
-			      // count and $latest_date is the newest match, so "entries"/
-			      // "Last updated" would mislabel them (the count lives in the
-			      // summary line below). Hero stays as page identity only. ?>
-			<p class="sn-notes-meta">
-				<span><?php echo esc_html( sprintf( _n( '%d entry', '%d entries', $entry_count, 'signal-noise' ), $entry_count ) ); ?></span>
-				<?php if ( $latest_date ) : ?>
-					<span class="sn-notes-meta-bullet" aria-hidden="true">&middot;</span>
-					<span>Last updated <?php echo esc_html( $latest_date ); ?></span>
-				<?php endif; ?>
-			</p>
-			<?php endif; ?>
-			<p class="sn-notes-subscribe">
-				No subscription form. No schedule. Notes via <a href="/notes/feed/">RSS</a>, or via email through <a href="https://blogtrottr.com/" target="_blank" rel="noopener noreferrer" data-sn-subscribe="email">Blogtrottr</a> or <a href="https://www.feedrabbit.com/" target="_blank" rel="noopener noreferrer" data-sn-subscribe="email">Feedrabbit</a>.<span class="sn-notes-cursor" aria-hidden="true"></span>
-			</p>
-		</header>
-
+	<header class="sn-notes-hero">
+		<p class="sn-notes-eyebrow"><?php if ( $sn_tag ) : ?>Topic &middot; <?php echo esc_html( $sn_tag_name ); ?><?php else : ?>Index &middot; <?php echo esc_html( wp_date( 'Y' ) ); ?><?php endif; ?></p>
+		<h1 class="sn-notes-headline">Notes.</h1>
+		<p class="sn-notes-dek">Working notes on music, AI, and the infrastructure underneath. Written when there&rsquo;s something worth writing.</p>
 		<?php if ( ! $sn_filtered ) : ?>
-		<?php
-		// v10.46.0: the rail derives from sn_theme_pillar_descriptors() —
-		// published /provenance/ child Pages — instead of hardcoded markup
-		// (which held a new essay invisible until a theme release). The
-		// eyebrow deliberately carries NO month: the Page dates are CMS-flip
-		// artifacts, and printing them would fabricate essay dates.
-		$sn_pillars = function_exists( 'sn_theme_pillar_descriptors' ) ? sn_theme_pillar_descriptors() : array();
-		?>
-		<?php if ( $sn_pillars ) : ?>
-		<section class="sn-notes-pillars-section" aria-labelledby="sn-pillars-heading">
-			<div class="sn-notes-section-wrap">
-				<p class="sn-notes-section-label" id="sn-pillars-heading">Pillar Essays &mdash; Featured</p>
-				<span class="sn-notes-section-count"><?php echo esc_html( sprintf( '%02d / %02d', count( $sn_pillars ), count( $sn_pillars ) ) ); ?></span>
-			</div>
-
-			<div class="sn-notes-pillars">
-				<?php foreach ( $sn_pillars as $sn_pillar_i => $sn_pillar ) : ?>
-				<article class="sn-notes-pillar">
-					<span class="sn-notes-pillar-number" aria-hidden="true">&#8470; <?php echo esc_html( sprintf( '%02d', $sn_pillar_i + 1 ) ); ?></span>
-					<div class="sn-notes-pillar-body">
-						<p class="sn-notes-pillar-eyebrow">Pillar Essay &middot; <?php echo esc_html( sn_notes_reading_time_for_slug( $sn_pillar['slug'] ) ); ?></p>
-						<h2 class="sn-notes-pillar-title"><?php echo esc_html( $sn_pillar['title'] ); ?></h2>
-						<?php if ( '' !== $sn_pillar['dek'] ) : ?>
-						<p class="sn-notes-pillar-dek"><?php echo esc_html( $sn_pillar['dek'] ); ?></p>
-						<?php endif; ?>
-						<a class="sn-notes-pillar-cta" href="<?php echo esc_url( '/' . $sn_pillar['slug'] . '/' ); ?>">Read essay</a>
-					</div>
-				</article>
-				<?php endforeach; ?>
-			</div>
-		</section>
+		<?php // Corpus stats: entry count + last-updated. Suppressed in
+		      // search/tag state — there $entry_count is the filtered result
+		      // count and $latest_date is the newest match, so "entries"/
+		      // "Last updated" would mislabel them (the count lives in the
+		      // summary line below). Hero stays as page identity only. ?>
+		<p class="sn-notes-meta">
+			<span><?php echo esc_html( sprintf( _n( '%d entry', '%d entries', $entry_count, 'signal-noise' ), $entry_count ) ); ?></span>
+			<?php if ( $latest_date ) : ?>
+				<span class="sn-notes-meta-bullet" aria-hidden="true">&middot;</span>
+				<span>Last updated <?php echo esc_html( $latest_date ); ?></span>
+			<?php endif; ?>
+		</p>
 		<?php endif; ?>
-		<?php endif; ?>
-
-	</div>
+		<p class="sn-notes-subscribe">
+			No subscription form. No schedule. Notes via <a href="/notes/feed/">RSS</a>, or via email through <a href="https://blogtrottr.com/" target="_blank" rel="noopener noreferrer" data-sn-subscribe="email">Blogtrottr</a> or <a href="https://www.feedrabbit.com/" target="_blank" rel="noopener noreferrer" data-sn-subscribe="email">Feedrabbit</a>.<span class="sn-notes-cursor" aria-hidden="true"></span>
+		</p>
+	</header>
 
 	<?php if ( ! $sn_searching ) : ?>
 	<hr class="sn-notes-rule" aria-hidden="true">
