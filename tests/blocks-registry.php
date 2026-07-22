@@ -79,7 +79,7 @@ signal_noise_register_block_editor_script();
 signal_noise_register_blocks();
 ok( isset( $GLOBALS['__reg_scripts']['signal-noise-blocks-editor'] ), 'editor script handle registered' );
 $deps = $GLOBALS['__reg_scripts']['signal-noise-blocks-editor'];
-foreach ( array( 'wp-blocks', 'wp-element', 'wp-block-editor' ) as $d ) {
+foreach ( array( 'wp-blocks', 'wp-element', 'wp-block-editor', 'wp-server-side-render' ) as $d ) {
 	ok( in_array( $d, $deps, true ), "editor script depends on $d" );
 }
 ok( count( $GLOBALS['__reg_blocks'] ) === 3, 'all three block dirs registered' );

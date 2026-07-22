@@ -17,7 +17,7 @@ function signal_noise_register_block_editor_script() {
 	wp_register_script(
 		'signal-noise-blocks-editor',
 		get_theme_file_uri( 'blocks/editor.js' ),
-		array( 'wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components' ),
+		array( 'wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components', 'wp-server-side-render' ),
 		wp_get_theme()->get( 'Version' ),
 		true
 	);

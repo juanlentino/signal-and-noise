@@ -2,6 +2,17 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.47.1] - 2026-07-21
+
+**Headline:** the pillar block stops looking broken (owner-reported same day): the card's fixed 48px number column clipped the new designations mid-digit ("No. 1.0..." behind the title, since the card is overflow:hidden — it was sized for the old two-character positional numbers), and the editor showed only a bare unstyled text line where the block should preview.
+
+### Fixed
+
+- [blocks/pillar-essays/style.css](blocks/pillar-essays/style.css): the number column is `auto` sized with `white-space: nowrap` on the designation, so "No. 1.01" (and any future "No. 10.02") renders whole on one line; pinned in [tests/pillar-essays-block.php](tests/pillar-essays-block.php).
+- [blocks/editor.js](blocks/editor.js): the pillar block's editor view now previews the REAL server render via ServerSideRender (`wp-server-side-render` added to the editor script deps in [inc/blocks-register.php](inc/blocks-register.php)); the static text line survives only as a fallback when the module is absent. Dep pinned in [tests/blocks-registry.php](tests/blocks-registry.php).
+
+> **Why PATCH:** two fixes to just-shipped v10.47.0 behavior; no new capability, no API change. Pairs with plugin v9.79.1 (the one-time designation seed).
+
 ## [10.47.0] - 2026-07-21
 
 **Headline:** pillar selection moves to per-Page meta owned by the plugin (flag `_sn_pillar`, free-text `_sn_pillar_designation` for the owner's editorial numbering: over-detection=1.00, cheap-option=1.01, as-substrate=2.00), and the rail leaves the /notes index to become the owner-placeable `signal-noise/pillar-essays` dynamic block, ready to drop into the /provenance/ hub Page.

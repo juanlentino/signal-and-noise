@@ -1,4 +1,4 @@
-( function ( blocks, element, blockEditor ) {
+( function ( blocks, element, blockEditor, serverSideRender ) {
 	'use strict';
 	var el = element.createElement;
 	var useBlockProps = blockEditor.useBlockProps;
@@ -37,13 +37,20 @@
 	} );
 
 	// Owner-placeable pillar rail. No attributes: render.php derives the
-	// live list server-side, so the editor shows a static placeholder.
+	// live list server-side, and the editor previews the REAL render via
+	// ServerSideRender (a bare text placeholder read as broken in v10.47.0,
+	// owner-reported). Static text stays only as a fallback when the
+	// server-side-render module is unavailable.
 	blocks.registerBlockType( 'signal-noise/pillar-essays', {
 		edit: function () {
-			var bp = useBlockProps( { className: 'sn-notes-pillars-section' } );
+			var bp = useBlockProps();
+			if ( serverSideRender ) {
+				return el( 'div', bp,
+					el( serverSideRender, { block: 'signal-noise/pillar-essays' } ) );
+			}
 			return el( 'div', bp,
 				'Pillar Essays: renders the live pillar essay rail from published designated Pages.' );
 		},
 		save: function () { return null; }
 	} );
-} )( window.wp.blocks, window.wp.element, window.wp.blockEditor );
+} )( window.wp.blocks, window.wp.element, window.wp.blockEditor, window.wp.serverSideRender );

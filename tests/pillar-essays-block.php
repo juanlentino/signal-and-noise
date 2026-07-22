@@ -97,8 +97,15 @@ $style = (string) file_get_contents( __DIR__ . '/../blocks/pillar-essays/style.c
 foreach ( array( '.sn-notes-pillars', '.sn-notes-pillar-number', '.sn-notes-pillar-cta', '.sn-notes-pillars-section .sn-notes-section-wrap', '.sn-notes-pillars-section .sn-notes-section-label', '.sn-notes-pillars-section .sn-notes-section-count', 'prefers-reduced-motion' ) as $needle ) {
 	ok( false !== strpos( $style, $needle ), "block style carries $needle" );
 }
+// v10.47.1 regression pins: a fixed 48px number column clipped "No. 1.01"
+// mid-digit (the card is overflow:hidden), and the bare-text editor
+// placeholder read as broken — the column must size to content and the
+// editor must preview the real render.
+ok( false !== strpos( $style, 'grid-template-columns: auto 1fr' ), 'number column sizes to the designation (auto, never a fixed px that clips)' );
+ok( preg_match( '/\.sn-notes-pillar-number\s*\{[^}]*white-space:\s*nowrap/s', $style ) === 1, 'designation never wraps inside the number column' );
 $editor_js = (string) file_get_contents( __DIR__ . '/../blocks/editor.js' );
 ok( false !== strpos( $editor_js, "registerBlockType( 'signal-noise/pillar-essays'" ), 'editor.js registers the block' );
+ok( false !== strpos( $editor_js, 'serverSideRender' ), 'editor preview uses ServerSideRender (not a bare text placeholder)' );
 $render_src = (string) file_get_contents( __DIR__ . '/../inc/page-notes-render.php' );
 ok( false === strpos( $render_src, 'sn-notes-pillar' ), 'the notes index no longer carries any pillar rail markup or CSS' );
 
