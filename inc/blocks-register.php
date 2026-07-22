@@ -1,6 +1,6 @@
 <?php
 /**
- * Signal & Noise — custom block registration (sidenote, pull-quote).
+ * Signal & Noise — custom block registration (sidenote, pull-quote, pillar-essays).
  *
  * Buildless dynamic blocks. editorScript is a manually-registered handle with
  * explicit deps — NOT a file: path (which would load with empty deps and throw
@@ -26,6 +26,7 @@ function signal_noise_register_block_editor_script() {
 function signal_noise_register_blocks() {
 	register_block_type( __DIR__ . '/../blocks/sidenote' );
 	register_block_type( __DIR__ . '/../blocks/pull-quote' );
+	register_block_type( __DIR__ . '/../blocks/pillar-essays' );
 }
 
 function signal_noise_block_category( $categories ) {

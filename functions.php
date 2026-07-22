@@ -16,7 +16,7 @@
  *   inc/template-maintenance.php — FSE template-override purge + sn_purge_all_caches_result/sn_clear_template_overrides_result filter listeners
  *   inc/page-notes-template.php  — template_include override for /notes route; includes page-notes-render.php
  *   inc/patterns.php             — Block Pattern category registration
- *   inc/blocks-register.php      — custom sidenote + pull-quote dynamic blocks (v9.11.0)
+ *   inc/blocks-register.php      — custom sidenote + pull-quote + pillar-essays dynamic blocks (v9.11.0, pillar-essays v10.47.0)
  *   inc/blocks-view-transitions.php — view-transition opt-in for block markup
  *   inc/abilities-registration.php — 15 WP 7.0 Abilities (theme-owned: 10 read + 5 generative; v9.1.1, get-latest-theme-tag added v9.9.0, get-seo-route-meta/get-llms-txt added v10.29.0)
  *   inc/post-frontmatter.php     — long-form post frontmatter rendering

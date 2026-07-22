@@ -144,6 +144,19 @@ function sn_theme_allowed_blocks( $allowed, $context ) {
 	// this site. Keep in sync if the companion plugin ships more author-facing blocks.
 	$companion = array( 'signal-noise/scheduled' );
 
-	return array_values( array_unique( array_merge( $used, $authoring, $contact, $companion ) ) );
+	// The theme's OWN blocks (inc/blocks-register.php). pillar-essays is
+	// owner-placeable on the /provenance/ hub Page, a DB CMS page edited in
+	// this curated post editor: curating it out would make the rail
+	// uninsertable (v10.47.0). sidenote + pull-quote were a pre-existing gap
+	// in the $used enumeration; they appear in patterns/sidenote.php and
+	// patterns/pull-quote.php, so the "union of every block in patterns"
+	// mandate above already owed them a seat.
+	$theme_blocks = array(
+		'signal-noise/sidenote',
+		'signal-noise/pull-quote',
+		'signal-noise/pillar-essays',
+	);
+
+	return array_values( array_unique( array_merge( $used, $authoring, $contact, $companion, $theme_blocks ) ) );
 }
 add_filter( 'allowed_block_types_all', 'sn_theme_allowed_blocks', 10, 2 );

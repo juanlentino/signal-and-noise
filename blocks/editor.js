@@ -35,4 +35,15 @@
 		},
 		save: function () { return null; }
 	} );
+
+	// Owner-placeable pillar rail. No attributes: render.php derives the
+	// live list server-side, so the editor shows a static placeholder.
+	blocks.registerBlockType( 'signal-noise/pillar-essays', {
+		edit: function () {
+			var bp = useBlockProps( { className: 'sn-notes-pillars-section' } );
+			return el( 'div', bp,
+				'Pillar Essays: renders the live pillar essay rail from published designated Pages.' );
+		},
+		save: function () { return null; }
+	} );
 } )( window.wp.blocks, window.wp.element, window.wp.blockEditor );

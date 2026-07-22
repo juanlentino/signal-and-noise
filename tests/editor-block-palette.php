@@ -131,6 +131,14 @@ ha_true( in_array( 'fluentfom/guten-block', $result, true ), 'allowlist includes
 // block is curated out of the page/post inserter and flagged not-allowed on paste.
 ha_true( in_array( 'signal-noise/scheduled', $result, true ), 'allowlist includes the companion scheduled block (signal-noise/scheduled)' );
 
+// v10.47.0: the theme's OWN blocks. pillar-essays must be insertable on the
+// /provenance/ hub Page (a DB CMS page edited in the curated post editor) or
+// the owner-placeable rail is dead on arrival; sidenote + pull-quote appear
+// in patterns/*.php, which the $used enumeration mandate already covers.
+foreach ( array( 'signal-noise/sidenote', 'signal-noise/pull-quote', 'signal-noise/pillar-essays' ) as $sn_theme_block ) {
+	ha_true( in_array( $sn_theme_block, $result, true ), "allowlist includes the theme block: {$sn_theme_block}" );
+}
+
 // FIX 6: the reusable / synced Patterns block must stay insertable, else any
 // synced pattern the author created vanishes from the inserter.
 ha_true( in_array( 'core/block', $result, true ), 'FIX 6: allowlist includes core/block (synced/reusable Pattern)' );

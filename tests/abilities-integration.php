@@ -555,6 +555,7 @@ ap_eq( true, $out['is_block_theme'], 'get-theme-version: is_block_theme true' );
 // get-page-notes-pillars
 $out = wp_get_ability( 'signal-and-noise/get-page-notes-pillars' )->execute( array() );
 ap_true( isset( $out['pillars'] ) && count( $out['pillars'] ) === 2, 'get-page-notes-pillars: 2 pillars' );
+ap_true( isset( $out['pillars'][0]['designation'] ), 'get-page-notes-pillars: designation field present (additive v10.47.0)' );
 
 // get-reading-time-for-slug
 $out = wp_get_ability( 'signal-and-noise/get-reading-time-for-slug' )->execute( array( 'slug' => 'provenance/over-detection' ) );

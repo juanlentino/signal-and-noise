@@ -14,7 +14,8 @@
  *   - sn_theme_parse_ai_json() — strips optional markdown fences then
  *     json_decodes; safe to call on any model output.
  *   - sn_theme_pillar_descriptors() — canonical pillar list (consumed by
- *     abilities-content.php for get-page-notes-pillars).
+ *     abilities-content.php for get-page-notes-pillars, the command
+ *     palette, and the signal-noise/pillar-essays block).
  *   - sn_theme_perm_read() / sn_theme_perm_edit_posts() — named permission
  *     callables replacing the closure pattern. Lets every split file
  *     reference 'sn_theme_perm_read' as a string callable in
@@ -92,33 +93,86 @@ function sn_theme_parse_ai_json( $raw ) {
 }
 
 /**
- * Returns the canonical SN /notes pillar essay descriptors.
+ * Parse an editorial pillar designation into numeric (major, minor) parts.
  *
- * Hardcoded here (not derived from a DB query) because the pillars
- * are intentionally curated, not editorial — they frame the /notes
- * catalog and are mirrored in inc/page-notes-render.php HTML.
- * Mirroring them in PHP rather than parsing the HTML keeps both
- * surfaces editable and authoritative.
+ * The designation is the owner's free-text numbering stored in the
+ * plugin-owned '_sn_pillar_designation' meta (over-detection=1.00,
+ * cheap-option=1.01, as-substrate=2.00). Split on the FIRST dot; each
+ * part compares as a NUMBER, never a string ("1.10" must sort after
+ * "1.09"; a bare "2" parses as (2, 0)).
  *
- * Consumed by sn_theme_ability_page_notes_pillars() in
- * inc/abilities-content.php after the v9.1.7 split.
+ * @since 10.47.0
+ * @param string $designation Trimmed designation text.
+ * @return array{0:float, 1:float}|null Numeric parts, or null when the
+ *                                      text does not parse as major.minor.
+ */
+function sn_theme_pillar_designation_parts( $designation ) {
+	$designation = (string) $designation;
+	if ( '' === $designation ) {
+		return null;
+	}
+	$parts = explode( '.', $designation, 2 );
+	$major = trim( $parts[0] );
+	$minor = isset( $parts[1] ) ? trim( $parts[1] ) : '0';
+	if ( ! is_numeric( $major ) || ! is_numeric( $minor ) ) {
+		return null;
+	}
+	return array( (float) $major, (float) $minor );
+}
+
+/**
+ * Returns the canonical SN pillar essay descriptors.
+ *
+ * v10.47.0: pillar selection is per-Page meta OWNED BY THE PLUGIN (the
+ * theme reads the literal keys; precedent: the _sn_prov_uid twin):
+ *
+ *   '_sn_pillar' = '1'         flags a published Page as a pillar essay.
+ *   '_sn_pillar_designation'   free-text editorial numbering ("1.01").
+ *
+ * PRIMARY derivation: all published Pages carrying _sn_pillar = '1'.
+ * When ANY flagged Page exists, that set IS the pillar set (no 'verify'
+ * exclusion here: verify simply is not flagged). Slug comes from
+ * get_page_uri() trimmed of slashes so an essay outside /provenance/
+ * works someday. Ordering: descriptors whose designation parses as
+ * major.minor first, numerically by (major, minor); empty/unparseable
+ * designations after, date ASC among themselves. Sort is stable.
+ *
+ * FALLBACK (zero flagged Pages anywhere): the v10.46.0 derivation, the
+ * published child Pages of the /provenance/ hub, date ASC, the 'verify'
+ * how-to child excluded, designation '' on every entry. Keeps the live
+ * site identical until the owner flags Pages.
+ *
+ * Dek: the Page excerpt, tag-stripped. An empty excerpt stays an empty
+ * dek (no fabricated copy). Honest empty when seams or sources are
+ * absent. Consumed by the signal-noise/pillar-essays block, the command
+ * palette, and sn_theme_ability_page_notes_pillars() in
+ * inc/abilities-content.php.
  *
  * @since 9.1.0
- * @return array<int, array{slug:string, title:string, dek:string, last_path:string}>
+ * @return array<int, array{slug:string, title:string, dek:string, last_path:string, date:string, designation:string}>
  */
 function sn_theme_pillar_descriptors() {
-	// v10.46.0: DERIVED from the published child Pages of the /provenance/
-	// hub, not hardcoded. The hardcoded two-entry array meant a newly
-	// published essay (/provenance/cheap-option/, live 2026-07-16) appeared
-	// NOWHERE — not the notes-index rail, not the palette, not the ability —
-	// until a theme release listed it (owner-caught live 2026-07-21).
-	// Content publishes → the rail grows; that is the whole contract.
-	//
-	// Ordering: date ASC, so the earliest essay keeps № 01 and a new essay
-	// appends. Dek: the Page excerpt, tag-stripped — an empty excerpt stays
-	// an empty dek (no fabricated copy). The 'verify' child is the how-to
-	// page, never a pillar. Honest empty when the hub or seams are absent.
-	if ( ! function_exists( 'get_page_by_path' ) || ! function_exists( 'get_posts' ) ) {
+	if ( ! function_exists( 'get_posts' ) ) {
+		return array();
+	}
+
+	$flagged = get_posts( array(
+		'post_type'      => 'page',
+		'post_status'    => 'publish',
+		'has_password'   => false, // A password-protected Page's title/excerpt is gated content; it never surfaces here.
+		'posts_per_page' => -1,
+		'no_found_rows'  => true,
+		'meta_key'       => '_sn_pillar', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- bounded corpus (site Pages), single indexed lookup.
+		'meta_value'     => '1', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
+	) );
+	if ( is_array( $flagged ) && array() !== $flagged ) {
+		return sn_theme_pillar_sort( array_values( array_filter( array_map( 'sn_theme_pillar_descriptor_from_page', $flagged ) ) ) );
+	}
+
+	// FALLBACK: the v10.46.0 hub-children derivation, unchanged in
+	// behavior. Content under /provenance/ keeps surfacing until the
+	// owner starts flagging Pages.
+	if ( ! function_exists( 'get_page_by_path' ) ) {
 		return array();
 	}
 	$hub = get_page_by_path( 'provenance' );
@@ -129,6 +183,7 @@ function sn_theme_pillar_descriptors() {
 		'post_type'      => 'page',
 		'post_parent'    => (int) $hub->ID,
 		'post_status'    => 'publish',
+		'has_password'   => false, // Same confidentiality gate as the flagged path.
 		'orderby'        => 'date',
 		'order'          => 'ASC',
 		'posts_per_page' => -1,
@@ -143,19 +198,96 @@ function sn_theme_pillar_descriptors() {
 		if ( '' === $name || 'verify' === $name ) {
 			continue;
 		}
-		$dek = (string) ( $page->post_excerpt ?? '' );
-		if ( '' !== $dek && function_exists( 'wp_strip_all_tags' ) ) {
-			$dek = trim( wp_strip_all_tags( $dek ) );
-		}
 		$out[] = array(
-			'slug'      => 'provenance/' . $name,
-			'title'     => (string) ( $page->post_title ?? '' ),
-			'dek'       => $dek,
-			'last_path' => $name,
-			'date'      => (string) ( $page->post_date ?? '' ),
+			'slug'        => 'provenance/' . $name,
+			'title'       => (string) ( $page->post_title ?? '' ),
+			'dek'         => sn_theme_pillar_dek( $page ),
+			'last_path'   => $name,
+			'date'        => (string) ( $page->post_date ?? '' ),
+			'designation' => '',
 		);
 	}
 	return $out;
+}
+
+/**
+ * Map one flagged Page to a pillar descriptor (primary path only).
+ *
+ * @since 10.47.0
+ * @param object $page Page post object.
+ * @return array|null Descriptor, or null for a nameless page.
+ */
+function sn_theme_pillar_descriptor_from_page( $page ) {
+	$name = (string) ( $page->post_name ?? '' );
+	if ( '' === $name ) {
+		return null;
+	}
+	$slug = $name;
+	if ( function_exists( 'get_page_uri' ) ) {
+		$uri = trim( (string) get_page_uri( $page ), '/' );
+		if ( '' !== $uri ) {
+			$slug = $uri;
+		}
+	}
+	$designation = '';
+	if ( function_exists( 'get_post_meta' ) && isset( $page->ID ) ) {
+		$designation = trim( (string) get_post_meta( (int) $page->ID, '_sn_pillar_designation', true ) );
+	}
+	return array(
+		'slug'        => $slug,
+		'title'       => (string) ( $page->post_title ?? '' ),
+		'dek'         => sn_theme_pillar_dek( $page ),
+		'last_path'   => $name,
+		'date'        => (string) ( $page->post_date ?? '' ),
+		'designation' => $designation,
+	);
+}
+
+/**
+ * Tag-stripped dek from a Page excerpt. Empty stays empty.
+ *
+ * @since 10.47.0
+ * @param object $page Page post object.
+ * @return string
+ */
+function sn_theme_pillar_dek( $page ) {
+	$dek = (string) ( $page->post_excerpt ?? '' );
+	if ( '' !== $dek && function_exists( 'wp_strip_all_tags' ) ) {
+		$dek = trim( wp_strip_all_tags( $dek ) );
+	}
+	return $dek;
+}
+
+/**
+ * Stable sort for pillar descriptors: numerically designated entries
+ * first by (major, minor), then undesignated entries date ASC.
+ *
+ * usort() is stable on PHP 8.0+ (the theme's floor), but the original
+ * index rides along as an explicit final tiebreak anyway so equal keys
+ * can never reorder.
+ *
+ * @since 10.47.0
+ * @param array $descriptors Pillar descriptors.
+ * @return array Sorted descriptors.
+ */
+function sn_theme_pillar_sort( $descriptors ) {
+	$designated   = array();
+	$undesignated = array();
+	foreach ( $descriptors as $i => $d ) {
+		$parts = sn_theme_pillar_designation_parts( $d['designation'] );
+		if ( null !== $parts ) {
+			$designated[] = array( $parts[0], $parts[1], $i, $d );
+		} else {
+			$undesignated[] = array( (string) $d['date'], $i, $d );
+		}
+	}
+	usort( $designated, function ( $a, $b ) {
+		return ( $a[0] <=> $b[0] ) ?: ( $a[1] <=> $b[1] ) ?: ( $a[2] <=> $b[2] );
+	} );
+	usort( $undesignated, function ( $a, $b ) {
+		return strcmp( $a[0], $b[0] ) ?: ( $a[1] <=> $b[1] );
+	} );
+	return array_merge( array_column( $designated, 3 ), array_column( $undesignated, 2 ) );
 }
 
 /**

@@ -2,11 +2,13 @@
 /**
  * Standalone fixture tests for the custom blocks (v9.11.0).
  *
- * Validates the two dynamic blocks (signal-noise/sidenote, signal-noise/pull-quote):
+ * Validates the theme's dynamic blocks (signal-noise/sidenote,
+ * signal-noise/pull-quote, and since v10.47.0 signal-noise/pillar-essays):
  * block.json field correctness (apiVersion 3, registered editorScript handle —
  * NOT a file: path that loads with empty deps → "wp is undefined"), behavioral
  * render output (.sn-sidenote / .sn-pull-quote, slot omission when empty), and the
- * registration wiring (editor-script handle + deps, both block dirs, block category).
+ * registration wiring (editor-script handle + deps, all block dirs, block category).
+ * Pillar-essays render behavior lives in tests/pillar-essays-block.php.
  * Mirrors tests/patterns-registry.php.
  *
  * @since theme v9.11.0
@@ -32,7 +34,7 @@ function wp_kses_post( $s ) { return $s; }
 $blocks_dir = __DIR__ . '/../blocks';
 
 // block.json validity + fields.
-foreach ( array( 'sidenote', 'pull-quote' ) as $slug ) {
+foreach ( array( 'sidenote', 'pull-quote', 'pillar-essays' ) as $slug ) {
 	$json = json_decode( file_get_contents( "$blocks_dir/$slug/block.json" ), true );
 	ok( is_array( $json ), "$slug/block.json parses as JSON" );
 	ok( $json['name'] === "signal-noise/$slug", "$slug name is signal-noise/$slug" );
@@ -45,7 +47,7 @@ foreach ( array( 'sidenote', 'pull-quote' ) as $slug ) {
 	// defaults — WP does NOT source `source:html` attributes server-side (verified
 	// vs wp-includes/class-wp-block.php). A source:html attr here would arrive
 	// EMPTY in render.php and drop all content on the front end. Lock it to plain.
-	foreach ( (array) $json['attributes'] as $attr_name => $attr_def ) {
+	foreach ( (array) ( $json['attributes'] ?? array() ) as $attr_name => $attr_def ) {
 		ok( ! isset( $attr_def['source'] ), "$slug/$attr_name is a plain attribute (no source:html → populated in render.php server-side)" );
 	}
 }
@@ -80,7 +82,8 @@ $deps = $GLOBALS['__reg_scripts']['signal-noise-blocks-editor'];
 foreach ( array( 'wp-blocks', 'wp-element', 'wp-block-editor' ) as $d ) {
 	ok( in_array( $d, $deps, true ), "editor script depends on $d" );
 }
-ok( count( $GLOBALS['__reg_blocks'] ) === 2, 'both block dirs registered' );
+ok( count( $GLOBALS['__reg_blocks'] ) === 3, 'all three block dirs registered' );
+ok( ! empty( array_filter( $GLOBALS['__reg_blocks'], fn( $d ) => false !== strpos( (string) $d, 'pillar-essays' ) ) ), 'pillar-essays block dir registered' );
 $cats = signal_noise_block_category( array() );
 ok( ! empty( array_filter( $cats, fn( $c ) => ( $c['slug'] ?? '' ) === 'signal-noise' ) ), 'block_categories_all adds a signal-noise category' );
 

@@ -2,6 +2,26 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.47.0] - 2026-07-21
+
+**Headline:** pillar selection moves to per-Page meta owned by the plugin (flag `_sn_pillar`, free-text `_sn_pillar_designation` for the owner's editorial numbering: over-detection=1.00, cheap-option=1.01, as-substrate=2.00), and the rail leaves the /notes index to become the owner-placeable `signal-noise/pillar-essays` dynamic block, ready to drop into the /provenance/ hub Page.
+
+### New
+
+- [blocks/pillar-essays/](blocks/pillar-essays/): new dynamic block rendering the pillar rail anywhere the owner places it. Self-contained styling (the rail CSS moved out of the notes-index inline stylesheet into the block's own style.css, with block-scoped copies of the section-header rules so they cannot fight the notes index's instances). The number line renders the editorial designation when set ("№ 1.01"), positional %02d only as fallback; the header count is a plain "N essays" (the old "03 / 03" positional counter retired: designations make it a false positional claim). Honest empty: no pillars, no output. Pinned in [tests/pillar-essays-block.php](tests/pillar-essays-block.php).
+- [inc/abilities-helpers.php](inc/abilities-helpers.php): `sn_theme_pillar_descriptors()` now derives primarily from published Pages carrying the plugin-owned `_sn_pillar` = '1' meta (precedent: the `_sn_prov_uid` twin). Slug comes from the page URI so an essay outside /provenance/ works someday. Sort: designations parsing as major.minor first, compared numerically part by part ("1.10" after "1.09", a bare "2" as (2,0)); undesignated entries after, date ASC. Stable. Zero flagged Pages anywhere keeps the v10.46.0 hub-children fallback byte-for-byte (date ASC, 'verify' excluded), so the live site is identical until the owner flags Pages. Every descriptor now carries a `designation` key. Pinned in [tests/pillar-descriptors-dynamic.php](tests/pillar-descriptors-dynamic.php).
+- [inc/abilities-content.php](inc/abilities-content.php): get-page-notes-pillars now returns the `designation` field per pillar (additive output plus schema).
+
+### Changed
+
+- [inc/editor-block-palette.php](inc/editor-block-palette.php): the curated post/page inserter now includes the theme's own blocks. Required for pillar-essays (the /provenance/ hub is a DB CMS page edited in the curated editor; without the seat the owner-placeable block is uninsertable) and closes a pre-existing enumeration gap for sidenote and pull-quote, which appear in patterns/ and were owed a seat by the "union of every block in patterns" mandate.
+
+### Removed
+
+- [inc/page-notes-render.php](inc/page-notes-render.php): the "Pillar Essays — Featured" rail, its derivation, and all rail CSS leave the /notes index (markup and styles now live in the block). The hero+pillars two-column desktop composition collapses to a full-width hero, and the search-state specificity hack that existed only to hide the pillar column simplifies away. Search, tag, and index labels, counts, and clear links are unchanged.
+
+> **Why MINOR:** a new user-visible capability (an owner-placeable pillar rail block with editorial numbering) plus meta-driven pillar selection; nothing public was removed or renamed (the /notes rail's departure is the feature, and the descriptor/ability surfaces stay additive with a byte-identical fallback until Pages are flagged).
+
 ## [10.46.0] - 2026-07-21: Pillar essays derive from content — publishing one now surfaces it
 
 **Headline:** the notes index's "Pillar Essays — Featured" rail and the pillar descriptors behind it were hardcoded to two essays with a literal "02 / 02" counter — the newly published third essay (/provenance/cheap-option/, the "1.01" essay) appeared nowhere (owner-caught live). Descriptors now derive from the published child Pages of the /provenance/ hub: content publishes → the rail grows.

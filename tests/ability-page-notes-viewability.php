@@ -12,7 +12,7 @@ define( 'ABSPATH', '/' );
 if ( ! defined( 'OBJECT' ) ) { define( 'OBJECT', 'OBJECT' ); }
 if ( ! function_exists( 'add_action' ) ) { function add_action() {} }
 
-function sn_theme_pillar_descriptors() { return array( array( 'slug' => 'p1', 'title' => 'P1', 'dek' => 'd', 'last_path' => 'prov-p1' ) ); }
+function sn_theme_pillar_descriptors() { return array( array( 'slug' => 'p1', 'title' => 'P1', 'dek' => 'd', 'last_path' => 'prov-p1', 'date' => '2026-01-01 00:00:00', 'designation' => '1.00' ) ); }
 function sn_notes_reading_time_for_slug( $s ) { return '5 min'; }
 function home_url( $p = '' ) { return $p; }
 $GLOBALS['__viewable'] = true;
@@ -35,6 +35,10 @@ $GLOBALS['__viewable'] = false;
 $out = sn_theme_ability_page_notes_pillars();
 ok( isset( $out['pillars'][0]['last_modified'] ) && '' === $out['pillars'][0]['last_modified'],
 	'non-viewable (draft/private) pillar → last_modified withheld (empty string)' );
+
+// v10.47.0: the editorial designation rides the ability output verbatim.
+ok( isset( $out['pillars'][0]['designation'] ) && '1.00' === $out['pillars'][0]['designation'],
+	'designation passes through the ability output' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

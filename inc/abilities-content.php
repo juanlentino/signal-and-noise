@@ -84,7 +84,7 @@ function sn_theme_register_content_abilities() {
 
 	wp_register_ability( 'signal-and-noise/get-page-notes-pillars', array(
 		'label'               => 'List /notes pillar essays',
-		'description'         => "Returns metadata for the SN /notes catalog pillar essays — slug, title, URL, summary dek, reading time, last modified. The pillars are project-defined in inc/page-notes-render.php and frame the /notes index.",
+		'description'         => "Returns metadata for the SN pillar essays — slug, title, URL, summary dek, reading time, last modified, editorial designation. Pillars derive from published Pages the plugin flags with '_sn_pillar' meta (hub-children fallback) and render via the signal-noise/pillar-essays block.",
 		'category'            => 'content',
 		'permission_callback' => 'sn_theme_perm_read',
 		'execute_callback'    => 'sn_theme_ability_page_notes_pillars',
@@ -109,6 +109,7 @@ function sn_theme_register_content_abilities() {
 							'summary'              => array( 'type' => 'string', 'description' => 'Editorial dek summarizing the pillar.' ),
 							'reading_time_minutes' => array( 'type' => 'integer', 'description' => 'Estimated reading time in minutes; 0 if the slug does not resolve to a post.', 'minimum' => 0 ),
 							'last_modified'        => array( 'type' => 'string', 'description' => 'YYYY-MM-DD of the resolved post\'s last modification; empty string if no matching post was found.' ),
+							'designation'          => array( 'type' => 'string', 'description' => 'Owner editorial numbering from the _sn_pillar_designation Page meta (e.g. "1.01"); empty string when unset.' ),
 						),
 					),
 				),
@@ -274,6 +275,7 @@ function sn_theme_ability_page_notes_pillars() {
 				'summary'              => $p['dek'],
 				'reading_time_minutes' => $minutes,
 				'last_modified'        => $last_modified,
+				'designation'          => isset( $p['designation'] ) ? (string) $p['designation'] : '',
 			);
 		}
 

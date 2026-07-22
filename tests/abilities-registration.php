@@ -716,6 +716,9 @@ ha_eq( 'Provenance Over Detection', $result['pillars'][0]['title'], 'pillar 1 ti
 ha_true( false !== strpos( $result['pillars'][0]['url'], '/provenance/over-detection' ), 'pillar 1 url contains slug' );
 ha_eq( 'provenance/as-substrate', $result['pillars'][1]['slug'], 'pillar 2 slug' );
 ha_true( isset( $result['pillars'][0]['reading_time_minutes'] ), 'reading_time_minutes present' );
+// v10.47.0: designation is additive output — '' on the hub-children fallback
+// path this fixture seeds (no _sn_pillar-flagged Pages).
+ha_true( isset( $result['pillars'][0]['designation'] ) && '' === $result['pillars'][0]['designation'], 'designation present, empty on the fallback path' );
 
 // ─── Test: get-reading-time-for-slug ─────────────────────────────
 echo "\nTest signal-and-noise/get-reading-time-for-slug\n";
