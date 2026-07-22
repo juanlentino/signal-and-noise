@@ -107,20 +107,55 @@ function sn_theme_parse_ai_json( $raw ) {
  * @return array<int, array{slug:string, title:string, dek:string, last_path:string}>
  */
 function sn_theme_pillar_descriptors() {
-	return array(
-		array(
-			'slug'      => 'provenance/over-detection',
-			'title'     => 'Provenance Over Detection',
-			'dek'       => "Detection chases what isn't. Provenance proves what is.",
-			'last_path' => 'over-detection',
-		),
-		array(
-			'slug'      => 'provenance/as-substrate',
-			'title'     => 'Provenance as Substrate',
-			'dek'       => 'Music files need fingerprints, not name tags.',
-			'last_path' => 'as-substrate',
-		),
-	);
+	// v10.46.0: DERIVED from the published child Pages of the /provenance/
+	// hub, not hardcoded. The hardcoded two-entry array meant a newly
+	// published essay (/provenance/cheap-option/, live 2026-07-16) appeared
+	// NOWHERE — not the notes-index rail, not the palette, not the ability —
+	// until a theme release listed it (owner-caught live 2026-07-21).
+	// Content publishes → the rail grows; that is the whole contract.
+	//
+	// Ordering: date ASC, so the earliest essay keeps № 01 and a new essay
+	// appends. Dek: the Page excerpt, tag-stripped — an empty excerpt stays
+	// an empty dek (no fabricated copy). The 'verify' child is the how-to
+	// page, never a pillar. Honest empty when the hub or seams are absent.
+	if ( ! function_exists( 'get_page_by_path' ) || ! function_exists( 'get_posts' ) ) {
+		return array();
+	}
+	$hub = get_page_by_path( 'provenance' );
+	if ( ! $hub || empty( $hub->ID ) ) {
+		return array();
+	}
+	$children = get_posts( array(
+		'post_type'      => 'page',
+		'post_parent'    => (int) $hub->ID,
+		'post_status'    => 'publish',
+		'orderby'        => 'date',
+		'order'          => 'ASC',
+		'posts_per_page' => -1,
+		'no_found_rows'  => true,
+	) );
+	if ( ! is_array( $children ) ) {
+		return array();
+	}
+	$out = array();
+	foreach ( $children as $page ) {
+		$name = (string) ( $page->post_name ?? '' );
+		if ( '' === $name || 'verify' === $name ) {
+			continue;
+		}
+		$dek = (string) ( $page->post_excerpt ?? '' );
+		if ( '' !== $dek && function_exists( 'wp_strip_all_tags' ) ) {
+			$dek = trim( wp_strip_all_tags( $dek ) );
+		}
+		$out[] = array(
+			'slug'      => 'provenance/' . $name,
+			'title'     => (string) ( $page->post_title ?? '' ),
+			'dek'       => $dek,
+			'last_path' => $name,
+			'date'      => (string) ( $page->post_date ?? '' ),
+		);
+	}
+	return $out;
 }
 
 /**

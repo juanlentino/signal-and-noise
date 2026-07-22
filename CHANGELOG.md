@@ -2,6 +2,21 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.46.0] - 2026-07-21: Pillar essays derive from content — publishing one now surfaces it
+
+**Headline:** the notes index's "Pillar Essays — Featured" rail and the pillar descriptors behind it were hardcoded to two essays with a literal "02 / 02" counter — the newly published third essay (/provenance/cheap-option/, the "1.01" essay) appeared nowhere (owner-caught live). Descriptors now derive from the published child Pages of the /provenance/ hub: content publishes → the rail grows.
+
+### New
+
+- [inc/abilities-helpers.php](inc/abilities-helpers.php): `sn_theme_pillar_descriptors()` queries the /provenance/ hub's published children, date ASC (the earliest essay keeps № 01, new essays append), excludes the `verify` how-to page, and maps each Page to {slug, title, dek (tag-stripped excerpt — an empty excerpt stays empty, no fabricated copy), last_path, date}. Feeds the notes-index rail, the command palette, and the get-page-notes-pillars ability from one source. Pinned in [tests/pillar-descriptors-dynamic.php](tests/pillar-descriptors-dynamic.php).
+- [inc/page-notes-render.php](inc/page-notes-render.php): the rail is now a loop — dynamic numbering, dynamic "0N / 0N" counter, dek from the Page excerpt, per-essay reading time. The eyebrow deliberately drops the hardcoded month labels ("March 2026"/"May 2026"): the Page dates are CMS-flip artifacts, and printing them would fabricate essay dates.
+
+### Changed
+
+- [tests/abilities-registration.php](tests/abilities-registration.php) + [tests/abilities-integration.php](tests/abilities-integration.php): pillar-consumer tests now seed the hub + child Pages (the dynamic source) instead of relying on the retired hardcode.
+
+> **Why MINOR:** a user-visible capability change — the pillar rail is content-driven; publishing an essay under /provenance/ is now sufficient to surface it.
+
 ## [10.45.0] - 2026-07-21: The .json twin republishes the Note uid — paste-a-URL verification becomes possible
 
 **Headline:** a Note's public `.json` twin now carries `provenance.note_uid` and points `provenance.verify_url` at that Note's own /verify docket, giving the verifier (and any external tool) the key it needs to resolve a pasted Note URL into a credential; plus tap-target sizing fixes across the discography and note frontmatter.

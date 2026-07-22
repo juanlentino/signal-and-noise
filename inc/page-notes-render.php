@@ -985,36 +985,38 @@ echo $sn_header_html;
 		</header>
 
 		<?php if ( ! $sn_filtered ) : ?>
+		<?php
+		// v10.46.0: the rail derives from sn_theme_pillar_descriptors() —
+		// published /provenance/ child Pages — instead of hardcoded markup
+		// (which held a new essay invisible until a theme release). The
+		// eyebrow deliberately carries NO month: the Page dates are CMS-flip
+		// artifacts, and printing them would fabricate essay dates.
+		$sn_pillars = function_exists( 'sn_theme_pillar_descriptors' ) ? sn_theme_pillar_descriptors() : array();
+		?>
+		<?php if ( $sn_pillars ) : ?>
 		<section class="sn-notes-pillars-section" aria-labelledby="sn-pillars-heading">
 			<div class="sn-notes-section-wrap">
 				<p class="sn-notes-section-label" id="sn-pillars-heading">Pillar Essays &mdash; Featured</p>
-				<span class="sn-notes-section-count">02 / 02</span>
+				<span class="sn-notes-section-count"><?php echo esc_html( sprintf( '%02d / %02d', count( $sn_pillars ), count( $sn_pillars ) ) ); ?></span>
 			</div>
 
 			<div class="sn-notes-pillars">
-
+				<?php foreach ( $sn_pillars as $sn_pillar_i => $sn_pillar ) : ?>
 				<article class="sn-notes-pillar">
-					<span class="sn-notes-pillar-number" aria-hidden="true">&#8470; 01</span>
+					<span class="sn-notes-pillar-number" aria-hidden="true">&#8470; <?php echo esc_html( sprintf( '%02d', $sn_pillar_i + 1 ) ); ?></span>
 					<div class="sn-notes-pillar-body">
-						<p class="sn-notes-pillar-eyebrow">Pillar Essay &middot; March 2026 &middot; <?php echo esc_html( sn_notes_reading_time_for_slug( 'provenance/over-detection' ) ); ?></p>
-						<h2 class="sn-notes-pillar-title">Provenance Over Detection</h2>
-						<p class="sn-notes-pillar-dek">Detection chases what isn&rsquo;t. Provenance proves what is.</p>
-						<a class="sn-notes-pillar-cta" href="/provenance/over-detection/">Read essay</a>
+						<p class="sn-notes-pillar-eyebrow">Pillar Essay &middot; <?php echo esc_html( sn_notes_reading_time_for_slug( $sn_pillar['slug'] ) ); ?></p>
+						<h2 class="sn-notes-pillar-title"><?php echo esc_html( $sn_pillar['title'] ); ?></h2>
+						<?php if ( '' !== $sn_pillar['dek'] ) : ?>
+						<p class="sn-notes-pillar-dek"><?php echo esc_html( $sn_pillar['dek'] ); ?></p>
+						<?php endif; ?>
+						<a class="sn-notes-pillar-cta" href="<?php echo esc_url( '/' . $sn_pillar['slug'] . '/' ); ?>">Read essay</a>
 					</div>
 				</article>
-
-				<article class="sn-notes-pillar">
-					<span class="sn-notes-pillar-number" aria-hidden="true">&#8470; 02</span>
-					<div class="sn-notes-pillar-body">
-						<p class="sn-notes-pillar-eyebrow">Pillar Essay &middot; May 2026 &middot; <?php echo esc_html( sn_notes_reading_time_for_slug( 'provenance/as-substrate' ) ); ?></p>
-						<h2 class="sn-notes-pillar-title">Provenance as Substrate</h2>
-						<p class="sn-notes-pillar-dek">Music files need fingerprints, not name tags.</p>
-						<a class="sn-notes-pillar-cta" href="/provenance/as-substrate/">Read essay</a>
-					</div>
-				</article>
-
+				<?php endforeach; ?>
 			</div>
 		</section>
+		<?php endif; ?>
 		<?php endif; ?>
 
 	</div>
