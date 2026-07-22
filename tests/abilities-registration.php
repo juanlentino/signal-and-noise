@@ -236,6 +236,16 @@ if ( ! function_exists( 'get_page_by_path' ) ) {
 		return null;
 	}
 }
+// v10.46.0: the dynamic pillar descriptors query the /provenance/ hub's
+// published child Pages; answer from a seedable global.
+if ( ! function_exists( 'get_posts' ) ) {
+	function get_posts( $args ) {
+		if ( 'page' === ( $args['post_type'] ?? '' ) && ! empty( $args['post_parent'] ) ) {
+			return $GLOBALS['__test_page_children'] ?? array();
+		}
+		return array();
+	}
+}
 // v9.15.6: get-reading-time-for-slug is gated public-only on is_post_publicly_viewable.
 if ( ! function_exists( 'is_post_publicly_viewable' ) ) {
 	function is_post_publicly_viewable( $post ) {
@@ -655,6 +665,18 @@ ha_reset();
 $GLOBALS['__test_reading_times'] = array(
 	'provenance/over-detection' => '7 min',
 	'provenance/as-substrate'   => '6 min',
+);
+
+// v10.46.0: descriptors are DERIVED — seed the /provenance/ hub page and its
+// published children (the dynamic source), replacing the retired hardcode.
+$GLOBALS['__test_posts'][1490] = array(
+	'ID' => 1490, 'post_name' => 'provenance', 'post_title' => 'Provenance',
+	'post_type' => 'page', 'post_status' => 'publish',
+);
+$GLOBALS['__test_page_children'] = array(
+	(object) array( 'post_name' => 'over-detection', 'post_title' => 'Provenance Over Detection', 'post_excerpt' => "Detection chases what isn't. Provenance proves what is.", 'post_date' => '2026-05-07 12:28:28' ),
+	(object) array( 'post_name' => 'as-substrate', 'post_title' => 'Provenance as Substrate', 'post_excerpt' => 'Music files need fingerprints, not name tags.', 'post_date' => '2026-05-07 14:08:50' ),
+	(object) array( 'post_name' => 'verify', 'post_title' => 'Verify a Note', 'post_excerpt' => 'How to verify.', 'post_date' => '2026-07-09 13:09:30' ),
 );
 
 // Seed posts behind the pillar slugs so url + last_modified resolve.

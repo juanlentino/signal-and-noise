@@ -244,6 +244,25 @@ if ( ! function_exists( 'get_page_by_path' ) ) {
 		return null;
 	}
 }
+// v10.46.0: the dynamic pillar descriptors query the /provenance/ hub's
+// published child Pages; answer from a seedable global.
+if ( ! function_exists( 'get_posts' ) ) {
+	function get_posts( $args ) {
+		if ( 'page' === ( $args['post_type'] ?? '' ) && ! empty( $args['post_parent'] ) ) {
+			return $GLOBALS['__test_page_children'] ?? array();
+		}
+		return array();
+	}
+}
+$GLOBALS['__test_posts'][1490] = array(
+	'ID' => 1490, 'post_name' => 'provenance', 'post_title' => 'Provenance',
+	'post_type' => 'page', 'post_status' => 'publish',
+);
+$GLOBALS['__test_page_children'] = array(
+	(object) array( 'post_name' => 'over-detection', 'post_title' => 'Provenance Over Detection', 'post_excerpt' => "Detection chases what isn't.", 'post_date' => '2026-05-07 12:28:28' ),
+	(object) array( 'post_name' => 'as-substrate', 'post_title' => 'Provenance as Substrate', 'post_excerpt' => 'Fingerprints, not name tags.', 'post_date' => '2026-05-07 14:08:50' ),
+	(object) array( 'post_name' => 'verify', 'post_title' => 'Verify a Note', 'post_excerpt' => 'How to verify.', 'post_date' => '2026-07-09 13:09:30' ),
+);
 $GLOBALS['__test_reading_times'] = array(
 	'provenance/over-detection' => '7 min',
 	'provenance/as-substrate'   => '6 min',
