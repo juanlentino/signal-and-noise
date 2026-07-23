@@ -2,6 +2,29 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.48.0] - 2026-07-22
+
+**Headline:** the pillar arc reaches the feeds and the essay Page itself — every feed item that is a verifiable Note now republishes its uid (JSON Feed `_signal_noise` extension + RSS `<sn:noteUid>`), so subscribers can reach the /verify docket without a second fetch, and a flagged essay's own title now carries its designation eyebrow ("№ 1.01 · Pillar Essay" → /provenance/). Rides along: three audited hardenings of the pillar descriptor derivation.
+
+### New
+
+- [inc/feed-json.php](inc/feed-json.php): JSON Feed items whose Note carries the plugin-owned `_sn_prov_uid` get an underscore-prefixed `_signal_noise` custom extension (JSON Feed 1.1 requires the prefix): `note_uid` (lowercased, the content-json-document precedent), `verify_url` (the Note's own /verify docket), `json_url` (the .json content twin, same derivation as the head link), and `reading_time_minutes` (plugin-owned `sn_get_reading_time()`, omitted when the plugin is absent or reports none). Items without a uid carry NO extension key at all. Pinned in [tests/feed-json.php](tests/feed-json.php).
+- [inc/feed-enrichment.php](inc/feed-enrichment.php): RSS2 items mirror the uid as a `<sn:noteUid>` element under the `sn:` namespace the module already declares, escaped at the sink. No uid, no element. Pinned in [tests/feed-enrichment.php](tests/feed-enrichment.php).
+- [inc/pillar-title-eyebrow.php](inc/pillar-title-eyebrow.php): new module — a `render_block_core/post-title` filter prepends an escaped designation eyebrow (`№ 1.01 · Pillar Essay`, linking to /provenance/, the block cards' vocabulary) ONLY on the reader-facing main-query singular Page that is flagged `_sn_pillar` = '1' AND carries a non-empty designation. Everywhere else — other blocks, secondary query loops, feeds, REST (covers the editor's ServerSideRender path), wp-admin, unflagged Pages — the input passes through byte-identical. Styling reuses `.sn-catalog-eyebrow` plus minimal `.sn-pillar-designation` link rules in [assets/css/components.css](assets/css/components.css) (part of the combined stylesheet, so it loads on every singular page; the mtime-keyed combine hash regenerates on its own). Pinned in [tests/pillar-title-eyebrow.php](tests/pillar-title-eyebrow.php).
+
+### Improvements
+
+- [inc/abilities-helpers.php](inc/abilities-helpers.php): `sn_theme_pillar_descriptors()` memoizes per request (the command palette derives on every front-end request, and the pillar block + the pillars Ability can run in the same request; each derivation costs 1-2 meta queries). Global-keyed, not a static — the `sn_css_combined_memo` precedent — so tests and future invalidation seams can clear it. Pinned in [tests/pillar-descriptors-dynamic.php](tests/pillar-descriptors-dynamic.php).
+
+### Fixed
+
+- **Security:** the JSON feed no longer includes password-protected posts. The custom feed rendered raw `post_content` through the `the_content` filter, bypassing `post_password_required()`, so a protected post's full body would have republished at `/feed/json` (the same trap class as the OG-card leak fixed plugin-side in v9.25.2). The query now excludes protected posts (`has_password => false`) and `sn_feed_json_build_item()` refuses them outright as defense in depth.
+
+- [inc/abilities-helpers.php](inc/abilities-helpers.php): the hub-children fallback no longer fails open when the owner deliberately unflags the LAST pillar essay. The fallback is now gated to a NEVER-seeded meta system (the plugin's seed sentinel is invisible theme-side, so the closest observable signal gates it: any Page carrying the `_sn_pillar` key with ANY value means curation is live, and an empty flagged set stays empty). Behavior change: after unflagging every essay, the rail/palette/Ability now go honestly empty instead of resurrecting the derived hub-children list; a corpus with zero `_sn_pillar` rows keeps the v10.46.0 fallback byte-for-byte. Pinned in [tests/pillar-descriptors-dynamic.php](tests/pillar-descriptors-dynamic.php).
+- [inc/abilities-helpers.php](inc/abilities-helpers.php): a flagged essay under a drafted/private parent Page no longer leaks the unpublished parent's slug into the block CTA and Ability payload — `get_page_uri()` walks ancestors regardless of status, so the hierarchical slug is only taken when every ancestor is published; otherwise the bare `post_name` stands. Pinned in [tests/pillar-descriptors-dynamic.php](tests/pillar-descriptors-dynamic.php).
+
+> **Why MINOR:** two new user-visible capabilities (feed-level provenance for subscribers, the designation eyebrow on the essay Page itself); the descriptor hardenings are PATCH-grade ride-alongs and nothing public was removed or renamed.
+
 ## [10.47.1] - 2026-07-21
 
 **Headline:** the pillar block stops looking broken (owner-reported same day): the card's fixed 48px number column clipped the new designations mid-digit ("No. 1.0..." behind the title, since the card is overflow:hidden — it was sized for the old two-character positional numbers), and the editor showed only a bare unstyled text line where the block should preview.

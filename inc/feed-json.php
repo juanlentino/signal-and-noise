@@ -30,6 +30,10 @@ function sn_feed_json_query_args() {
 	return array(
 		'post_type'           => 'post',
 		'post_status'         => 'publish',
+		// The raw the_content render below bypasses post_password_required();
+		// protected posts must never reach the public feed (content-json.php
+		// gates the same way; the OG-card leak was this exact trap class).
+		'has_password'        => false,
 		'posts_per_page'      => (int) apply_filters( 'sn_json_feed_items', 20 ),
 		'orderby'             => 'date',
 		'order'               => 'DESC',
@@ -67,7 +71,10 @@ function sn_feed_json_render( $is_comment_feed = false, $feed = 'json' ) {
 	$items = array();
 	while ( $q->have_posts() ) {
 		$q->the_post();
-		$items[] = sn_feed_json_build_item( get_post() );
+		$built = sn_feed_json_build_item( get_post() );
+		if ( null !== $built ) {
+			$items[] = $built;
+		}
 	}
 	wp_reset_postdata();
 
@@ -95,6 +102,11 @@ function sn_feed_json_render( $is_comment_feed = false, $feed = 'json' ) {
  * Build one JSON Feed item. Pure + testable. Raw values — wp_json_encode escapes.
  */
 function sn_feed_json_build_item( $post ) {
+	// Defense in depth behind the has_password query exclusion: a filtered
+	// query args array must still never leak a protected post's content.
+	if ( '' !== (string) ( $post->post_password ?? '' ) ) {
+		return null;
+	}
 	$tags = array();
 	foreach ( (array) get_the_category( $post->ID ) as $cat ) {
 		$tags[] = $cat->name;
@@ -126,6 +138,30 @@ function sn_feed_json_build_item( $post ) {
 	$thumb = get_the_post_thumbnail_url( $post, 'large' );
 	if ( is_string( $thumb ) && '' !== $thumb ) {
 		$item['image'] = $thumb;
+	}
+	// v10.48.0: feed-level provenance. When the Note carries the plugin-owned
+	// _sn_prov_uid meta (literal key; precedent inc/content-json-document.php,
+	// lowercased the same way), an underscore-prefixed JSON Feed 1.1 custom
+	// extension republishes it so feed subscribers can verify WITHOUT a second
+	// fetch: verify_url is this Note's own /verify docket, json_url the .json
+	// content twin (same derivation as inc/content-json.php's head link), and
+	// reading time rides the plugin-owned sn_get_reading_time() — omitted when
+	// the plugin is absent or reports none (mirrors inc/feed-enrichment.php's
+	// >= 1 gate). An item without a uid gets NO extension key at all.
+	$uid = function_exists( 'get_post_meta' ) ? strtolower( trim( (string) get_post_meta( $post->ID, '_sn_prov_uid', true ) ) ) : '';
+	if ( '' !== $uid ) {
+		$ext = array(
+			'note_uid'   => $uid,
+			'verify_url' => home_url( '/verify?note=' . rawurlencode( $uid ) ),
+			'json_url'   => rtrim( (string) get_permalink( $post ), '/' ) . '.json',
+		);
+		if ( function_exists( 'sn_get_reading_time' ) ) {
+			$mins = (int) sn_get_reading_time( $post->ID );
+			if ( $mins >= 1 ) {
+				$ext['reading_time_minutes'] = $mins;
+			}
+		}
+		$item['_signal_noise'] = $ext;
 	}
 	return $item;
 }

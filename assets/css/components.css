@@ -1575,3 +1575,22 @@
 	color: var(--wp--preset--color--signal, #ff4c47);
 	text-decoration: underline;
 }
+
+/* ============================================
+   PILLAR DESIGNATION EYEBROW (v10.48.0)
+   inc/pillar-title-eyebrow.php prepends
+   `<p class="sn-catalog-eyebrow sn-pillar-designation"><a …>№ 1.01 · Pillar
+   Essay</a></p>` above the title of a flagged essay Page. The typography is
+   all .sn-catalog-eyebrow (above); these rules only keep the inner link in
+   the eyebrow's blood mono-caps voice instead of the default link render,
+   with the .sn-prose-links hover idiom.
+   ============================================ */
+.sn-pillar-designation a {
+	color: inherit;
+	text-decoration: none;
+}
+.sn-pillar-designation a:hover,
+.sn-pillar-designation a:focus-visible {
+	color: var(--wp--preset--color--signal, #ff4c47);
+	text-decoration: underline;
+}

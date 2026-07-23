@@ -25,6 +25,9 @@ function home_url( $p = '' ) { return 'https://x.test' . $p; }
 function get_option( $k ) { return 'UTF-8'; }
 function get_the_post_thumbnail_url( $p = null, $size = '' ) { return $GLOBALS['__thumb'] ?? ''; }
 function get_site_icon_url( $s = 512 ) { return $GLOBALS['__icon'] ?? ''; }
+function get_post_meta( $id, $key, $single = false ) { return $GLOBALS['__meta'][ (int) $id ][ $key ] ?? ''; }
+// Plugin-owned reading time (inc/feed-enrichment.php precedent) — togglable.
+function sn_get_reading_time( $id = null ) { return $GLOBALS['__rt'] ?? 0; }
 if ( ! function_exists( 'wp_json_encode' ) ) { function wp_json_encode( $v, $flags = 0, $depth = 512 ) { return json_encode( $v, $flags, $depth ); } }
 
 require __DIR__ . '/../inc/feed-json.php';
@@ -73,11 +76,40 @@ $bad = sn_feed_json_build_item( (object) array( 'ID' => 8, 'post_content' => 'x'
 ok( ! isset( $bad['date_published'] ) && ! isset( $bad['date_modified'] ), 'non-string dates are omitted, not serialized as false (JF-2)' );
 unset( $GLOBALS['__pubdate'], $GLOBALS['__moddate'] );
 
+// v10.48.0: the _signal_noise extension (feed-level provenance). JSON Feed 1.1
+// custom extensions MUST be underscore-prefixed — this one is. An item whose
+// Note carries a plugin-owned _sn_prov_uid republishes it so feed subscribers
+// can verify WITHOUT a second fetch; an item without a uid gets NO key at all.
+$no_uid = sn_feed_json_build_item( (object) array( 'ID' => 11, 'post_content' => 'x' ) );
+ok( ! array_key_exists( '_signal_noise', $no_uid ), 'item without a Note uid carries NO _signal_noise key at all' );
+$GLOBALS['__meta'][12]['_sn_prov_uid'] = 'AB12cd34';
+$GLOBALS['__rt'] = 6;
+$ext_item = sn_feed_json_build_item( (object) array( 'ID' => 12, 'post_content' => 'x' ) );
+$ext      = $ext_item['_signal_noise'] ?? null;
+ok( is_array( $ext ), 'item with a Note uid carries the _signal_noise extension object' );
+ok( 'ab12cd34' === ( $ext['note_uid'] ?? null ), 'note_uid republishes the uid lowercased (content-json-document precedent)' );
+ok( 'https://x.test/verify?note=ab12cd34' === ( $ext['verify_url'] ?? null ), 'verify_url is the Note\'s own /verify docket URL' );
+ok( 'https://x.test/notes/n-12.json' === ( $ext['json_url'] ?? null ), 'json_url is the .json content twin (permalink, trailing slash trimmed, + .json)' );
+ok( 6 === ( $ext['reading_time_minutes'] ?? null ), 'reading_time_minutes rides the plugin-owned sn_get_reading_time()' );
+$GLOBALS['__rt'] = 0;
+$ext_no_rt = sn_feed_json_build_item( (object) array( 'ID' => 12, 'post_content' => 'x' ) );
+ok( ! isset( $ext_no_rt['_signal_noise']['reading_time_minutes'] ), 'reading_time_minutes omitted when the plugin reports none (mirrors the RSS >= 1 gate)' );
+ok( 'ab12cd34' === ( $ext_no_rt['_signal_noise']['note_uid'] ?? null ), 'the rest of the extension survives a missing reading time' );
+unset( $GLOBALS['__meta'][12], $GLOBALS['__rt'] );
+
 // v9.12.0: feed item count honors sn_json_feed_items (default 20).
 $GLOBALS['__filters']['sn_json_feed_items'] = 5;
 ok( (int) sn_feed_json_query_args()['posts_per_page'] === 5, 'json-feed: honors sn_json_feed_items=5' );
 $GLOBALS['__filters'] = array();
 ok( (int) sn_feed_json_query_args()['posts_per_page'] === 20, 'json-feed: default item count is 20' );
+
+// v10.48.0: password-protected posts must never enter the JSON feed. The raw
+// apply_filters( 'the_content', ... ) render bypasses post_password_required(),
+// so the query excludes them outright and build_item() refuses them defensively
+// (mirrors the content-json.php gate and the OG-card leak fix, plugin v9.25.2).
+ok( false === ( sn_feed_json_query_args()['has_password'] ?? null ), 'json-feed: query excludes password-protected posts (has_password=false)' );
+$protected = sn_feed_json_build_item( (object) array( 'ID' => 13, 'post_content' => 'secret body', 'post_password' => 'pw' ) );
+ok( null === $protected, 'json-feed: build_item refuses a password-protected post outright' );
 
 echo "Result: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
