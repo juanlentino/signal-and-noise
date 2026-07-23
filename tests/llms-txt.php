@@ -67,6 +67,29 @@ ok( strpos( $full, 'A Test Note' ) !== false, 'full body includes injected note 
 ok( strpos( $full, 'https://juanlentino.com/notes/a-test-note/' ) !== false, 'full body includes injected note URLs' );
 ok( strpos( sn_llms_txt_body( false ), 'A Test Note' ) === false, 'basic body does NOT include the notes list' );
 
+// --- v10.49.0: Pillar essays section derives from injected descriptors ---
+$pillars = array(
+	array( 'slug' => 'provenance/over-detection', 'title' => 'On Provenance: Over-detection', 'dek' => 'The verification problem.', 'designation' => '1.00' ),
+	array( 'slug' => 'provenance/cheap-option', 'title' => 'The Cheap Option', 'dek' => '', 'designation' => '' ),
+);
+$pb = sn_llms_txt_body( false, array(), $pillars );
+ok( strpos( $pb, "\n## Pillar essays\n" ) !== false, 'pillar body has a Pillar essays H2 section' );
+ok( strpos( $pb, '№ 1.00 · On Provenance: Over-detection' ) !== false, 'designated essay renders with its № designation (block-card vocabulary)' );
+ok( strpos( $pb, 'https://juanlentino.com/provenance/over-detection/' ) !== false, 'pillar row links the essay Page (slug → home URL, trailing slash)' );
+ok( strpos( $pb, '): The verification problem.' ) !== false, 'pillar dek rides as the row description' );
+ok( strpos( $pb, '- [The Cheap Option](https://juanlentino.com/provenance/cheap-option/)' ) !== false, 'undesignated essay renders its bare title and omits the empty dek' );
+$pb_pos_pillar = strpos( $pb, '## Pillar essays' );
+ok( $pb_pos_pillar > strpos( $pb, '## Key pages' ) && $pb_pos_pillar < strpos( $pb, '## Feeds' ), 'Pillar essays section sits between Key pages and Feeds' );
+// Empty descriptor set (or none injected) → section omitted entirely.
+ok( strpos( sn_llms_txt_body( false ), '## Pillar essays' ) === false, 'no Pillar essays section when no descriptors are injected' );
+ok( strpos( sn_llms_txt_body( false, array(), array() ), '## Pillar essays' ) === false, 'an explicitly empty descriptor set omits the section entirely' );
+// The full variant carries it too (both routes emit the shared body).
+$pf = sn_llms_txt_body( true, $rows, $pillars );
+ok( strpos( $pf, '## Pillar essays' ) !== false && strpos( $pf, 'A Test Note' ) !== false, 'llms-full carries the Pillar essays section alongside the Notes corpus' );
+// Malformed descriptor rows (no slug/title) are skipped, never fatal.
+$pm = sn_llms_txt_body( false, array(), array( array( 'dek' => 'orphan' ), array( 'slug' => 'x', 'title' => 'X Row', 'dek' => '', 'designation' => '' ) ) );
+ok( strpos( $pm, 'orphan' ) === false && strpos( $pm, '[X Row](https://juanlentino.com/x/)' ) !== false, 'malformed descriptor rows are skipped; valid rows still render' );
+
 // --- send() sets a 200 so the virtual route is not served under a 404 (gotcha #40) ---
 ob_start(); sn_llms_txt_send( false ); ob_end_clean();
 ok( $GLOBALS['__status'] === 200, 'send() calls status_header(200)' );

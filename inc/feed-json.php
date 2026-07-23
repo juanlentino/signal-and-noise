@@ -140,15 +140,16 @@ function sn_feed_json_build_item( $post ) {
 		$item['image'] = $thumb;
 	}
 	// v10.48.0: feed-level provenance. When the Note carries the plugin-owned
-	// _sn_prov_uid meta (literal key; precedent inc/content-json-document.php,
-	// lowercased the same way), an underscore-prefixed JSON Feed 1.1 custom
-	// extension republishes it so feed subscribers can verify WITHOUT a second
-	// fetch: verify_url is this Note's own /verify docket, json_url the .json
-	// content twin (same derivation as inc/content-json.php's head link), and
-	// reading time rides the plugin-owned sn_get_reading_time() — omitted when
-	// the plugin is absent or reports none (mirrors inc/feed-enrichment.php's
-	// >= 1 gate). An item without a uid gets NO extension key at all.
-	$uid = function_exists( 'get_post_meta' ) ? strtolower( trim( (string) get_post_meta( $post->ID, '_sn_prov_uid', true ) ) ) : '';
+	// _sn_prov_uid meta (read via the canonical normalized helper,
+	// inc/note-uid.php since v10.49.0), an underscore-prefixed JSON Feed 1.1
+	// custom extension republishes it so feed subscribers can verify WITHOUT
+	// a second fetch: verify_url is this Note's own /verify docket, json_url
+	// the .json content twin (same derivation as inc/content-json.php's head
+	// link), and reading time rides the plugin-owned sn_get_reading_time() —
+	// omitted when the plugin is absent or reports none (mirrors
+	// inc/feed-enrichment.php's >= 1 gate). An item without a uid gets NO
+	// extension key at all.
+	$uid = function_exists( 'sn_theme_note_uid' ) ? sn_theme_note_uid( $post->ID ) : '';
 	if ( '' !== $uid ) {
 		$ext = array(
 			'note_uid'   => $uid,

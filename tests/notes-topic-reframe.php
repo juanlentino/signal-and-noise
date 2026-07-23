@@ -65,10 +65,9 @@ class WP_Query {
 	}
 }
 
-// Pull in the render-file helpers (returns early under the test sentinel),
-// then the template-file routing/title helpers.
-define( 'SN_NOTES_RENDER_TEST', true );
-require __DIR__ . '/../inc/page-notes-render.php';
+// Pull in the index helpers (their own module since v10.49.0; the render
+// file is render-path only now), then the template-file routing/title helpers.
+require __DIR__ . '/../inc/notes-index-helpers.php';
 require __DIR__ . '/../inc/page-notes-template.php';
 
 $pass = 0; $fail = 0;

@@ -29,6 +29,7 @@ function get_post_thumbnail_id( $id ) { return $GLOBALS['__has_thumb'] ? 99 : 0;
 function wp_get_attachment_image_url( $aid, $size ) { return $GLOBALS['__thumb']; }
 function get_the_ID() { return 7; }
 
+require __DIR__ . '/../inc/note-uid.php'; // v10.49.0: canonical uid read the module now calls
 require __DIR__ . '/../inc/feed-enrichment.php';
 
 // Namespace declaration.

@@ -72,7 +72,7 @@ function sn_agents_surfaces() {
 		array( 'type' => 'opensearch', 'url' => $home . '/opensearch.xml', 'format' => 'application/opensearchdescription+xml', 'title' => 'OpenSearch', 'description' => 'Search-provider description over /notes/?s=.' ),
 		array( 'type' => 'sitemap',   'url' => $home . '/wp-sitemap.xml', 'format' => 'application/xml',  'title' => 'Sitemap',      'description' => 'Core WordPress sitemap index.' ),
 		array( 'type' => 'abilities', 'url' => $home . '/wp-json/wp-abilities/v1/abilities', 'format' => 'application/json', 'title' => 'Abilities API', 'description' => 'The agent/automation surface: discover + run site abilities.' ),
-		array( 'type' => 'provenance-verify', 'url' => $home . '/provenance/verify/', 'format' => 'text/html', 'title' => 'Provenance verify', 'description' => "Verify a Note's cryptographic (Bitcoin-anchored) authorship proof." ),
+		array( 'type' => 'provenance-verify', 'url' => $home . '/verify/', 'format' => 'text/html', 'title' => 'Provenance verify', 'description' => "Verify a Note's cryptographic (Bitcoin-anchored) authorship proof." ),
 	);
 
 	/**

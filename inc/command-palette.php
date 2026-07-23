@@ -68,7 +68,8 @@ function sn_cmdk_enabled() {
 
 /**
  * Add sn-cmdk-off to <body> when the palette is disabled, so the static footer
- * trigger (parts/footer.html) is hidden via critical.css even though the palette
+ * trigger (parts/footer.html) is hidden via the combined stylesheet (the rule
+ * moved from critical.css to assets/css/article.css in v10.49.0) even though the palette
  * stylesheet is not enqueued.
  *
  * @param string[] $classes Body classes.

@@ -56,13 +56,10 @@ if ( ! function_exists( 'wp_date' ) ) {
 	function wp_date( $format, $ts = null ) { return date( $format, $ts ?? 1700000000 ); }
 }
 
-// Pull in ONLY the helper functions. page-notes-render.php is a full
-// render file that echoes HTML + calls WP_Query at load, so we cannot
-// require it directly. Instead, the helpers live in a guarded block at
-// the top of that file that returns early when SN_NOTES_RENDER_TEST is
-// defined (see Task 1 Step 3). Define the sentinel, then require.
-define( 'SN_NOTES_RENDER_TEST', true );
-require __DIR__ . '/../inc/page-notes-render.php';
+// Pull in ONLY the helper functions. v10.49.0: they live in their own
+// always-loadable module now (extracted from page-notes-render.php, which
+// is render-path only; the SN_NOTES_RENDER_TEST sentinel is retired).
+require __DIR__ . '/../inc/notes-index-helpers.php';
 
 $pass = 0; $fail = 0;
 function ok( $cond, $label ) {

@@ -68,10 +68,11 @@ ok( strpos( $pq2, 'sn-pull-quote__attribution' ) === false, 'pull-quote omits th
 
 // The block emits .sn-pull-quote; the brutalist BOX (rules/padding/background)
 // must target that class, not only the pattern's .sn-pattern-pull-quote — else
-// the block renders as bare text. Assert critical.css carries a .sn-pull-quote
-// box selector (matches ".sn-pull-quote {" or ".sn-pull-quote," — NOT __body).
-$critical_css = file_get_contents( __DIR__ . '/../assets/css/critical.css' );
-ok( preg_match( '/\.sn-pull-quote\s*[,{]/', $critical_css ) === 1, 'critical.css has a .sn-pull-quote box selector (block gets the brutalist frame)' );
+// the block renders as bare text. Assert article.css (v10.49.0: moved verbatim
+// from critical.css's back half into the combined cascade) carries a
+// .sn-pull-quote box selector (".sn-pull-quote {" or ".sn-pull-quote," — NOT __body).
+$article_css = file_get_contents( __DIR__ . '/../assets/css/article.css' );
+ok( preg_match( '/\.sn-pull-quote\s*[,{]/', $article_css ) === 1, 'article.css has a .sn-pull-quote box selector (block gets the brutalist frame)' );
 
 // Registration wiring.
 require __DIR__ . '/../inc/blocks-register.php';

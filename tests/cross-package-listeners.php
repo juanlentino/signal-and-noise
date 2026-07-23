@@ -3,13 +3,21 @@
  * Standalone fixture tests for v9.5.0's cross-package listener
  * contracts (theme-side consumer locks).
  *
- * Verifies the 4 filter contracts the theme exposes to the companion
- * plugin (signal-and-noise-tools v4.4.0+):
+ * Verifies the 8 filter contracts where the theme LISTENS on a
+ * plugin-dispatched hook (signal-and-noise-tools v4.4.0+; the v10.49.0
+ * doc sweep found the table had drifted to 4 while 8 were live):
  *
  *   1. sn_purge_all_caches_result          → inc/template-maintenance.php
  *   2. sn_clear_template_overrides_result  → inc/template-maintenance.php
  *   3. sn_og_font_paths                    → inc/og-fonts.php
  *   4. sn_gh_latest_theme_tag_result       → inc/wp-update-integration.php
+ *   7. sn_og_image_url                     → inc/notes-og-card.php (v10.39.0)
+ *   8. sn_seo_singular_description         → inc/seo-route-meta.php (v10.13.0)
+ *   9. sn_cf_purge_urls_for_post           → inc/content-json.php (v10.38.0)
+ *  10. sn_gh_latest_theme_tag_error_result → inc/wp-update-integration.php (v10.43.0; plugin seam v9.54.0)
+ *
+ * (Contracts 5–6 below are the reverse direction — the theme READS a
+ * plugin-produced filter.)
  *
  * For each contract:
  *   - Assert that the listener registers itself when its module loads
@@ -172,14 +180,26 @@ if ( ! defined( 'HOUR_IN_SECONDS' ) ) {
 if ( ! defined( 'DAY_IN_SECONDS' ) ) {
 	define( 'DAY_IN_SECONDS', 86400 );
 }
+// Site-transient stubs are STATEFUL (v10.49.0, Contract 10): the error seam
+// surfaces the reason sn_gh_theme_record_fetch_failure() stored, so the store
+// must round-trip for the contract to be exercisable.
+$GLOBALS['__test_site_transients'] = array();
 if ( ! function_exists( 'delete_site_transient' ) ) {
-	function delete_site_transient( $k ) { return true; }
+	function delete_site_transient( $k ) {
+		unset( $GLOBALS['__test_site_transients'][ $k ] );
+		return true;
+	}
 }
 if ( ! function_exists( 'get_site_transient' ) ) {
-	function get_site_transient( $k ) { return false; }
+	function get_site_transient( $k ) {
+		return $GLOBALS['__test_site_transients'][ $k ] ?? false;
+	}
 }
 if ( ! function_exists( 'set_site_transient' ) ) {
-	function set_site_transient( $k, $v, $ttl = 0 ) { return true; }
+	function set_site_transient( $k, $v, $ttl = 0 ) {
+		$GLOBALS['__test_site_transients'][ $k ] = $v;
+		return true;
+	}
 }
 if ( ! function_exists( 'wp_clean_themes_cache' ) ) {
 	function wp_clean_themes_cache( $clear_update_cache = true ) { return true; }
@@ -402,7 +422,98 @@ $feat_html = sn_music_featured_shortcode();
 cpl_true( strpos( $feat_html, 'embed/album/c6AlbumId' ) !== false, 'Test 6.3: theme reads filter — featured embed URL flows to the player' );
 
 // ═════════════════════════════════════════════════════════════════════
-// META: listener-count summary across all 4 contracts.
+// CONTRACT 7: sn_og_image_url  (v10.39.0, theme listener at priority 20)
+// Producer (plugin): apply_filters('sn_og_image_url', $resolved_url)
+// Consumer (theme): inc/notes-og-card.php swaps in the bespoke /notes
+//   card ONLY on the notes-index request; everything else passes through.
+// ═════════════════════════════════════════════════════════════════════
+
+echo "\nContract 7: sn_og_image_url\n";
+if ( ! function_exists( 'get_theme_file_uri' ) ) {
+	function get_theme_file_uri( $rel = '' ) { return 'https://example.com/wp-content/themes/signal-and-noise/' . ltrim( (string) $rel, '/' ); }
+}
+require_once __DIR__ . '/../inc/notes-og-card.php';
+cpl_true( isset( $GLOBALS['__test_filters']['sn_og_image_url'] ), 'Test 7.1: listener registered' );
+// Flag-driven matcher stub (declared conditionally so it is NOT hoisted —
+// an unconditional declaration would exist before Test 7.2 runs).
+if ( ! function_exists( 'sn_notes_is_index_request' ) ) {
+	function sn_notes_is_index_request() { return ! empty( $GLOBALS['__is_notes_index'] ); }
+}
+$GLOBALS['__is_notes_index'] = false;
+cpl_eq( 'https://example.com/site-default.png', apply_filters( 'sn_og_image_url', 'https://example.com/site-default.png' ), 'Test 7.2: non-index request passes the plugin URL through unchanged' );
+// Force the index branch: the bespoke card wins.
+$GLOBALS['__is_notes_index'] = true;
+$og = apply_filters( 'sn_og_image_url', 'https://example.com/site-default.png' );
+cpl_true( is_string( $og ) && false !== strpos( $og, 'og-notes-card.png' ), 'Test 7.3: notes-index request swaps in the bespoke card asset' );
+
+// ═════════════════════════════════════════════════════════════════════
+// CONTRACT 8: sn_seo_singular_description  (v10.13.0)
+// Producer (plugin): apply_filters('sn_seo_singular_description', '', $post)
+// Consumer (theme): inc/seo-route-meta.php fills template-driven Page
+//   descriptions ONLY when the plugin resolved nothing.
+// ═════════════════════════════════════════════════════════════════════
+
+echo "\nContract 8: sn_seo_singular_description\n";
+require_once __DIR__ . '/../inc/seo-route-meta.php';
+cpl_true( isset( $GLOBALS['__test_filters']['sn_seo_singular_description'] ), 'Test 8.1: listener registered' );
+$colophon = (object) array( 'post_name' => 'colophon' );
+$desc = apply_filters( 'sn_seo_singular_description', '', $colophon );
+cpl_true( is_string( $desc ) && '' !== $desc, 'Test 8.2: fills a description for the mapped /colophon page' );
+cpl_eq( 'plugin already resolved this', apply_filters( 'sn_seo_singular_description', 'plugin already resolved this', $colophon ), 'Test 8.3: never overrides a description the plugin resolved' );
+cpl_eq( '', apply_filters( 'sn_seo_singular_description', '', (object) array( 'post_name' => 'not-mapped' ) ), 'Test 8.4: unmapped pages stay empty' );
+
+// ═════════════════════════════════════════════════════════════════════
+// CONTRACT 9: sn_cf_purge_urls_for_post  (v10.38.0)
+// Producer (plugin): apply_filters('sn_cf_purge_urls_for_post', $urls, $id, $post)
+// Consumer (theme): inc/content-json.php appends the permalink's .json twin
+//   so the twin is purged alongside the HTML page.
+// ═════════════════════════════════════════════════════════════════════
+
+echo "\nContract 9: sn_cf_purge_urls_for_post\n";
+if ( ! function_exists( 'get_permalink' ) ) {
+	function get_permalink( $id = 0 ) { return 'https://example.com/notes/a-note/'; }
+}
+if ( ! function_exists( 'get_bloginfo' ) ) {
+	function get_bloginfo( $k = '' ) { return ''; }
+}
+require_once __DIR__ . '/../inc/content-json.php';
+cpl_true( isset( $GLOBALS['__test_filters']['sn_cf_purge_urls_for_post'] ), 'Test 9.1: listener registered' );
+$note = (object) array( 'post_type' => 'post' );
+$urls = apply_filters( 'sn_cf_purge_urls_for_post', array( 'https://example.com/notes/a-note/' ), 12, $note );
+cpl_true( is_array( $urls ) && in_array( 'https://example.com/notes/a-note.json', $urls, true ), 'Test 9.2: the .json twin rides the per-post purge list' );
+$att = (object) array( 'post_type' => 'attachment' );
+cpl_eq( array(), apply_filters( 'sn_cf_purge_urls_for_post', array(), 13, $att ), 'Test 9.3: non post/page types add no twin' );
+
+// ═════════════════════════════════════════════════════════════════════
+// CONTRACT 10: sn_gh_latest_theme_tag_error_result  (theme v10.43.0;
+//   plugin opened the seam in v9.54.0)
+// Producer (plugin): apply_filters('sn_gh_latest_theme_tag_error_result', '')
+//   while snt_deploy_status_for('theme') resolves the card's failure reason.
+// Consumer (theme): inc/wp-update-integration.php answers with
+//   sn_gh_latest_theme_tag_error() — the theme's own recorded reason wins;
+//   with no reason of its own, the incoming (plugin-side) value passes through.
+// ═════════════════════════════════════════════════════════════════════
+
+echo "\nContract 10: sn_gh_latest_theme_tag_error_result\n";
+cpl_true( isset( $GLOBALS['__test_filters']['sn_gh_latest_theme_tag_error_result'] ), 'Test 10.1: listener registered' );
+cpl_true( count( $GLOBALS['__test_filters']['sn_gh_latest_theme_tag_error_result'] ?? array() ) === 1, 'Test 10.2: exactly one listener attached' );
+
+// Contract 4's forced HTTP-500 failure recorded a reason via
+// sn_gh_theme_record_fetch_failure(); the seam must surface it — and the
+// theme's own reason must WIN over anything the plugin already resolved.
+$reason = apply_filters( 'sn_gh_latest_theme_tag_error_result', '' );
+cpl_type( 'string', $reason, 'Test 10.3: returns string' );
+cpl_true( '' !== $reason && false !== strpos( $reason, '500' ), 'Test 10.4: surfaces the reason recorded by the failed tag fetch (mentions the HTTP 500)' );
+cpl_eq( $reason, apply_filters( 'sn_gh_latest_theme_tag_error_result', 'plugin-side reason' ), 'Test 10.5: the theme\'s own reason wins over the plugin-resolved value' );
+
+// With no recorded reason of its own, the theme passes the incoming value
+// through untouched ('' default included).
+delete_site_transient( SN_GH_THEME_ERROR_KEY );
+cpl_eq( 'plugin-side reason', apply_filters( 'sn_gh_latest_theme_tag_error_result', 'plugin-side reason' ), 'Test 10.6: no own reason → plugin value passes through' );
+cpl_eq( '', apply_filters( 'sn_gh_latest_theme_tag_error_result', '' ), 'Test 10.7: no own reason + empty default stays \'\' (last fetch succeeded)' );
+
+// ═════════════════════════════════════════════════════════════════════
+// META: listener-count summary across all 8 listener contracts.
 // ═════════════════════════════════════════════════════════════════════
 
 echo "\nMeta: contract surface summary\n";
@@ -411,6 +522,10 @@ $expected_contracts = array(
 	'sn_clear_template_overrides_result',
 	'sn_og_font_paths',
 	'sn_gh_latest_theme_tag_result',
+	'sn_og_image_url',
+	'sn_seo_singular_description',
+	'sn_cf_purge_urls_for_post',
+	'sn_gh_latest_theme_tag_error_result',
 );
 foreach ( $expected_contracts as $c ) {
 	cpl_true( isset( $GLOBALS['__test_filters'][ $c ] ), "Test meta: contract '$c' has a listener" );

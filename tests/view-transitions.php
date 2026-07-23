@@ -146,9 +146,11 @@ $sample4 = '<h1>No post context</h1>';
 $out4 = sn_view_transition_post_title( $sample4, array(), new SN_Test_Block_Instance( array() ) );
 ha_eq( $sample4, $out4, 'unchanged when no postId in context and get_the_ID returns 0' );
 
-// --- Test 6: reduced-motion guard intact in critical.css ----------------
-echo "\nTest: reduced-motion guard intact in assets/css/critical.css\n";
-$css = file_get_contents( __DIR__ . '/../assets/css/critical.css' );
+// --- Test 6: reduced-motion guard intact in article.css -----------------
+// (v10.49.0: the @view-transition block moved verbatim from critical.css's
+// back half to assets/css/article.css, last in the combined cascade.)
+echo "\nTest: reduced-motion guard intact in assets/css/article.css\n";
+$css = file_get_contents( __DIR__ . '/../assets/css/article.css' );
 ha_true(
 	false !== strpos( $css, '@media (prefers-reduced-motion: reduce)' ),
 	'@media (prefers-reduced-motion: reduce) block exists'

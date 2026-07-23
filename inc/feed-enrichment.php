@@ -45,11 +45,11 @@ function sn_rss_item_enrich() {
 			echo '<sn:readingTimeMinutes>' . esc_html( (string) $mins ) . '</sn:readingTimeMinutes>' . "\n";
 		}
 	}
-	// v10.48.0: mirror the Note uid (plugin-owned _sn_prov_uid; literal key —
-	// precedent inc/content-json-document.php, lowercased the same way) under
-	// the sn: namespace sn_rss_media_ns() already declares, so RSS subscribers
-	// can resolve the /verify docket without a second fetch. No uid, no element.
-	$uid = strtolower( trim( (string) get_post_meta( $id, '_sn_prov_uid', true ) ) );
+	// v10.48.0: mirror the Note uid under the sn: namespace sn_rss_media_ns()
+	// already declares, so RSS subscribers can resolve the /verify docket
+	// without a second fetch. No uid, no element. v10.49.0: read via the
+	// canonical normalized helper (inc/note-uid.php).
+	$uid = function_exists( 'sn_theme_note_uid' ) ? sn_theme_note_uid( $id ) : '';
 	if ( '' !== $uid ) {
 		echo '<sn:noteUid>' . esc_html( $uid ) . '</sn:noteUid>' . "\n";
 	}

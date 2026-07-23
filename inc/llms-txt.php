@@ -41,13 +41,18 @@ function sn_llms_txt_variant( $uri ) {
 
 /**
  * Build the llms.txt markdown body. Trusted by construction: home_url() +
- * get_bloginfo() values + (for the full variant) published post titles/permalinks.
+ * get_bloginfo() values + (for the full variant) published post titles/permalinks
+ * + (v10.49.0) the curated pillar descriptors.
  *
- * @param bool  $full  Append the Notes corpus section.
- * @param array $notes Rows of array{title,url,summary} (injected; queried in send()).
+ * @param bool  $full    Append the Notes corpus section.
+ * @param array $notes   Rows of array{title,url,summary} (injected; queried in send()).
+ * @param array $pillars Pillar descriptors array{slug,title,dek,designation}
+ *                       (injected in send() from sn_theme_pillar_descriptors();
+ *                       parameterized so this builder stays standalone-testable,
+ *                       mirroring $notes). Empty set = section omitted entirely.
  * @return string
  */
-function sn_llms_txt_body( $full = false, $notes = array() ) {
+function sn_llms_txt_body( $full = false, $notes = array(), $pillars = array() ) {
 	$name = (string) get_bloginfo( 'name' );
 	if ( '' === $name ) {
 		$name = 'Signal & Noise';
@@ -72,6 +77,38 @@ function sn_llms_txt_body( $full = false, $notes = array() ) {
 		'- [Accessibility](' . $home . '/accessibility/): accessibility statement and conformance notes.',
 		'- [Contact](' . $home . '/contact/): how to get in touch.',
 		'',
+	);
+
+	// v10.49.0: the curated pillar essays — the site's cornerstone long-form
+	// work (signal-noise/pillar-essays block, command palette, and the
+	// get-page-notes-pillars Ability all derive from the same descriptors).
+	// The "№ 1.01 · Title" shape mirrors the block cards' vocabulary. An
+	// empty descriptor set omits the whole section (honest empty).
+	if ( is_array( $pillars ) && array() !== $pillars ) {
+		$pillar_lines = array();
+		foreach ( $pillars as $pillar ) {
+			if ( empty( $pillar['slug'] ) || empty( $pillar['title'] ) ) {
+				continue;
+			}
+			$label = (string) $pillar['title'];
+			if ( ! empty( $pillar['designation'] ) ) {
+				$label = '№ ' . $pillar['designation'] . ' · ' . $label;
+			}
+			$row = '- [' . $label . '](' . $home . '/' . trim( (string) $pillar['slug'], '/' ) . '/)';
+			if ( ! empty( $pillar['dek'] ) ) {
+				$row .= ': ' . $pillar['dek'];
+			}
+			$pillar_lines[] = $row;
+		}
+		if ( array() !== $pillar_lines ) {
+			$lines[] = '## Pillar essays';
+			$lines[] = '';
+			$lines   = array_merge( $lines, $pillar_lines );
+			$lines[] = '';
+		}
+	}
+
+	$lines = array_merge( $lines, array(
 		'## Feeds',
 		'',
 		'- [RSS feed](' . $home . '/feed/): subscribe to new Notes.',
@@ -82,7 +119,7 @@ function sn_llms_txt_body( $full = false, $notes = array() ) {
 		'- [Discovery manifest](' . $home . '/.well-known/agents.json): a JSON index of every machine surface — feeds, sitemap, abilities, and provenance verification — for agents and crawlers.',
 		'- [Abilities API](' . $home . '/wp-json/wp-abilities/v1/abilities): discover and run site abilities (the agent/automation surface).',
 		'',
-	);
+	) );
 
 	if ( $full && ! empty( $notes ) ) {
 		$lines[] = '## Notes';
@@ -151,8 +188,12 @@ function sn_llms_txt_send( $full = false ) {
 	}
 	header( 'Content-Type: text/plain; charset=' . get_option( 'blog_charset', 'UTF-8' ) );
 	$notes = $full ? sn_llms_txt_recent_notes() : array();
-	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- plain-text markdown from home_url() + published post titles/permalinks; esc_html would corrupt the "&" and markdown punctuation in a text/plain document.
-	echo sn_llms_txt_body( $full, $notes );
+	// v10.49.0: the curated pillar essays ride both variants. Memoized +
+	// hardened derivation (inc/abilities-helpers.php, v10.48.0) — safe to
+	// call per request; degrades to array() (section omitted) standalone.
+	$pillars = function_exists( 'sn_theme_pillar_descriptors' ) ? (array) sn_theme_pillar_descriptors() : array();
+	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- plain-text markdown from home_url() + published post titles/permalinks + the curated pillar descriptors; esc_html would corrupt the "&" and markdown punctuation in a text/plain document.
+	echo sn_llms_txt_body( $full, $notes, $pillars );
 }
 
 /**

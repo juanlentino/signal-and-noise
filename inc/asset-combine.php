@@ -42,7 +42,11 @@ define( 'SN_CSS_COMBINE_SCHEME', 'v1' );
 /**
  * The ordered stylesheet sources, mirroring the cascade the per-file
  * enqueues enforce via dependencies: base → layout → components →
- * responsive (media overrides last) → command-palette (standalone chrome).
+ * responsive (media overrides last) → command-palette (standalone chrome)
+ * → article (v10.49.0: the single-note back half moved out of the inlined
+ * critical.css; it MUST stay LAST — before the move those rules were the
+ * last stylesheet layer in the document, so any earlier position could let
+ * previously-later rules start losing source-order ties).
  * print.css is NOT here — it loads with media="print" and never blocks.
  * Keep in sync with the fallback enqueues in inc/assets-frontend.php and
  * the editor list in inc/setup.php.
@@ -56,6 +60,7 @@ function sn_css_combine_sources() {
 		'assets/css/components.css',
 		'assets/css/responsive.css',
 		'assets/css/command-palette.css',
+		'assets/css/article.css',
 	);
 }
 

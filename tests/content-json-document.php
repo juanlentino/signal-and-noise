@@ -22,6 +22,7 @@ if ( ! function_exists( 'get_post_ancestors' ) ) { function get_post_ancestors( 
 $GLOBALS['__meta'] = array();
 if ( ! function_exists( 'get_post_meta' ) ) { function get_post_meta( $id, $key, $single = false ) { return $GLOBALS['__meta'][ $id ][ $key ] ?? ''; } }
 
+require __DIR__ . '/../inc/note-uid.php'; // v10.49.0: canonical uid read the module now calls
 require __DIR__ . '/../inc/content-json-document.php';
 
 $pass = 0; $fail = 0;
@@ -58,6 +59,12 @@ $GLOBALS['__meta'][1] = array( '_sn_prov_uid' => 'DEADBEEF-dead-4eef-8eef-deadbe
 $dv = sn_content_json_document( $note );
 ok( ( $dv['provenance']['note_uid'] ?? '' ) === 'deadbeef-dead-4eef-8eef-deadbeefdead', 'twin republishes the Note uid (lowercased) when the plugin meta exists' );
 ok( ( $dv['provenance']['verify_url'] ?? '' ) === 'https://juanlentino.com/verify?note=deadbeef-dead-4eef-8eef-deadbeefdead', 'verify_url points at the per-note /verify docket when a uid exists' );
+// v10.49.0: the twin now reads via sn_theme_note_uid(), which TRIMS — this
+// call site previously lowercased without trimming, so a uid stored with
+// stray whitespace republished whitespace into the value /verify matches on.
+$GLOBALS['__meta'][1] = array( '_sn_prov_uid' => "  DEADBEEF-dead-4eef-8eef-deadbeefdead\n" );
+$dt = sn_content_json_document( $note );
+ok( ( $dt['provenance']['note_uid'] ?? '' ) === 'deadbeef-dead-4eef-8eef-deadbeefdead', 'twin trims stray whitespace off the uid (v10.49.0 shared-helper normalization)' );
 $GLOBALS['__meta'] = array();
 $dn = sn_content_json_document( $note );
 ok( ! isset( $dn['provenance']['note_uid'] ), 'no fabricated note_uid when the meta is absent' );
