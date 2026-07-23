@@ -58,6 +58,10 @@ $fixtures = array(
 	'components.css'      => "/* big\n multiline\n comment */\n.card { margin : 0 ; }\n.icon { mask: url('data:image/svg+xml;utf8,<svg/>'); }\n.hero { background: url(\"https://juanlentino.com/x.png\"); }\n.badge { background: url('/wp-content/uploads/y.png'); }\n",
 	'responsive.css'      => "@media (max-width: 600px) {\n  .card { margin: 4px; }\n}\n",
 	'command-palette.css' => ".sn-cmdk {\n  display: none;\n}\n",
+	// v10.49.0: the REAL article stylesheet (the single-note back half moved out
+	// of critical.css). Copied verbatim so the combined-output assertion below
+	// exercises the actual shipped rules, not a stand-in.
+	'article.css'         => (string) file_get_contents( __DIR__ . '/../assets/css/article.css' ),
 );
 foreach ( $fixtures as $name => $css ) {
 	file_put_contents( $css_dir . '/' . $name, $css );
@@ -103,12 +107,12 @@ ac_eq( $sig2, is_array( $info ) ? $info['ver'] : null, 'ver equals the signature
 $built = is_array( $info ) ? (string) file_get_contents( $info['file'] ) : '';
 $order_ok = true;
 $last     = -1;
-foreach ( array( 'body{', '.grid{', '.card{', '@media (max-width: 600px)', '.sn-cmdk{' ) as $needle ) {
+foreach ( array( 'body{', '.grid{', '.card{', '@media (max-width: 600px)', '.sn-cmdk{', '.sn-post-frontmatter{' ) as $needle ) {
 	$at = strpos( $built, $needle );
 	if ( false === $at || $at < $last ) { $order_ok = false; break; }
 	$last = $at;
 }
-ac_true( $order_ok, 'all five sources present in cascade order (base → layout → components → responsive → palette)' );
+ac_true( $order_ok, 'all six sources present in cascade order (base → layout → components → responsive → palette → article LAST)' );
 ac_true( false === strpos( $built, 'base comment' ), 'sources are minified in the combined file' );
 
 // ─── Test 4: idempotency (existing target never rewritten) ────────────
@@ -181,6 +185,26 @@ file_put_contents( $css_dir . '/base.css', $fixtures['base.css'] );
 touch( $css_dir . '/base.css', time() + 420 );
 clearstatcache();
 ac_true( is_array( sn_css_ensure_combined() ), 'url(%23noise) inside the grain data: payload still combines (the one legit %-start)' );
+
+// ─── Test 8: v10.49.0 critical.css split — the article back half rides ──
+// the combined cascade, not the inlined head. Guards the v10.21.6 lesson
+// (63 green suites missed a combined-CSS handle drop): assert the REAL
+// repo files, not just the fixtures.
+echo "\nTest 8: critical.css split (v10.49.0)\n";
+$real_critical = (string) file_get_contents( __DIR__ . '/../assets/css/critical.css' );
+$real_article  = (string) file_get_contents( __DIR__ . '/../assets/css/article.css' );
+ac_true( '' !== $real_article, 'assets/css/article.css exists and is non-empty' );
+ac_true( false === strpos( $real_critical, '.sn-post-frontmatter' ), 'inlined critical.css no longer carries the article-only .sn-post-frontmatter rules' );
+ac_true( false === strpos( $real_critical, '.wp-block-footnotes' ), 'inlined critical.css no longer carries the footnote rules' );
+ac_true( false !== strpos( $real_article, '.sn-post-frontmatter' ), 'article.css carries the moved .sn-post-frontmatter rules' );
+ac_true( in_array( 'assets/css/article.css', sn_css_combine_sources(), true ), 'sn_css_combine_sources() includes the receiving article.css' );
+$ac_sources_for_end = sn_css_combine_sources();
+ac_eq( 'assets/css/article.css', end( $ac_sources_for_end ) ?: '', 'article.css sits LAST in the combined cascade (it was the LAST layer in the document before the move)' );
+// Combined output really contains a moved selector (built from the real
+// article.css copied into the fixture theme above).
+ac_true( false !== strpos( $built, '.sn-post-frontmatter{' ), 'combined output contains a known moved selector (.sn-post-frontmatter)' );
+ac_true( false !== strpos( $built, '.single-post .wp-block-footnotes' ), 'combined output contains the moved footnote rules' );
+ac_true( false !== strpos( $built, '@view-transition' ), 'combined output carries the @view-transition opt-in (moved with the back half; the combined sheet is render-blocking, so it is present before first render)' );
 
 // ─── Test 7: missing source → null signature (fail open) ──────────────
 echo "\nTest 7: missing source\n";

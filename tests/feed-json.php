@@ -30,6 +30,7 @@ function get_post_meta( $id, $key, $single = false ) { return $GLOBALS['__meta']
 function sn_get_reading_time( $id = null ) { return $GLOBALS['__rt'] ?? 0; }
 if ( ! function_exists( 'wp_json_encode' ) ) { function wp_json_encode( $v, $flags = 0, $depth = 512 ) { return json_encode( $v, $flags, $depth ); } }
 
+require __DIR__ . '/../inc/note-uid.php'; // v10.49.0: canonical uid read the module now calls
 require __DIR__ . '/../inc/feed-json.php';
 
 // --- Behavioral assertions on the pure builder ---

@@ -5,47 +5,74 @@
  * Loads the modular theme code under inc/. Keep this file small — it should
  * only compose the theme, not implement anything.
  *
- * Module map (load order; updated v9.7.0):
- *   inc/setup.php                — editor styles, shortcodes
- *   inc/assets-frontend.php      — frontend CSS/JS/fonts/favicons + defer filters
- *   inc/frontend-filters.php     — skip link, oEmbed, generator-tag stripping, output buffer
+ * Module map (load order; regenerated against the actual require list in the
+ * v10.49.0 doc sweep — it had drifted to ~33 of the 56 requires):
+ *   inc/setup.php                — theme supports, editor styles, shortcodes
+ *   inc/editor-block-palette.php — editor block-palette curation
+ *   inc/asset-combine.php        — combined+minified stylesheet delivery, fail-open to per-file enqueues (v10.21.6)
+ *   inc/assets-frontend.php      — frontend CSS/JS/fonts/favicons + defer filters (critical.css inline; article.css rides the combined cascade since v10.49.0)
+ *   inc/frontend-filters.php     — skip link, Spotify oEmbed, generator-tag stripping (named callbacks v10.49.0), social-link URL shim
  *   inc/og-fonts.php             — registers sn_og_font_paths filter (theme brand fonts → plugin's OG generator)
- *   inc/notes-og-card.php        : bespoke 1200x630 /notes-index share card via the plugin's sn_og_image_url seam (v10.39.0, plugin-guarded)
+ *   inc/notes-og-card.php        — bespoke 1200x630 /notes-index share card via the plugin's sn_og_image_url seam (v10.39.0, plugin-guarded)
  *   inc/wp-update-integration.php       — registers theme with WP's update transient (version visibility in wp-admin)
  *   inc/wp-update-git-preservation.php  — backs up/restores .git through WP UI installs (v8.5.2+)
  *   inc/template-maintenance.php — FSE template-override purge + sn_purge_all_caches_result/sn_clear_template_overrides_result filter listeners
+ *   inc/purge-verify.php         — render-epoch marker + durable per-leg purge report (verified-purge Tier-1, v10.23.0)
+ *   inc/purge-verify-cron.php    — deferred WP-Cron route verify for auto-purges (v10.25.0)
+ *   inc/notes-reading-time.php   — reading-time helper, REST/MCP-available (extracted v10.42.2)
+ *   inc/notes-index-helpers.php  — /notes index pure helpers (extracted from the renderer v10.49.0; loads BEFORE the template router)
  *   inc/page-notes-template.php  — template_include override for /notes route; includes page-notes-render.php
+ *   inc/page-index-template.php  — /index whole-site dossier virtual route; loads inc/page-index-render.php (C3, v10.7.0)
+ *   inc/cms-page-styles.php      — per-Page bespoke stylesheets: now/uses/accessibility (v10.36.0)
  *   inc/patterns.php             — Block Pattern category registration
  *   inc/blocks-register.php      — custom sidenote + pull-quote + pillar-essays dynamic blocks (v9.11.0, pillar-essays v10.47.0)
+ *   inc/block-styles.php         — block style variations
  *   inc/blocks-view-transitions.php — view-transition opt-in for block markup
- *   inc/abilities-registration.php — 15 WP 7.0 Abilities (theme-owned: 10 read + 5 generative; v9.1.1, get-latest-theme-tag added v9.9.0, get-seo-route-meta/get-llms-txt added v10.29.0)
+ *   inc/abilities-registration.php — WP 7.0 Abilities registration (theme-owned read + generative; splits into abilities-*.php)
+ *   inc/desktop-mode-copilot-schema.php — keeps ability tool schemas Copilot-legal even plugin-absent (v10.42.3, desktop-mode#362)
  *   inc/post-frontmatter.php     — long-form post frontmatter rendering
+ *   inc/pillar-title-eyebrow.php — designation eyebrow on flagged essay Pages (v10.48.0)
  *   inc/block-bindings.php       — signal-noise/post-field Block Bindings source (reading_time|pillar|canonical|og_title) (v9.11.0)
  *   inc/post-updated-date.php    — [sn_updated_date] "Updated YYYY.MM.DD" line for materially-revised notes (v9.10.0)
- *   inc/provenance-surface.php   — [sn_prov_chip] byline pill + [sn_prov_panel] record: theme-side placement for the plugin's public provenance rendering, plugin-guarded (v10.30.0)
+ *   inc/provenance-surface.php   — [sn_prov_chip] byline pill + [sn_prov_panel] record, plugin-guarded (v10.30.0)
+ *   inc/related-notes.php        — related-notes footer block on single notes
+ *   inc/cited-by.php             — [sn_cited_by] reverse-link footer (v10.21.0)
+ *   inc/404-recovery.php         — helpful 404: search + recent-notes suggestions ([sn_404_suggestions])
+ *   inc/post-share.php           — [sn_note_share] copy-permalink + native share row
  *   inc/article-toc.php          — in-article TOC + reading-progress bar (the_content filter, single notes ≥3 H2s)
- *   inc/feed-json.php            — JSON Feed 1.1 for the Notes corpus (v9.11.0)
- *   inc/feed-enrichment.php      — RSS media:content + reading-time enrichment, plugin-guarded (v9.11.0)
+ *   inc/feed-json.php            — JSON Feed 1.1 for the Notes corpus (v9.11.0; provenance extension v10.48.0)
+ *   inc/feed-enrichment.php      — RSS media:content + reading-time + noteUid enrichment, plugin-guarded (v9.11.0)
  *   inc/command-palette.php      — reader-facing Notes-scoped ⌘K/"/" command palette (v9.11.0)
  *   inc/keyboard-nav.php         — single-note j/k prev/next + "?" keyboard cheat-sheet (C5, v10.7.0)
- *   inc/404-recovery.php         — helpful 404: search + recent-notes suggestions ([sn_404_suggestions])
+ *   inc/discography-render.php   — [sn_discography] timeline (reads the plugin's sn_discography_entries filter)
+ *   inc/music-featured-render.php — [sn_music_featured] hero player (reads sn_music_featured filter, v9.15.0)
+ *   inc/beacon.php               — first-party edge analytics beacon enqueue (P1)
  *   inc/identity-rels.php        — <link rel="me"> head links from sn_settings social.same_as (A4, v10.5.0)
  *   inc/humans-txt.php           — /humans.txt virtual route + rel=author autodiscovery + maker's-mark comment (C4, v10.5.0)
- *   inc/llms-txt.php             — /llms.txt + /llms-full.txt AEO discoverability virtual routes (v10.19.0)
+ *   inc/security-txt.php         — /.well-known/security.txt virtual route (RFC 9116, v10.13.0)
+ *   inc/llms-txt.php             — /llms.txt + /llms-full.txt AEO discoverability virtual routes (v10.19.0; pillar section v10.49.0)
  *   inc/gpc-json.php             — /.well-known/gpc.json Global Privacy Control declaration (v10.19.0)
  *   inc/opensearch.php           — /opensearch.xml OSDD + rel=search autodiscovery over /notes/?s= (v10.19.0)
  *   inc/agents-manifest.php      — /.well-known/agents.json machine-surfaces discovery manifest + <head> alternate link (v10.37.0)
+ *   inc/note-uid.php             — canonical lowercase+trim read of the plugin-owned _sn_prov_uid meta (v10.49.0)
  *   inc/content-json-document.php — content-as-data JSON document builder (machine-readability sub-project C, v10.38.0)
  *   inc/content-json.php         — /<url>.json virtual route: every Note/Page reachable as JSON + <head> alternate link (v10.38.0)
+ *   inc/disable-smart-quotes.php — straight quotes: disable wptexturize site-wide (v10.13.2)
+ *   inc/seo-route-meta.php       — template-driven Page descriptions for the plugin's sn_seo_singular_description filter (v10.13.0)
  *   inc/colophon-meta.php        — [sn_build] live colophon line: theme+plugin version, git short SHA, deploy time (C2, v10.5.0)
+ *   inc/availability.php         — [sn_availability] line in the /contact + /services heroes (D5, v10.9.0)
+ *   inc/contact-email.php        — [sn_email] scraper-resistant /contact aliases (v10.16.0)
+ *   inc/feed-websub.php          — WebSub rel="hub" advertisement in the RSS2 + Atom feeds (D4, v10.9.0)
  *   (inc/page-notes-render.php   — full PHP render of /notes index; loaded by page-notes-template.php, not here)
+ *   (inc/page-index-render.php   — full PHP render of /index; loaded by page-index-template.php, not here)
+ *   (inc/abilities-*.php          — helpers/categories/content/diagnostics/ai-generation; loaded by abilities-registration.php)
  *
  * Operational tooling — REST surface, Plausible integration, admin UI, security
  * headers, Cloudflare purge, OG card generation, reading-time, content surfaces +
  * migrations — lives in the
  * [signal-and-noise-tools companion plugin](https://github.com/juanlentino/signal-and-noise-tools).
  * See [docs/WORDPRESS-REFERENCE.md](docs/WORDPRESS-REFERENCE.md) §10.0 for the
- * cross-package contract surface (3 hooks since v8.4.0).
+ * cross-package contract surface (7 theme-listener hooks as of the v10.49.0 sweep).
  *
  * @package SignalNoise
  * @since 1.0.0
@@ -75,6 +102,7 @@ require_once __DIR__ . '/inc/template-maintenance.php';
 require_once __DIR__ . '/inc/purge-verify.php'; // v10.23.0: render-epoch marker + durable per-leg purge report (verified-purge Tier-1)
 require_once __DIR__ . '/inc/purge-verify-cron.php'; // v10.25.0: deferred WP-Cron route verify for auto-purges (folds routes/resolved back into the report)
 require_once __DIR__ . '/inc/notes-reading-time.php'; // v10.42.2: reading-time helper, extracted from page-notes-render.php so it is available in REST/MCP (the /notes renderer is template-route-only)
+require_once __DIR__ . '/inc/notes-index-helpers.php'; // v10.49.0: the /notes index pure helpers, extracted from page-notes-render.php (which is render-path only now; the SN_NOTES_RENDER_TEST hack is retired). Must load BEFORE the template router below.
 require_once __DIR__ . '/inc/page-notes-template.php';
 require_once __DIR__ . '/inc/page-index-template.php'; // C3 (v10.7.0): /index whole-site dossier virtual route (loads inc/page-index-render.php)
 require_once __DIR__ . '/inc/cms-page-styles.php'; // v10.36.0: per-Page bespoke stylesheets (now.css on /now, uses.css on /about/uses, accessibility.css on /accessibility)
@@ -108,6 +136,7 @@ require_once __DIR__ . '/inc/llms-txt.php'; // v10.19.0: /llms.txt + /llms-full.
 require_once __DIR__ . '/inc/gpc-json.php'; // v10.19.0: /.well-known/gpc.json virtual route (Global Privacy Control declaration)
 require_once __DIR__ . '/inc/opensearch.php'; // v10.19.0: /opensearch.xml virtual route + rel=search autodiscovery (search provider over /notes/?s=)
 require_once __DIR__ . '/inc/agents-manifest.php'; // v10.37.0: /.well-known/agents.json machine-surfaces discovery manifest (machine-readability program, sub-project A)
+require_once __DIR__ . '/inc/note-uid.php'; // v10.49.0: canonical lowercase+trim read of the plugin-owned _sn_prov_uid meta (shared by the .json twin + both feeds; closes a trim drift)
 require_once __DIR__ . '/inc/content-json-document.php'; // v10.38.0: content-as-data JSON document builder (machine-readability, sub-project C)
 require_once __DIR__ . '/inc/content-json.php';          // v10.38.0: /<url>.json virtual route — every Note/Page reachable as JSON (machine-readability, sub-project C)
 require_once __DIR__ . '/inc/disable-smart-quotes.php'; // v10.13.2: straight quotes — disable wptexturize site-wide

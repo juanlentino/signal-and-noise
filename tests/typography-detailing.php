@@ -5,8 +5,9 @@
  * C1 is pure CSS, verified visually by headless-Chrome computed style. This
  * fixture is the in-repo regression guard (mirrors tests/view-transitions.php
  * and tests/style-variations.php): it asserts the declarations are present in
- * assets/css/critical.css and that the hanging-punctuation rule was broadened
- * beyond the old single-post-only scope.
+ * assets/css/article.css (v10.49.0: moved verbatim from critical.css's back
+ * half into the combined cascade) and that the hanging-punctuation rule was
+ * broadened beyond the old single-post-only scope.
  *
  * @since theme v10.5.0
  */
@@ -17,8 +18,8 @@ if ( PHP_SAPI !== 'cli' && ! defined( 'WP_CLI' ) ) { http_response_code( 404 ); 
 $pass = 0; $fail = 0;
 function ok( $cond, $msg ) { global $pass, $fail; if ( $cond ) { $pass++; echo "PASS: $msg\n"; } else { $fail++; echo "FAIL: $msg\n"; } }
 
-$css = (string) file_get_contents( realpath( __DIR__ . '/..' ) . '/assets/css/critical.css' );
-ok( '' !== $css, 'critical.css is readable' );
+$css = (string) file_get_contents( realpath( __DIR__ . '/..' ) . '/assets/css/article.css' );
+ok( '' !== $css, 'article.css is readable' );
 
 // Hanging punctuation present + broadened to the pull-quote prose root.
 ok( strpos( $css, 'hanging-punctuation:' ) !== false, 'hanging-punctuation declared' );

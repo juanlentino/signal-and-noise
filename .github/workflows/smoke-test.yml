@@ -241,6 +241,146 @@ jobs:
             'https://juanlentino.com/notes/feed/' \
             '<rss'
 
+          # ── Machine-readability surfaces (v10.49.0) ──────────────────
+          # The site's advertised machine surfaces are enumerated by the
+          # live /.well-known/agents.json discovery manifest
+          # (inc/agents-manifest.php + plugin-filtered entries). Instead of
+          # hardcoding each surface here, fetch the manifest and probe every
+          # advertised URL for its expected status + content-type — so a
+          # surface added via the sn_agents_surfaces filter is covered the
+          # moment it ships, and an advertised-but-404 surface (the exact
+          # "advertised resource vanished" rot class of WORDPRESS-REFERENCE
+          # gotcha #40) hard-fails.
+          #
+          # Data-trust note: every probed value comes from OUR OWN site over
+          # HTTPS and stays in quoted shell variables (no eval, no
+          # github.event.* interpolation).
+          #
+          # Per-entry semantics:
+          #   - URLs containing '{' are templates (per-note credential /
+          #     OG-card patterns) — not fetchable, skipped.
+          #   - type=content-json advertises a CONVENTION (its url is the
+          #     site root; the .json twins hang off individual permalinks) —
+          #     skipped here; the twin behavior is unit-tested in-repo.
+          #   - /wp-json/ REST surfaces may be auth- or method-gated for an
+          #     anonymous GET, so any JSON-speaking response (200/401/404
+          #     with an application/json content-type) proves the surface is
+          #     alive; a non-JSON body or 5xx fails.
+          #   - Everything else must answer 200 with a content-type matching
+          #     the manifest's advertised format (text/markdown is accepted
+          #     as text/plain — llms.txt serves markdown as plain text; and
+          #     application/xml accepts text/xml).
+
+          # check_surface <type> <url> <format>
+          check_surface() {
+            local type="$1" url="$2" fmt="$3"
+            case "$url" in
+              *'{'*)
+                echo ""
+                echo "=== agents.json surface: $type ==="
+                echo "SKIP: templated URL ($url)"
+                return ;;
+            esac
+            if [ "$type" = "content-json" ]; then
+              echo ""
+              echo "=== agents.json surface: $type ==="
+              echo "SKIP: convention surface (url is the site root; .json twins ride permalinks)"
+              return
+            fi
+
+            local body_file hdr_file attempt=1
+            body_file=$(mktemp); hdr_file=$(mktemp)
+            while : ; do
+              fetch "$url" "$body_file" "$hdr_file"
+              [ "$O_CODE" = "200" ] && break
+              [ "$attempt" -ge "$MAX_ATTEMPTS" ] && break
+              sleep $(( attempt * 8 ))
+              attempt=$(( attempt + 1 ))
+            done
+
+            local ct expected rest_surface=0
+            ct=$(grep -i '^content-type:' "$hdr_file" | tail -1 | tr -d '\r' \
+              | cut -d: -f2- | cut -d';' -f1 | tr '[:upper:]' '[:lower:]' | tr -d ' ')
+            expected=$(echo "$fmt" | cut -d';' -f1 | cut -d' ' -f1 | tr '[:upper:]' '[:lower:]')
+            case "$url" in *'/wp-json/'*) rest_surface=1 ;; esac
+
+            local outcome
+            if [ "$rest_surface" = "1" ]; then
+              # REST: alive = the router answered in JSON (auth/method gates
+              # make 401/404 legitimate for an anonymous GET probe).
+              case "$O_CODE" in
+                200|401|404)
+                  if [ "$ct" = "application/json" ]; then outcome=OK; else outcome=REGRESSION; fi ;;
+                403|415|429) outcome=EDGE_BLOCK ;;
+                *)           outcome=DOWN ;;
+              esac
+            else
+              case "$O_CODE" in
+                200)
+                  if [ "$ct" = "$expected" ] \
+                    || { [ "$expected" = "text/markdown" ] && [ "$ct" = "text/plain" ]; } \
+                    || { [ "$expected" = "application/xml" ] && [ "$ct" = "text/xml" ]; }; then
+                    outcome=OK
+                  else
+                    outcome=REGRESSION
+                  fi ;;
+                403|415|429) outcome=EDGE_BLOCK ;;
+                *)           outcome=DOWN ;;
+              esac
+            fi
+
+            echo ""
+            echo "=== agents.json surface: $type ==="
+            echo "URL:          $url"
+            echo "HTTP:         ${O_CODE}"
+            echo "Content-Type: ${ct:-(none)} (advertised: ${expected})"
+            echo "Attempts:     ${attempt}"
+            echo "Outcome:      ${outcome}"
+            case "$outcome" in
+              OK)
+                echo "Result: OK" ;;
+              EDGE_BLOCK)
+                excerpt "$body_file" "$hdr_file"
+                echo "::warning::agents.json surface '$type' — edge block (HTTP ${O_CODE}) from this runner IP after ${attempt} tries; inconclusive."
+                warn=1 ;;
+              REGRESSION)
+                excerpt "$body_file" "$hdr_file"
+                echo "::error::agents.json surface '$type' — answered HTTP ${O_CODE} but content-type '${ct}' does not satisfy advertised '${expected}'."
+                echo "Result: FAIL"
+                fail=1 ;;
+              DOWN)
+                excerpt "$body_file" "$hdr_file"
+                echo "::error::agents.json surface '$type' — HTTP ${O_CODE} after ${attempt} tries; the manifest advertises a surface that does not answer."
+                echo "Result: FAIL"
+                fail=1 ;;
+            esac
+            rm -f "$body_file" "$hdr_file"
+          }
+
+          manifest_body=$(mktemp); manifest_hdr=$(mktemp)
+          fetch 'https://juanlentino.com/.well-known/agents.json' "$manifest_body" "$manifest_hdr"
+          echo ""
+          echo "=== Machine-surfaces manifest (/.well-known/agents.json) ==="
+          echo "HTTP:  ${O_CODE}"
+          if [ "$O_CODE" = "200" ] && jq -e '.surfaces | length >= 8' "$manifest_body" > /dev/null 2>&1; then
+            echo "Result: OK ($(jq '.surfaces | length' "$manifest_body") surfaces advertised)"
+            while IFS=$'\t' read -r s_type s_url s_fmt; do
+              check_surface "$s_type" "$s_url" "$s_fmt"
+            done < <(jq -r '.surfaces[] | [.type, .url, .format] | @tsv' "$manifest_body")
+          else
+            case "$O_CODE" in
+              403|415|429)
+                excerpt "$manifest_body" "$manifest_hdr"
+                echo "::warning::agents.json manifest — edge block (HTTP ${O_CODE}); surface checks skipped this run."
+                warn=1 ;;
+              *)
+                excerpt "$manifest_body" "$manifest_hdr"
+                echo "::error::agents.json manifest missing, unreachable, or not parseable JSON with >=8 surfaces (HTTP ${O_CODE})."
+                fail=1 ;;
+            esac
+          fi
+          rm -f "$manifest_body" "$manifest_hdr"
+
           echo ""
           if [ $fail -ne 0 ]; then
             echo "::error::One or more routes failed health check (real regression / outage)."

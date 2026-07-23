@@ -293,7 +293,7 @@ This theme ships with a companion plugin that holds all operational tooling. Und
 
 ### 10.0 The theme + companion plugin split (Phases 1–3 complete as of v8.4.0 / Tools v1.3.0)
 
-The theme is presentation; the companion plugin [`signal-and-noise-tools`](https://github.com/juanlentino/signal-and-noise-tools) holds operational tooling. They communicate via 4 WP hooks (3 since v8.4.0; +1 in v9.1.6/plugin v4.1.1). **The split is complete as of v8.4.0 / Tools v1.3.0 — no further migrations are planned.** See `docs/superpowers/specs/2026-05-15-companion-plugin-phase-1-design.md` and successors for the migration history.
+The theme is presentation; the companion plugin [`signal-and-noise-tools`](https://github.com/juanlentino/signal-and-noise-tools) holds operational tooling. They communicate via 8 theme-listener WP hooks (3 since v8.4.0; +1 in v9.1.6/plugin v4.1.1; +3 accreted in v10.13.0/v10.38.0/v10.39.0; +1 in v10.43.0 against the plugin's v9.54.0 error seam — all first tabled in the v10.49.0 doc sweep). **The split is complete as of v8.4.0 / Tools v1.3.0 — no further migrations are planned.** See `docs/superpowers/specs/2026-05-15-companion-plugin-phase-1-design.md` and successors for the migration history.
 
 **Modules currently in plugin:**
 - *Phase 1 moves (v8.2.0 / Tools v1.0.0):* `seo.php`, `security-headers.php`, `cloudflare-purge.php`, `plausible-api.php`, `plausible-admin.php`, `plausible-widget.php`, `admin-bar.php`, `admin-page.php`, `rest-api.php`.
@@ -304,7 +304,7 @@ The theme is presentation; the companion plugin [`signal-and-noise-tools`](https
 
 **Phase 4 is empty** — the only file it was scheduled to migrate (the RSS tracker MU plugin) shipped early in v8.2.1. The `mu-plugins/` directory no longer exists in the theme repo.
 
-**Contract hooks — 4 cross-package hooks (3 added v8.4.0–v8.5.0; +1 added v9.1.6):**
+**Contract hooks — 8 cross-package hooks the theme LISTENS on (3 added v8.4.0–v8.5.0; +1 added v9.1.6; +3 added v10.13.0–v10.39.0; +1 added v10.43.0, tabled in the v10.49.0 doc sweep). All 8 are pinned by [tests/cross-package-listeners.php](../tests/cross-package-listeners.php):**
 
 | Hook | Type | Dispatched by | Listened by |
 | --- | --- | --- | --- |
@@ -312,12 +312,18 @@ The theme is presentation; the companion plugin [`signal-and-noise-tools`](https
 | `sn_clear_template_overrides_result` | filter | plugin: `apply_filters( 'sn_clear_template_overrides_result', 0 )` returns int count | theme: [`inc/template-maintenance.php`](../inc/template-maintenance.php) wraps `sn_clear_template_overrides()` |
 | `sn_og_font_paths` | filter | plugin: `apply_filters( 'sn_og_font_paths', array() )` returns array with `bebas` + `dmmono` keys mapping to absolute TTF paths | theme: [`inc/og-fonts.php`](../inc/og-fonts.php) returns paths via `get_theme_file_path( 'assets/fonts/og/*.ttf' )` |
 | `sn_gh_latest_theme_tag_result` | filter | plugin: `apply_filters( 'sn_gh_latest_theme_tag_result', null )` returns `string|null` (latest GitHub theme tag) | theme: [`inc/wp-update-integration.php`](../inc/wp-update-integration.php) wraps `sn_gh_latest_theme_tag()` |
+| `sn_gh_latest_theme_tag_error_result` | filter | plugin: `apply_filters( 'sn_gh_latest_theme_tag_error_result', '' )` while `snt_deploy_status_for('theme')` resolves the Dashboard card's failure reason (seam opened plugin v9.54.0) — returns string, `''` meaning "last fetch succeeded" | theme: [`inc/wp-update-integration.php`](../inc/wp-update-integration.php) (listener added v10.43.0) answers with `sn_gh_latest_theme_tag_error()`; the theme's own recorded reason wins, otherwise the incoming plugin-side value passes through |
+| `sn_seo_singular_description` | filter | plugin: `apply_filters( 'sn_seo_singular_description', $description, $post )` while resolving the meta description for a singular view (plugin `inc/seo.php`) | theme: [`inc/seo-route-meta.php`](../inc/seo-route-meta.php) fills template-driven Page descriptions (today `/colophon`) ONLY when the plugin resolved `''` — a non-empty description always passes through |
+| `sn_og_image_url` | filter | plugin: `apply_filters( 'sn_og_image_url', $resolved_url )` while resolving the `og:image` (plugin OG pipeline) | theme: [`inc/notes-og-card.php`](../inc/notes-og-card.php) at priority 20 (after the plugin's own listener at 10) swaps in the bespoke `/notes`-index share card ONLY when `sn_notes_is_index_request()` matches |
+| `sn_cf_purge_urls_for_post` | filter | plugin: `apply_filters( 'sn_cf_purge_urls_for_post', $urls, $post_id, $post )` when building the per-post Cloudflare purge list (plugin `inc/cloudflare-purge.php`) | theme: [`inc/content-json.php`](../inc/content-json.php) appends the permalink's `.json` twin (post/page only; site root skipped) so the twin purges alongside the HTML |
 
 > **Retired in theme v8.3.0 (Phase 2b):** the 5 updater/self-heal contracts (`sn_self_heal_force_run_result`, `sn_updater_branch`, `sn_updater_revcount`, `sn_updater_force_check`, `sn_updater_clear_error`). See [Phase 2b spec](superpowers/specs/2026-05-15-phase-2b-cleanup-design.md).
 
 > **Added in theme v8.4.0 (Phase 3):** `sn_og_font_paths` — plugin owns OG card PHP GD rendering; theme owns the typography. See [Phase 3 spec](superpowers/specs/2026-05-16-phase-3-theme-coupled-moves-design.md).
 
 > **Added in theme v9.1.6 / plugin v4.1.1 (audit X-01):** `sn_gh_latest_theme_tag_result` — plugin needed the latest theme tag for its deploy-status card but was reaching directly into the theme function via `function_exists`. The new filter contract makes the dependency tolerant of theme-absent/inactive states.
+
+> **Added in theme v10.43.0 (plugin seam v9.54.0):** `sn_gh_latest_theme_tag_error_result` — the plugin's Dashboard card asked WHY the theme tag fetch failed, but only implemented the answer for itself; without a theme listener the card rendered a bare unexplained red dot (the 2026-07-16 GitHub outage made this visible). Mirrors the tag filter: theme owns its data, plugin owns the card.
 
 **Direct dependencies kept (no contract — stable by design):**
 - `sn_*` option keys — plugin reads via `get_option()`. Option *key names* are part of the public contract surface; renaming them would require migration shims for zero benefit.

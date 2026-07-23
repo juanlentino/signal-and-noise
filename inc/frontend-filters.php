@@ -5,6 +5,12 @@
  * - Skip-to-content link (a11y)
  * - oEmbed filter forcing dark theme + square corners on Spotify embeds
  * - Strip WordPress + plugin generator meta tags (fingerprinting reduction)
+ * - core/social-link path-relative URL shim (upstream core bug workaround)
+ *
+ * v10.49.0: every hook callback here is a NAMED function (they were five
+ * anonymous closures) so the two behavior-bearing seams — the site-wide
+ * output-buffer rewrite and the social-link URL shim — are testable.
+ * Behavior is unchanged byte-for-byte; pinned in tests/frontend-filters.php.
  *
  * @package SignalNoise
  */
@@ -14,16 +20,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Accessibility: Add skip-to-content link as first element in body.
+ * Accessibility: skip-to-content link, first element in <body>.
  */
-add_action( 'wp_body_open', function() {
+function sn_skip_link() {
 	echo '<a class="sn-skip-link" href="#wp--skip-link--target">Skip to content</a>';
-} );
+}
 
 /**
  * Force Spotify embeds to use dark theme and remove border-radius.
+ *
+ * @param string $html oEmbed markup.
+ * @param string $url  The embedded URL.
+ * @return string
  */
-add_filter( 'embed_oembed_html', function( $html, $url ) {
+function sn_spotify_embed_dark( $html, $url ) {
 	if ( strpos( $url, 'spotify.com' ) !== false ) {
 		// Add theme=0 (dark) to iframe src
 		$html = preg_replace(
@@ -35,27 +45,7 @@ add_filter( 'embed_oembed_html', function( $html, $url ) {
 		$html = str_replace( 'border-radius: 12px', 'border-radius: 0', $html );
 	}
 	return $html;
-}, 10, 2 );
-
-/**
- * Security: Strip WordPress and plugin generator meta tags.
- */
-remove_action( 'wp_head', 'wp_generator' );
-add_filter( 'the_generator', '__return_empty_string' );
-
-/**
- * Head-sweep (A4): drop the legacy xmlrpc-era discovery links core still
- * emits at wp_head priority 10. Both advertise surfaces this site does not
- * serve:
- *   - rsd_link()         → <link rel="EditURI" … xmlrpc.php?rsd> (Really Simple
- *                          Discovery — points at the disabled xmlrpc.php).
- *   - wlwmanifest_link() → <link rel="wlwmanifest" … wlwmanifest.xml> (Windows
- *                          Live Writer, retired in 2017).
- * No explicit priority arg is needed: core registers both at the default
- * priority 10, which is what remove_action() matches when omitted.
- */
-remove_action( 'wp_head', 'rsd_link' );
-remove_action( 'wp_head', 'wlwmanifest_link' );
+}
 
 /**
  * Work around a WordPress core bug in render_block_core_social_link()
@@ -76,8 +66,11 @@ remove_action( 'wp_head', 'wlwmanifest_link' );
  * recognise the "starts with /" case, this filter becomes a no-op and
  * can be removed. Tracked at /docs (no upstream issue filed yet — file
  * one if you touch this again).
+ *
+ * @param array $parsed_block Parsed block (render_block_data).
+ * @return array
  */
-add_filter( 'render_block_data', function( $parsed_block ) {
+function sn_social_link_relative_url( $parsed_block ) {
 	if ( 'core/social-link' !== ( $parsed_block['blockName'] ?? '' ) ) {
 		return $parsed_block;
 	}
@@ -88,21 +81,58 @@ add_filter( 'render_block_data', function( $parsed_block ) {
 		$parsed_block['attrs']['url'] = home_url( $url );
 	}
 	return $parsed_block;
-} );
+}
 
 /**
- * Output buffer: strip remaining generator meta tags from plugins that emit
- * raw <meta name="generator"> inline rather than via the_generator().
+ * Output-buffer callback: strip remaining generator meta tags from plugins
+ * that emit raw <meta name="generator"> inline rather than via
+ * the_generator(). Pure string → string, so it is directly testable.
+ *
+ * @param string $html Buffered page markup.
+ * @return string
+ */
+function sn_strip_generator_meta( $html ) {
+	$html = preg_replace( '/<meta name="generator"[^>]*>\n?/i', '', $html );
+	return $html;
+}
+
+/**
+ * template_redirect handler: install the generator-strip rewrite on a
+ * page-wide output buffer.
  *
  * Caveat: inc/page-notes-template.php registers a template_redirect at
  * priority 0 that `include + exit`s, bypassing every later template_redirect
  * hook — including this ob_start — so this buffer does not run on /notes/
- * routes. The wp_head generator strip above (remove_action + the_generator
+ * routes. The wp_head generator strip below (remove_action + the_generator
  * filter) is unconditional and covers those routes regardless.
  */
-add_action( 'template_redirect', function() {
-	ob_start( function( $html ) {
-		$html = preg_replace( '/<meta name="generator"[^>]*>\n?/i', '', $html );
-		return $html;
-	});
-} );
+function sn_generator_meta_buffer_start() {
+	ob_start( 'sn_strip_generator_meta' );
+}
+
+if ( ! defined( 'SN_FRONTEND_FILTERS_TEST' ) || ! SN_FRONTEND_FILTERS_TEST ) {
+	add_action( 'wp_body_open', 'sn_skip_link' );
+	add_filter( 'embed_oembed_html', 'sn_spotify_embed_dark', 10, 2 );
+	add_filter( 'render_block_data', 'sn_social_link_relative_url' );
+	add_action( 'template_redirect', 'sn_generator_meta_buffer_start' );
+
+	/**
+	 * Security: Strip WordPress and plugin generator meta tags.
+	 */
+	remove_action( 'wp_head', 'wp_generator' );
+	add_filter( 'the_generator', '__return_empty_string' );
+
+	/**
+	 * Head-sweep (A4): drop the legacy xmlrpc-era discovery links core still
+	 * emits at wp_head priority 10. Both advertise surfaces this site does not
+	 * serve:
+	 *   - rsd_link()         → <link rel="EditURI" … xmlrpc.php?rsd> (Really Simple
+	 *                          Discovery — points at the disabled xmlrpc.php).
+	 *   - wlwmanifest_link() → <link rel="wlwmanifest" … wlwmanifest.xml> (Windows
+	 *                          Live Writer, retired in 2017).
+	 * No explicit priority arg is needed: core registers both at the default
+	 * priority 10, which is what remove_action() matches when omitted.
+	 */
+	remove_action( 'wp_head', 'rsd_link' );
+	remove_action( 'wp_head', 'wlwmanifest_link' );
+}

@@ -60,8 +60,9 @@ if ( ! class_exists( 'WP_Query' ) ) {
 	}
 }
 
-define( 'SN_NOTES_RENDER_TEST', true );
-require __DIR__ . '/../inc/page-notes-render.php';
+// v10.49.0: the pure helpers moved to their own module (page-notes-render.php
+// is render-path only now; the SN_NOTES_RENDER_TEST sentinel is retired).
+require __DIR__ . '/../inc/notes-index-helpers.php';
 
 $pass = 0; $fail = 0;
 function ok( $cond, $label ) {

@@ -79,14 +79,16 @@ function sn_content_json_document( $post ) {
 			'verify_url' => home_url( '/provenance/verify/' ),
 			'note'       => 'This Note carries a Bitcoin-anchored authorship proof.',
 		);
-		// Republish the Note's uid (the plugin owns the _sn_prov_uid meta;
-		// literal key — the constant lives plugin-side). It is the key the
-		// /verify docket needs to fetch this Note's credential: the verifier
-		// resolves a pasted Note URL by probing provenance.note_uid, so
-		// without it paste-a-URL can never work (caught live 2026-07-21).
-		// With a uid in hand, verify_url upgrades from the static how-to to
-		// this Note's own docket.
-		$uid = function_exists( 'get_post_meta' ) ? strtolower( (string) get_post_meta( $post->ID, '_sn_prov_uid', true ) ) : '';
+		// Republish the Note's uid via the canonical normalized read
+		// (inc/note-uid.php — v10.49.0: this call site previously inlined
+		// strtolower WITHOUT the trim the other readers had, so a uid stored
+		// with stray whitespace republished whitespace into the twin). It is
+		// the key the /verify docket needs to fetch this Note's credential:
+		// the verifier resolves a pasted Note URL by probing
+		// provenance.note_uid, so without it paste-a-URL can never work
+		// (caught live 2026-07-21). With a uid in hand, verify_url upgrades
+		// from the static how-to to this Note's own docket.
+		$uid = function_exists( 'sn_theme_note_uid' ) ? sn_theme_note_uid( $post->ID ) : '';
 		if ( '' !== $uid ) {
 			$doc['provenance']['note_uid']   = $uid;
 			$doc['provenance']['verify_url'] = home_url( '/verify?note=' . rawurlencode( $uid ) );

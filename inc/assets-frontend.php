@@ -6,8 +6,13 @@
  * side. Does NOT cover admin-side assets (see inc/admin-assets.php).
  *
  * Performance goals:
- *   - critical.css inlined in <head> for first paint
- *   - custom.css enqueued normally (Breeze strips onload from deferred)
+ *   - critical.css inlined in <head> for first paint + interaction-timing
+ *     chrome only (v10.49.0: the single-note article back half lives in
+ *     assets/css/article.css, last in the combined cascade)
+ *   - the modular stylesheets ship as ONE combined render-blocking file
+ *     (inc/asset-combine.php), with per-file enqueues as the fail-open
+ *     fallback (the custom.css this header once described was retired long
+ *     ago — the combined sn-styles file is the deferred-payload successor)
  *   - Bebas Neue @font-face inlined and preloaded; browser uses it immediately
  *   - wp-block-library + translatepress CSS converted to media="print"
  *     onload swap so they don't render-block
@@ -49,8 +54,8 @@ function sn_asset_ver( $relative_path ) {
 /**
  * Enqueue custom front-end assets.
  *
- * custom.css is inlined (below) to eliminate render-blocking external CSS.
- * Only the JS file is enqueued externally (loaded in footer with defer).
+ * Only the JS file is enqueued here (loaded in footer). Stylesheets ship via
+ * the combined enqueue below + the inlined critical.css.
  */
 function signal_noise_enqueue_styles() {
 	wp_enqueue_script(
@@ -64,8 +69,9 @@ function signal_noise_enqueue_styles() {
 add_action( 'wp_enqueue_scripts', 'signal_noise_enqueue_styles' );
 
 /**
- * Performance: Inline only critical above-the-fold CSS.
- * The full custom.css is loaded deferred below.
+ * Performance: Inline only critical above-the-fold + interaction-timing CSS.
+ * The rest of the theme CSS ships as the combined render-blocking stylesheet
+ * enqueued below (inc/asset-combine.php).
  *
  * SAFETY CONTRACT: assets/css/critical.css is theme-owned, ships in the
  * repo, and MUST never be programmatically rewritten by user-influenced
@@ -95,13 +101,17 @@ add_action( 'wp_head', function() {
  * did (Performance Lab audit, 2026-07-02), so the theme owns it now.
  *
  * Fail-open: when the combiner returns null (missing source, unwritable
- * uploads, relative url() guard), fall back to the original four separate
- * files in cascade order: base → layout → components → responsive.
- * Responsive @media rules must come last so they can override the earlier
- * layout/component defaults. (Keep the fallback list in sync with
+ * uploads, relative url() guard), fall back to the separate files in cascade
+ * order: base → layout → components → responsive → article. Responsive
+ * @media rules must override the earlier layout/component defaults, and
+ * article.css (v10.49.0, the single-note back half moved out of the inlined
+ * critical.css) stays last — it was the last stylesheet layer in the
+ * document before the move. (Keep the fallback list in sync with
  * sn_css_combine_sources() and inc/setup.php add_editor_style; the
  * command-palette stylesheet rides the combined file too — its fallback
- * enqueue lives in inc/command-palette.php.)
+ * enqueue lives in inc/command-palette.php. Article ↔ command-palette
+ * relative order is a non-issue: the only shared surface, the .sn-cmdk-off
+ * kill-switch, wins on specificity (0,2,0 vs 0,1,0), not source order.)
  */
 add_action( 'wp_enqueue_scripts', function() {
 	$combined = function_exists( 'sn_css_ensure_combined' ) ? sn_css_ensure_combined() : null;
@@ -123,6 +133,7 @@ add_action( 'wp_enqueue_scripts', function() {
 	wp_enqueue_style( 'sn-layout',     get_theme_file_uri( 'assets/css/layout.css' ),     array( 'sn-base' ),       sn_asset_ver( 'assets/css/layout.css' ) );
 	wp_enqueue_style( 'sn-components', get_theme_file_uri( 'assets/css/components.css' ), array( 'sn-layout' ),     sn_asset_ver( 'assets/css/components.css' ) );
 	wp_enqueue_style( 'sn-responsive', get_theme_file_uri( 'assets/css/responsive.css' ), array( 'sn-components' ), sn_asset_ver( 'assets/css/responsive.css' ) );
+	wp_enqueue_style( 'sn-article',    get_theme_file_uri( 'assets/css/article.css' ),    array( 'sn-responsive' ), sn_asset_ver( 'assets/css/article.css' ) );
 }, 10 );
 
 /**

@@ -19,7 +19,8 @@
  *
  * Reduced-motion respect: the existing @media (prefers-reduced-motion:
  * reduce) { @view-transition { navigation: none; } } block in
- * assets/css/critical.css disables ALL navigation transitions when the
+ * assets/css/article.css (combined stylesheet; moved from critical.css in
+ * v10.49.0) disables ALL navigation transitions when the
  * user opts out. Our per-element view-transition-names inherit that
  * disable automatically.
  *

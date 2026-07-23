@@ -60,6 +60,15 @@ foreach ( $s as $entry ) {
 ok( $all_have_url, 'every surface entry has type + url' );
 ok( $all_abs, 'every surface url is absolute https' );
 
+// ── provenance-verify URL pin (v10.49.0) ──
+// The verify docket ships at /verify (see inc/content-json-document.php's
+// per-note verify_url). The manifest briefly advertised the retired
+// /provenance/verify/ path, which 404s live — and the smoke test's surface
+// loop hard-fails on any advertised-404. Pin the exact URL so the manifest
+// can never re-advertise a dead verify path.
+$by_type = array_column( $s, 'url', 'type' );
+ok( ( $by_type['provenance-verify'] ?? '' ) === 'https://juanlentino.com/verify/', 'provenance-verify surface points at the live /verify docket (never /provenance/verify/)' );
+
 // ── surfaces filter (proves sub-project B can wire in) ──
 $GLOBALS['__filters']['sn_agents_surfaces'] = static function ( $list ) {
 	$list[] = array( 'type' => 'mcp', 'url' => 'https://juanlentino.com/wp-json/sn/mcp', 'format' => 'application/json' );
