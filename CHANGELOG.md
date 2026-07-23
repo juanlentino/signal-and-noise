@@ -2,6 +2,14 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.48.1] - 2026-07-22
+
+### Fixed
+
+- **The pillar eyebrow now actually renders on the pillar essays.** v10.48.0 hooked only `core/post-title`, but the essays render `templates/page-provenance.html`, which has no post-title block (their hero heading lives in content) — the feature was inert on exactly its target pages, caught in post-install live verification. The filter now also attaches to `core/post-content` (eyebrow prepended above the essay body) with a once-per-request flag so templates rendering both blocks emit a single eyebrow; a rejected candidate never burns the flag.
+
+> **Why PATCH:** fixes a v10.48.0 feature that never fired on its target pages; no new capability, no API change.
+
 ## [10.48.0] - 2026-07-22
 
 **Headline:** the pillar arc reaches the feeds and the essay Page itself — every feed item that is a verifiable Note now republishes its uid (JSON Feed `_signal_noise` extension + RSS `<sn:noteUid>`), so subscribers can reach the /verify docket without a second fetch, and a flagged essay's own title now carries its designation eyebrow ("№ 1.01 · Pillar Essay" → /provenance/). Rides along: three audited hardenings of the pillar descriptor derivation.
