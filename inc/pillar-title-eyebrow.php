@@ -41,7 +41,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return int Queried Page ID, or 0 when the eyebrow must not render.
  */
 function sn_pillar_eyebrow_page_id( $block, $instance = null ) {
-	if ( 'core/post-title' !== ( is_array( $block ) ? ( $block['blockName'] ?? '' ) : '' ) ) {
+	// v10.48.1: pillar essays render templates/page-provenance.html, which has
+	// NO core/post-title block (the hero heading lives in content), so the
+	// eyebrow also attaches via core/post-content. The once-flag in the filter
+	// keeps templates that render BOTH blocks (page.html) to a single eyebrow.
+	$name = is_array( $block ) ? ( $block['blockName'] ?? '' ) : '';
+	if ( 'core/post-title' !== $name && 'core/post-content' !== $name ) {
 		return 0;
 	}
 	if ( function_exists( 'is_admin' ) && is_admin() ) {
@@ -101,7 +106,23 @@ function sn_pillar_eyebrow_designation( $page_id ) {
  * @param WP_Block|null $instance      Block instance.
  * @return string
  */
+/**
+ * Reset the once-per-request emit flag (tests; never needed in production).
+ *
+ * @since 10.48.1
+ * @return void
+ */
+function sn_pillar_eyebrow_reset() {
+	$GLOBALS['sn_pillar_eyebrow_emitted'] = false;
+}
+
 function sn_pillar_eyebrow_filter( $block_content, $block, $instance = null ) {
+	// Once per request: page.html renders post-title THEN post-content; the
+	// first ACTUAL emit wins and every later candidate passes through. A
+	// rejected candidate (unflagged page, secondary loop) never burns the flag.
+	if ( ! empty( $GLOBALS['sn_pillar_eyebrow_emitted'] ) ) {
+		return $block_content;
+	}
 	$page_id = sn_pillar_eyebrow_page_id( $block, $instance );
 	if ( ! $page_id ) {
 		return $block_content;
@@ -116,11 +137,15 @@ function sn_pillar_eyebrow_filter( $block_content, $block, $instance = null ) {
 		esc_url( home_url( '/provenance/' ) ),
 		esc_html( $designation )
 	);
+	$GLOBALS['sn_pillar_eyebrow_emitted'] = true;
 	return $eyebrow . (string) $block_content;
 }
 
 if ( ! defined( 'SN_PILLAR_EYEBROW_TEST' ) || ! SN_PILLAR_EYEBROW_TEST ) {
-	// The block-specific render_block variant — never fires for other blocks;
+	// Block-specific render_block variants — never fire for other blocks;
 	// the blockName check in the resolver stays as belt-and-suspenders.
+	// post-content covers title-less templates (page-provenance.html); the
+	// once-flag keeps dual-block templates (page.html) to a single eyebrow.
 	add_filter( 'render_block_core/post-title', 'sn_pillar_eyebrow_filter', 10, 3 );
+	add_filter( 'render_block_core/post-content', 'sn_pillar_eyebrow_filter', 10, 3 );
 }

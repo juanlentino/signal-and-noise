@@ -46,6 +46,7 @@ function get_post_meta( $id, $key, $single = false ) { return $GLOBALS['__meta']
 require __DIR__ . '/../inc/pillar-title-eyebrow.php';
 
 function reset_ctx() {
+	sn_pillar_eyebrow_reset(); // v10.48.1 once-flag: every section starts fresh.
 	$GLOBALS['__is_admin']         = false;
 	$GLOBALS['__is_feed']          = false;
 	$GLOBALS['__is_singular_page'] = true;
@@ -118,6 +119,32 @@ ok( strpos( $fallback, '&#8470; 1.01' ) !== false, 'without a block instance the
 reset_ctx();
 $GLOBALS['__the_id'] = 9;
 ok( $html === sn_pillar_eyebrow_filter( $html, $title_block, null ), 'loop-ID fallback still requires the QUERIED page' );
+
+// ── v10.48.1: the pillar essays render page-provenance.html, which has NO
+// core/post-title block — the eyebrow must also attach via core/post-content
+// (prepended before the essay body), and at most ONCE per request when a
+// template renders both blocks (page.html order: title first, content second).
+reset_ctx();
+sn_pillar_eyebrow_reset();
+$content_block = array( 'blockName' => 'core/post-content' );
+$body = '<div class="entry-content">essay body</div>';
+$out = sn_pillar_eyebrow_filter( $body, $content_block, $instance );
+ok( 0 === strpos( $out, '<p class="sn-catalog-eyebrow sn-pillar-designation">' ) && false !== strpos( $out, 'essay body' ), 'post-content on a title-less template (page-provenance.html) gets the eyebrow prepended' );
+sn_pillar_eyebrow_reset();
+$first = sn_pillar_eyebrow_filter( $html, $title_block, $instance );
+$second = sn_pillar_eyebrow_filter( $body, $content_block, $instance );
+ok( false !== strpos( $first, 'sn-pillar-designation' ) && $body === $second, 'once per request: after the title carried the eyebrow, post-content is untouched' );
+sn_pillar_eyebrow_reset();
+$GLOBALS['__meta'][ $GLOBALS['__queried'] ]['_sn_pillar'] = '';
+$rejected = sn_pillar_eyebrow_filter( $html, $title_block, $instance );
+// Restore the flag meta WITHOUT reset_ctx(): the point is that the rejected
+// render above did not burn the once-flag on its own.
+$GLOBALS['__meta'][ $GLOBALS['__queried'] ]['_sn_pillar'] = '1';
+$after = sn_pillar_eyebrow_filter( $body, $content_block, $instance );
+ok( false !== strpos( $after, 'sn-pillar-designation' ), 'a REJECTED earlier render does not burn the once-flag (only an actual emit does)' );
+sn_pillar_eyebrow_reset();
+$other_block = array( 'blockName' => 'core/paragraph' );
+ok( $body === sn_pillar_eyebrow_filter( $body, $other_block, $instance ), 'other block names still resolve to no eyebrow' );
 
 // ── REST (the editor's ServerSideRender path) — LAST: constants stick ────
 reset_ctx();
