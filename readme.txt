@@ -20,7 +20,7 @@ Features:
 * Self-hosted Bebas Neue + DM Mono typography (no Google Fonts)
 * View Transitions API for soft cross-page navigation
 * Sticky shrinking header with reduced-motion honour
-* Inlined critical CSS; 5 deferred stylesheets (delegated to Breeze)
+* Inlined critical CSS; the modular stylesheets ship as one combined, minified file the theme builds itself (v10.21.6+), with per-file enqueues as the fail-open fallback
 * Skip-link, focus-visible outlines on every interactive element (WCAG 2.4.7 AA)
 * Companion plugin (Signal & Noise Tools) owns SEO, login hardening, admin tooling
 
@@ -29,7 +29,7 @@ Features:
 This theme is distributed via GitHub releases, not the WordPress.org directory. Install paths:
 
 1. **Canonical (user-driven):** wp-admin → Dashboard → Updates → "Update theme" for Signal & Noise. The theme registers with WP's native update system via `inc/wp-update-integration.php`.
-2. **Emergency manual:** `gh workflow run deploy.yml --repo juanlentino/signal-and-noise --ref vX.Y.Z` (deploys via Cloudways API).
+2. **Emergency manual:** `gh workflow run deploy.yml --repo juanlentino/signal-and-noise --ref vX.Y.Z` (v10.44.0+: builds the tag archive on the runner and rsyncs it over SSH, then asserts the landed style.css Version matches the tag).
 
 == Color Palette ==
 

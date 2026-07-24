@@ -15,12 +15,12 @@ A white-first, brutalist **WordPress Full Site Editing block theme** built for [
 
 - WordPress 7.0+ FSE block theme · PHP 8.0+
 - Vanilla CSS + JS — no build step, no framework, no jQuery
-- Inlined critical CSS + deferred stylesheets; View Transitions for soft navigation
+- Inlined critical CSS + one combined, minified stylesheet the theme builds itself (`inc/asset-combine.php`, fail-open to the per-file enqueues); View Transitions for soft navigation
 - Hosted on Cloudways, edge-cached via Cloudflare
 
 ## Pages & templates
 
-Block templates for the homepage, long-form **notes**, and the standing pages — **About**, **Services**, **Music** (role-filtered discography grid + featured player, Muso.AI verified credits), **Resume**, **Contact**, **Colophon**, and the **Provenance** pillar. Plus four server-rendered virtual routes with no editor entry: **`/notes`** (notes dossier), **`/index`** (whole-site index), **`/uses`** (gear list), and **`/humans.txt`**. All design tokens are editable in the Site Editor under **Styles**.
+Block templates for the homepage, long-form **notes**, and the standing pages — **About**, **Services**, **Music** (role-filtered discography grid + featured player, Muso.AI verified credits), **Resume**, **Contact**, **Now**, **Uses**, **Accessibility**, **Colophon**, and the **Provenance** pillar. Plus server-rendered virtual routes with no editor entry: **`/notes`** (notes dossier), **`/index`** (whole-site index), **`/humans.txt`**, and the machine-readable set — **`/llms.txt`** + **`/llms-full.txt`**, **`/opensearch.xml`**, **`/.well-known/agents.json`**, **`/.well-known/security.txt`**, **`/.well-known/gpc.json`**, and a **`.json`** content twin of every Note. All design tokens are editable in the Site Editor under **Styles**.
 
 ## Front-end
 
@@ -28,7 +28,8 @@ Block templates for the homepage, long-form **notes**, and the standing pages �
 - **Keyboard nav** — `j`/`k` previous/next note, `?` cheat-sheet (progressive enhancement; links work without JS)
 - **Reading aids** — article TOC with a sticky progress bar, shared-tag related notes, a frontmatter spec card, and reading time
 - **Provenance** — each Note carries a byline verification chip and an expandable record panel showing it's Ed25519-signed and Bitcoin-anchored, with links to the on-chain block and the public ledger. The plugin owns the markup (`sn_prov_render_chip` / `sn_prov_render_panel`); the theme places them in the byline + closing parts (see `inc/provenance-surface.php`)
-- **Feeds** — JSON Feed 1.1, WebSub (PubSubHubbub) advertisement, and Media-RSS enrichment
+- **Pillar essays** — the curated cornerstone essays render through the owner-placeable `signal-noise/pillar-essays` block, numbered with the owner's editorial designations (№ 1.01); a flagged essay's own page carries that designation as an eyebrow (`inc/pillar-title-eyebrow.php`)
+- **Feeds** — JSON Feed 1.1, WebSub (PubSubHubbub) advertisement, and Media-RSS enrichment; feed items for verifiable Notes republish the provenance uid (a `_signal_noise` JSON Feed extension and an RSS `<sn:noteUid>` element), so a subscriber can reach the verification docket without a second fetch
 - **IndieWeb** — `rel=me` identity links, `humans.txt`, and a live colophon build line (`[sn_build]`: theme + plugin version, git SHA, deploy time)
 - **Analytics** — a cookieless first-party beacon (Cloudflare Worker endpoint; respects DNT/GPC)
 - **WordPress 7.0 Abilities API** — the theme registers read + generative-AI capabilities for agents
