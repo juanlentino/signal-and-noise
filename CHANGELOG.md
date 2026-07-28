@@ -2,6 +2,26 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.0.0] - 2026-07-28 — The Search-corpus major
+
+**⚠️ Action required: requires PHP 8.3+.** Nothing else needs attention — no content, no settings, no templates change. **Pairs with plugin v10.0.0**, which the search noindex depends on (`sn_seo_robots_directives`, added in plugin v9.88.0).
+
+**Headline:** the theme half of the paired major. Search grew from the Notes index to the whole corpus across the v10.5x line; v11.0.0 makes that the stated contract, raises the PHP floor with the plugin, and drops the one deprecated URL the theme still answered.
+
+### Changed
+
+- **PHP floor raised to 8.3** ([style.css](style.css), [readme.txt](readme.txt), `composer.json`, CI matrix). 8.0/8.1/8.2 are all past end of life; Cloudways runs 8.4. Matched with plugin v10.0.0 so the pair states one floor.
+
+### Removed
+
+- **The deprecated top-level `/security.txt` alias** ([inc/security-txt.php](inc/security-txt.php)). RFC 9116 names `/.well-known/security.txt` as the canonical location and every compliant scanner reads it there; the alias existed only for pre-RFC probes. The canonical route is untouched, and the fixture now pins that the alias 404s.
+
+### The search story this major states
+
+Shipped across v10.51.0 and v10.51.1 and made permanent here: site search covers the **whole public corpus** (Notes and Pages) in one type-labeled list — **Note**, **Essay** (pillar-designated Pages), **Page** — while browsing `/notes` stays Notes-only by construction. Search-mode renders carry `noindex, follow` so a crafted `?s=` URL can never be indexed as site content. Entry stays keyboard-first: the command palette's first row and the `/` shortcut, with no new chrome.
+
+> **Why MAJOR:** a removed public URL plus a PHP-floor raise, shipped as the paired half of plugin v10.0.0.
+
 ## [10.51.1] - 2026-07-28
 
 ### Security
