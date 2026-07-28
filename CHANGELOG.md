@@ -2,6 +2,18 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.51.1] - 2026-07-28
+
+### Security
+
+- **/llms-full.txt no longer bakes a password-protected post's content into a public file** ([inc/llms-txt.php](inc/llms-txt.php)): a protected post IS `status=publish`, and with no manual excerpt the summary fell to `wp_trim_words( wp_strip_all_tags( $post->post_content ), 28 )` — raw content, bypassing the `post_password_required()` guard core applies inside `get_the_excerpt()`. The file's audience is explicitly LLM crawlers, so ingestion would be irreversible. The query now excludes protected posts (`has_password => false`, matching feed-json) with a row-level belt behind it. No protected post exists on the site today, so this closed a latent gate gap rather than active exposure. Found by the v9.88.0 hardening gate; pinned in [tests/llms-txt.php](tests/llms-txt.php).
+
+### Fixed
+
+- **The v10.51.0 search noindex actually fires now.** It filtered core's `wp_robots` — but the companion plugin removes that action so it can emit the robots meta itself, so the theme was mutating an array nobody printed (live-verified: a cache-busted `/notes/?s=` returned no `noindex`). It now answers the plugin's new `sn_seo_robots_directives` seam (plugin v9.88.0), the ninth cross-package listener. `sn_notes_search_robots()` takes and returns the seam's directive LIST rather than `wp_robots`' map — the v10.51.0 map shape was pinning a contract that could never fire. [tests/cross-package-listeners.php](tests/cross-package-listeners.php) gains Contract 9, including the assertion that would have caught this: nothing may hook `wp_robots`.
+
+> **Why PATCH:** a latent leak gate and a shipped-inert feature made real; no new capability, no API change. **Requires plugin v9.88.0+** for the noindex (the theme degrades to v10.51.0 behavior on older plugins — the listener simply never fires).
+
 ## [10.51.0] - 2026-07-28
 
 **Headline:** search grows to the whole corpus — the owned /notes search now surfaces essays and Pages in one type-labeled list, and search-mode renders are noindexed.

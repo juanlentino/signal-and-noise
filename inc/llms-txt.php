@@ -161,6 +161,12 @@ function sn_llms_txt_recent_notes( $limit = 40 ) {
 		array(
 			'post_type'           => 'post',
 			'post_status'         => 'publish',
+			// v10.51.1 (hardening gate): a password-protected post IS
+			// status=publish, and the no-excerpt branch below trims raw
+			// post_content — bypassing the post_password_required() guard core
+			// applies inside get_the_excerpt(). /llms-full.txt is read by LLM
+			// crawlers, so ingestion is irreversible. Matches feed-json's gate.
+			'has_password'        => false,
 			'posts_per_page'      => (int) $limit,
 			'ignore_sticky_posts' => true,
 			'no_found_rows'       => true,
@@ -169,6 +175,11 @@ function sn_llms_txt_recent_notes( $limit = 40 ) {
 		)
 	);
 	foreach ( $query->posts as $post ) {
+		// Defense in depth: the query gate above is the fix; this is the belt
+		// (feed-json carries the same pair).
+		if ( '' !== (string) ( $post->post_password ?? '' ) ) {
+			continue;
+		}
 		$summary = has_excerpt( $post ) ? get_the_excerpt( $post ) : wp_trim_words( wp_strip_all_tags( (string) $post->post_content ), 28, '…' );
 		$notes[] = array(
 			'title'   => wp_strip_all_tags( get_the_title( $post ) ),

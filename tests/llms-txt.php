@@ -101,5 +101,11 @@ ok( $GLOBALS['__status'] === 200, 'send() calls status_header(200)' );
 
 $report = ob_get_clean();
 echo $report;
+// ── v10.51.1 (hardening gate): /llms-full.txt must not trim a password-
+// protected post's raw content into a public file read by LLM crawlers.
+$sn_llms_src = (string) file_get_contents( __DIR__ . '/../inc/llms-txt.php' );
+ok( false !== strpos( $sn_llms_src, "'has_password'        => false," ), 'the recent-notes query excludes password-protected posts' );
+ok( false !== strpos( $sn_llms_src, "if ( '' !== (string) ( \$post->post_password ?? '' ) ) {" ), 'and the row loop carries the defense-in-depth belt' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

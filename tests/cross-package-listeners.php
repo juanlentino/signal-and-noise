@@ -531,5 +531,22 @@ foreach ( $expected_contracts as $c ) {
 	cpl_true( isset( $GLOBALS['__test_filters'][ $c ] ), "Test meta: contract '$c' has a listener" );
 }
 
+// ─── Contract 9: sn_seo_robots_directives (v10.51.1) ────────────────
+// The listener that v10.51.0 got WRONG: it hooked core's wp_robots, which the
+// plugin removes (inc/seo.php) so it can emit the tag itself — the filter was
+// live-verified inert. This contract pins the RIGHT seam, and pins it by
+// driving the filter the way the plugin's emitter does.
+echo "\nContract 9: sn_seo_robots_directives (search-mode noindex)\n";
+// page-notes-template.php cannot be required here (this fixture already defines
+// several of its helpers), so the contract is pinned at source level plus a
+// direct drive of the pure listener body — which is what the wiring calls.
+require_once __DIR__ . '/../inc/notes-index-helpers.php';
+$sn_tpl_src = (string) file_get_contents( __DIR__ . '/../inc/page-notes-template.php' );
+cpl_true( false !== strpos( $sn_tpl_src, "add_filter( 'sn_seo_robots_directives'" ), 'Test 9.1: the listener hooks the PLUGIN seam' );
+cpl_true( false === strpos( $sn_tpl_src, "add_filter( 'wp_robots'" ), 'Test 9.2: nothing hooks core wp_robots (the plugin removes it — hooking it is dead code, the v10.51.0 bug)' );
+cpl_true( in_array( 'noindex', sn_notes_search_robots( array( 'max-snippet:-1' ), 'signal' ), true ), 'Test 9.3: search mode adds noindex to the plugin directive list' );
+cpl_true( in_array( 'max-snippet:-1', sn_notes_search_robots( array( 'max-snippet:-1' ), 'signal' ), true ), 'Test 9.4: the plugin own directives survive' );
+cpl_true( ! in_array( 'noindex', sn_notes_search_robots( array( 'max-snippet:-1' ), '' ), true ), 'Test 9.5: a browse render is NOT noindexed' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

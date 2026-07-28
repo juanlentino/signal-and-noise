@@ -125,11 +125,17 @@ ok( 'Note' === sn_notes_result_type_label( $note ), 'posts label as Note' );
 ok( 'Page' === sn_notes_result_type_label( $page_ ), 'plain pages label as Page' );
 ok( 'Essay' === sn_notes_result_type_label( $pill ), 'pillar-designated pages label as Essay' );
 
-$robots = array( 'max-snippet' => '-1' );
-ok( $robots === sn_notes_search_robots( $robots, '' ), 'no term: robots untouched' );
-$out = sn_notes_search_robots( $robots, 'signal' );
-ok( true === ( $out['noindex'] ?? false ) && true === ( $out['follow'] ?? false ), 'search mode: noindex + follow' );
-ok( '-1' === ( $out['max-snippet'] ?? '' ), 'existing robots directives preserved' );
+// v10.51.1: the plugin owns robots emission (it removes core wp_robots), so
+// this answers the plugin's sn_seo_robots_directives seam — a DIRECTIVE LIST,
+// not wp_robots' map. The v10.51.0 map shape was pinning a contract that
+// could never fire (live-verified inert).
+$dirs = array( 'max-snippet:-1', 'max-image-preview:large' );
+ok( $dirs === sn_notes_search_robots( $dirs, '' ), 'no term: directives untouched' );
+$out = sn_notes_search_robots( $dirs, 'signal' );
+ok( in_array( 'noindex', $out, true ) && in_array( 'follow', $out, true ), 'search mode: noindex + follow appended' );
+ok( in_array( 'max-snippet:-1', $out, true ), 'existing directives preserved' );
+ok( array_values( $out ) === $out, 'returns a list, the seam contract shape' );
+ok( $dirs === array( 'max-snippet:-1', 'max-image-preview:large' ), 'input array not mutated' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
