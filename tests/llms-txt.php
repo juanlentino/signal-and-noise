@@ -53,6 +53,11 @@ ok( strpos( $body, '](https://juanlentino.com/uses/)' ) === false, 'stale bare /
 ok( strpos( $body, '[Now](https://juanlentino.com/now/)' ) !== false, 'Now surface listed' );
 ok( strpos( $body, '[Accessibility](https://juanlentino.com/accessibility/)' ) !== false, 'Accessibility surface listed' );
 
+// ── Rights section (v10.50.0) ──
+ok( strpos( $body, '## Rights' ) !== false, 'Rights section present' );
+ok( strpos( $body, 'https://juanlentino.com/license.xml' ) !== false, 'RSL license linked' );
+ok( strpos( $body, 'https://juanlentino.com/tdm-policy/' ) !== false, 'TDM policy linked' );
+
 // --- v10.37.0: Machine surfaces section points at the discovery manifest ---
 ok( strpos( $body, "\n## Machine surfaces\n" ) !== false, 'has a Machine surfaces H2 section' );
 ok( strpos( $body, 'https://juanlentino.com/.well-known/agents.json' ) !== false, 'Machine surfaces links the discovery manifest (/.well-known/agents.json)' );

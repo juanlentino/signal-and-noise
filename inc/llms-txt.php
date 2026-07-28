@@ -119,6 +119,11 @@ function sn_llms_txt_body( $full = false, $notes = array(), $pillars = array() )
 		'- [Discovery manifest](' . $home . '/.well-known/agents.json): a JSON index of every machine surface — feeds, sitemap, abilities, and provenance verification — for agents and crawlers.',
 		'- [Abilities API](' . $home . '/wp-json/wp-abilities/v1/abilities): discover and run site abilities (the agent/automation surface).',
 		'',
+		'## Rights',
+		'',
+		'- [RSL license](' . $home . '/license.xml): machine-readable licensing terms (AI training permitted with attribution; the licence sits on top of the TDM reservation).',
+		'- [TDM policy](' . $home . '/tdm-policy/): the text-and-data-mining policy behind the TDM-Reservation headers and [tdmrep.json](' . $home . '/.well-known/tdmrep.json).',
+		'',
 	) );
 
 	if ( $full && ! empty( $notes ) ) {
