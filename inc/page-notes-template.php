@@ -240,15 +240,17 @@ function sn_notes_search_redirect_target( $term ) {
 	return $url;
 }
 
-// v10.51.0: search-mode renders are noindexed (a crafted ?s= URL must never
-// be indexable as site content). The funnel below means any render with a
-// non-empty term IS the owned search surface; pure logic in
-// sn_notes_search_robots() (tests/notes-index-helpers.php).
-add_filter( 'wp_robots', function( $robots ) {
+// v10.51.1: search-mode renders are noindexed. This answers the PLUGIN's
+// sn_seo_robots_directives seam (plugin v9.88.0) — NOT core's wp_robots, which
+// the plugin removes in inc/seo.php so it can emit the tag itself. v10.51.0
+// hooked wp_robots and was live-verified inert; the pure logic in
+// sn_notes_search_robots() (tests/notes-index-helpers.php) was always correct,
+// only its wiring was wrong. Cross-package listener #9 (WORDPRESS-REFERENCE §10.0).
+add_filter( 'sn_seo_robots_directives', function( $directives ) {
 	if ( ! function_exists( 'sn_notes_search_term' ) || ! function_exists( 'sn_notes_search_robots' ) ) {
-		return $robots;
+		return $directives;
 	}
-	return sn_notes_search_robots( (array) $robots, sn_notes_search_term() );
+	return sn_notes_search_robots( (array) $directives, sn_notes_search_term() );
 } );
 
 /**

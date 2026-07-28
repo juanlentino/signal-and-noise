@@ -305,21 +305,26 @@ function sn_notes_result_type_label( $post ) {
 }
 
 /**
- * wp_robots for search mode: a crafted ?s= URL must not be indexable as site
- * content (query-stuffing abuse), so a non-empty term adds noindex + follow.
- * Pure (term passed in); existing directives are preserved. Browse mode
- * returns the array untouched.
+ * Robots directives for search mode: a crafted ?s= URL must not be indexable
+ * as site content (query-stuffing abuse), so a non-empty term appends
+ * noindex + follow.
  *
- * @param array  $robots wp_robots directive map.
- * @param string $term   Current search term ('' = browse).
+ * v10.51.1: answers the PLUGIN's `sn_seo_robots_directives` seam — a directive
+ * LIST — because the plugin removes core's wp_robots and emits the tag itself.
+ * v10.51.0 filtered `wp_robots` with a map and was live-verified inert: the
+ * array it mutated was never printed. Pure: input never mutated, list-shaped
+ * result, browse mode returns the input unchanged.
+ *
+ * @param array  $directives Directive list from the plugin's emitter.
+ * @param string $term       Current search term ('' = browse).
  * @return array
  */
-function sn_notes_search_robots( $robots, $term ) {
-	$robots = (array) $robots;
+function sn_notes_search_robots( $directives, $term ) {
+	$directives = array_values( (array) $directives );
 	if ( '' === (string) $term ) {
-		return $robots;
+		return $directives;
 	}
-	$robots['noindex'] = true;
-	$robots['follow']  = true;
-	return $robots;
+	$directives[] = 'noindex';
+	$directives[] = 'follow';
+	return array_values( array_unique( $directives ) );
 }
