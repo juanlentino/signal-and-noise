@@ -240,6 +240,17 @@ function sn_notes_search_redirect_target( $term ) {
 	return $url;
 }
 
+// v10.51.0: search-mode renders are noindexed (a crafted ?s= URL must never
+// be indexable as site content). The funnel below means any render with a
+// non-empty term IS the owned search surface; pure logic in
+// sn_notes_search_robots() (tests/notes-index-helpers.php).
+add_filter( 'wp_robots', function( $robots ) {
+	if ( ! function_exists( 'sn_notes_search_term' ) || ! function_exists( 'sn_notes_search_robots' ) ) {
+		return $robots;
+	}
+	return sn_notes_search_robots( (array) $robots, sn_notes_search_term() );
+} );
+
 /**
  * Funnel any site-wide search (?s=) to the single Notes search surface
  * (v9.8.0). There is exactly one search UI on the site — the /notes

@@ -52,7 +52,16 @@ if ( ! function_exists( 'home_url' ) ) {
 	function home_url( $p = '' ) { return 'https://example.com' . $p; }
 }
 if ( ! function_exists( 'get_post_meta' ) ) {
-	function get_post_meta( $id, $key, $single ) { return 0; }
+	function get_post_meta( $id, $key, $single ) { return $GLOBALS['__meta'][ $id ][ $key ] ?? 0; }
+}
+if ( ! class_exists( 'WP_Query' ) ) {
+	class WP_Query { public $args; public function __construct( $a = array() ) { $this->args = $a; } }
+}
+if ( ! function_exists( 'sanitize_text_field' ) ) {
+	function sanitize_text_field( $v ) { return trim( strip_tags( (string) $v ) ); }
+}
+if ( ! function_exists( 'wp_unslash' ) ) {
+	function wp_unslash( $v ) { return $v; }
 }
 
 // The whole point: ONLY the new module, no renderer, no sentinel constant.
@@ -99,6 +108,28 @@ ok( date( 'Y.m.d', 1700000000 ) === html_entity_decode( sn_notes_render_date( (o
 ok( array() === sn_notes_pagination_add_args( '' ), 'no add_args when not searching' );
 $args = sn_notes_pagination_add_args( 'two words' );
 ok( isset( $args['s'] ) && 'two%20words' === $args['s'], 'search term is rawurlencoded into add_args' );
+
+// ── v10.51.0: search covers the whole corpus, type-labeled ──
+$GLOBALS['__query_vars']['s'] = 'signal';
+$args = sn_notes_query_posts()->args;
+ok( array( 'post', 'page' ) === ( $args['post_type'] ?? null ), 'search mode queries the whole corpus (post + page)' );
+$GLOBALS['__query_vars']['s'] = '';
+$args = sn_notes_query_posts()->args;
+ok( 'post' === ( $args['post_type'] ?? null ), 'browse mode stays Notes-only by construction' );
+
+$note  = (object) array( 'ID' => 1, 'post_type' => 'post' );
+$page_ = (object) array( 'ID' => 2, 'post_type' => 'page' );
+$pill  = (object) array( 'ID' => 3, 'post_type' => 'page' );
+$GLOBALS['__meta'] = array( 3 => array( '_sn_pillar' => '1' ) );
+ok( 'Note' === sn_notes_result_type_label( $note ), 'posts label as Note' );
+ok( 'Page' === sn_notes_result_type_label( $page_ ), 'plain pages label as Page' );
+ok( 'Essay' === sn_notes_result_type_label( $pill ), 'pillar-designated pages label as Essay' );
+
+$robots = array( 'max-snippet' => '-1' );
+ok( $robots === sn_notes_search_robots( $robots, '' ), 'no term: robots untouched' );
+$out = sn_notes_search_robots( $robots, 'signal' );
+ok( true === ( $out['noindex'] ?? false ) && true === ( $out['follow'] ?? false ), 'search mode: noindex + follow' );
+ok( '-1' === ( $out['max-snippet'] ?? '' ), 'existing robots directives preserved' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

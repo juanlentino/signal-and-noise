@@ -2,6 +2,22 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.51.0] - 2026-07-28
+
+**Headline:** search grows to the whole corpus — the owned /notes search now surfaces essays and Pages in one type-labeled list, and search-mode renders are noindexed.
+
+### New
+
+- [inc/notes-index-helpers.php](inc/notes-index-helpers.php): **search mode queries the whole public corpus** (`post` + `page`) while browse mode stays Notes-only by construction — the owner-decided session-4 shape (one list, type-labeled). `sn_notes_result_type_label()` labels each result row: **Note** (posts), **Essay** (pillar-designated Pages via the `_sn_pillar` curation meta), **Page** (everything else); [inc/page-notes-render.php](inc/page-notes-render.php) renders the chip in the row spec column, search mode only. The search empty state now says what was searched.
+- **Search-mode renders are noindexed** ([inc/page-notes-template.php](inc/page-notes-template.php) + pure `sn_notes_search_robots()`): a crafted `?s=` URL can no longer be indexed as site content (query-stuffing abuse); `noindex, follow` joins the existing robots directives, browse mode untouched. Live-verified gap: `/notes/?s=` carried no noindex before this.
+- [assets/css/components.css](assets/css/components.css): the `.sn-notes-row-type` chip in the spec-column vocabulary (DM Mono, uppercase, concrete border).
+
+### Changed
+
+- [tests/notes-search.php](tests/notes-search.php): the "search stays Notes-only" pin — the old contract itself — updated to pin the new corpus-wide contract (an owner-decided behavior change, not a test accommodation). New assertions in [tests/notes-index-helpers.php](tests/notes-index-helpers.php) pin corpus/browse post types, all three labels, and the robots directives.
+
+> **Why MINOR:** a user-visible capability change on the owned search surface (corpus + labels + noindex); no API removed. Note for session-4 history: the scope doc's "no search exists" premise was wrong — the surface, funnel, palette entry, and `/` shortcut all predated this; the real delta was the corpus, exactly what shipped here.
+
 ## [10.50.0] - 2026-07-28
 
 **Headline:** the rights surfaces reach discovery — agents.json advertises TDMRep, the RSL license, and the TDM policy, and llms.txt gains a Rights section, so the machine surfaces that declare the site's rights are now themselves machine-discoverable (and smoke-guarded hourly).
