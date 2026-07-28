@@ -73,6 +73,11 @@ function sn_agents_surfaces() {
 		array( 'type' => 'sitemap',   'url' => $home . '/wp-sitemap.xml', 'format' => 'application/xml',  'title' => 'Sitemap',      'description' => 'Core WordPress sitemap index.' ),
 		array( 'type' => 'abilities', 'url' => $home . '/wp-json/wp-abilities/v1/abilities', 'format' => 'application/json', 'title' => 'Abilities API', 'description' => 'The agent/automation surface: discover + run site abilities.' ),
 		array( 'type' => 'provenance-verify', 'url' => $home . '/verify/', 'format' => 'text/html', 'title' => 'Provenance verify', 'description' => "Verify a Note's cryptographic (Bitcoin-anchored) authorship proof." ),
+		// v10.50.0: rights surfaces (worker-served at the edge, theme owns discovery;
+		// live-verified before advertising — the smoke test hard-fails advertised 404s).
+		array( 'type' => 'tdmrep', 'url' => $home . '/.well-known/tdmrep.json', 'format' => 'application/json', 'title' => 'TDM reservation (TDMRep)', 'description' => 'Machine-readable text-and-data-mining reservation policy.' ),
+		array( 'type' => 'rsl-license', 'url' => $home . '/license.xml', 'format' => 'application/xml', 'title' => 'RSL license', 'description' => 'Really Simple Licensing terms sitting on top of the TDM reservation.' ),
+		array( 'type' => 'tdm-policy', 'url' => $home . '/tdm-policy/', 'format' => 'text/html', 'title' => 'TDM policy', 'description' => 'Human-readable text-and-data-mining policy page.' ),
 	);
 
 	/**

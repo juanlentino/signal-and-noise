@@ -49,7 +49,7 @@ ok( sn_agents_is_request( '/' ) === false, 'rejects site root' );
 $s = sn_agents_surfaces();
 ok( is_array( $s ) && count( $s ) >= 6, 'surfaces() returns a non-trivial list' );
 $types = array_column( $s, 'type' );
-foreach ( array( 'llms-txt', 'llms-full', 'feed-json', 'abilities', 'provenance-verify' ) as $t ) {
+foreach ( array( 'llms-txt', 'llms-full', 'feed-json', 'abilities', 'provenance-verify', 'tdmrep', 'rsl-license', 'tdm-policy' ) as $t ) {
 	ok( in_array( $t, $types, true ), "surfaces include '$t'" );
 }
 $all_abs = true; $all_have_url = true;
@@ -68,6 +68,11 @@ ok( $all_abs, 'every surface url is absolute https' );
 // can never re-advertise a dead verify path.
 $by_type = array_column( $s, 'url', 'type' );
 ok( ( $by_type['provenance-verify'] ?? '' ) === 'https://juanlentino.com/verify/', 'provenance-verify surface points at the live /verify docket (never /provenance/verify/)' );
+
+// ── rights surfaces pins (v10.50.0) — worker-served, live-verified before advertising ──
+ok( ( $by_type['tdmrep'] ?? '' ) === 'https://juanlentino.com/.well-known/tdmrep.json', 'tdmrep surface points at the RFC well-known path' );
+ok( ( $by_type['rsl-license'] ?? '' ) === 'https://juanlentino.com/license.xml', 'rsl-license surface points at /license.xml' );
+ok( ( $by_type['tdm-policy'] ?? '' ) === 'https://juanlentino.com/tdm-policy/', 'tdm-policy surface points at the policy page' );
 
 // ── surfaces filter (proves sub-project B can wire in) ──
 $GLOBALS['__filters']['sn_agents_surfaces'] = static function ( $list ) {

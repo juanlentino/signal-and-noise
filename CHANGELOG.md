@@ -2,6 +2,17 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [10.50.0] - 2026-07-28
+
+**Headline:** the rights surfaces reach discovery — agents.json advertises TDMRep, the RSL license, and the TDM policy, and llms.txt gains a Rights section, so the machine surfaces that declare the site's rights are now themselves machine-discoverable (and smoke-guarded hourly).
+
+### New
+
+- [inc/agents-manifest.php](inc/agents-manifest.php): three rights surfaces join the discovery manifest — `tdmrep` (`/.well-known/tdmrep.json`, application/json), `rsl-license` (`/license.xml`, application/xml), and `tdm-policy` (`/tdm-policy/`, text/html). All three are worker-served at the edge; the theme owns discovery. Each was live-verified (status + content-type) before advertising, because the hourly smoke test's advertised-surface loop hard-fails an advertised 404 — which is exactly the guarantee this buys: a Cloudflare- or worker-side regression on any rights surface now turns CI red within the hour. URLs pinned in [tests/agents-manifest.php](tests/agents-manifest.php).
+- [inc/llms-txt.php](inc/llms-txt.php): a **Rights** section (after Machine surfaces, both `/llms.txt` and `/llms-full.txt`) linking the RSL license and the TDM policy — the rights declaration now sits in the file AI agents actually read. Pinned in [tests/llms-txt.php](tests/llms-txt.php).
+
+> **Why MINOR:** two new user-visible (machine-visible) capabilities on public surfaces; no behavior removed or changed.
+
 ## [10.49.0] - 2026-07-23
 
 **Headline:** the structural tier — the head sheds ~575 lines of article-only CSS that every route was paying for, the /notes renderer gives up its load-bearing mid-file hack, llms.txt finally mentions the pillar essays, and the smoke test starts probing every machine surface the site advertises.
