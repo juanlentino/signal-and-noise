@@ -30,7 +30,7 @@ require __DIR__ . '/../inc/security-txt.php';
 
 // --- Route matcher (pure helper) ---
 ok( sn_security_txt_is_request( '/.well-known/security.txt' ) === true, 'matches the RFC 9116 canonical /.well-known/security.txt' );
-ok( sn_security_txt_is_request( '/security.txt' ) === true, 'matches the legacy top-level /security.txt' );
+ok( sn_security_txt_is_request( '/security.txt' ) === false, 'v11.0.0: the legacy top-level /security.txt alias is REMOVED (RFC 9116 names only the well-known path)' );
 ok( sn_security_txt_is_request( '/.well-known/security.txt?x=1' ) === true, 'matches with a query string' );
 ok( sn_security_txt_is_request( '/' ) === false, 'rejects site root' );
 ok( sn_security_txt_is_request( '/humans.txt' ) === false, 'rejects /humans.txt' );

@@ -2,8 +2,8 @@
 /**
  * Signal & Noise — security.txt (RFC 9116).
  *
- * Serves a flat /.well-known/security.txt (and the deprecated top-level
- * /security.txt some scanners still probe) advertising how to report a security
+ * Serves a flat /.well-known/security.txt (RFC 9116's canonical location; the
+ * deprecated top-level alias was removed in v11.0.0) advertising how to report a security
  * issue. The spiritual sibling of /humans.txt — same flush-free virtual-route
  * mechanism (template_redirect priority 0, no add_rewrite_rule; the theme must
  * not flush, that is the plugin's job).
@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Is this request for the security.txt? Pure helper (takes the path) so it is
  * testable without $_SERVER. Matches the RFC 9116 canonical
- * /.well-known/security.txt and the deprecated legacy /security.txt.
+ * /.well-known/security.txt only (v11.0.0 removed the legacy top-level alias).
  *
  * @param string $uri Request URI (may carry a query string).
  * @return bool
@@ -31,7 +31,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 function sn_security_txt_is_request( $uri ) {
 	$path = strtok( (string) $uri, '?' );
 	$path = '/' . trim( (string) $path, '/' );
-	return ( '/.well-known/security.txt' === $path || '/security.txt' === $path );
+	// v11.0.0: the deprecated top-level /security.txt alias is REMOVED. RFC 9116
+	// names /.well-known/security.txt as the only canonical location, and every
+	// compliant scanner reads it there.
+	return ( '/.well-known/security.txt' === $path );
 }
 
 /**
