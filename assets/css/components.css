@@ -1594,3 +1594,18 @@
 	color: var(--wp--preset--color--signal, #ff4c47);
 	text-decoration: underline;
 }
+
+/* v10.51.0: search-result type chip (Note / Essay / Page) — spec-column
+   vocabulary beside the reading time; only rendered in search mode. */
+.sn-notes-row-type {
+	border: 1px solid var(--wp--preset--color--concrete, #d4d4d4);
+	color: var(--wp--preset--color--asphalt, #4a4a4a);
+	display: inline-block;
+	font-family: var(--wp--preset--font-family--mono, "DM Mono", monospace);
+	font-size: 0.625rem;
+	letter-spacing: 0.08em;
+	line-height: 1;
+	margin-top: 0.35rem;
+	padding: 0.2rem 0.4rem;
+	text-transform: uppercase;
+}

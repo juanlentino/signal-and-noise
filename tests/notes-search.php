@@ -100,7 +100,7 @@ ok( $GLOBALS['__wpquery_args']['post_type'] === 'post', 'post_type=post when bro
 $GLOBALS['__query_vars'] = array( 's' => 'provenance' );
 sn_notes_query_posts();
 ok( ( $GLOBALS['__wpquery_args']['s'] ?? null ) === 'provenance', 's injected when searching' );
-ok( $GLOBALS['__wpquery_args']['post_type'] === 'post', 'still post_type=post (Notes-only)' );
+ok( $GLOBALS['__wpquery_args']['post_type'] === array( 'post', 'page' ), 'v10.51.0: search mode spans the corpus (post + page), owner-decided 2026-07-28' );
 ok( $GLOBALS['__wpquery_args']['post_status'] === 'publish', 'still publish-only when searching' );
 $GLOBALS['__query_vars'] = array();
 

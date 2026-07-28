@@ -111,11 +111,15 @@ function sn_notes_query_posts() {
 		'no_found_rows'       => false, // pagination needs found_posts / max_num_pages
 		'ignore_sticky_posts' => true,  // the sticky is floated into the Start-here card, never the list
 	);
-	// Notes-only by construction (post_type=post = the whole Notes corpus;
-	// Pages are never queried here). Add the search term only when present.
+	// Browse mode is Notes-only by construction (post_type=post = the whole
+	// Notes corpus). SEARCH mode (v10.51.0) widens to the whole public corpus:
+	// posts AND pages, so essays and editorial Pages surface in one
+	// type-labeled list (sn_notes_result_type_label) — the owner-decided
+	// session-4 shape.
 	$term = sn_notes_search_term();
 	if ( '' !== $term ) {
-		$args['s'] = $term;
+		$args['s']         = $term;
+		$args['post_type'] = array( 'post', 'page' );
 	}
 	if ( $tag_id > 0 ) {
 		// Tag-archive mode: constrain to the queried post_tag.
@@ -280,4 +284,42 @@ function sn_notes_pagination_base() {
 		}
 	}
 	return home_url( '/notes/' );
+}
+
+/**
+ * Type label for a search-result row: Note (posts), Essay (pillar-designated
+ * Pages, the _sn_pillar meta from the v10.47.0 curation surface), Page
+ * (everything else). Pure; only meaningful in search mode (browse is
+ * Notes-only so rows need no label).
+ *
+ * @param object $post Post-like object (ID + post_type).
+ * @return string
+ */
+function sn_notes_result_type_label( $post ) {
+	$type = isset( $post->post_type ) ? (string) $post->post_type : 'post';
+	if ( 'post' === $type ) {
+		return 'Note';
+	}
+	$pillar = (string) get_post_meta( (int) ( $post->ID ?? 0 ), '_sn_pillar', true );
+	return '' !== $pillar && '0' !== $pillar ? 'Essay' : 'Page';
+}
+
+/**
+ * wp_robots for search mode: a crafted ?s= URL must not be indexable as site
+ * content (query-stuffing abuse), so a non-empty term adds noindex + follow.
+ * Pure (term passed in); existing directives are preserved. Browse mode
+ * returns the array untouched.
+ *
+ * @param array  $robots wp_robots directive map.
+ * @param string $term   Current search term ('' = browse).
+ * @return array
+ */
+function sn_notes_search_robots( $robots, $term ) {
+	$robots = (array) $robots;
+	if ( '' === (string) $term ) {
+		return $robots;
+	}
+	$robots['noindex'] = true;
+	$robots['follow']  = true;
+	return $robots;
 }

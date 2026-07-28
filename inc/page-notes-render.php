@@ -644,6 +644,9 @@ echo $sn_header_html;
 					<div class="sn-notes-row-spec" aria-hidden="false">
 						<time class="sn-notes-row-date" datetime="<?php echo esc_attr( get_the_date( 'c', $p ) ); ?>"><?php echo sn_notes_render_date( $p ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- helper returns esc_html()'d output (see sn_notes_render_date); escaping again would double-encode. ?></time>
 						<span class="sn-notes-row-rt"><?php echo esc_html( sn_notes_render_reading_time( $p->ID ) ); ?></span>
+						<?php if ( $sn_searching ) : // v10.51.0: search spans the corpus, so rows say what they are. ?>
+							<span class="sn-notes-row-type"><?php echo esc_html( sn_notes_result_type_label( $p ) ); ?></span>
+						<?php endif; ?>
 					</div>
 					<div class="sn-notes-row-content">
 						<h3 class="sn-notes-row-title"><a href="<?php the_permalink(); ?>"><?php echo esc_html( get_the_title() ); ?></a></h3>
@@ -655,7 +658,7 @@ echo $sn_header_html;
 			<?php endwhile; wp_reset_postdata(); ?>
 			</ol>
 		<?php elseif ( $sn_searching ) : ?>
-			<p class="sn-notes-empty">No notes match &ldquo;<?php echo esc_html( $sn_term ); ?>&rdquo;.</p>
+			<p class="sn-notes-empty">Nothing matches &ldquo;<?php echo esc_html( $sn_term ); ?>&rdquo; &mdash; notes, essays, and pages all searched.</p>
 		<?php elseif ( $sn_tag ) : ?>
 			<p class="sn-notes-empty">No notes tagged &ldquo;<?php echo esc_html( $sn_tag_name ); ?>&rdquo;.</p>
 		<?php else : ?>
