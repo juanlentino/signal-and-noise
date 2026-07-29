@@ -4,17 +4,18 @@ All notable changes to Signal & Noise are documented here.
 
 ## [11.1.1] - 2026-07-29 — Resume width + hierarchy calibration
 
-**Headline:** same-day UAT pass on the v11.1.0 text resume. The body sections move to the 1400px wide track (the two-track system's home for rails and strips) with CSS measure caps keeping prose readable; job titles stop reading as metadata.
+**Headline:** same-day UAT pass on the v11.1.0 text resume, delivered entirely in the stylesheet so the pasted Page content never needs a re-paste: body sections promote to the 1400px wide track, job titles stop reading as metadata, and the duplicate bottom download CTA retires.
 
 ### Fixed
 
-- **Job titles were too quiet** — `.sn-resume-title` (role lines, credential column heads) was on the 11px label scale; now 0.95rem medium mono with 0.08em tracking, clearly subordinate to the Bebas company heads but no longer lost against the bullets ([assets/css/resume.css](assets/css/resume.css)).
-- **The reading track crammed the experience rows** — the Page content's body sections (Experience, Credentials, Publications, Skills) move from 760px to the 1400px wide track; `.sn-resume-list li` and `.sn-resume-pub-title` cap at 80ch so line length stays readable at the wider measure.
+- **The reading track crammed the body sections** — `:has()`-scoped rules in [assets/css/resume.css](assets/css/resume.css) promote every section group carrying `sn-resume-*` components (Experience, Credentials, Publications, Skills, stats) to the 1400px wide track, overriding the content's declared 760px; the hero (the one group with an `h1`) stays on the reading track. The date rail widens from its inline 180px to 240px. Works because constrained-layout child rules use zero-specificity `:where()`, so body-prefixed selectors win regardless of print order — the width system is now owned by the theme, not the pasted markup.
+- **Prose at the wide measure** — `.sn-resume-list li` and `.sn-resume-pub-title` cap at 80ch so line length stays readable on the wide track.
+- **Job titles were too quiet** — `.sn-resume-title` (role lines, credential column heads) was on the 11px label scale; now 0.95rem medium mono with 0.08em tracking, clearly subordinate to the Bebas company heads but no longer lost against the bullets.
 - **Skills table on small screens** — under 600px the label/items cells stack (label above its items) instead of squeezing beside each other; the label column's `width: 1%` hack becomes an explicit `15rem`, echoing the date rail.
 
 ### Removed
 
-- **The duplicate bottom download CTA** (Page content) — the hero's File-block download button is the single PDF entry point.
+- **The duplicate bottom download CTA** — retired in CSS (the closing group hides; the hero's File-block download button is the single PDF entry point), again so the content needs no edit.
 
 > **Why PATCH:** design calibration of an existing surface; no new capability, no API change.
 

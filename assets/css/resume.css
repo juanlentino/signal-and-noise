@@ -9,6 +9,33 @@
  * 11px type floor honoured; motion neutralized under prefers-reduced-motion.
  */
 
+/* ── Track promotion + layout owned here, not in the Page content ─────────
+   The pasted content declares the 760px reading track on every section
+   group; these rules promote the body sections (experience, credentials,
+   publications, skills, stats) to the 1400px wide track so content edits
+   never require a re-paste. The hero (the one group with an h1) stays on
+   the reading track. Constrained-layout child rules use :where() (zero
+   specificity), so the body-prefixed selectors win regardless of print
+   order. */
+body .wp-block-group:not(:has(h1)):has(.sn-resume-title) > *,
+body .wp-block-group:has(.sn-resume-stat-n) > *,
+body .wp-block-group:has(.sn-resume-pub) > *,
+body .wp-block-group:has(.sn-resume-skills) > * {
+	max-width: 1400px;
+}
+
+/* Wider date rail than the content's inline 180px flex-basis; !important
+   is required to beat the inline style, and is scoped to rail columns. */
+body .wp-block-column:has(> .sn-resume-rail) {
+	flex-basis: 240px !important;
+}
+
+/* The closing download CTA duplicated the hero's; retired here so the
+   content needs no edit. The hero group (has an h1) keeps its download. */
+body .wp-block-group:not(:has(h1)):has(.sn-resume-download) {
+	display: none;
+}
+
 /* ── Stat strip ───────────────────────────────────────────────────────── */
 .sn-resume-stats {
 	border-top: 2px solid var(--wp--preset--color--bone, #000);
