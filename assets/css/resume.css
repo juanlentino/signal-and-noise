@@ -246,6 +246,23 @@ body .wp-block-group:not(:has(h1)):has(.sn-resume-download) {
 .sn-resume-download > a:first-child:hover {
 	color: var(--wp--preset--color--blood, #e00404);
 }
+.sn-resume-download .wp-block-file__button {
+	background: transparent;
+	color: var(--wp--preset--color--bone, #000);
+	border: 1px solid var(--wp--preset--color--bone, #000);
+	border-radius: 0;
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.7rem, 11px);
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	padding: 0.55rem 1.1rem;
+	transition: color 0.15s ease, border-color 0.15s ease;
+}
+.sn-resume-download .wp-block-file__button:hover {
+	background: transparent;
+	color: var(--wp--preset--color--blood, #e00404);
+	border-color: var(--wp--preset--color--blood, #e00404);
+}
 
 @media (max-width: 600px) {
 	.sn-resume-skills td {
@@ -268,7 +285,8 @@ body .wp-block-group:not(:has(h1)):has(.sn-resume-download) {
 @media (prefers-reduced-motion: reduce) {
 	.sn-resume-fold summary,
 	.sn-resume-pub,
-	.sn-resume-pub-title a {
+	.sn-resume-pub-title a,
+	.sn-resume-download .wp-block-file__button {
 		transition: none;
 	}
 }

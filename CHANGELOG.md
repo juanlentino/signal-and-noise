@@ -8,7 +8,8 @@ All notable changes to Signal & Noise are documented here.
 
 ### Fixed
 
-- **Body sections read left-shifted** — the `:has()`-scoped promotion in [assets/css/resume.css](assets/css/resume.css) now sets the experience/credentials/publications/skills section children to `max-width: 60rem` instead of 1400px. Wider than the 760px reading track, zero right-side slack, and centered for free by the layout's `margin: auto`. The stat strip stays on the 1400px wide track as a deliberate full band.
+- **Body sections read left-shifted** — the `:has()`-scoped promotion in [assets/css/resume.css](assets/css/resume.css) now sets the experience/credentials/publications/skills section children to `max-width: 60rem` instead of 1400px. Wider than the 760px reading track, zero right-side slack, and centered for free by the layout's `margin: auto` — matching how /music and /services center their constrained content. The stat strip stays on the 1400px wide track as a deliberate full band.
+- **The hero download button was too heavy** — `.sn-resume-download .wp-block-file__button` restyles the default `wp-element-button` black slab as the site's small mono outline button (11px-floor uppercase, hairline border, blood on hover), sized to sit inside the hero rather than dominate it.
 
 > **Why PATCH:** design calibration of an existing surface; no new capability, no API change.
 
