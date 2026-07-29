@@ -9,6 +9,33 @@
  * 11px type floor honoured; motion neutralized under prefers-reduced-motion.
  */
 
+/* ── Track promotion + layout owned here, not in the Page content ─────────
+   The pasted content declares the 760px reading track on every section
+   group; these rules promote the body sections (experience, credentials,
+   publications, skills, stats) to the 1400px wide track so content edits
+   never require a re-paste. The hero (the one group with an h1) stays on
+   the reading track. Constrained-layout child rules use :where() (zero
+   specificity), so the body-prefixed selectors win regardless of print
+   order. */
+body .wp-block-group:not(:has(h1)):has(.sn-resume-title) > *,
+body .wp-block-group:has(.sn-resume-stat-n) > *,
+body .wp-block-group:has(.sn-resume-pub) > *,
+body .wp-block-group:has(.sn-resume-skills) > * {
+	max-width: 1400px;
+}
+
+/* Wider date rail than the content's inline 180px flex-basis; !important
+   is required to beat the inline style, and is scoped to rail columns. */
+body .wp-block-column:has(> .sn-resume-rail) {
+	flex-basis: 240px !important;
+}
+
+/* The closing download CTA duplicated the hero's; retired here so the
+   content needs no edit. The hero group (has an h1) keeps its download. */
+body .wp-block-group:not(:has(h1)):has(.sn-resume-download) {
+	display: none;
+}
+
 /* ── Stat strip ───────────────────────────────────────────────────────── */
 .sn-resume-stats {
 	border-top: 2px solid var(--wp--preset--color--bone, #000);
@@ -53,8 +80,9 @@
 }
 .sn-resume-title {
 	font-family: 'DM Mono', 'Courier New', monospace;
-	font-size: max(0.7rem, 11px);
-	letter-spacing: 0.14em;
+	font-size: 0.95rem;
+	font-weight: 500;
+	letter-spacing: 0.08em;
 	text-transform: uppercase;
 	color: var(--wp--preset--color--bone, #000);
 	margin: 1.25rem 0 0.75rem;
@@ -69,6 +97,7 @@
 	padding: 0.45rem 0 0.45rem 1.4rem;
 	font-size: 0.95rem;
 	line-height: 1.6;
+	max-width: 80ch;
 	color: var(--wp--preset--color--bone, #000);
 }
 .sn-resume-list li::before {
@@ -150,6 +179,7 @@
 	line-height: 1.5;
 	letter-spacing: 0;
 	text-transform: none;
+	max-width: 80ch;
 	margin: 0;
 }
 .sn-resume-pub-title a {
@@ -185,7 +215,7 @@
 	text-transform: uppercase;
 	color: var(--wp--preset--color--rust, #666);
 	white-space: nowrap;
-	width: 1%;
+	width: 15rem;
 	padding-right: clamp(1.5rem, 4vw, 3rem);
 }
 .sn-resume-skills td:last-child {
@@ -211,6 +241,24 @@
 }
 .sn-resume-download > a:first-child:hover {
 	color: var(--wp--preset--color--blood, #e00404);
+}
+
+@media (max-width: 600px) {
+	.sn-resume-skills td {
+		display: block;
+	}
+	.sn-resume-skills td:first-child {
+		width: auto;
+		white-space: normal;
+		padding: 0.8rem 0 0.15rem;
+	}
+	.sn-resume-skills td:last-child {
+		border-top: 0;
+		padding-top: 0;
+	}
+	.sn-resume-skills tr:first-child td:last-child {
+		border-top: 0;
+	}
 }
 
 @media (prefers-reduced-motion: reduce) {
