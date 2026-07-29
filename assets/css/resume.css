@@ -24,6 +24,22 @@ body .wp-block-group:has(.sn-resume-pub) > *,
 body .wp-block-group:has(.sn-resume-skills) > * {
 	max-width: 60rem;
 }
+/* The hero joins the same 60rem measure so every section shares one left
+   edge (the stat band alone stays the full 1400px). The intro paragraph
+   keeps a reading measure via right padding — a plain max-width would
+   re-center it off that shared edge (the layout's auto margins carry
+   !important). */
+body .wp-block-group:has(h1) > * {
+	max-width: 60rem;
+}
+body .wp-block-group:has(h1) > p.has-body-font-family:not(.sn-resume-rail) {
+	padding-right: 14rem;
+}
+@media (max-width: 781px) {
+	body .wp-block-group:has(h1) > p.has-body-font-family:not(.sn-resume-rail) {
+		padding-right: 0;
+	}
+}
 body .wp-block-group:has(.sn-resume-stat-n) > * {
 	max-width: 1400px;
 }
