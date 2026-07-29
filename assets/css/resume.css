@@ -42,6 +42,19 @@ body div.wp-block-group:has(h1) > p.has-body-font-family:not(.sn-resume-rail) {
 	color: var(--wp--preset--color--void, #fff);
 }
 
+/* Highlight primitive: the editor's Highlight tool renders <mark>; on this
+   page it reads as blood ink, no background. Use sparingly — one or two
+   marks per screen. */
+mark {
+	background: none;
+	color: var(--wp--preset--color--blood, #e00404);
+}
+
+/* Metric emphasis inside achievement bullets. */
+.sn-resume-list li strong {
+	font-weight: 700;
+}
+
 /* Hard file-divider above each numbered body section's eyebrow, echoing
    the fold's and stat band's 2px line weight. The hero's eyebrow (group
    with an h1) keeps the site-wide treatment. div-qualified so the

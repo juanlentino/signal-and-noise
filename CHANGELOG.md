@@ -2,6 +2,15 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.1.8] - 2026-07-29 — Resume highlight primitives
+
+### Improvements
+
+- **`<mark>` as the /resume highlight primitive** — renders as blood ink with no background, so the editor's own Highlight tool becomes the way to flag credentials worth flagging (first use: the GRAMMY / Latin GRAMMY voting-member line); future highlights need no code or paste ([assets/css/resume.css](assets/css/resume.css)).
+- **`<strong>` metric emphasis in achievement bullets** — proper 700-weight mono for the one key figure per bullet.
+
+> **Why PATCH:** design calibration of an existing surface; no new capability.
+
 ## [11.1.7] - 2026-07-29 — Resume left-pin ROOT CAUSE: the width overrides matched <main>
 
 **Headline:** the "page sits left" report that survived six patches is fixed at its actual root. The `:has()` width overrides introduced in v11.1.2 used bare `.wp-block-group` selectors, which also matched the template's `<main class="wp-block-group">` — capping the entire post-content wrapper at 1400px with no centering (main is a flow layout, not constrained). On any viewport wider than 1400px the whole page rendered in a left-pinned box. At viewports ≤1400px the box filled the screen, which is why the defect was invisible in narrower verification.
