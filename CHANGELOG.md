@@ -2,6 +2,14 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.1.5] - 2026-07-29 — Resume hero joins the 60rem measure
+
+### Fixed
+
+- **The page read left-shifted (confirmed from a clean incognito session)** — the hero stayed on the 760px reading track while the body sections centered at 60rem, so every section started ~100px left of the hero's edge; the v11.1.4 divider rules made the mismatch loud. The hero now joins the 60rem dossier measure so all sections share one left edge (the stat band alone stays the full 1400px). The intro paragraph keeps its reading measure via right padding, because a plain max-width would re-center it off the shared edge (the constrained layout's auto margins carry `!important`); the padding drops at mobile widths ([assets/css/resume.css](assets/css/resume.css)).
+
+> **Why PATCH:** fixes the v11.1.2–v11.1.4 edge misalignment; no new capability.
+
 ## [11.1.4] - 2026-07-29 — Resume dossier design pass
 
 **Headline:** one batched polish pass on /resume, all in the site's existing vocabulary: 2px file-divider rules above each numbered section, tabular numerals on dates and stats, an external-link `↗` on the SSRN titles, a date-rail hover scan affordance, and blood text selection on the page.
