@@ -2,6 +2,14 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.1.10] - 2026-07-29 — Resume bullet emphasis goes quiet
+
+### Changed
+
+- **Bullet `<strong>` renders at body weight on /resume** — the owner rejected visual bolding mid-sentence; the tags stay in the content so machine readers keep the semantic emphasis, but `.sn-resume-list li strong` now renders `font-weight: 400` ([assets/css/resume.css](assets/css/resume.css)). Credentials-column bolds (degree names, member lines) are untouched.
+
+> **Why PATCH:** design calibration of an existing surface; no new capability.
+
 ## [11.1.9] - 2026-07-29 — Resume highlights done the site's way: credential chips
 
 ### Changed

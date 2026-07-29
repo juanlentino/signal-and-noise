@@ -64,9 +64,10 @@ body div.wp-block-group:has(h1) > p.has-body-font-family:not(.sn-resume-rail) {
 	padding: 0.45rem 0.8rem;
 }
 
-/* Metric emphasis inside achievement bullets. */
+/* Bullet <strong> stays semantic (machine readers get the emphasis) but
+   renders at body weight — owner rejected visual bolding mid-sentence. */
 .sn-resume-list li strong {
-	font-weight: 700;
+	font-weight: 400;
 }
 
 /* Hard file-divider above each numbered body section's eyebrow, echoing
