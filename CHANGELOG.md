@@ -2,6 +2,22 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.1.1] - 2026-07-29 — Resume width + hierarchy calibration
+
+**Headline:** same-day UAT pass on the v11.1.0 text resume. The body sections move to the 1400px wide track (the two-track system's home for rails and strips) with CSS measure caps keeping prose readable; job titles stop reading as metadata.
+
+### Fixed
+
+- **Job titles were too quiet** — `.sn-resume-title` (role lines, credential column heads) was on the 11px label scale; now 0.95rem medium mono with 0.08em tracking, clearly subordinate to the Bebas company heads but no longer lost against the bullets ([assets/css/resume.css](assets/css/resume.css)).
+- **The reading track crammed the experience rows** — the Page content's body sections (Experience, Credentials, Publications, Skills) move from 760px to the 1400px wide track; `.sn-resume-list li` and `.sn-resume-pub-title` cap at 80ch so line length stays readable at the wider measure.
+- **Skills table on small screens** — under 600px the label/items cells stack (label above its items) instead of squeezing beside each other; the label column's `width: 1%` hack becomes an explicit `15rem`, echoing the date rail.
+
+### Removed
+
+- **The duplicate bottom download CTA** (Page content) — the hero's File-block download button is the single PDF entry point.
+
+> **Why PATCH:** design calibration of an existing surface; no new capability, no API change.
+
 ## [11.1.0] - 2026-07-29 — The text resume
 
 **Headline:** /resume drops the embedded PDF viewport for a text-first dossier: the resume reads as styled page content (stat strip, date-rail experience rows, folded early career, publication cards, skills table) with the PDF kept as a download button. The content itself lives in the CMS Page body; the theme ships the component styling.
