@@ -9,18 +9,22 @@
  * 11px type floor honoured; motion neutralized under prefers-reduced-motion.
  */
 
-/* ── Track promotion + layout owned here, not in the Page content ─────────
+/* ── Section measure + layout owned here, not in the Page content ─────────
    The pasted content declares the 760px reading track on every section
-   group; these rules promote the body sections (experience, credentials,
-   publications, skills, stats) to the 1400px wide track so content edits
-   never require a re-paste. The hero (the one group with an h1) stays on
-   the reading track. Constrained-layout child rules use :where() (zero
+   group; these rules widen the body sections (experience, credentials,
+   publications, skills) to a 60rem dossier measure — rail plus 80ch
+   bullets, centered by the constrained layout's auto margins — and the
+   stat strip to the full 1400px wide track, so content edits never
+   require a re-paste. The hero (the one group with an h1) stays on the
+   reading track. Constrained-layout child rules use :where() (zero
    specificity), so the body-prefixed selectors win regardless of print
    order. */
 body .wp-block-group:not(:has(h1)):has(.sn-resume-title) > *,
-body .wp-block-group:has(.sn-resume-stat-n) > *,
 body .wp-block-group:has(.sn-resume-pub) > *,
 body .wp-block-group:has(.sn-resume-skills) > * {
+	max-width: 60rem;
+}
+body .wp-block-group:has(.sn-resume-stat-n) > * {
 	max-width: 1400px;
 }
 

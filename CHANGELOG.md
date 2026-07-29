@@ -2,6 +2,16 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.1.2] - 2026-07-29 — Resume sections center on a 60rem measure
+
+**Headline:** third same-day UAT pass on the text resume. v11.1.1 widened the body sections to the full 1400px container but capped the prose inside, which piled the visual mass on the left with dead air right. The section children now cap at a 60rem dossier measure (date rail + 80ch bullets, exactly) and the constrained layout's auto margins center them; the stat strip keeps the full 1400px band.
+
+### Fixed
+
+- **Body sections read left-shifted** — the `:has()`-scoped promotion in [assets/css/resume.css](assets/css/resume.css) now sets the experience/credentials/publications/skills section children to `max-width: 60rem` instead of 1400px. Wider than the 760px reading track, zero right-side slack, and centered for free by the layout's `margin: auto`. The stat strip stays on the 1400px wide track as a deliberate full band.
+
+> **Why PATCH:** design calibration of an existing surface; no new capability, no API change.
+
 ## [11.1.1] - 2026-07-29 — Resume width + hierarchy calibration
 
 **Headline:** same-day UAT pass on the v11.1.0 text resume, delivered entirely in the stylesheet so the pasted Page content never needs a re-paste: body sections promote to the 1400px wide track, job titles stop reading as metadata, and the duplicate bottom download CTA retires.
