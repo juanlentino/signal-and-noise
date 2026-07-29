@@ -2,6 +2,14 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.1.6] - 2026-07-29 — Resume intro paragraph respects the column
+
+### Fixed
+
+- **The hero intro dragged the page's optical center left** — its reading-measure `padding-right: 14rem` sat on a content-box paragraph (the theme does not force `border-box` on `p`), so the box GREW 224px past the shared 960px column, starting far left of every other element. `box-sizing: border-box` on the rule keeps the measure inside the column ([assets/css/resume.css](assets/css/resume.css)).
+
+> **Why PATCH:** fixes the v11.1.5 intro overflow; no new capability.
+
 ## [11.1.5] - 2026-07-29 — Resume hero joins the 60rem measure
 
 ### Fixed

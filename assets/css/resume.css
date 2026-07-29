@@ -33,6 +33,7 @@ body .wp-block-group:has(h1) > * {
 	max-width: 60rem;
 }
 body .wp-block-group:has(h1) > p.has-body-font-family:not(.sn-resume-rail) {
+	box-sizing: border-box; /* the theme leaves p at content-box: without this the padding GROWS the box past the column */
 	padding-right: 14rem;
 }
 @media (max-width: 781px) {
