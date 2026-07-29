@@ -105,11 +105,22 @@ ok( in_array( 'sn-components', (array) ( $a11y['deps'] ?? array() ), true ), 'sn
 ok( ( $a11y['ver'] ?? false ) !== false, 'sn-a11y carries a cache-bust version' );
 ok( ! isset( $GLOBALS['__enqueued']['sn-now'] ) && ! isset( $GLOBALS['__enqueued']['sn-uses'] ), 'only sn-a11y enqueued on /accessibility' );
 
+// ── /resume → sn-resume only ──
+reset_enqueue();
+$GLOBALS['__page'] = 'resume';
+sn_enqueue_cms_page_styles();
+$resume = $GLOBALS['__enqueued']['sn-resume'] ?? null;
+ok( $resume !== null, 'sn-resume enqueued on /resume' );
+ok( strpos( (string) ( $resume['src'] ?? '' ), 'assets/css/resume.css' ) !== false, 'sn-resume src points at assets/css/resume.css' );
+ok( in_array( 'sn-components', (array) ( $resume['deps'] ?? array() ), true ), 'sn-resume DEPENDS on sn-components' );
+ok( ( $resume['ver'] ?? false ) !== false, 'sn-resume carries a cache-bust version' );
+ok( ! isset( $GLOBALS['__enqueued']['sn-now'] ) && ! isset( $GLOBALS['__enqueued']['sn-uses'] ) && ! isset( $GLOBALS['__enqueued']['sn-a11y'] ), 'only sn-resume enqueued on /resume' );
+
 // ── An unrelated page → nothing enqueued ──
 reset_enqueue();
 $GLOBALS['__page'] = 'contact';
 sn_enqueue_cms_page_styles();
-ok( array() === $GLOBALS['__enqueued'], 'no bespoke stylesheet enqueued off the three Pages' );
+ok( array() === $GLOBALS['__enqueued'], 'no bespoke stylesheet enqueued off the bespoke Pages' );
 
 // ── CSS CONTENT contract (restored from the deleted route tests) ──
 $now_css = (string) @file_get_contents( __DIR__ . '/../assets/css/now.css' );
@@ -129,6 +140,15 @@ $a11y_css = (string) @file_get_contents( __DIR__ . '/../assets/css/accessibility
 ok( '' !== $a11y_css, 'accessibility.css is readable' );
 ok( strpos( $a11y_css, '.sn-a11y-page' ) !== false, 'accessibility.css is scoped under .sn-a11y-page' );
 ok( strpos( $a11y_css, '--wp--preset--color--' ) !== false, 'accessibility.css uses theme preset color tokens' );
+
+$resume_css = (string) @file_get_contents( __DIR__ . '/../assets/css/resume.css' );
+ok( '' !== $resume_css, 'resume.css is readable' );
+ok( strpos( $resume_css, '.sn-resume-' ) !== false, 'resume.css defines the sn-resume-* component idiom' );
+ok( strpos( $resume_css, '.sn-resume-rail' ) !== false, 'resume.css defines the .sn-resume-rail date-rail idiom' );
+ok( strpos( $resume_css, '.sn-resume-skills' ) !== false, 'resume.css restyles the skills table (.sn-resume-skills)' );
+ok( strpos( $resume_css, '--wp--preset--color--' ) !== false, 'resume.css uses theme preset color tokens (no bespoke palette)' );
+ok( strpos( $resume_css, 'max(0.7rem, 11px)' ) !== false, 'resume.css honours the 11px type floor idiom' );
+ok( strpos( $resume_css, 'prefers-reduced-motion' ) !== false, 'resume.css neutralizes motion under reduced-motion' );
 
 // ── functions.php wires the module ──
 $fn = (string) @file_get_contents( __DIR__ . '/../functions.php' );

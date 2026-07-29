@@ -1,0 +1,222 @@
+/**
+ * Signal & Noise — /resume page.
+ *
+ * Brutalist dossier treatment for the CMS resume Page: stat strip, date-rail
+ * experience rows, folded early career, publication cards, and a restyled
+ * skills table. Clones the /now + /uses idiom (Bebas heads, mono labels,
+ * hairline rows, blood on hover) with preset tokens only, scoped under
+ * sn-resume-* classes carried by the Page content. Loaded only on /resume.
+ * 11px type floor honoured; motion neutralized under prefers-reduced-motion.
+ */
+
+/* ── Stat strip ───────────────────────────────────────────────────────── */
+.sn-resume-stats {
+	border-top: 2px solid var(--wp--preset--color--bone, #000);
+	border-bottom: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+	padding: clamp(1.25rem, 3vw, 2rem) 0;
+}
+.sn-resume-stat-n {
+	font-family: 'Bebas Neue', Impact, sans-serif;
+	font-weight: 400;
+	font-size: clamp(2.75rem, 6vw, 4.5rem);
+	line-height: 0.9;
+	color: var(--wp--preset--color--bone, #000);
+	margin: 0;
+}
+.sn-resume-stat-l {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.7rem, 11px);
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--rust, #666);
+	margin: 0.4rem 0 0;
+}
+
+/* ── Experience rows ──────────────────────────────────────────────────── */
+.sn-resume-rail {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.7rem, 11px);
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	line-height: 1.8;
+	color: var(--wp--preset--color--rust, #666);
+	margin: 0.4rem 0 0;
+}
+.sn-resume-role {
+	font-family: 'Bebas Neue', Impact, sans-serif;
+	font-weight: 400;
+	font-size: clamp(1.5rem, 3vw, 2rem);
+	letter-spacing: 0.02em;
+	line-height: 1;
+	color: var(--wp--preset--color--bone, #000);
+	margin: 0 0 0.35rem;
+}
+.sn-resume-title {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.7rem, 11px);
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--bone, #000);
+	margin: 1.25rem 0 0.75rem;
+}
+.sn-resume-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+.sn-resume-list li {
+	position: relative;
+	padding: 0.45rem 0 0.45rem 1.4rem;
+	font-size: 0.95rem;
+	line-height: 1.6;
+	color: var(--wp--preset--color--bone, #000);
+}
+.sn-resume-list li::before {
+	content: "–";
+	position: absolute;
+	left: 0;
+	color: var(--wp--preset--color--rust, #666);
+}
+
+/* ── Early-career fold ────────────────────────────────────────────────── */
+.sn-resume-fold {
+	border-top: 2px solid var(--wp--preset--color--bone, #000);
+	border-bottom: 2px solid var(--wp--preset--color--bone, #000);
+	padding: 0;
+	margin-top: clamp(1.5rem, 3vw, 2.5rem);
+}
+.sn-resume-fold summary {
+	list-style: none;
+	cursor: pointer;
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	gap: 1rem;
+	padding: clamp(0.85rem, 1.6vw, 1.15rem) 0;
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.7rem, 11px);
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--bone, #000);
+	transition: color 0.15s ease;
+}
+.sn-resume-fold summary::-webkit-details-marker {
+	display: none;
+}
+.sn-resume-fold summary::after {
+	content: "+";
+	font-size: 1rem;
+}
+.sn-resume-fold[open] summary::after {
+	content: "\2013";
+}
+.sn-resume-fold summary:hover {
+	color: var(--wp--preset--color--blood, #e00404);
+}
+.sn-resume-fold > :last-child {
+	margin-bottom: clamp(1rem, 2vw, 1.5rem);
+}
+.sn-resume-fold-co {
+	font-family: 'Bebas Neue', Impact, sans-serif;
+	font-weight: 400;
+	font-size: 1.35rem;
+	letter-spacing: 0.02em;
+	color: var(--wp--preset--color--bone, #000);
+	margin: 1.25rem 0 0;
+}
+
+/* ── Publication cards ────────────────────────────────────────────────── */
+.sn-resume-pub {
+	border: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+	padding: clamp(1.1rem, 2.5vw, 1.6rem) clamp(1.1rem, 2.5vw, 1.75rem);
+	margin-top: 1rem;
+	transition: border-color 0.15s ease;
+}
+.sn-resume-pub:hover {
+	border-color: var(--wp--preset--color--bone, #000);
+}
+.sn-resume-pub-meta {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.7rem, 11px);
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--rust, #666);
+	margin: 0 0 0.5rem;
+}
+.sn-resume-pub-title {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: 1rem;
+	font-weight: 500;
+	line-height: 1.5;
+	letter-spacing: 0;
+	text-transform: none;
+	margin: 0;
+}
+.sn-resume-pub-title a {
+	color: var(--wp--preset--color--bone, #000);
+	text-decoration: none;
+	transition: color 0.15s ease;
+}
+.sn-resume-pub-title a:hover {
+	color: var(--wp--preset--color--blood, #e00404);
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+
+/* ── Skills table ─────────────────────────────────────────────────────── */
+.sn-resume-skills table {
+	border-collapse: collapse;
+	border: 0;
+	width: 100%;
+}
+.sn-resume-skills td {
+	border: 0;
+	border-top: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+	padding: 0.8rem 0;
+	vertical-align: top;
+}
+.sn-resume-skills tr:first-child td {
+	border-top: 2px solid var(--wp--preset--color--bone, #000);
+}
+.sn-resume-skills td:first-child {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.7rem, 11px);
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--rust, #666);
+	white-space: nowrap;
+	width: 1%;
+	padding-right: clamp(1.5rem, 4vw, 3rem);
+}
+.sn-resume-skills td:last-child {
+	font-size: 0.9rem;
+	line-height: 1.65;
+	color: var(--wp--preset--color--bone, #000);
+}
+
+/* ── Download rows ────────────────────────────────────────────────────── */
+.sn-resume-download {
+	display: flex;
+	align-items: center;
+	gap: 1.25rem;
+	flex-wrap: wrap;
+}
+.sn-resume-download > a:first-child {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.7rem, 11px);
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--rust, #666);
+	text-decoration: none;
+}
+.sn-resume-download > a:first-child:hover {
+	color: var(--wp--preset--color--blood, #e00404);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.sn-resume-fold summary,
+	.sn-resume-pub,
+	.sn-resume-pub-title a {
+		transition: none;
+	}
+}

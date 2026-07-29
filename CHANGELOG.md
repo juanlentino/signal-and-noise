@@ -2,6 +2,21 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.1.0] - 2026-07-29 — The text resume
+
+**Headline:** /resume drops the embedded PDF viewport for a text-first dossier: the resume reads as styled page content (stat strip, date-rail experience rows, folded early career, publication cards, skills table) with the PDF kept as a download button. The content itself lives in the CMS Page body; the theme ships the component styling.
+
+### New
+
+- **`assets/css/resume.css`** — the `sn-resume-*` component layer for the /resume Page: stat strip (`-stats`, `-stat-n`, `-stat-l`), date rail (`-rail`), role heads and titles (`-role`, `-title`), hairline achievement lists (`-list`), the early-career `<details>` fold (`-fold`, `-fold-co`), publication cards (`-pub`, `-pub-meta`, `-pub-title`), the restyled skills table (`-skills`), and File-block download rows (`-download`). Clones the /now + /uses dossier idiom: Bebas heads, mono 11px-floor labels, hairline rows, blood on hover only, preset tokens throughout, motion neutralized under `prefers-reduced-motion`.
+- **`/resume` branch in [inc/cms-page-styles.php](inc/cms-page-styles.php)** — enqueues the sheet only on that Page, depending on `sn-components`, mirroring the /now, /about/uses, and /accessibility branches.
+
+### Changed
+
+- The Resume Page's block content (DB-side, pasted through the editor) replaces the core File block's inline PDF `<object>` preview with the text resume plus two download-button-only File blocks. The PDF embed never rendered reliably on mobile, fought the site's typography, and gave machine readers an empty tag on a page `llms.txt` advertises as "professional experience and credentials."
+
+> **Why MINOR:** a new user-visible surface (the styled text resume) with no API or schema change.
+
 ## [11.0.0] - 2026-07-28 — The Search-corpus major
 
 **⚠️ Action required: requires PHP 8.3+.** Nothing else needs attention — no content, no settings, no templates change. **Pairs with plugin v10.0.0**, which the search noindex depends on (`sn_seo_robots_directives`, added in plugin v9.88.0).
