@@ -2,6 +2,20 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.1.4] - 2026-07-29 — Resume dossier design pass
+
+**Headline:** one batched polish pass on /resume, all in the site's existing vocabulary: 2px file-divider rules above each numbered section, tabular numerals on dates and stats, an external-link `↗` on the SSRN titles, a date-rail hover scan affordance, and blood text selection on the page.
+
+### Improvements
+
+- **Dossier file-dividers** — each body section's eyebrow opens with a hard 2px bone rule, echoing the fold's and stat band's line weight so the whole page carries the file-separator skeleton ([assets/css/resume.css](assets/css/resume.css)).
+- **Tabular numerals** on the date rails and stat numbers (`font-variant-numeric: tabular-nums`).
+- **`↗` affordance** on publication titles, rust at rest and blood on hover.
+- **Scan affordance** — hovering an experience row lifts its date rail from rust to ink (transition guarded under `prefers-reduced-motion`).
+- **Blood selection** — `::selection` on this page renders blood on void; the sheet only loads on /resume, so the site-wide default is untouched elsewhere.
+
+> **Why PATCH:** design calibration of an existing surface; no new capability, no API change.
+
 ## [11.1.3] - 2026-07-29 — Resume download button style actually applies
 
 ### Fixed
