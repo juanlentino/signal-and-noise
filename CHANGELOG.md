@@ -2,6 +2,17 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.1.7] - 2026-07-29 — Resume left-pin ROOT CAUSE: the width overrides matched <main>
+
+**Headline:** the "page sits left" report that survived six patches is fixed at its actual root. The `:has()` width overrides introduced in v11.1.2 used bare `.wp-block-group` selectors, which also matched the template's `<main class="wp-block-group">` — capping the entire post-content wrapper at 1400px with no centering (main is a flow layout, not constrained). On any viewport wider than 1400px the whole page rendered in a left-pinned box. At viewports ≤1400px the box filled the screen, which is why the defect was invisible in narrower verification.
+
+### Fixed
+
+- **Removed every container-width override from [assets/css/resume.css](assets/css/resume.css)** — the Page content now declares its constrained widths directly (960px sections, 1400px stat band) and WordPress's constrained layout centers them with auto margins, the block-theme handbook mechanism. The stylesheet keeps only component styling.
+- **Remaining structural selectors qualified as `div.wp-block-group`** (intro measure, section dividers) so no rule in this sheet can ever reach `<main>` again; the file header documents the trap.
+
+> **Why PATCH:** fixes the v11.1.2 regression at its root; no new capability.
+
 ## [11.1.6] - 2026-07-29 — Resume intro paragraph respects the column
 
 ### Fixed
