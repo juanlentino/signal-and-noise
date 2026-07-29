@@ -2,6 +2,14 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.1.3] - 2026-07-29 — Resume download button style actually applies
+
+### Fixed
+
+- **The hero download button stayed the default black slab** — the combined sheet's `.wp-block-file a.wp-block-file__button` (0,2,1) outranked v11.1.2's `.sn-resume-download .wp-block-file__button` (0,2,0) for background, padding, and type. The selector is now `.wp-block-file.sn-resume-download a.wp-block-file__button` (0,3,1), so the small mono outline idiom wins ([assets/css/resume.css](assets/css/resume.css)).
+
+> **Why PATCH:** fixes a v11.1.2 rule that never took effect.
+
 ## [11.1.2] - 2026-07-29 — Resume sections center on a 60rem measure
 
 **Headline:** third same-day UAT pass on the text resume. v11.1.1 widened the body sections to the full 1400px container but capped the prose inside, which piled the visual mass on the left with dead air right. The section children now cap at a 60rem dossier measure (date rail + 80ch bullets, exactly) and the constrained layout's auto margins center them; the stat strip keeps the full 1400px band.
