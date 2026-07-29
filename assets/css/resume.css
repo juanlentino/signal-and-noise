@@ -42,12 +42,26 @@ body div.wp-block-group:has(h1) > p.has-body-font-family:not(.sn-resume-rail) {
 	color: var(--wp--preset--color--void, #fff);
 }
 
-/* Highlight primitive: the editor's Highlight tool renders <mark>; on this
-   page it reads as blood ink, no background. Use sparingly — one or two
-   marks per screen. */
-mark {
-	background: none;
-	color: var(--wp--preset--color--blood, #e00404);
+/* Credential chips: the site's cohesive highlight is structural, not
+   inline color — red stays chrome (eyebrows, meta, hover). Mirrors
+   .sn-disco-chip (mono 11px uppercase, hairline bone border). Authored
+   as a plain list block with className sn-resume-chips. */
+.sn-resume-chips {
+	list-style: none;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.6rem;
+	margin: 1.25rem 0 0;
+	padding: 0;
+}
+.sn-resume-chips li {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.7rem, 11px);
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--bone, #000);
+	border: 1px solid var(--wp--preset--color--bone, #000);
+	padding: 0.45rem 0.8rem;
 }
 
 /* Metric emphasis inside achievement bullets. */
