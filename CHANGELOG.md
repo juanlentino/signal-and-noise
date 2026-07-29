@@ -2,6 +2,15 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.1.9] - 2026-07-29 — Resume highlights done the site's way: credential chips
+
+### Changed
+
+- **The v11.1.8 blood `<mark>` rule is removed** — inline color in body copy broke the site's discipline (red is chrome: eyebrows, meta labels, hover states — never content). Cohesive highlighting on this site is structural.
+- **`.sn-resume-chips`** — a credential chip row for the hero (GRAMMY / Latin GRAMMY voting membership, MBA, SSRN research), mirroring the discography's `.sn-disco-chip` idiom: mono 11px-floor uppercase, hairline bone border, authored as a plain list block ([assets/css/resume.css](assets/css/resume.css)).
+
+> **Why PATCH:** design calibration of an existing surface; no new capability.
+
 ## [11.1.8] - 2026-07-29 — Resume highlight primitives
 
 ### Improvements
