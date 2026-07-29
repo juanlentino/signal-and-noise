@@ -9,52 +9,31 @@
  * 11px type floor honoured; motion neutralized under prefers-reduced-motion.
  */
 
-/* ── Section measure + layout owned here, not in the Page content ─────────
-   The pasted content declares the 760px reading track on every section
-   group; these rules widen the body sections (experience, credentials,
-   publications, skills) to a 60rem dossier measure — rail plus 80ch
-   bullets, centered by the constrained layout's auto margins — and the
-   stat strip to the full 1400px wide track, so content edits never
-   require a re-paste. The hero (the one group with an h1) stays on the
-   reading track. Constrained-layout child rules use :where() (zero
-   specificity), so the body-prefixed selectors win regardless of print
-   order. */
-body .wp-block-group:not(:has(h1)):has(.sn-resume-title) > *,
-body .wp-block-group:has(.sn-resume-pub) > *,
-body .wp-block-group:has(.sn-resume-skills) > * {
-	max-width: 60rem;
-}
-/* The hero joins the same 60rem measure so every section shares one left
-   edge (the stat band alone stays the full 1400px). The intro paragraph
-   keeps a reading measure via right padding — a plain max-width would
-   re-center it off that shared edge (the layout's auto margins carry
-   !important). */
-body .wp-block-group:has(h1) > * {
-	max-width: 60rem;
-}
-body .wp-block-group:has(h1) > p.has-body-font-family:not(.sn-resume-rail) {
-	box-sizing: border-box; /* the theme leaves p at content-box: without this the padding GROWS the box past the column */
+/* ── Widths belong to the Page content, NOT this sheet ────────────────────
+   The Page content declares its constrained widths directly (960px
+   sections, 1400px stat band) and WordPress's constrained layout centers
+   them with auto margins — the handbook mechanism. v11.1.2–v11.1.6
+   carried `:has()` width overrides here; their `.wp-block-group`
+   selectors ALSO matched the template's <main class="wp-block-group">,
+   capping the whole post-content wrapper at 1400px with no centering
+   (main is a flow layout) and left-pinning the entire page on viewports
+   wider than 1400px. Never reintroduce container-width rules whose
+   selector can reach <main>; qualify group selectors as
+   div.wp-block-group. */
+
+/* The hero intro keeps a reading measure inside its declared 960px column.
+   Right padding, not max-width: the constrained layout's auto margins
+   carry !important and would re-center a narrower box off the shared left
+   edge. border-box because the theme leaves p at content-box — without it
+   the padding GROWS the box past the column. */
+body div.wp-block-group:has(h1) > p.has-body-font-family:not(.sn-resume-rail) {
+	box-sizing: border-box;
 	padding-right: 14rem;
 }
 @media (max-width: 781px) {
-	body .wp-block-group:has(h1) > p.has-body-font-family:not(.sn-resume-rail) {
+	body div.wp-block-group:has(h1) > p.has-body-font-family:not(.sn-resume-rail) {
 		padding-right: 0;
 	}
-}
-body .wp-block-group:has(.sn-resume-stat-n) > * {
-	max-width: 1400px;
-}
-
-/* Wider date rail than the content's inline 180px flex-basis; !important
-   is required to beat the inline style, and is scoped to rail columns. */
-body .wp-block-column:has(> .sn-resume-rail) {
-	flex-basis: 240px !important;
-}
-
-/* The closing download CTA duplicated the hero's; retired here so the
-   content needs no edit. The hero group (has an h1) keeps its download. */
-body .wp-block-group:not(:has(h1)):has(.sn-resume-download) {
-	display: none;
 }
 
 /* ── Dossier micro-details (this sheet loads only on /resume) ─────────── */
@@ -65,8 +44,9 @@ body .wp-block-group:not(:has(h1)):has(.sn-resume-download) {
 
 /* Hard file-divider above each numbered body section's eyebrow, echoing
    the fold's and stat band's 2px line weight. The hero's eyebrow (group
-   with an h1) keeps the site-wide treatment. */
-body .wp-block-group:not(:has(h1)) > .sn-catalog-eyebrow {
+   with an h1) keeps the site-wide treatment. div-qualified so the
+   selector can never reach the template's <main>. */
+body div.wp-block-group:not(:has(h1)) > .sn-catalog-eyebrow {
 	border-top: 2px solid var(--wp--preset--color--bone, #000);
 	padding-top: 1.1rem;
 }
