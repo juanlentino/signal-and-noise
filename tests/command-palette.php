@@ -43,13 +43,21 @@ function sn_theme_pillar_descriptors() {
 if ( ! function_exists( 'wp_json_encode' ) ) {
 	function wp_json_encode( $v, $f = 0, $d = 512 ) { return json_encode( $v, $f, $d ); }
 }
-$GLOBALS['__qargs'] = null;
+$GLOBALS['__qargs']     = null;    // Args of the FIRST (recent) query per build.
+$GLOBALS['__qargs_all'] = array(); // Full history: [0] recent, [1] notes.
 class WP_Query {
 	public $posts;
 	public function __construct( $args ) {
-		$GLOBALS['__qargs'] = $args;
+		if ( null === $GLOBALS['__qargs'] ) {
+			$GLOBALS['__qargs'] = $args;
+		}
+		$GLOBALS['__qargs_all'][] = $args;
 		$this->posts = array( (object) array( 'ID' => 1 ), (object) array( 'ID' => 2 ) );
 	}
+}
+function reset_qargs() {
+	$GLOBALS['__qargs']     = null;
+	$GLOBALS['__qargs_all'] = array();
 }
 function wp_reset_postdata() {}
 
@@ -80,9 +88,11 @@ $pal_css = file_get_contents( __DIR__ . '/../assets/css/command-palette.css' );
 ok( ! preg_match( '/\.sn-cmdk-trigger\s*\{[^}]*position\s*:\s*fixed/s', $pal_css ), 'trigger is no longer position:fixed' );
 
 // v9.12.0: recent-notes count honors sn_palette_recent_count (default 8).
+reset_qargs();
 $GLOBALS['__filters']['sn_palette_recent_count'] = 4;
 sn_cmdk_build_data();
 ok( (int) $GLOBALS['__qargs']['posts_per_page'] === 4, 'palette: recent query honors sn_palette_recent_count=4' );
+reset_qargs();
 $GLOBALS['__filters'] = array();
 sn_cmdk_build_data();
 ok( (int) $GLOBALS['__qargs']['posts_per_page'] === 8, 'palette: default recent count is 8' );
@@ -95,6 +105,46 @@ ok( sn_cmdk_enabled() === false, 'palette: sn_palette_enabled=false disables it'
 ok( in_array( 'sn-cmdk-off', sn_cmdk_body_class( array( 'home' ) ), true ), 'palette: body class sn-cmdk-off added when disabled' );
 $GLOBALS['__filters'] = array();
 ok( ! in_array( 'sn-cmdk-off', sn_cmdk_body_class( array( 'home' ) ), true ), 'palette: no sn-cmdk-off class when enabled' );
+
+// ── v11.2.0: the `notes` corpus key — ALL published notes for ⌘K ranked search ──
+reset_qargs();
+$GLOBALS['__filters'] = array();
+$data = sn_cmdk_build_data();
+$notes = ( isset( $data['notes'] ) && is_array( $data['notes'] ) ) ? $data['notes'] : array();
+ok( isset( $data['notes'] ) && is_array( $data['notes'] ), 'notes: data island carries a notes key' );
+ok( count( $notes ) === 2, 'notes: one entry per returned post' );
+ok( isset( $notes[0]['t'], $notes[0]['u'] ) && count( $notes[0] ) === 2, 'notes: entries are exactly {t,u}' );
+ok( ( $notes[0]['t'] ?? '' ) === 'A & B', 'notes: titles HTML-decoded like recent' );
+ok( ( $notes[0]['u'] ?? '' ) === 'https://x.test/notes/n1/', 'notes: u is the permalink' );
+ok( count( $GLOBALS['__qargs_all'] ) === 2, 'notes: exactly two queries per build (recent + notes)' );
+$nq = $GLOBALS['__qargs_all'][1] ?? array();
+ok( (int) ( $nq['posts_per_page'] ?? 0 ) === 200, 'notes: query bounded to 200' );
+ok( ( $nq['no_found_rows'] ?? false ) === true, 'notes: query uses no_found_rows' );
+ok( ( $nq['post_status'] ?? '' ) === 'publish', 'notes: query is publish-only' );
+ok( ( $nq['orderby'] ?? '' ) === 'date' && ( $nq['order'] ?? '' ) === 'DESC', 'notes: date DESC (stable tiebreak order for the JS)' );
+
+// The cap honors sn_palette_notes_cap but can never exceed the 200 bound.
+reset_qargs();
+$GLOBALS['__filters']['sn_palette_notes_cap'] = 50;
+sn_cmdk_build_data();
+ok( (int) ( $GLOBALS['__qargs_all'][1]['posts_per_page'] ?? 0 ) === 50, 'notes: cap honors sn_palette_notes_cap=50' );
+reset_qargs();
+$GLOBALS['__filters']['sn_palette_notes_cap'] = 10000;
+sn_cmdk_build_data();
+ok( (int) ( $GLOBALS['__qargs_all'][1]['posts_per_page'] ?? 0 ) === 200, 'notes: cap is hard-clamped at 200 even when filtered higher' );
+$GLOBALS['__filters'] = array();
+
+// ── v11.2.0: JS source contract — vanilla ranking, XSS discipline intact ──
+// (Source-assertion pattern per tests/keyboard-nav.php.)
+$js = file_get_contents( __DIR__ . '/../assets/js/command-palette.js' );
+ok( (bool) preg_match( '/data\.notes\b(?!Url)/', $js ), 'js: ranking reads the notes corpus (data.notes, not just notesUrl)' );
+ok( strpos( $js, 'scoreNote' ) !== false, 'js: scoreNote token scorer present' );
+ok( strpos( $js, 'MAX_RANKED' ) !== false, 'js: ranked list is capped (MAX_RANKED)' );
+ok( ! preg_match( '/\.innerHTML\s*=|insertAdjacentHTML/', $js ), 'js: textContent discipline holds — no innerHTML/insertAdjacentHTML writes' );
+ok( strpos( $js, "type: 'search'" ) !== false, 'js: the /notes/?s= search action row survives as fallback' );
+// The no-model-in-browser commitment: plain arithmetic only — no network, no
+// eval, no WASM, no workers smuggling a model in.
+ok( ! preg_match( '/\bfetch\s*\(|XMLHttpRequest|WebAssembly|importScripts|\beval\s*\(/', $js ), 'js: no network/eval/WASM — vanilla arithmetic only (no-model commitment)' );
 
 echo "Result: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
