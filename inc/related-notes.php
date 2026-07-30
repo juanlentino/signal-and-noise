@@ -66,7 +66,10 @@ function sn_related_notes_query( $post_id, $limit = 3 ) {
 					continue;
 				}
 				$p = get_post( $rid );
-				if ( ! $p || 'publish' !== get_post_status( $p ) ) {
+				// Publish AND type re-checked here, not trusted from the
+				// artifact: post IDs are global across types, so a stale or
+				// widened artifact must never surface a non-Note in this footer.
+				if ( ! $p || 'publish' !== get_post_status( $p ) || 'post' !== get_post_type( $p ) ) {
 					continue;
 				}
 				$seen[ $rid ] = true;

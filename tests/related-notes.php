@@ -31,9 +31,10 @@ $GLOBALS['__queried_id']  = 0;      // get_queried_object_id() return.
 /**
  * Minimal post fixture. Mirrors the fields the helpers read.
  */
-function mk_post( $id, $tag_ids, $ts, $title, $link, $status = 'publish' ) {
+function mk_post( $id, $tag_ids, $ts, $title, $link, $status = 'publish', $type = 'post' ) {
 	$p              = new stdClass();
 	$p->ID          = $id;
+	$p->__type      = $type;
 	$p->__tag_ids   = $tag_ids;
 	$p->__ts        = $ts;
 	$p->__title     = $title;
@@ -213,6 +214,13 @@ if ( ! class_exists( 'WP_Query' ) ) {
 				if ( ( $p->__status ?? 'publish' ) !== $status ) {
 					continue;
 				}
+				// …and post_type does too (real WP_Query defaults to 'post';
+				// every call site here passes it explicitly). Without this the
+				// stub let a PAGE ride the heuristic backfill — exactly the
+				// stub-drift class this repo's rules exist for.
+				if ( ( $p->__type ?? 'post' ) !== (string) ( $args['post_type'] ?? 'post' ) ) {
+					continue;
+				}
 				if ( $has_tax ) {
 					if ( ! array_intersect( $terms, $p->__tag_ids ) ) {
 						continue;
@@ -356,6 +364,13 @@ if ( ! function_exists( 'snt_ml_related_for_post' ) ) {
 if ( ! class_exists( 'WP_Error' ) ) {
 	class WP_Error {}
 }
+if ( ! function_exists( 'get_post_type' ) ) {
+	// Models the real transform: type string for a known post, false otherwise.
+	function get_post_type( $post ) {
+		$id = is_object( $post ) ? (int) $post->ID : (int) $post;
+		return isset( $GLOBALS['POSTS'][ $id ] ) ? $GLOBALS['POSTS'][ $id ]->__type : false;
+	}
+}
 if ( ! function_exists( 'get_post_status' ) ) {
 	// Models the real transform: string status for a known post, false otherwise.
 	function get_post_status( $post ) {
@@ -411,6 +426,19 @@ $GLOBALS['__ml_rows'] = array(
 );
 $res = sn_related_notes_query( 1, 3 );
 ok( ids_of( $res ) === array( 2, 3, 4 ), 'kernel: self/unknown/draft/malformed dropped, heuristic fills: ' . implode( ',', ids_of( $res ) ) );
+
+// KERNEL TYPE GUARD (review follow-up, applied pre-merge): post IDs are global
+// across types — a published PAGE id surfacing in a stale/widened artifact must
+// never enter the Notes footer. Today's plugin corpus is posts-only, so this
+// guards drift, not a live path.
+kernel_fixture();
+mk_post( 7, array( 10 ), 4900, 'A published page', 'https://x/p/7/', 'publish', 'page' );
+$GLOBALS['__ml_rows'] = array(
+	array( 'post_id' => 7, 'score' => 0.95 ), // publish, but a PAGE — dropped.
+	array( 'post_id' => 2, 'score' => 0.6 ),
+);
+$res = sn_related_notes_query( 1, 3 );
+ok( ids_of( $res ) === array( 2, 3, 4 ), 'kernel: a published non-post NEVER enters the footer: ' . implode( ',', ids_of( $res ) ) );
 
 // KERNEL DEDUPE: a kernel pick never re-enters via the heuristic passes.
 kernel_fixture();
