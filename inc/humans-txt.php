@@ -15,7 +15,8 @@
  *
  * Owner + theme facts come from wp_get_theme() so they never drift from
  * style.css. The profile URLs and stack lines are hardcoded in lockstep with
- * parts/footer.html and patterns/colophon.php — keep all three in sync.
+ * parts/footer.html and the CMS-owned /colophon content (Site Editor override
+ * rendering the plugin's [sn_colophon], since plugin v10.13.0) — keep them in sync.
  *
  * @package SignalNoise
  */

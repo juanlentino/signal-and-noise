@@ -68,7 +68,7 @@ add_shortcode( 'current_year', 'signal_noise_current_year' );
  * actually carry one of our tokens (avoids paying do_shortcode on every block).
  * Add new theme tokens here when introducing them:
  *   [current_year] — footer copyright (parts/footer.html)
- *   [sn_build]     — live colophon build line (patterns/colophon.php, C2)
+ *   [sn_build]     — live colophon build line (C2; available to CMS-owned content — the /colophon template is a Site Editor override since plugin v10.13.0)
  */
 add_filter( 'render_block', function( $block_content, $block ) {
 	if ( strpos( $block_content, '[current_year]' ) !== false

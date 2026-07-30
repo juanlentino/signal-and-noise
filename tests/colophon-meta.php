@@ -132,8 +132,9 @@ ok( ( $wt['branch'] ?? '' ) === 'feature', 'worktree: reports the checked-out br
 $root      = realpath( __DIR__ . '/..' );
 $setup_src = (string) file_get_contents( $root . '/inc/setup.php' );
 ok( strpos( $setup_src, '[sn_build]' ) !== false, 'render_block bridge (setup.php) resolves the [sn_build] token (not just [current_year])' );
-$colophon_src = (string) file_get_contents( $root . '/patterns/colophon.php' );
-ok( strpos( $colophon_src, '[sn_build]' ) !== false, 'colophon pattern emits the [sn_build] token' );
+// NB: the theme's colophon pattern (the token's original emitter) was removed in
+// v11.1.11 — /colophon is CMS-owned since plugin v10.13.0. The [sn_build]
+// shortcode + bridge stay available for CMS-owned content.
 
 // --- Path-traversal hardening: a tampered HEAD ref must not escape refs_dir ---
 // Plant a 40-hex file reachable from .git/refs/heads ONLY via "..". Pre-guard,

@@ -2,6 +2,19 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.1.11] - 2026-07-30 — The dead colophon template leaves the theme
+
+### Removed
+
+- **`templates/page-colophon.html` + `patterns/colophon.php`** — the colophon moved to CMS ownership in plugin v10.13.0: /colophon renders the plugin's `[sn_colophon]` shortcode through a Site Editor `wp_template` override of `page-colophon`. The theme's slug-bound template file was therefore permanently shadowed dead code that would have resurrected stale hardcoded stack/type credits if the DB override were ever deleted. The `signal-noise/colophon` pattern existed only to serve that template (verified referenced nowhere else; the live DB override carries a detached, since-edited copy, not a pattern reference), and the `page-colophon` `customTemplates` entry in theme.json registered the removed file.
+- [tests/colophon-template.php](tests/colophon-template.php) is rewritten as a tombstone suite guarding against resurrection (template, pattern, and theme.json entry stay gone; the footer's /colophon link and the absence of stray `signal-noise/colophon` references stay checked).
+
+### Unchanged on purpose
+
+- `inc/colophon-meta.php` (`[sn_build]`) and the setup.php render_block shortcode bridge stay — they serve CMS-owned content, not the removed template.
+
+> **Why PATCH:** dead-code removal with no behavioural change; /colophon keeps rendering from the CMS-owned override.
+
 ## [11.1.10] - 2026-07-29 — Resume bullet emphasis goes quiet
 
 ### Changed
