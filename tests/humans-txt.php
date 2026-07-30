@@ -6,7 +6,7 @@
  * template_redirect virtual route, advertises it with a rel=author head link,
  * and emits one dry maker's-mark comment in <head>. Owner/theme facts are read
  * from wp_get_theme() so they never drift from style.css; the social URLs +
- * stack lines are hardcoded in lockstep with parts/footer.html + patterns/colophon.php.
+ * stack lines are hardcoded in lockstep with parts/footer.html + the CMS-owned /colophon content.
  *
  * @since theme v10.5.0
  */
