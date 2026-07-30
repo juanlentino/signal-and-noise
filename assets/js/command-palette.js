@@ -4,7 +4,9 @@
  * Open with ⌘/Ctrl-K, "/" (outside form fields), or the visible trigger button.
  * Three action types:
  *   1. Search notes → location.assign( notesUrl + '?s=' + encodeURIComponent(q) )
- *   2. Jump to a recent note (window.SN_CMDK.recent)
+ *   2. Jump to a note — empty query lists recent (window.SN_CMDK.recent);
+ *      typing ranks the FULL corpus (window.SN_CMDK.notes) with plain token
+ *      scoring (v11.2.0). No model in the browser, ever — site commitment.
  *   3. Jump to a pillar page (window.SN_CMDK.pillars)
  *
  * Buildless ES5 (no JSX, no build step). Distinct from the plugin's wp-admin
@@ -23,7 +25,11 @@
 ( function () {
 	'use strict';
 
-	var data = window.SN_CMDK || { notesUrl: '/notes/', recent: [], pillars: [] };
+	var data = window.SN_CMDK || { notesUrl: '/notes/', recent: [], pillars: [], notes: [] };
+	if ( ! data.notes ) { data.notes = []; } // Pre-11.2.0 island shape.
+
+	// Ranked-search cap: how many scored notes render for a query.
+	var MAX_RANKED = 8;
 
 	var root, backdrop, input, list, trigger, lastFocus;
 	var items = [];      // The flat, currently-rendered model.
@@ -34,37 +40,109 @@
 	// ── Model ──────────────────────────────────────────────────────────────
 
 	/**
-	 * Build the item model for a query. Row 0 is always the synthetic "search"
-	 * action; pillars + recent notes follow, substring-filtered when there's a
-	 * query. Each item: { type, label, sub, url, query }.
+	 * Lowercase whitespace-tokenize a query string. Plain arithmetic ranking
+	 * only — the site's public commitment: no model ever ships to the reader's
+	 * browser, so scoring is transparent token matching, nothing learned.
+	 */
+	function tokenize( s ) {
+		var raw = s.toLowerCase().split( /\s+/ );
+		var out = [];
+		for ( var i = 0; i < raw.length; i++ ) {
+			if ( raw[ i ] ) { out.push( raw[ i ] ); }
+		}
+		return out;
+	}
+
+	/**
+	 * Score a note title against query tokens. Per token: a title-word PREFIX
+	 * match scores 2, a bare substring match 1, no match disqualifies the note
+	 * (every token must land somewhere). Returns 0 when disqualified.
+	 */
+	function scoreNote( tokens, title ) {
+		var lower = title.toLowerCase();
+		var words = lower.split( /[^a-z0-9]+/ );
+		var score = 0;
+		for ( var i = 0; i < tokens.length; i++ ) {
+			var tok = tokens[ i ];
+			var best = 0;
+			for ( var w = 0; w < words.length; w++ ) {
+				if ( words[ w ].indexOf( tok ) === 0 ) { best = 2; break; }
+			}
+			if ( ! best && lower.indexOf( tok ) !== -1 ) { best = 1; }
+			if ( ! best ) { return 0; }
+			score += best;
+		}
+		return score;
+	}
+
+	/**
+	 * Rank the full notes corpus for a query: score every title, drop the
+	 * disqualified, sort score DESC with corpus order (date DESC) as the
+	 * stable tiebreak, and cap at MAX_RANKED.
+	 */
+	function rankNotes( trimmed ) {
+		var tokens = tokenize( trimmed );
+		var scored = [];
+		var i;
+		for ( i = 0; i < data.notes.length; i++ ) {
+			var s = scoreNote( tokens, data.notes[ i ].t );
+			if ( s > 0 ) {
+				scored.push( { s: s, idx: i, t: data.notes[ i ].t, u: data.notes[ i ].u } );
+			}
+		}
+		scored.sort( function ( a, b ) {
+			return b.s - a.s || a.idx - b.idx;
+		} );
+		return scored.slice( 0, MAX_RANKED );
+	}
+
+	/**
+	 * Build the item model for a query.
+	 *
+	 * Empty query (unchanged since v9.11.0): row 0 is the synthetic "search"
+	 * action, then pillars, then recent notes.
+	 *
+	 * With a query (v11.2.0): ranked notes from the full corpus lead (best
+	 * match is the active row, so Enter opens it), matching pillars follow,
+	 * and the "search /notes/?s=" action becomes the FINAL fallback row.
+	 * Each item: { type, label, sub, url, query }.
 	 */
 	function buildItems( q ) {
 		var out = [];
 		var trimmed = ( q || '' ).replace( /^\s+|\s+$/g, '' );
+		var i;
 
-		out.push( {
+		var searchItem = {
 			type: 'search',
 			label: trimmed ? 'Search notes for “' + trimmed + '”' : 'Search all notes',
 			sub: 'Enter',
 			query: trimmed
-		} );
+		};
 
-		var needle = trimmed.toLowerCase();
-		function matches( label ) {
-			return ! needle || label.toLowerCase().indexOf( needle ) !== -1;
+		if ( ! trimmed ) {
+			out.push( searchItem );
+			for ( i = 0; i < data.pillars.length; i++ ) {
+				out.push( { type: 'pillar', label: data.pillars[ i ].t, sub: 'Pillar', url: data.pillars[ i ].u } );
+			}
+			for ( i = 0; i < data.recent.length; i++ ) {
+				out.push( { type: 'note', label: data.recent[ i ].t, sub: 'Note', url: data.recent[ i ].u } );
+			}
+			return out;
 		}
 
-		var i;
+		var ranked = rankNotes( trimmed );
+		for ( i = 0; i < ranked.length; i++ ) {
+			out.push( { type: 'note', label: ranked[ i ].t, sub: 'Note', url: ranked[ i ].u } );
+		}
+
+		var needle = trimmed.toLowerCase();
 		for ( i = 0; i < data.pillars.length; i++ ) {
-			if ( matches( data.pillars[ i ].t ) ) {
+			if ( data.pillars[ i ].t.toLowerCase().indexOf( needle ) !== -1 ) {
 				out.push( { type: 'pillar', label: data.pillars[ i ].t, sub: 'Pillar', url: data.pillars[ i ].u } );
 			}
 		}
-		for ( i = 0; i < data.recent.length; i++ ) {
-			if ( matches( data.recent[ i ].t ) ) {
-				out.push( { type: 'note', label: data.recent[ i ].t, sub: 'Note', url: data.recent[ i ].u } );
-			}
-		}
+
+		out.push( searchItem );
 		return out;
 	}
 
@@ -93,7 +171,8 @@
 			}
 			list.appendChild( li );
 		}
-		// Reset active to the first row (the search action) on every keystroke.
+		// Reset active to the first row on every keystroke (empty query: the
+		// search action; with a query: the best-ranked note, so Enter opens it).
 		setActive( items.length ? 0 : -1 );
 	}
 

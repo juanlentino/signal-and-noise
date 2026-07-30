@@ -31,13 +31,14 @@ $GLOBALS['__queried_id']  = 0;      // get_queried_object_id() return.
 /**
  * Minimal post fixture. Mirrors the fields the helpers read.
  */
-function mk_post( $id, $tag_ids, $ts, $title, $link ) {
+function mk_post( $id, $tag_ids, $ts, $title, $link, $status = 'publish' ) {
 	$p              = new stdClass();
 	$p->ID          = $id;
 	$p->__tag_ids   = $tag_ids;
 	$p->__ts        = $ts;
 	$p->__title     = $title;
 	$p->__link      = $link;
+	$p->__status    = $status;
 	$GLOBALS['POSTS'][ $id ] = $p;
 	return $p;
 }
@@ -201,9 +202,15 @@ if ( ! class_exists( 'WP_Query' ) ) {
 			}
 			$has_tax = isset( $args['tax_query'] );
 
+			$status = isset( $args['post_status'] ) ? (string) $args['post_status'] : 'publish';
+
 			$cand = array();
 			foreach ( $GLOBALS['POSTS'] as $p ) {
 				if ( in_array( (int) $p->ID, $not_in, true ) ) {
+					continue;
+				}
+				// Models the real WP_Query: post_status filters candidates.
+				if ( ( $p->__status ?? 'publish' ) !== $status ) {
 					continue;
 				}
 				if ( $has_tax ) {
@@ -329,6 +336,99 @@ ok( (int) $GLOBALS['__last_qargs']['posts_per_page'] === 5, 'related: shortcode 
 $GLOBALS['__filters'] = array();
 sn_related_notes_shortcode();
 ok( (int) $GLOBALS['__last_qargs']['posts_per_page'] === 3, 'related: default count is 3 when unfiltered' );
+
+// ── v11.2.0: kernel-ranked pass (plugin snt_ml_related_for_post adoption) ──
+// Every test ABOVE ran with the plugin accessor genuinely absent, so the
+// legacy path's byte-identical guarantee is what those assertions measured.
+ok( ! function_exists( 'snt_ml_related_for_post' ), 'kernel: all legacy tests above ran with the accessor ABSENT' );
+
+// Conditionally defined at runtime (inside a block, so NOT hoisted at compile
+// time — that is what kept the accessor absent for the legacy tests above).
+// Contract mirrored from the plugin's inc/ml-artifacts.php: returns null when
+// artifacts were never built, [] when the post is unindexed (an empty ANSWER),
+// or rows of {post_id:int, score:float}.
+if ( ! function_exists( 'snt_ml_related_for_post' ) ) {
+	function snt_ml_related_for_post( $post_id, $limit ) {
+		$GLOBALS['__ml_calls'][] = array( (int) $post_id, (int) $limit );
+		return $GLOBALS['__ml_rows'];
+	}
+}
+if ( ! class_exists( 'WP_Error' ) ) {
+	class WP_Error {}
+}
+if ( ! function_exists( 'get_post_status' ) ) {
+	// Models the real transform: string status for a known post, false otherwise.
+	function get_post_status( $post ) {
+		$id = is_object( $post ) ? (int) $post->ID : (int) $post;
+		return isset( $GLOBALS['POSTS'][ $id ] ) ? $GLOBALS['POSTS'][ $id ]->__status : false;
+	}
+}
+
+// Shared fixture corpus: post 1 is current ([10,20]); 5 is untagged-newest-nothing
+// by the legacy heuristic, so kernel ordering placing it FIRST is unmistakable.
+function kernel_fixture() {
+	$GLOBALS['POSTS'] = array();
+	mk_post( 1, array( 10, 20 ), 5000, 'Current note',  'https://x/notes/1/' );
+	mk_post( 2, array( 10 ),     4000, 'Shares tag 10', 'https://x/notes/2/' );
+	mk_post( 3, array( 20 ),     3000, 'Shares tag 20', 'https://x/notes/3/' );
+	mk_post( 4, array( 99 ),     4500, 'No shared tag', 'https://x/notes/4/' );
+	mk_post( 5, array( 99 ),     2000, 'No shared tag', 'https://x/notes/5/' );
+	mk_post( 6, array( 10 ),     4800, 'Draft sibling', 'https://x/notes/6/', 'draft' );
+}
+function ids_of( $posts ) {
+	return array_map( function ( $p ) { return (int) $p->ID; }, $posts );
+}
+
+// KERNEL FULL: rows satisfy the limit → kernel ORDER wins, zero WP_Query runs.
+kernel_fixture();
+$GLOBALS['__ml_calls']  = array();
+$GLOBALS['__ml_rows']   = array(
+	array( 'post_id' => 5, 'score' => 0.9 ),
+	array( 'post_id' => 3, 'score' => 0.8 ),
+	array( 'post_id' => 2, 'score' => 0.7 ),
+);
+$GLOBALS['__last_qargs'] = null;
+$res = sn_related_notes_query( 1, 3 );
+ok( ids_of( $res ) === array( 5, 3, 2 ), 'kernel: full set keeps kernel score order (5,3,2), not recency: ' . implode( ',', ids_of( $res ) ) );
+ok( $GLOBALS['__ml_calls'] === array( array( 1, 3 ) ), 'kernel: accessor called once with (post_id, limit)' );
+ok( null === $GLOBALS['__last_qargs'], 'kernel: NO WP_Query runs when the kernel satisfies the limit' );
+
+// KERNEL PARTIAL: heuristic tops up, no duplicates, self excluded.
+kernel_fixture();
+$GLOBALS['__ml_rows'] = array( array( 'post_id' => 5, 'score' => 0.9 ) );
+$res = sn_related_notes_query( 1, 3 );
+ok( ids_of( $res ) === array( 5, 2, 3 ), 'kernel: partial (5) tops up via shared-tag recency (2,3): ' . implode( ',', ids_of( $res ) ) );
+ok( count( ids_of( $res ) ) === count( array_unique( ids_of( $res ) ) ), 'kernel: no duplicates across kernel + heuristic' );
+
+// KERNEL FILTERS: self, unknown id, non-publish, and malformed rows are dropped.
+kernel_fixture();
+$GLOBALS['__ml_rows'] = array(
+	array( 'post_id' => 1, 'score' => 0.9 ),    // self — dropped.
+	array( 'post_id' => 999, 'score' => 0.8 ),  // unknown — dropped.
+	array( 'post_id' => 6, 'score' => 0.7 ),    // draft — dropped.
+	'not-a-row',                                 // malformed — dropped.
+	array( 'post_id' => 2, 'score' => 0.6 ),
+);
+$res = sn_related_notes_query( 1, 3 );
+ok( ids_of( $res ) === array( 2, 3, 4 ), 'kernel: self/unknown/draft/malformed dropped, heuristic fills: ' . implode( ',', ids_of( $res ) ) );
+
+// KERNEL DEDUPE: a kernel pick never re-enters via the heuristic passes.
+kernel_fixture();
+$GLOBALS['__ml_rows'] = array(
+	array( 'post_id' => 2, 'score' => 0.9 ),
+	array( 'post_id' => 2, 'score' => 0.9 ), // duplicate kernel row.
+);
+$res = sn_related_notes_query( 1, 3 );
+$ids = ids_of( $res );
+ok( count( $ids ) === count( array_unique( $ids ) ) && $ids[0] === 2, 'kernel: duplicate kernel rows collapse; heuristic never re-adds a pick' );
+
+// NULL (unbuilt), WP_Error, and [] (unindexed) all fall back to the FULL legacy result.
+foreach ( array( 'null' => null, 'WP_Error' => new WP_Error(), 'empty' => array() ) as $case => $rows ) {
+	kernel_fixture();
+	$GLOBALS['__ml_rows'] = $rows;
+	$res = sn_related_notes_query( 1, 3 );
+	ok( ids_of( $res ) === array( 2, 3, 4 ), "kernel: $case → byte-identical legacy fallback (2,3,4): " . implode( ',', ids_of( $res ) ) );
+}
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

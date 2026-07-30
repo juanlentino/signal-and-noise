@@ -20,7 +20,13 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
  * pillars from the theme's own sn_theme_pillar_descriptors() (function_exists-
  * guarded so the palette degrades to search + recent when it is absent).
  *
- * @return array{notesUrl:string, recent:array<int,array{t:string,u:string}>, pillars:array<int,array{t:string,u:string}>}
+ * v11.2.0: `notes` carries ALL published notes as {t,u} so the JS can rank
+ * client-side with plain token arithmetic (no model ever ships to the reader's
+ * browser — the site's standing commitment). Hard-clamped at 200 titles+URLs
+ * (~3-4 KB inline at the current ~34-note corpus); date DESC so the JS gets a
+ * stable recency tiebreak for equal scores.
+ *
+ * @return array{notesUrl:string, recent:array<int,array{t:string,u:string}>, pillars:array<int,array{t:string,u:string}>, notes:array<int,array{t:string,u:string}>}
  */
 function sn_cmdk_build_data() {
 	$recent = array();
@@ -51,10 +57,32 @@ function sn_cmdk_build_data() {
 		}
 	}
 
+	// Full corpus for the JS ranker: every published note as {t,u}, bounded.
+	$notes = array();
+	$nq    = new WP_Query( array(
+		'post_type'              => 'post',
+		'post_status'            => 'publish',
+		'posts_per_page'         => min( 200, max( 1, (int) apply_filters( 'sn_palette_notes_cap', 200 ) ) ),
+		'orderby'                => 'date',
+		'order'                  => 'DESC',
+		'no_found_rows'          => true,
+		'ignore_sticky_posts'    => true,
+		'update_post_meta_cache' => false,
+		'update_post_term_cache' => false,
+	) );
+	foreach ( $nq->posts as $p ) {
+		$notes[] = array(
+			't' => html_entity_decode( get_the_title( $p ), ENT_QUOTES ),
+			'u' => get_permalink( $p ),
+		);
+	}
+	wp_reset_postdata();
+
 	return array(
 		'notesUrl' => home_url( '/notes/' ),
 		'recent'   => $recent,
 		'pillars'  => $pillars,
+		'notes'    => $notes,
 	);
 }
 

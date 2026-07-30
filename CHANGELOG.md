@@ -2,6 +2,22 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.2.0] - 2026-07-30 — The theme adopts the ML kernel: kernel-ranked related notes + ⌘K ranked search
+
+The companion plugin's deterministic ML kernel (plugin v10.15.0–v10.17.0) now has its first two theme-side reader surfaces. Both honor the house discipline: the kernel computes server-side, the theme renders — and **no model ever ships to the reader's browser** (the ⌘K ranking is transparent token arithmetic, source-asserted in the test suite).
+
+### Added
+
+- **Related Notes goes kernel-ranked** ([inc/related-notes.php](inc/related-notes.php)) — `sn_related_notes_query()` now leads with the plugin's `snt_ml_related_for_post( $post_id, $limit )` blended-relatedness ranking when the accessor exists. Contract honored exactly as shipped in the plugin's `inc/ml-artifacts.php`: ranked rows of `{post_id, score}`, `null` when the artifacts were never built, `[]` when the post is unindexed (an empty ANSWER, per the null-vs-zero house rule). Kernel picks are re-verified theme-side (publish-only via `get_post()` + `get_post_status()`, never self, deduped) against upstream drift; any shortfall — null, error, empty, or partial — tops up through the **unchanged** shared-tag + recency heuristic, excluding self and everything already selected. When the plugin is absent the code path is byte-identical to v11.1.11 — the test suite's legacy assertions all run with the accessor genuinely undefined before the kernel stubs are conditionally introduced.
+- **⌘K ranked search over the full notes corpus** ([inc/command-palette.php](inc/command-palette.php), [assets/js/command-palette.js](assets/js/command-palette.js)) — the data island gains a `notes` key: ALL published notes as `{t,u}`, bounded (`sn_palette_notes_cap`, default 200, hard-clamped at 200; `no_found_rows`; date DESC — ~3-4 KB inline at the current ~34-note corpus). Typing now ranks the whole corpus client-side with plain token scoring: lowercase whitespace tokenization, per-token title-word **prefix** match (2) beats substring match (1), every token must land or the note is disqualified; score DESC with recency as the stable tiebreak, capped at 8. The best match is the active row, so Enter opens it directly; the existing "Search notes for …" `/notes/?s=` action survives as the final fallback row, and the empty-query state (search + pillars + recent) is exactly as before.
+
+### Unchanged on purpose
+
+- The v9.11.0 palette accessibility contract (APG dialog + combobox, `aria-activedescendant`, focus trap) and XSS discipline (JSON_HEX_TAG island, `textContent`-only DOM writes — now source-asserted: no `innerHTML`, no `fetch`/`eval`/WASM) carry through untouched; `isFormField` stays verbatim-locked to tests/keyboard-nav.php.
+- The related-notes footer markup, the `sn_related_count` filter, and the render_block bridge are untouched — only the ranking source changed.
+
+> **Why MINOR:** two new user-visible capabilities (kernel-ranked related notes, full-corpus ranked palette search); no breaking change — both degrade to prior behavior when the plugin or its artifacts are absent.
+
 ## [11.1.11] - 2026-07-30 — The dead colophon template leaves the theme
 
 ### Removed
