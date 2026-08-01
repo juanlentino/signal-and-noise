@@ -72,7 +72,7 @@ function sn_theme_ai_helper_available() {
 function sn_theme_ai_unavailable_error() {
 	return new WP_Error(
 		'ai_helper_unavailable',
-		'AI helper not available. Install or update signal-and-noise-tools plugin to v3.7.x+.',
+		'AI helper not available. Install or update the signal-and-noise-tools plugin (AI helper required).',
 		array( 'status' => 503 )
 	);
 }

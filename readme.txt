@@ -3,7 +3,7 @@ Contributors: Juan Lentino
 Requires at least: 7.0
 Tested up to: 7.0
 Requires PHP: 8.3
-Stable tag: 11.2.0
+Stable tag: 11.2.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -38,7 +38,8 @@ All design tokens live in theme.json — a white-first palette (`void`/`bone` wi
 == Recommended Plugins ==
 
 * **Signal & Noise Tools** (companion plugin) — owns SEO emission, login hardening, admin tooling, analytics, and AI-health surfaces. Recommended for the full feature set; the theme is standalone-safe and degrades gracefully without it.
-* **Contact Form 7** (with Cloudflare Turnstile) — contact-page form. Optional but recommended.
+
+Note: Contact Form 7 was removed in v10.12.0 in favor of a plain-text routing directory on `/contact` — it is no longer used or recommended (see `tests/cf7-removal.php`, a regression guard against its reintroduction).
 
 == Changelog ==
 
