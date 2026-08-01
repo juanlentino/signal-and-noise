@@ -2,6 +2,23 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.2.1] - 2026-07-31 — Cross-repo audit hygiene batch: stale answer + stale metadata + doc drift
+
+Fixes-and-docs pass from the 2026-07-31 cross-repo audit. Each item was re-verified against current code before fixing (some audit premises had already expired — see below).
+
+### Fixed
+
+- **`get-reading-time-for-slug` ability served the wrong `wpm_basis`** ([inc/abilities-content.php](inc/abilities-content.php)) — reported `220`, but the plugin's reading-time module has computed at **225 WPM** since the module's own rebuild (see the CHANGELOG history at "225 WPM default"). A stale answer served to agents; corrected to `225` in both response sites and the docblock.
+- **Stale plugin-version / model claims in ability metadata** — `inc/abilities-helpers.php`'s AI-unavailable error message named a specific floor ("v3.7.x+") that no longer communicates anything useful at plugin v10.x; reworded to name the requirement (AI helper) without a version pin. `inc/abilities-ai-generation.php`'s `ai-generate-page-note-summary` description claimed "Sonnet 4.6 pinned via plugin v3.7.2+"; the plugin's actual default model is `claude-sonnet-5` (configurable via the plugin's Front-End settings, `inc/ai-bootstrap.php`), not a hard Sonnet-4.6 pin — description corrected to match.
+- **Doc drift in readme.txt / README.md** — readme.txt still recommended Contact Form 7 as an optional plugin; CF7 was fully removed in v10.12.0 and `tests/cf7-removal.php` is a standing regression guard against its reintroduction — replaced the recommendation with a note pointing at the removal. README.md's Stack line claimed "PHP 8.0+"; the real floor (style.css `Requires PHP`, readme.txt) is `8.3` — corrected. README.md's "Pages & templates" list still named Colophon among the theme's block templates; `templates/page-colophon.html` was deleted in v11.1.11/#145 (CMS-owned since plugin v10.13.0, rendered via a Site Editor `wp_template` override of `[sn_colophon]`) — corrected to describe it as CMS-owned rather than a theme template.
+
+### Verified, no change needed
+
+- **Command palette `recent` key** ([inc/command-palette.php](inc/command-palette.php)) — flagged as possibly redundant with the v11.2.0 `notes` key (an extra `WP_Query` per pageview). Verified `assets/js/command-palette.js` consumes `data.recent` distinctly for the empty-query default view (before `data.notes` search-ranking kicks in) — removing it would break that state. Left as-is per the audit's own guardrail ("a removal that breaks ⌘K is worse than the extra query").
+- **`get-seo-route-meta` ability's premise** (`/colophon` lacks a Page Excerpt) — confirmed live: the WP REST API reports an empty excerpt for the Colophon page, yet `https://juanlentino.com/colophon/` serves a real meta description sourced from the theme's own `inc/seo-route-meta.php` hardcoded fallback map, matching verbatim. Premise holds; ability retirement is out of scope for this pass.
+
+> **Why PATCH:** doc corrections, a stale-answer fix, and stale-metadata wording — no behavioral or schema change.
+
 ## [11.2.0] - 2026-07-30 — The theme adopts the ML kernel: kernel-ranked related notes + ⌘K ranked search
 
 The companion plugin's deterministic ML kernel (plugin v10.15.0–v10.17.0) now has its first two theme-side reader surfaces. Both honor the house discipline: the kernel computes server-side, the theme renders — and **no model ever ships to the reader's browser** (the ⌘K ranking is transparent token arithmetic, source-asserted in the test suite).

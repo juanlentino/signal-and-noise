@@ -13,14 +13,14 @@ A white-first, brutalist **WordPress Full Site Editing block theme** built for [
 
 ## Stack
 
-- WordPress 7.0+ FSE block theme · PHP 8.0+
+- WordPress 7.0+ FSE block theme · PHP 8.3+
 - Vanilla CSS + JS — no build step, no framework, no jQuery
 - Inlined critical CSS + one combined, minified stylesheet the theme builds itself (`inc/asset-combine.php`, fail-open to the per-file enqueues); View Transitions for soft navigation
 - Hosted on Cloudways, edge-cached via Cloudflare
 
 ## Pages & templates
 
-Block templates for the homepage, long-form **notes**, and the standing pages — **About**, **Services**, **Music** (role-filtered discography grid + featured player, Muso.AI verified credits), **Resume**, **Contact**, **Now**, **Uses**, **Accessibility**, **Colophon**, and the **Provenance** pillar. Plus server-rendered virtual routes with no editor entry: **`/notes`** (notes dossier), **`/index`** (whole-site index), **`/humans.txt`**, and the machine-readable set — **`/llms.txt`** + **`/llms-full.txt`**, **`/opensearch.xml`**, **`/.well-known/agents.json`**, **`/.well-known/security.txt`**, **`/.well-known/gpc.json`**, and a **`.json`** content twin of every Note. All design tokens are editable in the Site Editor under **Styles**.
+Block templates for the homepage, long-form **notes**, and the standing pages — **About**, **Services**, **Music** (role-filtered discography grid + featured player, Muso.AI verified credits), **Resume**, **Contact**, **Now**, **Uses**, **Accessibility**, and the **Provenance** pillar. **Colophon** is CMS-owned (rendered via a Site Editor `wp_template` override of the plugin's `[sn_colophon]` shortcode, since plugin v10.13.0) rather than a theme template file. Plus server-rendered virtual routes with no editor entry: **`/notes`** (notes dossier), **`/index`** (whole-site index), **`/humans.txt`**, and the machine-readable set — **`/llms.txt`** + **`/llms-full.txt`**, **`/opensearch.xml`**, **`/.well-known/agents.json`**, **`/.well-known/security.txt`**, **`/.well-known/gpc.json`**, and a **`.json`** content twin of every Note. All design tokens are editable in the Site Editor under **Styles**.
 
 ## Front-end
 

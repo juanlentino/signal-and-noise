@@ -295,8 +295,9 @@ function sn_theme_ability_page_notes_pillars() {
  *
  * Wraps sn_notes_reading_time_for_slug() which returns a formatted
  * string like "7 min". Parses the integer back out for a typed
- * response. wpm_basis is hardcoded to 220 — the project default
- * baked into sn_get_reading_time().
+ * response. wpm_basis is hardcoded to 225 — the project default
+ * baked into sn_get_reading_time() (see the plugin's reading-time
+ * module, rebuilt at 225 WPM).
  *
  * v9.15.5: gated on page viewability so it cannot double as an existence/
  * length oracle (sibling of the v9.15.4 get-active-template-structure fix).
@@ -355,7 +356,7 @@ function sn_theme_ability_reading_time_for_slug( $input ) {
 			return array(
 				'slug'      => $slug,
 				'minutes'   => 0,
-				'wpm_basis' => 220,
+				'wpm_basis' => 225,
 			);
 		}
 
@@ -368,7 +369,7 @@ function sn_theme_ability_reading_time_for_slug( $input ) {
 		return array(
 			'slug'      => $slug,
 			'minutes'   => $minutes,
-			'wpm_basis' => 220,
+			'wpm_basis' => 225,
 		);
 	} catch ( \Throwable $e ) {
 		error_log( 'SN theme ability error in get-reading-time-for-slug: ' . $e->getMessage() );
