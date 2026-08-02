@@ -2,6 +2,16 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.2.2] - 2026-08-01 — get-reading-time-for-slug: resolve posts, compute minutes directly
+
+### Fixed
+
+- **`get-reading-time-for-slug` returned `minutes=0` for every published post over REST/MCP** ([inc/abilities-content.php](inc/abilities-content.php)) — verified live 2026-08-02 on `provenance-signs-the-claim-not-the-truth` (556 words → reported 0). Root cause: the ability's oracle gate resolved slugs with `get_page_by_path( $slug, OBJECT, 'page' )` — **pages only** — so a post slug never resolved and the uniform non-viewable `minutes=0` fired before any computation. Two changes:
+  - **Resolution now tries pages first, then posts.** The public-only viewability gate (v9.15.6) applies identically to both — a draft/private post returns the same uniform `minutes=0` as a missing slug, so the existence-oracle posture is unchanged.
+  - **Minutes are computed directly via the plugin's `sn_get_reading_time()`** (the 225-wpm source of truth with its post-meta cache) instead of rendering and string-parsing the `[sn_reading_time]` shortcode. The shortcode and the theme's `sn_notes_reading_time_for_slug()` helper are untouched for front-end use. If the plugin's reading-time module is absent the ability now fails loudly with `plugin_dependency_missing` (503) rather than a fabricated "5 min".
+  - The plugin's `sn-site-facts` `reading_time` fact dispatches to this ability, so it inherits the fix with no plugin change.
+- **Test-stub drift fixed in both ability suites** ([tests/abilities-registration.php](tests/abilities-registration.php), [tests/abilities-integration.php](tests/abilities-integration.php)) — both stubbed `get_page_by_path()` ignoring its `$post_type` argument (one said so in a comment), which is exactly why 2,000+ assertions stayed green while the live ability failed. The stubs now model core's real filter (`post_type IN ( $post_type, 'attachment' )`), and new fixtures pin the published-post (556 words → 3 min), draft-post (uniform 0), and page (unchanged) paths.
+
 ## [11.2.1] - 2026-07-31 — Cross-repo audit hygiene batch: stale answer + stale metadata + doc drift
 
 Fixes-and-docs pass from the 2026-07-31 cross-repo audit. Each item was re-verified against current code before fixing (some audit premises had already expired — see below).

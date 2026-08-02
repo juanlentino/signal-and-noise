@@ -236,8 +236,13 @@ if ( ! function_exists( 'is_post_publicly_viewable' ) ) {
 }
 if ( ! function_exists( 'get_page_by_path' ) ) {
 	function get_page_by_path( $slug, $output = OBJECT, $post_type = 'page' ) {
+		// Model the REAL post_type filter: core matches post_type IN
+		// ($post_type, 'attachment') — a 'page' lookup NEVER returns a post.
+		// The pre-v11.2.2 stub ignored $post_type, which hid the live bug where
+		// get-reading-time-for-slug returned minutes=0 for every published POST.
 		foreach ( $GLOBALS['__test_posts'] as $id => $p ) {
-			if ( isset( $p['post_name'] ) && $p['post_name'] === $slug ) {
+			if ( isset( $p['post_name'] ) && $p['post_name'] === $slug
+				&& in_array( $p['post_type'] ?? 'page', array( $post_type, 'attachment' ), true ) ) {
 				return (object) $p;
 			}
 		}
@@ -272,6 +277,21 @@ if ( ! function_exists( 'sn_notes_reading_time_for_slug' ) ) {
 		return isset( $GLOBALS['__test_reading_times'][ $slug ] )
 			? $GLOBALS['__test_reading_times'][ $slug ]
 			: '5 min';
+	}
+}
+// Plugin reading-time source of truth (inc/reading-time.php in the companion
+// plugin). Models the REAL transform: cached override per post ID, else word
+// count / 225 wpm, ceil, floor of 1 — so a 556-word post yields 3, not "5 min".
+$GLOBALS['__test_reading_minutes'] = array();
+if ( ! function_exists( 'sn_get_reading_time' ) ) {
+	function sn_get_reading_time( $post = null ) {
+		$p = is_object( $post ) ? $post : get_post( $post );
+		if ( ! $p ) { return 1; }
+		if ( isset( $GLOBALS['__test_reading_minutes'][ (int) $p->ID ] ) ) {
+			return (int) $GLOBALS['__test_reading_minutes'][ (int) $p->ID ];
+		}
+		$words = str_word_count( wp_strip_all_tags( (string) ( $p->post_content ?? '' ) ) );
+		return max( 1, (int) ceil( $words / 225 ) );
 	}
 }
 
@@ -462,6 +482,30 @@ $GLOBALS['__test_posts'][301] = array(
 // Give the draft a distinctive reading time — if the oracle leaked, the
 // subscriber would see 9 (real) instead of the uniform 0 / not-found signal.
 $GLOBALS['__test_reading_times']['secret-draft'] = '9 min';
+// v11.2.2: plugin-side cached minutes for the public page fixture (the ability
+// now reads sn_get_reading_time directly instead of parsing the shortcode).
+$GLOBALS['__test_reading_minutes'][302] = 7;
+$GLOBALS['__test_reading_minutes'][301] = 9; // draft — must never surface
+// v11.2.2 regression target: a real published POST (not a page). 556 words at
+// 225 wpm → ceil = 3. Pre-fix, the page-only get_page_by_path gate never
+// resolved it and the ability returned the uniform minutes=0 live over MCP.
+$GLOBALS['__test_posts'][303] = array(
+	'ID'           => 303,
+	'post_type'    => 'post',
+	'post_name'    => 'provenance-signs-the-claim-not-the-truth',
+	'post_title'   => 'Provenance signs the claim, not the truth',
+	'post_status'  => 'publish',
+	'post_content' => implode( ' ', array_fill( 0, 556, 'word' ) ),
+);
+// ...and a non-public draft POST — the oracle gate must hold for posts too.
+$GLOBALS['__test_posts'][304] = array(
+	'ID'           => 304,
+	'post_type'    => 'post',
+	'post_name'    => 'secret-draft-post',
+	'post_title'   => 'Secret draft post',
+	'post_status'  => 'draft',
+	'post_content' => implode( ' ', array_fill( 0, 900, 'word' ) ),
+);
 
 // ─── Harness ─────────────────────────────────────────────────────────
 $pass = 0; $fail = 0;
@@ -662,6 +706,18 @@ ap_eq( 0, $res3['minutes'], 'reading-time oracle: even a read_post-authorized us
 $GLOBALS['__test_readable_posts'] = array();
 $res4 = wp_get_ability( 'signal-and-noise/get-reading-time-for-slug' )->execute( array( 'slug' => 'provenance/over-detection' ) );
 ap_eq( 7, $res4['minutes'], 'reading-time oracle: a publicly-viewable page still returns its real reading time' );
+
+// ── v11.2.2: published POSTS must resolve too. Live over MCP the ability
+// returned {minutes:0, wpm_basis:225} for every real published post because the
+// gate resolved page-type only. Direct computation via sn_get_reading_time
+// (225 wpm source of truth) replaces shortcode-string parsing entirely.
+$res5 = wp_get_ability( 'signal-and-noise/get-reading-time-for-slug' )->execute( array( 'slug' => 'provenance-signs-the-claim-not-the-truth' ) );
+ap_eq( 3, is_array( $res5 ) ? $res5['minutes'] : -1, 'post resolution: a 556-word published POST returns ceil(556/225)=3, not the uniform 0' );
+ap_eq( 225, is_array( $res5 ) ? $res5['wpm_basis'] : -1, 'post resolution: wpm_basis stays 225' );
+// Oracle gate holds for posts exactly as for pages: a draft POST returns the
+// uniform minutes=0 indistinguishable from a missing slug.
+$res6 = wp_get_ability( 'signal-and-noise/get-reading-time-for-slug' )->execute( array( 'slug' => 'secret-draft-post' ) );
+ap_eq( 0, is_array( $res6 ) ? $res6['minutes'] : -1, 'post oracle: a draft POST returns the uniform minutes=0 (no length proxy leaks)' );
 ap_reset_caps();
 
 // ════════════════════════════════════════════════════════════════════
