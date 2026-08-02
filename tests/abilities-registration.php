@@ -227,9 +227,13 @@ if ( ! function_exists( 'get_post_field' ) ) {
 }
 if ( ! function_exists( 'get_page_by_path' ) ) {
 	function get_page_by_path( $slug, $output = OBJECT, $post_type = 'page' ) {
-		// The theme's pillars use post_type=post; ignore $post_type filter for stub.
+		// Model the REAL post_type filter: core matches post_type IN
+		// ($post_type, 'attachment'), so a 'page' lookup never returns a post.
+		// The pre-v11.2.2 stub ignored $post_type ("ignore ... for stub"), which
+		// hid the live minutes=0 bug for published posts over MCP.
 		foreach ( $GLOBALS['__test_posts'] as $id => $p ) {
-			if ( isset( $p['post_name'] ) && $p['post_name'] === $slug ) {
+			if ( isset( $p['post_name'] ) && $p['post_name'] === $slug
+				&& in_array( $p['post_type'] ?? 'page', array( $post_type, 'attachment' ), true ) ) {
 				return (object) $p;
 			}
 		}
@@ -266,6 +270,21 @@ if ( ! function_exists( 'sn_notes_reading_time_for_slug' ) ) {
 			return $GLOBALS['__test_reading_times'][ $slug ];
 		}
 		return '5 min';
+	}
+}
+// Plugin reading-time source of truth (companion plugin inc/reading-time.php).
+// Models the REAL transform: cached override per post ID, else word count /
+// 225 wpm, ceil, floor of 1.
+$GLOBALS['__test_reading_minutes'] = array();
+if ( ! function_exists( 'sn_get_reading_time' ) ) {
+	function sn_get_reading_time( $post = null ) {
+		$p = is_object( $post ) ? $post : get_post( $post );
+		if ( ! $p ) { return 1; }
+		if ( isset( $GLOBALS['__test_reading_minutes'][ (int) $p->ID ] ) ) {
+			return (int) $GLOBALS['__test_reading_minutes'][ (int) $p->ID ];
+		}
+		$words = str_word_count( strip_tags( (string) ( $p->post_content ?? '' ) ) );
+		return max( 1, (int) ceil( $words / 225 ) );
 	}
 }
 
@@ -738,6 +757,25 @@ $GLOBALS['__test_posts']['rt'] = array(
 	'post_name'   => 'provenance/over-detection',
 	'post_status' => 'publish',
 );
+// v11.2.2: minutes now come straight from the plugin's sn_get_reading_time
+// (225 wpm source of truth) instead of parsing the shortcode string.
+$GLOBALS['__test_reading_minutes'] = array( 770 => 7 );
+// A real published POST — pre-fix the page-only resolver returned uniform 0.
+$GLOBALS['__test_posts']['rt-post'] = array(
+	'ID'           => 771,
+	'post_type'    => 'post',
+	'post_name'    => 'provenance-signs-the-claim-not-the-truth',
+	'post_status'  => 'publish',
+	'post_content' => implode( ' ', array_fill( 0, 556, 'word' ) ),
+);
+// A draft POST — the uniform-0 oracle gate must hold for posts too.
+$GLOBALS['__test_posts']['rt-draft'] = array(
+	'ID'           => 772,
+	'post_type'    => 'post',
+	'post_name'    => 'secret-draft-post',
+	'post_status'  => 'draft',
+	'post_content' => implode( ' ', array_fill( 0, 900, 'word' ) ),
+);
 
 sn_theme_register_abilities();
 ha_true(
@@ -757,6 +795,14 @@ ha_true( isset( $result['wpm_basis'] ),                'wpm_basis included' );
 $missing = call_user_func( $ability['execute_callback'], array( 'slug' => 'nonexistent' ) );
 ha_eq( 'nonexistent', $missing['slug'], 'echoes nonexistent slug' );
 ha_true( $missing['minutes'] >= 0, 'minutes is non-negative for unknown slug' );
+
+// v11.2.2: a published POST resolves (556 words / 225 wpm → 3) — pre-fix the
+// page-only get_page_by_path gate returned the uniform 0 for every post.
+$post_rt = call_user_func( $ability['execute_callback'], array( 'slug' => 'provenance-signs-the-claim-not-the-truth' ) );
+ha_eq( 3, is_array( $post_rt ) ? $post_rt['minutes'] : -1, 'published post: minutes computed directly (ceil(556/225)=3)' );
+// A draft post keeps the uniform 0 — indistinguishable from a missing slug.
+$draft_rt = call_user_func( $ability['execute_callback'], array( 'slug' => 'secret-draft-post' ) );
+ha_eq( 0, is_array( $draft_rt ) ? $draft_rt['minutes'] : -1, 'draft post: uniform minutes=0 (oracle gate holds for posts)' );
 
 // ─── Test: get-design-system-summary ─────────────────────────────
 echo "\nTest signal-and-noise/get-design-system-summary\n";

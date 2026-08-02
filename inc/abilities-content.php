@@ -127,7 +127,7 @@ function sn_theme_register_content_abilities() {
 
 	wp_register_ability( 'signal-and-noise/get-reading-time-for-slug', array(
 		'label'               => 'Get reading time for slug',
-		'description'         => 'Returns the computed reading-time minutes for a page identified by slug. Wraps sn_notes_reading_time_for_slug() (the same helper that powers the [sn_reading_time] shortcode). Returns minutes=0 if the slug does not resolve to a page the current user may view (so it cannot be used to probe for non-public pages).',
+		'description'         => 'Returns the computed reading-time minutes for a page or post identified by slug (pages are tried first, then posts). Minutes come directly from sn_get_reading_time() — the plugin\'s 225-wpm reading-time source of truth, the same basis as the [sn_reading_time] shortcode. Returns minutes=0 if the slug does not resolve to publicly-viewable content (so it cannot be used to probe for non-public pages or posts).',
 		'category'            => 'content',
 		'permission_callback' => 'sn_theme_perm_read',
 		'execute_callback'    => 'sn_theme_ability_reading_time_for_slug',
@@ -293,11 +293,13 @@ function sn_theme_ability_page_notes_pillars() {
 /**
  * Execute callback: signal-and-noise/get-reading-time-for-slug.
  *
- * Wraps sn_notes_reading_time_for_slug() which returns a formatted
- * string like "7 min". Parses the integer back out for a typed
- * response. wpm_basis is hardcoded to 225 — the project default
- * baked into sn_get_reading_time() (see the plugin's reading-time
- * module, rebuilt at 225 WPM).
+ * v11.2.2: computes minutes DIRECTLY via the plugin's sn_get_reading_time()
+ * (225-wpm source of truth, post-meta cached) instead of rendering and
+ * string-parsing the [sn_reading_time] shortcode, and resolves POSTS as
+ * well as pages (page lookup first, post fallback). The old page-only
+ * get_page_by_path() gate meant every published post returned the uniform
+ * minutes=0 over REST/MCP. wpm_basis stays 225 — the project default baked
+ * into sn_get_reading_time().
  *
  * v9.15.5: gated on page viewability so it cannot double as an existence/
  * length oracle (sibling of the v9.15.4 get-active-template-structure fix).
@@ -320,10 +322,14 @@ function sn_theme_ability_reading_time_for_slug( $input ) {
 			);
 		}
 
-		if ( ! function_exists( 'sn_notes_reading_time_for_slug' ) ) {
+		// v11.2.2: minutes come straight from the plugin's sn_get_reading_time()
+		// (the 225-wpm single source of truth with its post-meta cache) instead
+		// of rendering + string-parsing the [sn_reading_time] shortcode. The
+		// shortcode path stays untouched for front-end use.
+		if ( ! function_exists( 'sn_get_reading_time' ) ) {
 			return new WP_Error(
-				'theme_dependency_missing',
-				'sn_notes_reading_time_for_slug() unavailable — theme module not loaded.',
+				'plugin_dependency_missing',
+				'sn_get_reading_time() unavailable — the Signal & Noise Tools plugin reading-time module is not loaded.',
 				array( 'status' => 503 )
 			);
 		}
@@ -346,9 +352,18 @@ function sn_theme_ability_reading_time_for_slug( $input ) {
 		// downstream) and would make the two layers' policies diverge. (Contrast
 		// get-active-template-structure, which computes in-theme and can honor
 		// read_post.) Only the integer minutes is ever returned, never content.
-		$post = function_exists( 'get_page_by_path' )
-			? get_page_by_path( $slug, OBJECT, 'page' )
-			: null;
+		// v11.2.2: resolve PAGES first (the original surface), then POSTS.
+		// get_page_by_path() filters by post_type, so the page-only lookup
+		// never resolved a published post — live over MCP every real post
+		// returned the uniform minutes=0 (found on
+		// provenance-signs-the-claim-not-the-truth, 556 words).
+		$post = null;
+		if ( function_exists( 'get_page_by_path' ) ) {
+			$post = get_page_by_path( $slug, OBJECT, 'page' );
+			if ( ! $post ) {
+				$post = get_page_by_path( $slug, OBJECT, 'post' );
+			}
+		}
 		$is_viewable = $post
 			&& function_exists( 'is_post_publicly_viewable' )
 			&& is_post_publicly_viewable( $post );
@@ -360,15 +375,9 @@ function sn_theme_ability_reading_time_for_slug( $input ) {
 			);
 		}
 
-		$raw = (string) sn_notes_reading_time_for_slug( $slug );
-		$minutes = 0;
-		if ( preg_match( '/(\d+)/', $raw, $m ) ) {
-			$minutes = (int) $m[1];
-		}
-
 		return array(
 			'slug'      => $slug,
-			'minutes'   => $minutes,
+			'minutes'   => max( 0, (int) sn_get_reading_time( $post ) ),
 			'wpm_basis' => 225,
 		);
 	} catch ( \Throwable $e ) {
