@@ -2,6 +2,13 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.3.0] - 2026-08-03 — /notes split hero: title left, dek + meta + subscribe right
+
+### Changed
+
+- **/notes hero is a two-column editorial split** ([inc/page-notes-render.php](inc/page-notes-render.php)). The single stack (eyebrow → NOTES. → dek → meta → subscribe) left the right half of wide viewports empty since the pillar rail moved out in v10.47.0. At ≥900px the hero is now a bottom-aligned grid: eyebrow + headline in the left column; dek, corpus meta, and the subscribe line in the right, sitting on the headline baseline. Below 900px the original vertical order is unchanged.
+- **/notes container widens 1180px → 1320px** (same file) so the index rows and hero use the viewport, matching the /resume band width shipped in plugin v10.35.0.
+
 ## [11.2.2] - 2026-08-01 — get-reading-time-for-slug: resolve posts, compute minutes directly
 
 ### Fixed
