@@ -138,17 +138,33 @@ wp_head();
    viewport. */
 .sn-notes-page {
 	padding: clamp(2rem, 5vw, 4.5rem) clamp(1.25rem, 3vw, 3rem) 160px;
-	max-width: 1180px;
+	max-width: 1320px;
 	margin: 0 auto;
 }
 
 /* HERO ────────────────────────────────────────────────────────
-   Full-width since v10.47.0: the pillar rail that shared a
-   two-column top composition with the hero moved to the
-   owner-placeable signal-noise/pillar-essays block. */
+   Two-column editorial split since v11.3.0: title block left,
+   dek + corpus meta + subscribe right, bottom-aligned to the
+   headline baseline. The v10.47.0 single stack left the right
+   half of wide viewports empty once the pillar rail moved to
+   the owner-placeable block. Single column below 900px. */
 
 .sn-notes-hero {
 	margin-bottom: clamp(2rem, 4vw, 3rem);
+}
+@media (min-width: 900px) {
+	.sn-notes-hero {
+		display: grid;
+		grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+		column-gap: clamp(2.5rem, 6vw, 5rem);
+		align-items: end;
+	}
+	.sn-notes-hero-side {
+		padding-bottom: 0.35rem;
+	}
+	.sn-notes-hero-title .sn-notes-headline {
+		margin-bottom: 0;
+	}
 }
 .sn-notes-eyebrow,
 .sn-notes-meta,
@@ -562,26 +578,30 @@ echo $sn_header_html;
 <main class="sn-notes-page" id="wp--skip-link--target">
 
 	<header class="sn-notes-hero">
-		<p class="sn-notes-eyebrow"><?php if ( $sn_tag ) : ?>Topic &middot; <?php echo esc_html( $sn_tag_name ); ?><?php else : ?>Index &middot; <?php echo esc_html( wp_date( 'Y' ) ); ?><?php endif; ?></p>
-		<h1 class="sn-notes-headline">Notes.</h1>
-		<p class="sn-notes-dek">Working notes on music, AI, and the infrastructure underneath. Written when there&rsquo;s something worth writing.</p>
-		<?php if ( ! $sn_filtered ) : ?>
-		<?php // Corpus stats: entry count + last-updated. Suppressed in
-		      // search/tag state — there $entry_count is the filtered result
-		      // count and $latest_date is the newest match, so "entries"/
-		      // "Last updated" would mislabel them (the count lives in the
-		      // summary line below). Hero stays as page identity only. ?>
-		<p class="sn-notes-meta">
-			<span><?php echo esc_html( sprintf( _n( '%d entry', '%d entries', $entry_count, 'signal-noise' ), $entry_count ) ); ?></span>
-			<?php if ( $latest_date ) : ?>
-				<span class="sn-notes-meta-bullet" aria-hidden="true">&middot;</span>
-				<span>Last updated <?php echo esc_html( $latest_date ); ?></span>
+		<div class="sn-notes-hero-title">
+			<p class="sn-notes-eyebrow"><?php if ( $sn_tag ) : ?>Topic &middot; <?php echo esc_html( $sn_tag_name ); ?><?php else : ?>Index &middot; <?php echo esc_html( wp_date( 'Y' ) ); ?><?php endif; ?></p>
+			<h1 class="sn-notes-headline">Notes.</h1>
+		</div>
+		<div class="sn-notes-hero-side">
+			<p class="sn-notes-dek">Working notes on music, AI, and the infrastructure underneath. Written when there&rsquo;s something worth writing.</p>
+			<?php if ( ! $sn_filtered ) : ?>
+			<?php // Corpus stats: entry count + last-updated. Suppressed in
+			      // search/tag state — there $entry_count is the filtered result
+			      // count and $latest_date is the newest match, so "entries"/
+			      // "Last updated" would mislabel them (the count lives in the
+			      // summary line below). Hero stays as page identity only. ?>
+			<p class="sn-notes-meta">
+				<span><?php echo esc_html( sprintf( _n( '%d entry', '%d entries', $entry_count, 'signal-noise' ), $entry_count ) ); ?></span>
+				<?php if ( $latest_date ) : ?>
+					<span class="sn-notes-meta-bullet" aria-hidden="true">&middot;</span>
+					<span>Last updated <?php echo esc_html( $latest_date ); ?></span>
+				<?php endif; ?>
+			</p>
 			<?php endif; ?>
-		</p>
-		<?php endif; ?>
-		<p class="sn-notes-subscribe">
-			No subscription form. No schedule. Notes via <a href="/notes/feed/">RSS</a>, or via email through <a href="https://blogtrottr.com/" target="_blank" rel="noopener noreferrer" data-sn-subscribe="email">Blogtrottr</a> or <a href="https://www.feedrabbit.com/" target="_blank" rel="noopener noreferrer" data-sn-subscribe="email">Feedrabbit</a>.<span class="sn-notes-cursor" aria-hidden="true"></span>
-		</p>
+			<p class="sn-notes-subscribe">
+				No subscription form. No schedule. Notes via <a href="/notes/feed/">RSS</a>, or via email through <a href="https://blogtrottr.com/" target="_blank" rel="noopener noreferrer" data-sn-subscribe="email">Blogtrottr</a> or <a href="https://www.feedrabbit.com/" target="_blank" rel="noopener noreferrer" data-sn-subscribe="email">Feedrabbit</a>.<span class="sn-notes-cursor" aria-hidden="true"></span>
+			</p>
+		</div>
 	</header>
 
 	<?php if ( ! $sn_searching ) : ?>
