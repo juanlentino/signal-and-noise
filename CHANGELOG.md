@@ -2,6 +2,12 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.4.1] - 2026-08-03 — /notes headline joins the uniform title scale
+
+### Fixed
+
+- **/notes headline drops from clamp(4rem, 14vw, 11rem) to the site-wide clamp(3rem, 8vw, 7rem)** ([inc/page-notes-render.php](inc/page-notes-render.php)). Owner audit: it was the lone 176px outlier against 112px titles everywhere else. Companion to plugin v10.37.0's one-frame normalization.
+
 ## [11.4.0] - 2026-08-03 — /now + /uses split heroes
 
 ### Changed
