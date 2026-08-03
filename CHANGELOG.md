@@ -2,6 +2,13 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.4.0] - 2026-08-03 — /now + /uses split heroes
+
+### Changed
+
+- **/now and /uses heroes join the split-hero system** ([assets/css/now.css](assets/css/now.css), [assets/css/uses.css](assets/css/uses.css)). At ≥900px each hero lays out as a bottom-aligned two-column grid — eyebrow + headline left; dek + meta right — matching /notes (v11.3.0) and /resume (plugin v10.35.0). The grid is `:has(.sn-*-hero-side)`-guarded so pre-split page bodies keep the single stack until plugin v10.36.0 regenerates them; below 900px the stack is unchanged.
+- **/now and /uses containers widen 60rem → 1320px** (same files), completing the uniform width across the split-hero surfaces.
+
 ## [11.3.0] - 2026-08-03 — /notes split hero: title left, dek + meta + subscribe right
 
 ### Changed

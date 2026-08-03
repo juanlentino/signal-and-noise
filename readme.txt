@@ -3,7 +3,7 @@ Contributors: Juan Lentino
 Requires at least: 7.0
 Tested up to: 7.0
 Requires PHP: 8.3
-Stable tag: 11.3.0
+Stable tag: 11.4.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
