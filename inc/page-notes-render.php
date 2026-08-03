@@ -183,8 +183,10 @@ wp_head();
 .sn-notes-headline {
 	font-family: 'Bebas Neue', Impact, sans-serif;
 	font-weight: 400;
-	font-size: clamp(4rem, 14vw, 11rem);
-	line-height: 0.85;
+	/* v11.4.1: unified site-wide title scale (owner audit — "some titles
+	   are even larger than others"); was clamp(4rem, 14vw, 11rem). */
+	font-size: clamp(3rem, 8vw, 7rem);
+	line-height: 0.95;
 	letter-spacing: -0.02em;
 	margin: 0 0 1.25rem;
 	color: var(--wp--preset--color--bone, #000);
