@@ -329,7 +329,9 @@ wp_head();
 	line-height: 1.6;
 	color: var(--wp--preset--color--rust, #666);
 	margin: 0;
-	max-width: 60ch;
+	/* Loosened 60ch → 80ch with the 1320px container (owner direction,
+	   v11.4.0): the tighter cap left the right half of each row empty. */
+	max-width: 80ch;
 }
 
 /* Scoped to .sn-notes-page so this inline rule deterministically wins over
