@@ -143,11 +143,9 @@ wp_head();
 }
 
 /* HERO ────────────────────────────────────────────────────────
-   Two-column editorial split since v11.3.0: title block left,
-   dek + corpus meta + subscribe right, bottom-aligned to the
-   headline baseline. The v10.47.0 single stack left the right
-   half of wide viewports empty once the pillar rail moved to
-   the owner-placeable block. Single column below 900px. */
+   Resume treatment since v11.4.4: eyebrow kicker spanning the
+   grid; headline + dek left; subscribe + corpus-meta stamp
+   right; top-aligned (v11.4.2). Single column below 900px. */
 
 .sn-notes-hero {
 	margin-bottom: clamp(2rem, 4vw, 3rem);

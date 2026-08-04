@@ -16,19 +16,6 @@
 	padding: clamp(2.5rem, 6vw, 5rem) clamp(1.25rem, 4vw, 3rem) clamp(4rem, 8vw, 7rem);
 }
 
-/* Split hero (v11.4.0, site-wide direction): title block left, dek +
-   meta right, bottom-aligned on the headline baseline at >=900px.
-   :has()-guarded so a pre-v10.36.0 body (plugin regenerates on update
-   via its one-shot) keeps the single stack until the new wrappers
-   exist. Stacks below 900px. */
-@media (min-width: 900px) {
-	.sn-uses-hero:has(.sn-uses-hero-side) {
-		display: grid;
-		grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-		column-gap: clamp(2.5rem, 6vw, 5rem);
-		align-items: start;
-	}
-}
 
 /* ── Hero ─────────────────────────────────────────────────────────────── */
 .sn-uses-eyebrow {

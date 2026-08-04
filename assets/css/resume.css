@@ -10,8 +10,8 @@
  */
 
 /* ── Widths belong to the Page content, NOT this sheet ────────────────────
-   The Page content declares its constrained widths directly (960px
-   sections, 1400px stat band) and WordPress's constrained layout centers
+   The Page content declares its constrained widths directly (uniform
+   1320px bands since plugin v10.35.0) and WordPress's constrained layout centers
    them with auto margins — the handbook mechanism. v11.1.2–v11.1.6
    carried `:has()` width overrides here; their `.wp-block-group`
    selectors ALSO matched the template's <main class="wp-block-group">,

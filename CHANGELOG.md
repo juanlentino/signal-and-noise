@@ -6,6 +6,7 @@ All notable changes to Signal & Noise are documented here.
 
 ### Changed
 
+- **/now and /uses split-hero grid CSS removed** ([assets/css/now.css](assets/css/now.css), [assets/css/uses.css](assets/css/uses.css)) — plugin v10.37.5 returns those heroes to plain left stacks (no real side content), so the `:has()`-guarded grid is dead code. Stale width/alignment comments refreshed in [assets/css/resume.css](assets/css/resume.css) and the notes renderer.
 - **/notes hero restructured to match /resume** ([inc/page-notes-render.php](inc/page-notes-render.php)). Eyebrow becomes a kicker spanning the hero grid; the dek reads under the NOTES. title in the left column; the side column carries the subscribe line first with the corpus meta ("N entries · Last updated") as its closing stamp — inverted from before, per owner direction. Search/tag suppression of the meta unchanged.
 
 ## [11.4.3] - 2026-08-03 — /resume credential chips become a hairline ledger
