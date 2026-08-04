@@ -157,10 +157,10 @@ wp_head();
 		display: grid;
 		grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
 		column-gap: clamp(2.5rem, 6vw, 5rem);
-		align-items: end;
-	}
-	.sn-notes-hero-side {
-		padding-bottom: 0.35rem;
+		/* v11.4.2: TOP alignment is the single split-hero rule — with the
+		   uniform title scale the side column is taller than the title
+		   block, and bottom alignment floated the dek above the eyebrow. */
+		align-items: start;
 	}
 	.sn-notes-hero-title .sn-notes-headline {
 		margin-bottom: 0;

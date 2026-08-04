@@ -2,6 +2,12 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.4.2] - 2026-08-03 — top alignment becomes the single split-hero rule
+
+### Fixed
+
+- **/notes, /now, /uses hero grids switch bottom → top alignment** ([inc/page-notes-render.php](inc/page-notes-render.php), [assets/css/now.css](assets/css/now.css), [assets/css/uses.css](assets/css/uses.css)). With the uniform title scale (v11.4.1) the side column is taller than the title block, so bottom alignment floated the dek above the eyebrow (owner screenshot review). /resume set the pattern in plugin v10.36.1; every split hero now top-aligns — eyebrow and dek start on the same line. The baseline-compensation paddings are gone with the rule that needed them.
+
 ## [11.4.1] - 2026-08-03 — /notes headline joins the uniform title scale
 
 ### Fixed
