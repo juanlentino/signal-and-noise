@@ -162,8 +162,11 @@ wp_head();
 		   block, and bottom alignment floated the dek above the eyebrow. */
 		align-items: start;
 	}
-	.sn-notes-hero-title .sn-notes-headline {
-		margin-bottom: 0;
+	.sn-notes-hero > .sn-notes-eyebrow {
+		grid-column: 1 / -1;
+	}
+	.sn-notes-hero-side .sn-notes-meta {
+		margin-top: 1rem;
 	}
 }
 .sn-notes-eyebrow,
@@ -582,18 +585,23 @@ echo $sn_header_html;
 <main class="sn-notes-page" id="wp--skip-link--target">
 
 	<header class="sn-notes-hero">
+		<?php // v11.4.4 resume-treatment: eyebrow is a kicker spanning the
+		      // grid; dek reads under the title; the side column carries the
+		      // subscribe line with the corpus meta as its closing stamp. ?>
+		<p class="sn-notes-eyebrow"><?php if ( $sn_tag ) : ?>Topic &middot; <?php echo esc_html( $sn_tag_name ); ?><?php else : ?>Index &middot; <?php echo esc_html( wp_date( 'Y' ) ); ?><?php endif; ?></p>
 		<div class="sn-notes-hero-title">
-			<p class="sn-notes-eyebrow"><?php if ( $sn_tag ) : ?>Topic &middot; <?php echo esc_html( $sn_tag_name ); ?><?php else : ?>Index &middot; <?php echo esc_html( wp_date( 'Y' ) ); ?><?php endif; ?></p>
 			<h1 class="sn-notes-headline">Notes.</h1>
+			<p class="sn-notes-dek">Working notes on music, AI, and the infrastructure underneath. Written when there&rsquo;s something worth writing.</p>
 		</div>
 		<div class="sn-notes-hero-side">
-			<p class="sn-notes-dek">Working notes on music, AI, and the infrastructure underneath. Written when there&rsquo;s something worth writing.</p>
+			<p class="sn-notes-subscribe">
+				No subscription form. No schedule. Notes via <a href="/notes/feed/">RSS</a>, or via email through <a href="https://blogtrottr.com/" target="_blank" rel="noopener noreferrer" data-sn-subscribe="email">Blogtrottr</a> or <a href="https://www.feedrabbit.com/" target="_blank" rel="noopener noreferrer" data-sn-subscribe="email">Feedrabbit</a>.<span class="sn-notes-cursor" aria-hidden="true"></span>
+			</p>
 			<?php if ( ! $sn_filtered ) : ?>
-			<?php // Corpus stats: entry count + last-updated. Suppressed in
-			      // search/tag state — there $entry_count is the filtered result
-			      // count and $latest_date is the newest match, so "entries"/
-			      // "Last updated" would mislabel them (the count lives in the
-			      // summary line below). Hero stays as page identity only. ?>
+			<?php // Corpus stats: entry count + last-updated, the side column's
+			      // closing stamp. Suppressed in search/tag state — there the
+			      // figures describe the filtered result set and would mislabel
+			      // the corpus (the count lives in the summary line below). ?>
 			<p class="sn-notes-meta">
 				<span><?php echo esc_html( sprintf( _n( '%d entry', '%d entries', $entry_count, 'signal-noise' ), $entry_count ) ); ?></span>
 				<?php if ( $latest_date ) : ?>
@@ -602,9 +610,6 @@ echo $sn_header_html;
 				<?php endif; ?>
 			</p>
 			<?php endif; ?>
-			<p class="sn-notes-subscribe">
-				No subscription form. No schedule. Notes via <a href="/notes/feed/">RSS</a>, or via email through <a href="https://blogtrottr.com/" target="_blank" rel="noopener noreferrer" data-sn-subscribe="email">Blogtrottr</a> or <a href="https://www.feedrabbit.com/" target="_blank" rel="noopener noreferrer" data-sn-subscribe="email">Feedrabbit</a>.<span class="sn-notes-cursor" aria-hidden="true"></span>
-			</p>
 		</div>
 	</header>
 

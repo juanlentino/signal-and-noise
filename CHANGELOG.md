@@ -2,6 +2,12 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.4.4] - 2026-08-03 — /notes hero gets the resume treatment
+
+### Changed
+
+- **/notes hero restructured to match /resume** ([inc/page-notes-render.php](inc/page-notes-render.php)). Eyebrow becomes a kicker spanning the hero grid; the dek reads under the NOTES. title in the left column; the side column carries the subscribe line first with the corpus meta ("N entries · Last updated") as its closing stamp — inverted from before, per owner direction. Search/tag suppression of the meta unchanged.
+
 ## [11.4.3] - 2026-08-03 — /resume credential chips become a hairline ledger
 
 ### Changed
