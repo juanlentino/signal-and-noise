@@ -42,17 +42,16 @@ body div.wp-block-group:has(h1) > p.has-body-font-family:not(.sn-resume-rail) {
 	color: var(--wp--preset--color--void, #fff);
 }
 
-/* Credential chips: the site's cohesive highlight is structural, not
-   inline color — red stays chrome (eyebrows, meta, hover). Mirrors
-   .sn-disco-chip (mono 11px uppercase, hairline bone border). Authored
-   as a plain list block with className sn-resume-chips. */
+/* Credential ledger (v11.4.3, owner: the hero's right column read as one
+   dense block): chips become hairline rows — 2px bone rule on top, one
+   credential per row on a concrete hairline, echoing the notes-index
+   rhythm. Same list markup (className sn-resume-chips). */
 .sn-resume-chips {
 	list-style: none;
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.6rem;
-	margin: 1.25rem 0 0;
+	display: block;
+	margin: 1.5rem 0 0;
 	padding: 0;
+	border-top: 2px solid var(--wp--preset--color--bone, #000);
 }
 .sn-resume-chips li {
 	font-family: 'DM Mono', 'Courier New', monospace;
@@ -60,8 +59,8 @@ body div.wp-block-group:has(h1) > p.has-body-font-family:not(.sn-resume-rail) {
 	letter-spacing: 0.14em;
 	text-transform: uppercase;
 	color: var(--wp--preset--color--bone, #000);
-	border: 1px solid var(--wp--preset--color--bone, #000);
-	padding: 0.45rem 0.8rem;
+	border-bottom: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+	padding: 0.55rem 0;
 }
 
 /* Bullet <strong> stays semantic (machine readers get the emphasis) but

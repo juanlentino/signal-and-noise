@@ -2,6 +2,12 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.4.3] - 2026-08-03 — /resume credential chips become a hairline ledger
+
+### Changed
+
+- **/resume hero right column de-blocked** ([assets/css/resume.css](assets/css/resume.css)). Owner review: summary + boxed chips + contact + PDF read as one dense block. The bordered chip boxes become a credential ledger — 2px bone rule on top, one credential per row on a concrete hairline — echoing the notes-index rhythm. Markup unchanged (pure CSS; plugin untouched).
+
 ## [11.4.2] - 2026-08-03 — top alignment becomes the single split-hero rule
 
 ### Fixed
