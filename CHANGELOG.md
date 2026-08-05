@@ -2,6 +2,22 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.4.7] - 2026-08-05 — the four em-dashes the theme itself put on the page
+
+**Headline:** a live-site audit for house-style em-dashes found the published writing already clean (3 in 30 notes, and only 2 notes affected). Nearly everything flagged turned out to be CMS page content or invisible CSS comments. These four are the ones the **theme** emits into a reader's page, so they are the theme's to fix.
+
+### Changed
+
+- **The three `/notes` section labels drop the em-dash:** `Notes — Index`, `Notes — Search · "term"`, and `Notes — Tag · "name"` become `Notes: …`. They are one family and change together. A crawl of the default `/notes` view only ever sees the Index variant, so fixing that alone would have left the other two inconsistent the moment anyone searched or opened a tag archive. The `&middot;` stays as the secondary separator, matching the site's existing byline vocabulary.
+- **The empty-search state reads as two sentences:** `Nothing matches "x" — notes, essays, and pages all searched.` becomes `Nothing matches "x". Notes, essays, and pages all searched.` Reaching this string requires a search that matches nothing, which is why a live crawl never surfaced it; it is now pinned by a source assertion instead.
+
+### Not changed (recorded so it is not re-flagged)
+
+- `sn_index_title()` keeps `Index — <site>`. The em-dash there is the **site-wide document-title separator**, not prose: every page already titles as `Notes — Juan Lentino`, and that shape is set plugin-side. Changing it here alone would make `/index` the only page on the site with a different title. If the title separator is ever revisited it has to move everywhere at once.
+- The four `inc/wp-update-integration.php` updater messages are **wp-admin** copy, not reader-facing. They belong to a separate admin-copy pass, which is deliberately not bundled here because roughly 50 of those strings are pinned verbatim by tests, including `analytics-i18n`-style assertions that pin exact `__()` msgids as an i18n contract.
+
+> **Why PATCH:** reader-visible copy only. No markup, structure, capability, or API change; the strings are unlinked and untranslated.
+
 ## [11.4.6] - 2026-08-05 — audit follow-ups: the palette's third array, and a linter that could not see SQL
 
 **Headline:** the 2026-08-05 CMA post-ship audit returned **zero** findings against the `v10.44.5..v11.4.5` increment, so this release actions its three INFO observations plus a gap the audit's own falsification probe exposed: `phpcs.xml.dist` pulled in `WordPress.Security`, which does **not** carry the DB sniffs, so unprepared SQL was invisible to the theme's linter while the plugin's caught it.

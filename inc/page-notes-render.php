@@ -625,13 +625,13 @@ echo $sn_header_html;
 
 		<div class="sn-notes-section-wrap">
 			<?php if ( $sn_searching ) : ?>
-				<p class="sn-notes-section-label" id="sn-index-heading">Notes &mdash; Search &middot; &ldquo;<?php echo esc_html( $sn_term ); ?>&rdquo;</p>
+				<p class="sn-notes-section-label" id="sn-index-heading">Notes: Search &middot; &ldquo;<?php echo esc_html( $sn_term ); ?>&rdquo;</p>
 				<a class="sn-notes-section-clear" href="<?php echo esc_url( home_url( '/notes/' ) ); ?>">Clear &times;</a>
 			<?php elseif ( $sn_tag ) : ?>
-				<p class="sn-notes-section-label" id="sn-index-heading">Notes &mdash; Tag &middot; &ldquo;<?php echo esc_html( $sn_tag_name ); ?>&rdquo;</p>
+				<p class="sn-notes-section-label" id="sn-index-heading">Notes: Tag &middot; &ldquo;<?php echo esc_html( $sn_tag_name ); ?>&rdquo;</p>
 				<a class="sn-notes-section-clear" href="<?php echo esc_url( home_url( '/notes/' ) ); ?>">All notes</a>
 			<?php else : ?>
-				<p class="sn-notes-section-label" id="sn-index-heading">Notes &mdash; Index</p>
+				<p class="sn-notes-section-label" id="sn-index-heading">Notes: Index</p>
 				<span class="sn-notes-section-count"><?php echo esc_html( sprintf( '%02d', (int) $entry_count ) ); ?></span>
 			<?php endif; ?>
 		</div>
@@ -685,7 +685,7 @@ echo $sn_header_html;
 			<?php endwhile; wp_reset_postdata(); ?>
 			</ol>
 		<?php elseif ( $sn_searching ) : ?>
-			<p class="sn-notes-empty">Nothing matches &ldquo;<?php echo esc_html( $sn_term ); ?>&rdquo; &mdash; notes, essays, and pages all searched.</p>
+			<p class="sn-notes-empty">Nothing matches &ldquo;<?php echo esc_html( $sn_term ); ?>&rdquo;. Notes, essays, and pages all searched.</p>
 		<?php elseif ( $sn_tag ) : ?>
 			<p class="sn-notes-empty">No notes tagged &ldquo;<?php echo esc_html( $sn_tag_name ); ?>&rdquo;.</p>
 		<?php else : ?>
