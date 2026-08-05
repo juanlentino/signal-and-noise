@@ -39,6 +39,26 @@
 	<!-- ── Security: escaping + sanitization (theme is output-heavy) ──── -->
 	<rule ref="WordPress.Security"/>
 
+	<!-- ── Security: SQL preparation ─────────────────────────────────────
+	     v11.4.6: `WordPress.Security` does NOT include the DB sniffs, so unprepared
+	     SQL was invisible to this ruleset while the plugin's caught it. Surfaced by
+	     the CMA audit's own falsification probe (2026-08-05): the injected
+	     `$wpdb->query( "… " . $_GET['id'] )` raised EscapeOutput + sanitization
+	     errors here but NOT PreparedSQL, so the auditor had to hunt $wpdb by hand.
+	     The theme has exactly two $wpdb call sites (inc/cited-by.php, which already
+	     uses ->prepare() + esc_like; inc/template-maintenance.php, which interpolates
+	     only $wpdb->options — a table name, which cannot be a placeholder), so this
+	     enters green and stays a live gate rather than a backlog. Mirrors the
+	     plugin's ruleset. -->
+	<rule ref="WordPress.DB.PreparedSQL"/>
+
+	<!-- DirectDatabaseQuery: silenced, matching the plugin. The two call sites are a
+	     deliberate options-table cleanup and a cross-post content scan; direct access
+	     is correct there and the caching sub-sniff is noise for both. -->
+	<rule ref="WordPress.DB.DirectDatabaseQuery">
+		<severity>0</severity>
+	</rule>
+
 	<!-- ── API hygiene ───────────────────────────────────────────────── -->
 	<rule ref="WordPress.WP.DeprecatedFunctions"/>
 	<rule ref="WordPress.WP.DeprecatedParameters"/>

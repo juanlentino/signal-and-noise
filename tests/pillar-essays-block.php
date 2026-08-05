@@ -30,6 +30,8 @@ function get_block_wrapper_attributes( $a = array() ) { return 'class="' . ( $a[
 function esc_html( $s ) { return htmlspecialchars( (string) $s, ENT_QUOTES, 'UTF-8' ); }
 function esc_attr( $s ) { return htmlspecialchars( (string) $s, ENT_QUOTES, 'UTF-8' ); }
 function esc_url( $s ) { return (string) $s; }
+// Subdirectory install on purpose: a root-relative CTA would resolve outside it.
+function home_url( $path = '' ) { return 'https://x.test/blog' . $path; }
 function _n( $single, $plural, $n, $domain = '' ) { return 1 === (int) $n ? $single : $plural; }
 $GLOBALS['__descriptors'] = array();
 function sn_theme_pillar_descriptors() { return $GLOBALS['__descriptors']; }
@@ -66,7 +68,13 @@ ok( false !== strpos( $out, 'Pillar Essay &middot; 7 min' ), 'eyebrow carries th
 ok( false !== strpos( $out, '<h2 class="sn-notes-pillar-title">Provenance Over Detection</h2>' ), 'card title is an h2 (block lands inside an owner Page)' );
 ok( false !== strpos( $out, 'Detection chases what isn&#039;t.' ), 'dek paragraph renders when non-empty (apostrophe entity-escaped by esc_html)' );
 ok( 2 === substr_count( $out, 'sn-notes-pillar-dek' ), 'exactly the two non-empty deks render a dek paragraph (empty dek omitted)' );
-ok( false !== strpos( $out, 'href="/provenance/over-detection/"' ), 'CTA links to /<slug>/' );
+// v11.4.6 (CMA audit INFO-2): the CTA is built with home_url(), not a bare
+// root-relative '/<slug>/'. The palette already emitted home_url() for the very
+// same pillar, and a root-relative href silently points outside the install on a
+// subdirectory setup (home_url() = https://x.test/blog → '/slug/' resolves to
+// https://x.test/slug/). Absolute is both uniform and correct.
+ok( false !== strpos( $out, 'href="https://x.test/blog/provenance/over-detection/"' ), 'CTA is built from home_url(), correct under a subdirectory install' );
+ok( false === strpos( $out, 'href="/provenance/over-detection/"' ), 'CTA is no longer a bare root-relative path' );
 ok( 3 === substr_count( $out, 'sn-notes-pillar-cta' ), 'every card carries a Read essay CTA' );
 ok( 3 === substr_count( $out, '<article class="sn-notes-pillar">' ), 'one article per descriptor' );
 

@@ -50,7 +50,8 @@ $sn_heading_id = function_exists( 'wp_unique_id' ) ? wp_unique_id( 'sn-pillars-h
 				<?php if ( '' !== (string) ( $sn_pillar['dek'] ?? '' ) ) : ?>
 				<p class="sn-notes-pillar-dek"><?php echo esc_html( (string) $sn_pillar['dek'] ); ?></p>
 				<?php endif; ?>
-				<a class="sn-notes-pillar-cta" href="<?php echo esc_url( '/' . $sn_slug . '/' ); ?>">Read essay</a>
+				<?php // v11.4.6: home_url(), not a bare '/<slug>/'. Matches what the command palette already emits for the same pillar, and a root-relative href resolves outside the install on a subdirectory setup. CMA audit 2026-08-05 INFO-2. ?>
+				<a class="sn-notes-pillar-cta" href="<?php echo esc_url( home_url( '/' . $sn_slug . '/' ) ); ?>">Read essay</a>
 			</div>
 		</article>
 		<?php endforeach; ?>

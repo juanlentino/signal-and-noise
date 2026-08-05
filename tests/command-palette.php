@@ -36,7 +36,8 @@ function get_permalink( $p = null ) { return 'https://x.test/notes/n' . ( is_obj
 function get_the_title( $p = null ) { return 'A &amp; B'; }
 function sn_theme_pillar_descriptors() {
 	return array(
-		array( 'slug' => 'provenance/over-detection', 'title' => 'Provenance Over Detection' ),
+		// Entity-carrying title: pins the html_entity_decode() parity added in v11.4.6.
+		array( 'slug' => 'provenance/over-detection', 'title' => 'Provenance &amp; Detection' ),
 		array( 'slug' => 'provenance/as-substrate', 'title' => 'Provenance As Substrate' ),
 	);
 }
@@ -145,6 +146,26 @@ ok( strpos( $js, "type: 'search'" ) !== false, 'js: the /notes/?s= search action
 // The no-model-in-browser commitment: plain arithmetic only — no network, no
 // eval, no WASM, no workers smuggling a model in.
 ok( ! preg_match( '/\bfetch\s*\(|XMLHttpRequest|WebAssembly|importScripts|\beval\s*\(/', $js ), 'js: no network/eval/WASM — vanilla arithmetic only (no-model commitment)' );
+
+// ── v11.4.6: CMA audit 2026-08-05 follow-ups (theme INFO-1 + INFO-3) ──
+// INFO-1: all three corpus arrays normalize titles the same way. `recent` and
+// `notes` already decoded; `pillars` passed the descriptor title through raw, so a
+// pillar whose title had been wptexturized would render its entity literally in the
+// palette (textContent, so cosmetic — never an injection).
+reset_qargs();
+$GLOBALS['__filters'] = array();
+$data = sn_cmdk_build_data();
+ok( ( $data['pillars'][0]['t'] ?? '' ) === 'Provenance & Detection', 'pillars: titles HTML-decoded like recent/notes (uniform normalization)' );
+
+// INFO-3: protected posts never ride a bulk corpus surface. Not a live leak — only
+// titles and permalinks are emitted, and WP treats those as public — but the
+// convention is that every corpus query states it, so a future change that starts
+// emitting excerpts cannot silently widen the surface. Mirrors the gates already on
+// inc/feed-json.php and inc/llms-txt.php.
+$rq = $GLOBALS['__qargs_all'][0] ?? array();
+$nq = $GLOBALS['__qargs_all'][1] ?? array();
+ok( false === ( $rq['has_password'] ?? null ), 'recent: query excludes password-protected posts' );
+ok( false === ( $nq['has_password'] ?? null ), 'notes: query excludes password-protected posts' );
 
 echo "Result: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

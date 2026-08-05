@@ -110,6 +110,12 @@ function sn_notes_query_posts() {
 		'order'               => 'DESC',
 		'no_found_rows'       => false, // pagination needs found_posts / max_num_pages
 		'ignore_sticky_posts' => true,  // the sticky is floated into the Start-here card, never the list
+		// v11.4.6: password-protected entries stay off the index and out of search.
+		// Search rows render get_the_excerpt(), which for a protected post is WP's
+		// "There is no excerpt because this is a protected post." placeholder — no
+		// body ever leaked, so this is convention symmetry with inc/feed-json.php and
+		// inc/llms-txt.php (and it drops the useless placeholder rows). CMA audit INFO-3.
+		'has_password'        => false,
 	);
 	// Browse mode is Notes-only by construction (post_type=post = the whole
 	// Notes corpus). SEARCH mode (v10.51.0) widens to the whole public corpus:
