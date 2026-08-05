@@ -2,6 +2,18 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.4.9] - 2026-08-05 — "we do not know" stops reading as "it failed"
+
+**Headline:** the purge report's Varnish leg carries the companion's two remaining qualifiers, so an inconclusive purge is no longer recorded as a failed one.
+
+### Fixed
+
+- **`sn_write_purge_report()` carries `inconclusive` and `stage`** ([inc/purge-verify.php](inc/purge-verify.php)), alongside the `coalesced` and `reauthed` markers added in v11.4.8. Companion v10.52.5 marks a transport failure — a timeout, a DNS failure, a reset — as **inconclusive** rather than failed, because it means we never heard back, not that the purge did not run. That distinction was earned live on 2026-08-05: a 5-second timeout was recorded as a failure, and the operation it started was found still running three seconds later by the next call, which coalesced onto it. `stage` says which step the attempt reached (`auth` or `dispatch`) instead of leaving it to be inferred from which keys are present.
+
+  Copied **only when present**, so a report written against an older companion keeps its existing shape rather than gaining `false` values that read as "checked, and negative". 5 new assertions in [tests/purge-verify.php](tests/purge-verify.php) pin both the inconclusive and auth-stage cases, including that an auth failure is *not* marked inconclusive.
+
+> **Why PATCH:** two optional fields added to one leg of a diagnostic record. No behaviour, template, or public surface changed.
+
 ## [11.4.8] - 2026-08-05 — the purge report stops making its reader infer
 
 **Headline:** the Varnish leg gains the two qualifier markers the companion plugin now emits, so `ok: true, http: 422` reads as what it is instead of as a contradiction.
