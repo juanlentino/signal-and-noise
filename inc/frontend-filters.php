@@ -53,7 +53,7 @@ function sn_spotify_embed_dark( $html, $url ) {
  * URL that has no scheme and doesn't start with "//" or "#" — but it
  * misses path-relative URLs (starting with a single "/"). Result: a
  * social-link with url="/notes/feed/" renders as href="https:///notes/feed/"
- * (three slashes, empty host), which browsers normalise to "https://notes/feed/"
+ * (three slashes, empty host), which browsers normalize to "https://notes/feed/"
  * and route to a non-existent server.
  *
  * Fix: filter the parsed block attributes BEFORE core's render callback
@@ -63,7 +63,7 @@ function sn_spotify_embed_dark( $html, $url ) {
  * URL and skips its broken prepend branch entirely.
  *
  * This is upstream-bug shaped: when WP core fixes their scheme check to
- * recognise the "starts with /" case, this filter becomes a no-op and
+ * recognize the "starts with /" case, this filter becomes a no-op and
  * can be removed. Tracked at /docs (no upstream issue filed yet — file
  * one if you touch this again).
  *

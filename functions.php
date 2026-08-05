@@ -72,7 +72,7 @@
  * migrations — lives in the
  * [signal-and-noise-tools companion plugin](https://github.com/juanlentino/signal-and-noise-tools).
  * See [docs/WORDPRESS-REFERENCE.md](docs/WORDPRESS-REFERENCE.md) §10.0 for the
- * cross-package contract surface (7 theme-listener hooks as of the v10.49.0 sweep).
+ * cross-package contract surface (9 theme-listener hooks as of the v11.4.5 sweep).
  *
  * @package SignalNoise
  * @since 1.0.0

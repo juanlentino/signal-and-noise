@@ -4,7 +4,7 @@
  * Brutalist/white-first, preset tokens only. Reuses the /index dossier idiom
  * (Bebas section heads with a hairline rule, mono counts, hairline-separated
  * rows, blood on hover) scoped under .sn-uses-page so it stays decoupled.
- * Loaded only on the /uses route. 11px type floor honoured; the single row
+ * Loaded only on the /uses route. 11px type floor honored; the single row
  * transition is neutralized under prefers-reduced-motion: reduce.
  *
  * @since theme v10.10.0
@@ -23,14 +23,14 @@
 	font-size: max(0.7rem, 11px);
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--rust, #666);
-	margin: 0 0 0.75rem;
+	color: var(--wp--preset--color--blood, #e00404);
+	margin: 0 0 1rem;
 }
 .sn-uses-headline {
 	font-family: 'Bebas Neue', Impact, sans-serif;
 	font-weight: 400;
-	font-size: clamp(3.5rem, 12vw, 7rem);
-	line-height: 0.9;
+	font-size: clamp(3rem, 8vw, 7rem);
+	line-height: 0.95;
 	letter-spacing: -0.01em;
 	color: var(--wp--preset--color--bone, #000);
 	margin: 0;

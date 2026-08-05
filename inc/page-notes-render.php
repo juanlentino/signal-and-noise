@@ -171,7 +171,7 @@ wp_head();
 .sn-notes-meta,
 .sn-notes-section-label {
 	font-family: 'DM Mono', 'Courier New', monospace;
-	font-size: 0.7rem;
+	font-size: max(0.7rem, 11px);
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
 	color: var(--wp--preset--color--rust, #666);
@@ -471,7 +471,7 @@ wp_head();
 .sn-notes-subscribe {
 	margin: 1.25rem 0 0;
 	font-family: 'DM Mono', 'Courier New', monospace;
-	font-size: 0.7rem;
+	font-size: max(0.7rem, 11px);
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
 	line-height: 1.7;

@@ -260,7 +260,7 @@ function sn_gh_latest_theme_tag( $force_refresh = false ) {
 		// v10.16.3 (audit LOW-1): pin to a single hop. On a 3xx, WP's HTTP layer
 		// re-issues the request with the SAME $args — including the Bearer header
 		// above — to whatever host the redirect names. api.github.com/tags returns
-		// 200 (no redirect), so this is behaviour-preserving; it just guarantees the
+		// 200 (no redirect), so this is behavior-preserving; it just guarantees the
 		// SNT_GITHUB_TOKEN can never be forwarded off-host. Mirrors the host-scoped
 		// download path (sn_gh_theme_inject_token_header) + the plugin's outbound peers.
 		'redirection' => 0,
@@ -342,7 +342,7 @@ add_filter( 'sn_gh_latest_theme_tag_result', 'sn_gh_latest_theme_tag' );
  * wp-admin → Updates install path keeps working when this repo is private.
  * sn_gh_theme_authenticated_download() (below) injects the Bearer token for the
  * download. Without a token, fall back to the public auto-generated tag archive
- * (unchanged behaviour, correct for a public repo). The API zipball unpacks to
+ * (unchanged behavior, correct for a public repo). The API zipball unpacks to
  * `owner-repo-<sha>/`, but the upgrader_source_selection rename below is
  * dir-name-agnostic (it renames whatever unpacked dir to the stylesheet slug),
  * so the install lands identically either way.

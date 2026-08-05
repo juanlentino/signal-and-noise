@@ -8,7 +8,9 @@ Layered defenses against the kind of incident documented in
 Already shipped. The OG card generator no longer runs synchronously
 in the request path; cache miss returns the site default OG image
 instead of attempting on-demand generation. See the function-header
-contract on `sn_og_image_url_for_post()` in `inc/og-image.php`.
+contract on `sn_og_image_url_for_post()` in the companion plugin's
+`inc/og-card-generator.php` (moved out of the theme's `inc/og-image.php`
+in v8.4.0 / Tools v1.3.0 — see WORDPRESS-REFERENCE §10.0).
 
 **Rule baked into the codebase:** decorative work never blocks
 essential rendering. Anything in the request path that calls GD,

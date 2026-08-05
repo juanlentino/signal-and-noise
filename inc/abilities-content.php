@@ -258,7 +258,13 @@ function sn_theme_ability_page_notes_pillars() {
 			// the final path segment.
 			$last_modified = '';
 			if ( function_exists( 'get_page_by_path' ) ) {
-				$post = get_page_by_path( $p['last_path'], OBJECT, 'post' );
+				// PAGE, not 'post'. Pillars are Pages — sn_theme_pillar_descriptors()
+				// selects on post_type => 'page' (_sn_pillar meta, hub-children
+				// fallback), so last_path is always a Page's post_name. Core matches
+				// post_type IN ($post_type, 'attachment'), so the old 'post' lookup
+				// could never resolve and every pillar reported last_modified:"" live.
+				// Same root cause as the v11.2.2 get-reading-time-for-slug fix.
+				$post = get_page_by_path( $p['last_path'], OBJECT, 'page' );
 				// Only surface the mtime of a PUBLICLY-VIEWABLE post — defense in
 				// depth so a draft/private pillar never leaks its modification date
 				// over the read-gated /wp-abilities run-path (parity with v9.15.x).

@@ -3,7 +3,7 @@ Contributors: Juan Lentino
 Requires at least: 7.0
 Tested up to: 7.0
 Requires PHP: 8.3
-Stable tag: 11.4.4
+Stable tag: 11.4.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -19,7 +19,7 @@ Features:
 * Justified text with hyphenation and hanging punctuation (v9.4.0)
 * Self-hosted Bebas Neue + DM Mono typography (no Google Fonts)
 * View Transitions API for soft cross-page navigation
-* Sticky shrinking header with reduced-motion honour
+* Sticky shrinking header with reduced-motion honor
 * Inlined critical CSS; the modular stylesheets ship as one combined, minified file the theme builds itself (v10.21.6+), with per-file enqueues as the fail-open fallback
 * Skip-link, focus-visible outlines on every interactive element (WCAG 2.4.7 AA)
 * Companion plugin (Signal & Noise Tools) owns SEO, login hardening, admin tooling

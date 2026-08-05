@@ -39,8 +39,25 @@ footer.wp-block-template-part,
 .sn-related-notes,
 .sn-cited-by,
 .sn-cmdk-trigger,
-.sn-cmdk {
+.sn-cmdk,
+.sn-resume-download {
 	display: none !important;
+}
+
+/* ── /resume prints. Collapsed <details> must not eat a career. ──
+   The early-career fold (.sn-resume-fold) is a <details> that ships CLOSED,
+   and a closed details omits its content from the printed page entirely — so
+   the most-printed page on the site was silently dropping a section. Force
+   every fold open for paper and hide the +/- affordance, which means nothing
+   in print. */
+details {
+	display: block !important;
+}
+details > *:not(summary) {
+	display: block !important;
+}
+.sn-resume-fold summary::after {
+	content: "" !important;
 }
 
 /* ── Typography: keep Bebas for the title, DM Mono for body. ── */

@@ -30,7 +30,7 @@ html {
 	overflow-x: hidden;
 }
 
-/* v9.5.1: honour prefers-reduced-motion. Smooth scrolling is a motion effect
+/* v9.5.1: honor prefers-reduced-motion. Smooth scrolling is a motion effect
    (fires on skip-link activation + every in-page anchor jump) — the one motion
    vector not already gated (the theme disables all keyframe animations, hover
    transitions, and View Transitions under reduce). Loaded after the inline
@@ -201,13 +201,13 @@ summary:focus-visible {
 	background: var(--wp--preset--color--blood);
 }
 
-/* ── Forced colours / high contrast (a11y, v10.20.0) ─────────────────────
+/* ── Forced colors / high contrast (a11y, v10.20.0) ─────────────────────
  * Windows High Contrast Mode (forced-colors: active) replaces the palette with
- * the user's system colours. The brutalist black-on-white base is already
+ * the user's system colors. The brutalist black-on-white base is already
  * maximal contrast, so this pins only the two things the OS override could
- * weaken: the keyboard focus ring (custom outline colours get remapped — pin
- * the Highlight system colour and widen it) and the reading-progress fill
- * (conveys scroll position via colour, so keep it a system colour instead of
+ * weaken: the keyboard focus ring (custom outline colors get remapped — pin
+ * the Highlight system color and widen it) and the reading-progress fill
+ * (conveys scroll position via color, so keep it a system color instead of
  * letting it flatten into the system background). The sanctioned high-contrast
  * answer to the deliberately-omitted dark mode. */
 @media (forced-colors: active) {
@@ -232,7 +232,7 @@ summary:focus-visible {
 
 /* prefers-contrast: more — the base is already maximal black-on-white, so the
  * one meaningful lever is a heavier keyboard focus ring for users who ask for
- * more contrast without forcing system colours. */
+ * more contrast without forcing system colors. */
 @media (prefers-contrast: more) {
 	a:focus-visible,
 	button:focus-visible,

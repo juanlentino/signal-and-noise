@@ -49,7 +49,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * deployed version of THIS file can be verified from the live site
  * with a curl. Bumped manually on each commit that touches /notes
  * routing. Without a marker like this, "did the deploy actually take
- * effect?" was answered by behavioural inference, which has lied to
+ * effect?" was answered by behavioral inference, which has lied to
  * us across multiple incidents on this exact page.
  */
 const SN_NOTES_OVERRIDE_BUILD = '2026-06-05-notes-search-v12';
