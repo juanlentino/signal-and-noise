@@ -108,5 +108,32 @@ $GLOBALS['__query_vars'] = array();
 ok( sn_notes_pagination_add_args( '' ) === array(), 'no add_args when browsing' );
 ok( sn_notes_pagination_add_args( 'provenance' ) === array( 's' => 'provenance' ), 'add_args carries s when searching' );
 
+// ── v11.4.7: the /notes section label carries no em-dash ──
+// House style is no em-dashes in reader-facing copy. These three labels are the only
+// em-dashes the THEME itself emits into a reader's page (everything else on the live
+// site is CMS content). They are one family and change together: a crawl of the default
+// /notes view only ever sees "Index", so fixing that alone would leave the Search and
+// Tag states inconsistent the moment someone searches. Source-assertion pattern per
+// tests/keyboard-nav.php.
+$sn_render_src = file_get_contents( __DIR__ . '/../inc/page-notes-render.php' );
+preg_match_all( '/<p class="sn-notes-section-label"[^>]*>(.*?)<\/p>/s', $sn_render_src, $sn_labels );
+$sn_label_bodies = $sn_labels[1] ?? array();
+ok( 3 === count( $sn_label_bodies ), 'all three section-label states are present (Index, Search, Tag)' );
+foreach ( $sn_label_bodies as $i => $body ) {
+	ok( false === strpos( $body, '&mdash;' ), "section label #$i emits no &mdash; entity" );
+	ok( false === strpos( $body, '—' ), "section label #$i emits no literal em-dash" );
+}
+ok( false !== strpos( $sn_render_src, '>Notes: Index<' ), 'index label reads "Notes: Index"' );
+ok( false !== strpos( $sn_render_src, '>Notes: Search &middot;' ), 'search label reads "Notes: Search &middot; …" (middot kept as the secondary separator)' );
+ok( false !== strpos( $sn_render_src, '>Notes: Tag &middot;' ), 'tag label reads "Notes: Tag &middot; …"' );
+
+// The empty-search state is the other string this template renders to a reader. A crawl
+// of /notes never reaches it (it needs a search that matches nothing), which is why it
+// was missed by the live-site pass and is pinned here instead.
+preg_match( '/<p class="sn-notes-empty">Nothing matches.*?<\/p>/s', $sn_render_src, $sn_empty );
+ok( ! empty( $sn_empty[0] ), 'the empty-search state is present' );
+ok( false === strpos( $sn_empty[0] ?? '', '&mdash;' ), 'empty-search state emits no &mdash;' );
+ok( false !== strpos( $sn_render_src, '&rdquo;. Notes, essays, and pages all searched.' ), 'empty-search state reads as two sentences' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
