@@ -2,6 +2,20 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.4.8] - 2026-08-05 — the purge report stops making its reader infer
+
+**Headline:** the Varnish leg gains the two qualifier markers the companion plugin now emits, so `ok: true, http: 422` reads as what it is instead of as a contradiction.
+
+### Fixed
+
+- **`sn_write_purge_report()` carries `coalesced` and `reauthed` through to the durable report** ([inc/purge-verify.php](inc/purge-verify.php)). The Varnish leg reads the companion plugin's `sn_cloudways_last_purge`, and that record gained two qualifiers: `coalesced` (companion v10.52.2 — Cloudways serializes cache operations, so a purge issued while one is open is rejected 422, and when the blocking operation is itself a running purge the plugin now rides it) and `reauthed` (companion v10.52.4 — a cached OAuth token the API rejected, replaced and retried once).
+
+  The theme copied only `via`/`ok`/`http`/`operation_id`, so the durable record showed `ok: true, http: 422` with no explanation, and the reader had to already know that combination means "coalesced" rather than a contradiction. That is precisely the inference that cost an afternoon on 2026-08-05, when a `422` in this leg was first read as a broken Varnish tier and then as a three-week outage, before a control reading showed it was neither.
+
+  Copied **only when present**, so a report written against an older companion keeps its current shape rather than gaining `false` values that read as "checked, and negative" — 7 new assertions in [tests/purge-verify.php](tests/purge-verify.php) pin both directions, including that a plain 200 purge gains neither key.
+
+> **Why PATCH:** one leg of a diagnostic record gains two optional fields. No behaviour, no template, no public surface changed — the theme still writes the same report at the same time.
+
 ## [11.4.7] - 2026-08-05 — the four em-dashes the theme itself put on the page
 
 **Headline:** a live-site audit for house-style em-dashes found the published writing already clean (3 in 30 notes, and only 2 notes affected). Nearly everything flagged turned out to be CMS page content or invisible CSS comments. These four are the ones the **theme** emits into a reader's page, so they are the theme's to fix.

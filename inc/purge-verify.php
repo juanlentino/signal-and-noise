@@ -140,6 +140,19 @@ function sn_write_purge_report( $args, $cleared = 0 ) {
 			'http'         => isset( $cw['http'] ) ? (int) $cw['http'] : 0,
 			'operation_id' => isset( $cw['operation_id'] ) ? (int) $cw['operation_id'] : 0,
 		);
+		// v11.4.8: carry the plugin's two qualifier markers (companion v10.52.2 /
+		// v10.52.4). Without them this leg reads `ok: true, http: 422` and the
+		// reader has to KNOW that combination means "coalesced onto an in-flight
+		// purge" rather than a contradiction — the exact inference that cost an
+		// afternoon on 2026-08-05. Copied only when present, so a report from an
+		// older companion keeps its current shape rather than gaining false
+		// negatives.
+		if ( ! empty( $cw['coalesced'] ) ) {
+			$varnish['coalesced'] = true;
+		}
+		if ( ! empty( $cw['reauthed'] ) ) {
+			$varnish['reauthed'] = true;
+		}
 	} else {
 		$varnish = array( 'via' => 'breeze', 'listener' => $state['breeze_varnish'] );
 	}
