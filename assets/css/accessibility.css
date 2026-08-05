@@ -4,7 +4,7 @@
  * Brutalist/white-first, preset tokens only. Same hero vocabulary as /now
  * (Bebas headline, mono eyebrow, rust dek) with a prose section idiom for
  * the statement body, scoped under .sn-a11y-page. Loaded only on the
- * /accessibility route. 11px type floor honoured.
+ * /accessibility route. 11px type floor honored.
  */
 
 .sn-a11y-page {
@@ -19,14 +19,14 @@
 	font-size: max(0.7rem, 11px);
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--rust, #666);
-	margin: 0 0 0.75rem;
+	color: var(--wp--preset--color--blood, #e00404);
+	margin: 0 0 1rem;
 }
 .sn-a11y-headline {
 	font-family: 'Bebas Neue', Impact, sans-serif;
 	font-weight: 400;
-	font-size: clamp(3.5rem, 12vw, 7rem);
-	line-height: 0.9;
+	font-size: clamp(3rem, 8vw, 7rem);
+	line-height: 0.95;
 	letter-spacing: -0.01em;
 	color: var(--wp--preset--color--bone, #000);
 	margin: 0;

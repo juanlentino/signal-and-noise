@@ -3,9 +3,10 @@
  * Standalone fixture tests for v9.5.0's cross-package listener
  * contracts (theme-side consumer locks).
  *
- * Verifies the 8 filter contracts where the theme LISTENS on a
+ * Verifies the 9 filter contracts where the theme LISTENS on a
  * plugin-dispatched hook (signal-and-noise-tools v4.4.0+; the v10.49.0
- * doc sweep found the table had drifted to 4 while 8 were live):
+ * doc sweep found the table had drifted to 4 while 8 were live, and
+ * v11.4.5 found it had drifted again to 8 while 9 were live):
  *
  *   1. sn_purge_all_caches_result          → inc/template-maintenance.php
  *   2. sn_clear_template_overrides_result  → inc/template-maintenance.php
@@ -477,12 +478,12 @@ if ( ! function_exists( 'get_bloginfo' ) ) {
 	function get_bloginfo( $k = '' ) { return ''; }
 }
 require_once __DIR__ . '/../inc/content-json.php';
-cpl_true( isset( $GLOBALS['__test_filters']['sn_cf_purge_urls_for_post'] ), 'Test 9.1: listener registered' );
+cpl_true( isset( $GLOBALS['__test_filters']['sn_cf_purge_urls_for_post'] ), 'Test 11.1: listener registered' );
 $note = (object) array( 'post_type' => 'post' );
 $urls = apply_filters( 'sn_cf_purge_urls_for_post', array( 'https://example.com/notes/a-note/' ), 12, $note );
-cpl_true( is_array( $urls ) && in_array( 'https://example.com/notes/a-note.json', $urls, true ), 'Test 9.2: the .json twin rides the per-post purge list' );
+cpl_true( is_array( $urls ) && in_array( 'https://example.com/notes/a-note.json', $urls, true ), 'Test 11.2: the .json twin rides the per-post purge list' );
 $att = (object) array( 'post_type' => 'attachment' );
-cpl_eq( array(), apply_filters( 'sn_cf_purge_urls_for_post', array(), 13, $att ), 'Test 9.3: non post/page types add no twin' );
+cpl_eq( array(), apply_filters( 'sn_cf_purge_urls_for_post', array(), 13, $att ), 'Test 11.3: non post/page types add no twin' );
 
 // ═════════════════════════════════════════════════════════════════════
 // CONTRACT 10: sn_gh_latest_theme_tag_error_result  (theme v10.43.0;
@@ -512,8 +513,39 @@ delete_site_transient( SN_GH_THEME_ERROR_KEY );
 cpl_eq( 'plugin-side reason', apply_filters( 'sn_gh_latest_theme_tag_error_result', 'plugin-side reason' ), 'Test 10.6: no own reason → plugin value passes through' );
 cpl_eq( '', apply_filters( 'sn_gh_latest_theme_tag_error_result', '' ), 'Test 10.7: no own reason + empty default stays \'\' (last fetch succeeded)' );
 
+// ─── Contract 11: sn_seo_robots_directives (v10.51.1) ───────────────
+// v11.4.5: renumbered from "Contract 9", which collided with the
+// sn_cf_purge_urls_for_post section above — two sections carried the same
+// number, so the labels in the output were ambiguous.
+// The listener that v10.51.0 got WRONG: it hooked core's wp_robots, which the
+// plugin removes (inc/seo.php) so it can emit the tag itself — the filter was
+// live-verified inert. This contract pins the RIGHT seam, and pins it by
+// driving the filter the way the plugin's emitter does.
+echo "\nContract 11: sn_seo_robots_directives (search-mode noindex)\n";
+// page-notes-template.php cannot be required here (this fixture already defines
+// several of its helpers), so the contract is pinned at source level plus a
+// direct drive of the pure listener body — which is what the wiring calls.
+require_once __DIR__ . '/../inc/notes-index-helpers.php';
+$sn_tpl_src = (string) file_get_contents( __DIR__ . '/../inc/page-notes-template.php' );
+cpl_true( false !== strpos( $sn_tpl_src, "add_filter( 'sn_seo_robots_directives'" ), 'Test 11.1: the listener hooks the PLUGIN seam' );
+cpl_true( false === strpos( $sn_tpl_src, "add_filter( 'wp_robots'" ), 'Test 11.2: nothing hooks core wp_robots (the plugin removes it — hooking it is dead code, the v10.51.0 bug)' );
+cpl_true( in_array( 'noindex', sn_notes_search_robots( array( 'max-snippet:-1' ), 'signal' ), true ), 'Test 11.3: search mode adds noindex to the plugin directive list' );
+cpl_true( in_array( 'max-snippet:-1', sn_notes_search_robots( array( 'max-snippet:-1' ), 'signal' ), true ), 'Test 11.4: the plugin own directives survive' );
+cpl_true( ! in_array( 'noindex', sn_notes_search_robots( array( 'max-snippet:-1' ), '' ), true ), 'Test 11.5: a browse render is NOT noindexed' );
+
 // ═════════════════════════════════════════════════════════════════════
-// META: listener-count summary across all 8 listener contracts.
+// META: listener-count summary across all 9 theme-listener contracts.
+//
+// v11.4.5: this block moved to the END of the file. It previously ran before
+// the robots contract's section, so adding sn_seo_robots_directives to it
+// reported a missing listener that was in fact registered further down.
+//
+// Two mechanisms, deliberately: eight contracts register a real add_filter()
+// when their module is required, so presence in __test_filters is the check.
+// sn_seo_robots_directives cannot — inc/page-notes-template.php redefines
+// helpers this fixture already stubs, so it is pinned at source level instead
+// (Test 11.1). Counting them together is what keeps the total honest; the
+// v10.49.0 sweep found this table had drifted to 4 while 8 were live.
 // ═════════════════════════════════════════════════════════════════════
 
 echo "\nMeta: contract surface summary\n";
@@ -530,23 +562,11 @@ $expected_contracts = array(
 foreach ( $expected_contracts as $c ) {
 	cpl_true( isset( $GLOBALS['__test_filters'][ $c ] ), "Test meta: contract '$c' has a listener" );
 }
-
-// ─── Contract 9: sn_seo_robots_directives (v10.51.1) ────────────────
-// The listener that v10.51.0 got WRONG: it hooked core's wp_robots, which the
-// plugin removes (inc/seo.php) so it can emit the tag itself — the filter was
-// live-verified inert. This contract pins the RIGHT seam, and pins it by
-// driving the filter the way the plugin's emitter does.
-echo "\nContract 9: sn_seo_robots_directives (search-mode noindex)\n";
-// page-notes-template.php cannot be required here (this fixture already defines
-// several of its helpers), so the contract is pinned at source level plus a
-// direct drive of the pure listener body — which is what the wiring calls.
-require_once __DIR__ . '/../inc/notes-index-helpers.php';
-$sn_tpl_src = (string) file_get_contents( __DIR__ . '/../inc/page-notes-template.php' );
-cpl_true( false !== strpos( $sn_tpl_src, "add_filter( 'sn_seo_robots_directives'" ), 'Test 9.1: the listener hooks the PLUGIN seam' );
-cpl_true( false === strpos( $sn_tpl_src, "add_filter( 'wp_robots'" ), 'Test 9.2: nothing hooks core wp_robots (the plugin removes it — hooking it is dead code, the v10.51.0 bug)' );
-cpl_true( in_array( 'noindex', sn_notes_search_robots( array( 'max-snippet:-1' ), 'signal' ), true ), 'Test 9.3: search mode adds noindex to the plugin directive list' );
-cpl_true( in_array( 'max-snippet:-1', sn_notes_search_robots( array( 'max-snippet:-1' ), 'signal' ), true ), 'Test 9.4: the plugin own directives survive' );
-cpl_true( ! in_array( 'noindex', sn_notes_search_robots( array( 'max-snippet:-1' ), '' ), true ), 'Test 9.5: a browse render is NOT noindexed' );
+// The ninth, pinned at source rather than at runtime (see above).
+cpl_true( false !== strpos( $sn_tpl_src, "add_filter( 'sn_seo_robots_directives'" ),
+	"Test meta: contract 'sn_seo_robots_directives' has a listener (source-pinned)" );
+cpl_true( 9 === count( $expected_contracts ) + 1,
+	'Test meta: 9 theme-listener contracts accounted for (WORDPRESS-REFERENCE §10.0 table)' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

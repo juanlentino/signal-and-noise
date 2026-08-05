@@ -4,7 +4,7 @@
  *
  * On a single note: j = next note, k = previous note (following the
  * post-closing prev/next links rendered in parts/post-closing.html), and
- * ? opens a keyboard cheat-sheet overlay. All behaviours are progressive
+ * ? opens a keyboard cheat-sheet overlay. All behaviors are progressive
  * enhancement — the prev/next links and the command palette work without
  * this script. Conditionally enqueued on single posts only (where the
  * prev/next links exist), footer + deferred, so it never blocks first paint.

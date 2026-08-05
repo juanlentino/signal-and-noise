@@ -239,7 +239,7 @@
 
 /* Discreet "Read the long-form on this site →" affordance under Card 1's
    blurb. Italic + rust = secondary action, not a primary CTA. Explicit
-   colour on the anchor (not `inherit`) for the same theme.json-cascade
+   color on the anchor (not `inherit`) for the same theme.json-cascade
    reason as the title above. */
 .sn-prov-paper-longform,
 .sn-prov-paper-longform a {
@@ -300,8 +300,8 @@
 }
 
 /* Title sits one step under the parent .sn-prov-paper-title ceiling so it
-   reads subordinate without leaving the type scale. Explicit colour (not
-   `inherit`) to win over theme.json's global link colour, matching the
+   reads subordinate without leaving the type scale. Explicit color (not
+   `inherit`) to win over theme.json's global link color, matching the
    .sn-prov-paper-title rationale above; clean word-boundary wraps. */
 .sn-prov-subcard-title,
 .sn-prov-subcard-title a {
@@ -419,7 +419,7 @@
    pages render the full body via wp:post-content and are unaffected. */
 
 /* RSS footer line — caption-size, muted. The "RSS" word inherits the
-   theme link colour by default; opacity dims the whole line so it
+   theme link color by default; opacity dims the whole line so it
    reads as a quiet footnote. */
 .sn-notes-rss {
 	opacity: 0.55;
@@ -966,7 +966,7 @@
 }
 
 /* B2: per-role count badge ("MIXING · 6"). Dimmed (rust) when idle; follows the
-   chip's blood/active colour on hover + when selected. The middot separator is
+   chip's blood/active color on hover + when selected. The middot separator is
    CSS-only so the screen-reader label reads "Mixing 6", not "Mixing · 6". */
 .sn-disco-chip__count {
 	color: var(--wp--preset--color--rust, #666);
@@ -1558,13 +1558,13 @@
 
 /* ============================================
    EDITORIAL PROSE LINKS (v10.12.2)
-   Inline links inside colour-bearing body paragraphs (the /contact routing
+   Inline links inside color-bearing body paragraphs (the /contact routing
    directory + the /contact/personal note). WordPress core emits
    `:where(p.has-text-color:not(.has-link-color)) a{color:inherit}` (specificity
    0,0,1, AFTER the theme's elements.link rule which is also 0,0,1), so a "naked"
-   <a> in a paragraph that has a text colour but no link colour renders as plain
+   <a> in a paragraph that has a text color but no link color renders as plain
    body text. A class selector (0,1,1) decisively wins, restoring the theme's
-   blood -> signal link colour. Mirrors the .sn-404-browse / .sn-prov-* idiom.
+   blood -> signal link color. Mirrors the .sn-404-browse / .sn-prov-* idiom.
    ============================================ */
 .sn-prose-links a {
 	color: var(--wp--preset--color--blood, #e00404);

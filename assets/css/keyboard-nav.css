@@ -6,7 +6,7 @@
  * blood on the keycaps. z-index 100002 (shared with the palette — the two
  * never sit open together). The fade runs only under prefers-reduced-motion:
  * no-preference; the overlay still appears instantly under reduced motion
- * (no @keyframes gating display). 11px type floor honoured.
+ * (no @keyframes gating display). 11px type floor honored.
  *
  * @since theme v10.7.0
  */

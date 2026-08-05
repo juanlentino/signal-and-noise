@@ -6,7 +6,7 @@
  * skills table. Clones the /now + /uses idiom (Bebas heads, mono labels,
  * hairline rows, blood on hover) with preset tokens only, scoped under
  * sn-resume-* classes carried by the Page content. Loaded only on /resume.
- * 11px type floor honoured; motion neutralized under prefers-reduced-motion.
+ * 11px type floor honored; motion neutralized under prefers-reduced-motion.
  */
 
 /* ── Widths belong to the Page content, NOT this sheet ────────────────────
@@ -21,18 +21,26 @@
    selector can reach <main>; qualify group selectors as
    div.wp-block-group. */
 
-/* The hero intro keeps a reading measure inside its declared 960px column.
-   Right padding, not max-width: the constrained layout's auto margins
-   carry !important and would re-center a narrower box off the shared left
-   edge. border-box because the theme leaves p at content-box — without it
-   the padding GROWS the box past the column. */
-body div.wp-block-group:has(h1) > p.has-body-font-family:not(.sn-resume-rail) {
-	box-sizing: border-box;
-	padding-right: 14rem;
-}
-@media (max-width: 781px) {
-	body div.wp-block-group:has(h1) > p.has-body-font-family:not(.sn-resume-rail) {
-		padding-right: 0;
+/* v11.4.5 REMOVED: a hero-intro reading-measure rule (padding-right: 14rem on
+   a direct-child p.has-body-font-family) that has matched nothing since plugin
+   v10.35.0 split the hero. The band's direct children are now the eyebrow and
+   the columns wrapper; the summary paragraph lives two levels down inside a
+   wp-block-column, and carries its own measure. Verified against the live page:
+   the selector matched 0 elements. Its comment also described a 960px column
+   that became 1320px. Same dead-rule class v11.4.4 removed from now/uses. */
+
+/* Split-hero breakpoint. /notes gates its hero grid at 900px; core's wp:columns
+   stacks at 782px, so between 782-899px /resume was two columns while /notes
+   had already stacked — one system, two thresholds. 900px is the documented
+   rule, so /resume is brought to it here rather than /notes being moved down.
+   .sn-resume-hero-split is emitted by the plugin (inc/resume-sync-engine.php)
+   purely as a styling hook. */
+@media (max-width: 899.98px) {
+	.sn-resume-hero-split {
+		flex-wrap: wrap;
+	}
+	.sn-resume-hero-split > .wp-block-column {
+		flex-basis: 100% !important;
 	}
 }
 

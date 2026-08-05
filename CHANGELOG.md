@@ -2,6 +2,37 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.4.5] - 2026-08-04 — the uniform title scale becomes uniform
+
+**Headline:** v11.4.1 named `clamp(3rem, 8vw, 7rem)` the site-wide title scale and moved `/notes` onto it. Four surfaces never followed, and a phone-width rule was quietly shrinking the one surface that had. Measured against the live site before fixing: at 768px `/now` rendered its headline at **92px** against `/notes`' **61px**; at 375px `/resume` rendered **37.5px** against `/notes`' **48px**. Three "uniform" titles at three sizes. The old and new clamp curves coincide only between roughly 933px and 1400px, which is exactly the band the screenshot reviews happened in, so five consecutive releases each fixed one surface without the pattern becoming visible.
+
+> **Why PATCH:** consistency cleanup, dead-rule removal, a print fix, one ability bug fix, and new test coverage. No new user-visible capability, no removed or renamed public API, nothing requiring user action. Per [docs/VERSIONING.md](docs/VERSIONING.md), a bug fix is not breaking even when it changes observable output.
+
+### Fixed
+
+- **`/now`, `/uses`, `/index`, `/accessibility` headlines join the uniform title scale** ([now.css](assets/css/now.css), [uses.css](assets/css/uses.css), [index.css](assets/css/index.css), [accessibility.css](assets/css/accessibility.css)). All four still declared the superseded `clamp(3.5rem, 12vw, 7rem)` with `line-height: 0.9`; they now match `/notes` and `/resume` at `clamp(3rem, 8vw, 7rem)` / `0.95`. Verified by injecting the new declarations into the live page: `/now` resolves to 48px at 375px and 61.44px at 768px, byte-identical to `/notes` at both widths.
+- **`/resume` headline stops being force-shrunk on phones** ([responsive.css](assets/css/responsive.css)). The `@media (max-width: 480px)` block matched `.wp-block-heading[style*="clamp(3rem"]` with `!important`. That attribute-substring selector was unique to the front-page hero when written, but plugin v10.37.0 normalized every generated page title onto `clamp(3rem, 8vw, 7rem)`, so it silently began matching the plugin-emitted `/resume` H1 and overriding its inline style (an `!important` author rule outranks an inline declaration). The rule is now scoped to `.sn-hero-title`, the class `templates/front-page.html` already carries. **Never match a value the design system has standardized on** — the selector's reach widens as the codebase converges on the token.
+- **`get-page-notes-pillars` returned an empty `last_modified` for every pillar** ([inc/abilities-content.php](inc/abilities-content.php)) — confirmed live over MCP: all three pillar essays returned `"last_modified":""` while every other field populated. The lookup asked `get_page_by_path( $path, OBJECT, 'post' )`, but pillars are **Pages** (`sn_theme_pillar_descriptors()` selects on `post_type => 'page'`), and core matches `post_type IN ($post_type, 'attachment')`, so the lookup could never resolve. Identical root cause to the v11.2.2 `get-reading-time-for-slug` fix, which corrected two test stubs and missed this third site.
+- **The stub guarding that ability ignored both of its arguments** ([tests/ability-page-notes-viewability.php](tests/ability-page-notes-viewability.php)) — it returned a modified post object unconditionally, which is why three assertions stayed green against a production path that always returned empty. It now models core's real `post_type` filter, and pins the page-resolves, wrong-type, and unknown-path cases. Falsified: reverting the fix turns three of six assertions red.
+- **`/resume` split hero stacks at 900px, matching `/notes`** ([resume.css](assets/css/resume.css)). `/notes` gates its hero grid at 900px while core's `wp:columns` stacks at 782px, so between 782px and 899px `/resume` was two columns while `/notes` had already stacked. Verified live at 840px before the fix.
+- **The early-career fold no longer vanishes from printed resumes** ([print.css](assets/css/print.css)). `.sn-resume-fold` is a `<details>` that ships closed, and a closed `<details>` omits its content from print entirely, so the most-printed page on the site was silently dropping a section. Folds now force open for paper and the `+`/`–` affordance is suppressed. The "Download PDF" button is also stripped, having previously printed as a bordered box followed by its own raw URL.
+- **Two bare `font-size: 0.7rem` declarations join the 11px floor** ([inc/page-notes-render.php](inc/page-notes-render.php)) — the `/notes` eyebrow, meta, section label, and subscribe line now use `max(0.7rem, 11px)` like every peer, including two overrides in the same file.
+- **The cross-package listener count disagreed in three places** — `functions.php` said 7, `docs/WORDPRESS-REFERENCE.md` said 8, and `tests/cross-package-listeners.php` said 8 while testing 9. Nine are live; `sn_seo_robots_directives` (added v10.51.1) was never tabled. All three now say 9, the §10.0 table gains its row, and the suite's meta summary accounts for all nine. Two suite sections were also both numbered "Contract 9"; the robots section is renumbered 11.
+- **A stale module path in [docs/MONITORING.md](docs/MONITORING.md)** pointed at the theme's `inc/og-image.php`, which moved to the plugin as `inc/og-card-generator.php` in v8.4.0.
+
+### Removed
+
+- **A dead reading-measure rule in [resume.css](assets/css/resume.css)** (`padding-right: 14rem` on a direct-child `p.has-body-font-family`, plus its 781px reset). It has matched nothing since plugin v10.35.0 split the hero: the band's direct children are now the eyebrow and the columns wrapper, while the summary paragraph sits two levels down and carries its own measure. Confirmed against the live page, where the selector matched zero elements. Its comment also described a 960px column that has been 1320px since v11.3.0. Same dead-rule class v11.4.4 removed from `/now` and `/uses`.
+
+### Changed
+
+- **Hero eyebrows unify on blood** ([now.css](assets/css/now.css), [uses.css](assets/css/uses.css), [index.css](assets/css/index.css), [accessibility.css](assets/css/accessibility.css)). `/notes`, `/resume`, `/about`, `/services`, and `/music` render the eyebrow in blood at `margin-bottom: 1rem`; these four rendered it in rust (`#333`) at `0.75rem`. `components.css` declares `.sn-catalog-eyebrow` the standardized treatment, so the four were the outliers. Markup is untouched; the plugin emits these class names and the theme owns their color.
+- **British spellings corrected to American English** across `readme.txt`, `inc/`, and `assets/css/` prose (honour, behaviour, normalise, recognise, colour).
+
+### New
+
+- **[tests/notes-hero-structure.php](tests/notes-hero-structure.php)** — the `/notes` hero had **zero** test coverage across the five releases (v11.3.0 through v11.4.4) that restructured it; no suite referenced a single hero class. Source-level assertions pin the two-column split, the source ordering, the uniform title scale, and most importantly the `! $sn_filtered` guard, which is a behavioral contract rather than styling: corpus counts describe the whole corpus, so rendering them over a search or tag result set mislabels the result set. Falsified by breaking the guard and confirming the suite goes red.
+
 ## [11.4.4] - 2026-08-03 — /notes hero gets the resume treatment
 
 ### Changed

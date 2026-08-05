@@ -5,7 +5,7 @@
  * overlay sits above every other surface (header/skip-link reach 9998–9999,
  * some critical.css overlays reach 100000–100001) at z-index 100002. The open
  * animation runs only under prefers-reduced-motion: no-preference; the overlay
- * itself still appears instantly under reduced motion. 11px type floor honoured.
+ * itself still appears instantly under reduced motion. 11px type floor honored.
  *
  * @since theme v9.11.0
  */

@@ -225,8 +225,14 @@
 		font-size: 1.3rem !important;
 	}
 
-	/* Section headings */
-	.wp-block-heading[style*="clamp(3rem"] {
+	/* Front-page hero title. Scoped to .sn-hero-title (templates/front-page.html)
+	   — NOT to [style*="clamp(3rem"]. That attribute-substring selector was
+	   unique when written, but plugin v10.37.0 normalized every generated page
+	   title onto clamp(3rem, 8vw, 7rem), so it silently began matching the
+	   /resume H1 (plugin inc/resume-sync-engine.php) and force-shrinking it to
+	   37.5px at 375px while class-styled titles held 48px. Never match a value
+	   the design system has standardized on. */
+	.sn-hero-title {
 		font-size: clamp(2.2rem, 10vw, 3rem) !important;
 	}
 

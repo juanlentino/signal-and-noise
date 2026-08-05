@@ -50,10 +50,10 @@ function signal_noise_register_block_styles() {
 	// assets/css/components.css sets `.wp-block-separator{border-color:concrete
 	// !important}`, and an !important declaration always beats a non-important
 	// one regardless of specificity — so without our own !important here the
-	// Hairline's colour would be silently dictated by that unrelated base rule
+	// Hairline's color would be silently dictated by that unrelated base rule
 	// instead of this style's own declaration. The more-specific
 	// `.is-style-hairline` selector wins the !important tie-break, so the
-	// Hairline now owns its border colour.
+	// Hairline now owns its border color.
 	register_block_style(
 		'core/separator',
 		array(
