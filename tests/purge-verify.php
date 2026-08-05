@@ -216,6 +216,22 @@ $old = get_option( 'sn_last_purge_report', null );
 ok( ! array_key_exists( 'coalesced', $old['legs']['varnish'] ), 'an older companion produces no coalesced key at all' );
 ok( ! array_key_exists( 'reauthed', $old['legs']['varnish'] ), 'an older companion produces no reauthed key at all' );
 
+// Companion v10.52.5: "we do not know" must stay distinct from "it failed".
+$GLOBALS['__options']['sn_cloudways_last_purge'] = array( 'time' => 666, 'ok' => false, 'stage' => 'dispatch', 'http' => 0, 'operation_id' => 0, 'inconclusive' => true, 'error' => 'http_request_failed: cURL error 28' );
+$GLOBALS['sn_cf_verified_result']                = array( 'accepted' => true, 'http' => 200, 'cf_success' => true );
+fire( 'sn_after_full_cache_flush', array( 'origin_html' => true, 'cloudflare' => true, 'verified' => true ), 0 );
+$inc = get_option( 'sn_last_purge_report', null );
+ok( true === ( $inc['legs']['varnish']['inconclusive'] ?? null ), 'an inconclusive purge carries the marker into the report' );
+ok( 'dispatch' === ( $inc['legs']['varnish']['stage'] ?? '' ), 'the stage the attempt reached is carried too' );
+ok( empty( $inc['legs']['varnish']['ok'] ), 'and it still reads not-ok — inconclusive is not success' );
+
+$GLOBALS['__options']['sn_cloudways_last_purge'] = array( 'time' => 777, 'ok' => false, 'stage' => 'auth', 'http' => 429, 'error' => 'Too many requests' );
+$GLOBALS['sn_cf_verified_result']                = array( 'accepted' => true, 'http' => 200, 'cf_success' => true );
+fire( 'sn_after_full_cache_flush', array( 'origin_html' => true, 'cloudflare' => true, 'verified' => true ), 0 );
+$auth = get_option( 'sn_last_purge_report', null );
+ok( 'auth' === ( $auth['legs']['varnish']['stage'] ?? '' ), 'an auth-stage failure is distinguishable in the report' );
+ok( empty( $auth['legs']['varnish']['inconclusive'] ), 'an auth failure is not marked inconclusive' );
+
 // Auto (non-verified) purge: CF is dispatched but unconfirmed.
 $GLOBALS['__options']['sn_cloudways_last_purge'] = array( 'time' => 222, 'ok' => true, 'http' => 200, 'operation_id' => 55 );
 fire( 'sn_after_full_cache_flush', array( 'origin_html' => true, 'cloudflare' => true ), 0 );

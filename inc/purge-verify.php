@@ -153,6 +153,18 @@ function sn_write_purge_report( $args, $cleared = 0 ) {
 		if ( ! empty( $cw['reauthed'] ) ) {
 			$varnish['reauthed'] = true;
 		}
+		// Companion v10.52.5: a transport failure (timeout, DNS, reset) is not
+		// evidence the purge did not run — only that we never heard back. Observed
+		// live: a 5s timeout was recorded as failed, and the operation it started
+		// was still running seconds later. Carrying this keeps "we do not know"
+		// distinct from "it failed" in the durable record, and `stage` says which
+		// step the attempt reached rather than leaving it to be inferred.
+		if ( ! empty( $cw['inconclusive'] ) ) {
+			$varnish['inconclusive'] = true;
+		}
+		if ( ! empty( $cw['stage'] ) ) {
+			$varnish['stage'] = (string) $cw['stage'];
+		}
 	} else {
 		$varnish = array( 'via' => 'breeze', 'listener' => $state['breeze_varnish'] );
 	}
