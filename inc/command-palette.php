@@ -38,6 +38,11 @@ function sn_cmdk_build_data() {
 		'order'               => 'DESC',
 		'no_found_rows'       => true,
 		'ignore_sticky_posts' => true,
+		// v11.4.6: protected posts never ride a bulk corpus surface. Only titles +
+		// permalinks are emitted here (WP treats both as public), so this closes no
+		// live leak — it states the convention at the query so a future change that
+		// starts emitting excerpts cannot silently widen it. CMA audit INFO-3.
+		'has_password'        => false,
 	) );
 	foreach ( $q->posts as $p ) {
 		$recent[] = array(
@@ -51,7 +56,11 @@ function sn_cmdk_build_data() {
 	if ( function_exists( 'sn_theme_pillar_descriptors' ) ) {
 		foreach ( sn_theme_pillar_descriptors() as $d ) {
 			$pillars[] = array(
-				't' => $d['title'],
+				// v11.4.6: decode like recent/notes. A pillar title that had been
+				// wptexturized would otherwise render its entity literally in the
+				// palette (the JS writes labels via textContent, so this was only
+				// ever cosmetic — never an injection). CMA audit 2026-08-05 INFO-1.
+				't' => html_entity_decode( (string) $d['title'], ENT_QUOTES ),
 				'u' => home_url( '/' . $d['slug'] . '/' ),
 			);
 		}
@@ -69,6 +78,7 @@ function sn_cmdk_build_data() {
 		'ignore_sticky_posts'    => true,
 		'update_post_meta_cache' => false,
 		'update_post_term_cache' => false,
+		'has_password'           => false, // v11.4.6: see the recent query above.
 	) );
 	foreach ( $nq->posts as $p ) {
 		$notes[] = array(

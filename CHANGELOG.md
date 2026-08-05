@@ -2,6 +2,22 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.4.6] - 2026-08-05 — audit follow-ups: the palette's third array, and a linter that could not see SQL
+
+**Headline:** the 2026-08-05 CMA post-ship audit returned **zero** findings against the `v10.44.5..v11.4.5` increment, so this release actions its three INFO observations plus a gap the audit's own falsification probe exposed: `phpcs.xml.dist` pulled in `WordPress.Security`, which does **not** carry the DB sniffs, so unprepared SQL was invisible to the theme's linter while the plugin's caught it.
+
+### Fixed
+
+- **Pillar CTA is built from `home_url()`, not a bare `/<slug>/`.** `blocks/pillar-essays/render.php` emitted a root-relative href while the command palette emitted an absolute one for the very same pillar. The audit filed this as cosmetic; it is not — on a subdirectory install (`home_url()` = `example.com/blog`) a root-relative `/slug/` resolves to `example.com/slug/`, outside the install. Latent rather than live, since this site is root-installed, and now pinned by a test whose `home_url()` stub is deliberately a subdirectory.
+
+### Improvements
+
+- **`phpcs.xml.dist` gains `WordPress.DB.PreparedSQL`** (with `DirectDatabaseQuery` silenced, matching the plugin's ruleset). The theme's two `$wpdb` call sites already hold — `inc/cited-by.php` uses `->prepare()` + `esc_like()`, `inc/template-maintenance.php` interpolates only `$wpdb->options`, a table name, which cannot be a placeholder — so the rule enters green and stays a live gate instead of becoming a backlog. Verified by injecting a violation inside the scanned tree and confirming `PreparedSQL.NotPrepared` fires, per this ruleset's own standing warning that exit 0 can mean "scanned nothing."
+- **The command palette normalizes all three corpus arrays identically.** `recent` and `notes` ran titles through `html_entity_decode()`; `pillars` passed the descriptor title through raw, so a wptexturized pillar title would render its entity literally. Cosmetic only — the JS writes every label via `textContent`, never `innerHTML`.
+- **Password-protected entries stay off the bulk corpus surfaces.** `has_password => false` added to the palette's `recent` and `notes` queries and to `sn_notes_query_posts()` (both browse and search). No leak was open: those surfaces emit titles and permalinks, which WordPress treats as public, and a protected post's `get_the_excerpt()` is already the "There is no excerpt because this is a protected post." placeholder. This states the convention at the query — matching `inc/feed-json.php` and `inc/llms-txt.php`, which gate because they render actual content — so a future change that starts emitting excerpts cannot silently widen the surface. It also drops the useless placeholder rows from search results.
+
+> **Why PATCH:** no new capability and no public API change. One latent-correctness fix, one linter gate, and two convention-consistency changes, all behavior-preserving for a root install with no protected posts on the index.
+
 ## [11.4.5] - 2026-08-04 — the uniform title scale becomes uniform
 
 **Headline:** v11.4.1 named `clamp(3rem, 8vw, 7rem)` the site-wide title scale and moved `/notes` onto it. Four surfaces never followed, and a phone-width rule was quietly shrinking the one surface that had. Measured against the live site before fixing: at 768px `/now` rendered its headline at **92px** against `/notes`' **61px**; at 375px `/resume` rendered **37.5px** against `/notes`' **48px**. Three "uniform" titles at three sizes. The old and new clamp curves coincide only between roughly 933px and 1400px, which is exactly the band the screenshot reviews happened in, so five consecutive releases each fixed one surface without the pattern becoming visible.

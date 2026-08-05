@@ -117,6 +117,18 @@ $GLOBALS['__query_vars']['s'] = '';
 $args = sn_notes_query_posts()->args;
 ok( 'post' === ( $args['post_type'] ?? null ), 'browse mode stays Notes-only by construction' );
 
+// ── v11.4.6: CMA audit 2026-08-05 INFO-3 — protected posts stay off bulk corpus
+// surfaces. Search mode renders get_the_excerpt(), which for a protected post is
+// WP's "There is no excerpt because this is a protected post." placeholder, so no
+// body ever leaked. Stating the gate at the query makes the convention uniform with
+// inc/feed-json.php + inc/llms-txt.php and removes the placeholder rows entirely.
+$GLOBALS['__query_vars']['s'] = 'signal';
+$args = sn_notes_query_posts()->args;
+ok( false === ( $args['has_password'] ?? null ), 'search mode excludes password-protected posts' );
+$GLOBALS['__query_vars']['s'] = '';
+$args = sn_notes_query_posts()->args;
+ok( false === ( $args['has_password'] ?? null ), 'browse mode excludes password-protected posts' );
+
 $note  = (object) array( 'ID' => 1, 'post_type' => 'post' );
 $page_ = (object) array( 'ID' => 2, 'post_type' => 'page' );
 $pill  = (object) array( 'ID' => 3, 'post_type' => 'page' );
