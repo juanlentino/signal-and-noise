@@ -185,6 +185,36 @@ ok( true === ( $report['legs']['cf']['cf_success'] ?? null ), 'CF leg records th
 ok( 4 === ( $report['template_overrides'] ?? -1 ), 'report carries the template-override count' );
 ok( false === $GLOBALS['__option_writes']['sn_last_purge_report']['autoload'], 'report option is NON-autoloaded' );
 ok( ! isset( $GLOBALS['sn_cf_verified_result'] ), 'the stashed CF result is consumed (unset) after the report' );
+ok( ! isset( $report['legs']['varnish']['coalesced'] ), 'a plain 200 purge carries NO coalesced marker' );
+ok( ! isset( $report['legs']['varnish']['reauthed'] ), 'a plain 200 purge carries NO reauthed marker' );
+
+// v11.4.8: the companion's qualifier markers must survive into the durable
+// report. Without them the leg reads `ok: true, http: 422` and the reader has
+// to know that means "coalesced onto an in-flight purge" rather than a
+// contradiction — an inference that cost an afternoon on 2026-08-05.
+$GLOBALS['__options']['sn_cloudways_last_purge'] = array( 'time' => 333, 'ok' => true, 'http' => 422, 'operation_id' => 92898575, 'coalesced' => true );
+$GLOBALS['sn_cf_verified_result']                = array( 'accepted' => true, 'http' => 200, 'cf_success' => true );
+fire( 'sn_after_full_cache_flush', array( 'origin_html' => true, 'cloudflare' => true, 'verified' => true ), 0 );
+$coal = get_option( 'sn_last_purge_report', null );
+ok( true === ( $coal['legs']['varnish']['coalesced'] ?? null ), 'a coalesced purge carries the marker into the report' );
+ok( ! empty( $coal['legs']['varnish']['ok'] ), 'and still reads ok — a 422 that coalesced is a success' );
+ok( 422 === ( $coal['legs']['varnish']['http'] ?? 0 ), 'the real 422 is preserved alongside it' );
+ok( 92898575 === ( $coal['legs']['varnish']['operation_id'] ?? 0 ), 'the adopted operation id survives' );
+
+$GLOBALS['__options']['sn_cloudways_last_purge'] = array( 'time' => 444, 'ok' => true, 'http' => 200, 'operation_id' => 7, 'reauthed' => true );
+$GLOBALS['sn_cf_verified_result']                = array( 'accepted' => true, 'http' => 200, 'cf_success' => true );
+fire( 'sn_after_full_cache_flush', array( 'origin_html' => true, 'cloudflare' => true, 'verified' => true ), 0 );
+$re = get_option( 'sn_last_purge_report', null );
+ok( true === ( $re['legs']['varnish']['reauthed'] ?? null ), 'a re-authenticated purge carries the reauthed marker' );
+
+// An OLDER companion emits neither key; the leg must keep its existing shape
+// rather than gaining `false` values that read as "checked and negative".
+$GLOBALS['__options']['sn_cloudways_last_purge'] = array( 'time' => 555, 'ok' => true, 'http' => 200, 'operation_id' => 9 );
+$GLOBALS['sn_cf_verified_result']                = array( 'accepted' => true, 'http' => 200, 'cf_success' => true );
+fire( 'sn_after_full_cache_flush', array( 'origin_html' => true, 'cloudflare' => true, 'verified' => true ), 0 );
+$old = get_option( 'sn_last_purge_report', null );
+ok( ! array_key_exists( 'coalesced', $old['legs']['varnish'] ), 'an older companion produces no coalesced key at all' );
+ok( ! array_key_exists( 'reauthed', $old['legs']['varnish'] ), 'an older companion produces no reauthed key at all' );
 
 // Auto (non-verified) purge: CF is dispatched but unconfirmed.
 $GLOBALS['__options']['sn_cloudways_last_purge'] = array( 'time' => 222, 'ok' => true, 'http' => 200, 'operation_id' => 55 );
