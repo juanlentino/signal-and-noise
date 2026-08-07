@@ -378,7 +378,17 @@ body {
  * 140px gives a comfortable buffer in both cases. The /notes index in
  * particular ends with `.sn-notes-rss` whose link was being eaten by
  * the footer at the previous 90px buffer.
+ *
+ * `!important` is load-bearing, not lazy: the block templates
+ * (templates/page.html, single.html, …) serialize their spacing as an
+ * INLINE style on <main> (`padding-bottom: var(--wp--preset--spacing--60)`
+ * ≈ 36px), and an inline style beats every selector — so this clearance
+ * rule had silently NEVER applied on those templates. Measured live
+ * 2026-08-07 on the maturity hub: the fixed footer permanently covered
+ * the last ~58px of every page-template page ("the pages don't scroll
+ * all the way down"). A structural requirement that page-level spacing
+ * must never defeat is exactly what !important is for.
  */
 main.wp-block-group {
-	padding-bottom: 140px;
+	padding-bottom: 140px !important;
 }

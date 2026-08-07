@@ -2,6 +2,14 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.4.10] - 2026-08-07 — the fixed footer stops eating page bottoms
+
+**Headline:** the fixed-footer clearance rule finally applies — it had silently never worked on page templates.
+
+### Fixed
+
+- **`main.wp-block-group { padding-bottom: 140px }` is now `!important`** ([assets/css/layout.css](assets/css/layout.css)). The block templates serialize their spacing as an INLINE style on `<main>` (`padding-bottom: var(--wp--preset--spacing--60)` ≈ 36px), and an inline style beats every selector — so the clearance rule written for the fixed footer had silently never applied on `page.html`/`single.html` pages. Measured live 2026-08-07 on the maturity hub at 2000px: at maximum scroll the last content row sat provably under the fixed `.sn-footer` bar (last card bottom 1108 vs bar top 1097) — the final ~58px of every page-template page was permanently covered, reported as "the pages don't scroll all the way down to see everything." Dense-bottomed pages (the maturity family) made a site-wide defect visible. The `!important` is load-bearing and documented in place: a structural clearance requirement that page-level spacing must never defeat.
+
 ## [11.4.9] - 2026-08-05 — "we do not know" stops reading as "it failed"
 
 **Headline:** the purge report's Varnish leg carries the companion's two remaining qualifiers, so an inconclusive purge is no longer recorded as a failed one.
