@@ -2,6 +2,24 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.5.0] - 2026-08-05 — /stats joins the footer, and two aria-labels stop speaking em-dashes
+
+**Headline:** the public stats page has been live and reachable only by typing the URL. It now has an icon in the footer meta-nav, beside the colophon.
+
+### New
+
+- **`/stats` joins the footer meta-nav**, as a fifth stroke icon (three ascending bars) between Colophon and Privacy. The row now reads *what I'm doing → how to use it → how it's made → how it's read → legal*, which puts the two "this site about itself" entries next to each other and keeps Privacy last as the legal anchor. The icon speaks the row's existing grammar: 16 grid, 1.5 stroke, `fill="none"`, `currentColor`, `aria-hidden` + unfocusable, with the accessible name on the anchor (icon-only links have no universal glyph, so the label is the only discoverable name).
+
+### Fixed
+
+- **Two footer `aria-label`s carried em-dashes** (`Now — what I'm focused on`, `Colophon — how this site is made`) and now use a colon. A screen reader speaks these, so they are reader-facing prose under the house style. The v11.4.7 sweep missed them because it measured rendered text with tags stripped, which makes attribute copy invisible. Worth recording: the em-dash scanner shipped in plugin v10.51.0 would also skip these, since it classifies anything inside a tag as `inside_markup` — correct for `href` and `class`, wrong for `aria-label`. A known, narrow gap.
+
+### Changed
+
+- **`tests/footer-meta-nav.php` counts are now relational rather than literal.** It pinned "four inline icons / three separators"; it now asserts one icon per link and one fewer separator than links. A hard-coded count only says somebody updated a number when the row grew; the relationship says the row is internally consistent, which is the property that matters. Same reasoning as the schema/registry equality assertion added in plugin v10.52.1.
+
+> **Why MINOR:** a page that existed but could not be reached from anywhere on the site is now navigable. That is a new user-visible capability, not a fix.
+
 ## [11.4.10] - 2026-08-07 — the fixed footer stops eating page bottoms
 
 **Headline:** the fixed-footer clearance rule finally applies — it had silently never worked on page templates.
