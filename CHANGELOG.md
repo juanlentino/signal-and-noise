@@ -2,6 +2,22 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.5.1] - 2026-08-08 — the twin's fallback verify link stops pointing at a 404
+
+**Headline:** a Note without a uid published a dead verify link in its machine-readable twin, and the test asserted that dead link was correct.
+
+### Fixed
+
+- **`sn_content_json_document()`'s fallback `verify_url` was `/provenance/verify/`, which returns 404 live** (confirmed 2026-08-08 against production, redirects followed). The uid-ful branch already upgrades to the real docket at `/verify?note=<uid>`, so this only ever surfaced for a Note whose uid meta was missing — but for those it published a dead link to every machine reading the twin.
+
+### Changed
+
+- **The assertion is now a relationship, not a literal.** The old line read `=== 'https://juanlentino.com/provenance/verify/'`, so it did not merely miss the defect — **it asserted the defect was correct**. It now requires the uid-less fallback and the uid-ful docket URL to share a base path, so the two can only drift together.
+
+  This is the third place the same broken URL was frozen as expected behaviour (the plugin's credential fixtures were the other two, fixed in plugin v10.66.1 alongside the reader-facing "Verify it yourself" link that 404'd on every Note). A literal pin freezes whatever was true when it was written, and then defends the wrong side the moment reality moves.
+
+> **Why PATCH:** one broken URL repaired and its test strengthened. No new capability, no markup change, no API change.
+
 ## [11.5.0] - 2026-08-05 — /stats joins the footer, and two aria-labels stop speaking em-dashes
 
 **Headline:** the public stats page has been live and reachable only by typing the URL. It now has an icon in the footer meta-nav, beside the colophon.

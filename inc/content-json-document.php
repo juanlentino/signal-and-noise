@@ -76,7 +76,13 @@ function sn_content_json_document( $post ) {
 	// Provenance applies to Notes only (Pages carry no authorship proof).
 	if ( $is_post ) {
 		$doc['provenance'] = array(
-			'verify_url' => home_url( '/provenance/verify/' ),
+			// v11.5.1: was '/provenance/verify/', which 404s live. This is the
+			// fallback a Note without a uid publishes in its machine-readable
+			// twin; the uid-ful branch below already upgrades to the real docket.
+			// Both now point at /verify, and the test asserts they agree rather
+			// than pinning a literal — the old literal pin asserted the 404 was
+			// correct, which is why this survived.
+			'verify_url' => home_url( '/verify/' ),
 			'note'       => 'This Note carries a Bitcoin-anchored authorship proof.',
 		);
 		// Republish the Note's uid via the canonical normalized read
