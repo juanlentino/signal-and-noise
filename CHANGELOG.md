@@ -2,6 +2,28 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [Unreleased] — Notes MCP harness documented (docs only, no version bump)
+
+**Headline:** the drafting-harness facts that were living in session memory are now written down, and two of the remembered ones were wrong.
+
+### New
+
+- **[docs/NOTES-MCP-HARNESS.md](docs/NOTES-MCP-HARNESS.md)** records how `sn` / `sn-write` behave when drafting and editing Notes: `create_draft` (revision-only, never publishes), `delete_draft` (v10.58.0, trash-only via `wp_trash_post`, draft-only, `change.fingerprint` required, `rollback.method` is `manual_untrash`), `link_reshape` (v10.58.0, the only path to move an anchor's boundaries, retargeting explicitly out of scope), `unlink` (v10.59.0), and `change.payload.edits` (v10.66.0, batches N prose splices into one write for the `sentence_replace` / `emdash_replace` / `drift_replace` family, all-or-nothing, max 50).
+
+  Every statement was checked against the live tool descriptions, and the behavioral ones against live calls, on 2026-08-08.
+
+### Fixed
+
+- **Two claims that had been circulating were false and are corrected in writing.** A `link_reshape` change type and a `delete_draft` path were both described as undocumented or absent; both have existed since v10.58.0. A created draft was described as unrollable; `delete_draft` is exactly that rollback, and `create_draft`'s response carries the fingerprint it needs.
+
+- **The corpus figure was stale.** The archive is **30 published and 11 scheduled**, not 37 with seven scheduled (`list-posts`, `status: any`, 2026-08-08). The doc says to re-count rather than quote.
+
+- **The `links` validation surface is host-relative and the doc now says how.** With `compare_against: "none"`, `body` / `tags` / `excerpt` / meta evaluate on their own terms, but `links` does not detach from the host post: `target_exists` errors on any non-`publish` target, so a scheduled target is reported missing, and with `proposed.body` omitted both `not_already_linked` and `anchor_present` resolve against the host post's body. The practical rule is to omit `links` while drafting and re-validate against the real `post_id` after `create_draft`. Related editorial constraint: a Note body must not link to a scheduled post, because the target 404s until that post publishes, so publish order constrains the schedule date.
+
+  Also recorded: **`checks: "all"` is accepted.** That one was asserted as broken and is not. The bare string works, including in the drafting harness, verified live.
+
+> **Why no version bump:** documentation only. Per [CLAUDE.md](CLAUDE.md), `docs/` changes do not bump `Version:`.
+
 ## [11.5.1] - 2026-08-08 — the twin's fallback verify link stops pointing at a 404
 
 **Headline:** a Note without a uid published a dead verify link in its machine-readable twin, and the test asserted that dead link was correct.
