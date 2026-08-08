@@ -68,7 +68,20 @@ ok( ( $dt['provenance']['note_uid'] ?? '' ) === 'deadbeef-dead-4eef-8eef-deadbee
 $GLOBALS['__meta'] = array();
 $dn = sn_content_json_document( $note );
 ok( ! isset( $dn['provenance']['note_uid'] ), 'no fabricated note_uid when the meta is absent' );
-ok( ( $dn['provenance']['verify_url'] ?? '' ) === 'https://juanlentino.com/provenance/verify/', 'uid-less Notes keep the how-to verify_url' );
+// v11.5.1: this line USED TO PIN 'https://juanlentino.com/provenance/verify/' —
+// a URL that returns 404 live (confirmed 2026-08-08, redirects followed). The test
+// did not merely miss the defect, it asserted the defect was CORRECT, which is how
+// a uid-less Note kept publishing a dead link in its machine-readable twin.
+//
+// Rewritten as a RELATIONSHIP: whatever a uid-less Note advertises must share the
+// same base path as the uid-ful docket URL, so the fallback and the real thing can
+// only drift together. A literal merely re-freezes today's string — the mistake
+// this very line already made once.
+$uidful_path   = (string) parse_url( (string) ( $dt['provenance']['verify_url'] ?? '' ), PHP_URL_PATH );
+$fallback_path = (string) parse_url( (string) ( $dn['provenance']['verify_url'] ?? '' ), PHP_URL_PATH );
+ok( '' !== $fallback_path, 'a uid-less Note still advertises a verify_url' );
+ok( rtrim( $fallback_path, '/' ) === rtrim( $uidful_path, '/' ), 'the uid-less fallback points at the SAME docket as the uid-ful URL (never the 404 /provenance/verify)' );
+ok( false === strpos( $fallback_path, '/provenance/verify' ), 'the fallback is never the unrelated /provenance/verify Page' );
 
 // valid JSON
 ok( json_decode( json_encode( $d ), true ) !== null, 'document round-trips through JSON' );
