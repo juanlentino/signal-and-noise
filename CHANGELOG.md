@@ -2,6 +2,27 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.5.2] - 2026-08-09 — llms.txt announced the training grant without the reservation that gates it
+
+**Headline:** the `## Rights` section of `/llms.txt` said *"AI training permitted with attribution"*. That is the exception read as the rule. `Content-Signal` says `ai-train=no`, `TDM-Reservation` is `1`, and `license.xml` grants training **only** to a party meeting conditions C1–C5 — so the one surface that is supposed to be the site speaking in its own words to machines was the one stating a conditional licence as a standing permission.
+
+### Not actually a contradiction — which is what made it survive
+
+Every one of these surfaces is individually true. `license.xml` really does carry a second `<license>` permitting `ai-train`, and it really is conditioned on attribution. The reservation is the default and the licence is the named route out of it; the file's own comments are explicit about that layering.
+
+What llms.txt did was publish half the structure. A machine reading only this file — which is exactly the reader the file exists for — takes away a permission with a soft caveat, never learning that the default is *no*. And "with attribution" quietly understates the conditions: `license.xml` deliberately points `<standard>` at the policy rather than at CC BY 4.0, on the reasoning that CC BY §3(a) is satisfied by a model card while C2 (in-output, end-user-visible attribution) is not. The short phrase reintroduced precisely the weaker reading that `license.xml` went out of its way to foreclose.
+
+### Fixed
+
+Both Rights bullets rewritten so the default and the exception travel together, and in that order:
+
+- the RSL line now states the unconditional grants (search, AI input — free), then that **AI training is reserved by default** and permitted **only** under the attribution conditions stated in the policy;
+- the TDM policy line names the reservation as a reservation, and points at the conditions a training licence requires rather than leaving them implied.
+
+### Why the tests did not catch it
+
+`tests/llms-txt.php` asserted that `license.xml` and `/tdm-policy/` were **linked**. Link presence was the entire Rights contract, so the sentence beside the link was free to say anything. Four assertions added: the reservation is stated, the licence is stated as conditional, the bare grant phrasing is gone, and — because ordering is the claim — the reservation appears *before* the exception, so a machine that stops reading early hits the default rather than the escape from it.
+
 ## [11.5.1] - 2026-08-08 — the twin's fallback verify link stops pointing at a 404
 
 **Headline:** a Note without a uid published a dead verify link in its machine-readable twin, and the test asserted that dead link was correct.
