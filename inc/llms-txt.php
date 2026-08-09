@@ -121,8 +121,19 @@ function sn_llms_txt_body( $full = false, $notes = array(), $pillars = array() )
 		'',
 		'## Rights',
 		'',
-		'- [RSL license](' . $home . '/license.xml): machine-readable licensing terms (AI training permitted with attribution; the licence sits on top of the TDM reservation).',
-		'- [TDM policy](' . $home . '/tdm-policy/): the text-and-data-mining policy behind the TDM-Reservation headers and [tdmrep.json](' . $home . '/.well-known/tdmrep.json).',
+		// The default and the exception must travel together. An earlier
+		// version of this line said only "AI training permitted with
+		// attribution", which is the grant without the gate: a machine
+		// reading llms.txt alone would have taken a conditional licence for
+		// a standing permission, while Content-Signal and the TDM
+		// reservation both say ai-train=no by default. Nothing here may
+		// state a permission without the reservation it is an exception to,
+		// and "with attribution" may not stand in for the conditions —
+		// license.xml deliberately points <standard> at the policy rather
+		// than at CC BY 4.0, precisely so the weaker half cannot be read as
+		// the whole term. Substance is pinned in tests/llms-txt.php.
+		'- [RSL license](' . $home . '/license.xml): machine-readable terms. Search and AI input are permitted unconditionally and free. AI training is reserved by default and permitted only under the attribution conditions stated in the TDM policy.',
+		'- [TDM policy](' . $home . '/tdm-policy/): the text-and-data-mining reservation behind the TDM-Reservation headers and [tdmrep.json](' . $home . '/.well-known/tdmrep.json), and the conditions a training licence requires.',
 		'',
 	) );
 

@@ -58,6 +58,19 @@ ok( strpos( $body, '## Rights' ) !== false, 'Rights section present' );
 ok( strpos( $body, 'https://juanlentino.com/license.xml' ) !== false, 'RSL license linked' );
 ok( strpos( $body, 'https://juanlentino.com/tdm-policy/' ) !== false, 'TDM policy linked' );
 
+// ── v11.5.2: the Rights section states the RESERVATION, not just the grant ──
+// The links being present was the whole contract, so the copy beside them
+// drifted into announcing a conditional training licence as though it were a
+// standing permission — the grant without the gate, while Content-Signal and
+// the TDM reservation both say ai-train=no by default. Substance is pinned
+// now, not just link presence.
+ok( strpos( $body, 'reserved by default' ) !== false, 'AI training is stated as RESERVED by default, before any permission is mentioned' );
+ok( strpos( $body, 'permitted only under the attribution conditions' ) !== false, 'the training licence is stated as conditional, and points at the conditions' );
+ok( strpos( $body, 'AI training permitted with attribution' ) === false, 'the bare grant phrasing is gone — it read as a standing permission' );
+// Ordering is the claim: a machine that stops reading early must hit the
+// reservation first, never the exception.
+ok( strpos( $body, 'reserved by default' ) < strpos( $body, 'permitted only under' ), 'the reservation is stated BEFORE the exception it gates' );
+
 // --- v10.37.0: Machine surfaces section points at the discovery manifest ---
 ok( strpos( $body, "\n## Machine surfaces\n" ) !== false, 'has a Machine surfaces H2 section' );
 ok( strpos( $body, 'https://juanlentino.com/.well-known/agents.json' ) !== false, 'Machine surfaces links the discovery manifest (/.well-known/agents.json)' );
