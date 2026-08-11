@@ -30,11 +30,17 @@
 	cursor: pointer;
 }
 
+/* void, not bone. The resting trigger is bone-on-transparent, so a scan that
+   reads declarations sees bone-on-transparent and passes it — I dismissed this
+   pair as a false positive on exactly that reasoning. The rendered tier
+   measured it in the state that matters: on hover the background IS blood, and
+   bone on blood is 4.19:1, under the 4.5 floor at 11px. void on blood is
+   5.01:1 and matches theme.json's own text-on-blood convention. */
 .sn-cmdk-trigger:hover,
 .sn-cmdk-trigger:focus-visible {
 	background: var(--wp--preset--color--blood);
 	border-color: var(--wp--preset--color--blood);
-	color: var(--wp--preset--color--bone);
+	color: var(--wp--preset--color--void);
 	outline: none;
 }
 

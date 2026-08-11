@@ -231,7 +231,13 @@ cb_gte( snt_test_contrast_ratio( $colors['blood'], $colors['void'] ),    4.5, 'b
 
 // ─── Test 3: AA large-text + non-text pairings (>= 3.0) ────────────
 echo "\nTest 3: AA large-text / non-text pairings (>= 3.0)\n";
-cb_gte( snt_test_contrast_ratio( $colors['signal'], $colors['void'] ),    3.0, 'signal on void: AA large text / non-text (hover state, requires underline per ACCESSIBILITY.md Watch 2)' );
+// signal used to be asserted at 3.0 here with a note that the hover underline
+// carried it. That reasoning was wrong: the underline satisfies SC 1.4.1 (Use
+// of Color) and does nothing for SC 1.4.3 (Contrast Minimum), which is an
+// independent requirement. The rendered tier measured the consequence — every
+// link hover on the site at 3.29:1 — and signal was darkened to #bf3935 in
+// v11.7.1. It now clears BODY AA, so this asserts the real threshold.
+cb_gte( snt_test_contrast_ratio( $colors['signal'], $colors['void'] ),    4.5, 'signal on void: AA NORMAL text — the link hover state, no underline exemption claimed' );
 // signal-on-asphalt (2.49:1) is NOT asserted here any more. The comment it
 // carried ("hover state on cards") was stale: the only two signal-on-asphalt
 // uses are 7px status dots (.sn-music-featured__dot, .sn-availability__dot),
@@ -256,8 +262,8 @@ $current_rust_void      = snt_test_contrast_ratio( $colors['rust'], $colors['voi
 // an explicit decision (update theme.json AND this test in the same commit).
 cb_eq_approx( $current_blood_void,     5.01, 0.20, 'blood-on-void baseline drift within tolerance (baseline 5.01)' );
 cb_eq_approx( $current_blood_asphalt,  4.60, 0.20, 'blood-on-asphalt baseline drift within tolerance (baseline 4.60 — TIGHT)' );
-cb_eq_approx( $current_signal_void,    3.29, 0.20, 'signal-on-void baseline drift within tolerance (baseline 3.29)' );
-cb_eq_approx( $current_signal_asphalt, 3.02, 0.20, 'signal-on-asphalt baseline drift within tolerance (baseline 3.02)' );
+cb_eq_approx( $current_signal_void,    5.45, 0.20, 'signal-on-void baseline drift within tolerance (baseline 5.45 — was 3.29 before v11.7.1)' );
+cb_eq_approx( $current_signal_asphalt, 5.00, 0.20, 'signal-on-asphalt baseline drift within tolerance (baseline 5.00 — was 3.02 before v11.7.1)' );
 cb_eq_approx( $current_rust_void,      5.74, 0.20, 'rust-on-void baseline drift within tolerance (baseline 5.74)' );
 
 // ─── Test 5: maximum-contrast sanity check ─────────────────────────

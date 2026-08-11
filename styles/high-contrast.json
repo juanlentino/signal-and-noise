@@ -11,7 +11,7 @@
 				{ "slug": "rust", "color": "#333333", "name": "Steel" },
 				{ "slug": "bone", "color": "#000000", "name": "Black" },
 				{ "slug": "blood", "color": "#e00404", "name": "Red" },
-				{ "slug": "signal", "color": "#ff4c47", "name": "Signal" }
+				{ "slug": "signal", "color": "#bf3935", "name": "Signal" }
 			]
 		}
 	}
