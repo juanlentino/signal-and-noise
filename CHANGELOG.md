@@ -2,6 +2,14 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.6.1] - 2026-08-11 — the page panel renders once, from the plugin
+
+**Headline:** v11.6.0's template slots are removed — measured live, they DUPLICATED the panel: the plugin's v10.86.0 render verb already appends it through the content filter on pages (my earlier "renders nothing" observation was a stale cached fetch), so the theme slot produced a second, unstyled, full-bleed copy below the constrained column. The plugin-side render is the right owner — site behavior that must survive a theme swap — and the panel's visual design lands plugin-side with it.
+
+### Fixed
+
+- **`[sn_prov_panel]` slots removed** from [templates/page-about.html](templates/page-about.html) and [templates/page.html](templates/page.html). The note templates' post-closing placement is untouched — notes never double-rendered because the content-filter append is page-kind only.
+
 ## [11.6.0] - 2026-08-11 — page templates get the provenance slot
 
 **Headline:** a signed PAGE now shows its provenance panel — the theme-side half the plugin's v10.84.0/v10.86.0 subject-kinds work could not ship for it.
