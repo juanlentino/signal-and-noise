@@ -2,6 +2,15 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.6.0] - 2026-08-11 — page templates get the provenance slot
+
+**Headline:** a signed PAGE now shows its provenance panel — the theme-side half the plugin's v10.84.0/v10.86.0 subject-kinds work could not ship for it.
+
+### Added
+
+- **`[sn_prov_panel]` placed on the page templates** ([templates/page-about.html](templates/page-about.html), [templates/page.html](templates/page.html)). The plugin's render verb went page-aware in v10.86.0, but the panel is emitted where the THEME places its shortcode — and only the single-post template's closing part carried it, so the first signed page (About, 2026-08-11) enqueued the provenance stylesheet and rendered nothing. The slot is safe everywhere: `sn_prov_render_panel()` returns `''` for any page without a chain, so unopted pages emit nothing. This render is also the PREREQUISITE for the ledger's index: `build-index.mjs` discovers a signed page by reading the UID out of the rendered panel — no panel, no index entry, however wide the ledger tooling gets.
+- **Deliberately not added** to the other dedicated `page-*.html` templates (music, services, resume, …): each carries its own layout, and the slot should be placed with intent when one of those pages is ever opted in — this line is the reminder that the slot is missing there.
+
 ## [11.5.2] - 2026-08-09 — llms.txt announced the training grant without the reservation that gates it
 
 **Headline:** the `## Rights` section of `/llms.txt` said *"AI training permitted with attribution"*. That is the exception read as the rule. `Content-Signal` says `ai-train=no`, `TDM-Reservation` is `1`, and `license.xml` grants training **only** to a party meeting conditions C1–C5 — so the one surface that is supposed to be the site speaking in its own words to machines was the one stating a conditional licence as a standing permission.
