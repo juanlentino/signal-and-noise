@@ -39,7 +39,7 @@
 				},
 				{
 					"slug": "signal",
-					"color": "#bf3935",
+					"color": "#ff4c47",
 					"name": "Signal"
 				}
 			]
@@ -197,7 +197,7 @@
 				},
 				":hover": {
 					"color": {
-						"text": "var(--wp--preset--color--signal)"
+						"text": "var(--wp--preset--color--bone)"
 					},
 					"typography": {
 						"textDecoration": "underline"

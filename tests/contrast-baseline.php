@@ -231,13 +231,22 @@ cb_gte( snt_test_contrast_ratio( $colors['blood'], $colors['void'] ),    4.5, 'b
 
 // ─── Test 3: AA large-text + non-text pairings (>= 3.0) ────────────
 echo "\nTest 3: AA large-text / non-text pairings (>= 3.0)\n";
-// signal used to be asserted at 3.0 here with a note that the hover underline
-// carried it. That reasoning was wrong: the underline satisfies SC 1.4.1 (Use
-// of Color) and does nothing for SC 1.4.3 (Contrast Minimum), which is an
-// independent requirement. The rendered tier measured the consequence — every
-// link hover on the site at 3.29:1 — and signal was darkened to #bf3935 in
-// v11.7.1. It now clears BODY AA, so this asserts the real threshold.
-cb_gte( snt_test_contrast_ratio( $colors['signal'], $colors['void'] ),    4.5, 'signal on void: AA NORMAL text — the link hover state, no underline exemption claimed' );
+// THE THRESHOLD HERE IS 3.0 AND THAT IS DELIBERATE — see Test 8.
+//
+// The history is worth keeping because it took two wrong turns. Originally
+// this asserted 3.0 with a note that the hover UNDERLINE carried it; that
+// reasoning was wrong, because the underline satisfies SC 1.4.1 (Use of
+// Color) and does nothing for SC 1.4.3 (Contrast Minimum). v11.7.1 then
+// darkened signal to #bf3935 so it could clear 4.5 as text — which worked
+// and still treated a symptom, because the real defect was using a 3.29:1
+// accent for link hover at all.
+//
+// v11.7.2 settles it: signal is an OUTLINE colour, never a word. So the
+// governing criterion is SC 1.4.11 (Non-text Contrast) at 3:1, which is the
+// correct bar for a fill, a focus ring or a status dot — and Test 8 enforces
+// that it is never text, which is what makes 3.0 the honest number here
+// rather than a lowered one.
+cb_gte( snt_test_contrast_ratio( $colors['signal'], $colors['void'] ),    3.0, 'signal on void: SC 1.4.11 non-text (fills, dots, outlines) — never text, see Test 8' );
 // signal-on-asphalt (2.49:1) is NOT asserted here any more. The comment it
 // carried ("hover state on cards") was stale: the only two signal-on-asphalt
 // uses are 7px status dots (.sn-music-featured__dot, .sn-availability__dot),
@@ -262,8 +271,8 @@ $current_rust_void      = snt_test_contrast_ratio( $colors['rust'], $colors['voi
 // an explicit decision (update theme.json AND this test in the same commit).
 cb_eq_approx( $current_blood_void,     5.01, 0.20, 'blood-on-void baseline drift within tolerance (baseline 5.01)' );
 cb_eq_approx( $current_blood_asphalt,  4.60, 0.20, 'blood-on-asphalt baseline drift within tolerance (baseline 4.60 — TIGHT)' );
-cb_eq_approx( $current_signal_void,    5.45, 0.20, 'signal-on-void baseline drift within tolerance (baseline 5.45 — was 3.29 before v11.7.1)' );
-cb_eq_approx( $current_signal_asphalt, 5.00, 0.20, 'signal-on-asphalt baseline drift within tolerance (baseline 5.00 — was 3.02 before v11.7.1)' );
+cb_eq_approx( $current_signal_void,    3.29, 0.20, 'signal-on-void baseline drift within tolerance (baseline 3.29 — brand accent restored in v11.7.2)' );
+cb_eq_approx( $current_signal_asphalt, 3.02, 0.20, 'signal-on-asphalt baseline drift within tolerance (baseline 3.02 — brand accent restored in v11.7.2)' );
 cb_eq_approx( $current_rust_void,      5.74, 0.20, 'rust-on-void baseline drift within tolerance (baseline 5.74)' );
 
 // ─── Test 5: maximum-contrast sanity check ─────────────────────────
@@ -469,6 +478,70 @@ if ( empty( $css_files ) ) {
 		$pass++;
 		echo '  PASS: every text-on-surface pairing clears AA under all ' . count( $palettes ) . " shipped palettes\n";
 	}
+}
+
+// ─── Test 8: signal is an OUTLINE colour, never a word ─────────────
+//
+// The rule the palette now encodes, and the reason v11.7.1's approach was
+// wrong. That release darkened signal #ff4c47 -> #bf3935 SO THAT it could
+// be text at AA. It worked, and it treated a symptom: the real defect was
+// that a 3.29:1 accent was being used for link hover at all.
+//
+// Reverting to #ff4c47 restores the brand accent AND restores a property
+// worth more than the fix: at 3.29:1 the token CANNOT pass as body text,
+// so misuse is arithmetically impossible to hide. #bf3935 would have let
+// signal-as-text sail through every contrast check forever.
+//
+// WHY THIS TEST AND NOT TEST 7. Test 7 is resting-state only (a hover
+// background paired with resting text produced ~60 false positives, so it
+// refuses to model state). Every signal-as-text use in this theme's
+// history has been a :hover rule — precisely the shape Test 7 skips. A
+// source-level check has no such blind spot: it does not care about state,
+// only about whether the token appears after `color:`.
+echo "\nTest 8: signal is an outline colour, never a word\n";
+
+$signal_text_uses = array();
+
+// theme.json: any `text` value naming signal, at any depth.
+$walk = function ( $node, $path ) use ( &$walk, &$signal_text_uses ) {
+	if ( is_array( $node ) ) {
+		foreach ( $node as $k => $v ) {
+			if ( 'text' === $k && is_string( $v ) && false !== strpos( $v, 'color--signal' ) ) {
+				$signal_text_uses[] = "theme.json $path.text";
+			}
+			$walk( $v, $path . '.' . $k );
+		}
+	}
+};
+$walk( $theme_json['styles'] ?? array(), 'styles' );
+
+// Stylesheets: `color:` (never border-color, background-color) naming signal.
+foreach ( array( '/../assets/css', '/../blocks' ) as $rel ) {
+	$root_dir = realpath( __DIR__ . $rel );
+	if ( ! $root_dir ) {
+		continue;
+	}
+	foreach ( new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $root_dir ) ) as $file ) {
+		if ( ! $file->isFile() || 'css' !== strtolower( $file->getExtension() ) ) {
+			continue;
+		}
+		$css = (string) file_get_contents( $file->getPathname() );
+		if ( preg_match_all( '/(?<![a-z-])color:\s*var\(\s*--wp--preset--color--signal\s*\)/i', $css, $m ) ) {
+			$signal_text_uses[] = basename( $file->getPathname() ) . ' × ' . count( $m[0] );
+		}
+	}
+}
+
+if ( empty( $signal_text_uses ) ) {
+	$pass++;
+	echo "  PASS: signal is never used as a text colour (backgrounds, borders and fills are fine)\n";
+} else {
+	$fail++;
+	echo "  FAIL: signal used as TEXT in " . count( $signal_text_uses ) . " place(s) — it is 3.29:1 on void and cannot be read\n";
+	foreach ( $signal_text_uses as $where ) {
+		echo "        $where\n";
+	}
+	echo "        Use bone for a link hover. If signal genuinely must be text, the token is wrong, not this test.\n";
 }
 
 echo "\nResult: $pass passed, $fail failed.\n";

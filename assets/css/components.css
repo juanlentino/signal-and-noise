@@ -390,7 +390,7 @@
 }
 
 .sn-pillar-card-cta a:hover {
-	color: var(--wp--preset--color--signal);
+	color: var(--wp--preset--color--bone);
 	text-decoration: underline;
 }
 
@@ -1572,7 +1572,7 @@
 }
 .sn-prose-links a:hover,
 .sn-prose-links a:focus-visible {
-	color: var(--wp--preset--color--signal);
+	color: var(--wp--preset--color--bone);
 	text-decoration: underline;
 }
 
@@ -1591,7 +1591,7 @@
 }
 .sn-pillar-designation a:hover,
 .sn-pillar-designation a:focus-visible {
-	color: var(--wp--preset--color--signal);
+	color: var(--wp--preset--color--bone);
 	text-decoration: underline;
 }
 
