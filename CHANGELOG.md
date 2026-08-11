@@ -2,6 +2,42 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.7.0] - 2026-08-11 — the contrast suite was measuring a palette the site does not serve
+
+**Headline:** `tests/contrast-baseline.php` reported **20 passed, 0 failed**, with delta 0.00 on every drift assertion, while the live site carried a real AA failure. It reads the palette out of `theme.json`. The site runs the **High Contrast** style variation, whose palette lives in the `wp_global_styles` CPT and wins. Both palettes are correct — they are different styles. Only one of them is on screen, and the suite did not know the other existed.
+
+### Both true at once, which is what made it survive
+
+Activating a style variation copies its palette into the database, so `theme.json` is the *default* style rather than the served one. `blood`-on-`asphalt` is **4.60:1 at root** (passes AA) and **3.80:1 under High Contrast** (fails). Darkening a background raises contrast for dark text and lowers it for a light-ish accent, so a variation named for higher contrast reduced it for one pairing.
+
+No single-palette assertion could have caught this, and the ±0.20 drift window was no help either: its stated job is to force a conscious decision when the palette moves, but the palette that moved was not the one it reads. The plugin's Health → Contrast panel scores the *resolved* palette and was right throughout.
+
+### Fixed
+
+- **The search-result type chip was invisible.** `.sn-notes-row-type` pointed `color` at `asphalt`, a background token, behind a dark-grey fallback that can never fire. It rendered at **1.32:1**. Now `rust`.
+- **Four surfaces moved off `asphalt`** so their `blood` text clears AA under every shipped palette: `core/code` (every code block), `.sn-pillar-card` (home and notes templates), `.sn-footnote-popover`, and `.sn-notes-pillar` (the dynamic twin of the pillar card, which had drifted from its template counterpart).
+- **`bone` on `blood` was 4.19:1** in the selected command-palette row and in 11px `kbd` chips. Both now `void` (5.01:1), matching the theme's own text-on-`blood` convention in `theme.json` `elements.button:hover`.
+- **`--wp--preset--font-family--mono` is not a real slug.** Its fallback was carrying the font on its own. Repointed to `body`, which is the same DM Mono stack.
+
+### Changed
+
+- **279 hardcoded `var(--wp--preset--*, #literal)` fallbacks removed** across 11 files. A fallback that disagrees with its token's real value is a bug concealer: it records what the author believed the token was, the two are never compared, and the belief is never tested. That is exactly how the invisible chip above survived. Core's `--navigation-layout-*` vars keep their `initial` fallbacks, which are load-bearing.
+- `.sn-pillar-card` and `.sn-notes-pillar` are now outlined (`void` plus a 1px `concrete` hairline) rather than filled, and `core/code` likewise.
+
+### Removed
+
+- **`styles/monolith.json`.** Vestigial since v9.10.0 and never activated. It remapped `blood` to `#000000` while components paint `bone` text on `blood` backgrounds, giving black on black at **1.00:1**. A vestigial variation is not inert: WordPress lists every file in `/styles` in the switcher, so an unmaintained one is a palette any visitor can select.
+
+### New
+
+- **`contrast-baseline.php` Test 6** — the served palette must be root or a shipped variation, and the run names the active style. Asserts a relationship rather than equality, because a variation legitimately differs from root. Requires WordPress; it cannot run in CI.
+- **`contrast-baseline.php` Test 7** — no sub-AA text pairing under *any* shipped palette. Walks the stylesheets for pairings that are genuinely rendered together and scores each one per palette. Pure static analysis, so this is the half that runs in CI. Deliberately limited to resting state: an earlier cut stripped `:hover` to match more pairs and promptly paired a hover *background* with a resting *text* colour, reporting ~60 false positives. Hover and focus pairings remain a manual review item.
+- **`style-variations.php`** — a guard that retired variations stay deleted.
+
+### Why the tests did not catch it
+
+Tests 1-5 assert literal ratios against one palette. The durable invariants are relationships: *served is a palette we ship* (Test 6) and *every rendered pairing clears AA under every palette we ship* (Test 7). The retired `blood`-on-`asphalt` and `signal`-on-`asphalt` assertions were removed rather than re-baselined, because both had stopped describing anything rendered — the `signal` pair's comment still said "hover state on cards" when the only uses were two `aria-hidden` status dots.
+
 ## [11.6.1] - 2026-08-11 — the page panel renders once, from the plugin
 
 **Headline:** v11.6.0's template slots are removed — the plugin now appends the panel itself (v10.87.0, same day), and the two mechanisms cannot see each other, so the About page rendered TWO panels.

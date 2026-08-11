@@ -234,7 +234,7 @@
 }
 
 .sn-prov-paper-blurb {
-	line-height: var(--wp--custom--line-height--normal, 1.7);
+	line-height: var(--wp--custom--line-height--normal);
 }
 
 /* Discreet "Read the long-form on this site →" affordance under Card 1's
@@ -323,7 +323,7 @@
 }
 
 .sn-prov-subcard-blurb {
-	line-height: var(--wp--custom--line-height--normal, 1.7);
+	line-height: var(--wp--custom--line-height--normal);
 }
 
 /* "Read the essay ->" uses the same italic-rust secondary affordance as
@@ -453,7 +453,7 @@
 .sn-note-single .wp-block-post-content p,
 .sn-note-single .wp-block-post-content li {
 	font-size: max(0.9rem, 11px);
-	line-height: var(--wp--custom--line-height--normal, 1.7);
+	line-height: var(--wp--custom--line-height--normal);
 }
 
 /* ============================================
@@ -506,13 +506,13 @@
 	font-family: 'DM Mono', 'Courier New', monospace;
 	letter-spacing: 0.14em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--rust, #666);
-	border-top: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
-	padding-top: var(--wp--preset--spacing--20, 1rem);
+	color: var(--wp--preset--color--rust);
+	border-top: 1px solid var(--wp--preset--color--concrete);
+	padding-top: var(--wp--preset--spacing--20);
 }
 
 .sn-provenance-extended-by a {
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 	text-decoration: none;
 	border-bottom: 1px solid transparent;
 	transition: border-color 0.2s ease;
@@ -684,20 +684,20 @@
 	font-size: max(0.7rem, 11px);
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 	margin: clamp(2rem, 4vw, 3rem) 0 clamp(1rem, 2vw, 1.5rem);
 	padding-bottom: 0.5rem;
-	border-bottom: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+	border-bottom: 1px solid var(--wp--preset--color--concrete);
 }
 .sn-search-row {
-	border-bottom: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+	border-bottom: 1px solid var(--wp--preset--color--concrete);
 }
 .sn-search-no-results {
 	font-family: 'DM Mono', 'Courier New', monospace;
 	font-size: 0.85rem;
 	letter-spacing: 0.1em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 	padding: 1rem 0;
 }
 
@@ -713,7 +713,7 @@
 .sn-cited-by {
 	margin-top: clamp(2rem, 4vw, 3rem);
 	padding-top: clamp(1.5rem, 3vw, 2rem);
-	border-top: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+	border-top: 1px solid var(--wp--preset--color--concrete);
 }
 .sn-related-notes__label,
 .sn-cited-by__label {
@@ -722,7 +722,7 @@
 	font-weight: 500;
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 	margin: 0 0 clamp(1rem, 2vw, 1.5rem);
 }
 .sn-related-notes__list,
@@ -737,7 +737,7 @@
 	grid-template-columns: 1fr;
 	gap: 0.5rem;
 	padding: clamp(0.85rem, 1.6vw, 1.25rem) 0;
-	border-bottom: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+	border-bottom: 1px solid var(--wp--preset--color--concrete);
 	transition: padding 0.2s ease;
 }
 .sn-related-notes .sn-notes-row:last-child,
@@ -762,7 +762,7 @@
 	font-size: max(0.7rem, 11px);
 	letter-spacing: 0.14em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 	display: flex;
 	flex-wrap: wrap;
 	gap: 0.5rem;
@@ -778,16 +778,16 @@
 }
 .sn-related-notes .sn-notes-row-date,
 .sn-cited-by .sn-notes-row-date {
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 	font-weight: 500;
 }
 .sn-related-notes .sn-notes-row-rt,
 .sn-cited-by .sn-notes-row-rt {
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 }
 .sn-related-notes .sn-notes-row:hover .sn-notes-row-date,
 .sn-cited-by .sn-notes-row:hover .sn-notes-row-date {
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 }
 .sn-related-notes .sn-notes-row-content,
 .sn-cited-by .sn-notes-row-content {
@@ -804,7 +804,7 @@
 }
 .sn-related-notes .sn-notes-row-title a,
 .sn-cited-by .sn-notes-row-title a {
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 	text-decoration: none;
 	background-image: linear-gradient(currentColor, currentColor);
 	background-position: 0 100%;
@@ -815,7 +815,7 @@
 }
 .sn-related-notes .sn-notes-row-title a:hover,
 .sn-cited-by .sn-notes-row-title a:hover {
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 	background-size: 100% 1px;
 }
 @media (prefers-reduced-motion: reduce) {
@@ -846,7 +846,7 @@
 	font-weight: 500;
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 	margin-right: 0.25rem;
 }
 .sn-note-share__copy,
@@ -856,9 +856,9 @@
 	font-weight: 500;
 	letter-spacing: 0.14em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 	background: transparent;
-	border: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+	border: 1px solid var(--wp--preset--color--concrete);
 	border-radius: 0;
 	padding: 0.5rem 0.85rem;
 	min-height: 44px;
@@ -872,13 +872,13 @@
 .sn-note-share__native:hover,
 .sn-note-share__copy:focus-visible,
 .sn-note-share__native:focus-visible {
-	color: var(--wp--preset--color--blood, #e00404);
-	border-color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
+	border-color: var(--wp--preset--color--blood);
 }
 .sn-note-share__copy.is-copied {
-	color: var(--wp--preset--color--void, #fff);
-	background-color: var(--wp--preset--color--blood, #e00404);
-	border-color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--void);
+	background-color: var(--wp--preset--color--blood);
+	border-color: var(--wp--preset--color--blood);
 }
 .sn-note-share__native[hidden] {
 	display: none;
@@ -919,20 +919,20 @@
 	justify-content: space-between;
 	gap: 0.9rem 1.2rem;
 	padding: 1rem 0;
-	background: var(--wp--preset--color--void, #fff);
-	border-bottom: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+	background: var(--wp--preset--color--void);
+	border-bottom: 1px solid var(--wp--preset--color--concrete);
 }
 .sn-disco-count {
 	font-family: 'DM Mono', 'Courier New', monospace;
 	font-size: max(0.75rem, 12px);
 	letter-spacing: 0.16em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 	margin: 0;
 	white-space: nowrap;
 }
 .sn-disco-count strong {
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 	font-weight: 500;
 }
 .sn-disco-filters {
@@ -945,9 +945,9 @@
 	font-size: max(0.7rem, 11px);
 	letter-spacing: 0.14em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 	background: transparent;
-	border: 1px solid var(--wp--preset--color--bone, #000);
+	border: 1px solid var(--wp--preset--color--bone);
 	padding: 0.45rem 0.8rem;
 	min-height: 44px;
 	display: inline-flex;
@@ -956,20 +956,20 @@
 	transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
 }
 .sn-disco-chip:hover {
-	color: var(--wp--preset--color--blood, #e00404);
-	border-color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
+	border-color: var(--wp--preset--color--blood);
 }
 .sn-disco-chip.is-active {
-	color: var(--wp--preset--color--void, #fff);
-	background-color: var(--wp--preset--color--blood, #e00404);
-	border-color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--void);
+	background-color: var(--wp--preset--color--blood);
+	border-color: var(--wp--preset--color--blood);
 }
 
 /* B2: per-role count badge ("MIXING · 6"). Dimmed (rust) when idle; follows the
    chip's blood/active color on hover + when selected. The middot separator is
    CSS-only so the screen-reader label reads "Mixing 6", not "Mixing · 6". */
 .sn-disco-chip__count {
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 }
 .sn-disco-chip__count::before {
 	content: '·';
@@ -992,16 +992,16 @@
 	font-weight: 500;
 	font-size: clamp(1.1rem, 2vw, 1.4rem);
 	letter-spacing: 0.1em;
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 	margin: 0 0 clamp(1rem, 2vw, 1.5rem);
 	padding-bottom: 0.5rem;
-	border-bottom: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+	border-bottom: 1px solid var(--wp--preset--color--concrete);
 }
 .sn-disco-year__count {
 	font-size: max(0.7rem, 11px);
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 }
 
 /* Cover grid. */
@@ -1025,8 +1025,8 @@
 	position: relative;
 	aspect-ratio: 1;
 	overflow: hidden;
-	background-color: var(--wp--preset--color--concrete, #d9d9d9);
-	border: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+	background-color: var(--wp--preset--color--concrete);
+	border: 1px solid var(--wp--preset--color--concrete);
 	cursor: pointer;
 }
 .sn-disco-cover-wrap--static {
@@ -1040,7 +1040,7 @@
 	transition: transform 0.5s ease, filter 0.3s ease;
 }
 .sn-disco-art--none {
-	background-color: var(--wp--preset--color--concrete, #d9d9d9);
+	background-color: var(--wp--preset--color--concrete);
 }
 .sn-disco-cover-wrap:not(.sn-disco-cover-wrap--static):hover .sn-disco-art {
 	transform: scale(1.05);
@@ -1063,7 +1063,7 @@
 	width: 58px;
 	height: 58px;
 	border-radius: 50%;
-	background: var(--wp--preset--color--blood, #e00404);
+	background: var(--wp--preset--color--blood);
 	box-shadow: 0 6px 22px rgba(224, 4, 4, 0.4);
 }
 .sn-disco-play-circle::after {
@@ -1072,7 +1072,7 @@
 	top: 50%;
 	left: 53%;
 	transform: translate(-50%, -50%);
-	border-left: 17px solid var(--wp--preset--color--void, #fff);
+	border-left: 17px solid var(--wp--preset--color--void);
 	border-top: 10px solid transparent;
 	border-bottom: 10px solid transparent;
 }
@@ -1099,13 +1099,13 @@
 	font-size: clamp(1.45rem, 2.4vw, 1.9rem);
 	line-height: 1.0;
 	letter-spacing: -0.005em;
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 	margin: 0;
 }
 .sn-disco-artist {
 	font-family: var(--wp--preset--font-family--body);
 	font-size: max(0.78rem, 12px);
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 	margin: 0.3rem 0 0;
 }
 .sn-disco-roles {
@@ -1113,7 +1113,7 @@
 	font-size: max(0.66rem, 11px);
 	letter-spacing: 0.13em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 	margin: 0.45rem 0 0;
 }
 .sn-disco-credits {
@@ -1122,7 +1122,7 @@
 	font-size: max(0.66rem, 11px);
 	letter-spacing: 0.14em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 	text-decoration: none;
 	/* Hit-area, not layout: the bare 11px line measured ~19px tall — under the
 	   24px standalone-target minimum. Padding grows the clickable box; the
@@ -1133,7 +1133,7 @@
 }
 .sn-disco-credits:hover,
 .sn-disco-credits:focus-visible {
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 }
 .sn-disco-empty {
 	padding: 3rem 0;
@@ -1142,13 +1142,13 @@
 	font-size: max(0.78rem, 12px);
 	letter-spacing: 0.1em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 }
 /* B1: expandable liner-notes panel (native <details>) — tracklist + per-track
    credits + cookieless 30-sec preview buttons. Brutalist, preset tokens, 11px floor. */
 .sn-disco-liner {
 	margin-top: 0.8rem;
-	border-top: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+	border-top: 1px solid var(--wp--preset--color--concrete);
 	padding-top: 0.6rem;
 }
 .sn-disco-liner__summary {
@@ -1161,7 +1161,7 @@
 	font-size: 0.6875rem; /* 11px floor */
 	letter-spacing: 0.12em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 	/* Hit-area, not layout: this is the details toggle — a ~19px-tall control.
 	   Padding cancelled by equal negative margins reaches the 24px minimum
 	   without shifting the card. */
@@ -1175,22 +1175,22 @@
 	content: '+';
 	display: inline-block;
 	width: 1em;
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 }
 .sn-disco-liner[open] .sn-disco-liner__summary::before {
 	content: '\2212'; /* minus */
 }
 .sn-disco-liner__summary:hover,
 .sn-disco-liner__summary:focus-visible {
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 	outline: none;
 }
 .sn-disco-liner__summary:focus-visible {
-	outline: 2px solid var(--wp--preset--color--bone, #000);
+	outline: 2px solid var(--wp--preset--color--bone);
 	outline-offset: 2px;
 }
 .sn-disco-liner__count {
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 }
 .sn-disco-tracklist {
 	list-style: none;
@@ -1204,7 +1204,7 @@
 	row-gap: 0.1rem;
 	align-items: center;
 	padding: 0.5rem 0;
-	border-bottom: 1px solid color-mix( in srgb, var(--wp--preset--color--concrete, #d9d9d9) 55%, transparent );
+	border-bottom: 1px solid color-mix( in srgb, var(--wp--preset--color--concrete) 55%, transparent );
 }
 .sn-disco-track:last-child {
 	border-bottom: 0;
@@ -1222,7 +1222,7 @@
 }
 .sn-disco-track__play {
 	padding: 0;
-	border: 1px solid var(--wp--preset--color--bone, #000);
+	border: 1px solid var(--wp--preset--color--bone);
 	background: transparent;
 	cursor: pointer;
 	transition: background-color 0.15s ease, border-color 0.15s ease;
@@ -1230,19 +1230,19 @@
 .sn-disco-track__play:hover,
 .sn-disco-track__play:focus-visible,
 .sn-disco-track__play.is-playing {
-	background: var(--wp--preset--color--blood, #e00404);
-	border-color: var(--wp--preset--color--blood, #e00404);
+	background: var(--wp--preset--color--blood);
+	border-color: var(--wp--preset--color--blood);
 	outline: none;
 }
 .sn-disco-track__play:focus-visible {
-	outline: 2px solid var(--wp--preset--color--bone, #000);
+	outline: 2px solid var(--wp--preset--color--bone);
 	outline-offset: 2px;
 }
 .sn-disco-track__play.is-dead {
 	opacity: 0.3;
 	cursor: default;
 	background: transparent;
-	border-color: var(--wp--preset--color--concrete, #d9d9d9);
+	border-color: var(--wp--preset--color--concrete);
 }
 /* play triangle (idle) → swaps to white on the blood hover/playing state */
 .sn-disco-track__icon {
@@ -1250,12 +1250,12 @@
 	height: 0;
 	border-style: solid;
 	border-width: 5px 0 5px 8px;
-	border-color: transparent transparent transparent var(--wp--preset--color--bone, #000);
+	border-color: transparent transparent transparent var(--wp--preset--color--bone);
 	margin-left: 2px;
 }
 .sn-disco-track__play:hover .sn-disco-track__icon,
 .sn-disco-track__play:focus-visible .sn-disco-track__icon {
-	border-left-color: var(--wp--preset--color--void, #fff);
+	border-left-color: var(--wp--preset--color--void);
 }
 /* playing → two pause bars (white on blood) */
 .sn-disco-track__play.is-playing .sn-disco-track__icon {
@@ -1263,22 +1263,22 @@
 	height: 11px;
 	border: 0;
 	margin-left: 0;
-	border-left: 3px solid var(--wp--preset--color--void, #fff);
-	border-right: 3px solid var(--wp--preset--color--void, #fff);
+	border-left: 3px solid var(--wp--preset--color--void);
+	border-right: 3px solid var(--wp--preset--color--void);
 }
 .sn-disco-track__noplay::before {
 	content: '';
 	width: 4px;
 	height: 4px;
-	background: var(--wp--preset--color--concrete, #d9d9d9);
+	background: var(--wp--preset--color--concrete);
 }
 .sn-disco-track__title {
 	grid-column: 2;
 	grid-row: 1;
-	font-family: var(--wp--preset--font-family--body, sans-serif);
+	font-family: var(--wp--preset--font-family--body);
 	font-size: 0.82rem;
 	line-height: 1.3;
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 }
 .sn-disco-track__roles {
 	grid-column: 2;
@@ -1287,7 +1287,7 @@
 	font-size: 0.6875rem; /* 11px floor */
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1308,8 +1308,8 @@
    cover grid below stays click-to-play. */
 .sn-music-featured {
 	margin: clamp(1.5rem, 4vw, 2.75rem) 0;
-	border: 1px solid var(--wp--preset--color--bone, #000);
-	background: var(--wp--preset--color--asphalt, #f5f5f5);
+	border: 1px solid var(--wp--preset--color--bone);
+	background: var(--wp--preset--color--asphalt);
 	padding: clamp(1rem, 2.5vw, 1.6rem);
 }
 .sn-music-featured__label {
@@ -1320,14 +1320,14 @@
 	font-size: max(0.7rem, 11px);
 	letter-spacing: 0.2em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 	margin: 0 0 0.9rem;
 }
 .sn-music-featured__dot {
 	width: 7px;
 	height: 7px;
 	border-radius: 50%;
-	background: var(--wp--preset--color--signal, #ff4c47);
+	background: var(--wp--preset--color--signal);
 	flex: 0 0 auto;
 }
 .sn-music-featured__player {
@@ -1355,13 +1355,13 @@
 	font-size: max(0.72rem, 11px);
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 }
 .sn-availability__dot {
 	width: 7px;
 	height: 7px;
 	border-radius: 50%;
-	background: var(--wp--preset--color--signal, #ff4c47);
+	background: var(--wp--preset--color--signal);
 	flex: 0 0 auto;
 }
 
@@ -1370,36 +1370,36 @@
  * Tokens mirror .sn-provenance-toc; blood-red active state. JS injects the
  * progress bar element (assets/js/article-toc.js). */
 .sn-article-toc {
-	margin: 0 0 var(--wp--preset--spacing--40, 2rem);
-	padding: var(--wp--preset--spacing--20, 1rem) var(--wp--preset--spacing--30, 1.5rem);
-	border: 1px solid var(--wp--preset--color--bone, #000);
+	margin: 0 0 var(--wp--preset--spacing--40);
+	padding: var(--wp--preset--spacing--20) var(--wp--preset--spacing--30);
+	border: 1px solid var(--wp--preset--color--bone);
 }
 .sn-article-toc__label {
 	margin: 0 0 0.5rem;
-	font-family: var(--wp--preset--font-family--heading, "Bebas Neue"), sans-serif;
+	font-family: var(--wp--preset--font-family--heading), sans-serif;
 	text-transform: uppercase;
-	letter-spacing: var(--wp--custom--letter-spacing--wide, 0.15em);
-	font-size: var(--wp--preset--font-size--small, 0.8rem);
-	color: var(--wp--preset--color--rust, #666);
+	letter-spacing: var(--wp--custom--letter-spacing--wide);
+	font-size: var(--wp--preset--font-size--small);
+	color: var(--wp--preset--color--rust);
 }
 .sn-article-toc__list {
 	margin: 0;
 	padding: 0;
 	list-style: none;
-	font-family: var(--wp--preset--font-family--body, "DM Mono"), monospace;
-	font-size: var(--wp--preset--font-size--small, 0.8rem);
+	font-family: var(--wp--preset--font-family--body), monospace;
+	font-size: var(--wp--preset--font-size--small);
 	line-height: 1.9;
 }
 .sn-article-toc__list a {
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 	text-decoration: underline;
-	text-decoration-color: var(--wp--preset--color--concrete, #d9d9d9);
+	text-decoration-color: var(--wp--preset--color--concrete);
 	text-underline-offset: 0.2em;
 }
 .sn-article-toc__list a:hover,
 .sn-article-toc__list a:focus-visible {
-	color: var(--wp--preset--color--blood, #e00404);
-	text-decoration-color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
+	text-decoration-color: var(--wp--preset--color--blood);
 }
 
 .sn-article-progress {
@@ -1409,14 +1409,14 @@
 	right: 0;
 	height: 3px;
 	z-index: 9999; /* below the fixed header (10000), above content */
-	background: var(--wp--preset--color--asphalt, #f5f5f5);
+	background: var(--wp--preset--color--asphalt);
 	pointer-events: none;
 }
 .sn-article-progress__fill {
 	display: block;
 	height: 100%;
 	width: 0;
-	background: var(--wp--preset--color--blood, #e00404);
+	background: var(--wp--preset--color--blood);
 }
 @media (prefers-reduced-motion: no-preference) {
 	.sn-article-progress__fill { transition: width 80ms linear; }
@@ -1437,56 +1437,56 @@
  * the search form + section spacing. Blood-red accents, brutalist tokens. */
 .sn-404-search {
 	display: flex;
-	gap: var(--wp--preset--spacing--20, 1rem);
+	gap: var(--wp--preset--spacing--20);
 	align-items: baseline;
 	max-width: 760px;
-	margin: 0 0 var(--wp--preset--spacing--40, 2rem);
+	margin: 0 0 var(--wp--preset--spacing--40);
 }
 .sn-404-search__input {
 	flex: 1 1 auto;
 	min-width: 0;
 	padding: 0.4rem 0;
 	border: 0;
-	border-bottom: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+	border-bottom: 1px solid var(--wp--preset--color--concrete);
 	background: transparent;
-	font-family: var(--wp--preset--font-family--body, "DM Mono"), monospace;
-	font-size: var(--wp--preset--font-size--medium, 1rem);
-	color: var(--wp--preset--color--bone, #000);
+	font-family: var(--wp--preset--font-family--body), monospace;
+	font-size: var(--wp--preset--font-size--medium);
+	color: var(--wp--preset--color--bone);
 }
 .sn-404-search__input:focus-visible {
-	outline: 2px solid var(--wp--preset--color--blood, #e00404);
+	outline: 2px solid var(--wp--preset--color--blood);
 	outline-offset: 2px;
-	border-bottom-color: var(--wp--preset--color--blood, #e00404);
+	border-bottom-color: var(--wp--preset--color--blood);
 }
 .sn-404-search__submit {
 	flex: 0 0 auto;
 	padding: 0.4rem 1rem;
-	border: 1px solid var(--wp--preset--color--bone, #000);
+	border: 1px solid var(--wp--preset--color--bone);
 	background: transparent;
-	font-family: var(--wp--preset--font-family--heading, "Bebas Neue"), sans-serif;
+	font-family: var(--wp--preset--font-family--heading), sans-serif;
 	text-transform: uppercase;
-	letter-spacing: var(--wp--custom--letter-spacing--wide, 0.15em);
-	color: var(--wp--preset--color--bone, #000);
+	letter-spacing: var(--wp--custom--letter-spacing--wide);
+	color: var(--wp--preset--color--bone);
 	cursor: pointer;
 }
 .sn-404-search__submit:hover,
 .sn-404-search__submit:focus-visible {
-	color: var(--wp--preset--color--void, #fff);
-	background: var(--wp--preset--color--blood, #e00404);
-	border-color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--void);
+	background: var(--wp--preset--color--blood);
+	border-color: var(--wp--preset--color--blood);
 }
 
 .sn-404-suggestions {
 	max-width: 760px;
-	margin: 0 0 var(--wp--preset--spacing--30, 1.5rem);
+	margin: 0 0 var(--wp--preset--spacing--30);
 }
 .sn-404-suggestions__label {
 	margin: 0 0 0.5rem;
-	font-family: var(--wp--preset--font-family--heading, "Bebas Neue"), sans-serif;
+	font-family: var(--wp--preset--font-family--heading), sans-serif;
 	text-transform: uppercase;
-	letter-spacing: var(--wp--custom--letter-spacing--wide, 0.15em);
-	font-size: var(--wp--preset--font-size--small, 0.8rem);
-	color: var(--wp--preset--color--rust, #666);
+	letter-spacing: var(--wp--custom--letter-spacing--wide);
+	font-size: var(--wp--preset--font-size--small);
+	color: var(--wp--preset--color--rust);
 }
 .sn-404-suggestions__list {
 	margin: 0;
@@ -1503,24 +1503,24 @@
 	align-items: baseline;
 	gap: 0.3rem 1rem;
 	padding: 0.55rem 0;
-	border-top: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+	border-top: 1px solid var(--wp--preset--color--concrete);
 }
 .sn-404-suggestions .sn-notes-row:last-child {
-	border-bottom: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+	border-bottom: 1px solid var(--wp--preset--color--concrete);
 }
 .sn-404-suggestions .sn-notes-row-spec {
 	flex: 0 0 auto;
 	display: flex;
 	gap: 0.6rem;
 	align-items: baseline;
-	font-family: var(--wp--preset--font-family--body, "DM Mono"), monospace;
+	font-family: var(--wp--preset--font-family--body), monospace;
 	font-size: max(0.68rem, 11px);
 	letter-spacing: 0.1em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 }
 .sn-404-suggestions .sn-notes-row-date {
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 }
 .sn-404-suggestions .sn-notes-row-content {
 	flex: 1 1 14rem;
@@ -1528,27 +1528,27 @@
 }
 .sn-404-suggestions .sn-notes-row-title {
 	margin: 0;
-	font-family: var(--wp--preset--font-family--heading, "Bebas Neue"), sans-serif;
+	font-family: var(--wp--preset--font-family--heading), sans-serif;
 	font-weight: 400;
 	font-size: 1.2rem;
 	line-height: 1.1;
 	letter-spacing: 0.01em;
 }
 .sn-404-suggestions .sn-notes-row-title a {
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 	text-decoration: none;
 }
 .sn-404-suggestions .sn-notes-row-title a:hover,
 .sn-404-suggestions .sn-notes-row-title a:focus-visible {
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 	text-decoration: underline;
 }
 .sn-404-browse {
-	font-family: var(--wp--preset--font-family--body, "DM Mono"), monospace;
-	font-size: var(--wp--preset--font-size--small, 0.8rem);
+	font-family: var(--wp--preset--font-family--body), monospace;
+	font-size: var(--wp--preset--font-size--small);
 }
 .sn-404-browse a {
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 	text-decoration: none;
 }
 .sn-404-browse a:hover,
@@ -1567,12 +1567,12 @@
    blood -> signal link color. Mirrors the .sn-404-browse / .sn-prov-* idiom.
    ============================================ */
 .sn-prose-links a {
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 	text-decoration: none;
 }
 .sn-prose-links a:hover,
 .sn-prose-links a:focus-visible {
-	color: var(--wp--preset--color--signal, #ff4c47);
+	color: var(--wp--preset--color--signal);
 	text-decoration: underline;
 }
 
@@ -1591,17 +1591,17 @@
 }
 .sn-pillar-designation a:hover,
 .sn-pillar-designation a:focus-visible {
-	color: var(--wp--preset--color--signal, #ff4c47);
+	color: var(--wp--preset--color--signal);
 	text-decoration: underline;
 }
 
 /* v10.51.0: search-result type chip (Note / Essay / Page) — spec-column
    vocabulary beside the reading time; only rendered in search mode. */
 .sn-notes-row-type {
-	border: 1px solid var(--wp--preset--color--concrete, #d4d4d4);
-	color: var(--wp--preset--color--asphalt, #4a4a4a);
+	border: 1px solid var(--wp--preset--color--concrete);
+	color: var(--wp--preset--color--rust);
 	display: inline-block;
-	font-family: var(--wp--preset--font-family--mono, "DM Mono", monospace);
+	font-family: var(--wp--preset--font-family--body);
 	font-size: 0.625rem;
 	letter-spacing: 0.08em;
 	line-height: 1;

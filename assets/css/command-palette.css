@@ -155,9 +155,13 @@
 	background: var(--wp--preset--color--blood);
 }
 
+/* void, not bone: this is the SELECTED row, so it is the one that most has to
+   be readable, and bone-on-blood is 4.19:1 — under the 4.5 AA floor. void on
+   blood is 5.01:1 and matches theme.json's own text-on-blood convention
+   (elements.button:hover). */
 .sn-cmdk-option.is-active .sn-cmdk-option__label,
 .sn-cmdk-option.is-active .sn-cmdk-option__sub {
-	color: var(--wp--preset--color--bone);
+	color: var(--wp--preset--color--void);
 }
 
 /* Open animation only when motion is welcome; overlay still appears instantly

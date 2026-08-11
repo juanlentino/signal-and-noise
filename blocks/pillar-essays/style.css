@@ -21,14 +21,14 @@
 	gap: 1rem;
 	margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
 	padding-bottom: 0.5rem;
-	border-bottom: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+	border-bottom: 1px solid var(--wp--preset--color--concrete);
 }
 .sn-notes-pillars-section .sn-notes-section-label {
 	font-family: 'DM Mono', 'Courier New', monospace;
 	font-size: max(0.7rem, 11px);
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 	margin: 0;
 }
 .sn-notes-pillars-section .sn-notes-section-count {
@@ -36,7 +36,7 @@
 	font-size: max(0.7rem, 11px);
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 }
 
 /* PILLAR CARDS ─────────────────────────────────────────────── */
@@ -55,8 +55,15 @@
 	   overflow, so a fixed column truncated designations mid-digit. */
 	grid-template-columns: auto 1fr;
 	gap: 0;
-	background: var(--wp--preset--color--asphalt, #f5f5f5);
-	color: var(--wp--preset--color--bone, #000);
+	/* void + hairline, matching the .sn-pillar-card treatment in
+	   templates/home.html and templates/page-notes.html — this block is the
+	   dynamic twin of that card and the two must not drift apart. Asphalt
+	   was dropped because the number, eyebrow and CTA hover are all blood at
+	   body-text sizes: 3.80:1 on asphalt (fails AA), 5.01:1 on void. The
+	   border replaces the fill so the card keeps a visible boundary. */
+	background: var(--wp--preset--color--void);
+	border: 1px solid var(--wp--preset--color--concrete);
+	color: var(--wp--preset--color--bone);
 	text-decoration: none;
 	overflow: hidden;
 	transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -67,7 +74,7 @@
 	position: absolute;
 	inset: 0 auto 0 0;
 	width: 4px;
-	background: var(--wp--preset--color--blood, #e00404);
+	background: var(--wp--preset--color--blood);
 	transition: width 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .sn-notes-pillar:hover::before {
@@ -79,7 +86,7 @@
 .sn-notes-pillar-number {
 	font-family: 'DM Mono', 'Courier New', monospace;
 	font-size: clamp(0.95rem, 1.4vw, 1.15rem);
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 	padding: clamp(1.1rem, 2vw, 1.4rem) 0.9rem 0 1.1rem;
 	letter-spacing: 0.05em;
 	font-weight: 500;
@@ -93,7 +100,7 @@
 	font-size: 0.7rem;
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 	margin: 0 0 0.5rem;
 }
 .sn-notes-pillar-title {
@@ -103,12 +110,12 @@
 	line-height: 1;
 	letter-spacing: -0.005em;
 	margin: 0 0 0.65rem;
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 }
 .sn-notes-pillar-dek {
 	font-size: clamp(0.85rem, 1vw, 0.95rem);
 	line-height: 1.5;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 	margin: 0 0 0.85rem;
 	max-width: 42ch;
 }
@@ -117,7 +124,7 @@
 	font-size: max(0.75rem, 11px);
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 	text-decoration: none;
 	display: inline-flex;
 	align-items: center;
@@ -132,7 +139,7 @@
 	transition: transform 0.2s ease;
 }
 .sn-notes-pillar-cta:hover {
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 }
 .sn-notes-pillar-cta:hover::after {
 	transform: translateX(4px);

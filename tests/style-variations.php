@@ -1,7 +1,15 @@
 <?php
 /**
  * Standalone fixture tests for the theme's Style Variation JSON files
- * (styles/monolith.json + styles/high-contrast.json), introduced in v9.10.0.
+ * (styles/high-contrast.json), introduced in v9.10.0.
+ *
+ * styles/monolith.json was REMOVED 2026-08-11 as vestigial — it shipped in
+ * v9.10.0, was never activated, and remapped blood -> #000000, which turned
+ * every bone-text-on-blood-background component (the active command-palette
+ * row, kbd chips, buttons) into black-on-black at 1.00:1. Surfaced by
+ * contrast-baseline.php Test 7, which evaluates every shipped palette rather
+ * than only root. Do not reintroduce a monochrome variation without checking
+ * the components that paint themselves with `blood`.
  *
  * WordPress contract (verified vs the Theme Handbook "Create theme style
  * variations" page + Gutenberg's WP_Theme_JSON_Resolver merge logic, trunk
@@ -96,7 +104,6 @@ ha_eq(
 
 // ─── Per-variation shared assertions ───────────────────────────────────
 $variations = array(
-	'monolith.json'      => 'Monolith',
 	'high-contrast.json' => 'High Contrast',
 );
 
@@ -135,27 +142,18 @@ foreach ( $variations as $file => $expected_title ) {
 	);
 }
 
-// ─── Monolith: monochrome remap ────────────────────────────────────────
-echo "\nTest: Monolith remaps blood -> #000000 and signal -> #333333 (monochrome)\n";
-if ( isset( $decoded['monolith.json'] ) ) {
-	$m = sv_palette_map( $decoded['monolith.json'] );
-	ha_eq( '#000000', $m['blood'] ?? null, 'Monolith blood is #000000' );
-	ha_eq( '#333333', $m['signal'] ?? null, 'Monolith signal is #333333' );
-	// Structural colors preserved from the root palette.
-	ha_eq( '#ffffff', $m['void'] ?? null, 'Monolith void unchanged (#ffffff)' );
-	ha_eq( '#000000', $m['bone'] ?? null, 'Monolith bone unchanged (#000000)' );
-	// No chromatic red survives anywhere in the palette (accent-free).
-	$chromatic = array();
-	foreach ( $m as $slug => $color ) {
-		$hex = ltrim( strtolower( (string) $color ), '#' );
-		if ( 6 === strlen( $hex ) ) {
-			$r = hexdec( substr( $hex, 0, 2 ) );
-			$g = hexdec( substr( $hex, 2, 2 ) );
-			$b = hexdec( substr( $hex, 4, 2 ) );
-			if ( ! ( $r === $g && $g === $b ) ) { $chromatic[] = $slug; }
-		}
-	}
-	ha_eq( array(), $chromatic, 'Monolith palette is fully achromatic (no colored entries)' );
+// ─── Removed variations stay removed ───────────────────────────────────
+// A vestigial variation is not inert: WordPress offers every file in
+// /styles in the FSE switcher, so an unmaintained one is a palette any
+// visitor can be shown. monolith.json remapped blood -> #000000 while CSS
+// components paint bone text on blood backgrounds — black on black. Guard
+// the deletion so it cannot quietly return.
+echo "\nTest: retired variations are absent from /styles\n";
+foreach ( array( 'monolith.json' ) as $retired ) {
+	ha_true(
+		! file_exists( __DIR__ . '/../styles/' . $retired ),
+		"styles/{$retired} stays deleted (retired 2026-08-11 — see docblock)"
+	);
 }
 
 // ─── High Contrast: keep red, push greys toward black ──────────────────

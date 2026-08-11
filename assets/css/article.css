@@ -329,7 +329,7 @@ main { view-transition-name: sn-main; }
 	font-size: 2.5rem;
 	line-height: 0.85;
 	float: left;
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 	margin: 0.05em 0.35rem 0 -0.02em;
 	padding-top: 0.15rem;
 	font-weight: 400;
@@ -340,7 +340,7 @@ main { view-transition-name: sn-main; }
 .single-post .wp-block-post-content sup a[href^="#footnote-"] {
 	font-family: 'DM Mono', 'Courier New', monospace;
 	font-size: 0.75em;
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 	text-decoration: none;
 	margin: 0 0.1em;
 	letter-spacing: 0.05em;
@@ -350,7 +350,7 @@ main { view-transition-name: sn-main; }
 }
 
 .single-post .wp-block-footnotes {
-	border-top: 1px solid var(--wp--preset--color--bone, #000);
+	border-top: 1px solid var(--wp--preset--color--bone);
 	padding-top: 1.5rem;
 	margin-top: 3rem;
 	counter-reset: sn-footnote;
@@ -365,19 +365,19 @@ main { view-transition-name: sn-main; }
 	font-size: 0.85rem;
 	line-height: 1.55;
 	margin-bottom: 0.85rem;
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 }
 .single-post .wp-block-footnotes li::before {
 	content: counter(sn-footnote, decimal-leading-zero);
 	position: absolute;
 	left: 0;
 	top: 0;
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 	letter-spacing: 0.1em;
 	font-weight: 500;
 }
 .single-post .wp-block-footnotes a[href^="#"] {
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 	text-decoration: none;
 }
 .single-post .wp-block-footnotes a[href^="#"]:hover {
@@ -390,18 +390,22 @@ main { view-transition-name: sn-main; }
 	z-index: 1000;
 	max-width: 360px;
 	padding: 0.75rem 1rem;
-	background: var(--wp--preset--color--asphalt, #f5f5f5);
-	border: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
-	border-top: 2px solid var(--wp--preset--color--blood, #e00404);
+	/* void, not asphalt: the popover's links are blood, which clears AA on
+	   void (5.01:1) but fails it on asphalt (3.80:1). The 2px blood top rule,
+	   concrete hairline and drop shadow carry the surface identity instead of
+	   a fill, so it still reads as a raised layer over void page content. */
+	background: var(--wp--preset--color--void);
+	border: 1px solid var(--wp--preset--color--concrete);
+	border-top: 2px solid var(--wp--preset--color--blood);
 	font-family: 'DM Mono', 'Courier New', monospace;
 	font-size: 0.8rem;
 	line-height: 1.5;
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 	pointer-events: auto;
 }
 .sn-footnote-popover a {
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 }
 
 /* --- SIDENOTES (signal-noise/sidenote pattern) --- */
@@ -418,7 +422,7 @@ main { view-transition-name: sn-main; }
 		font-family: 'DM Mono', 'Courier New', monospace;
 		font-size: max(0.75rem, 11px);
 		line-height: 1.45;
-		color: var(--wp--preset--color--rust, #666);
+		color: var(--wp--preset--color--rust);
 		text-align: left;
 	}
 }
@@ -431,11 +435,11 @@ main { view-transition-name: sn-main; }
 		margin-bottom: 1.5rem;
 		padding-top: 0.5rem;
 		padding-left: 0;
-		border-top: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+		border-top: 1px solid var(--wp--preset--color--concrete);
 		font-family: 'DM Mono', 'Courier New', monospace;
 		font-size: 0.85rem;
 		line-height: 1.5;
-		color: var(--wp--preset--color--rust, #666);
+		color: var(--wp--preset--color--rust);
 	}
 }
 
@@ -456,22 +460,22 @@ main { view-transition-name: sn-main; }
 	margin: 0;
 }
 .sn-post-frontmatter__date {
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 	font-weight: 500;
 }
 .sn-post-frontmatter__divider {
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 }
 .sn-post-frontmatter__rt {
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 }
 .sn-post-frontmatter__updated {
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 	font-weight: 500;
 }
 .sn-post-frontmatter__tags,
 .sn-post-frontmatter__tags a {
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 	text-decoration: none;
 }
 .sn-post-frontmatter__tags a {
@@ -483,10 +487,10 @@ main { view-transition-name: sn-main; }
 	margin: -0.35rem -0.15rem;
 }
 .sn-post-frontmatter__tags a:hover {
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 }
 .sn-post-frontmatter__pillar {
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 	text-decoration: none;
 	font-weight: 500;
 	margin-left: auto;
@@ -495,13 +499,13 @@ main { view-transition-name: sn-main; }
 	padding: 0.28rem 0.5rem;
 	margin-top: -0.13rem;
 	margin-bottom: -0.13rem;
-	border: 1px solid var(--wp--preset--color--bone, #000);
+	border: 1px solid var(--wp--preset--color--bone);
 	transition: color 0.15s ease, background 0.15s ease;
 }
 .sn-post-frontmatter__pillar:hover {
-	color: var(--wp--preset--color--void, #fff);
-	background: var(--wp--preset--color--blood, #e00404);
-	border-color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--void);
+	background: var(--wp--preset--color--blood);
+	border-color: var(--wp--preset--color--blood);
 }
 /* v9.11.0: the reading-time + pillar slots are now Block-Bindings paragraphs.
    When a binding returns null (no pillar match; or the plugin is absent) WP keeps

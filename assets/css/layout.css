@@ -262,7 +262,7 @@ body {
 .sn-hero-accent {
 	width: 120px;
 	height: 3px;
-	background-color: var(--wp--preset--color--blood, #e00404);
+	background-color: var(--wp--preset--color--blood);
 	margin: var(--wp--preset--spacing--30) 0;
 }
 
@@ -324,7 +324,7 @@ body {
 	display: flex;
 	align-items: center;
 	gap: 0.15rem;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 	font-size: 0.7rem;
 }
 
@@ -340,7 +340,7 @@ body {
 }
 
 .sn-footer__meta-nav a:hover {
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 }
 
 .sn-footer__meta-nav svg {
