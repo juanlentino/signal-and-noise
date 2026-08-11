@@ -2,6 +2,34 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.7.1] - 2026-08-11 — every link hover on the site was 3.29:1, and the doc said that was fine
+
+**Headline:** `theme.json` sets `elements.link:hover` to `signal`, and `signal` on `void` is **3.29:1** at body-paragraph sizes. That is not one component — it is every link hover on the site, for two major versions. `docs/ACCESSIBILITY.md` Watch 2 knew the number and cleared it anyway.
+
+### The documentation was the defect
+
+Watch 2 stated the failure in its own first line — *"already below normal-text AA at 3.29 : 1"* — and then concluded it *"ships AA-clean today"* because hover also draws an underline, satisfying **SC 1.4.1 (Use of Color)**.
+
+The 1.4.1 half is correct. The conclusion is not. **1.4.1 and 1.4.3 (Contrast Minimum) are independent criteria.** An underline proves information is not carried by colour alone; it does nothing for legibility. The old "Impact if it fails" line went further and implied the underline was holding 1.4.3 up. It never was. A wrong success criterion, cited confidently, protected a live failure for two majors.
+
+### Why nothing caught it
+
+The arithmetic tier scores token pairs, not rendered ones. The usage tier reads resting-state declarations, and this only exists on hover. The **rendered tier** (`r3-prep` §3C, built the same day) found it on four surfaces in its first live run against seven pages.
+
+### Fixed
+
+- **`signal` darkened `#ff4c47` → `#bf3935`**, in `theme.json` **and** `styles/high-contrast.json`. Root alone would have changed nothing live — the site serves the variation, which is the trap this whole arc has been about. `signal` on `void` goes 3.29 → **5.45:1**, clearing body AA rather than claiming a large-text exemption it never qualified for.
+- **`.sn-cmdk-trigger` hover/focus text `bone` → `void`.** Found by the rendered tier at 4.19:1 — and worth recording that I had dismissed this exact pair as a false positive, because the resting background is `transparent` and a declaration scan reads it as bone-on-transparent. It was a true positive measured in the wrong state.
+
+### Changed
+
+- `tests/contrast-baseline.php` asserts `signal`-on-`void` at **4.5** now, not 3.0. The old assertion carried the underline exemption in its message; the threshold was wrong, not just the comment. Drift baselines re-measured (5.45, 5.00) — the ±0.20 window fired correctly on the token change, which is what it is for.
+- `docs/ACCESSIBILITY.md` Watch 2 rewritten to record the reasoning error rather than quietly delete it.
+
+### Still open, deliberately not claimed as fixed
+
+`signal` on the **served** asphalt is 4.13:1, still under the floor — and so is the resting link colour, `blood` at 3.80:1. Links inside tinted surfaces (`.sn-pull-quote`, `.sn-provenance-panel`, `.sn-pattern-*`) fail at rest as well as on hover. That is a separate decision about link colours on tinted backgrounds, not about the hover token.
+
 ## [11.7.0] - 2026-08-11 — the contrast suite was measuring a palette the site does not serve
 
 **Headline:** `tests/contrast-baseline.php` reported **20 passed, 0 failed**, with delta 0.00 on every drift assertion, while the live site carried a real AA failure. It reads the palette out of `theme.json`. The site runs the **High Contrast** style variation, whose palette lives in the `wp_global_styles` CPT and wins. Both palettes are correct — they are different styles. Only one of them is on screen, and the suite did not know the other existed.

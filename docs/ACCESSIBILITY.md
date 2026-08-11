@@ -67,15 +67,46 @@ The palette has **two tight margins** that future tweaks could push under AA. Do
 
 **Impact if it fails:** the blood-coloured brand accent inside card surfaces (which is the most common visual hierarchy pattern across the theme) becomes WCAG-non-compliant for normal text. Headings inside cards would specifically be affected.
 
-### Watch 2: `signal` hover state (currently 3.29 : 1 on `void`)
+### Watch 2: `signal` hover state — RESOLVED v11.7.1, and the old reasoning here was wrong
 
-**Sensitivity:** already below normal-text AA at 3.29 : 1; passes only as large text (≥18pt or ≥14pt bold).
+**What this section used to say**, from v9.5.0 until 2026-08-11: that `signal`
+at 3.29 : 1 "ships AA-clean today" because hover also triggers an underline, so
+**WCAG 1.4.1 (Use of Color)** is satisfied and colour is not the sole affordance.
 
-**Current usage:** applied only to hover state of links, where it appears at body-paragraph font sizes (~16px = ~12pt, NOT large by WCAG definition). The reason it ships AA-clean today: **WCAG 1.4.1 (Use of Color)** is satisfied because hover ALSO triggers an underline (in `assets/css/base.css:97-105` and equivalents). Color is not the sole affordance.
+**The 1.4.1 half was correct. The conclusion was not.** SC 1.4.1 (Use of Color)
+and SC 1.4.3 (Contrast Minimum) are independent success criteria. An underline
+proves information is not carried by colour ALONE; it does nothing whatsoever
+for legibility, which is what 1.4.3 measures. This section even stated the
+failure in its own first line — "already below normal-text AA at 3.29 : 1" —
+and then discharged it with the wrong criterion. The old "Impact if it fails"
+line compounded it, implying the underline was holding 1.4.3 up; it never was.
 
-**Impact if it fails:** if the underline is ever removed from the hover state for `signal`-coloured links, the color-only signal would fail WCAG 1.4.1 and 1.4.3 simultaneously.
+**Cost of the error:** `theme.json` sets `elements.link:hover` to `signal`, so
+this was not one component but **every link hover on the site**, at
+body-paragraph sizes, for two major versions. Nothing caught it because the
+arithmetic tier scores token pairs rather than rendered ones, and the usage tier
+reads resting-state declarations. The rendered tier (r3-prep §3C) found it on
+four surfaces in its first live run.
 
-**Don't break the underline-on-hover convention** without re-evaluating contrast.
+**Resolved in v11.7.1:** `signal` darkened `#ff4c47` → `#bf3935` in BOTH
+`theme.json` and `styles/high-contrast.json` — root alone would not have changed
+the live site, which serves the variation.
+
+| pairing | before | after |
+| --- | --- | --- |
+| `signal` on `void` | 3.29 : 1 ✗ | **5.45 : 1** ✓ body AA |
+| `signal` on `asphalt` (root) | 3.02 : 1 | **5.00 : 1** ✓ |
+| `signal` on `asphalt` (High Contrast, served) | 2.49 : 1 | **4.13 : 1** ✗ |
+
+**Still open, and deliberately not claimed as fixed:** `signal` on the *served*
+asphalt is 4.13 : 1, under the floor. So is the resting link colour — `blood` on
+served asphalt is 3.80 : 1 — which means links inside asphalt surfaces
+(`.sn-pull-quote`, `.sn-provenance-panel`, `.sn-pattern-*`) fail at rest as well
+as on hover. That is a separate, pre-existing issue about link colours on tinted
+surfaces, not about the hover token, and it needs its own decision.
+
+**Keep the underline on hover** — it is genuinely required by 1.4.1. Just never
+again let it be cited as evidence about 1.4.3.
 
 ## Verification recipe
 
