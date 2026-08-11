@@ -1595,6 +1595,25 @@
 	text-decoration: underline;
 }
 
+/* ============================================
+   PROVENANCE BADGE IN THE TITLE BROW (v11.7.0)
+   inc/provenance-title-badge.php prepends the plugin's chip above a signed
+   Page's title, in the eyebrow slot beside its pillar sibling. The chip
+   carries its own type and status colour (plugin-owned, functional), so
+   these rules only place it: cancel the eyebrow's own letter-spacing and
+   caps for the chip's inline run, and give it the eyebrow's spacing.
+   NOT restyled here — a status colour that means something is the plugin's
+   to own, and overriding it in the theme is how two sources of truth start.
+   ============================================ */
+.sn-prov-title-badge {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5em;
+	letter-spacing: normal;
+	text-transform: none;
+}
+
 /* v10.51.0: search-result type chip (Note / Essay / Page) — spec-column
    vocabulary beside the reading time; only rendered in search mode. */
 .sn-notes-row-type {
