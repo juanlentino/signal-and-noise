@@ -18,7 +18,7 @@ The judgement throughout is "is this worth adopting *for a single-author, no-bui
 1. **Adopt Block Bindings (WP 6.5+, expanded in 6.9/7.0)** for reading time, current year, OG image URLs, and Plausible widget values. Replaces `[sn_reading_time]` + `[current_year]` shortcodes with native FSE-editable bindings. **Highest ROI on this list.**
 2. **Register patterns under `/patterns`** (file-header convention). The theme has 13 templates and zero patterns — patterns are how authors reuse hero/section layouts without duplicating template HTML.
 3. **Register a custom REST route under `signal-noise/v1`** to wrap the existing maintenance actions (purge cache, heal templates, force update check, refresh Plausible). Then the admin page calls REST instead of admin-post + nonce form actions, and the same endpoints are reusable from CLI/external automation.
-4. **Add a `/styles` style variation** (e.g. `monolith.json` for an even more reduced black-on-white scheme). Cheap, ships native FSE switcher.
+4. **Add a `/styles` style variation.** Ships via the native FSE switcher — but not free: a palette remap changes every token pairing in CSS at once, so each new variation must clear `tests/contrast-baseline.php` Test 7. (`monolith.json` was retired for exactly this.)
 5. **Register a custom template-part area** (`brand-mark`, `provenance-strip`, or similar) via `default_wp_template_part_areas` — currently every theme uses default header/footer only.
 6. **Switch `[sn_reading_time]` to a Block Bindings source first, drop the shortcode in v8.0**. Same logic, modern surface, editor-visible value, no nested-shortcode pitfalls.
 7. **Skip the AI Client / Abilities API / Connectors API entirely** for now. They are designed for distributed plugins exposing capabilities to external agents; a single-author site has nothing to expose and no agent driving it.
@@ -156,7 +156,7 @@ Docs: [Style variations](https://developer.wordpress.org/themes/global-settings-
 
 **What it is.** Drop alternative `theme.json`-shaped files into `theme/styles/`. WordPress shows them in the Site Editor → Styles browser. User selects → JSON is migrated into the database as a customization.
 
-**S&N integration.** Theme is currently single-style. A second variation costs effectively nothing and shows off the brutalist palette flexibility. Suggested: `monolith.json` (even more reduced — drop accent red entirely) and/or `inverted.json` (white-on-black). One file each, ~30 lines.
+**S&N integration.** Theme ships one variation, `high-contrast.json`, and the live site runs it — so `theme.json` is the *default* style, not the served one. `monolith.json` was retired 2026-08-11: a variation costs nothing to add and quite a lot to maintain, because a palette remap silently changes every hardcoded token pairing in CSS. Monolith set `blood` to `#000000` while components paint bone text on blood backgrounds, giving black-on-black at 1.00:1. Any new variation must be checked against `tests/contrast-baseline.php` Test 7, which evaluates every shipped palette. `inverted.json` (white-on-black). One file each, ~30 lines.
 
 **Caveats.** Selecting a variation copies it to the database, so subsequent theme updates do not retroactively update the user's selection. Document this in the maintainer's mental model — switching back to default and reselecting is the only way to pick up new variation tweaks.
 

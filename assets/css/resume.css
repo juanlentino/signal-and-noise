@@ -46,8 +46,8 @@
 
 /* ── Dossier micro-details (this sheet loads only on /resume) ─────────── */
 ::selection {
-	background: var(--wp--preset--color--blood, #e00404);
-	color: var(--wp--preset--color--void, #fff);
+	background: var(--wp--preset--color--blood);
+	color: var(--wp--preset--color--void);
 }
 
 /* Credential ledger (v11.4.3, owner: the hero's right column read as one
@@ -59,15 +59,15 @@
 	display: block;
 	margin: 1.5rem 0 0;
 	padding: 0;
-	border-top: 2px solid var(--wp--preset--color--bone, #000);
+	border-top: 2px solid var(--wp--preset--color--bone);
 }
 .sn-resume-chips li {
 	font-family: 'DM Mono', 'Courier New', monospace;
 	font-size: max(0.7rem, 11px);
 	letter-spacing: 0.14em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--bone, #000);
-	border-bottom: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+	color: var(--wp--preset--color--bone);
+	border-bottom: 1px solid var(--wp--preset--color--concrete);
 	padding: 0.55rem 0;
 }
 
@@ -82,14 +82,14 @@
    with an h1) keeps the site-wide treatment. div-qualified so the
    selector can never reach the template's <main>. */
 body div.wp-block-group:not(:has(h1)) > .sn-catalog-eyebrow {
-	border-top: 2px solid var(--wp--preset--color--bone, #000);
+	border-top: 2px solid var(--wp--preset--color--bone);
 	padding-top: 1.1rem;
 }
 
 /* ── Stat strip ───────────────────────────────────────────────────────── */
 .sn-resume-stats {
-	border-top: 2px solid var(--wp--preset--color--bone, #000);
-	border-bottom: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+	border-top: 2px solid var(--wp--preset--color--bone);
+	border-bottom: 1px solid var(--wp--preset--color--concrete);
 	padding: clamp(1.25rem, 3vw, 2rem) 0;
 }
 .sn-resume-stat-n {
@@ -98,7 +98,7 @@ body div.wp-block-group:not(:has(h1)) > .sn-catalog-eyebrow {
 	font-size: clamp(2.75rem, 6vw, 4.5rem);
 	line-height: 0.9;
 	font-variant-numeric: tabular-nums;
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 	margin: 0;
 }
 .sn-resume-stat-l {
@@ -106,7 +106,7 @@ body div.wp-block-group:not(:has(h1)) > .sn-catalog-eyebrow {
 	font-size: max(0.7rem, 11px);
 	letter-spacing: 0.14em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 	margin: 0.4rem 0 0;
 }
 
@@ -118,13 +118,13 @@ body div.wp-block-group:not(:has(h1)) > .sn-catalog-eyebrow {
 	text-transform: uppercase;
 	line-height: 1.8;
 	font-variant-numeric: tabular-nums;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 	margin: 0.4rem 0 0;
 	transition: color 0.15s ease;
 }
 /* Scan affordance: hovering an experience row lifts its date rail to ink. */
 body .wp-block-columns:has(.sn-resume-rail):hover .sn-resume-rail {
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 }
 .sn-resume-role {
 	font-family: 'Bebas Neue', Impact, sans-serif;
@@ -132,7 +132,7 @@ body .wp-block-columns:has(.sn-resume-rail):hover .sn-resume-rail {
 	font-size: clamp(1.5rem, 3vw, 2rem);
 	letter-spacing: 0.02em;
 	line-height: 1;
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 	margin: 0 0 0.35rem;
 }
 .sn-resume-title {
@@ -141,7 +141,7 @@ body .wp-block-columns:has(.sn-resume-rail):hover .sn-resume-rail {
 	font-weight: 500;
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 	margin: 1.25rem 0 0.75rem;
 }
 .sn-resume-list {
@@ -155,19 +155,19 @@ body .wp-block-columns:has(.sn-resume-rail):hover .sn-resume-rail {
 	font-size: 0.95rem;
 	line-height: 1.6;
 	max-width: 80ch;
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 }
 .sn-resume-list li::before {
 	content: "–";
 	position: absolute;
 	left: 0;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 }
 
 /* ── Early-career fold ────────────────────────────────────────────────── */
 .sn-resume-fold {
-	border-top: 2px solid var(--wp--preset--color--bone, #000);
-	border-bottom: 2px solid var(--wp--preset--color--bone, #000);
+	border-top: 2px solid var(--wp--preset--color--bone);
+	border-bottom: 2px solid var(--wp--preset--color--bone);
 	padding: 0;
 	margin-top: clamp(1.5rem, 3vw, 2.5rem);
 }
@@ -183,7 +183,7 @@ body .wp-block-columns:has(.sn-resume-rail):hover .sn-resume-rail {
 	font-size: max(0.7rem, 11px);
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 	transition: color 0.15s ease;
 }
 .sn-resume-fold summary::-webkit-details-marker {
@@ -197,7 +197,7 @@ body .wp-block-columns:has(.sn-resume-rail):hover .sn-resume-rail {
 	content: "\2013";
 }
 .sn-resume-fold summary:hover {
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 }
 .sn-resume-fold > :last-child {
 	margin-bottom: clamp(1rem, 2vw, 1.5rem);
@@ -207,26 +207,26 @@ body .wp-block-columns:has(.sn-resume-rail):hover .sn-resume-rail {
 	font-weight: 400;
 	font-size: 1.35rem;
 	letter-spacing: 0.02em;
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 	margin: 1.25rem 0 0;
 }
 
 /* ── Publication cards ────────────────────────────────────────────────── */
 .sn-resume-pub {
-	border: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+	border: 1px solid var(--wp--preset--color--concrete);
 	padding: clamp(1.1rem, 2.5vw, 1.6rem) clamp(1.1rem, 2.5vw, 1.75rem);
 	margin-top: 1rem;
 	transition: border-color 0.15s ease;
 }
 .sn-resume-pub:hover {
-	border-color: var(--wp--preset--color--bone, #000);
+	border-color: var(--wp--preset--color--bone);
 }
 .sn-resume-pub-meta {
 	font-family: 'DM Mono', 'Courier New', monospace;
 	font-size: max(0.7rem, 11px);
 	letter-spacing: 0.14em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 	margin: 0 0 0.5rem;
 }
 .sn-resume-pub-title {
@@ -240,21 +240,21 @@ body .wp-block-columns:has(.sn-resume-rail):hover .sn-resume-rail {
 	margin: 0;
 }
 .sn-resume-pub-title a {
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 	text-decoration: none;
 	transition: color 0.15s ease;
 }
 .sn-resume-pub-title a:hover {
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 	text-decoration: underline;
 	text-underline-offset: 3px;
 }
 .sn-resume-pub-title a::after {
 	content: " ↗";
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 }
 .sn-resume-pub-title a:hover::after {
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 }
 
 /* ── Skills table ─────────────────────────────────────────────────────── */
@@ -265,19 +265,19 @@ body .wp-block-columns:has(.sn-resume-rail):hover .sn-resume-rail {
 }
 .sn-resume-skills td {
 	border: 0;
-	border-top: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+	border-top: 1px solid var(--wp--preset--color--concrete);
 	padding: 0.8rem 0;
 	vertical-align: top;
 }
 .sn-resume-skills tr:first-child td {
-	border-top: 2px solid var(--wp--preset--color--bone, #000);
+	border-top: 2px solid var(--wp--preset--color--bone);
 }
 .sn-resume-skills td:first-child {
 	font-family: 'DM Mono', 'Courier New', monospace;
 	font-size: max(0.7rem, 11px);
 	letter-spacing: 0.14em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 	white-space: nowrap;
 	width: 15rem;
 	padding-right: clamp(1.5rem, 4vw, 3rem);
@@ -285,7 +285,7 @@ body .wp-block-columns:has(.sn-resume-rail):hover .sn-resume-rail {
 .sn-resume-skills td:last-child {
 	font-size: 0.9rem;
 	line-height: 1.65;
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 }
 
 /* ── Download rows ────────────────────────────────────────────────────── */
@@ -300,18 +300,18 @@ body .wp-block-columns:has(.sn-resume-rail):hover .sn-resume-rail {
 	font-size: max(0.7rem, 11px);
 	letter-spacing: 0.14em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 	text-decoration: none;
 }
 .sn-resume-download > a:first-child:hover {
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 }
 /* Outranks the combined sheet's `.wp-block-file a.wp-block-file__button`
    (0,2,1) — hence the qualified (0,3,1) selector, not vanity nesting. */
 .wp-block-file.sn-resume-download a.wp-block-file__button {
 	background: transparent;
-	color: var(--wp--preset--color--bone, #000);
-	border: 1px solid var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
+	border: 1px solid var(--wp--preset--color--bone);
 	border-radius: 0;
 	font-family: 'DM Mono', 'Courier New', monospace;
 	font-size: max(0.7rem, 11px);
@@ -322,8 +322,8 @@ body .wp-block-columns:has(.sn-resume-rail):hover .sn-resume-rail {
 }
 .wp-block-file.sn-resume-download a.wp-block-file__button:hover {
 	background: transparent;
-	color: var(--wp--preset--color--blood, #e00404);
-	border-color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
+	border-color: var(--wp--preset--color--blood);
 }
 
 @media (max-width: 600px) {

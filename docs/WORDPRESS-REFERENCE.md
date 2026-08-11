@@ -87,8 +87,8 @@ Several subsystems in this theme need to call out to slow external services (Git
 
 **Reference implementations:**
 
-- [inc/plausible-api.php](../inc/plausible-api.php) — full SWR pattern with batch + realtime accessors. Read the file header for the architectural commentary.
-- [inc/updater.php](../inc/updater.php) — GitHub branch HEAD + remote Version + revcount, all in one refresh function.
+- [signal-and-noise-tools inc/analytics-api.php](https://github.com/juanlentino/signal-and-noise-tools/blob/main/inc/analytics-api.php) — full SWR pattern with batch + realtime accessors. Read the file header for the architectural commentary.
+- [inc/wp-update-integration.php](../inc/wp-update-integration.php) — GitHub branch HEAD + remote Version + revcount, all in one refresh function.
 
 ### 2.2 The freshness gate constants
 
@@ -106,7 +106,7 @@ Decision rule: when adding a new SWR subsystem, mirror this layout. Pick `FRESHN
 
 | Hook | What it does | Lives in |
 | --- | --- | --- |
-| `admin_init` | Fires on every admin pageview. Used as a warmer for SWR — checks cache age, schedules background refresh. Capability-gate before scheduling. | [inc/updater.php:367](../inc/updater.php:367), [inc/plausible-api.php:323](../inc/plausible-api.php:323) |
+| `admin_init` | Fires on every admin pageview. Used as a warmer for SWR — checks cache age, schedules background refresh. Capability-gate before scheduling. | [inc/wp-update-integration.php](../inc/wp-update-integration.php), [signal-and-noise-tools inc/analytics-api.php](https://github.com/juanlentino/signal-and-noise-tools/blob/main/inc/analytics-api.php) |
 | `wp_schedule_single_event(time(), HOOK)` | Queues a one-shot cron event. `wp_next_scheduled(HOOK)` guards against stacking. | Same files |
 | `spawn_cron()` | Implicit — fires at `wp_loaded`. Dispatches loopback HTTP request to `wp-cron.php`. Non-blocking (timeout 0.01). | WP core; not directly called |
 | Cron callback (`add_action('your_hook', 'callback')`) | Runs in the loopback. Makes the actual `wp_remote_get`. | Same files |
@@ -117,7 +117,7 @@ Decision rule: when adding a new SWR subsystem, mirror this layout. Pick `FRESHN
 
 `_maybe_update_themes()` in WP core skips its own update check if the `update_themes` site transient was refreshed within the last 7200 seconds (2 hours). This means a fresh SN cache holding a new SHA goes nowhere visible until either (a) the gate expires, (b) `?force-check=1` is hit, or (c) **something deletes the `update_themes` site transient**.
 
-Our v8.0.1 patch in [inc/updater.php](../inc/updater.php) does option (c) — when `sn_updater_refresh_cache` detects a SHA change, it calls `delete_site_transient('update_themes')` so WP re-runs the filter on the next admin pageview. Safe to do because the refresh runs in a spawn_cron loopback, not during a page render (the original `fbd6b30` race is unreachable from this code path).
+Our v8.0.1 patch in [inc/wp-update-integration.php](../inc/wp-update-integration.php) does option (c) — when `sn_updater_refresh_cache` detects a SHA change, it calls `delete_site_transient('update_themes')` so WP re-runs the filter on the next admin pageview. Safe to do because the refresh runs in a spawn_cron loopback, not during a page render (the original `fbd6b30` race is unreachable from this code path).
 
 ---
 
@@ -137,7 +137,7 @@ Pick the right primitive — the difference matters for cache invalidation, auto
 update_option( 'large_data_blob', $data, false );  // third arg = autoload
 ```
 
-**Existing pattern reference:** [inc/plausible-api.php](../inc/plausible-api.php) uses transients for cache data. [inc/updater.php](../inc/updater.php) uses `sn_github_local_sha` as a permanent option (single small string) and `sn_github_branch_*` as transients (cache data).
+**Existing pattern reference:** [signal-and-noise-tools inc/analytics-api.php](https://github.com/juanlentino/signal-and-noise-tools/blob/main/inc/analytics-api.php) uses transients for cache data. [inc/wp-update-integration.php](../inc/wp-update-integration.php) uses `sn_github_local_sha` as a permanent option (single small string) and `sn_github_branch_*` as transients (cache data).
 
 ---
 
@@ -161,7 +161,7 @@ update_option( 'large_data_blob', $data, false );  // third arg = autoload
 
 4. **Hook it on `init`, not `admin_init`,** if anything front-end depends on the table existing. The RSS tracker module needs this because feed-request inserts arrive before any admin pageview on a cold install.
 
-**Reference implementation:** `sn_rss_tracker_install()` + `sn_rss_tracker_maybe_install()` in the [signal-and-noise-tools companion plugin's inc/rss-plausible-tracker.php](https://github.com/juanlentino/signal-and-noise-tools/blob/main/inc/rss-plausible-tracker.php). Read the file header for the cold-install race rationale. (Migrated from theme's `mu-plugins/` directory in v8.2.1 / Tools v1.1.0.)
+**Reference implementation:** `sn_rss_tracker_install()` + `sn_rss_tracker_maybe_install()` in the [signal-and-noise-tools companion plugin's inc/rss-feed-tracker.php](https://github.com/juanlentino/signal-and-noise-tools/blob/main/inc/rss-feed-tracker.php). Read the file header for the cold-install race rationale. (Migrated from theme's `mu-plugins/` directory in v8.2.1 / Tools v1.1.0.)
 
 ---
 
@@ -197,7 +197,7 @@ wp_remote_post( $endpoint, array(
 ) );
 ```
 
-**Reference:** `sn_rss_tracker_send_plausible()` in the [companion plugin's inc/rss-plausible-tracker.php](https://github.com/juanlentino/signal-and-noise-tools/blob/main/inc/rss-plausible-tracker.php). The DB log row is the durable fallback when the non-blocking POST fails silently.
+**Reference:** `sn_rss_tracker_send_event()` in the [companion plugin's inc/rss-feed-tracker.php](https://github.com/juanlentino/signal-and-noise-tools/blob/main/inc/rss-feed-tracker.php). The DB log row is the durable fallback when the non-blocking POST fails silently.
 
 **When to also log on failure:** if the non-blocking POST is the only durable channel (no DB fallback), `error_log` the failure. If there IS a DB fallback (like in our case), the silent fail is acceptable design.
 
@@ -249,7 +249,7 @@ function my_handler() {
 add_action( 'admin_init', 'my_handler' );
 ```
 
-**Reference:** `sn_rss_tracker_handle_form()` in the [companion plugin's inc/rss-plausible-tracker.php](https://github.com/juanlentino/signal-and-noise-tools/blob/main/inc/rss-plausible-tracker.php). Has the soft nonce pattern, the three-state flash on `update_option` returns, and the explicit-fail-vs-success distinction on `$wpdb->query`.
+**Reference:** `sn_rss_tracker_handle_form()` in the [companion plugin's inc/rss-feed-tracker.php](https://github.com/juanlentino/signal-and-noise-tools/blob/main/inc/rss-feed-tracker.php). Has the soft nonce pattern, the three-state flash on `update_option` returns, and the explicit-fail-vs-success distinction on `$wpdb->query`.
 
 ---
 
@@ -318,9 +318,9 @@ The theme is presentation; the companion plugin [`signal-and-noise-tools`](https
 | `sn_cf_purge_urls_for_post` | filter | plugin: `apply_filters( 'sn_cf_purge_urls_for_post', $urls, $post_id, $post )` when building the per-post Cloudflare purge list (plugin `inc/cloudflare-purge.php`) | theme: [`inc/content-json.php`](../inc/content-json.php) appends the permalink's `.json` twin (post/page only; site root skipped) so the twin purges alongside the HTML |
 | `sn_seo_robots_directives` | filter | plugin: `apply_filters( 'sn_seo_robots_directives', $directives )` while the plugin builds the robots meta tag (seam opened plugin v9.88.0). **NOT core's `wp_robots`** — the plugin removes core's emitter in `inc/seo.php` so it can own the tag, which is why a theme-side `wp_robots` filter is dead code (v10.51.0 shipped exactly that mistake and was live-verified inert) | theme: [`inc/page-notes-template.php`](../inc/page-notes-template.php) (listener added v10.51.1) noindexes search-mode `/notes` renders via `sn_notes_search_robots()` |
 
-> **Retired in theme v8.3.0 (Phase 2b):** the 5 updater/self-heal contracts (`sn_self_heal_force_run_result`, `sn_updater_branch`, `sn_updater_revcount`, `sn_updater_force_check`, `sn_updater_clear_error`). See [Phase 2b spec](superpowers/specs/2026-05-15-phase-2b-cleanup-design.md).
+> **Retired in theme v8.3.0 (Phase 2b):** the 5 updater/self-heal contracts (`sn_self_heal_force_run_result`, `sn_updater_branch`, `sn_updater_revcount`, `sn_updater_force_check`, `sn_updater_clear_error`). See Phase 2b spec (`docs/superpowers/specs/2026-05-15-phase-2b-cleanup-design.md`, local-only).
 
-> **Added in theme v8.4.0 (Phase 3):** `sn_og_font_paths` — plugin owns OG card PHP GD rendering; theme owns the typography. See [Phase 3 spec](superpowers/specs/2026-05-16-phase-3-theme-coupled-moves-design.md).
+> **Added in theme v8.4.0 (Phase 3):** `sn_og_font_paths` — plugin owns OG card PHP GD rendering; theme owns the typography. See Phase 3 spec (`docs/superpowers/specs/2026-05-16-phase-3-theme-coupled-moves-design.md`, local-only).
 
 > **Added in theme v9.1.6 / plugin v4.1.1 (audit X-01):** `sn_gh_latest_theme_tag_result` — plugin needed the latest theme tag for its deploy-status card but was reaching directly into the theme function via `function_exists`. The new filter contract makes the dependency tolerant of theme-absent/inactive states.
 
@@ -343,7 +343,7 @@ The theme is presentation; the companion plugin [`signal-and-noise-tools`](https
 
 **When adding new cross-package interactions:** add a row to the table above and document the listener side in the theme file that owns the underlying function. **Never let plugin code directly call a theme function — even with `function_exists` guards.** The contract pattern is non-negotiable.
 
-**Function-prefix convention — `sn_` vs `snt_` (documented v9.6.x / plugin v4.5.x; rationale from the [v5.0.0 scope audit](superpowers/specs/2026-05-26-v5.0.0-scope.md)):**
+**Function-prefix convention — `sn_` vs `snt_` (documented v9.6.x / plugin v4.5.x; rationale from the v5.0.0 scope audit (`docs/superpowers/specs/2026-05-26-v5.0.0-scope.md`, local-only)):**
 
 The plugin splits its function names across two prefixes. This is a real, load-bearing convention — the v5.0.0 contract audit acts on it — not accidental drift:
 
@@ -359,7 +359,7 @@ Rough live split (plugin, 2026-06): ~200 `sn_*` vs ~186 `snt_*` function definit
 The original GitHub-poll self-updater (`inc/updater.php`, 683 LOC) and the
 associated `sn_updater_*` contracts were removed in theme v8.3.0 (2026-05-15)
 when Phase 2b landed. Theme deploys then rode Cloudways' git-pull on tag push
-(see [Phase 2a spec](superpowers/specs/2026-05-15-cloudways-auto-deploy-design.md))
+(see Phase 2a spec (`docs/superpowers/specs/2026-05-15-cloudways-auto-deploy-design.md`, local-only))
 which made the WP-Cron SWR refresh + filter-injection layer redundant.
 
 If you're maintaining a fork that still needs the original in-WP update
@@ -471,7 +471,7 @@ mv wp-content/upgrade/sn-signal-and-noise-tools-git-backup wp-content/plugins/si
 
 ## 11. The versioning rules (project-specific)
 
-Recap from [CLAUDE.md](../CLAUDE.md) and [docs/VERSIONING.md](VERSIONING.md):
+Recap from CLAUDE.md (`CLAUDE.md`, local-only) and [docs/VERSIONING.md](VERSIONING.md):
 
 - **No caps** (dropped 2026-05-26 — they forced fictional majors; see [VERSIONING.md](VERSIONING.md)
   for the audit that killed them). Patch and minor numbers grow as high as needed; MAJOR gates
@@ -522,7 +522,7 @@ The bugs / surprises we've actually paid for. Reference this list before assumin
 | 21 | **WP core's `rel_canonical()` fires on every singular view including static front pages.** Registered at `wp_head` priority 10 by `wp-includes/default-filters.php`. The function checks `is_singular()` and emits `<link rel="canonical">`. Plugins emitting their own canonical at lower priorities will produce two canonical tags per page unless they explicitly remove the core action. Until Phase 13, TSF was suppressing core's `rel_canonical` for us behind the scenes. | `wp-includes/link-template.php` `rel_canonical()`; `wp-includes/default-filters.php` adds the action | When introducing custom canonical emission, immediately add `remove_action( 'wp_head', 'rel_canonical' )` on `init` priority 1. Defensive gate on `! function_exists( 'the_seo_framework' )` so accidental TSF reactivation doesn't double-suppress. Plugin v2.0.2 [`inc/seo.php`](https://github.com/juanlentino/signal-and-noise-tools/blob/main/inc/seo.php) does this. |
 | 22 | **WP core's `wp_robots()` emits a competing `<meta name="robots">` only when `blog_public=0`** ("Discourage search engines" in Settings → Reading). Hooked at `wp_head` priority 1 since WP 5.7. When `blog_public=1` (production default) it emits nothing — so the conflict is latent. A staging clone or accidental toggle introduces a second robots tag with conflicting directives overnight. | `wp-includes/robots-template.php` `wp_robots()`; `wp-includes/default-filters.php` adds the action | Same defensive pattern as rel_canonical removal: `remove_action( 'wp_head', 'wp_robots', 1 )` on `init`, gated on TSF absence. Plugin v2.0.4 adds this — surfaced by the pre-7.0 audit subagent, not by user-visible breakage. |
 | 23 | **Block themes do NOT auto-declare `title-tag` theme support.** Despite many tutorials claiming otherwise, `wp-includes/theme.php` on trunk has no auto-declaration for block themes. Without an explicit `add_theme_support('title-tag')` in `inc/setup.php`, `_wp_render_title_tag()` returns early and the page has NO `<title>` tag at all. The only reason this looked working pre-Phase-13 is that TSF was emitting `<title>` itself, masking the gap. | `wp-includes/theme.php` `_wp_render_title_tag()` capability check; `wp-includes/general-template.php` registers the hook | Always declare `add_theme_support('title-tag')` explicitly in block themes' `after_setup_theme` callback. Theme v8.5.5 added this when deactivating TSF made the gap visible. |
-| 24 | **`WordPress/desktop-mode` auto-imports every `add_menu_page()` entry into its dock by default.** Per [`includes/core/payload.php`](https://github.com/WordPress/desktop-mode/blob/trunk/includes/core/payload.php), the default dock items array iterates `$menu` + `$submenu` globals and converts each accessible page to a dock entry. Plugins that ALSO register an explicit dock entry via the `desktop_mode_dock_items` filter end up with two visible entries for the same plugin — one with the plugin's registered icon, one with desktop-mode's generic fallback. | `WordPress/desktop-mode` `includes/core/payload.php` (default dock builder) | Use the documented `desktop_mode_dock_placement` filter to return `'hidden'` for your menu slug, suppressing the auto-import. Keep your explicit `desktop_mode_dock_items` entry for the richer submenu + badge. Plugin v2.0.1 [`inc/desktop-mode-integration.php`](https://github.com/juanlentino/signal-and-noise-tools/blob/main/inc/desktop-mode-integration.php) does this. |
+| 24 | **`WordPress/desktop-mode` auto-imports every `add_menu_page()` entry into its dock by default.** Per [`includes/core/payload.php`](https://github.com/WordPress/desktop-mode/blob/trunk/includes/core/payload.php), the default dock items array iterates `$menu` + `$submenu` globals and converts each accessible page to a dock entry. Plugins that ALSO register an explicit dock entry via the `desktop_mode_dock_items` filter end up with two visible entries for the same plugin — one with the plugin's registered icon, one with desktop-mode's generic fallback. | `WordPress/desktop-mode` `includes/core/payload.php` (default dock builder) | Use the documented `desktop_mode_dock_placement` filter to return `'hidden'` for your menu slug, suppressing the auto-import. Keep your explicit `desktop_mode_dock_items` entry for the richer submenu + badge. Plugin v2.0.1 [`inc/desktop-mode-dock.php`](https://github.com/juanlentino/signal-and-noise-tools/blob/v10.87.2/inc/desktop-mode-dock.php) does this. |
 | 25 | **`wp_register_ability()` silently returns `null` if the category slug isn't pre-registered.** Per `WordPress/abilities-api`, the registry checks `wp_has_ability_category()` and fires `_doing_it_wrong` + bails out. Categories MUST be registered via `wp_register_ability_category()` during the **separate** `wp_abilities_api_categories_init` action — registering on `wp_abilities_api_init` (the abilities-register hook) is too late. | `WordPress/abilities-api` `includes/abilities-api.php` registry guard | When using the Abilities API in WP 7.0+, hook BOTH actions: `wp_abilities_api_categories_init` first (register your category slugs), then `wp_abilities_api_init` (register the abilities that cite them). Plugin v2.0.4 [`inc/abilities-registration.php`](https://github.com/juanlentino/signal-and-noise-tools/blob/main/inc/abilities-registration.php) demonstrates the two-step pattern. Caught by an audit subagent before shipping — would have silently failed all 4 ability registrations on 7.0 launch. |
 | 26 | **`is_plugin_active()` is a pure option lookup — it does NOT check whether the plugin file actually exists on disk.** If a plugin is removed via the filesystem (e.g., FTP/SSH/Cloudways File Manager delete) instead of WP's Deactivate flow, its slug stays in the `active_plugins` option as an orphan forever. WP silently skips the missing file on every page load (no error, no admin notice), but `is_plugin_active( $basename )` still returns `true`. Any plugin that gates behavior on another plugin's active-state via `is_plugin_active()` will misbehave indefinitely. | `wp-admin/includes/plugin.php` `is_plugin_active()` → `in_array( $plugin, (array) get_option( 'active_plugins', array() ), true )` | Always pair `is_plugin_active( $basename )` with `file_exists( WP_PLUGIN_DIR . '/' . $basename )` when conditioning on another plugin's presence. The `&&` of both signals is the only authoritative "actually running" check. Caught by a production login lockout in 2026-05-18 — plugin v2.1.1 [`inc/login-hide.php`](https://github.com/juanlentino/signal-and-noise-tools/blob/main/inc/login-hide.php) added the file_exists tightening (plus mirrored it in admin-page.php status display). Cleanup of orphan slug is optional — the consumer-side defense makes it irrelevant. |
 | 27 | **Critical CSS scope is a TIME-DOMAIN question, not a viewport-domain question.** The conventional rule "critical CSS = above the fold" conflates render timing (initial paint, ~50-200ms) with interaction timing (any user input firing at any moment). Styles needed for state revealed by interaction (e.g., `.is-menu-open` cascade for a hamburger overlay) can be triggered milliseconds after first paint, before the deferred stylesheet roundtrip completes. If the styles live only in the deferred bundle, the user sees unstyled content for the brief race-condition window. The rule should be: **critical CSS = what can possibly render before the deferred stylesheet roundtrip completes**, which includes any interaction-triggered state on always-visible controls. | N/A — this is a perf-pattern misconception, not a WP gotcha per se | When pruning critical CSS, ask "could a user click/tap/hover to reveal this content before `<link rel='stylesheet'>` tags below the inline block have fetched?" If yes, keep the styles in critical. Theme v8.5.7 restored the `.is-menu-open` cascade after v8.5.6's overly-aggressive pruning shipped this race condition. Patterns at-risk: mobile nav overlays, dropdown menus, modals triggered by always-visible buttons, hover-revealed tooltips on the hero. Patterns safe-to-defer: animation keyframes (entrance fades are post-paint), `:hover` styles on non-critical elements, form widget styling for forms deep below the fold. |

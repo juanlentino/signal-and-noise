@@ -96,7 +96,7 @@ When adding or modifying any palette token, re-run the measurement:
 
 | Date | Audit | Outcome |
 |---|---|---|
-| 2026-05-26 | [Audit D — Perf + A11y](superpowers/specs/2026-05-26-audit-d-perf-a11y-findings.md) | 🟢 GREEN. Every text pairing passes AA. Tightest margins documented above. |
+| 2026-05-26 | Audit D — Perf + A11y (`docs/superpowers/specs/2026-05-26-audit-d-perf-a11y-findings.md`, local-only) | 🟢 GREEN. Every text pairing passes AA. Tightest margins documented above. |
 
 ## Related files
 

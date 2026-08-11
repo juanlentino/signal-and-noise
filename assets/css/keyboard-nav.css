@@ -78,7 +78,9 @@
 	padding: 0.2rem 0.45rem;
 	border: 1px solid var(--wp--preset--color--void);
 	background: var(--wp--preset--color--blood);
-	color: var(--wp--preset--color--bone);
+	/* void, not bone: 11px text, and bone-on-blood is 4.19:1 (below the 4.5
+	   AA floor). void on blood is 5.01:1 and matches the void border. */
+	color: var(--wp--preset--color--void);
 	font-family: var(--wp--preset--font-family--body);
 	font-size: 0.6875rem; /* 11px floor */
 	line-height: 1.1;

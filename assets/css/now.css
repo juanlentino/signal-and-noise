@@ -21,7 +21,7 @@
 	font-size: max(0.7rem, 11px);
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 	margin: 0 0 1rem;
 }
 .sn-now-headline {
@@ -30,13 +30,13 @@
 	font-size: clamp(3rem, 8vw, 7rem);
 	line-height: 0.95;
 	letter-spacing: -0.01em;
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 	margin: 0;
 }
 .sn-now-dek {
 	font-size: clamp(1rem, 1.4vw, 1.15rem);
 	line-height: 1.55;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 	max-width: 52ch;
 	margin: 1rem 0 0.5rem;
 }
@@ -45,7 +45,7 @@
 	font-size: max(0.7rem, 11px);
 	letter-spacing: 0.14em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 	margin: 0;
 }
 
@@ -59,7 +59,7 @@
 	justify-content: space-between;
 	gap: 1rem;
 	padding-bottom: 0.6rem;
-	border-bottom: 2px solid var(--wp--preset--color--bone, #000);
+	border-bottom: 2px solid var(--wp--preset--color--bone);
 	margin-bottom: 0.5rem;
 }
 .sn-now-section-label {
@@ -68,14 +68,14 @@
 	font-size: clamp(1.4rem, 3vw, 2rem);
 	letter-spacing: 0.02em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 	margin: 0;
 }
 .sn-now-section-count {
 	font-family: 'DM Mono', 'Courier New', monospace;
 	font-size: max(0.75rem, 12px);
 	letter-spacing: 0.12em;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 }
 
 /* ── Items ────────────────────────────────────────────────────────────── */
@@ -86,7 +86,7 @@
 }
 .sn-now-item {
 	padding: clamp(0.85rem, 1.6vw, 1.15rem) 0;
-	border-bottom: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+	border-bottom: 1px solid var(--wp--preset--color--concrete);
 	transition: padding 0.2s ease;
 }
 .sn-now-item:last-child {
@@ -99,7 +99,7 @@
 	font-family: 'DM Mono', 'Courier New', monospace;
 	font-size: clamp(0.95rem, 1.4vw, 1.05rem);
 	line-height: 1.5;
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 }
 
 @media (prefers-reduced-motion: reduce) {

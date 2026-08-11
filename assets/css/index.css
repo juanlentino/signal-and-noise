@@ -22,7 +22,7 @@
 	font-size: max(0.7rem, 11px);
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 	margin: 0 0 1rem;
 }
 .sn-index-headline {
@@ -31,13 +31,13 @@
 	font-size: clamp(3rem, 8vw, 7rem);
 	line-height: 0.95;
 	letter-spacing: -0.01em;
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 	margin: 0;
 }
 .sn-index-dek {
 	font-size: clamp(1rem, 1.4vw, 1.15rem);
 	line-height: 1.55;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 	max-width: 46ch;
 	margin: 1rem 0 0.5rem;
 }
@@ -46,7 +46,7 @@
 	font-size: max(0.7rem, 11px);
 	letter-spacing: 0.14em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 	margin: 0;
 }
 
@@ -60,7 +60,7 @@
 	justify-content: space-between;
 	gap: 1rem;
 	padding-bottom: 0.6rem;
-	border-bottom: 2px solid var(--wp--preset--color--bone, #000);
+	border-bottom: 2px solid var(--wp--preset--color--bone);
 	margin-bottom: 0.5rem;
 }
 .sn-index-section-label {
@@ -69,14 +69,14 @@
 	font-size: clamp(1.4rem, 3vw, 2rem);
 	letter-spacing: 0.02em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 	margin: 0;
 }
 .sn-index-section-count {
 	font-family: 'DM Mono', 'Courier New', monospace;
 	font-size: max(0.75rem, 12px);
 	letter-spacing: 0.12em;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 }
 
 /* ── Rows (the reused idiom) ──────────────────────────────────────────── */
@@ -90,7 +90,7 @@
 	grid-template-columns: 1fr;
 	gap: 0.35rem;
 	padding: clamp(0.85rem, 1.6vw, 1.2rem) 0;
-	border-bottom: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+	border-bottom: 1px solid var(--wp--preset--color--concrete);
 	transition: padding 0.2s ease;
 }
 .sn-index-row:last-child {
@@ -111,7 +111,7 @@
 	font-size: 0.75rem;
 	letter-spacing: 0.12em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 }
 .sn-index-row-content {
 	min-width: 0;
@@ -125,7 +125,7 @@
 	margin: 0;
 }
 .sn-index-row-title a {
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 	text-decoration: none;
 	background-image: linear-gradient(currentColor, currentColor);
 	background-position: 0 100%;
@@ -135,13 +135,13 @@
 	padding-bottom: 2px;
 }
 .sn-index-row-title a:hover {
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 	background-size: 100% 1px;
 }
 .sn-index-row-sub {
 	font-size: 0.9rem;
 	line-height: 1.5;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 	margin: 0.25rem 0 0;
 	max-width: 60ch;
 }

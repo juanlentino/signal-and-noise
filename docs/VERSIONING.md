@@ -26,10 +26,10 @@ The caps were dropped 2026-05-26 after the v4.4.x deep audit revealed they were 
 
 What replaced the caps:
 
-- **Roadmap brainstorm-checkpoints** — explicit deliberation moments before each new minor or major (see [docs/superpowers/specs/2026-05-26-roadmap-to-v5-and-v10-design.md](superpowers/specs/2026-05-26-roadmap-to-v5-and-v10-design.md))
+- **Roadmap brainstorm-checkpoints** — explicit deliberation moments before each new minor or major (see `docs/superpowers/specs/2026-05-26-roadmap-to-v5-and-v10-design.md`, local-only)
 - **Audit findings docs** — surface actual issues that warrant patches / minors / majors based on what the code is doing, not what the counter says
 - **Post-ship cycle template** (QA → Bugfix → UI/UX → Gate) — structured response to live findings
-- **Pre-major audit / scope docs** (e.g., [v5.0.0-scope.md](https://github.com/juanlentino/signal-and-noise-tools/blob/main/docs/superpowers/specs/2026-05-26-v5.0.0-scope.md)) — concrete inventory of what a major would actually need to break
+- **Pre-major audit / scope docs** (e.g., v5.0.0-scope.md (`signal-and-noise-tools/docs/superpowers/specs/2026-05-26-v5.0.0-scope.md`, local-only)) — concrete inventory of what a major would actually need to break
 
 Together these provide stronger triggers for version transitions than the cap rule did. The cap is gone; the discipline isn't.
 
@@ -136,6 +136,6 @@ Fix: bumped each number's `margin-bottom` from `0` to `var:preset|spacing|10`
 ## See also
 
 - Global versioning rules: `~/.claude/CLAUDE.md`
-- Project overrides: [CLAUDE.md](../CLAUDE.md)
+- Project overrides: CLAUDE.md (`CLAUDE.md`, local-only)
 - Smoke test workflow: [.github/workflows/smoke-test.yml](../.github/workflows/smoke-test.yml)
-- Self-updater: [inc/updater.php](../inc/updater.php) (how WP polls origin/main and offers updates)
+- Self-updater: [inc/wp-update-integration.php](../inc/wp-update-integration.php) (how WP polls origin/main and offers updates)

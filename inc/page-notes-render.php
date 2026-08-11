@@ -174,11 +174,11 @@ wp_head();
 	font-size: max(0.7rem, 11px);
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 	margin: 0;
 }
 .sn-notes-eyebrow {
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 	margin-bottom: 1rem;
 }
 .sn-notes-headline {
@@ -190,13 +190,13 @@ wp_head();
 	line-height: 0.95;
 	letter-spacing: -0.02em;
 	margin: 0 0 1.25rem;
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 }
 .sn-notes-dek {
 	font-size: clamp(1rem, 1.4vw, 1.15rem);
 	line-height: 1.55;
 	max-width: 48ch;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 	margin: 0 0 1.5rem;
 }
 .sn-notes-meta {
@@ -205,14 +205,14 @@ wp_head();
 	flex-wrap: wrap;
 }
 .sn-notes-meta-bullet {
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 }
 
 /* RULE — section divider, full-width hairline */
 
 .sn-notes-rule {
 	border: 0;
-	border-top: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+	border-top: 1px solid var(--wp--preset--color--concrete);
 	margin: clamp(2rem, 4vw, 3.5rem) 0;
 }
 
@@ -229,18 +229,18 @@ wp_head();
 	gap: 1rem;
 	margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
 	padding-bottom: 0.5rem;
-	border-bottom: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+	border-bottom: 1px solid var(--wp--preset--color--concrete);
 }
 .sn-notes-section-label {
 	font-size: max(0.7rem, 11px);
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 }
 .sn-notes-section-count {
 	font-family: 'DM Mono', 'Courier New', monospace;
 	font-size: max(0.7rem, 11px);
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 }
 
 /* NOTES INDEX — tabular ──────────────────────────────────────── */
@@ -256,7 +256,7 @@ wp_head();
 	grid-template-columns: 1fr;
 	gap: 0.5rem;
 	padding: clamp(1rem, 2vw, 1.5rem) 0;
-	border-bottom: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+	border-bottom: 1px solid var(--wp--preset--color--concrete);
 	transition: padding 0.2s ease;
 }
 .sn-notes-row:last-child {
@@ -278,7 +278,7 @@ wp_head();
 	font-size: 0.75rem;
 	letter-spacing: 0.14em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 	display: flex;
 	flex-wrap: wrap;
 	gap: 0.5rem;
@@ -292,14 +292,14 @@ wp_head();
 	}
 }
 .sn-notes-row-date {
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 	font-weight: 500;
 }
 .sn-notes-row-rt {
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 }
 .sn-notes-row:hover .sn-notes-row-date {
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 }
 
 .sn-notes-row-content {
@@ -314,7 +314,7 @@ wp_head();
 	margin: 0 0 0.6rem;
 }
 .sn-notes-row-title a {
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 	text-decoration: none;
 	background-image: linear-gradient(currentColor, currentColor);
 	background-position: 0 100%;
@@ -324,13 +324,13 @@ wp_head();
 	padding-bottom: 2px;
 }
 .sn-notes-row-title a:hover {
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 	background-size: 100% 1px;
 }
 .sn-notes-row-excerpt {
 	font-size: 0.95rem;
 	line-height: 1.6;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 	margin: 0;
 	/* Loosened 60ch → 80ch with the 1320px container (owner direction,
 	   v11.4.0): the tighter cap left the right half of each row empty. */
@@ -345,7 +345,7 @@ wp_head();
 	font-size: 0.85rem;
 	letter-spacing: 0.1em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 	padding: 2rem 0;
 }
 
@@ -358,11 +358,11 @@ wp_head();
 	align-items: center;
 	gap: 0.5rem;
 	margin-bottom: clamp(1.5rem, 3vw, 2.25rem);
-	border-bottom: 1px solid var(--wp--preset--color--concrete, #d9d9d9);
+	border-bottom: 1px solid var(--wp--preset--color--concrete);
 	transition: border-color 0.2s ease;
 }
 .sn-notes-search:focus-within {
-	border-bottom-color: var(--wp--preset--color--bone, #000);
+	border-bottom-color: var(--wp--preset--color--bone);
 }
 .sn-notes-search input[type="search"] {
 	flex: 1 1 auto;
@@ -373,7 +373,7 @@ wp_head();
 	font-family: 'DM Mono', 'Courier New', monospace;
 	font-size: max(0.9rem, 12px);
 	letter-spacing: 0.04em;
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 	-webkit-appearance: none;
 	appearance: none;
 }
@@ -385,7 +385,7 @@ wp_head();
    the theme's global focus-visible list (base.css) doesn't cover
    input[type="search"]. WCAG 2.4.7. */
 .sn-notes-search input[type="search"]:focus-visible {
-	outline: 2px solid var(--wp--preset--color--blood, #e00404);
+	outline: 2px solid var(--wp--preset--color--blood);
 	outline-offset: 3px;
 }
 /* Strip the UA search-clear "✕" + decoration so the brutalist field stays a
@@ -396,7 +396,7 @@ wp_head();
 	appearance: none;
 }
 .sn-notes-search input[type="search"]::placeholder {
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 	text-transform: uppercase;
 	letter-spacing: 0.16em;
 	font-size: 0.78em;
@@ -411,7 +411,7 @@ wp_head();
 	align-items: center;
 	justify-content: center;
 	cursor: pointer;
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 	font-family: 'DM Mono', 'Courier New', monospace;
 	font-size: 1.15rem;
 	line-height: 1;
@@ -419,7 +419,7 @@ wp_head();
 }
 .sn-notes-search button:hover,
 .sn-notes-search button:focus {
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 	transform: translateX(2px);
 }
 
@@ -429,13 +429,13 @@ wp_head();
 	font-size: max(0.7rem, 11px);
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 	text-decoration: none;
 	transition: color 0.2s ease;
 }
 .sn-notes-section-clear:hover,
 .sn-notes-section-clear:focus {
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 }
 
 /* Result-count line under the search header. */
@@ -444,7 +444,7 @@ wp_head();
 	font-size: max(0.7rem, 11px);
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 	margin: 0 0 clamp(1.25rem, 2.5vw, 1.75rem);
 }
 
@@ -475,23 +475,23 @@ wp_head();
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
 	line-height: 1.7;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 	max-width: 48ch;
 }
 .sn-notes-subscribe a {
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 	text-decoration: none;
 	border-bottom: 1px solid transparent;
 	transition: border-color 0.2s ease;
 }
 .sn-notes-subscribe a:hover {
-	border-bottom-color: var(--wp--preset--color--blood, #e00404);
+	border-bottom-color: var(--wp--preset--color--blood);
 }
 .sn-notes-cursor {
 	display: inline-block;
 	width: 0.4em;
 	height: 0.95em;
-	background: var(--wp--preset--color--blood, #e00404);
+	background: var(--wp--preset--color--blood);
 	margin-left: 0.4em;
 	vertical-align: -0.1em;
 	animation: sn-blink 1.05s steps(2, end) infinite;
@@ -529,7 +529,7 @@ wp_head();
    out-of-date-order placement is intentional (a sticky), not a sort bug; the
    row is otherwise an ordinary .sn-notes-row. */
 .sn-notes-row-pin {
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 	font-weight: 500;
 }
 
@@ -551,7 +551,7 @@ wp_head();
 }
 .sn-notes-pagination a,
 .sn-notes-pagination span {
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 	text-decoration: none;
 	padding: 0.25rem 0.5rem;
 	min-width: 1.5rem;
@@ -559,12 +559,12 @@ wp_head();
 }
 .sn-notes-pagination a:hover,
 .sn-notes-pagination a:focus {
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 	text-decoration: underline;
 	text-underline-offset: 0.25em;
 }
 .sn-notes-pagination .current {
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 	font-weight: 700;
 }
 </style>

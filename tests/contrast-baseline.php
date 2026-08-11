@@ -9,6 +9,28 @@
  * theme.json AND the test in the same commit. The window forces a
  * conscious decision (not silent erosion).
  *
+ * ── READ THIS BEFORE TRUSTING A GREEN RUN (2026-08-11) ──────────────
+ * Tests 1-5 measure the ROOT palette in theme.json. That is NOT
+ * necessarily what the site serves. Activating a style variation copies
+ * that variation's palette into the `wp_global_styles` CPT, and it wins.
+ *
+ * It bit: the live site runs the "High Contrast" variation
+ * (asphalt #e0e0e0, concrete #9e9e9e, rust #333333) while theme.json
+ * reads #f5f5f5/#d9d9d9/#666666. Both are correct — they are different
+ * styles. But this suite reported 20 passed / 0 failed with delta 0.00 on
+ * EVERY drift assertion while the ACTIVE palette carried a real AA
+ * failure: blood-on-asphalt is 4.60 at root (passes) and 3.80 under High
+ * Contrast (fails). Darkening a background helps dark text and hurts the
+ * red accent, so a variation SOLD as higher contrast lowered it for one
+ * pairing. The suite was not wrong; it was measuring one of several
+ * palettes and reporting as if it were the only one.
+ *
+ * Hence two additions, both asserting RELATIONSHIPS rather than literals:
+ *   Test 6 — the served palette must be root or a SHIPPED variation
+ *            (needs WP; cannot run in CI).
+ *   Test 7 — no sub-AA text pairing may exist under ANY palette the theme
+ *            can present (pure static analysis; DOES run in CI).
+ *
  * Algorithm: WCAG 2.1 SC 1.4.3 (Contrast Minimum). Relative luminance L =
  * 0.2126*R + 0.7152*G + 0.0722*B where each channel is the sRGB-to-linear
  * transform of the 8-bit value / 255. Contrast ratio = (L1 + 0.05) / (L2 + 0.05).
@@ -59,6 +81,60 @@ function snt_test_contrast_ratio( $hex_a, $hex_b ) {
 	$lighter = max( $l1, $l2 );
 	$darker  = min( $l1, $l2 );
 	return ( $lighter + 0.05 ) / ( $darker + 0.05 );
+}
+
+/**
+ * Normalise a hex colour to lowercase 6-digit, no '#', so short and long
+ * form never read as a difference.
+ *
+ * @param string $hex
+ * @return string
+ */
+function snt_test_norm_hex( $hex ) {
+	$hex = strtolower( ltrim( trim( (string) $hex ), '#' ) );
+	if ( 3 === strlen( $hex ) ) {
+		$hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+	}
+	return $hex;
+}
+
+/**
+ * Every palette this theme can present: the root palette plus each shipped
+ * style variation in styles/. Variations inherit any slug they do not
+ * redefine, which is why each is merged over root rather than read alone —
+ * a variation that overrode only `rust` would otherwise appear to have a
+ * one-colour palette and silently drop out of Test 7's coverage.
+ *
+ * @return array<string, array<string,string>> label => (slug => normalised hex)
+ */
+function snt_test_all_palettes() {
+	static $cache = null;
+	if ( null !== $cache ) {
+		return $cache;
+	}
+
+	$read = function ( $path ) {
+		$data = json_decode( (string) file_get_contents( $path ), true );
+		$out  = array();
+		foreach ( ( $data['settings']['color']['palette'] ?? array() ) as $e ) {
+			if ( isset( $e['slug'], $e['color'] ) ) {
+				$out[ $e['slug'] ] = snt_test_norm_hex( $e['color'] );
+			}
+		}
+		return $out;
+	};
+
+	$root  = $read( __DIR__ . '/../theme.json' );
+	$cache = array( 'root (theme.json)' => $root );
+
+	foreach ( (array) glob( __DIR__ . '/../styles/*.json' ) as $file ) {
+		$overrides = $read( $file );
+		if ( $overrides ) {
+			$cache[ 'variation: ' . basename( $file, '.json' ) ] = array_merge( $root, $overrides );
+		}
+	}
+
+	return $cache;
 }
 
 // ─── Load palette from theme.json ──────────────────────────────────
@@ -145,12 +221,24 @@ cb_gte( snt_test_contrast_ratio( $colors['bone'], $colors['asphalt'] ),  4.5, 'b
 cb_gte( snt_test_contrast_ratio( $colors['rust'], $colors['void'] ),     4.5, 'rust on void: AA normal text (secondary)' );
 cb_gte( snt_test_contrast_ratio( $colors['rust'], $colors['asphalt'] ),  4.5, 'rust on asphalt: AA normal text (secondary on cards)' );
 cb_gte( snt_test_contrast_ratio( $colors['blood'], $colors['void'] ),    4.5, 'blood on void: AA normal text (brand accent)' );
-cb_gte( snt_test_contrast_ratio( $colors['blood'], $colors['asphalt'] ), 4.5, 'blood on asphalt: AA normal text (TIGHT — see ACCESSIBILITY.md Watch 1)' );
+// blood-on-asphalt (4.60 at root, 3.80 under High Contrast) is NOT asserted
+// here any more, for two reasons. It is no longer a rendered pairing — as of
+// 2026-08-11 every blood-text-on-asphalt surface moved to void (core/code,
+// .sn-pillar-card, .sn-footnote-popover, .sn-notes-pillar) — and a
+// single-palette assertion could never have caught it anyway, since it
+// passes at root and only fails under a variation. Test 7 replaces it and
+// checks every shipped palette.
 
 // ─── Test 3: AA large-text + non-text pairings (>= 3.0) ────────────
 echo "\nTest 3: AA large-text / non-text pairings (>= 3.0)\n";
 cb_gte( snt_test_contrast_ratio( $colors['signal'], $colors['void'] ),    3.0, 'signal on void: AA large text / non-text (hover state, requires underline per ACCESSIBILITY.md Watch 2)' );
-cb_gte( snt_test_contrast_ratio( $colors['signal'], $colors['asphalt'] ), 3.0, 'signal on asphalt: AA large text / non-text (hover state on cards)' );
+// signal-on-asphalt (2.49:1) is NOT asserted here any more. The comment it
+// carried ("hover state on cards") was stale: the only two signal-on-asphalt
+// uses are 7px status dots (.sn-music-featured__dot, .sn-availability__dot),
+// both aria-hidden="true" and both sitting beside their own text label — so
+// they are decorative and outside SC 1.4.11, which covers graphics REQUIRED
+// to understand the content. Test 7 catches it if signal ever becomes real
+// text on an asphalt surface.
 
 // ─── Test 4: baseline drift tolerance (watch the tight margin) ─────
 echo "\nTest 4: baseline drift tolerance\n";
@@ -161,7 +249,9 @@ $current_signal_void    = snt_test_contrast_ratio( $colors['signal'], $colors['v
 $current_signal_asphalt = snt_test_contrast_ratio( $colors['signal'], $colors['asphalt'] );
 $current_rust_void      = snt_test_contrast_ratio( $colors['rust'], $colors['void'] );
 
-// Baselines from docs/ACCESSIBILITY.md (measured 2026-05-26).
+// Baselines from docs/ACCESSIBILITY.md (measured 2026-05-26). These are
+// the ROOT palette — the theme's default style. They are NOT what the live
+// site serves whenever a style variation is active; see Test 6.
 // Tolerance ±0.20 → any meaningful palette tweak fails the test, forcing
 // an explicit decision (update theme.json AND this test in the same commit).
 cb_eq_approx( $current_blood_void,     5.01, 0.20, 'blood-on-void baseline drift within tolerance (baseline 5.01)' );
@@ -174,6 +264,206 @@ cb_eq_approx( $current_rust_void,      5.74, 0.20, 'rust-on-void baseline drift 
 echo "\nTest 5: maximum-contrast sanity\n";
 $bone_void_ratio = snt_test_contrast_ratio( $colors['bone'], $colors['void'] );
 cb_gte( $bone_void_ratio, 20.0, 'bone-on-void approaches WCAG max (21.0) — sanity check that #000 / #fff is configured' );
+
+// ─── Test 6: the SERVED palette is root or a shipped variation ─────
+//
+// NOT "served == theme.json". A style variation is a legitimate, shipped
+// alternative palette, and activating one makes served differ from root
+// by design — asserting equality would fail on correct configuration.
+//
+// The real invariant: whatever the site serves must be a palette this
+// repo actually ships. That still catches the thing worth catching (an
+// ad-hoc Site Editor edit, a stale deploy, a rogue filter) while treating
+// an active variation as the normal state it is. It also NAMES the active
+// style, which is the fact Tests 1-5 silently assumed away.
+//
+// Requires WP. Under plain CLI it SKIPS rather than passing vacuously.
+echo "\nTest 6: served palette is root or a shipped variation (requires WP)\n";
+
+if ( ! function_exists( 'wp_get_global_stylesheet' ) ) {
+	echo "  SKIP: WordPress not loaded — run via `wp eval-file " . basename( __FILE__ ) . "`.\n";
+	echo "        This check CANNOT run in CI (no WP, no database). Test 7 is the\n";
+	echo "        CI-runnable half; it needs no WP and covers every shipped palette.\n";
+} else {
+	$served_css = (string) wp_get_global_stylesheet();
+	$served     = array();
+	if ( preg_match_all( '/--wp--preset--color--([a-z0-9-]+)\s*:\s*([^;]+);/i', $served_css, $m, PREG_SET_ORDER ) ) {
+		foreach ( $m as $hit ) {
+			$served[ strtolower( $hit[1] ) ] = snt_test_norm_hex( $hit[2] );
+		}
+	}
+
+	if ( empty( $served ) ) {
+		$fail++;
+		echo "  FAIL: parsed no --wp--preset--color--* from wp_get_global_stylesheet()\n";
+		echo "        (positive-control failure — broken probe, NOT 'no drift')\n";
+	} else {
+		// Restrict to slugs this theme owns; WP may serve others.
+		$served = array_intersect_key( $served, $colors );
+		$matched = null;
+		foreach ( snt_test_all_palettes() as $label => $palette ) {
+			if ( count( $palette ) === count( $served ) && ! array_diff_assoc( $palette, $served ) ) {
+				$matched = $label;
+				break;
+			}
+		}
+
+		if ( null !== $matched ) {
+			$pass++;
+			echo "  PASS: served palette matches a shipped style — ACTIVE STYLE: $matched\n";
+			if ( 'root (theme.json)' !== $matched ) {
+				echo "        NOTE: Tests 1-5 above measured ROOT, not this. Test 7 covers all styles.\n";
+			}
+		} else {
+			$fail++;
+			echo "  FAIL: served palette matches NO shipped style — ad-hoc override or stale deploy\n";
+			foreach ( $served as $slug => $hex ) {
+				$root = isset( $colors[ $slug ] ) ? snt_test_norm_hex( $colors[ $slug ] ) : '(absent)';
+				if ( $root !== $hex ) {
+					echo "        $slug: served #$hex, root #$root\n";
+				}
+			}
+		}
+	}
+}
+
+// ─── Test 7: no sub-AA text pairing under ANY shipped palette ──────
+//
+// Replaces the retired blood-on-asphalt / signal-on-asphalt ratio
+// assertions. Those asserted a NUMBER under ONE palette, which is exactly
+// how the High Contrast regression stayed invisible: at root,
+// blood-on-asphalt is 4.60 and passes, so a root-only check reports green
+// while the ACTIVE style renders it at 3.80.
+//
+// So this scans the CSS for real text-on-surface pairings and evaluates
+// each one under root AND every shipped variation, failing if any palette
+// puts it below AA. Needs no WP, so it is the CI-runnable half of the
+// enforcement Test 6 can only do with a database.
+echo "\nTest 7: no sub-AA text pairing under ANY shipped palette (static)\n";
+
+$css_files = array();
+foreach ( array( '/../assets/css', '/../blocks' ) as $rel ) {
+	$root_dir = realpath( __DIR__ . $rel );
+	if ( ! $root_dir ) {
+		continue;
+	}
+	foreach ( new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $root_dir ) ) as $file ) {
+		if ( $file->isFile() && 'css' === strtolower( $file->getExtension() ) ) {
+			$css_files[] = $file->getPathname();
+		}
+	}
+}
+
+if ( empty( $css_files ) ) {
+	$fail++;
+	echo "  FAIL: found no stylesheets to scan (broken probe, NOT 'no violations')\n";
+} else {
+	$rules = array();
+	foreach ( $css_files as $file ) {
+		$css = (string) file_get_contents( $file );
+		if ( preg_match_all( '/([^{}]+)\{([^{}]*)\}/s', $css, $m, PREG_SET_ORDER ) ) {
+			foreach ( $m as $r ) {
+				$sel_lines = preg_split( '/\R/', trim( $r[1] ) );
+				$rules[]   = array(
+					'file' => str_replace( realpath( __DIR__ . '/..' ) . '/', '', $file ),
+					'sel'  => trim( (string) end( $sel_lines ) ),
+					'body' => $r[2],
+				);
+			}
+		}
+	}
+
+	// Surfaces and text are BOTH restricted to pseudo-free rules.
+	//
+	// Deliberately conservative, and the limitation is the point. State
+	// matters: `.x { background: transparent; color: bone }` and
+	// `.x:hover { background: blood; color: void }` are two different
+	// contexts. An earlier cut of this test stripped `:hover` so it could
+	// match more, and promptly paired the hover BACKGROUND with the resting
+	// TEXT colour — reporting `.sn-cmdk-trigger` as bone-on-blood when it is
+	// actually bone-on-transparent. Correctly modelling cascade and state is
+	// a real CSS linter, not a test helper.
+	//
+	// So: resting state only. It catches the regression class that actually
+	// shipped (a surface token changed, or text moved onto a darker fill)
+	// with zero false positives. Hover/focus pairings are NOT covered here —
+	// they remain a manual review item, noted in docs/ACCESSIBILITY.md.
+	$is_plain = function ( $sel ) {
+		return false === strpos( $sel, ':' );
+	};
+
+	$surfaces = array();
+	foreach ( $rules as $r ) {
+		if ( ! $is_plain( $r['sel'] ) ) {
+			continue;
+		}
+		if ( ! preg_match( '/background(-color)?:\s*var\(--wp--preset--color--([a-z0-9-]+)\)/', $r['body'], $bg ) ) {
+			continue;
+		}
+		foreach ( explode( ',', $r['sel'] ) as $one ) {
+			$one = trim( $one );
+			if ( '' !== $one ) {
+				$surfaces[ $one ] = $bg[2];
+			}
+		}
+	}
+
+	$palettes = snt_test_all_palettes();
+	echo '  palettes evaluated: ' . implode( ', ', array_keys( $palettes ) ) . "\n";
+	echo '  resting-state surfaces: ' . count( $surfaces ) . "\n";
+
+	// Longest first, so a child's own surface beats an ancestor's.
+	uksort( $surfaces, function ( $x, $y ) {
+		return strlen( $y ) - strlen( $x );
+	} );
+
+	$violations = 0;
+	foreach ( $rules as $r ) {
+		if ( ! $is_plain( $r['sel'] ) ) {
+			continue;
+		}
+		if ( ! preg_match( '/(?<![a-z-])color:\s*var\(--wp--preset--color--([a-z0-9-]+)\)/', $r['body'], $c ) ) {
+			continue;
+		}
+
+		$bg_slug = null;
+		if ( preg_match( '/background(-color)?:\s*var\(--wp--preset--color--([a-z0-9-]+)\)/', $r['body'], $own ) ) {
+			$bg_slug = $own[2];
+		} else {
+			foreach ( $surfaces as $surface => $slug ) {
+				if ( $r['sel'] === $surface
+					|| 0 === strpos( $r['sel'], $surface . ' ' )
+					|| 0 === strpos( $r['sel'], $surface . '-' )
+					|| false !== strpos( $r['sel'], ' ' . $surface . ' ' ) ) {
+					$bg_slug = $slug;
+					break;
+				}
+			}
+		}
+		if ( null === $bg_slug || $bg_slug === $c[1] ) {
+			continue;
+		}
+
+		foreach ( $palettes as $label => $palette ) {
+			if ( ! isset( $palette[ $c[1] ], $palette[ $bg_slug ] ) ) {
+				continue;
+			}
+			$ratio = snt_test_contrast_ratio( $palette[ $c[1] ], $palette[ $bg_slug ] );
+			if ( $ratio >= 4.5 ) {
+				continue;
+			}
+			$violations++;
+			$fail++;
+			echo '  FAIL: ' . $c[1] . ' on ' . $bg_slug . ' = ' . sprintf( '%.2f', $ratio ) . ":1 under $label\n";
+			echo "        {$r['sel']}  [{$r['file']}]\n";
+		}
+	}
+
+	if ( 0 === $violations ) {
+		$pass++;
+		echo '  PASS: every text-on-surface pairing clears AA under all ' . count( $palettes ) . " shipped palettes\n";
+	}
+}
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

@@ -19,7 +19,7 @@
 	font-size: max(0.7rem, 11px);
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 	margin: 0 0 1rem;
 }
 .sn-a11y-headline {
@@ -28,13 +28,13 @@
 	font-size: clamp(3rem, 8vw, 7rem);
 	line-height: 0.95;
 	letter-spacing: -0.01em;
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 	margin: 0;
 }
 .sn-a11y-dek {
 	font-size: clamp(1rem, 1.4vw, 1.15rem);
 	line-height: 1.55;
-	color: var(--wp--preset--color--rust, #666);
+	color: var(--wp--preset--color--rust);
 	max-width: 52ch;
 	margin: 1rem 0 0;
 }
@@ -50,17 +50,17 @@
 	font-size: clamp(1.4rem, 3vw, 2rem);
 	letter-spacing: 0.02em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 	padding-bottom: 0.6rem;
-	border-bottom: 2px solid var(--wp--preset--color--bone, #000);
+	border-bottom: 2px solid var(--wp--preset--color--bone);
 	margin: 0 0 1rem;
 }
 .sn-a11y-paragraph {
 	font-size: max(0.95rem, 11px);
 	line-height: 1.7;
-	color: var(--wp--preset--color--bone, #000);
+	color: var(--wp--preset--color--bone);
 	margin: 0 0 0.85rem;
 }
 .sn-a11y-paragraph a {
-	color: var(--wp--preset--color--blood, #e00404);
+	color: var(--wp--preset--color--blood);
 }

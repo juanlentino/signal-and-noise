@@ -284,7 +284,7 @@
 			},
 			"core/code": {
 				"color": {
-					"background": "var(--wp--preset--color--asphalt)",
+					"background": "var(--wp--preset--color--void)",
 					"text": "var(--wp--preset--color--blood)"
 				},
 				"border": {
