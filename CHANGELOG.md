@@ -2,6 +2,34 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.7.2] - 2026-08-11 — signal is an outline colour, never a word
+
+**Headline:** v11.7.1 darkened `signal` so it could be legible as text. That treated a symptom. The defect was never that the accent was too light — it was that a 3.29:1 accent was being used for link hover at all. `signal` reverts to `#ff4c47` and stops being text anywhere.
+
+### Why reverting is the right direction
+
+Counter-intuitive, so the reasoning is the point: **at 3.29:1 the token cannot pass as body text, which makes misuse arithmetically impossible to hide.** `#bf3935` (5.45:1) would have let `signal`-as-text sail through every contrast check forever. The token's own value is the enforcement.
+
+Governing criterion becomes **SC 1.4.11 (Non-text Contrast)** at 3:1 — the honest bar for a fill, a focus ring or a status dot, not a lowered one.
+
+### Changed
+
+- **`elements.link:hover` → `bone`** (21:1). The site-wide link hover, and the original defect.
+- **Three CSS link hovers → `bone`**: `.sn-pillar-card-cta a:hover`, `.sn-prose-links a:hover/:focus-visible`, `.sn-pillar-designation a:hover/:focus-visible`.
+- **`signal` `#bf3935` → `#ff4c47`** in `theme.json` and `styles/high-contrast.json`. Its two remaining uses are `.sn-music-featured__dot` and `.sn-availability__dot` — 7px fills, both `aria-hidden`, both non-text.
+
+### New
+
+- **Test 8 — "signal is an outline colour, never a word."** Fails if `signal` appears after `color:` in `theme.json` styles or any stylesheet. Source-level on purpose: Test 7 is resting-state only and *every* signal-as-text use in this theme's history has been a `:hover` rule, exactly the shape Test 7 skips. Control-verified from both reintroduction paths — a CSS rule and a `theme.json` style — each reported with its exact location.
+
+### Fixed by consequence
+
+`signal`-on-`void` returns to its documented 3.29:1 and is asserted at **3.0** (non-text) rather than 4.5. That is not a lowered bar; it is the correct criterion for what the token is now allowed to be.
+
+### Still open
+
+`blood` on the served asphalt is 3.80:1, so links inside tinted surfaces fail **at rest** — separate decision about link colours on tinted backgrounds, unrelated to signal.
+
 ## [11.7.1] - 2026-08-11 — every link hover on the site was 3.29:1, and the doc said that was fine
 
 **Headline:** `theme.json` sets `elements.link:hover` to `signal`, and `signal` on `void` is **3.29:1** at body-paragraph sizes. That is not one component — it is every link hover on the site, for two major versions. `docs/ACCESSIBILITY.md` Watch 2 knew the number and cleared it anyway.
