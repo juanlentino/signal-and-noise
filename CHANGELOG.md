@@ -2,6 +2,23 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [Unreleased] — the featured player is eager again (owner call)
+
+v11.8.0's facade made the /music hero a click-to-play card. Installed and
+tried, the owner's verdict was direct: clicking a link to make the player
+appear is friction where the page's one job is "hit play". The hero returns
+to the eager Spotify iframe — a deliberate, recorded trade of the no-fetch-
+before-consent argument for the page working the way its owner wants it to.
+The discography grid below keeps click-to-play (N live embeds would still
+wreck the page; that part was never the complaint). The accessible-embeds
+roadmap row stays `planned` and cannot graduate on the hero as scoped — its
+next move (rescope or decline) is an owner decision on the board, not a
+silent edit here.
+
+This is a clean `git revert` of the facade's four code files; v11.8.0's
+CHANGELOG entry above stands as history — a shipped release's record does
+not get rewritten by the change of course that followed it.
+
 ## [11.8.0] - 2026-08-12 — the facade retires the last eager embed, and the theme declares its breakpoints
 
 **The accessible-embeds roadmap row, delivered.** A corpus-and-render census

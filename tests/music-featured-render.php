@@ -1,19 +1,14 @@
 <?php
 /**
- * Standalone fixture tests for the [sn_music_featured] shortcode.
+ * Standalone fixture tests for the [sn_music_featured] shortcode (theme v9.15.0).
  *
- * v9.15.0 rendered the one eager Spotify iframe on /music. The facade release
- * replaces it: the server now emits ZERO iframes — the hero is an accessible
- * card, a real <a> to the release's public Spotify page, and the discography
- * script upgrades it to click-to-play (mounting the embed only on the reader's
- * explicit choice, from the data-embed attribute it validates). With JS off the
- * card is simply a link that works. Nothing is fetched from Spotify before the
- * reader asks — the same argument the site already makes everywhere else.
+ * Renders the single "press play" Spotify player at the top of /music from the
+ * featured config the companion plugin supplies over the standalone-safe
+ * `sn_music_featured` filter. Standalone-safe: plugin absent / setting empty →
+ * filter yields array() → shortcode → ''. The embed URL is escaped; the player
+ * height adapts to the embed type (compact track vs full album/playlist).
  *
- * Standalone-safe contract unchanged: plugin absent / setting empty → filter
- * yields array() → shortcode → ''.
- *
- * @since theme v9.15.0 (facade contract since the accessible-embeds release)
+ * @since theme v9.15.0
  */
 
 if ( PHP_SAPI !== 'cli' && ! defined( 'WP_CLI' ) ) {
@@ -52,9 +47,6 @@ if ( ! function_exists( 'esc_html' ) ) {
 if ( ! function_exists( 'esc_html__' ) ) {
 	function esc_html__( $s, $d = 'default' ) { return htmlspecialchars( (string) $s, ENT_QUOTES ); }
 }
-if ( ! function_exists( 'rawurlencode' ) ) {
-	// core PHP; listed only so a grep for the derivation's inputs lands here.
-}
 
 require __DIR__ . '/../inc/music-featured-render.php';
 
@@ -64,7 +56,7 @@ function ok( $c, $m ) {
 	if ( $c ) { $pass++; echo "PASS: $m\n"; } else { $fail++; echo "FAIL: $m\n"; }
 }
 
-echo "Featured-release shortcode suite — the facade contract\n\n";
+echo "Featured-release shortcode suite — theme v9.15.0\n\n";
 
 ok( isset( $GLOBALS['shortcode_tags']['sn_music_featured'] ) && 'sn_music_featured_shortcode' === $GLOBALS['shortcode_tags']['sn_music_featured'], 'registers [sn_music_featured] → sn_music_featured_shortcode' );
 
@@ -74,48 +66,39 @@ ok( sn_music_featured_shortcode() === '', 'empty featured config → "" (plugin 
 $GLOBALS['__test_filters']['sn_music_featured'] = array();
 ok( sn_music_featured_shortcode() === '', 'no filter listener → "" (truly standalone)' );
 
-// ── TRACK → compact facade ────────────────────────────────────────────
+// ── TRACK → compact player ────────────────────────────────────────────
 $GLOBALS['__test_filters']['sn_music_featured'] = array( function () {
 	return array( 'type' => 'track', 'id' => '6MuumbyTsu4CLaniAN0lBW', 'embed_url' => 'https://open.spotify.com/embed/track/6MuumbyTsu4CLaniAN0lBW', 'open_url' => 'https://open.spotify.com/track/6MuumbyTsu4CLaniAN0lBW' );
 } );
 $html = sn_music_featured_shortcode();
 ok( $html !== '', 'configured → emits markup' );
 ok( strpos( $html, 'sn-music-featured' ) !== false, 'wrapper present' );
-// THE LOAD-BEARING PIN. The server never mounts the third party: no iframe
-// exists until the reader chooses. This is the row's whole sentence.
-ok( strpos( $html, '<iframe' ) === false, 'ZERO iframes server-side — nothing is fetched on a reader\'s behalf before they choose it' );
-ok( strpos( $html, '<a class="sn-music-featured__facade" href="https://open.spotify.com/track/6MuumbyTsu4CLaniAN0lBW"' ) !== false, 'the facade is a REAL link to the public Spotify page — with JS off the card still works, keyboard-native' );
-ok( strpos( $html, 'data-embed="https://open.spotify.com/embed/track/6MuumbyTsu4CLaniAN0lBW"' ) !== false, 'the embed URL rides as data — the discography script mounts it only on explicit activation' );
-ok( strpos( $html, 'data-height="152"' ) !== false, 'track → compact 152px player height, stamped server-side for the JS' );
+ok( strpos( $html, 'embed/track/6MuumbyTsu4CLaniAN0lBW' ) !== false, 'iframe src is the embed URL' );
+ok( strpos( $html, 'height="152"' ) !== false, 'track → compact 152px player' );
 ok( strpos( $html, 'Featured' ) !== false && strpos( $html, 'Press play' ) !== false, 'label present' );
-ok( strpos( $html, 'Play the featured release on Spotify' ) !== false, 'the link NAMES its destination — an accessible card says where it goes, not "click here"' );
+ok( strpos( $html, 'loading="lazy"' ) !== false, 'iframe lazy-loaded' );
 
-// ── ALBUM → full player height ────────────────────────────────────────
+// ── ALBUM → full player ───────────────────────────────────────────────
 $GLOBALS['__test_filters']['sn_music_featured'] = array( function () {
 	return array( 'type' => 'album', 'id' => '4m2880jivSbbyEGAKfITCa', 'embed_url' => 'https://open.spotify.com/embed/album/4m2880jivSbbyEGAKfITCa', 'open_url' => 'https://open.spotify.com/album/4m2880jivSbbyEGAKfITCa' );
 } );
 $album_html = sn_music_featured_shortcode();
-ok( strpos( $album_html, 'data-height="352"' ) !== false, 'album → full 352px height (shows tracklist once mounted)' );
-ok( strpos( $album_html, '<iframe' ) === false, 'album facade: still zero server-side iframes' );
+ok( strpos( $album_html, 'height="352"' ) !== false, 'album → full 352px player (shows tracklist)' );
+ok( strpos( $album_html, 'embed/album/' ) !== false, 'album embed path' );
 
-// ── PLAYLIST, MISSING open_url → derived from type+id ─────────────────
-// An older plugin (or a partial record) may omit open_url; the card must
-// still link OUT, so the theme derives the public URL from the parts it has
-// rather than falling back to the embed page or rendering a dead card.
+// ── PLAYLIST → full player ────────────────────────────────────────────
 $GLOBALS['__test_filters']['sn_music_featured'] = array( function () {
 	return array( 'type' => 'playlist', 'id' => '37i9dQZF1DXcBWIGoYBM5M', 'embed_url' => 'https://open.spotify.com/embed/playlist/37i9dQZF1DXcBWIGoYBM5M', 'open_url' => '' );
 } );
-$pl = sn_music_featured_shortcode();
-ok( strpos( $pl, 'href="https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M"' ) !== false, 'missing open_url → link derived from type+id (never the embed page, never a dead card)' );
-ok( strpos( $pl, 'data-height="352"' ) !== false, 'playlist → full 352px height' );
+ok( strpos( sn_music_featured_shortcode(), 'height="352"' ) !== false, 'playlist → full 352px player' );
 
 // ── ESCAPING: hostile embed URL ───────────────────────────────────────
 $GLOBALS['__test_filters']['sn_music_featured'] = array( function () {
-	return array( 'type' => 'track', 'id' => 'x', 'embed_url' => 'https://open.spotify.com/embed/track/x"></a><script>alert(1)</script>', 'open_url' => 'https://open.spotify.com/track/x' );
+	return array( 'type' => 'track', 'id' => 'x', 'embed_url' => 'https://open.spotify.com/embed/track/x"></iframe><script>alert(1)</script>', 'open_url' => '' );
 } );
 $evil = sn_music_featured_shortcode();
 ok( strpos( $evil, '<script' ) === false, 'hostile embed_url: no injected <script tag' );
-ok( strpos( $evil, '<iframe' ) === false, 'hostile embed_url: still zero iframes — the server has no iframe path left to break out of' );
+ok( substr_count( $evil, '<iframe' ) === 1, 'hostile embed_url cannot inject a SECOND iframe (esc_url stripped the breakout)' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
