@@ -2,6 +2,31 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [Unreleased] — the last eager third-party embed becomes an accessible facade
+
+**The accessible-embeds roadmap row, delivered.** A corpus-and-render census
+found exactly ONE eager third-party embed on the whole site: the featured
+Spotify player at the top of `/music` ([sn_music_featured]). No post or page
+body contains an embed block or iframe — the discography grid was already
+click-to-play. The hero held the only exception, and this release retires it.
+
+The shortcode now renders an accessible card instead of an iframe: a real
+`<a>` to the release's public Spotify page (derived from type+id when the
+plugin record lacks `open_url`), labelled with its destination, zero
+third-party requests at page load. `discography.js` upgrades the card to
+click-to-play — the reader's activation is the first moment anything is
+fetched from Spotify — and refuses any `data-embed` that is not a
+`https://open.spotify.com/embed/` URL, so the card can never be steered to a
+foreign origin (the provider-allowlist question from `docs/r1-prep.md`,
+answered in code). No poster image is fetched or proxied: a poster request
+would reintroduce exactly the tracking the facade exists to remove. With JS
+off the card is simply a link that works.
+
+MINOR-class when folded into a release (reader-visible behaviour change on
+`/music`). Tests: the shortcode suite rewritten to the facade contract — 17
+asserts, the load-bearing pin being *zero server-side iframes* — full theme
+sweep 86 suites / 2,134 assertions green.
+
 ## [11.7.2] - 2026-08-11 — signal is an outline colour, never a word
 
 **Headline:** v11.7.1 darkened `signal` so it could be legible as text. That treated a symptom. The defect was never that the accent was too light — it was that a 3.29:1 accent was being used for link hover at all. `signal` reverts to `#ff4c47` and stops being text anywhere.

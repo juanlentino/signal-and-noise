@@ -1301,11 +1301,14 @@
 	}
 }
 
-/* ── FEATURED RELEASE (/music hero, v9.15.0) ─────────────────────────
+/* ── FEATURED RELEASE (/music hero, v9.15.0; facade since the
+   accessible-embeds release) ─────────────────────────────────────────
    The [sn_music_featured] shortcode (inc/music-featured-render.php, from the
-   plugin-supplied sn_music_featured filter) emits the single "press play"
-   Spotify embed at the top of /music — the ONE eager iframe on the page; the
-   cover grid below stays click-to-play. */
+   plugin-supplied sn_music_featured filter) renders an accessible CARD — a
+   real link to the release's public Spotify page — and discography.js
+   upgrades it to click-to-play. The server emits zero iframes: nothing is
+   fetched from Spotify before the reader chooses. The cover grid below was
+   always click-to-play; the hero no longer holds the exception. */
 .sn-music-featured {
 	margin: clamp(1.5rem, 4vw, 2.75rem) 0;
 	border: 1px solid var(--wp--preset--color--bone);
@@ -1334,6 +1337,34 @@
 	display: block;
 	width: 100%;
 	border: 0;
+}
+.sn-music-featured__facade {
+	display: flex;
+	align-items: center;
+	gap: 0.9rem;
+	padding: 0.9rem 1rem;
+	border: 1px solid var(--wp--preset--color--bone);
+	background: var(--wp--preset--color--void);
+	color: var(--wp--preset--color--bone);
+	text-decoration: none;
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.85rem, 12px);
+	letter-spacing: 0.05em;
+}
+.sn-music-featured__facade:hover .sn-music-featured__cta,
+.sn-music-featured__facade:focus-visible .sn-music-featured__cta {
+	text-decoration: underline;
+}
+/* Non-text play affordance (aria-hidden border-triangle) — decorative, so it
+   carries no text-contrast obligation; blood on void clears the 3:1 non-text
+   floor regardless. */
+.sn-music-featured__play {
+	width: 0;
+	height: 0;
+	border-top: 9px solid transparent;
+	border-bottom: 9px solid transparent;
+	border-left: 14px solid var(--wp--preset--color--blood);
+	flex: 0 0 auto;
 }
 
 /* ── Availability line (D5) — Contact/Services hero status ──────────────

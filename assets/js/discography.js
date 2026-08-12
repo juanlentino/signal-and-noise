@@ -260,10 +260,49 @@
 		}
 	}
 
+	// Featured-release facade → click-to-play. The server renders the hero as
+	// an accessible card (a real link to the public Spotify page; see
+	// inc/music-featured-render.php) and never an iframe. This upgrade
+	// intercepts activation and mounts the embed in place — the reader's click
+	// is the FIRST moment anything is fetched from Spotify. The embed URL
+	// comes from a data attribute, so it is validated against the one origin
+	// this page embeds from before it becomes an iframe src: a card that could
+	// mount an arbitrary URL would be a phishing surface, not a facade.
+	function initFeatured() {
+		var box = document.querySelector( '.sn-music-featured[data-embed]' );
+		if ( ! box ) {
+			return;
+		}
+		var link = box.querySelector( '.sn-music-featured__facade' );
+		var embed = box.getAttribute( 'data-embed' ) || '';
+		if ( ! link || embed.indexOf( 'https://open.spotify.com/embed/' ) !== 0 ) {
+			return; // Not our provider → leave the plain link alone.
+		}
+		link.addEventListener( 'click', function ( e ) {
+			e.preventDefault();
+			if ( box.classList.contains( 'is-playing' ) ) {
+				return;
+			}
+			var iframe = document.createElement( 'iframe' );
+			iframe.className = 'sn-music-featured__player';
+			iframe.src = embed;
+			iframe.setAttribute( 'width', '100%' );
+			iframe.setAttribute( 'height', box.getAttribute( 'data-height' ) || '152' );
+			iframe.setAttribute( 'frameborder', '0' );
+			iframe.setAttribute( 'allow', 'encrypted-media; clipboard-write; fullscreen; picture-in-picture' );
+			iframe.setAttribute( 'allowfullscreen', '' );
+			iframe.setAttribute( 'title', 'Featured Spotify player' );
+			box.classList.add( 'is-playing' );
+			link.parentNode.replaceChild( iframe, link );
+			iframe.focus();
+		} );
+	}
+
 	function init() {
 		initPlay();
 		initFilter();
 		initLiner();
+		initFeatured();
 	}
 
 	if ( document.readyState === 'loading' ) {
