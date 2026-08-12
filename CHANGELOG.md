@@ -4138,7 +4138,7 @@ User-visible design changes across five page templates plus a new shared CSS sur
 - `/contact`, `/work-with-me` — action pages, different tone.
 - `/notes/{slug}/`, `/provenance/over-detection/`, `/provenance/as-substrate/` — long-form reading surfaces, not catalog surfaces.
 
-## [Unreleased] — Operational fixes (post-v7.0.0)
+## Operational fixes (post-v7.0.0 — shipped in v7.1.0; heading corrected 2026-08-12, it sat mislabelled "Unreleased" for three months)
 
 ### `/notes` rebuilt from scratch — PHP-rendered, redesigned
 
