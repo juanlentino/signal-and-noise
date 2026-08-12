@@ -2,7 +2,7 @@
 
 All notable changes to Signal & Noise are documented here.
 
-## [Unreleased] — the featured player is eager again (owner call)
+## [11.8.1] - 2026-08-12 — the featured player is eager again
 
 v11.8.0's facade made the /music hero a click-to-play card. Installed and
 tried, the owner's verdict was direct: clicking a link to make the player
