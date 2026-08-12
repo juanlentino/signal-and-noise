@@ -544,5 +544,34 @@ if ( empty( $signal_text_uses ) ) {
 	echo "        Use bone for a link hover. If signal genuinely must be text, the token is wrong, not this test.\n";
 }
 
+/* ── The command-palette trigger's HOVER pair (added after v11.7.1) ────────
+ * v11.7.1 FIXED this pair — bone on blood was 4.19:1 at 11.2px — but shipped it
+ * unpinned, and the note above says why: this suite models RESTING pairings on
+ * purpose, because an earlier cut that stripped `:hover` to match more promptly
+ * paired a hover background with a resting text colour. That reasoning is right
+ * and it left a live fix with nothing holding it: revert `void` to `bone` today
+ * and every test still passes.
+ *
+ * So this pins the ONE hover pair by name rather than teaching the scanner to
+ * model state generally. Narrow on purpose — it asserts what the stylesheet
+ * DECLARES for that selector, and checks the resulting pair under every palette
+ * the theme can present, which is this file's own standing rule. */
+echo "\nGroup: the command-palette trigger inverts to VOID on hover, never bone\n";
+$cmdk = (string) file_get_contents( __DIR__ . '/../assets/css/command-palette.css' );
+cb_gte( (int) preg_match( '/\.sn-cmdk-trigger:hover,\s*\.sn-cmdk-trigger:focus-visible\s*\{[^}]*color:\s*var\(--wp--preset--color--void\)/s', $cmdk ), 1, 'the hover/focus label is declared --void' );
+cb_gte( (int) preg_match( '/\.sn-cmdk-trigger:hover,\s*\.sn-cmdk-trigger:focus-visible\s*\{[^}]*background:\s*var\(--wp--preset--color--blood\)/s', $cmdk ), 1, 'on a --blood surface' );
+foreach ( snt_test_all_palettes() as $label => $pal ) {
+	$r = snt_test_contrast_ratio( $pal['void'], $pal['blood'] );
+	cb_gte( $r, 4.5, sprintf( 'void on blood under %s', $label ) );
+}
+$bone_on_blood = snt_test_contrast_ratio( $colors['bone'], $colors['blood'] );
+if ( $bone_on_blood < 4.5 ) {
+	++$pass;
+	printf( "  PASS: documented — the pair v11.7.1 replaced really was %.2f:1\n", $bone_on_blood );
+} else {
+	++$fail;
+	echo "  FAIL: bone-on-blood no longer fails — the palette moved and this pin is meaningless\n";
+}
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
