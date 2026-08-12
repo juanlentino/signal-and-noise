@@ -2,7 +2,7 @@
 
 All notable changes to Signal & Noise are documented here.
 
-## [Unreleased] — the last eager third-party embed becomes an accessible facade
+## [11.8.0] - 2026-08-12 — the facade retires the last eager embed, and the theme declares its breakpoints
 
 **The accessible-embeds roadmap row, delivered.** A corpus-and-render census
 found exactly ONE eager third-party embed on the whole site: the featured
@@ -26,6 +26,28 @@ MINOR-class when folded into a release (reader-visible behaviour change on
 `/music`). Tests: the shortcode suite rewritten to the facade contract — 17
 asserts, the load-bearing pin being *zero server-side iframes* — full theme
 sweep 86 suites / 2,134 assertions green.
+
+### Folded in: the theme declares its own breakpoints, and a test keeps the declaration true
+
+
+**No visual change, and nothing a site reader can observe.** PATCH-class when folded into a release.
+
+WordPress 7.1 lets a theme declare its responsive breakpoints, which core uses for responsive block styles and for block visibility. `theme.json` now says so:
+
+```json
+"viewport": { "mobile": "480px", "tablet": "781px" }
+```
+
+**781px, not WordPress's 782px default** — this is the whole decision. Core generates range-syntax queries with an **inclusive** upper bound: `(width <= 480px)` for mobile, `(480px < width <= 781px)` for tablet. This theme's tiers live in `assets/css/responsive.css` under two section banners, `RESPONSIVE — TABLET (max-width: 781px)` and `RESPONSIVE — MOBILE (max-width: 480px)`. Taking the 782px default would have declared a ceiling the stylesheet does not honour: at exactly 782px core would call the viewport "tablet" while the CSS treats it as desktop. A 1px band, invisible, permanent, and only reachable through a feature nothing uses yet — which is how a seam survives. 781px makes the declaration true.
+
+`theme.json` admits no comments, so the numbers would otherwise sit there unexplained *and* unenforced — the tier system existed only as a banner in a stylesheet two files away, with nothing connecting them. [tests/theme-json-viewport-parity.php](tests/theme-json-viewport-parity.php) connects them: move `responsive.css` to 768px without touching `theme.json` and CI fails. It also pins the two traps core documents but does not error on — an invalid length (`"781 px"`) is silently ignored and the default substituted, and `mobile >= tablet` silently drops the tablet tier.
+
+Scope is the two canonical tiers only. The theme has ten other breakpoints across eleven files (720px ×5, 768px, 640px, 600px ×2, 1440px, 1280px, 1200px, 899.98px, 1279.98px); those are local adjustments in feature CSS, not tiers, and `settings.viewport` has exactly two slots — out of scope by design, not oversight.
+
+Schema `version` stays `3`, and no `$schema` change was needed: Gutenberg's `wp/7.0` branch schema already validates `viewport`, verified by resolving the URL rather than assuming it.
+
+(13 asserts. Mutation-fired five ways: declaring 782px reds 3, `responsive.css` drifting to 768px reds 3, an inverted pair reds 3, a `"781 px"` typo reds 3, removing the declaration reds 9. Full theme sweep 86 suites, 0 failing.)
+
 
 ## [11.7.2] - 2026-08-11 — signal is an outline colour, never a word
 
@@ -137,26 +159,6 @@ The exact mechanism, because it will recur: plugin v10.86.0 taught the renderer 
 
 - **`[sn_prov_panel]` placed on the page templates** ([templates/page-about.html](templates/page-about.html), [templates/page.html](templates/page.html)). The plugin's render verb went page-aware in v10.86.0, but the panel is emitted where the THEME places its shortcode — and only the single-post template's closing part carried it, so the first signed page (About, 2026-08-11) enqueued the provenance stylesheet and rendered nothing. The slot is safe everywhere: `sn_prov_render_panel()` returns `''` for any page without a chain, so unopted pages emit nothing. This render is also the PREREQUISITE for the ledger's index: `build-index.mjs` discovers a signed page by reading the UID out of the rendered panel — no panel, no index entry, however wide the ledger tooling gets.
 - **Deliberately not added** to the other dedicated `page-*.html` templates (music, services, resume, …): each carries its own layout, and the slot should be placed with intent when one of those pages is ever opted in — this line is the reminder that the slot is missing there.
-
-## [Unreleased] — the theme declares its own breakpoints, and a test keeps the declaration true
-
-**No visual change, and nothing a site reader can observe.** PATCH-class when folded into a release.
-
-WordPress 7.1 lets a theme declare its responsive breakpoints, which core uses for responsive block styles and for block visibility. `theme.json` now says so:
-
-```json
-"viewport": { "mobile": "480px", "tablet": "781px" }
-```
-
-**781px, not WordPress's 782px default** — this is the whole decision. Core generates range-syntax queries with an **inclusive** upper bound: `(width <= 480px)` for mobile, `(480px < width <= 781px)` for tablet. This theme's tiers live in `assets/css/responsive.css` under two section banners, `RESPONSIVE — TABLET (max-width: 781px)` and `RESPONSIVE — MOBILE (max-width: 480px)`. Taking the 782px default would have declared a ceiling the stylesheet does not honour: at exactly 782px core would call the viewport "tablet" while the CSS treats it as desktop. A 1px band, invisible, permanent, and only reachable through a feature nothing uses yet — which is how a seam survives. 781px makes the declaration true.
-
-`theme.json` admits no comments, so the numbers would otherwise sit there unexplained *and* unenforced — the tier system existed only as a banner in a stylesheet two files away, with nothing connecting them. [tests/theme-json-viewport-parity.php](tests/theme-json-viewport-parity.php) connects them: move `responsive.css` to 768px without touching `theme.json` and CI fails. It also pins the two traps core documents but does not error on — an invalid length (`"781 px"`) is silently ignored and the default substituted, and `mobile >= tablet` silently drops the tablet tier.
-
-Scope is the two canonical tiers only. The theme has ten other breakpoints across eleven files (720px ×5, 768px, 640px, 600px ×2, 1440px, 1280px, 1200px, 899.98px, 1279.98px); those are local adjustments in feature CSS, not tiers, and `settings.viewport` has exactly two slots — out of scope by design, not oversight.
-
-Schema `version` stays `3`, and no `$schema` change was needed: Gutenberg's `wp/7.0` branch schema already validates `viewport`, verified by resolving the URL rather than assuming it.
-
-(13 asserts. Mutation-fired five ways: declaring 782px reds 3, `responsive.css` drifting to 768px reds 3, an inverted pair reds 3, a `"781 px"` typo reds 3, removing the declaration reds 9. Full theme sweep 86 suites, 0 failing.)
 
 ## [11.5.2] - 2026-08-09 — llms.txt announced the training grant without the reservation that gates it
 
