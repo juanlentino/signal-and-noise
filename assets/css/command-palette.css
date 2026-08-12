@@ -139,7 +139,7 @@
 	border-bottom: none;
 }
 
-.sn-cmdk-option__label {
+.sn-cmdk-panel .sn-cmdk-option__label {
 	font-family: var(--wp--preset--font-family--body);
 	font-size: 0.9375rem;
 	color: var(--wp--preset--color--void);
@@ -148,7 +148,7 @@
 	white-space: nowrap;
 }
 
-.sn-cmdk-option__sub {
+.sn-cmdk-panel .sn-cmdk-option__sub {
 	flex: none;
 	font-family: var(--wp--preset--font-family--body);
 	font-size: 0.6875rem; /* 11px floor */
