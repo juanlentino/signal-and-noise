@@ -48,6 +48,13 @@ concurrency:
   group: deploy
   cancel-in-progress: false
 
+# Least privilege: the only GITHUB_TOKEN use here is actions/checkout reading
+# this repo. The Cloudways SSH deploy and the cache purge run on their own
+# secrets, not the token. Unset, the token inherits the repository default,
+# which is broader than a deploy job needs.
+permissions:
+  contents: read
+
 jobs:
   deploy:
     name: Archive deploy + cache purge
