@@ -2,6 +2,22 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.9.0] - 2026-08-14 — single Notes gain the reading-path slot
+
+The plugin's reading chains (signal-and-noise-tools v11.3.0, ML pipeline #10) become
+reader-visible: `templates/single.html` places `[sn_reading_path]` ABOVE the Related
+Notes footer — "where am I in this argument" outranks "what else is near it" — and
+`inc/reading-path-slot.php` is the render_block bridge that makes a block-template
+shortcode actually resolve (core/shortcode only wpautop()s its content; the
+inc/related-notes.php finding, and that bridge is prefix-gated to its own token, so this
+one could not ride it).
+
+**The bridge returns an EMPTY SLOT when the plugin is absent**, not a pass-through:
+with the shortcode unregistered, do_shortcode() would leave the literal
+`[sn_reading_path]` token in the page as prose. Nothing renders until BOTH halves are
+installed and the note sits on a chain — either install order is safe, which is the
+property the split-arc plan promised.
+
 ## [11.8.2] - 2026-08-14 — body H2s drop to H4's slot so the corpus can stop skipping levels
 
 **Headline:** the scoped body-heading rule in `article.css` now renders a

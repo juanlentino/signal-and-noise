@@ -145,3 +145,4 @@ require_once __DIR__ . '/inc/colophon-meta.php'; // C2 (v10.5.0): [sn_build] liv
 require_once __DIR__ . '/inc/availability.php'; // D5 (v10.9.0): [sn_availability] line in the /contact + /services heroes (reads sn_settings identity.availability)
 require_once __DIR__ . '/inc/contact-email.php'; // v10.16.0: [sn_email] scraper-resistant /contact aliases (client-side assembly, no plaintext/mailto in source)
 require_once __DIR__ . '/inc/feed-websub.php'; // D4 (v10.9.0): WebSub <atom:link rel="hub"> advertisement in the RSS2 + Atom feeds
+require_once __DIR__ . '/inc/reading-path-slot.php'; // v11.9.0: [sn_reading_path] block bridge — the plugin's reading-chain nav resolves on single Notes (empty slot when the plugin is absent)
