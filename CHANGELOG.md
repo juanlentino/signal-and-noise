@@ -2,6 +2,44 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.8.2] - 2026-08-14 — body H2s drop to H4's slot so the corpus can stop skipping levels
+
+**Headline:** the scoped body-heading rule in `article.css` now renders a
+single-note H2 at the `large` font-size preset — the slot theme.json maps H4
+to — clearing the visual reason Notes drifted to H3/H4 subheads in the first
+place.
+
+The single-note template titles with H1, so the correct first-level body
+subhead is H2. The published corpus disagrees with itself: 11 posts use H2,
+10 use H3, 11 use H4 — and the H3/H4 posts skip a level from the H1 (WCAG
+1.3.1). The drift was visual, not semantic: the global H2 style is xx-large
+Bebas Neue, near the H1's own size, so subheads got downgraded to look
+smaller. This release removes that incentive so the content migration
+(plugin-side, via `block_migration`) can normalize everything to H2 without
+the pages shouting.
+
+### Changed
+- `.single-post .wp-block-post-content h2.wp-block-heading` font-size moves
+  from a hardcoded `clamp(1.875rem, 3.5vw, 3rem)` to
+  `var(--wp--preset--font-size--large)` (line-height 1.25 to match the size
+  class it now occupies). The preset VAR deliberately, not a copied clamp:
+  the active global styles own what `large` resolves to (live it is a 2.25rem
+  fluid clamp from the DB global-styles post, not theme.json's 1.25rem — the
+  activation-copies rule).
+- Scope verified live before the edit: the "Related notes" and "Cited by" H2
+  labels are siblings of the post-content block in `templates/single.html`,
+  outside this selector, and keep their own `components.css` label styling.
+  The H1 note title and the global H2 element style are untouched.
+
+### New
+- `tests/body-heading-scale.php` — relationship pins: the scoped rule
+  references the preset var (never a palette-frozen literal), article.css
+  carries no bare-h2 font-size rule, and the section-label shortcodes stay
+  siblings of post-content in the template.
+
+> **Why PATCH:** visual calibration of one scoped CSS rule plus its
+> regression fixture; no new capability, no API change.
+
 ## [11.8.1] - 2026-08-12 — the featured player is eager again
 
 v11.8.0's facade made the /music hero a click-to-play card. Installed and
