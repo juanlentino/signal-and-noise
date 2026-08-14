@@ -27,6 +27,16 @@
 	     remains below. -->
 	<!-- wp:template-part {"slug":"post-closing","tagName":"footer"} /-->
 
+	<!-- v11.9.0: Reading-path footer (the PLUGIN's [sn_reading_path],
+	     signal-and-noise-tools v11.3.0, ML pipeline #10). Placed ABOVE
+	     Related: "where am I in this argument" outranks "what else is
+	     near it". Resolved by inc/reading-path-slot.php's render_block
+	     bridge; renders nothing until the plugin provides the shortcode
+	     AND the note sits on a chain — an empty slot in both cases. -->
+	<!-- wp:shortcode -->
+	[sn_reading_path]
+	<!-- /wp:shortcode -->
+
 	<!-- v9.10.0: Related Notes footer (inc/related-notes.php). Shared-tag
 	     heuristic with recency backfill; resolved by the [sn_related_notes]
 	     render_block bridge (core/shortcode only wpautop()s its content). -->
