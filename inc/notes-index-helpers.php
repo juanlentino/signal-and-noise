@@ -274,6 +274,36 @@ function sn_notes_start_here_id() {
 }
 
 /**
+ * The Start Here PAGE id for the hero wayfinding link, or 0.
+ *
+ * Deliberately separate from sn_notes_start_here_id(): that one answers the
+ * sticky-POST question that drives the pinned index row, and returns 0 once no
+ * sticky qualifies. Start Here became a page (a child of /notes/) in 2026-08,
+ * which freed its index slot but left it unreachable from any navigation — a
+ * page is not in the post query, so nothing linked it. This resolves the page
+ * itself so the hero can carry the link.
+ *
+ * Resolved by path rather than a pinned id so the link dies with the page
+ * instead of pointing at a 404: an absent, trashed, or unpublished page yields
+ * 0 and the hero simply renders without it.
+ *
+ * @return int
+ */
+function sn_notes_start_here_page_id() {
+	if ( ! function_exists( 'get_page_by_path' ) || ! function_exists( 'get_post_status' ) ) {
+		return 0;
+	}
+	$page = get_page_by_path( 'notes/start-here' );
+	if ( ! $page || ! isset( $page->ID ) ) {
+		return 0;
+	}
+	if ( 'publish' !== get_post_status( $page->ID ) ) {
+		return 0;
+	}
+	return (int) $page->ID;
+}
+
+/**
  * Pagination base URL: the tag-archive permalink in tag mode, the bare
  * /notes/ index otherwise. Both paginate via ?paged=%#% (the exact-path
  * router strips the query string before matching, so ?paged= is safe on

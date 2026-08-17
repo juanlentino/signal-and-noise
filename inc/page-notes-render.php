@@ -199,6 +199,34 @@ wp_head();
 	color: var(--wp--preset--color--rust);
 	margin: 0 0 1.5rem;
 }
+/* START HERE — hero wayfinding link. Takes the eyebrow's mono/blood treatment
+   rather than the dek's prose voice: it is a navigational accent, not a
+   sentence, and it should read as a sibling of the eyebrow above it. */
+.sn-notes-start-here {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.7rem, 11px);
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	margin: 0;
+}
+.sn-notes-start-here a {
+	color: var(--wp--preset--color--blood);
+	text-decoration: none;
+	border-bottom: 1px solid transparent;
+	transition: border-color 150ms ease;
+}
+.sn-notes-start-here a:hover,
+.sn-notes-start-here a:focus-visible {
+	border-bottom-color: currentColor;
+}
+.sn-notes-start-here-arrow {
+	margin-left: 0.5em;
+}
+@media (prefers-reduced-motion: reduce) {
+	.sn-notes-start-here a {
+		transition: none;
+	}
+}
 .sn-notes-meta {
 	display: flex;
 	gap: 1rem;
@@ -590,6 +618,21 @@ echo $sn_header_html;
 		<div class="sn-notes-hero-title">
 			<h1 class="sn-notes-headline">Notes.</h1>
 			<p class="sn-notes-dek">Working notes on music, AI, and the infrastructure underneath. Written when there&rsquo;s something worth writing.</p>
+			<?php
+			// Start Here is a PAGE under /notes/, so it is absent from the post
+			// query that builds the index below — without this link the corpus
+			// has no route to its own front door. Rendered unconditionally
+			// (unlike the corpus meta, which is filtered-state suppressed):
+			// wayfinding is most useful precisely when a newcomer landed on a
+			// tag or search view. Resolver returns 0 if the page is gone, so a
+			// missing page removes the link rather than serving a 404.
+			$sn_start_here_page = sn_notes_start_here_page_id();
+			?>
+			<?php if ( $sn_start_here_page ) : ?>
+				<p class="sn-notes-start-here">
+					<a href="<?php echo esc_url( get_permalink( $sn_start_here_page ) ); ?>">New here? Start here<span class="sn-notes-start-here-arrow" aria-hidden="true">&rarr;</span></a>
+				</p>
+			<?php endif; ?>
 		</div>
 		<div class="sn-notes-hero-side">
 			<p class="sn-notes-subscribe">

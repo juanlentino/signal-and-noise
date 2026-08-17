@@ -53,6 +53,28 @@ ok( false !== strpos( $hero, 'if ( ! $sn_filtered ) :' ), 'corpus meta sits behi
 ok( strpos( $hero, 'if ( ! $sn_filtered ) :' ) < strpos( $hero, 'class="sn-notes-meta"' ),
 	'the guard OPENS before the meta paragraph (guard actually wraps it)' );
 
+// v11.9.1 START HERE CONTRACT. Start Here is a PAGE under /notes/, so it is
+// absent from the post query that builds the index below — this hero link is
+// the corpus's only route to its own front door. It has already gone missing
+// once: it used to ride on a stickied post, and when that post was replaced by
+// the page, sn_notes_start_here_id() returned 0, the pinned row stopped
+// rendering, and a stale page cache hid the disappearance. Hence source pins.
+$p_start_here = strpos( $src, 'class="sn-notes-start-here">' );
+
+ok( false !== $p_start_here, 'hero carries the Start Here wayfinding link' );
+ok( false !== $p_start_here && $p_start_here > $p_title && $p_start_here < $p_side,
+	'Start Here sits in the LEFT title column (newcomer reading order), not the side column' );
+ok( false !== strpos( $src, 'sn_notes_start_here_page_id()' ),
+	'link resolves through sn_notes_start_here_page_id(), not a hardcoded id or path' );
+ok( false !== strpos( $src, 'if ( $sn_start_here_page ) :' ),
+	'link is guarded — a missing/unpublished page removes it rather than serving a 404' );
+
+// DELIBERATELY OUTSIDE the ! $sn_filtered guard, unlike the corpus meta above:
+// the meta would mislabel a filtered result set, but wayfinding is most useful
+// exactly when a newcomer has landed on a tag or search view.
+ok( false !== $p_start_here && $p_start_here < $p_side,
+	'Start Here is NOT inside the side column\'s ! $sn_filtered guard (renders in search/tag state too)' );
+
 // v11.4.1: the headline joined the site-wide uniform title scale. Pinned so a
 // future hero edit cannot silently reintroduce the 176px outlier.
 ok( false !== strpos( $src, 'font-size: clamp(3rem, 8vw, 7rem)' ), 'headline DECLARES the uniform title scale clamp(3rem, 8vw, 7rem)' );

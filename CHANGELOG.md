@@ -2,6 +2,43 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.9.1] - 2026-08-17 — the notes index links its own front door
+
+Start Here became a page under `/notes/` (freeing the index slot its stickied
+predecessor occupied), and in doing so left itself unreachable: a page is not in the
+post query that builds the index, so nothing on the site linked it. The hero now
+carries the link.
+
+**The disappearance was invisible while it happened.** The pinned row is driven by
+`sn_notes_start_here_id()`, which returns the first published *sticky post*. When the
+sticky note was replaced by the page that resolver went to 0 and the row stopped
+rendering — but a cached `/notes/` kept serving the old row, complete with a correct
+href built from the live slug and a title, date and excerpt belonging to a post that
+no longer existed. Every surface check said the link was fine. Only purging and
+re-reading the *body* showed zero.
+
+### Added
+
+- **Start Here link in the `/notes/` hero** ([inc/page-notes-render.php](inc/page-notes-render.php)) —
+  under the dek, in the left title column, where a newcomer reads first. Takes the
+  eyebrow's mono/`blood` treatment: it is a navigational accent, not prose.
+- **`sn_notes_start_here_page_id()`** ([inc/notes-index-helpers.php](inc/notes-index-helpers.php)) —
+  resolves the page by path and returns 0 when it is absent, trashed or unpublished,
+  so the hero drops the link instead of serving a 404. Deliberately **separate from**
+  `sn_notes_start_here_id()`: that one answers the sticky-post question behind the
+  pinned row and stays dormant. Reviving the pin would re-consume the index slot this
+  change exists to keep free.
+
+### Notes
+
+- The link renders in search and tag state too, unlike the corpus meta beside it. The
+  meta is suppressed when filtered because entry counts would mislabel a filtered
+  result set; wayfinding has the opposite profile — it is most useful exactly when a
+  newcomer has landed on a tag or search view.
+- Pinned in [tests/notes-hero-structure.php](tests/notes-hero-structure.php) (19 assertions,
+  up from 14): presence, left-column placement, resolver indirection, and the guard.
+  Negative-controlled — removing the link reds exactly 3 assertions and exits 1.
+
 ## [11.9.0] - 2026-08-14 — single Notes gain the reading-path slot
 
 The plugin's reading chains (signal-and-noise-tools v11.3.0, ML pipeline #10) become
