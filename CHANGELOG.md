@@ -2,6 +2,42 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.9.3] - 2026-08-17 — the feed stylesheet is served with a type a browser will apply
+
+v11.9.2 shipped the stylesheet as a static file and it was fetched, then ignored. Apache has
+no MIME mapping for `.xsl`, so it returned `Content-Type: application/octet-stream`, and the
+site's own `X-Content-Type-Options: nosniff` forbids the browser from guessing a better type.
+A browser applies XSLT only for `text/xsl`, `application/xslt+xml` or an XML type. The feed
+was correct, the pointer was correct, and the stylesheet was unreachable *as a stylesheet*.
+
+### Changed
+
+- **The stylesheet is now served by PHP** via `add_feed( 'xsl', … )` at `?feed=xsl`, which
+  states `Content-Type: text/xsl` outright instead of depending on server MIME configuration.
+  Query-arg form on purpose — it resolves with **no rewrite flush**, mirroring the JSON Feed
+  route next door (the theme must never flush; see JF-1 in `inc/feed-json.php`), so it is live
+  on a cold deploy.
+- **Asset paths in `assets/feed.xsl` are tokenised** as `{{THEME_URI}}` and resolved at serve
+  time with `get_theme_file_uri()`. To be accurate about what this does and does not fix: the
+  previous root-relative paths resolved *correctly* — root-relative URLs resolve against the
+  origin, not the document directory — so this is robustness, not a bug fix. It stops the
+  stylesheet hardcoding a theme directory name.
+
+### Notes
+
+- **Nothing was broken in 11.9.2**, which is why it was not caught sooner: a browser that
+  cannot apply the stylesheet shows the raw XML it showed before, and feed *readers* never
+  fetch a stylesheet at all. The bug's symptom was the designed degradation.
+- **The green suite could not have caught it.** PHP's `header()` is unstubbable in a fixture
+  harness, so `Content-Type` has no unit-level assertion; the XSLTProcessor test passed because
+  PHP reads the file off disk and never sees an HTTP header. Verified live against the deployed
+  route instead — the lesson being that a test proving a file is *correct* says nothing about
+  how it is *served*.
+- `tests/feed-stylesheet.php` grows to **19 assertions**: the route registration, that the PI
+  points at the route rather than a static asset, that no `{{THEME_URI}}` token survives into
+  the served body, that every `url()` in it is absolute, plus the existing feed-type guard and
+  XPath namespace-completeness check.
+
 ## [11.9.2] - 2026-08-17 — the feed stops looking like a broken page
 
 The site names RSS as its only endorsed channel — the notes hero says so in capitals:
