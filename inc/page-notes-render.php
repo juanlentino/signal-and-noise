@@ -203,24 +203,34 @@ wp_head();
    rather than the dek's prose voice: it is a navigational accent, not a
    sentence, and it should read as a sibling of the eyebrow above it. */
 .sn-notes-start-here {
-	font-family: 'DM Mono', 'Courier New', monospace;
-	font-size: max(0.7rem, 11px);
-	letter-spacing: 0.18em;
-	text-transform: uppercase;
 	margin: 0;
 }
+/* v11.9.4: promoted from a quiet inline link to a bordered target. A newcomer
+   arriving from a shared link lands on ONE note and leaves; the route into the
+   argument has to compete with 32 rows of index below it, and an 11px inline
+   link does not. Boxed and inverting on hover — stark, no radius, no gradient:
+   emphasis by contrast rather than by decoration. */
 .sn-notes-start-here a {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 0.55em;
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.8rem, 13px);
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
 	color: var(--wp--preset--color--blood);
 	text-decoration: none;
-	border-bottom: 1px solid transparent;
-	transition: border-color 150ms ease;
+	padding: 0.7rem 1.1rem;
+	border: 1px solid var(--wp--preset--color--blood);
+	transition: background-color 150ms ease, color 150ms ease;
 }
 .sn-notes-start-here a:hover,
 .sn-notes-start-here a:focus-visible {
-	border-bottom-color: currentColor;
+	background-color: var(--wp--preset--color--blood);
+	color: var(--wp--preset--color--void);
 }
 .sn-notes-start-here-arrow {
-	margin-left: 0.5em;
+	/* gap owns the spacing now */
 }
 @media (prefers-reduced-motion: reduce) {
 	.sn-notes-start-here a {
@@ -636,7 +646,7 @@ echo $sn_header_html;
 		</div>
 		<div class="sn-notes-hero-side">
 			<p class="sn-notes-subscribe">
-				No subscription form. No schedule. Notes via <a href="/notes/feed/">RSS</a>, or via email through <a href="https://blogtrottr.com/" target="_blank" rel="noopener noreferrer" data-sn-subscribe="email">Blogtrottr</a> or <a href="https://www.feedrabbit.com/" target="_blank" rel="noopener noreferrer" data-sn-subscribe="email">Feedrabbit</a>.<span class="sn-notes-cursor" aria-hidden="true"></span>
+				No subscription form. No schedule. Notes via <a href="/notes/subscribe/">RSS</a>, or via email through <a href="https://blogtrottr.com/" target="_blank" rel="noopener noreferrer" data-sn-subscribe="email">Blogtrottr</a> or <a href="https://www.feedrabbit.com/" target="_blank" rel="noopener noreferrer" data-sn-subscribe="email">Feedrabbit</a>.<span class="sn-notes-cursor" aria-hidden="true"></span>
 			</p>
 			<?php if ( ! $sn_filtered ) : ?>
 			<?php // Corpus stats: entry count + last-updated, the side column's

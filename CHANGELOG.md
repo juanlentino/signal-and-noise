@@ -2,6 +2,50 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.9.4] - 2026-08-17 — a page instead of a stylesheet, and Start Here you can actually see
+
+Two changes, one theme: the routes into the writing should not make a newcomer work.
+
+### Removed
+
+- **The XSL feed stylesheet (v11.9.2–3) is gone** — `inc/feed-stylesheet.php`,
+  `assets/feed.xsl`, and its tests. It could never have worked. Verified in three browsers:
+  **Chrome** shows raw XML and does not apply `<?xml-stylesheet?>`; **Safari** never renders
+  feeds at all and opens a "find an RSS reader" dialog; **Firefox** downloads the file.
+  Firefox is the tell that this was never only about XSLT — the feed's `application/rss+xml`
+  type is correct and *required* for readers and autodiscovery, and it is exactly what makes a
+  browser treat the response as a download rather than a document. The two requirements are
+  mutually exclusive; no header or stylesheet reconciles them.
+
+### Added
+
+- **`/notes/subscribe/`** (`inc/feed-subscribe-page.php`) — the human page the visible "RSS"
+  link now points at. Says what a feed is, shows the address in a bordered block you can select
+  in one click, offers the email bridges, points newcomers at Start Here, and lists the last
+  eight notes as "what you would have received". Routed on `template_redirect` by exact path,
+  so it needs **no rewrite rule and no flush** (the theme must never flush — JF-1 in
+  `inc/feed-json.php`). Works in every browser, permanently, because it is a page.
+- Feed **readers are unaffected**: autodiscovery follows `<link rel="alternate">` in `<head>`,
+  never the visible link, so retargeting it costs subscription nothing.
+
+### Changed
+
+- **The Start Here link is now a bordered target**, not a quiet 11px inline link — larger type,
+  a `blood` border, and a full colour inversion on hover and focus. A newcomer arriving from a
+  shared link lands on one note; the route into the argument has to compete with 32 index rows
+  below it, and it was losing. Emphasis by contrast, no radius and no gradient.
+
+### Notes
+
+- `tests/feed-subscribe-page.php` (14 assertions) pins the **path match**, which is the
+  load-bearing part: this hook runs on every front-end request, so a loose match would not
+  merely fail — it would hijack other URLs. Eight near-misses must all be false, including
+  `/notes/feed/` itself and slugs sharing the prefix.
+- The lesson from the reverted arc, recorded because it cost three releases: both verifications
+  (PHP's `XSLTProcessor`, an HTTP header check) confirmed the **artifact** and neither could
+  see the **delivery**. "Does a browser render `application/rss+xml`?" was answerable in a
+  minute, before any code.
+
 ## [11.9.3] - 2026-08-17 — the feed stylesheet is served with a type a browser will apply
 
 v11.9.2 shipped the stylesheet as a static file and it was fetched, then ignored. Apache has
