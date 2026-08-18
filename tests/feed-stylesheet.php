@@ -1,6 +1,6 @@
 <?php
 /**
- * Standalone fixture tests for the RSS stylesheet PI (v11.10.0).
+ * Standalone fixture tests for the RSS stylesheet PI (v11.9.2).
  *
  * Mirrors tests/feed-enrichment.php: stubs the WP primitives the callback
  * touches so inc/feed-stylesheet.php runs without a WordPress load.
@@ -12,7 +12,7 @@
  * is the same class of error tests/feed-enrichment.php pins as RSS-1, and it
  * was live in this file's first draft (atom: used, never declared).
  *
- * @since theme v11.10.0
+ * @since theme v11.9.2
  */
 
 if ( PHP_SAPI !== 'cli' && ! defined( 'WP_CLI' ) ) { http_response_code( 404 ); exit; }
@@ -31,7 +31,7 @@ function get_theme_file_uri( $p = '' ) { return 'https://x.test/wp-content/theme
 
 require __DIR__ . '/../inc/feed-stylesheet.php';
 
-echo "RSS feed stylesheet (v11.10.0)\n\n";
+echo "RSS feed stylesheet (v11.9.2)\n\n";
 
 // --- the PI itself -------------------------------------------------------
 ob_start(); sn_feed_stylesheet_pi( 'rss2' ); $out = ob_get_clean();
