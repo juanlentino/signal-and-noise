@@ -22,6 +22,15 @@ an XSL stylesheet and renders as a readable page in the site's own type system.
   the theme already injects as `sn:readingTimeMinutes` — enrichment that until now only a
   parser could see.
 
+- **Cross-document view transitions** (`assets/css/base.css`) — index → note → note now fades
+  continuously instead of flashing white. Declared inside `prefers-reduced-motion:
+  no-preference`, the same opt-in posture the existing `fadeInUp` block uses, so a reader who
+  asked for less motion gets none of it; browsers without support ignore the at-rule and keep
+  the previous instant navigation. Named element morphs (index row title → note title) are
+  deliberately deferred: `view-transition-name` must be unique per document, so a 32-row index
+  needs a distinct name emitted per row from PHP — that belongs with the notes-index redesign,
+  where the row markup is being rewritten anyway.
+
 ### Notes
 
 - **Cannot break subscription.** Feed *readers* parse the XML and never fetch a stylesheet;

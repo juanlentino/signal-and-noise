@@ -243,3 +243,27 @@ summary:focus-visible {
 		outline-width: 3px;
 	}
 }
+
+/* ============================================
+   VIEW TRANSITIONS (v11.10.0)
+   ============================================
+
+   Cross-document transitions for index → note → note, the site's dominant
+   navigation. Replaces the white flash between pages with a continuous fade,
+   which is motion that clarifies flow rather than decorating it.
+
+   Declared INSIDE prefers-reduced-motion: no-preference so a reader who asked
+   for less motion gets none of it — the same opt-in posture the fadeInUp block
+   above uses. Browsers without support ignore the at-rule entirely, so this
+   degrades to the previous instant navigation.
+
+   NOT doing named element morphs (index row title → note title) yet:
+   view-transition-name must be UNIQUE per document, so a 32-row index needs a
+   distinct name emitted per row from PHP. That belongs with the notes-index
+   redesign, where the row markup is being rewritten anyway. */
+
+@media (prefers-reduced-motion: no-preference) {
+	@view-transition {
+		navigation: auto;
+	}
+}
