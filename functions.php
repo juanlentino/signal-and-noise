@@ -42,6 +42,7 @@
  *   inc/article-toc.php          — in-article TOC + reading-progress bar (the_content filter, single notes ≥3 H2s)
  *   inc/feed-json.php            — JSON Feed 1.1 for the Notes corpus (v9.11.0; provenance extension v10.48.0)
  *   inc/feed-enrichment.php      — RSS media:content + reading-time + noteUid enrichment, plugin-guarded (v9.11.0)
+ *   inc/feed-stylesheet.php      — XSL stylesheet PI so a browser renders the RSS2 feed readably (v11.10.0)
  *   inc/command-palette.php      — reader-facing Notes-scoped ⌘K/"/" command palette (v9.11.0)
  *   inc/keyboard-nav.php         — single-note j/k prev/next + "?" keyboard cheat-sheet (C5, v10.7.0)
  *   inc/discography-render.php   — [sn_discography] timeline (reads the plugin's sn_discography_entries filter)
@@ -124,6 +125,7 @@ require_once __DIR__ . '/inc/post-share.php';
 require_once __DIR__ . '/inc/article-toc.php';
 require_once __DIR__ . '/inc/feed-json.php';
 require_once __DIR__ . '/inc/feed-enrichment.php';
+require_once __DIR__ . '/inc/feed-stylesheet.php';
 require_once __DIR__ . '/inc/command-palette.php';
 require_once __DIR__ . '/inc/keyboard-nav.php'; // C5 (v10.7.0): single-note j/k prev/next + "?" keyboard cheat-sheet
 require_once __DIR__ . '/inc/discography-render.php';
