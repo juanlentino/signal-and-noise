@@ -1,0 +1,176 @@
+<?php
+/**
+ * Signal & Noise — the provenance badge joins the BROW on signed Pages.
+ *
+ * WHERE IT WAS. The plugin appends the chip through a `the_content` filter
+ * (sn_prov_append_page_panel, priority 20), so on /about it landed as the last
+ * child of .entry-content — measured 2026-08-18 at y=3212 of a 3382px document,
+ * with the <h1> at y=250. A content filter can only append; the position was
+ * never a styling choice, it was a consequence of the hook.
+ *
+ * WHY THAT IS WRONG, beyond taste. The badge is a claim ABOUT the document, not
+ * a part of it. Sitting inside .entry-content after the final section it reads
+ * as a closing sentence — and a reader learns the page is signed only after
+ * reading everything, which inverts the argument the site exists to make:
+ * authorship is established at creation, not asserted afterwards.
+ *
+ * WHERE IT GOES. The page already has the right slot. /about opens with
+ * `<p class="sn-catalog-eyebrow">Dossier · Who I Am</p>` directly above its
+ * title — the metadata line. The badge joins it as a second segment, in the
+ * same DM Mono uppercase tracking every other meta line on the site uses, with
+ * no pill chrome (the brow does not draw boxes).
+ *
+ * THE HOOK, and the trap. The obvious precedent is inc/pillar-title-eyebrow.php,
+ * which filters `render_block_core/post-title`. It would silently never fire
+ * here: /about's title is an authored `core/heading` inside the content, not a
+ * post-title block, and its eyebrow is an authored `core/paragraph`. So this
+ * filters `render_block_core/paragraph` and joins the FIRST eyebrow paragraph.
+ *
+ * NEVER SILENTLY LOSES THE BADGE. The plugin's foot append is suppressed only
+ * when this placement actually happened (sn_prov_brow_placed()). A signed Page
+ * with no eyebrow keeps the plugin's original behaviour rather than showing no
+ * proof at all — a guard that makes the badge invisible is worse than the badge
+ * being in the wrong place.
+ *
+ * @package SignalNoise
+ * @since 11.11.0
+ */
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
+ * Did this request already place the brow badge? Also the signal the plugin's
+ * append filter reads, so the two can never both render.
+ *
+ * @param bool|null $set Internal: mark as placed.
+ * @return bool
+ */
+function sn_prov_brow_placed( $set = null ) {
+	static $placed = false;
+	if ( true === $set ) {
+		$placed = true;
+	}
+	return $placed;
+}
+
+/** Reset between queries so a second loop cannot inherit the first's flag. */
+function sn_prov_brow_reset() {
+	// Cheap and explicit: the static above is per-request, and the only way to
+	// clear it is a fresh request. Kept as a named seam for the tests.
+	return sn_prov_brow_placed();
+}
+
+/**
+ * The reader-facing, main-query, singular signed Page this render may decorate.
+ *
+ * Mirrors sn_pillar_eyebrow_page_id()'s gating exactly — everywhere else (other
+ * blocks, non-main queries, feeds, REST/editor ServerSideRender, wp-admin)
+ * degrades to 0 and the filter returns its input unchanged.
+ *
+ * @return int Page ID, or 0.
+ */
+function sn_prov_brow_page_id() {
+	if ( is_admin() || wp_doing_ajax() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
+		return 0;
+	}
+	if ( function_exists( 'is_feed' ) && is_feed() ) {
+		return 0;
+	}
+	if ( ! is_singular( 'page' ) || ! in_the_loop() || ! is_main_query() ) {
+		return 0;
+	}
+	$id = get_the_ID();
+	return $id ? (int) $id : 0;
+}
+
+/**
+ * The brow segment for a signed Page, or '' when the Page carries no chain.
+ *
+ * Reads the plugin's own view model rather than re-deriving status or version —
+ * two renderers disagreeing about an anchor is exactly the class of bug the
+ * provenance surface must not have. Guarded, so the theme still renders with
+ * the plugin absent.
+ *
+ * @param int $page_id
+ * @return string HTML, already escaped.
+ */
+function sn_prov_brow_segment( $page_id ) {
+	if ( ! function_exists( 'sn_prov_view_data' ) || ! function_exists( 'sn_prov_present_status' ) ) {
+		return '';
+	}
+	$vm = sn_prov_view_data( $page_id );
+	if ( null === $vm ) {
+		return '';
+	}
+	$root  = function_exists( 'sn_prov_genesis_root_state' ) ? sn_prov_genesis_root_state() : array( 'status' => '' );
+	$pres  = sn_prov_present_status( $vm['status'], $root['status'] ?? '' );
+	$label = (string) ( $pres['label'] ?? '' );
+	if ( '' === $label ) {
+		return '';
+	}
+	// Version only when there is a real one: a genesis-only Page has no v-number
+	// to show, and inventing "v1" would claim an edit history it does not have.
+	$version = empty( $vm['is_genesis_only'] ) ? ' v' . (int) $vm['version'] : '';
+	$href    = '';
+	if ( function_exists( 'sn_prov_primary_explorer' ) ) {
+		$explorer = sn_prov_primary_explorer( $vm, $root );
+		$href     = (string) ( $explorer['href'] ?? '' );
+	}
+	$text = esc_html( $label . $version );
+	$inner = '' === $href
+		? '<span class="sn-prov-brow-label">' . $text . '</span>'
+		: '<a class="sn-prov-brow-link" href="' . esc_url( $href ) . '" rel="nofollow noopener" target="_blank">'
+			. $text . '<span class="sn-prov-brow-ext" aria-hidden="true">&#8599;</span></a>';
+	return '<span class="sn-prov-brow" data-state="' . esc_attr( (string) ( $pres['state'] ?? '' ) ) . '">'
+		. '<span class="sn-prov-brow-sep" aria-hidden="true">&middot;</span>' . $inner . '</span>';
+}
+
+/**
+ * render_block_core/paragraph: join the first `.sn-catalog-eyebrow` brow.
+ *
+ * @param string $block_content Rendered block HTML.
+ * @param array  $block         Parsed block.
+ * @return string
+ */
+function sn_prov_brow_filter( $block_content, $block = array() ) {
+	if ( sn_prov_brow_placed() ) {
+		return $block_content; // one brow per page, always the first
+	}
+	if ( false === strpos( (string) $block_content, 'sn-catalog-eyebrow' ) ) {
+		return $block_content;
+	}
+	$page_id = sn_prov_brow_page_id();
+	if ( ! $page_id ) {
+		return $block_content;
+	}
+	$segment = sn_prov_brow_segment( $page_id );
+	if ( '' === $segment ) {
+		return $block_content;
+	}
+	// Insert INSIDE the paragraph, before its closing tag, so the badge shares
+	// the brow's line and baseline rather than starting a second one.
+	$pos = strrpos( $block_content, '</p>' );
+	if ( false === $pos ) {
+		return $block_content;
+	}
+	sn_prov_brow_placed( true );
+	return substr( $block_content, 0, $pos ) . $segment . substr( $block_content, $pos );
+}
+
+if ( function_exists( 'add_filter' ) ) {
+	add_filter( 'render_block_core/paragraph', 'sn_prov_brow_filter', 10, 2 );
+
+	// Suppress the plugin's foot append ONLY when the brow actually took it.
+	// Blocks render inside the_content at priority 9; the plugin appends at 20,
+	// so by the time this answers, the flag is truthful for this request.
+	add_filter(
+		'sn_prov_auto_append_page_panel',
+		static function ( $enabled ) {
+			return sn_prov_brow_placed() ? false : $enabled;
+		},
+		10,
+		1
+	);
+}

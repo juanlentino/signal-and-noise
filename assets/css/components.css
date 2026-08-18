@@ -631,6 +631,37 @@
 	margin-bottom: 1rem;
 }
 
+/* v11.11.0 — the provenance badge as a BROW SEGMENT, not a pill.
+   Lives inside .sn-catalog-eyebrow's <p>, so family, 11px floor, 0.18em
+   tracking and uppercase all inherit; only colour is decided here.
+
+   Rust, not blood, and that is the whole hierarchy: the designation says what
+   this page IS and keeps the accent; the provenance says how you can CHECK it
+   and sits one step back. Two blood items on one line would read as one loud
+   line rather than a statement and its footing. The link earns blood back on
+   hover, where the reader has asked for it. */
+.sn-prov-brow {
+	color: var(--wp--preset--color--rust);
+}
+.sn-prov-brow-sep {
+	margin: 0 0.5em;
+	opacity: 0.6;
+}
+.sn-prov-brow-link {
+	color: inherit;
+	text-decoration: none;
+	border-bottom: 1px solid transparent;
+	transition: color 0.2s ease, border-color 0.2s ease;
+}
+.sn-prov-brow-link:hover,
+.sn-prov-brow-link:focus-visible {
+	color: var(--wp--preset--color--blood);
+	border-bottom-color: currentColor;
+}
+.sn-prov-brow-ext {
+	margin-left: 0.35em;
+}
+
 .sn-catalog-meta {
 	font-family: var(--wp--preset--font-family--body);
 	font-size: max(0.7rem, 11px);
