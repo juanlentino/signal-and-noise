@@ -1640,3 +1640,11 @@
 	padding: 0.2rem 0.4rem;
 	text-transform: uppercase;
 }
+
+/* v11.11.1 — the brow this filter CREATES on a page that had none
+   (a core/post-title page such as /notes/start-here/). It reuses
+   .sn-catalog-eyebrow for treatment, so this only marks the case for
+   future readers; the segment inside carries its own colour. */
+.sn-catalog-eyebrow.sn-prov-brow-solo {
+	color: var(--wp--preset--color--rust);
+}

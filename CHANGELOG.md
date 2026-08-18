@@ -2,6 +2,38 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.11.1] - 2026-08-18 — the brow badge learns the other page shape
+
+### Fixed
+- **v11.11.0 only covered half the signed Pages, and the half it missed is the one
+  about to be signed.** The two have opposite structures, verified against live
+  markup *before* signing rather than after:
+
+  | | title block | brow |
+  |---|---|---|
+  | `/about` | authored `core/heading` | authored `.sn-catalog-eyebrow` |
+  | `/notes/start-here/` | **`core/post-title`** | **none** |
+
+  The `render_block_core/paragraph` filter can never fire on start-here — there is
+  no eyebrow paragraph to join — so the badge would have fallen straight back to the
+  plugin's foot append, the exact position this change exists to leave.
+- Added a `render_block_core/post-title` path that **creates** the brow when a page
+  has none, reusing `.sn-catalog-eyebrow` so treatment is inherited rather than
+  redefined. The segment drops its leading separator in this mode: here it *is* the
+  brow, not a second segment of one.
+- **It cannot stack a second brow.** A post-title block renders *before* the content
+  paragraphs, so filter registration order cannot decide which path wins — block
+  order does. The title filter therefore asks the page content directly for an
+  authored `.sn-catalog-eyebrow` instead of racing the render, and stands down when
+  it finds one.
+
+### Verified
+- **92 test files pass, zero failures** — including two new suites, split by file
+  because the placement flag is a per-request static: shape A consumes it, so shape B
+  needs a clean process rather than a fake reset that would not model the real lifetime.
+- Rendered against live `/notes/start-here/` markup with the shipped CSS:
+  `VERIFIED V1 ↗` in rust, above the headline, one line.
+
 ## [11.11.0] - 2026-08-18 — the proof moves to the brow
 
 ### Changed
