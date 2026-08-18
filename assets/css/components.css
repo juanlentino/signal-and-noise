@@ -1435,7 +1435,13 @@
 
 .sn-article-progress {
 	position: fixed;
-	top: 108px; /* desktop header height */
+	/* NO-JS FALLBACK ONLY. article-toc.js sets `top` from the header's measured
+	   bottom edge every frame, because .sn-header SHRINKS on scroll
+	   (.is-scrolled) and any fixed number is wrong in one of the two states.
+	   The 108px here was measured against a 94px header — a 14px gap of content
+	   showing between the header and the bar. Kept as a graceful degradation,
+	   not as the source of truth. */
+	top: 108px;
 	left: 0;
 	right: 0;
 	height: 3px;

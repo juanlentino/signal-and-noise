@@ -2,6 +2,39 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.11.2] - 2026-08-18 — the reading-progress bar measures the reading
+
+### Fixed
+- **The bar measured the document, not the article.** It divided by
+  `scrollHeight - clientHeight`, which counts the masthead above the prose and the
+  entire footer below it. Measured on a live note:
+
+  | moment | bar read |
+  |---|---|
+  | article **starts** | **19%** |
+  | article **ends** — every word read | **43%** |
+  | bottom of the footer | 100% |
+
+  **76% of the bar's travel was spent on things that are not the article**, and a
+  reader who had finished still had 1048px of footer to scroll before it filled. It
+  now measures the article's own extent: 0% where the prose begins, 100% where its
+  last line lands.
+- **It also floated free of the header.** `top` was hardcoded at 108px against a
+  header that is **94px** — a 14px gap of content showing through — and `.sn-header`
+  **shrinks on scroll** (`.is-scrolled` cuts its padding and the logo 64→48px), so any
+  fixed number is wrong in one of the two states and the gap opens further exactly
+  when the bar matters. The bar now reads the header's measured bottom edge each
+  frame, inside the rAF that was already running. The CSS value stays as a no-JS
+  fallback, relabelled as such.
+- A note shorter than the viewport reports 100% rather than 0: it is entirely visible,
+  so it is entirely read. Guarding with 0 would have left the bar empty on exactly the
+  notes a reader finishes fastest.
+
+### Verified
+- **92 test files pass, zero failures.**
+- Re-measured against the same live note with the fixed script: gap **0px**, 0% at the
+  article's start, 100% at its end.
+
 ## [11.11.1] - 2026-08-18 — the brow badge learns the other page shape
 
 ### Fixed
