@@ -17,7 +17,7 @@
  * same raw XML it showed before. The failure mode is the previous behaviour.
  *
  * @package SignalNoise
- * @since 11.10.0
+ * @since 11.9.2
  */
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
@@ -34,7 +34,7 @@ function sn_feed_stylesheet_pi( $type = '' ) {
 
 	/**
 	 * Filter the RSS stylesheet URL. Return an empty string to serve the feed
-	 * unstyled — the pre-11.10.0 behaviour.
+	 * unstyled — the pre-11.9.2 behaviour.
 	 *
 	 * @param string $url Absolute URL of the XSL stylesheet.
 	 */

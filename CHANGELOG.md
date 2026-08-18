@@ -2,7 +2,7 @@
 
 All notable changes to Signal & Noise are documented here.
 
-## [11.10.0] - 2026-08-17 — the feed stops looking like a broken page
+## [11.9.2] - 2026-08-17 — the feed stops looking like a broken page
 
 The site names RSS as its only endorsed channel — the notes hero says so in capitals:
 "No subscription form. No schedule. Notes via RSS." Clicking that link served raw XML,
