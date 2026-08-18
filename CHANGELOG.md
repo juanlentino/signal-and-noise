@@ -2,6 +2,43 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.10.0] - 2026-08-17 — the feed stops looking like a broken page
+
+The site names RSS as its only endorsed channel — the notes hero says so in capitals:
+"No subscription form. No schedule. Notes via RSS." Clicking that link served raw XML,
+which to anyone without a reader installed reads as a parse error. The feed now carries
+an XSL stylesheet and renders as a readable page in the site's own type system.
+
+### Added
+
+- **`inc/feed-stylesheet.php`** — emits an `<?xml-stylesheet?>` processing instruction on
+  `rss_tag_pre`, the core hook that fires between the XML declaration and the opening
+  `<rss>` tag and is therefore the only legal position for it. Guarded on the feed type
+  core passes, so comment feeds (`rss2-comments`) are excluded. Filterable via
+  `sn_feed_stylesheet_url`; returning an empty string restores the unstyled feed.
+- **`assets/feed.xsl`** — the stylesheet, in the site's own system: Bebas Neue headline,
+  DM Mono meta at the 11px floor, `blood` accents, hairline rules. Explains in one line
+  that a feed is not a broken page, shows the subscribe URL, and surfaces the reading time
+  the theme already injects as `sn:readingTimeMinutes` — enrichment that until now only a
+  parser could see.
+
+### Notes
+
+- **Cannot break subscription.** Feed *readers* parse the XML and never fetch a stylesheet;
+  a browser without XSLT shows the same raw XML it showed before. The failure mode is the
+  previous behaviour.
+- Asset paths inside the XSL are root-relative by necessity: relative URLs in XSLT output
+  resolve against the *source* document (the feed URL), not the stylesheet, so
+  `fonts/x.woff2` would resolve under `/notes/feed/`. Font stacks fall back to system faces.
+- Verified end to end by transforming the **live feed** through the stylesheet with PHP's
+  XSLTProcessor: 10 item rows, subscribe URL, and reading time all rendered.
+- Pinned in `tests/feed-stylesheet.php` (14 assertions). The load-bearing ones are the feed-
+  type guard and a **namespace-completeness check** — every prefix used in an XPath
+  expression must be declared on the stylesheet element. An undeclared prefix is a runtime
+  transform failure that the XML parser cannot catch, because it lives inside an attribute
+  *value*; this file shipped with exactly that bug in its first draft (`atom:` used, never
+  declared). Negative-controlled: removing the declaration reds that assertion alone.
+
 ## [11.9.1] - 2026-08-17 — the notes index links its own front door
 
 Start Here became a page under `/notes/` (freeing the index slot its stickied
