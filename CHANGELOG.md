@@ -2,6 +2,23 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.9.5] - 2026-08-17 — "New here? Start here" said *here* twice
+
+Owner caught the repetition: four words, two of them "here", and the second one was doing all
+the work. Link text still has to predict its destination and the page is titled "Start Here",
+so that half stays; the framing goes.
+
+### Changed
+
+- **"New here? Start here" → "First time? Start here"** in the /notes hero
+  (`inc/page-notes-render.php`) and, for consistency, in the same sentence on `/notes/subscribe/`
+  (`inc/feed-subscribe-page.php`) — a grep for the old phrasing found the second instance, which
+  had the identical repetition.
+
+"First time?" keeps what "New here?" was for: telling a RETURNING reader that the bordered red
+block is not aimed at them. Without some such cue, a regular visitor meets a prominent
+call-to-action on every visit that is permanently not for them.
+
 ## [11.9.4] - 2026-08-17 — a page instead of a stylesheet, and Start Here you can actually see
 
 Two changes, one theme: the routes into the writing should not make a newcomer work.

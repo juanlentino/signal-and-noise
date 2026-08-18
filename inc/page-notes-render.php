@@ -640,7 +640,7 @@ echo $sn_header_html;
 			?>
 			<?php if ( $sn_start_here_page ) : ?>
 				<p class="sn-notes-start-here">
-					<a href="<?php echo esc_url( get_permalink( $sn_start_here_page ) ); ?>">New here? Start here<span class="sn-notes-start-here-arrow" aria-hidden="true">&rarr;</span></a>
+					<a href="<?php echo esc_url( get_permalink( $sn_start_here_page ) ); ?>">First time? Start here<span class="sn-notes-start-here-arrow" aria-hidden="true">&rarr;</span></a>
 				</p>
 			<?php endif; ?>
 		</div>
