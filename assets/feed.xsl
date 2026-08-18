@@ -12,10 +12,11 @@
   (readers parse the XML and never fetch a stylesheet). It therefore degrades to
   exactly the previous behaviour and cannot break subscription.
 
-  Asset paths are ROOT-RELATIVE on purpose: relative URLs in XSLT output resolve
-  against the SOURCE document (the feed URL, /notes/feed/), not against this
-  stylesheet, so "fonts/x.woff2" would resolve to /notes/feed/fonts/x.woff2.
-  Font stacks fall back to system faces if the theme directory ever moves.
+  Asset paths must be ABSOLUTE: relative URLs in XSLT output resolve against the
+  SOURCE document (the feed URL, /notes/feed/), not against this stylesheet, so
+  "fonts/x.woff2" would resolve to /notes/feed/fonts/x.woff2. {{THEME_URI}} is
+  substituted by sn_feed_stylesheet_body() with get_theme_file_uri('') at serve
+  time, so the paths follow the theme wherever it lives.
 -->
 <xsl:stylesheet version="1.0"
 	xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
@@ -36,12 +37,12 @@
 	<style>
 		@font-face {
 			font-family: 'Bebas Neue';
-			src: url('/wp-content/themes/signal-and-noise/assets/fonts/bebas-neue-latin.woff2') format('woff2');
+			src: url('{{THEME_URI}}assets/fonts/bebas-neue-latin.woff2') format('woff2');
 			font-display: swap; font-weight: 400; font-style: normal;
 		}
 		@font-face {
 			font-family: 'DM Mono';
-			src: url('/wp-content/themes/signal-and-noise/assets/fonts/dm-mono-400-latin.woff2') format('woff2');
+			src: url('{{THEME_URI}}assets/fonts/dm-mono-400-latin.woff2') format('woff2');
 			font-display: swap; font-weight: 400; font-style: normal;
 		}
 		:root {
