@@ -150,7 +150,7 @@ function sn_subscribe_render() {
 			<p class="sn-subscribe-help">Prefer email? <a href="https://blogtrottr.com/" target="_blank" rel="noopener noreferrer" data-sn-subscribe="email">Blogtrottr</a>
 				and <a href="https://www.feedrabbit.com/" target="_blank" rel="noopener noreferrer" data-sn-subscribe="email">Feedrabbit</a>
 				turn that same address into messages in your inbox.</p>
-			<p class="sn-subscribe-help">New here? <a href="<?php echo esc_url( home_url( '/notes/start-here/' ) ); ?>">Start here</a>
+			<p class="sn-subscribe-help">First time? <a href="<?php echo esc_url( home_url( '/notes/start-here/' ) ); ?>">Start here</a>
 				reads the argument in order, or <a href="<?php echo esc_url( home_url( '/notes/' ) ); ?>">browse every note</a>.</p>
 		</section>
 
