@@ -34,6 +34,19 @@ if ( ! function_exists( 'get_query_var' ) ) {
 		return $GLOBALS['__query_vars'][ $var ] ?? $default;
 	}
 }
+if ( ! function_exists( 'sanitize_text_field' ) ) {
+	// v11.10.0: the fixture now drives SEARCH mode (to pin that filtered views
+	// still paginate), which reaches sn_notes_search_term()'s non-empty branch.
+	// Browse mode short-circuits before these, which is why they were never
+	// needed here before.
+	function sanitize_text_field( $str ) { return trim( wp_strip_all_tags( (string) $str ) ); }
+}
+if ( ! function_exists( 'wp_unslash' ) ) {
+	function wp_unslash( $v ) { return is_string( $v ) ? stripslashes( $v ) : $v; }
+}
+if ( ! function_exists( 'wp_strip_all_tags' ) ) {
+	function wp_strip_all_tags( $str ) { return strip_tags( (string) $str ); }
+}
 
 // Capture the args WP_Query is constructed with.
 $GLOBALS['__wpquery_args'] = null;
@@ -105,15 +118,30 @@ unset( $_GET['paged'] );
 $GLOBALS['__filters'] = array(); $GLOBALS['__query_vars'] = array( 'paged' => 2 ); unset( $_GET['paged'] );
 $q = sn_notes_query_posts();
 $a = $GLOBALS['__wpquery_args'];
-ok( $a['posts_per_page'] === 20, 'query uses default per-page 20' );
-ok( $a['paged'] === 2,           'query passes paged=2 from query var' );
+// v11.10.0: BROWSE mode returns the whole corpus and drops pagination — the
+// year spine bounds the visible page instead, so paging would only re-hide what
+// the spine already folds. These two assertions inverted deliberately; the
+// per-page contract below still holds for FILTERED modes, which have no spine.
+ok( $a['posts_per_page'] === -1, 'browse mode fetches the whole corpus (no pagination)' );
+ok( $a['paged'] === 1,           'browse mode ignores paged — there is only one page' );
 ok( $a['no_found_rows'] === false, 'no_found_rows is false (pagination needs found_posts)' );
 ok( $a['post_status'] === 'publish', 'still publish-only (scheduled excluded)' );
 ok( $a['post_type'] === 'post',  'still post_type=post' );
 
-$GLOBALS['__filters'] = array( 'sn_notes_per_page' => 10 ); $GLOBALS['__query_vars'] = array();
+// The sn_notes_per_page filter (Release 2 contract) still governs FILTERED
+// modes. Driven through search, because browse no longer paginates at all —
+// asserting the filter against browse would pin a path that cannot use it.
+$GLOBALS['__filters'] = array( 'sn_notes_per_page' => 10 ); $GLOBALS['__query_vars'] = array( 's' => 'provenance', 'paged' => 3 );
 sn_notes_query_posts();
-ok( $GLOBALS['__wpquery_args']['posts_per_page'] === 10, 'filter override flows into query (10)' );
+ok( $GLOBALS['__wpquery_args']['posts_per_page'] === 10, 'filter override flows into a FILTERED query (10)' );
+ok( $GLOBALS['__wpquery_args']['paged'] === 3, 'filtered mode still paginates (paged=3)' );
+
+// The negative control for the split: same filter, browse mode, and the
+// per-page value must NOT be honoured — otherwise "browse is unpaginated" is
+// only true until someone sets the filter.
+$GLOBALS['__filters'] = array( 'sn_notes_per_page' => 10 ); $GLOBALS['__query_vars'] = array( 'paged' => 3 );
+sn_notes_query_posts();
+ok( $GLOBALS['__wpquery_args']['posts_per_page'] === -1, 'browse ignores the per-page filter (spine bounds the page, not paging)' );
 
 // ── sn_notes_hero_stats(): corpus total, not the page slice ──
 ok( function_exists( 'sn_notes_hero_stats' ), 'sn_notes_hero_stats() is defined' );

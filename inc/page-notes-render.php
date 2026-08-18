@@ -292,29 +292,40 @@ wp_head();
 .sn-notes-row {
 	display: grid;
 	grid-template-columns: 1fr;
-	gap: 0.5rem;
-	padding: clamp(1rem, 2vw, 1.5rem) 0;
+	gap: 0.25rem;
+	/* v11.10.0 — MANIFEST DENSITY. Was clamp(1rem, 2vw, 1.5rem), which with a
+	   4-line excerpt made every row ~250px and buried the one thing that
+	   carries the argument: the titles, read in sequence. */
+	padding: 0.6rem 0;
 	border-bottom: 1px solid var(--wp--preset--color--concrete);
-	transition: padding 0.2s ease;
+	transition: background-color 0.2s ease;
 }
 .sn-notes-row:last-child {
 	border-bottom: 0;
 }
 @media (min-width: 720px) {
 	.sn-notes-row {
-		grid-template-columns: 140px 1fr;
-		gap: 2rem;
-		align-items: start;
+		/* date | title | meta — a ledger line, not a card. */
+		grid-template-columns: 108px minmax(0, 1fr) auto;
+		grid-template-areas:
+			"spec title meta"
+			".    excerpt excerpt";
+		gap: 0 1.5rem;
+		align-items: baseline;
 	}
 }
-.sn-notes-row:hover {
-	padding-left: 6px;
+/* The hover affordance moves from padding (which reflowed the row) to a
+   background wash + the blood date already established as this list's idiom. */
+.sn-notes-row:hover,
+.sn-notes-row:focus-within {
+	background-color: color-mix(in srgb, var(--wp--preset--color--concrete) 28%, transparent);
 }
 
 .sn-notes-row-spec {
+	grid-area: spec;
 	font-family: 'DM Mono', 'Courier New', monospace;
-	font-size: 0.75rem;
-	letter-spacing: 0.14em;
+	font-size: 0.6875rem; /* 11px floor */
+	letter-spacing: 0.12em;
 	text-transform: uppercase;
 	color: var(--wp--preset--color--rust);
 	display: flex;
@@ -323,33 +334,73 @@ wp_head();
 	align-items: baseline;
 	transition: color 0.2s ease;
 }
-@media (min-width: 720px) {
-	.sn-notes-row-spec {
-		flex-direction: column;
-		gap: 0.4rem;
-	}
-}
 .sn-notes-row-date {
 	color: var(--wp--preset--color--bone);
 	font-weight: 500;
+	white-space: nowrap;
 }
-.sn-notes-row-rt {
-	color: var(--wp--preset--color--rust);
-}
-.sn-notes-row:hover .sn-notes-row-date {
+.sn-notes-row:hover .sn-notes-row-date,
+.sn-notes-row:focus-within .sn-notes-row-date {
 	color: var(--wp--preset--color--blood);
 }
 
+/* The right-hand stamp: reading time, tags, provenance version. Editorial
+   signals only — never traffic or decay, which would publish per-note
+   performance and turn a reading list into a leaderboard. */
+.sn-notes-row-meta {
+	grid-area: meta;
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: 0.6875rem;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--rust);
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	align-items: baseline;
+	justify-content: flex-end;
+}
+.sn-notes-row-meta a {
+	color: inherit;
+	text-decoration: none;
+	border-bottom: 1px solid transparent;
+}
+.sn-notes-row-meta a:hover,
+.sn-notes-row-meta a:focus-visible {
+	color: var(--wp--preset--color--bone);
+	border-bottom-color: var(--wp--preset--color--blood);
+}
+.sn-notes-row-sep {
+	opacity: 0.5;
+}
+/* v2+ only: "signed once" is true of nearly every Note and says nothing. */
+.sn-notes-row-prov {
+	color: var(--wp--preset--color--blood);
+	white-space: nowrap;
+}
+@media (max-width: 719px) {
+	.sn-notes-row-meta {
+		justify-content: flex-start;
+	}
+	.sn-notes-row-tags {
+		display: none; /* the date + reading time carry the row on a phone */
+	}
+}
+
 .sn-notes-row-content {
-	min-width: 0; /* allow text to wrap inside grid cell */
+	grid-area: title;
+	min-width: 0;
 }
 .sn-notes-row-title {
 	font-family: 'Bebas Neue', Impact, sans-serif;
 	font-weight: 400;
-	font-size: clamp(1.5rem, 2.4vw, 2rem);
-	line-height: 1.05;
-	letter-spacing: -0.005em;
-	margin: 0 0 0.6rem;
+	/* Was clamp(1.5rem, 2.4vw, 2rem). The titles are aphorisms that read as a
+	   manifesto in sequence, so they stay the loudest thing in the row — but a
+	   manifesto is read in a column, not one line per screen. */
+	font-size: clamp(1.15rem, 1.5vw, 1.45rem);
+	line-height: 1.15;
+	letter-spacing: 0.005em;
+	margin: 0;
 }
 .sn-notes-row-title a {
 	color: var(--wp--preset--color--bone);
@@ -361,18 +412,93 @@ wp_head();
 	transition: background-size 0.3s ease, color 0.2s ease;
 	padding-bottom: 2px;
 }
-.sn-notes-row-title a:hover {
+.sn-notes-row-title a:hover,
+.sn-notes-row-title a:focus-visible {
 	color: var(--wp--preset--color--blood);
 	background-size: 100% 1px;
 }
+
+/* THE EXCERPT: present in the DOM always (crawlers, AEO and screen readers
+   lose nothing), collapsed visually so the titles can be read in sequence.
+   grid-template-rows 0fr → 1fr animates the reveal without animating height
+   on the element itself, and without the row ever reflowing at rest. */
+.sn-notes-row-excerpt-wrap {
+	grid-area: excerpt;
+	display: grid;
+	grid-template-rows: 0fr;
+	transition: grid-template-rows 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.sn-notes-row:hover .sn-notes-row-excerpt-wrap,
+.sn-notes-row:focus-within .sn-notes-row-excerpt-wrap {
+	grid-template-rows: 1fr;
+}
 .sn-notes-row-excerpt {
-	font-size: 0.95rem;
-	line-height: 1.6;
+	overflow: hidden;
+	min-height: 0;
+	font-size: 0.9rem;
+	line-height: 1.55;
 	color: var(--wp--preset--color--rust);
 	margin: 0;
-	/* Loosened 60ch → 80ch with the 1320px container (owner direction,
-	   v11.4.0): the tighter cap left the right half of each row empty. */
 	max-width: 80ch;
+	/* Three lines is a scent, not the note. Clamping bounds how far the rows
+	   below can be displaced by a reveal — an unclamped 5-line excerpt shoves
+	   thirty rows a quarter-screen down and the list stops feeling stable. */
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 3;
+	line-clamp: 3;
+}
+.sn-notes-row:hover .sn-notes-row-excerpt,
+.sn-notes-row:focus-within .sn-notes-row-excerpt {
+	padding-top: 0.4rem;
+}
+@media (prefers-reduced-motion: reduce) {
+	.sn-notes-row-excerpt-wrap {
+		transition: none;
+	}
+}
+
+/* THE YEAR SPINE. Renders only when the index spans more than one year — see
+   sn_notes_year_spine_is_useful(). Prior years collapse to a single line, so
+   the visible page stays bounded no matter how long the corpus runs. */
+.sn-notes-year {
+	margin: 0 0 2rem;
+}
+.sn-notes-year-band {
+	display: flex;
+	align-items: baseline;
+	gap: 0.75rem;
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: 0.6875rem;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--rust);
+	border-bottom: 1px solid var(--wp--preset--color--concrete);
+	padding-bottom: 0.5rem;
+	margin: 0 0 0.25rem;
+}
+.sn-notes-year-band .sn-notes-year-n {
+	color: var(--wp--preset--color--bone);
+	font-weight: 500;
+}
+details.sn-notes-year > summary {
+	cursor: pointer;
+	list-style: none;
+}
+details.sn-notes-year > summary::-webkit-details-marker {
+	display: none;
+}
+details.sn-notes-year > summary .sn-notes-year-band::after {
+	content: '\002B'; /* + ; flips to − when open */
+	margin-left: auto;
+	color: var(--wp--preset--color--rust);
+}
+details.sn-notes-year[open] > summary .sn-notes-year-band::after {
+	content: '\2212';
+}
+details.sn-notes-year > summary:focus-visible .sn-notes-year-band {
+	outline: 2px solid var(--wp--preset--color--blood);
+	outline-offset: 2px;
 }
 
 /* Scoped to .sn-notes-page so this inline rule deterministically wins over
@@ -696,47 +822,48 @@ echo $sn_header_html;
 		<?php endif; ?>
 
 		<?php if ( $query->have_posts() || $sn_pin_on_page1 ) : ?>
-			<ol class="sn-notes-index-list">
 			<?php
-			// PINNED ROW — the stickied note, floated to the top of page 1. Same
-			// .sn-notes-row markup as the chronological rows; a blood "Start here"
-			// label flags that the out-of-date-order position is intentional.
-			if ( $sn_pin_on_page1 ) :
+			// v11.10.0: rows and the year spine render from inc/notes-index-row.php.
+			// The pinned Start-here row and the chronological rows are the SAME
+			// markup through one function — they had already drifted apart once.
+			$sn_rows = array();
+			if ( $sn_pin_on_page1 ) {
 				$sn_pin_post = get_post( $sn_start_here_id );
-				if ( $sn_pin_post ) :
+				if ( $sn_pin_post ) {
+					$sn_rows[] = array( 'post' => $sn_pin_post, 'pinned' => true );
+				}
+			}
+			while ( $query->have_posts() ) {
+				$query->the_post();
+				$sn_rows[] = array( 'post' => get_post(), 'pinned' => false );
+			}
+			wp_reset_postdata();
+
+			$sn_row_args = array( 'show_type' => (bool) $sn_searching );
+			if ( $sn_filtered ) {
+				// Filtered views stay flat: a search result set is ordered by
+				// relevance to the query, and folding it by year would impose a
+				// spine on a list whose structure is the QUERY, not the calendar.
+				sn_notes_render_row_list( wp_list_pluck( $sn_rows, 'post' ), $sn_row_args );
+			} else {
+				// Browse mode. The pinned row sits ABOVE the spine — it is
+				// deliberately out of date order, so filing it under a year would
+				// contradict the reason it is pinned.
+				$sn_pinned_rows = array();
+				$sn_chrono      = array();
+				foreach ( $sn_rows as $sn_r ) {
+					if ( $sn_r['pinned'] ) {
+						$sn_pinned_rows[] = $sn_r['post'];
+					} else {
+						$sn_chrono[] = $sn_r['post'];
+					}
+				}
+				if ( $sn_pinned_rows ) {
+					sn_notes_render_row_list( $sn_pinned_rows, array( 'pinned' => true ) );
+				}
+				sn_notes_render_year_spine( $sn_chrono, $sn_row_args );
+			}
 			?>
-				<li class="sn-notes-row is-pinned">
-					<div class="sn-notes-row-spec" aria-hidden="false">
-						<span class="sn-notes-row-pin">Start here</span>
-						<time class="sn-notes-row-date" datetime="<?php echo esc_attr( get_the_date( 'c', $sn_pin_post ) ); ?>"><?php echo sn_notes_render_date( $sn_pin_post ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- helper returns esc_html()'d output; escaping again would double-encode. ?></time>
-						<span class="sn-notes-row-rt"><?php echo esc_html( sn_notes_render_reading_time( $sn_pin_post->ID ) ); ?></span>
-					</div>
-					<div class="sn-notes-row-content">
-						<h3 class="sn-notes-row-title"><a href="<?php echo esc_url( get_permalink( $sn_pin_post ) ); ?>"><?php echo esc_html( get_the_title( $sn_pin_post ) ); ?></a></h3>
-						<?php $sn_pin_excerpt = get_the_excerpt( $sn_pin_post ); if ( $sn_pin_excerpt ) : ?>
-							<p class="sn-notes-row-excerpt"><?php echo esc_html( wp_strip_all_tags( $sn_pin_excerpt ) ); ?></p>
-						<?php endif; ?>
-					</div>
-				</li>
-			<?php endif; endif; ?>
-			<?php while ( $query->have_posts() ) : $query->the_post(); $p = get_post(); ?>
-				<li class="sn-notes-row">
-					<div class="sn-notes-row-spec" aria-hidden="false">
-						<time class="sn-notes-row-date" datetime="<?php echo esc_attr( get_the_date( 'c', $p ) ); ?>"><?php echo sn_notes_render_date( $p ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- helper returns esc_html()'d output (see sn_notes_render_date); escaping again would double-encode. ?></time>
-						<span class="sn-notes-row-rt"><?php echo esc_html( sn_notes_render_reading_time( $p->ID ) ); ?></span>
-						<?php if ( $sn_searching ) : // v10.51.0: search spans the corpus, so rows say what they are. ?>
-							<span class="sn-notes-row-type"><?php echo esc_html( sn_notes_result_type_label( $p ) ); ?></span>
-						<?php endif; ?>
-					</div>
-					<div class="sn-notes-row-content">
-						<h3 class="sn-notes-row-title"><a href="<?php the_permalink(); ?>"><?php echo esc_html( get_the_title() ); ?></a></h3>
-						<?php $excerpt = get_the_excerpt(); if ( $excerpt ) : ?>
-							<p class="sn-notes-row-excerpt"><?php echo esc_html( wp_strip_all_tags( $excerpt ) ); ?></p>
-						<?php endif; ?>
-					</div>
-				</li>
-			<?php endwhile; wp_reset_postdata(); ?>
-			</ol>
 		<?php elseif ( $sn_searching ) : ?>
 			<p class="sn-notes-empty">Nothing matches &ldquo;<?php echo esc_html( $sn_term ); ?>&rdquo;. Notes, essays, and pages all searched.</p>
 		<?php elseif ( $sn_tag ) : ?>

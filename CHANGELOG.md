@@ -2,6 +2,74 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.10.0] - 2026-08-18 — the index reads as a manifest, not a feed
+
+### Changed
+- **The excerpt is the problem, not the list.** Every row carried a 4–5 line DM Mono
+  excerpt at identical weight, ~250px tall, 20 to a page. That buried the one thing
+  the index actually has: the titles are aphorisms, and they read as a manifesto in
+  sequence. Excerpts now **collapse visually and stay in the DOM** — crawlers, AEO
+  and screen readers lose nothing — revealing on hover *and* focus, clamped to three
+  lines so a reveal cannot shove thirty rows a quarter-screen down.
+- **Rows are ledger lines**: `date | title | stamp`, ~41px each. All 33 Notes now
+  render in **1,724px** — less than one page of the old layout, which needed two.
+- **Browse mode drops pagination entirely.** Pagination is what you reach for when a
+  list has no structure but recency, and numbered pages say nothing about what is on
+  them. Filtered views (search, tag) keep `sn_notes_per_page()`: a result set ordered
+  by relevance to a query has no spine to fold it.
+- **Rows differentiate on editorial signals only** — reading time, up to two tags,
+  and the provenance version. **Never traffic or decay.** Publishing per-note
+  performance would cut against the ML kernel's refusals and turn a reading list into
+  a leaderboard; the test suite asserts the absence, rather than trusting it.
+- The provenance badge renders from **v2 only**. "Signed once" is true of nearly every
+  Note, so v1 thirty times costs a column and says nothing; from v2 it reports what the
+  date cannot — this argument was revisited, and the revision was signed.
+- Hover moved off `padding-left` (which reflowed the row) onto a background wash plus
+  the blood date already established as this list's idiom.
+
+### Added
+- **A year spine, which renders only when it discriminates — and collapses only
+  genuine surplus.** Years expand newest-first until `SN_NOTES_SPINE_MIN_VISIBLE`
+  (24) rows are showing; the year that crosses the line stays open, and only what
+  is left over collapses to a single line (`2028 · 15`). That bounds the visible
+  page however long the corpus runs, which was the point of the owner's objection
+  that an unbounded list breaks about two years out.
+- **Every Note published so far is from 2026**, so today the spine correctly renders
+  *nothing* — a band restating the count already in the section header is decoration.
+
+- [inc/notes-index-row.php](inc/notes-index-row.php) — row and spine rendering,
+  extracted from the 786-line template. The pinned Start-here row and the
+  chronological rows now share one function; they had already drifted apart once.
+- Helpers: `sn_notes_prov_version()`, `sn_notes_row_tags()`, `sn_notes_group_by_year()`,
+  `sn_notes_year_spine_is_useful()`.
+
+### Considered and rejected
+- **Grouping by argument thread**, which would have made the index a map of the
+  argument rather than a calendar. Rejected on evidence, not taste: the stored TF-IDF
+  topic partition returns **2 clusters covering 4 of 33 Notes**, so 29 would have had
+  no home. Revisit if the kernel moves to embeddings.
+- **A card grid or bento layout.** The index is already brutalist; a grid moves toward
+  generic, not away from it.
+
+### Verified
+- **90 test files pass, zero failures** (89 + the new suite), including a new
+  40-assertion suite whose harness is negative-controlled.
+- **The spine was tested against the distribution that will actually occur, not a
+  convenient one.** A first attempt used a rule of "newest year open, everything
+  else collapsed", verified against a backdated 2025/2024 fixture — years this
+  corpus can never have, since it began 2026-04. Backdating puts the mass in the
+  *open* year and hides the failure. The real first activation is **January 2027**:
+  a year holding two Notes above a year holding thirty-plus, where that rule shows
+  the reader two rows and folds the whole argument behind a closed line, on the exact
+  day it switches on. The fixtures now model that, and the corrected rule is pinned
+  by a control that reproduces the old behaviour and fails four assertions.
+- Rendered and inspected in-browser: 33 rows / 41px / 1,724px with excerpts collapsed
+  today, and the simulated January 2027 state showing `2027 · 2` and `2026 · 31` both
+  open with no drawer at all.
+- Closed drawers confirmed to hide their rows via `checkVisibility()` — `getClientRects()`
+  reports them as painted, because Chrome hides `<details>` content with
+  `content-visibility`, not `display: none`.
+
 ## [11.9.5] - 2026-08-17 — "New here? Start here" said *here* twice
 
 Owner caught the repetition: four words, two of them "here", and the second one was doing all
