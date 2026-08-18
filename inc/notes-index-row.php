@@ -95,6 +95,59 @@ function sn_notes_render_row( $p, $args = array() ) {
 }
 
 /**
+ * Rows for one year, subdivided by month, with surplus months collapsed.
+ *
+ * THE YEAR IS THE WRONG BOUNDING UNIT ON ITS OWN. At the observed cadence —
+ * 22 Notes scheduled across ten weeks, ~114/year — a single open year reaches
+ * ~4,900px by December, which is the exact wall this redesign removed. The year
+ * spine can only collapse whole years, so it does nothing until January. The
+ * month is the finer unit that bounds growth INSIDE a year.
+ *
+ * So the same rule runs at both granularities: expand newest-first until the
+ * page carries substance, then collapse the surplus. $shown is shared by
+ * reference across years and months, so the budget is spent once, globally —
+ * the page holds roughly a screen and a half of rows no matter how large the
+ * corpus grows.
+ *
+ * Month bands are deliberately QUIETER than year bands — no rule. The year band
+ * divides; the month band only marks where you are.
+ *
+ * @param array $posts
+ * @param array $args  Passed through to sn_notes_render_row().
+ * @param int   $shown Running count of rows already expanded (by reference).
+ * @return void Echoes.
+ */
+function sn_notes_render_months( $posts, $args = array(), &$shown = null ) {
+	$local = 0;
+	if ( null === $shown ) {
+		$shown = &$local;
+	}
+	if ( ! sn_notes_month_dividers_are_useful( count( (array) $posts ) ) ) {
+		sn_notes_render_row_list( $posts, $args );
+		$shown += count( (array) $posts );
+		return;
+	}
+	foreach ( sn_notes_group_by_month( $posts ) as $key => $month_posts ) {
+		$count = count( $month_posts );
+		$label = date_i18n( 'F', strtotime( $key . '-01 00:00:00' ) );
+		$band  = '<p class="sn-notes-month-band"><span class="sn-notes-month-m">' . esc_html( $label )
+			. '</span><span class="sn-notes-month-sep" aria-hidden="true">&middot;</span><span class="sn-notes-month-n">'
+			. esc_html( number_format_i18n( $count ) ) . '</span></p>';
+
+		if ( $shown < SN_NOTES_SPINE_MIN_VISIBLE ) {
+			echo $band; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- assembled from esc_html() above.
+			sn_notes_render_row_list( $month_posts, $args );
+			$shown += $count;
+			continue;
+		}
+		echo '<details class="sn-notes-month">';
+		echo '<summary>' . $band . '</summary>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- assembled from esc_html() above.
+		sn_notes_render_row_list( $month_posts, $args );
+		echo '</details>';
+	}
+}
+
+/**
  * A flat <ol> of rows.
  *
  * @param array $posts
@@ -126,6 +179,15 @@ function sn_notes_render_row_list( $posts, $args = array() ) {
 const SN_NOTES_SPINE_MIN_VISIBLE = 24;
 
 /**
+ * Rows in a year before it gets month dividers.
+ *
+ * A divider that fires on four rows is texture, not structure. Below this, a
+ * year reads fine as one run and chopping it works against the reason the rows
+ * were made dense — the titles are meant to be read in sequence.
+ */
+const SN_NOTES_MONTH_DIVIDER_MIN = 12;
+
+/**
  * The year spine: enough years open to carry the page, the rest collapsed.
  *
  * This is what bounds the visible page permanently. Pagination was the wrong
@@ -143,11 +205,14 @@ const SN_NOTES_SPINE_MIN_VISIBLE = 24;
  */
 function sn_notes_render_year_spine( $posts, $args = array() ) {
 	$grouped = sn_notes_group_by_year( $posts );
+	$shown   = 0;
 	if ( ! sn_notes_year_spine_is_useful( $grouped ) ) {
-		sn_notes_render_row_list( $posts, $args );
+		// The state the site is actually in and will stay in through 2026: one
+		// year, no year spine. The MONTH dividers carry the whole structure
+		// here, which is why they must be able to collapse on their own.
+		sn_notes_render_months( $posts, $args, $shown );
 		return;
 	}
-	$shown = 0;
 	foreach ( $grouped as $year => $year_posts ) {
 		$count = count( $year_posts );
 		$band  = '<p class="sn-notes-year-band"><span class="sn-notes-year-y">' . esc_html( (string) $year )
@@ -160,9 +225,8 @@ function sn_notes_render_year_spine( $posts, $args = array() ) {
 		if ( $shown < SN_NOTES_SPINE_MIN_VISIBLE ) {
 			echo '<section class="sn-notes-year">';
 			echo $band; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- assembled from esc_html() above.
-			sn_notes_render_row_list( $year_posts, $args );
+			sn_notes_render_months( $year_posts, $args, $shown );
 			echo '</section>';
-			$shown += $count;
 			continue;
 		}
 		echo '<details class="sn-notes-year">';

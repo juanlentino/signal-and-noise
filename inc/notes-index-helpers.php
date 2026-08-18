@@ -494,3 +494,38 @@ function sn_notes_group_by_year( $posts ) {
 function sn_notes_year_spine_is_useful( $grouped ) {
 	return count( (array) $grouped ) > 1;
 }
+
+/**
+ * Group posts by calendar month, newest first. Keys are 'YYYY-MM' so they sort
+ * correctly as strings and never collide across years.
+ *
+ * @param array $posts
+ * @return array<string,array>
+ */
+function sn_notes_group_by_month( $posts ) {
+	$out = array();
+	foreach ( (array) $posts as $p ) {
+		$key = function_exists( 'get_the_date' ) ? (string) get_the_date( 'Y-m', $p ) : '';
+		if ( '' === $key ) {
+			$key = isset( $p->post_date ) ? substr( (string) $p->post_date, 0, 7 ) : '0000-00';
+		}
+		$out[ $key ][] = $p;
+	}
+	krsort( $out, SORT_STRING );
+	return $out;
+}
+
+/**
+ * Whether a year's rows should be subdivided by month.
+ *
+ * Same discipline as the year spine: a divider that fires on a handful of rows
+ * is texture, not structure. Below this count the year reads fine as one run,
+ * and chopping it would work against the reason the rows were made dense in the
+ * first place — the titles are meant to be read in sequence.
+ *
+ * @param int $year_count
+ * @return bool
+ */
+function sn_notes_month_dividers_are_useful( $year_count ) {
+	return (int) $year_count >= SN_NOTES_MONTH_DIVIDER_MIN;
+}

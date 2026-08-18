@@ -458,6 +458,56 @@ wp_head();
 	}
 }
 
+/* THE MONTH DIVIDER — quieter than the year band by design. The year band
+   DIVIDES (rule, stronger colour); the month band only MARKS where you are, so
+   it carries no rule and sits at the same 11px floor in muted rust. Aligned to
+   the date column so the eye reads it as part of the ledger's left margin. */
+.sn-notes-month-band {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: 0.6875rem;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--rust);
+	display: flex;
+	align-items: baseline;
+	gap: 0.6rem;
+	margin: 1.5rem 0 0.15rem;
+	opacity: 0.75;
+}
+.sn-notes-month-band:first-child {
+	margin-top: 0.5rem;
+}
+.sn-notes-month-n {
+	color: var(--wp--preset--color--rust);
+}
+.sn-notes-month-sep {
+	opacity: 0.6;
+}
+
+details.sn-notes-month > summary {
+	cursor: pointer;
+	list-style: none;
+}
+details.sn-notes-month > summary::-webkit-details-marker {
+	display: none;
+}
+details.sn-notes-month > summary .sn-notes-month-band::after {
+	content: '\002B';
+	margin-left: auto;
+}
+details.sn-notes-month[open] > summary .sn-notes-month-band::after {
+	content: '\2212';
+}
+details.sn-notes-month > summary:hover .sn-notes-month-band,
+details.sn-notes-month > summary:focus-visible .sn-notes-month-band {
+	opacity: 1;
+	color: var(--wp--preset--color--bone);
+}
+details.sn-notes-month > summary:focus-visible .sn-notes-month-band {
+	outline: 2px solid var(--wp--preset--color--blood);
+	outline-offset: 2px;
+}
+
 /* THE YEAR SPINE. Renders only when the index spans more than one year — see
    sn_notes_year_spine_is_useful(). Prior years collapse to a single line, so
    the visible page stays bounded no matter how long the corpus runs. */

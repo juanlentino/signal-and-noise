@@ -28,14 +28,26 @@ All notable changes to Signal & Noise are documented here.
   the blood date already established as this list's idiom.
 
 ### Added
-- **A year spine, which renders only when it discriminates — and collapses only
-  genuine surplus.** Years expand newest-first until `SN_NOTES_SPINE_MIN_VISIBLE`
-  (24) rows are showing; the year that crosses the line stays open, and only what
-  is left over collapses to a single line (`2028 · 15`). That bounds the visible
-  page however long the corpus runs, which was the point of the owner's objection
-  that an unbounded list breaks about two years out.
-- **Every Note published so far is from 2026**, so today the spine correctly renders
-  *nothing* — a band restating the count already in the section header is decoration.
+- **A month divider, and it is the load-bearing one.** Months carry the structure
+  the year spine cannot: at the observed cadence — 22 Notes scheduled across ten
+  weeks, ~114/year — a single open year reaches ~4,900px by December, which is the
+  exact wall this redesign removed. The year spine only ever collapses *whole
+  years*, so it does nothing between Januaries. The month is the finer unit that
+  bounds growth inside a year.
+- **One rule at two granularities.** Years, then months within the open year,
+  expand newest-first until `SN_NOTES_SPINE_MIN_VISIBLE` (24) rows are showing;
+  the unit that crosses the line stays open, and only genuine surplus collapses to
+  a single line. The budget is spent once, globally, so the visible page holds
+  roughly a screen and a half **regardless of corpus size**. Measured against the
+  known pipeline: today's 33 Notes render 1,724px; the 55 Notes the site will hold
+  on 1 November render **1,671px — shorter**, with 28 rows visible and four months
+  folded.
+- Month bands are deliberately quieter than year bands — no rule, muted. The year
+  band divides; the month band marks where you are. Below
+  `SN_NOTES_MONTH_DIVIDER_MIN` (12) a year gets no dividers at all: one on four
+  rows is texture, not structure.
+- **Every Note published so far is from 2026**, so today the year spine correctly
+  renders *nothing* — the months carry the whole page.
 
 - [inc/notes-index-row.php](inc/notes-index-row.php) — row and spine rendering,
   extracted from the 786-line template. The pinned Start-here row and the
@@ -52,21 +64,21 @@ All notable changes to Signal & Noise are documented here.
   generic, not away from it.
 
 ### Verified
-- **90 test files pass, zero failures** (89 + the new suite), including a new
-  40-assertion suite whose harness is negative-controlled.
-- **The spine was tested against the distribution that will actually occur, not a
-  convenient one.** A first attempt used a rule of "newest year open, everything
-  else collapsed", verified against a backdated 2025/2024 fixture — years this
-  corpus can never have, since it began 2026-04. Backdating puts the mass in the
-  *open* year and hides the failure. The real first activation is **January 2027**:
-  a year holding two Notes above a year holding thirty-plus, where that rule shows
-  the reader two rows and folds the whole argument behind a closed line, on the exact
-  day it switches on. The fixtures now model that, and the corrected rule is pinned
-  by a control that reproduces the old behaviour and fails four assertions.
-- Rendered and inspected in-browser: 33 rows / 41px / 1,724px with excerpts collapsed
-  today, and the simulated January 2027 state showing `2027 · 2` and `2026 · 31` both
-  open with no drawer at all.
-- Closed drawers confirmed to hide their rows via `checkVisibility()` — `getClientRects()`
+- **90 test files pass, zero failures** (89 + the new suite), including a
+  49-assertion suite whose harness is negative-controlled.
+- **The spine was tested against distributions that will actually occur.** A first
+  attempt collapsed by year alone, verified against a backdated 2025/2024 fixture —
+  years this corpus can never have, since it began 2026-04. Backdating puts the mass
+  in the *open* year, which is the one shape that hides the failure. Two real
+  distributions replaced it: **January 2027** (a two-Note year above a thirty-plus
+  year, where a naive rule folds the entire argument on the day it switches on) and
+  **November 2026** (55 Notes, one year, where only months can bound the page). The
+  corrected rule is pinned by a control that reproduces the old behaviour and fails
+  four assertions.
+- All 55 rows stay in the DOM when months fold — collapsing is a `<details>`
+  affordance, never a query limit, so the same crawler/AEO contract as the excerpts.
+- Rendered and inspected in-browser at each state.
+- Closed drawers confirmed to hide rows via `checkVisibility()` — `getClientRects()`
   reports them as painted, because Chrome hides `<details>` content with
   `content-visibility`, not `display: none`.
 

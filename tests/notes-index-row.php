@@ -40,6 +40,7 @@ function esc_html__( $s, $d = null ) { return esc_html( $s ); }
 function esc_attr__( $s, $d = null ) { return esc_html( $s ); }
 function wp_strip_all_tags( $s ) { return strip_tags( (string) $s ); }
 function number_format_i18n( $n ) { return (string) $n; }
+function date_i18n( $f, $ts ) { return gmdate( $f, (int) $ts ); }
 // NOTE: sn_notes_render_date(), sn_notes_render_reading_time() and
 // sn_notes_result_type_label() are REAL helpers in notes-index-helpers.php and
 // are deliberately NOT stubbed — a stub that shadows the code under test is how
@@ -113,7 +114,7 @@ for ( $i = 0; $i < 33; $i++ ) {
 	$jan_2027[] = mk( 100 + $i, 'Note ' . $i, '2026-' . str_pad( (string) ( 1 + ( $i % 12 ) ), 2, '0', STR_PAD_LEFT ) . '-05 00:00:00' );
 }
 $out_2027 = cap( function () use ( $jan_2027 ) { sn_notes_render_year_spine( $jan_2027 ); } );
-ok( false === strpos( $out_2027, '<details' ), 'Jan 2027: a two-Note year does NOT collapse the 33-Note year beneath it' );
+ok( 0 === substr_count( $out_2027, '<details class="sn-notes-year"' ), 'Jan 2027: a two-Note year does NOT collapse the 33-Note YEAR beneath it (month drawers inside it are fine)' );
 ok( 2 === substr_count( $out_2027, '<section class="sn-notes-year">' ), 'Jan 2027: both years open — the page must carry substance' );
 ok( false !== strpos( $out_2027, 'Note 0' ), 'Jan 2027: the 2026 corpus is still readable in sequence' );
 
@@ -141,6 +142,48 @@ $two_years = array( mk( 1, 'A', '2027-08-14 00:00:00' ), mk( 2, 'B', '2026-11-02
 $out2 = cap( function () use ( $two_years ) { sn_notes_render_year_spine( $two_years ); } );
 ok( false !== strpos( $out2, 'sn-notes-year-band' ), 'multi-year corpus → the spine appears' );
 ok( strpos( $out2, '2027' ) < strpos( $out2, '2026' ), 'newest year first' );
+
+echo "\nGroup: months bound growth INSIDE a year\n";
+// The year is the wrong bounding unit on its own. At the observed cadence
+// (22 Notes scheduled across ten weeks, ~114/yr) a single open year reaches
+// ~4,900px by December — the exact wall this redesign removed. The year spine
+// can only collapse whole years, so it does nothing until January.
+$nov_2026 = array();
+$m_counts = array( '10' => 9, '09' => 10, '08' => 9, '07' => 9, '06' => 5, '05' => 11, '04' => 2 );
+$n = 0;
+foreach ( $m_counts as $mm => $c ) {
+	for ( $i = 0; $i < $c; $i++ ) {
+		$nov_2026[] = mk( 1000 + $n, 'N' . $n, '2026-' . $mm . '-' . str_pad( (string) ( 28 - $i ), 2, '0', STR_PAD_LEFT ) . ' 10:00:00' );
+		$n++;
+	}
+}
+ok( 55 === count( $nov_2026 ), 'fixture models the KNOWN pipeline: 33 published + 22 scheduled = 55 by 1 Nov 2026' );
+$out_nov = cap( function () use ( $nov_2026 ) { sn_notes_render_year_spine( $nov_2026 ); } );
+ok( false === strpos( $out_nov, 'sn-notes-year-band' ), '55 Notes, still ONE year → no year spine' );
+ok( 4 === substr_count( $out_nov, '<details class="sn-notes-month"' ), 'surplus months collapse (Oct+Sep+Aug = 28 >= 24, so Jul/Jun/May/Apr fold)' );
+ok( 3 === substr_count( $out_nov, '<p class="sn-notes-month-band">' ) - 4, 'three months stay open' );
+ok( false !== strpos( $out_nov, 'N0' ), 'the newest month is open' );
+// Collapsed months keep their rows in the DOM — same contract as the excerpts.
+ok( 55 === substr_count( $out_nov, 'sn-notes-row-title' ), 'ALL 55 rows remain in the DOM; collapsing is a CSS/details affordance, never a query limit' );
+
+// The month that CROSSES the budget stays open, or the crossing month is the
+// one that gets hidden — the same boundary bug the year rule had.
+$boundary_m = array();
+for ( $i = 0; $i < 10; $i++ ) { $boundary_m[] = mk( 2000 + $i, 'P' . $i, '2026-10-' . str_pad( (string) ( 28 - $i ), 2, '0', STR_PAD_LEFT ) . ' 10:00:00' ); }
+for ( $i = 0; $i < 10; $i++ ) { $boundary_m[] = mk( 2100 + $i, 'Q' . $i, '2026-09-' . str_pad( (string) ( 28 - $i ), 2, '0', STR_PAD_LEFT ) . ' 10:00:00' ); }
+for ( $i = 0; $i < 10; $i++ ) { $boundary_m[] = mk( 2200 + $i, 'R' . $i, '2026-08-' . str_pad( (string) ( 28 - $i ), 2, '0', STR_PAD_LEFT ) . ' 10:00:00' ); }
+$out_bm = cap( function () use ( $boundary_m ) { sn_notes_render_year_spine( $boundary_m ); } );
+ok( 0 === substr_count( $out_bm, '<details class="sn-notes-month"' ), '10+10+10: each month is tested BEFORE its own rows count, so 0<24, 10<24, 20<24 — all three open' );
+// Add a fourth month and the budget is finally spent (30 >= 24), so it folds.
+for ( $i = 0; $i < 10; $i++ ) { $boundary_m[] = mk( 2300 + $i, 'T' . $i, '2026-07-' . str_pad( (string) ( 28 - $i ), 2, '0', STR_PAD_LEFT ) . ' 10:00:00' ); }
+$out_bm4 = cap( function () use ( $boundary_m ) { sn_notes_render_year_spine( $boundary_m ); } );
+ok( 1 === substr_count( $out_bm4, '<details class="sn-notes-month"' ), 'the fourth month folds — the budget (24) is spent by then' );
+
+// Below the divider threshold a year is one clean run — no bands at all.
+$short = array();
+for ( $i = 0; $i < 8; $i++ ) { $short[] = mk( 3000 + $i, 'S' . $i, '2026-0' . ( 1 + ( $i % 3 ) ) . '-05 00:00:00' ); }
+$out_s = cap( function () use ( $short ) { sn_notes_render_year_spine( $short ); } );
+ok( false === strpos( $out_s, 'sn-notes-month-band' ), 'a short year gets NO month dividers — a divider on four rows is texture, not structure' );
 
 echo "\nGroup: grouping is pure\n";
 $g = sn_notes_group_by_year( $two_years );
