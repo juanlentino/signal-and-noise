@@ -93,10 +93,12 @@ function sn_prov_brow_page_id() {
  * provenance surface must not have. Guarded, so the theme still renders with
  * the plugin absent.
  *
- * @param int $page_id
+ * @param int  $page_id
+ * @param bool $with_separator Prefix the middot that joins an existing brow.
+ *                             False when the segment IS the brow.
  * @return string HTML, already escaped.
  */
-function sn_prov_brow_segment( $page_id ) {
+function sn_prov_brow_segment( $page_id, $with_separator = true ) {
 	if ( ! function_exists( 'sn_prov_view_data' ) || ! function_exists( 'sn_prov_present_status' ) ) {
 		return '';
 	}
@@ -123,8 +125,9 @@ function sn_prov_brow_segment( $page_id ) {
 		? '<span class="sn-prov-brow-label">' . $text . '</span>'
 		: '<a class="sn-prov-brow-link" href="' . esc_url( $href ) . '" rel="nofollow noopener" target="_blank">'
 			. $text . '<span class="sn-prov-brow-ext" aria-hidden="true">&#8599;</span></a>';
+	$sep = $with_separator ? '<span class="sn-prov-brow-sep" aria-hidden="true">&middot;</span>' : '';
 	return '<span class="sn-prov-brow" data-state="' . esc_attr( (string) ( $pres['state'] ?? '' ) ) . '">'
-		. '<span class="sn-prov-brow-sep" aria-hidden="true">&middot;</span>' . $inner . '</span>';
+		. $sep . $inner . '</span>';
 }
 
 /**
@@ -159,8 +162,59 @@ function sn_prov_brow_filter( $block_content, $block = array() ) {
 	return substr( $block_content, 0, $pos ) . $segment . substr( $block_content, $pos );
 }
 
+/**
+ * render_block_core/post-title: CREATE the brow when the page has none.
+ *
+ * The two signed Pages have opposite shapes, and one filter cannot serve both:
+ *
+ *   /about              authored core/heading + an authored .sn-catalog-eyebrow
+ *                       → the paragraph filter joins the existing brow
+ *   /notes/start-here/  a core/post-title block and NO eyebrow at all
+ *                       → nothing to join, so the brow is created here
+ *
+ * Without this the badge on a post-title page falls back to the plugin's foot
+ * append — the position this whole change exists to leave. Verified against the
+ * live markup before signing rather than after: start-here renders
+ * `<h1 class="wp-block-post-title">` and carries no eyebrow paragraph.
+ *
+ * The emitted line reuses .sn-catalog-eyebrow so it inherits the site's brow
+ * treatment exactly, and the segment drops its leading separator because here
+ * it IS the brow rather than a second segment of one.
+ *
+ * @param string $block_content
+ * @param array  $block
+ * @return string
+ */
+function sn_prov_brow_title_filter( $block_content, $block = array() ) {
+	if ( sn_prov_brow_placed() ) {
+		return $block_content;
+	}
+	$page_id = sn_prov_brow_page_id();
+	if ( ! $page_id ) {
+		return $block_content;
+	}
+	// A post-title block renders BEFORE the content paragraphs, so registration
+	// order cannot decide which filter wins — block order does. On a page that
+	// has an authored brow, firing here would stack a second one above the
+	// title. Ask the content directly instead of racing the render.
+	$post = get_post( $page_id );
+	if ( $post && false !== strpos( (string) $post->post_content, 'sn-catalog-eyebrow' ) ) {
+		return $block_content; // the paragraph filter owns this page
+	}
+	$segment = sn_prov_brow_segment( $page_id, false );
+	if ( '' === $segment ) {
+		return $block_content;
+	}
+	sn_prov_brow_placed( true );
+	return '<p class="sn-catalog-eyebrow sn-prov-brow-solo">' . $segment . '</p>' . $block_content;
+}
+
 if ( function_exists( 'add_filter' ) ) {
+	// Exactly one of these ever fires: they share the placed-flag, and the
+	// title filter additionally checks the page content for an authored brow
+	// (it renders first, so it cannot rely on the flag alone).
 	add_filter( 'render_block_core/paragraph', 'sn_prov_brow_filter', 10, 2 );
+	add_filter( 'render_block_core/post-title', 'sn_prov_brow_title_filter', 10, 2 );
 
 	// Suppress the plugin's foot append ONLY when the brow actually took it.
 	// Blocks render inside the_content at priority 9; the plugin appends at 20,
