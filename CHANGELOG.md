@@ -2,6 +2,86 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.10.0] - 2026-08-18 — the index reads as a manifest, not a feed
+
+### Changed
+- **The excerpt is the problem, not the list.** Every row carried a 4–5 line DM Mono
+  excerpt at identical weight, ~250px tall, 20 to a page. That buried the one thing
+  the index actually has: the titles are aphorisms, and they read as a manifesto in
+  sequence. Excerpts now **collapse visually and stay in the DOM** — crawlers, AEO
+  and screen readers lose nothing — revealing on hover *and* focus, clamped to three
+  lines so a reveal cannot shove thirty rows a quarter-screen down.
+- **Rows are ledger lines**: `date | title | stamp`, ~41px each. All 33 Notes now
+  render in **1,724px** — less than one page of the old layout, which needed two.
+- **Browse mode drops pagination entirely.** Pagination is what you reach for when a
+  list has no structure but recency, and numbered pages say nothing about what is on
+  them. Filtered views (search, tag) keep `sn_notes_per_page()`: a result set ordered
+  by relevance to a query has no spine to fold it.
+- **Rows differentiate on editorial signals only** — reading time, up to two tags,
+  and the provenance version. **Never traffic or decay.** Publishing per-note
+  performance would cut against the ML kernel's refusals and turn a reading list into
+  a leaderboard; the test suite asserts the absence, rather than trusting it.
+- The provenance badge renders from **v2 only**. "Signed once" is true of nearly every
+  Note, so v1 thirty times costs a column and says nothing; from v2 it reports what the
+  date cannot — this argument was revisited, and the revision was signed.
+- Hover moved off `padding-left` (which reflowed the row) onto a background wash plus
+  the blood date already established as this list's idiom.
+
+### Added
+- **A month divider, and it is the load-bearing one.** Months carry the structure
+  the year spine cannot: at the observed cadence — 22 Notes scheduled across ten
+  weeks, ~114/year — a single open year reaches ~4,900px by December, which is the
+  exact wall this redesign removed. The year spine only ever collapses *whole
+  years*, so it does nothing between Januaries. The month is the finer unit that
+  bounds growth inside a year.
+- **One rule at two granularities.** Years, then months within the open year,
+  expand newest-first until `SN_NOTES_SPINE_MIN_VISIBLE` (24) rows are showing;
+  the unit that crosses the line stays open, and only genuine surplus collapses to
+  a single line. The budget is spent once, globally, so the visible page holds
+  roughly a screen and a half **regardless of corpus size**. Measured against the
+  known pipeline: today's 33 Notes render 1,724px; the 55 Notes the site will hold
+  on 1 November render **1,671px — shorter**, with 28 rows visible and four months
+  folded.
+- Month bands are deliberately quieter than year bands — no rule, muted. The year
+  band divides; the month band marks where you are. Below
+  `SN_NOTES_MONTH_DIVIDER_MIN` (12) a year gets no dividers at all: one on four
+  rows is texture, not structure.
+- **Every Note published so far is from 2026**, so today the year spine correctly
+  renders *nothing* — the months carry the whole page.
+
+- [inc/notes-index-row.php](inc/notes-index-row.php) — row and spine rendering,
+  extracted from the 786-line template. The pinned Start-here row and the
+  chronological rows now share one function; they had already drifted apart once.
+- Helpers: `sn_notes_prov_version()`, `sn_notes_row_tags()`, `sn_notes_group_by_year()`,
+  `sn_notes_year_spine_is_useful()`.
+
+### Considered and rejected
+- **Grouping by argument thread**, which would have made the index a map of the
+  argument rather than a calendar. Rejected on evidence, not taste: the stored TF-IDF
+  topic partition returns **2 clusters covering 4 of 33 Notes**, so 29 would have had
+  no home. Revisit if the kernel moves to embeddings.
+- **A card grid or bento layout.** The index is already brutalist; a grid moves toward
+  generic, not away from it.
+
+### Verified
+- **90 test files pass, zero failures** (89 + the new suite), including a
+  49-assertion suite whose harness is negative-controlled.
+- **The spine was tested against distributions that will actually occur.** A first
+  attempt collapsed by year alone, verified against a backdated 2025/2024 fixture —
+  years this corpus can never have, since it began 2026-04. Backdating puts the mass
+  in the *open* year, which is the one shape that hides the failure. Two real
+  distributions replaced it: **January 2027** (a two-Note year above a thirty-plus
+  year, where a naive rule folds the entire argument on the day it switches on) and
+  **November 2026** (55 Notes, one year, where only months can bound the page). The
+  corrected rule is pinned by a control that reproduces the old behaviour and fails
+  four assertions.
+- All 55 rows stay in the DOM when months fold — collapsing is a `<details>`
+  affordance, never a query limit, so the same crawler/AEO contract as the excerpts.
+- Rendered and inspected in-browser at each state.
+- Closed drawers confirmed to hide rows via `checkVisibility()` — `getClientRects()`
+  reports them as painted, because Chrome hides `<details>` content with
+  `content-visibility`, not `display: none`.
+
 ## [11.9.5] - 2026-08-17 — "New here? Start here" said *here* twice
 
 Owner caught the repetition: four words, two of them "here", and the second one was doing all

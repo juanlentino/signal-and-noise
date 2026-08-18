@@ -104,6 +104,7 @@ require_once __DIR__ . '/inc/purge-verify.php'; // v10.23.0: render-epoch marker
 require_once __DIR__ . '/inc/purge-verify-cron.php'; // v10.25.0: deferred WP-Cron route verify for auto-purges (folds routes/resolved back into the report)
 require_once __DIR__ . '/inc/notes-reading-time.php'; // v10.42.2: reading-time helper, extracted from page-notes-render.php so it is available in REST/MCP (the /notes renderer is template-route-only)
 require_once __DIR__ . '/inc/notes-index-helpers.php'; // v10.49.0: the /notes index pure helpers, extracted from page-notes-render.php (which is render-path only now; the SN_NOTES_RENDER_TEST hack is retired). Must load BEFORE the template router below.
+require_once __DIR__ . '/inc/notes-index-row.php'; // v11.10.0: /notes index row + year-spine rendering, extracted from page-notes-render.php (needs the helpers above).
 require_once __DIR__ . '/inc/page-notes-template.php';
 require_once __DIR__ . '/inc/page-index-template.php'; // C3 (v10.7.0): /index whole-site dossier virtual route (loads inc/page-index-render.php)
 require_once __DIR__ . '/inc/cms-page-styles.php'; // v10.36.0: per-Page bespoke stylesheets (now.css on /now, uses.css on /about/uses, accessibility.css on /accessibility)

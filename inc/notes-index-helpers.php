@@ -101,11 +101,19 @@ function sn_notes_current_page() {
 function sn_notes_query_posts() {
 	$tag_id        = sn_notes_current_tag_id();
 	$start_here_id = sn_notes_start_here_id();
+	$term_for_mode = sn_notes_search_term();
+	// v11.10.0: BROWSE mode returns the whole corpus in one response and drops
+	// pagination entirely. Pagination is what you reach for when a list has no
+	// structure but recency; the year spine bounds the VISIBLE page instead
+	// (prior years collapse to one line each), so paging would only re-hide
+	// what the spine already folds. Filtered modes keep sn_notes_per_page():
+	// a search result set is unbounded by nature and has no spine to fold it.
+	$browse_all = ( '' === $term_for_mode && $tag_id <= 0 );
 	$args = array(
 		'post_type'           => 'post',
 		'post_status'         => 'publish',
-		'posts_per_page'      => sn_notes_per_page(),
-		'paged'               => sn_notes_current_page(),
+		'posts_per_page'      => $browse_all ? -1 : sn_notes_per_page(),
+		'paged'               => $browse_all ? 1 : sn_notes_current_page(),
 		'orderby'             => 'date',
 		'order'               => 'DESC',
 		'no_found_rows'       => false, // pagination needs found_posts / max_num_pages
@@ -122,7 +130,7 @@ function sn_notes_query_posts() {
 	// posts AND pages, so essays and editorial Pages surface in one
 	// type-labeled list (sn_notes_result_type_label) — the owner-decided
 	// session-4 shape.
-	$term = sn_notes_search_term();
+	$term = $term_for_mode;
 	if ( '' !== $term ) {
 		$args['s']         = $term;
 		$args['post_type'] = array( 'post', 'page' );
@@ -363,4 +371,161 @@ function sn_notes_search_robots( $directives, $term ) {
 	$directives[] = 'noindex';
 	$directives[] = 'follow';
 	return array_values( array_unique( $directives ) );
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+ * v11.10.0 — the index reads as a MANIFEST, not a feed.
+ *
+ * Row differentiators are editorial only: reading time, tags, and the
+ * provenance version. Traffic and decay data are deliberately absent —
+ * publishing per-note performance would cut against the ML kernel's
+ * refusals, and a reader choosing what to read next is owed the argument,
+ * not the numbers.
+ * ───────────────────────────────────────────────────────────────────── */
+
+/**
+ * The Note's provenance version: how many times its prose has been
+ * substantively revised AND signed.
+ *
+ * Reads the companion plugin's `_sn_prov_chain` meta by its literal key —
+ * the established theme↔plugin seam (precedent: the `_sn_prov_uid` twin in
+ * inc/note-uid.php). Absent plugin, absent meta, or a malformed chain all
+ * return 0, so the badge simply does not render.
+ *
+ * @param int $post_id
+ * @return int Highest version in the chain, 0 when there is none.
+ */
+function sn_notes_prov_version( $post_id ) {
+	if ( ! function_exists( 'get_post_meta' ) ) {
+		return 0;
+	}
+	$chain = get_post_meta( (int) $post_id, '_sn_prov_chain', true );
+	if ( ! is_array( $chain ) ) {
+		return 0;
+	}
+	$max = 0;
+	foreach ( $chain as $entry ) {
+		if ( is_array( $entry ) && (int) ( $entry['version'] ?? 0 ) > $max ) {
+			$max = (int) $entry['version'];
+		}
+	}
+	return $max;
+}
+
+/**
+ * Whether to show a provenance badge at all.
+ *
+ * v1 means "published once, signed once" — true of nearly every Note, so
+ * rendering it 30 times says nothing and costs a column. The badge earns its
+ * place only from v2, where it reports something the date cannot: this
+ * argument was revisited, and the revision was signed.
+ *
+ * @param int $version
+ * @return bool
+ */
+function sn_notes_prov_version_is_notable( $version ) {
+	return (int) $version >= 2;
+}
+
+/**
+ * Up to $limit tags for a row, as {name, url} pairs.
+ *
+ * Tags are the only cross-cutting structure the corpus actually has (the
+ * TF-IDF topic partition covers 4 of 33 Notes, so it cannot carry a spine),
+ * which makes them the row's most useful non-chronological signal.
+ *
+ * @param int $post_id
+ * @param int $limit
+ * @return array<int,array{name:string,url:string}>
+ */
+function sn_notes_row_tags( $post_id, $limit = 2 ) {
+	if ( ! function_exists( 'get_the_tags' ) ) {
+		return array();
+	}
+	$tags = get_the_tags( (int) $post_id );
+	if ( ! is_array( $tags ) ) {
+		return array();
+	}
+	$out = array();
+	foreach ( $tags as $tag ) {
+		if ( count( $out ) >= (int) $limit ) {
+			break;
+		}
+		$link  = function_exists( 'get_term_link' ) ? get_term_link( $tag ) : '';
+		$out[] = array(
+			'name' => (string) $tag->name,
+			'url'  => is_string( $link ) ? $link : '',
+		);
+	}
+	return $out;
+}
+
+/**
+ * Group posts by publication year, newest year first, newest post first.
+ *
+ * @param array $posts WP_Post-ish objects.
+ * @return array<string,array> year => posts
+ */
+function sn_notes_group_by_year( $posts ) {
+	$out = array();
+	foreach ( (array) $posts as $p ) {
+		$year = function_exists( 'get_the_date' ) ? (string) get_the_date( 'Y', $p ) : '';
+		if ( '' === $year ) {
+			$year = isset( $p->post_date ) ? substr( (string) $p->post_date, 0, 4 ) : '—';
+		}
+		$out[ $year ][] = $p;
+	}
+	krsort( $out, SORT_STRING );
+	return $out;
+}
+
+/**
+ * Whether the year spine should render at all.
+ *
+ * The spine exists to bound the page permanently as the corpus grows — but
+ * every Note published so far is from a single year, so today it would draw
+ * one band restating the count already in the section header. It renders when
+ * it discriminates, and not before: a structure that appears the moment it
+ * carries information, rather than a label that is decorative until 2027.
+ *
+ * @param array $grouped sn_notes_group_by_year() result.
+ * @return bool
+ */
+function sn_notes_year_spine_is_useful( $grouped ) {
+	return count( (array) $grouped ) > 1;
+}
+
+/**
+ * Group posts by calendar month, newest first. Keys are 'YYYY-MM' so they sort
+ * correctly as strings and never collide across years.
+ *
+ * @param array $posts
+ * @return array<string,array>
+ */
+function sn_notes_group_by_month( $posts ) {
+	$out = array();
+	foreach ( (array) $posts as $p ) {
+		$key = function_exists( 'get_the_date' ) ? (string) get_the_date( 'Y-m', $p ) : '';
+		if ( '' === $key ) {
+			$key = isset( $p->post_date ) ? substr( (string) $p->post_date, 0, 7 ) : '0000-00';
+		}
+		$out[ $key ][] = $p;
+	}
+	krsort( $out, SORT_STRING );
+	return $out;
+}
+
+/**
+ * Whether a year's rows should be subdivided by month.
+ *
+ * Same discipline as the year spine: a divider that fires on a handful of rows
+ * is texture, not structure. Below this count the year reads fine as one run,
+ * and chopping it would work against the reason the rows were made dense in the
+ * first place — the titles are meant to be read in sequence.
+ *
+ * @param int $year_count
+ * @return bool
+ */
+function sn_notes_month_dividers_are_useful( $year_count ) {
+	return (int) $year_count >= SN_NOTES_MONTH_DIVIDER_MIN;
 }
