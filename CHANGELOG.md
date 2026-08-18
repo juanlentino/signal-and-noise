@@ -2,6 +2,54 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.11.0] - 2026-08-18 — the proof moves to the brow
+
+### Changed
+- **The provenance badge on signed Pages now joins the brow instead of trailing the
+  content.** Measured on /about before the change: the badge sat at **y=3212 of a
+  3382px document** — the last child of `.entry-content` — while the `<h1>` was at
+  y=250. That position was never a styling choice. The plugin places it through a
+  `the_content` filter, and a content filter can only append.
+- **Why it mattered beyond taste.** The badge is a claim *about* the document, not a
+  part of it. Sitting inside `.entry-content` after the final section it read as a
+  closing sentence — and a reader learned the page was signed only after reading
+  everything, which inverts the argument the site exists to make: authorship is
+  established at creation, not asserted afterwards.
+- **The right slot already existed.** /about opens with
+  `<p class="sn-catalog-eyebrow">Dossier · Who I Am</p>` directly above its title. The
+  badge joins that line as a second segment: `DOSSIER · WHO I AM · VERIFIED V1 ↗`.
+
+### Added
+- [inc/provenance-title-badge.php](inc/provenance-title-badge.php). It reads the
+  plugin's own `sn_prov_view_data()` rather than re-deriving status or version — two
+  renderers disagreeing about an anchor is exactly the bug a provenance surface must
+  not have — and is guarded so the theme still renders with the plugin absent.
+- Treatment: the segment is a `<span>` inside the brow's `<p>`, so DM Mono, the 11px
+  floor, 0.18em tracking and uppercase all **inherit**; only colour is decided.
+  It takes `rust`, not `blood`, and that is the whole hierarchy — the designation says
+  what the page **is** and keeps the accent, the provenance says how you can **check**
+  it and sits one step back. Two blood items on one line read as one loud line rather
+  than a statement and its footing. The link earns blood back on hover, where the
+  reader has asked for it. No pill chrome: the brow does not draw boxes.
+
+### Fixed
+- **The obvious hook would have silently never fired.** The precedent,
+  `inc/pillar-title-eyebrow.php`, filters `render_block_core/post-title` — but /about's
+  title is an authored `core/heading` inside the content and its eyebrow is an authored
+  `core/paragraph`, so there is no post-title block on the page at all. This filters
+  `render_block_core/paragraph` and joins the first `.sn-catalog-eyebrow`.
+- **It never silently loses the badge.** The plugin's foot append is suppressed through
+  the existing `sn_prov_auto_append_page_panel` seam **only when the brow placement
+  actually happened**. A signed Page with no eyebrow keeps the old behaviour rather
+  than showing no proof at all — a guard that makes the badge invisible is worse than
+  the badge being in the wrong place.
+
+### Verified
+- **90 test files pass, zero failures.**
+- Rendered against the live /about markup with the shipped CSS: one line at 19px,
+  `DOSSIER · WHO I AM · VERIFIED V1 ↗`, blood then rust, foot badge gone.
+- Mobile 375px: still one line, 335px wide, no overflow.
+
 ## [11.10.0] - 2026-08-18 — the index reads as a manifest, not a feed
 
 ### Changed

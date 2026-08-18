@@ -116,6 +116,7 @@ require_once __DIR__ . '/inc/abilities-registration.php';
 require_once __DIR__ . '/inc/desktop-mode-copilot-schema.php'; // v10.42.3: Desktop Mode auto-enrols every read-only ability into the AI Copilot with no opt-out, and one non-conformant tool schema 400s the WHOLE assistant. Must load whenever abilities do — the theme cannot rely on the companion plugin being active to keep its own schemas legal. See WordPress/desktop-mode#362.
 require_once __DIR__ . '/inc/post-frontmatter.php';
 require_once __DIR__ . '/inc/pillar-title-eyebrow.php'; // v10.48.0: designation eyebrow ("№ 1.01 · Pillar Essay" → /provenance/) on the flagged essay Page's own title
+require_once __DIR__ . '/inc/provenance-title-badge.php'; // v11.11.0: the provenance badge joins the BROW on signed Pages (was appended at the content foot by the plugin's the_content filter).
 require_once __DIR__ . '/inc/block-bindings.php';
 require_once __DIR__ . '/inc/post-updated-date.php';
 require_once __DIR__ . '/inc/provenance-surface.php'; // v10.30.0: [sn_prov_chip] byline pill + [sn_prov_panel] record — theme-side placement for the plugin's public provenance rendering (plugin-guarded)
