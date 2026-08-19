@@ -2,6 +2,48 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.12.0] - 2026-08-19 — the title morph has a source again
+
+### Fixed
+- **The index→note title morph has been one-sided since v11.10.0.** `inc/blocks-view-transitions.php`
+  (v9.2.0) names the title by filtering `render_block_core/post-title`, and that worked
+  because the /notes catalog and the single-note hero were the same core block. The
+  v11.10.0 notes-index redesign replaced the core query loop with hand-rolled markup in
+  [inc/notes-index-row.php](inc/notes-index-row.php), which echoes its own
+  `<h3 class="sn-notes-row-title">` — silently out of that filter's reach. The
+  destination kept its `view-transition-name`; the source lost one.
+- **A morph with only one named side is invisible.** It degrades to exactly the root
+  cross-fade that already shipped in v11.11.3, so nothing looked broken and no test failed.
+  That is why this is being fixed rather than built: the row now emits the same name.
+
+### Added
+- **`sn_view_transition_name( $post_id )`** — the single definition of the name format
+  (`sn-note-<sanitized-slug>`). Both surfaces call it, so they cannot drift apart again.
+  The filter's inline copy of the sanitising logic is gone.
+- 16 assertions in [tests/view-transition-names.php](tests/view-transition-names.php),
+  including the one that matters: the row and the hero emit the **identical** string.
+  Negative-controlled by mutation — naming by ID instead of slug, and dropping the
+  trailing-hyphen trim, each fail their intended pins.
+
+### Notes
+- **This completes a deferral, on its own stated condition.** v11.11.3 shipped the
+  root-level transition and deferred the named morph in writing: *"a 32-row index needs a
+  distinct name emitted per row from PHP — that belongs with the notes-index redesign,
+  where the row markup is being rewritten anyway."* That redesign shipped as v11.10.0, so
+  the condition was met.
+- **Motion posture unchanged and not re-decided.** The `@view-transition` at-rule stays
+  inside `prefers-reduced-motion: no-preference`, so a reader who asked for less motion
+  never enters a transition and these names are inert for them.
+- **Browser support, verified against MDN compat data rather than assumed:** Chrome 126+,
+  Safari 18.2+, Edge and iOS Safari mirroring. **Firefox does not support it** — those
+  readers keep today's instant navigation, which is not a regression. Standard-track, not
+  experimental.
+- No new stylesheet, so `sn_css_combine_sources()`, the fallback enqueue list, and
+  `add_editor_style` are all untouched.
+- Duplicate names would disable the morph for **both** elements, but the pinned
+  "Start here" row is already `post__not_in`-excluded from the chronological query, so one
+  note cannot be named twice on one index.
+
 ## [11.11.2] - 2026-08-18 — the reading-progress bar measures the reading
 
 ### Fixed
