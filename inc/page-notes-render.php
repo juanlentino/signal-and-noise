@@ -315,36 +315,6 @@ wp_head();
 	}
 }
 
-/* ── BELOW 720px THE NAMED AREAS DO NOT EXIST ───────────────────────────────
- *
- * `grid-template-areas` is declared ONLY in the query above, but the four
- * children below carry `grid-area: spec|title|meta|excerpt` unconditionally.
- * On a phone the row is a single `1fr` column with no areas defined, so every
- * one of those names is unresolvable — the browser invents implicit lines and
- * drops all four children into the SAME cell.
- *
- * Measured live on 375x812, /notes, 2026-08-19: computed
- * `grid-template-columns: 0px 0px 327px`, and the date, title, meta and
- * excerpt all reported an identical top and left. The date printed on top of
- * the title on every row in the index; the page was unreadable on a phone.
- *
- * Resetting the four to `auto` lets them flow down the single column the base
- * rule already intends. The desktop layout is untouched.
- * ────────────────────────────────────────────────────────────────────────── */
-@media (max-width: 719px) {
-	.sn-notes-row-spec,
-	.sn-notes-row-content,
-	.sn-notes-row-meta,
-	.sn-notes-row-excerpt-wrap {
-		grid-area: auto;
-	}
-
-	/* The tags are hidden at this width by design; their separators were not,
-	   so the meta line read "03 MIN · ·" with orphan dots after every note. */
-	.sn-notes-row-meta .sn-notes-row-sep {
-		display: none;
-	}
-}
 /* The hover affordance moves from padding (which reflowed the row) to a
    background wash + the blood date already established as this list's idiom. */
 .sn-notes-row:hover,
@@ -459,6 +429,39 @@ wp_head();
 	grid-template-rows: 0fr;
 	transition: grid-template-rows 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+/* ── BELOW 720px THE NAMED AREAS DO NOT EXIST ───────────────────────────────
+ *
+ * `grid-template-areas` is declared ONLY inside @media (min-width: 720px), but
+ * the four children carry `grid-area: spec|title|meta|excerpt` unconditionally.
+ * On a phone the row is a single `1fr` column with no areas defined, so every
+ * one of those names is unresolvable — the browser invents implicit lines and
+ * drops all four children into the SAME cell. Measured live at 375x812:
+ * computed `grid-template-columns: 0px 0px 327px`, date/title/meta/excerpt all
+ * at an identical top. Every note's date printed over its title.
+ *
+ * POSITION IS LOAD-BEARING. v11.12.2 put this block ABOVE those four rules.
+ * Equal specificity, later wins — so it never applied, and shipped as a tagged
+ * release that changed nothing. It must stay BELOW the last `grid-area`
+ * declaration in this file. The v11.12.2 verification missed it because the fix
+ * was tested by injecting a <style> at the end of <head>, which is the one
+ * position where it wins for free.
+ * ────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 719px) {
+	.sn-notes-row-spec,
+	.sn-notes-row-content,
+	.sn-notes-row-meta,
+	.sn-notes-row-excerpt-wrap {
+		grid-area: auto;
+	}
+
+	/* Tags are hidden at this width by design; their separators were not, so
+	   the meta line read "03 MIN · ·" after every note. */
+	.sn-notes-row-meta .sn-notes-row-sep {
+		display: none;
+	}
+}
+
 .sn-notes-row:hover .sn-notes-row-excerpt-wrap,
 .sn-notes-row:focus-within .sn-notes-row-excerpt-wrap {
 	grid-template-rows: 1fr;
