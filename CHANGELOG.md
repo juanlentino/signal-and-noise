@@ -2,6 +2,24 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.12.1] - 2026-08-19 — tested against WordPress 7.1
+
+### Changed
+- **`Tested up to: 7.1`.** Audited against the 7.1 Field Guide rather than assumed:
+  - **Enforced iframed editor.** The theme registers **no** `enqueue_block_editor_assets`
+    or `enqueue_block_assets` handler at all, so it ships nothing into the editor
+    canvas and cannot reach across the document boundary.
+  - **Deprecated editor JS.** No `__experimental*` reference and no
+    `@wordpress/reusable-blocks` usage.
+  - **`WP_Theme_JSON::to_ruleset()` coercion change.** The only two references are
+    in test *comments* describing core behaviour — no call site.
+  - **jQuery UI 1.14.2, `notify_post_author`.** Not used.
+  - **Abilities API.** 7.1's unified `public` flag resolves as
+    `show_in_rest ?? public ?? false`. The theme's abilities that omit
+    `show_in_rest` were already REST-hidden and remain so; the plugin reaches
+    them in-process via `wp_get_ability()->check_permissions()->execute()`, so
+    REST exposure was never the mechanism.
+
 ## [11.12.0] - 2026-08-19 — the title morph has a source again
 
 ### Fixed
