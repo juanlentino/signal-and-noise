@@ -281,6 +281,43 @@
 		padding-right: 1.25rem !important;
 	}
 
+	/* ON A PHONE THE FOOTER IS STATIC, NOT FIXED.
+	 *
+	 * Measured on a 375x812 viewport, /notes, 2026-08-19:
+	 *   fixed header  68px
+	 *   fixed footer 123px   (it wraps to two rows here — the desktop
+	 *                         single row is ~76px and earns its place)
+	 *   ------------------
+	 *   191px, or 23.5% of the screen, permanently spent on chrome —
+	 *   and the layout.css reserve adds a further 140px of dead scroll
+	 *   below the last note.
+	 *
+	 * The reserve exists only because the footer is fixed and would
+	 * otherwise cover content (see the comment on main.wp-block-group in
+	 * layout.css). Un-fix the footer and the reserve is not just
+	 * unnecessary, it is 140px of empty page. Both go together or neither
+	 * works: dropping the reserve alone would put content under the bar.
+	 *
+	 * Desktop keeps the fixed footer. This is a phone-shaped problem —
+	 * a persistent bar costs a fraction of a tall screen and a quarter of
+	 * a short one.
+	 */
+	.sn-footer {
+		position: static;
+	}
+
+	/* `main`, NOT `main.wp-block-group`. The reserve is set in two different
+	 * places and the notes index matches neither of the obvious ones:
+	 *   layout.css   main.wp-block-group { padding-bottom: 140px !important }
+	 *   notes css    .sn-notes-page      { padding: … 160px }
+	 * /notes renders <main class="sn-notes-page">, so the layout.css rule has
+	 * never applied there at all. Targeting the element covers both without
+	 * having to enumerate every template's class. Measured live: 160px -> 36px.
+	 */
+	main {
+		padding-bottom: var( --wp--preset--spacing--60, 2.25rem ) !important;
+	}
+
 	/* Social icons */
 	.wp-block-social-links {
 		justify-content: center;

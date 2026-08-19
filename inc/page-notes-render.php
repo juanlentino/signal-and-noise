@@ -314,6 +314,37 @@ wp_head();
 		align-items: baseline;
 	}
 }
+
+/* ── BELOW 720px THE NAMED AREAS DO NOT EXIST ───────────────────────────────
+ *
+ * `grid-template-areas` is declared ONLY in the query above, but the four
+ * children below carry `grid-area: spec|title|meta|excerpt` unconditionally.
+ * On a phone the row is a single `1fr` column with no areas defined, so every
+ * one of those names is unresolvable — the browser invents implicit lines and
+ * drops all four children into the SAME cell.
+ *
+ * Measured live on 375x812, /notes, 2026-08-19: computed
+ * `grid-template-columns: 0px 0px 327px`, and the date, title, meta and
+ * excerpt all reported an identical top and left. The date printed on top of
+ * the title on every row in the index; the page was unreadable on a phone.
+ *
+ * Resetting the four to `auto` lets them flow down the single column the base
+ * rule already intends. The desktop layout is untouched.
+ * ────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 719px) {
+	.sn-notes-row-spec,
+	.sn-notes-row-content,
+	.sn-notes-row-meta,
+	.sn-notes-row-excerpt-wrap {
+		grid-area: auto;
+	}
+
+	/* The tags are hidden at this width by design; their separators were not,
+	   so the meta line read "03 MIN · ·" with orphan dots after every note. */
+	.sn-notes-row-meta .sn-notes-row-sep {
+		display: none;
+	}
+}
 /* The hover affordance moves from padding (which reflowed the row) to a
    background wash + the blood date already established as this list's idiom. */
 .sn-notes-row:hover,
