@@ -57,7 +57,17 @@ function sn_notes_render_row( $p, $args = array() ) {
 	echo '</div>';
 
 	echo '<div class="sn-notes-row-content">';
-	echo '<h3 class="sn-notes-row-title"><a href="' . esc_url( get_permalink( $p ) ) . '">'
+	// v11.12.0: the SOURCE half of the title morph. This row replaced a
+	// core/post-title block in the v11.10.0 redesign, which silently took the
+	// row out of render_block_core/post-title's reach — the note's hero kept its
+	// name, the row lost one, and a morph with a named destination and an
+	// unnamed source is just the root cross-fade. Same helper, same string.
+	$sn_vt = function_exists( 'sn_view_transition_name' ) ? sn_view_transition_name( $p->ID ) : '';
+	echo '<h3 class="sn-notes-row-title"';
+	if ( '' !== $sn_vt ) {
+		echo ' style="view-transition-name: ' . esc_attr( $sn_vt ) . ';"';
+	}
+	echo '><a href="' . esc_url( get_permalink( $p ) ) . '">'
 		. esc_html( get_the_title( $p ) ) . '</a></h3>';
 	echo '</div>';
 
