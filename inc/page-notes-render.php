@@ -380,11 +380,18 @@ wp_head();
 	white-space: nowrap;
 }
 @media (max-width: 719px) {
+	/* v11.12.4: TAGS ARE BACK ON A PHONE.
+	 *
+	 * They were hidden with "the date + reading time carry the row on a phone",
+	 * which was true when the row was still a cramped desktop-shaped grid — the
+	 * meta had to share a line with the title and the date. Since v11.12.3 the
+	 * row stacks and the meta owns its own full width, so the reason expired
+	 * with the layout it described. Wrapping keeps a long pair honest rather
+	 * than truncating it. */
 	.sn-notes-row-meta {
 		justify-content: flex-start;
-	}
-	.sn-notes-row-tags {
-		display: none; /* the date + reading time carry the row on a phone */
+		flex-wrap: wrap;
+		row-gap: 0.15rem;
 	}
 }
 
@@ -453,12 +460,6 @@ wp_head();
 	.sn-notes-row-meta,
 	.sn-notes-row-excerpt-wrap {
 		grid-area: auto;
-	}
-
-	/* Tags are hidden at this width by design; their separators were not, so
-	   the meta line read "03 MIN · ·" after every note. */
-	.sn-notes-row-meta .sn-notes-row-sep {
-		display: none;
 	}
 }
 

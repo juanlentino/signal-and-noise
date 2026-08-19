@@ -2,6 +2,20 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.12.4] - 2026-08-19 — tags return to the notes index on a phone
+
+### Changed
+- **Tags are shown again below 720px.** They were hidden with the note "the date +
+  reading time carry the row on a phone" — true when the row was still a cramped
+  desktop-shaped grid and the meta had to share a line with the title and date. Since
+  v11.12.3 the row stacks and the meta owns its own full width, so the reason expired
+  with the layout it described. The meta line wraps rather than truncating, so a long
+  pair reads as `03 MIN · BLACK BOX ROYALTIES · MUSIC METADATA` across two lines.
+- **The separators come back with them.** v11.12.2 hid `.sn-notes-row-sep` precisely
+  *because* the tags were hidden and the line read `03 MIN · ·`. With the tags restored
+  that rule would have run the meta together as `03 MIN BLACK BOX ROYALTIES`, so it is
+  removed rather than left as a stale workaround for a condition that no longer holds.
+
 ## [11.12.3] - 2026-08-19 — v11.12.2's mobile fix never applied
 
 ### Fixed
