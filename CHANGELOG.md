@@ -2,6 +2,30 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.12.2] - 2026-08-19 — the notes index was unreadable on a phone
+
+### Fixed
+- **Every note's date printed on top of its title.** `.sn-notes-row` declares
+  `grid-template-areas` only inside `@media (min-width: 720px)`, but its four
+  children carry `grid-area: spec|title|meta|excerpt` **unconditionally**. Below
+  that width the row is a single `1fr` column with no areas defined, so every one
+  of those names is unresolvable — the browser invents implicit lines and drops
+  all four children into the same cell. Measured live on 375×812: computed
+  `grid-template-columns: 0px 0px 327px`, with date, title, meta and excerpt all
+  reporting an identical top and left. Resetting the four to `grid-area: auto`
+  below 720px lets them flow down the column the base rule already intends.
+  Desktop is untouched.
+- **The meta line read "03 MIN · ·".** Tags are hidden at that width by design;
+  their separators were not, leaving orphan dots after every note.
+- **The fixed footer cost 23.5% of a phone screen.** 68px of fixed header plus
+  123px of fixed footer — which wraps to two rows on mobile, against ~76px on
+  desktop — left 621px of an 812px viewport, with content scrolling underneath
+  and a further 140–160px reserved below the last note to keep it clear. The
+  footer is now `static` below 781px and the reserve drops with it; the two go
+  together, since removing either alone breaks the other. Desktop keeps the
+  fixed footer, where a persistent bar costs a fraction of a tall screen rather
+  than a quarter of a short one.
+
 ## [11.12.1] - 2026-08-19 — tested against WordPress 7.1
 
 ### Changed
