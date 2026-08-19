@@ -197,5 +197,30 @@ ok( 2 === count( $g[2026] ), 'posts land in the right year' );
 ok( ! sn_notes_year_spine_is_useful( sn_notes_group_by_year( $one_year ) ), 'one year → spine not useful' );
 ok( sn_notes_year_spine_is_useful( $g ), 'two years → spine useful' );
 
+// ── CASCADE ORDER IS THE CONTRACT (v11.12.3) ────────────────────────────────
+// v11.12.2 shipped a mobile fix that did nothing. The
+// `@media (max-width: 719px) { … grid-area: auto }` override was written ABOVE
+// the four `grid-area: spec|meta|title|excerpt` declarations it has to beat.
+// Equal specificity, later wins — so the override never applied, and a tagged
+// release changed nothing on the live site.
+//
+// It was missed because the fix was verified by injecting a <style> at the end
+// of <head>, the one position where any rule wins for free. A rule's POSITION is
+// part of the rule, so it gets an assertion.
+echo "\nGroup: the mobile grid-area override comes last\n";
+$css_src = (string) file_get_contents( __DIR__ . '/../inc/page-notes-render.php' );
+
+$override = strpos( $css_src, 'grid-area: auto;' );
+ok( false !== $override, 'the mobile grid-area override exists' );
+
+$named = array();
+foreach ( array( 'grid-area: spec;', 'grid-area: meta;', 'grid-area: title;', 'grid-area: excerpt;' ) as $decl ) {
+	$at = strrpos( $css_src, $decl );
+	ok( false !== $at, "declaration present: $decl" );
+	$named[ $decl ] = $at;
+}
+ok( $override > max( $named ),
+	'THE OVERRIDE IS BELOW EVERY NAMED grid-area — equal specificity means source order decides, and above them it is a silent no-op' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

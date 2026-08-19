@@ -2,6 +2,24 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [11.12.3] - 2026-08-19 — v11.12.2's mobile fix never applied
+
+### Fixed
+- **The notes-index mobile fix shipped as a no-op and was tagged as done.** The
+  `@media (max-width: 719px) { … grid-area: auto }` override was written *above* the
+  four `grid-area: spec|meta|title|excerpt` declarations it has to beat. Equal
+  specificity means source order decides, so it never applied — every note's date
+  still printed over its title on a phone, exactly as before the release. The block
+  now sits below the last `grid-area` declaration in the file.
+
+  It was missed because the fix was verified by injecting a `<style>` at the end of
+  `<head>` on the live page — the one position where any rule wins for free. That
+  tests the rule, not the rule where it was written. `tests/notes-index-row.php` now
+  asserts the source order, and the assertion is negative-controlled: moving the block
+  back above the named areas fails it.
+
+  The footer half of v11.12.2 was correct and is unchanged.
+
 ## [11.12.2] - 2026-08-19 — the notes index was unreadable on a phone
 
 ### Fixed
