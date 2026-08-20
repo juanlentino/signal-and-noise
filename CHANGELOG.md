@@ -81,6 +81,15 @@ This is the repair. No API changes.
   already holds a button. It now copies `.sn-cmdk-trigger` exactly, asserted by
   comparing the two rules against each other rather than against copied literals.
 
+### Notes
+- **The sweep's summary line reports `passed` and `skipped` — never `failed`.**
+  Every green claim in this session's development was read off that line, and it
+  is not the signal: `tests/run.sh` reports failures on a separate `ERROR` line
+  and in its **exit code**. A suite failing 2 assertions still contributes its
+  passing ones to the total, so the summary reads healthy while the sweep exits
+  1. Caught by CI on this very release, after the same misreading had been
+  repeated all session. Check `$?`, not the tally.
+
 > **Why PATCH:** a live-outage fix plus visual repairs to what v12.0.0 shipped.
 > No public API changed — `colors` keeps the v12.0.0 struct; the schema is being
 > corrected to describe what was already being returned. No floors moved,
