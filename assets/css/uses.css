@@ -104,8 +104,10 @@
 		align-items: baseline;
 	}
 }
-.sn-uses-item:hover {
-	padding-left: 6px;
+@media (hover: hover) {
+	.sn-uses-item:hover {
+		padding-left: 6px;
+	}
 }
 .sn-uses-item-name {
 	font-family: 'DM Mono', 'Courier New', monospace;

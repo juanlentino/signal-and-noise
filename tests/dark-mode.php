@@ -359,5 +359,162 @@ foreach ( array(
 		"$sel no longer shares one selector list between hover and focus" );
 }
 
+// ── PANEL INK MUST BE READABLE ON THE PANEL, IN BOTH SCHEMES (v12.0.3) ─────
+// v12.0.1 introduced --sn-panel and converted the SURFACES to it — and left
+// the ink behind. The command-palette rows kept `color: var(--…--void)`, which
+// is white on a black panel in light and #0a0a0a on a #161616 panel in dark, so
+// every row went invisible. The secondary label and the input placeholder kept
+// `asphalt`, near-white in light and #171717 in dark: invisible too, and not
+// even visible in the screenshot that reported the first one.
+//
+// Converting a surface without converting the ink that sits on it is the same
+// half-migration as the whole ink-as-chrome class. This computes the actual
+// contrast of each panel ink against the panel in BOTH schemes, so the pairing
+// is checked rather than assumed.
+echo "\nGroup: panel ink clears AA on the panel, light and dark\n";
+
+function dm_lum( $hex ) {
+	$hex = ltrim( $hex, '#' );
+	$c   = array();
+	foreach ( array( 0, 2, 4 ) as $i ) {
+		$v = hexdec( substr( $hex, $i, 2 ) ) / 255;
+		$c[] = ( $v <= 0.03928 ) ? $v / 12.92 : pow( ( $v + 0.055 ) / 1.055, 2.4 );
+	}
+	return 0.2126 * $c[0] + 0.7152 * $c[1] + 0.0722 * $c[2];
+}
+function dm_ratio( $a, $b ) {
+	$l1 = dm_lum( $a ); $l2 = dm_lum( $b );
+	if ( $l1 < $l2 ) { $t = $l1; $l1 = $l2; $l2 = $t; }
+	return ( $l1 + 0.05 ) / ( $l2 + 0.05 );
+}
+
+$schemes = array(
+	'light' => dm_decls( dm_block( $crit, ':root {' ) ),
+	'dark'  => dm_decls( dm_block( $crit, ':root[data-theme="dark"]' ) ),
+);
+foreach ( $schemes as $name => $decls ) {
+	$panel = $decls['--sn-panel'] ?? '';
+	ok( '' !== $panel, "$name: --sn-panel is defined" );
+	foreach ( array( '--sn-panel-ink', '--sn-panel-ink-dim' ) as $ink ) {
+		$v = $decls[ $ink ] ?? '';
+		ok( '' !== $v, "$name: $ink is defined" );
+		if ( '' !== $v && '' !== $panel ) {
+			$r = dm_ratio( $v, $panel );
+			ok( $r >= 4.5, sprintf( '%s: %s on --sn-panel is %.2f:1 (AA needs 4.5)', $name, $ink, $r ) );
+		}
+	}
+}
+
+// And no panel descendant may draw its text from the PAGE palette. `void` and
+// `asphalt` are page colours; on a panel they mean nothing.
+foreach ( array( 'assets/css/command-palette.css', 'assets/css/keyboard-nav.css' ) as $rel ) {
+	$css = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( $root . '/' . $rel ) );
+	$bad = array();
+	foreach ( explode( '}', $css ) as $chunk ) {
+		// Text sitting on a nested BLOOD surface legitimately keeps --void:
+		// there the page palette IS the right source, and void-on-blood is
+		// 5.01:1 light / 6.01:1 dark (asserted in tests/contrast-baseline.php).
+		// Listed explicitly rather than pattern-matched, because the background
+		// is often declared in a DIFFERENT rule from the colour — the selector
+		// alone cannot tell you what it is sitting on.
+		$on_blood = array(
+			'.sn-cmdk-option.is-active',   // the selected row is blood-filled
+			'.sn-cmdk-trigger:hover',      // fills blood on hover
+			'.sn-cmdk-trigger:focus-visible',
+			'.sn-kbdn-list kbd',           // blood-filled key cap
+		);
+		$skip = false;
+		foreach ( $on_blood as $sel_on_blood ) {
+			if ( strpos( $chunk, $sel_on_blood ) !== false ) {
+				$skip = true;
+				break;
+			}
+		}
+		if ( $skip || strpos( $chunk, 'background: var(--wp--preset--color--blood)' ) !== false ) {
+			continue;
+		}
+		if ( preg_match( '/(?<!-)\bcolor:\s*var\(--wp--preset--color--(void|asphalt)\)/', $chunk, $m ) ) {
+			$sel = trim( substr( $chunk, 0, (int) strpos( $chunk, '{' ) ) );
+			$bad[] = substr( str_replace( "\n", ' ', $sel ), -46 ) . ' -> ' . $m[1];
+		}
+	}
+	ok( empty( $bad ), basename( $rel ) . ': no panel text drawn from the PAGE palette'
+		. ( $bad ? ' — ' . implode( '; ', $bad ) : '' ) );
+}
+
+// ── EVERY :hover IS GUARDED FOR TOUCH (v12.0.3) ────────────────────────────
+// v12.0.1 guarded two buttons and recorded the rest as outstanding. This closes
+// it: all 70 rules. The completeness is the point — a partial sweep leaves the
+// same trap in the surfaces nobody happened to screenshot, and "we fixed the
+// ones we saw" is how the ink-as-chrome class survived a whole release.
+//
+// The transformation was mechanical and is verified mechanically: this parses
+// every declaration block and fails on any :hover rule not inside a
+// (hover: hover) query. Adding one unguarded rule fails the suite.
+echo "\nGroup: every :hover rule is behind (hover: hover)\n";
+
+function dm_css_rules( $css ) {
+	$out = array(); $i = 0; $n = strlen( $css ); $sel_start = 0;
+	while ( $i < $n ) {
+		if ( '/' === $css[ $i ] && '/*' === substr( $css, $i, 2 ) ) {
+			$j = strpos( $css, '*/', $i );
+			$i = ( false !== $j ) ? $j + 2 : $n;
+			continue;
+		}
+		if ( '{' === $css[ $i ] ) {
+			$sel = trim( (string) preg_replace( '#/\*.*?\*/#s', '', substr( $css, $sel_start, $i - $sel_start ) ) );
+			if ( '' !== $sel && '@' === $sel[0] ) {
+				++$i; $sel_start = $i; continue;
+			}
+			$j = $i; $d = 0;
+			while ( $j < $n ) {
+				if ( '{' === $css[ $j ] ) { ++$d; }
+				elseif ( '}' === $css[ $j ] ) { --$d; if ( 0 === $d ) { break; } }
+				++$j;
+			}
+			$out[] = array( $sel_start, $sel );
+			$i = $j + 1; $sel_start = $i; continue;
+		}
+		if ( '}' === $css[ $i ] ) { ++$i; $sel_start = $i; continue; }
+		++$i;
+	}
+	return $out;
+}
+
+$unguarded = array();
+$guarded   = 0;
+foreach ( glob( $root . '/assets/css/*.css' ) as $file ) {
+	if ( 'print.css' === basename( $file ) ) {
+		continue; // Print has no pointer at all; hover is meaningless there.
+	}
+	$css = (string) file_get_contents( $file );
+	foreach ( dm_css_rules( $css ) as $r ) {
+		list( $at, $sel ) = $r;
+		if ( strpos( $sel, ':hover' ) === false ) {
+			continue;
+		}
+		$before = substr( $css, 0, $at );
+		// Inside an open (hover: hover) block? The nearest such opener must come
+		// after the last block that closed at column zero.
+		if ( strrpos( $before, '@media (hover: hover)' ) > strrpos( $before, "\n}\n" ) ) {
+			++$guarded;
+			continue;
+		}
+		$unguarded[] = basename( $file ) . ':' . ( substr_count( $before, "\n" ) + 1 ) . ' ' . substr( str_replace( "\n", ' ', $sel ), 0, 48 );
+	}
+}
+ok( $guarded >= 68, "at least 68 :hover rules are guarded (found $guarded)" );
+ok( empty( $unguarded ),
+	'NO UNGUARDED :hover RULE REMAINS' . ( $unguarded ? ' — ' . implode( ' | ', array_slice( $unguarded, 0, 4 ) ) : '' ) );
+
+// Negative control: the parser must be able to SEE an unguarded rule, or this
+// group is decoration that passes for a checker that never checks.
+$probe = ".sn-probe:hover {\n\tcolor: red;\n}\n";
+$found = false;
+foreach ( dm_css_rules( $probe ) as $r ) {
+	if ( strpos( $r[1], ':hover' ) !== false ) { $found = true; }
+}
+ok( $found, 'negative control: the parser DOES detect a bare :hover rule' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

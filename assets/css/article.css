@@ -243,9 +243,11 @@ main { view-transition-name: sn-main; }
 	line-height: 1.15;
 }
 
-.sn-post-closing__next-link a:hover,
-.sn-post-closing__prev-link a:hover {
-	text-decoration: underline;
+@media (hover: hover) {
+	.sn-post-closing__next-link a:hover,
+	.sn-post-closing__prev-link a:hover {
+		text-decoration: underline;
+	}
 }
 
 /* ─── v9.2.0: catalog → single-note morph ─────────────────────────────
@@ -354,8 +356,10 @@ main { view-transition-name: sn-main; }
 	margin: 0 0.1em;
 	letter-spacing: 0.05em;
 }
-.single-post .wp-block-post-content sup a[href^="#footnote-"]:hover {
-	text-decoration: underline;
+@media (hover: hover) {
+	.single-post .wp-block-post-content sup a[href^="#footnote-"]:hover {
+		text-decoration: underline;
+	}
 }
 
 .single-post .wp-block-footnotes {
@@ -389,8 +393,10 @@ main { view-transition-name: sn-main; }
 	color: var(--wp--preset--color--blood);
 	text-decoration: none;
 }
-.single-post .wp-block-footnotes a[href^="#"]:hover {
-	text-decoration: underline;
+@media (hover: hover) {
+	.single-post .wp-block-footnotes a[href^="#"]:hover {
+		text-decoration: underline;
+	}
 }
 
 /* Footnote hover popover (injected by assets/js/footnotes-popover.js) */
@@ -495,8 +501,10 @@ main { view-transition-name: sn-main; }
 	padding: 0.35rem 0.15rem;
 	margin: -0.35rem -0.15rem;
 }
-.sn-post-frontmatter__tags a:hover {
-	color: var(--wp--preset--color--blood);
+@media (hover: hover) {
+	.sn-post-frontmatter__tags a:hover {
+		color: var(--wp--preset--color--blood);
+	}
 }
 .sn-post-frontmatter__pillar {
 	color: var(--wp--preset--color--bone);
@@ -511,10 +519,12 @@ main { view-transition-name: sn-main; }
 	border: 1px solid var(--wp--preset--color--bone);
 	transition: color 0.15s ease, background 0.15s ease;
 }
-.sn-post-frontmatter__pillar:hover {
-	color: var(--wp--preset--color--void);
-	background: var(--wp--preset--color--blood);
-	border-color: var(--wp--preset--color--blood);
+@media (hover: hover) {
+	.sn-post-frontmatter__pillar:hover {
+		color: var(--wp--preset--color--void);
+		background: var(--wp--preset--color--blood);
+		border-color: var(--wp--preset--color--blood);
+	}
 }
 /* v9.11.0: the reading-time + pillar slots are now Block-Bindings paragraphs.
    When a binding returns null (no pillar match; or the plugin is absent) WP keeps

@@ -123,7 +123,7 @@
 }
 
 .sn-cmdk-input::placeholder {
-	color: var(--wp--preset--color--asphalt);
+	color: var(--sn-panel-ink-dim);
 	opacity: 1;
 }
 
@@ -152,7 +152,10 @@
 .sn-cmdk-panel .sn-cmdk-option__label {
 	font-family: var(--wp--preset--font-family--body);
 	font-size: 0.9375rem;
-	color: var(--wp--preset--color--void);
+	/* PANEL ink, not page ink. `void` is white on a black panel in light and
+	   #0a0a0a on a #161616 panel in dark — the row text vanished. v12.0.1
+	   converted the panel SURFACE and left the ink behind. */
+	color: var(--sn-panel-ink);
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -164,7 +167,7 @@
 	font-size: 0.6875rem; /* 11px floor */
 	letter-spacing: 0.1em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--asphalt);
+	color: var(--sn-panel-ink-dim);
 }
 
 .sn-cmdk-option.is-active {
