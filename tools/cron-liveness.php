@@ -15,9 +15,11 @@
  * The verdict is a pure function taking its clock as an argument, so the whole
  * decision table is drivable offline — see tests/cron-liveness.php.
  *
- * SHIPS NOTHING. This is CI tooling; `tools/` is excluded from the built
- * theme and from phpcs. Required as a library by tests/cron-liveness.php and
- * run with --check by .github/workflows/ci.yml.
+ * SHIPS NOTHING. This is CI tooling, excluded from the built theme. It is NOT
+ * excluded from phpcs — this repo's phpcs.xml.dist excludes tests/ but sweeps
+ * tools/ deliberately, so the one unavoidable CLI-output rule is disabled by
+ * scope below rather than by exempting the directory. Required as a library
+ * by tests/cron-liveness.php and run with --check by .github/workflows/ci.yml.
  *
  * Usage (stdin is JSON; the workflow assembles it from `gh api`):
  *   echo '{"workflow_created_at":"…","scheduled_run_times":["…"]}' \
@@ -141,6 +143,12 @@ $runs    = isset( $payload['scheduled_run_times'] ) && is_array( $payload['sched
 $created = isset( $payload['workflow_created_at'] ) ? $payload['workflow_created_at'] : null;
 $verdict = sn_cron_liveness_verdict( $runs, $created, time(), $grace_hours );
 
+// phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped -- CLI
+// output, exactly as tools/version-tag-parity.php does it. This block is
+// unreachable outside `php … --check` on the command line, the destination is
+// a terminal or an Actions log, and esc_html() does not exist here: nothing
+// loads WordPress. Scoped to this call rather than excluding tools/ wholesale,
+// so the next file added there is still swept.
 printf(
 	"%s: %s\ncode=%s ok=%s runs_seen=%d\n",
 	$verdict['ok'] ? 'OK' : 'FAIL',
@@ -149,4 +157,5 @@ printf(
 	$verdict['ok'] ? 'true' : 'false',
 	count( $runs )
 );
+// phpcs:enable WordPress.Security.EscapeOutput.OutputNotEscaped
 exit( $verdict['ok'] ? 0 : 1 );
