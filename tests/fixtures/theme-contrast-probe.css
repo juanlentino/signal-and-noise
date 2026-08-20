@@ -7,3 +7,12 @@
    wrong) rather than as a contrast bug. */
 .sn-fx-role-error{color:var(--wp--preset--color--asphalt);background:var(--wp--preset--color--void)}
 .sn-fx-unmapped{color:var(--wp--preset--color--void)}
+
+/* Non-text fixtures.
+   Rule 3 is a focus ring that fails 1.4.11: `concrete` on the page ground is
+   1.41 / 2.68 / 1.69:1 across the three palettes. An OUTLINE is drawn outside
+   the element, so it meets the ancestor ground — not the element's own fill.
+   Rule 4 sets background AND border-color to the same token: that is fill, not
+   a boundary, and must be counted as skipped rather than reported. */
+.sn-fx-weak-focus:focus-visible{outline:2px solid var(--wp--preset--color--concrete)}
+.sn-fx-solid-chip:hover{background:var(--wp--preset--color--blood);border-color:var(--wp--preset--color--blood)}
