@@ -324,5 +324,117 @@ $summary = sn_theme_ability_design_system_summary( array( 'format' => 'markdown'
 dtk_true( is_array( $summary ), 'happy path: real origin-keyed tokens format without error' );
 dtk_true( is_array( $summary ) && false !== strpos( $summary['summary'], 'blood' ), 'happy path: real color slug appears in the formatted summary' );
 
+// ── THE PAYLOAD MUST SATISFY ITS OWN DECLARED SCHEMA (v12.0.1) ─────────────
+// v12.0.0 reshaped `colors` and left `output_schema` describing the old shape.
+// The Abilities API validates execute results against that schema, so the
+// ability failed on the LIVE SITE the moment the release installed — while
+// 2,349 assertions stayed green, because every test in this file calls
+// sn_theme_ability_design_tokens() directly and never goes through
+// registration. The payload was asserted. The payload against its own
+// DECLARATION was not, and that is the gap that shipped a dark flagship.
+//
+// sn-site-facts degrades one failing fact to {error:"unavailable"} and returns
+// its siblings normally, by design — so nothing went red. The only way to see
+// it was to ask for that one fact.
+//
+// This walks the registered schema rather than restating it, so it keeps
+// working through any future reshape: change one side and it fails.
+echo "\nGroup: payload conforms to the registered output_schema\n";
+
+function dtk_schema_check( $value, $schema, $path, &$errors ) {
+	$type = $schema['type'] ?? null;
+	if ( 'object' === $type ) {
+		if ( ! is_array( $value ) ) {
+			$errors[] = "$path: expected object, got " . gettype( $value );
+			return;
+		}
+		foreach ( (array) ( $schema['required'] ?? array() ) as $req ) {
+			if ( ! array_key_exists( $req, $value ) ) {
+				$errors[] = "$path.$req: required but absent";
+			}
+		}
+		foreach ( (array) ( $schema['properties'] ?? array() ) as $k => $sub ) {
+			if ( array_key_exists( $k, $value ) ) {
+				dtk_schema_check( $value[ $k ], $sub, "$path.$k", $errors );
+			}
+		}
+		$extra = $schema['additionalProperties'] ?? null;
+		if ( is_array( $extra ) ) {
+			$declared = array_keys( (array) ( $schema['properties'] ?? array() ) );
+			foreach ( $value as $k => $v ) {
+				if ( ! in_array( $k, $declared, true ) ) {
+					dtk_schema_check( $v, $extra, "$path.$k", $errors );
+				}
+			}
+		}
+		return;
+	}
+	if ( 'array' === $type ) {
+		if ( ! is_array( $value ) ) {
+			$errors[] = "$path: expected array, got " . gettype( $value );
+			return;
+		}
+		foreach ( $value as $i => $item ) {
+			if ( isset( $schema['items'] ) ) {
+				dtk_schema_check( $item, $schema['items'], "$path\[$i]", $errors );
+			}
+		}
+		return;
+	}
+	if ( 'string' === $type ) {
+		if ( ! is_string( $value ) ) {
+			$errors[] = "$path: expected string, got " . gettype( $value );
+			return;
+		}
+		if ( isset( $schema['enum'] ) && ! in_array( $value, (array) $schema['enum'], true ) ) {
+			$errors[] = "$path: '$value' not in enum(" . implode( '|', $schema['enum'] ) . ')';
+		}
+		if ( 'color-hex' === ( $schema['format'] ?? '' ) && preg_match( '/^#[0-9a-fA-F]{3,8}$/', $value ) !== 1 ) {
+			$errors[] = "$path: '$value' is not a hex colour";
+		}
+	}
+}
+
+// Capture the real registration by invoking the real registrar. The schema is
+// READ from it, never restated here — a second copy would keep agreeing with
+// itself while the shipped one drifted, which is the failure this whole group
+// exists to close.
+if ( ! function_exists( 'wp_register_ability' ) ) {
+	function wp_register_ability( $slug, $args ) {
+		$GLOBALS['__registered_abilities'][ $slug ] = $args;
+		return true;
+	}
+}
+if ( ! function_exists( 'wp_register_ability_category' ) ) {
+	function wp_register_ability_category( $slug, $args ) { return true; }
+}
+if ( ! function_exists( 'sn_theme_perm_read' ) ) {
+	function sn_theme_perm_read() { return true; }
+}
+$GLOBALS['__registered_abilities'] = array();
+if ( function_exists( 'sn_theme_register_diagnostics_abilities' ) ) {
+	sn_theme_register_diagnostics_abilities();
+}
+
+$reg = $GLOBALS['__registered_abilities']['signal-and-noise/get-design-tokens'] ?? null;
+dtk_eq( true, is_array( $reg ), 'the ability registration was captured' );
+$schema = $reg['output_schema'] ?? null;
+dtk_eq( true, is_array( $schema ), 'it declares an output_schema' );
+
+$live   = sn_theme_ability_design_tokens();
+$errors = array();
+dtk_eq( false, is_wp_error( $live ), 'the ability returns a payload, not a WP_Error' );
+if ( is_array( $live ) && is_array( $schema ) ) {
+	dtk_schema_check( $live, $schema, 'tokens', $errors );
+}
+dtk_eq( array(), $errors, 'THE PAYLOAD VALIDATES AGAINST ITS OWN DECLARED SCHEMA' . ( $errors ? ': ' . implode( '; ', $errors ) : '' ) );
+
+// Negative control: the check must actually be able to fail, or it is decoration.
+$broken = $live;
+$broken['colors']['resolved'] = 'not-an-object';
+$neg = array();
+dtk_schema_check( $broken, $schema, 'tokens', $neg );
+dtk_eq( false, empty( $neg ), 'negative control: a wrong-typed payload IS rejected' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

@@ -222,10 +222,23 @@ ha_true(
 	'::selection has no bare hex'
 );
 
+// v12.0.1: the skip link is a PANEL, not a palette-coloured element, so it
+// draws from --sn-panel rather than a palette slug. The assertion the original
+// was making — "token-driven, so it tracks the active style" — is unchanged and
+// asserted below as "no bare hex"; what changed is WHICH token is correct.
+//
+// It had to change. The skip link was `background: bone; color: void`, meaning
+// "the inverse of the page". That is only the same as "a contrasting panel"
+// while the page is white. When dark mode inverted the palette it inverted a
+// second time and became a white pill on a black page.
 $skip = sv_block( $css, '.sn-skip-link {', '}' );
 ha_true(
-	false !== strpos( $skip, 'var(--wp--preset--color--' ),
-	'.sn-skip-link uses palette vars'
+	false !== strpos( $skip, 'var(--sn-panel)' ),
+	'.sn-skip-link draws its surface from the panel token, not from the ink slug'
+);
+ha_true(
+	false === strpos( $skip, '--wp--preset--color--bone' ),
+	'.sn-skip-link no longer uses the INK slug as a background (the double-inversion bug)'
 );
 ha_true(
 	false === strpos( $skip, '#' ),

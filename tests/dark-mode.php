@@ -142,5 +142,177 @@ ok( preg_match( '/\.sn-header\s*\{[^}]*background-color:\s*var\(--sn-veil\)/s', 
 ok( strpos( $crit, 'filter: invert(var(--sn-mark-invert' ) !== false,
 	'the logo mark inverts — it is #171718 on transparency and would otherwise vanish' );
 
+// ── PLACEMENT IS PART OF THE CONTROL (v12.0.1) ─────────────────────────────
+// v12.0.0 put the toggle in parts/header.html. That group is
+// layout:flex justifyContent:space-between with exactly two children —
+// identity left, navigation right. A third child does not join a cluster; it
+// becomes a third distribution point and lands stranded in the middle of the
+// gap, which is what shipped and what the owner saw immediately.
+//
+// The lesson is the same one this release keeps re-learning: a thing can be
+// individually correct (the button worked, was accessible, persisted) and wrong
+// in aggregate because of the surface it was dropped onto. So the surface is
+// asserted, not just the control.
+echo "\nGroup: the toggle lives on the utility bar\n";
+
+$header = (string) file_get_contents( $root . '/parts/header.html' );
+$footer = (string) file_get_contents( $root . '/parts/footer.html' );
+
+ok( strpos( $header, 'sn_theme_toggle' ) === false,
+	'THE HEADER DOES NOT CARRY THE TOGGLE — space-between with two children is the layout, and a third strands itself in the gap' );
+ok( strpos( $footer, '[sn_theme_toggle]' ) !== false,
+	'the footer utility bar carries it' );
+
+// Beside the search trigger, not inside the meta-nav: both are BUTTONS, and a
+// <nav> of links is the wrong container for a state control with aria-pressed.
+$toggle_at = strpos( $footer, '[sn_theme_toggle]' );
+$cmdk_at   = strpos( $footer, 'sn-cmdk-trigger' );
+$nav_at    = strpos( $footer, '<nav class="sn-footer__meta-nav"' );
+ok( false !== $cmdk_at && false !== $nav_at, 'the footer utility cluster is intact (search trigger + meta nav)' );
+ok( $toggle_at > $cmdk_at && $toggle_at < $nav_at,
+	'it sits BETWEEN the search button and the meta-nav — grouped with the other button, outside the nav of links' );
+
+// It wears the surface it stands on. Copying .sn-cmdk-trigger is not cosmetic
+// here: the two sit shoulder to shoulder in the same bar, so a different box
+// reads as two designs sharing a strip rather than one control group.
+//
+// The two RULES are compared against each other rather than against copied
+// literals. A literal list would freeze today's values as correct and keep
+// passing after the trigger was restyled — leaving the toggle quietly mismatched
+// with the neighbour it is supposed to match. Assert the relationship.
+$comp = (string) file_get_contents( $root . '/assets/css/components.css' );
+$cmdk = (string) file_get_contents( $root . '/assets/css/command-palette.css' );
+
+$toggle_rule  = dm_decls( dm_block( $comp, '.sn-theme-toggle {' ) );
+$trigger_rule = dm_decls( dm_block( $cmdk, '.sn-cmdk-trigger {' ) );
+ok( ! empty( $toggle_rule ) && ! empty( $trigger_rule ), 'both rules resolve' );
+
+foreach ( array( 'font-family', 'font-size', 'letter-spacing', 'padding', 'gap', 'text-transform', 'border', 'background' ) as $prop ) {
+	ok(
+		isset( $toggle_rule[ $prop ], $trigger_rule[ $prop ] ) && $toggle_rule[ $prop ] === $trigger_rule[ $prop ],
+		"toggle and search trigger agree on `$prop` ("
+			. ( $toggle_rule[ $prop ] ?? 'missing' ) . ' vs ' . ( $trigger_rule[ $prop ] ?? 'missing' ) . ')'
+	);
+}
+
+// The 44px floor came from the share buttons and does not belong on a dense
+// utility bar; carrying it over would have made the toggle the tallest thing
+// in the footer.
+ok( ! isset( $toggle_rule['min-height'] ),
+	'no 44px floor carried over from the share-button vocabulary it used to copy' );
+
+// ── THE INK-AS-CHROME CLASS (v12.0.1) ──────────────────────────────────────
+// v12.0.0 shipped dark mode and broke a whole family of surfaces at once,
+// because `bone` was doing two different jobs. It is the INK token. It was also
+// being used to mean "a surface that contrasts with the page" — identical while
+// the page is white, and the moment the palette inverted, every one of those
+// surfaces inverted a SECOND time: the command palette, the keyboard-help
+// modal and the skip link all became blinding white cards on a black page, and
+// the Spotify backdrop turned white behind a player the theme squares off on
+// purpose, which is where the white corners came from.
+//
+// Individually each rule was defensible. The aggregate was not. So the class
+// gets a guard rather than each instance getting a fix: every `bone` background
+// must be on this list with a stated reason, which forces the question — is
+// this ink, or is it chrome? — at the moment someone writes the rule.
+echo "\nGroup: no palette INK token is used as chrome\n";
+
+$ALLOWED = array(
+	// A 1px rule. Ink drawn as a line: inverts correctly, black rule on white
+	// becomes white rule on black.
+	'assets/css/article.css'    => 1,
+	// Two BUTTON fills (outline-button hover, file-download button). A solid
+	// ink-coloured button that flips to a solid white button on a dark page is
+	// a correct inversion — the button is meant to read as a block of ink.
+	'assets/css/components.css' => 2,
+);
+
+$offenders = array();
+foreach ( glob( $root . '/assets/css/*.css' ) as $file ) {
+	if ( basename( $file ) === 'print.css' ) {
+		continue; // Print is always light by definition.
+	}
+	$css = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( $file ) );
+	$n   = preg_match_all( '/background(-color)?:\s*var\(\s*--wp--preset--color--bone\s*\)/', $css );
+	$rel = 'assets/css/' . basename( $file );
+	$cap = $ALLOWED[ $rel ] ?? 0;
+	if ( $n > $cap ) {
+		$offenders[] = "$rel has $n (allowed $cap)";
+	}
+}
+ok( empty( $offenders ),
+	'no NEW ink-as-background rule has appeared' . ( $offenders ? ': ' . implode( '; ', $offenders ) : '' ) );
+
+// The surfaces that were converted must stay converted.
+foreach ( array(
+	'assets/css/command-palette.css' => 'the command palette',
+	'assets/css/keyboard-nav.css'    => 'the keyboard-help modal',
+	'assets/css/base.css'            => 'the skip link',
+	'assets/css/critical.css'        => 'the inlined skip link',
+) as $rel => $what ) {
+	$css = (string) file_get_contents( $root . '/' . $rel );
+	ok( strpos( $css, 'var(--sn-panel' ) !== false, "$what draws from the panel token" );
+}
+
+// Third-party chrome must NOT invert — it is matching somebody else's card.
+$comp = (string) file_get_contents( $root . '/assets/css/components.css' );
+ok( substr_count( $comp, 'var(--sn-embed-backdrop)' ) >= 3,
+	'all three embed backdrop rules use the fixed token' );
+ok( strpos( $crit, '--sn-embed-backdrop' ) !== false, 'the embed backdrop is defined' );
+$dark_block_raw = dm_block( $crit, ':root[data-theme="dark"]' );
+ok( strpos( (string) $dark_block_raw, '--sn-embed-backdrop' ) === false,
+	'THE EMBED BACKDROP IS DELIBERATELY ABSENT FROM THE DARK BLOCK — Spotify\'s card is dark whatever our page is doing' );
+
+// ── NO COLOUR LITERAL AT A USE SITE ────────────────────────────────────────
+// A literal cannot invert, by construction. The mobile nav overlay was a
+// full-screen #ffffff marked !important — the least overridable surface on the
+// site — so in dark mode opening the menu on a phone flashed the whole viewport
+// white with black links on it.
+echo "\nGroup: no colour literal at a use site\n";
+foreach ( glob( $root . '/assets/css/*.css' ) as $file ) {
+	if ( in_array( basename( $file ), array( 'print.css' ), true ) ) {
+		continue;
+	}
+	$css  = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( $file ) );
+	$bad  = array();
+	foreach ( explode( "\n", $css ) as $i => $line ) {
+		// Token DEFINITIONS are where literals belong; everything else must
+		// reference one.
+		if ( preg_match( '/^\s*--/', $line ) ) {
+			continue;
+		}
+		if ( preg_match( '/(background|^\s*color|border-color|fill|stroke)[^:]*:\s*[^;]*(#[0-9a-fA-F]{3,8}\b)/', $line ) ) {
+			$bad[] = trim( $line );
+		}
+	}
+	ok( empty( $bad ), basename( $file ) . ' has no hex literal at a use site'
+		. ( $bad ? ': ' . implode( ' | ', array_slice( $bad, 0, 3 ) ) : '' ) );
+}
+
+// ── STUCK HOVER ON TOUCH (v12.0.1) ─────────────────────────────────────────
+// On iOS a tap applies :hover and KEEPS it until the next tap elsewhere. So an
+// unguarded hover state on a button is not feedback — it becomes the control's
+// apparent resting style. Tapping the theme toggle on a phone left it outlined
+// in blood, reading as permanently active.
+//
+// Scope note, recorded so the gap is not mistaken for coverage: the theme has
+// 78 :hover rules and, before v12.0.1, ZERO touch guards. This asserts the two
+// utility-bar BUTTONS only — the controls where a stuck state actively misleads
+// and which this release touches. The rest is a known, unfixed follow-up.
+echo "\nGroup: tappable controls guard hover for touch\n";
+foreach ( array(
+	'assets/css/components.css'      => '.sn-theme-toggle',
+	'assets/css/command-palette.css' => '.sn-cmdk-trigger',
+) as $rel => $sel ) {
+	$css = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( $root . '/' . $rel ) );
+	ok( preg_match( '/@media\s*\(\s*hover:\s*hover\s*\)\s*\{\s*' . preg_quote( $sel, '/' ) . ':hover/', $css ) === 1,
+		"$sel puts its :hover behind (hover: hover)" );
+	// The keyboard affordance must NOT be inside the guard.
+	ok( preg_match( '/^' . preg_quote( $sel, '/' ) . ':focus-visible\s*\{/m', $css ) === 1,
+		"$sel keeps :focus-visible unguarded — it is the keyboard path" );
+	ok( preg_match( '/' . preg_quote( $sel, '/' ) . ':hover,\s*' . preg_quote( $sel, '/' ) . ':focus-visible/', $css ) !== 1,
+		"$sel no longer shares one selector list between hover and focus" );
+}
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

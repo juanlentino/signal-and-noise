@@ -174,10 +174,59 @@ function sn_theme_register_diagnostics_abilities() {
 			'type'     => 'object',
 			'required' => array( 'colors', 'typography', 'spacing', 'version' ),
 			'properties' => array(
+				// v12.0.1 — THIS SCHEMA IS THE CONTRACT, AND IT IS VALIDATED.
+				// v12.0.0 reshaped `colors` from a flat slug => hex map into the
+				// struct below and did NOT update this block, which still said
+				// "every property is a hex string". The Abilities API validates
+				// the execute result against it, so the ability failed on the
+				// live site the moment the release installed — and because
+				// sn-site-facts degrades a single failing fact to
+				// {error:"unavailable"} and returns its siblings normally,
+				// nothing went red anywhere. The one ability whose reshape
+				// justified the major was the one that went dark.
+				//
+				// It survived 2,349 assertions because every test calls
+				// sn_theme_ability_design_tokens() DIRECTLY, which bypasses
+				// registration and therefore bypasses this schema. The payload
+				// was asserted; the payload against its own declaration was not.
+				// tests/design-tokens.php now validates one against the other.
 				'colors'     => array(
-					'type'                 => 'object',
-					'description'          => 'Named brand colors from theme.json color.palette.',
-					'additionalProperties' => array( 'type' => 'string', 'format' => 'color-hex' ),
+					'type'        => 'object',
+					'description' => 'Every palette the site can present, plus which one is live.',
+					'required'    => array( 'served', 'resolved', 'palettes' ),
+					'properties'  => array(
+						'served'   => array(
+							'type'        => 'string',
+							'description' => "Id of the shipped palette WordPress actually resolved ('root', a styles/*.json basename, or 'custom' when the owner has edited colours in the Site Editor and no shipped palette matches). Empty when WordPress cannot be asked.",
+						),
+						'resolved' => array(
+							'type'                 => 'object',
+							'description'          => 'The palette in effect for THIS request, slug => hex.',
+							'additionalProperties' => array( 'type' => 'string', 'format' => 'color-hex' ),
+						),
+						'palettes' => array(
+							'type'                 => 'object',
+							'description'          => 'Keyed by palette IDENTITY, so a new palette is an additive key rather than a reshape. Each entry is a COMPLETE palette (variation overrides merged over root).',
+							'additionalProperties' => array(
+								'type'       => 'object',
+								'properties' => array(
+									'scheme' => array(
+										'type'        => 'string',
+										'enum'        => array( 'light', 'dark' ),
+										'description' => 'Colour scheme this palette belongs to. A field, not a key: variation and scheme are orthogonal, since the dark layer overrides :root and replaces whatever variation is active.',
+									),
+									'source' => array(
+										'type'        => 'string',
+										'description' => 'Theme-relative file the palette is read from.',
+									),
+									'colors' => array(
+										'type'                 => 'object',
+										'additionalProperties' => array( 'type' => 'string', 'format' => 'color-hex' ),
+									),
+								),
+							),
+						),
+					),
 				),
 				'typography' => array(
 					'type'       => 'object',

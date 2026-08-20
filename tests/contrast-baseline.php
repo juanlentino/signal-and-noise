@@ -566,8 +566,36 @@ if ( empty( $signal_text_uses ) ) {
  * the theme can present, which is this file's own standing rule. */
 echo "\nGroup: the command-palette trigger inverts to VOID on hover, never bone\n";
 $cmdk = (string) file_get_contents( __DIR__ . '/../assets/css/command-palette.css' );
-cb_gte( (int) preg_match( '/\.sn-cmdk-trigger:hover,\s*\.sn-cmdk-trigger:focus-visible\s*\{[^}]*color:\s*var\(--wp--preset--color--void\)/s', $cmdk ), 1, 'the hover/focus label is declared --void' );
-cb_gte( (int) preg_match( '/\.sn-cmdk-trigger:hover,\s*\.sn-cmdk-trigger:focus-visible\s*\{[^}]*background:\s*var\(--wp--preset--color--blood\)/s', $cmdk ), 1, 'on a --blood surface' );
+// v12.0.1: the hover and focus-visible halves were SPLIT — :hover moved behind
+// @media (hover: hover) because iOS keeps a tap's hover state until the next tap
+// elsewhere, and :focus-visible stayed outside the guard as the keyboard path.
+//
+// The original assertion pinned the combined SELECTOR LIST, so the split broke
+// it while the property it exists to guard was untouched. Re-pinned to the
+// invariant instead: BOTH states must land void-on-blood, wherever they are
+// written. The old form would have to be rewritten again the next time the rule
+// moves; this one survives the move and still fails if the colour regresses to
+// the 4.19:1 bone-on-blood pair v11.7.1 replaced.
+foreach ( array( 'hover', 'focus-visible' ) as $state ) {
+	$block = null;
+	$at    = 0;
+	while ( ( $at = strpos( $cmdk, '.sn-cmdk-trigger:' . $state, $at ) ) !== false ) {
+		$open = strpos( $cmdk, '{', $at );
+		$end  = false === $open ? false : strpos( $cmdk, '}', $open );
+		if ( false !== $end ) {
+			$candidate = substr( $cmdk, $open, $end - $open );
+			if ( strpos( $candidate, 'color:' ) !== false ) {
+				$block = $candidate;
+				break;
+			}
+		}
+		$at += 20;
+	}
+	cb_gte( (int) ( null !== $block && strpos( $block, 'color: var(--wp--preset--color--void)' ) !== false ), 1,
+		":$state declares the label --void, never bone" );
+	cb_gte( (int) ( null !== $block && strpos( $block, 'background: var(--wp--preset--color--blood)' ) !== false ), 1,
+		":$state puts it on a --blood surface" );
+}
 foreach ( snt_test_all_palettes() as $label => $pal ) {
 	$r = snt_test_contrast_ratio( $pal['void'], $pal['blood'] );
 	cb_gte( $r, 4.5, sprintf( 'void on blood under %s', $label ) );

@@ -39,6 +39,37 @@
 	   light scrollbar and light form widgets. */
 	color-scheme: light;
 
+	/* ── SURFACES THAT ARE NOT THE PAGE ──────────────────────────────
+	   A whole class of bugs shipped in v12.0.0 because these were built
+	   from `bone`. `bone` is INK. It was being used to mean "a surface
+	   that contrasts with the page", which is only the same thing while
+	   the page is white — and the moment dark mode inverted the palette,
+	   every one of them inverted a second time and became a blinding
+	   white card on a black page. The command palette, the keyboard-help
+	   modal and the skip link all did exactly that.
+
+	   An overlay's job is to sit ABOVE the page, not to be the opposite
+	   of it. So in dark these become a raised dark surface, not white. */
+	--sn-panel: #000000;
+	--sn-panel-ink: #ffffff;
+	--sn-panel-edge: #ffffff;
+	--sn-panel-shadow: #ffffff;
+
+	/* Backdrop behind third-party embeds whose own chrome is always dark
+	   (Spotify). DELIBERATELY IDENTICAL IN BOTH SCHEMES — it is matching
+	   somebody else's card, not ours, and that card does not care what
+	   our page is doing. Built from `bone` it turned white in dark and
+	   showed through the four corners of Spotify's rounded player, which
+	   the theme squares off on purpose. */
+	--sn-embed-backdrop: #000000;
+
+	/* The scanline is drawn as a BLACK striping gradient. Black stripes on a
+	   black page are nothing at all, so dark mode would have quietly dropped
+	   the second of the theme's two textures — the same way the grain would
+	   have gone had its blend mode not flipped. */
+	--sn-scanline: rgba(0, 0, 0, 0.04);
+	--sn-shadow-soft: rgba(0, 0, 0, 0.08);
+
 	/* Veils: translucent white-over-content washes (the fixed header
 	   backdrop, the hero fade). These were rgba(255,255,255,…) literals,
 	   which are white BY VALUE and therefore ignore any palette — they
@@ -63,6 +94,12 @@
 
 :root[data-theme="dark"] {
 	color-scheme: dark;
+	--sn-scanline: rgba(255, 255, 255, 0.05);
+	--sn-shadow-soft: rgba(0, 0, 0, 0.55);
+	--sn-panel: #161616;
+	--sn-panel-ink: #ffffff;
+	--sn-panel-edge: #3a3a3a;
+	--sn-panel-shadow: #000000;
 	--wp--preset--color--void: #0a0a0a;
 	--wp--preset--color--asphalt: #171717;
 	--wp--preset--color--concrete: #383838;
@@ -82,6 +119,12 @@
 @media (prefers-color-scheme: dark) {
 	:root:not([data-theme="light"]) {
 		color-scheme: dark;
+		--sn-scanline: rgba(255, 255, 255, 0.05);
+		--sn-shadow-soft: rgba(0, 0, 0, 0.55);
+		--sn-panel: #161616;
+		--sn-panel-ink: #ffffff;
+		--sn-panel-edge: #3a3a3a;
+		--sn-panel-shadow: #000000;
 		--wp--preset--color--void: #0a0a0a;
 		--wp--preset--color--asphalt: #171717;
 		--wp--preset--color--concrete: #383838;
@@ -152,8 +195,8 @@ body::after {
 		0deg,
 		transparent,
 		transparent 2px,
-		rgba(0, 0, 0, 0.04) 2px,
-		rgba(0, 0, 0, 0.04) 4px
+		var(--sn-scanline) 2px,
+		var(--sn-scanline) 4px
 	);
 }
 
@@ -163,8 +206,8 @@ body::after {
 	top: -100%;
 	left: 1rem;
 	z-index: 999999;
-	background: var(--wp--preset--color--bone);
-	color: var(--wp--preset--color--void);
+	background: var(--sn-panel);
+	color: var(--sn-panel-ink);
 	padding: 0.75rem 1.5rem;
 	font-family: var(--wp--preset--font-family--heading);
 	font-size: 0.85rem;
@@ -214,9 +257,9 @@ body::after {
 	word-wrap: normal !important;
 }
 .screen-reader-text:focus {
-	background-color: #ddd;
+	background-color: var(--sn-panel);
 	clip-path: none;
-	color: #444;
+	color: var(--sn-panel-ink);
 	display: block;
 	width: auto;
 	height: auto;
@@ -535,7 +578,13 @@ body {
 	height: 100vh !important;
 	height: 100dvh !important;
 	z-index: 100000 !important;
-	background-color: #ffffff !important;
+	/* v12.0.1: was a hardcoded #ffffff. This is a FULL-SCREEN overlay
+	   marked !important, so in dark mode opening the menu on a phone
+	   flashed the whole viewport white with black links on it — the
+	   single worst dark-mode defect on the site, and the least
+	   overridable. The palette tokens invert on their own; nothing
+	   here ever needed a literal. */
+	background-color: var(--wp--preset--color--void) !important;
 	display: flex !important;
 	flex-direction: column !important;
 	align-items: center !important;
@@ -564,7 +613,7 @@ body {
 	display: block !important;
 	width: 40px !important;
 	height: 3px !important;
-	background: #e00404 !important;
+	background: var(--wp--preset--color--blood) !important;
 	margin-bottom: 2rem !important;
 }
 .wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation__container,
@@ -587,7 +636,7 @@ body {
 	letter-spacing: 0.04em !important;
 	text-transform: uppercase !important;
 	padding: 0.6rem 0 !important;
-	color: #000000 !important;
+	color: var(--wp--preset--color--bone) !important;
 	text-decoration: none !important;
 	display: block !important;
 	line-height: 1.1 !important;
@@ -596,7 +645,7 @@ body {
 }
 .wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation-item a:hover,
 .wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation-item a:active {
-	color: #e00404 !important;
+	color: var(--wp--preset--color--blood) !important;
 }
 .wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation-item a::after {
 	display: none !important;

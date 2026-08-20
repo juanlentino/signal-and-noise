@@ -119,17 +119,21 @@
 
 .wp-block-embed,
 .wp-block-embed .wp-block-embed__wrapper {
-	background: var(--wp--preset--color--bone);
+	background: var(--sn-embed-backdrop);
 }
 
 .wp-block-embed-spotify,
 .wp-block-embed-spotify .wp-block-embed__wrapper {
-	background: var(--wp--preset--color--bone) !important;
+	background: var(--sn-embed-backdrop) !important;
 }
 
+/* The theme squares off Spotify's rounded card on purpose (brutalist: no
+   radius). That only works if what shows through the four corners matches
+   the player. Built from `bone` it was black in light and WHITE in dark,
+   which is where the white corners came from. */
 .wp-block-embed-spotify iframe {
 	border-radius: 0 !important;
-	background: var(--wp--preset--color--bone);
+	background: var(--sn-embed-backdrop);
 }
 
 .wp-block-embed-spotify.wp-has-aspect-ratio .wp-block-embed__wrapper::before {
@@ -1662,56 +1666,81 @@
 	color: var(--wp--preset--color--rust);
 }
 
-/* ── THEME TOGGLE (v11.13.0) ───────────────────────────────────────────
-   Rendered by [sn_theme_toggle] into parts/header.html; behaviour in
-   assets/js/dark-mode-toggle.js.
+/* ── THEME TOGGLE (v12.0.1) ────────────────────────────────────────────
+   Rendered by [sn_theme_toggle] into the footer utility bar
+   (parts/footer.html); behaviour in assets/js/dark-mode-toggle.js.
 
-   Deliberately COPIES the .sn-note-share__copy vocabulary rather than
-   inventing a control: mono uppercase tracked label, 1px concrete
-   outline, zero radius, blood on hover and focus. The one addition is a
-   filled square that empties in dark — no sun, no moon, no icon font. A
-   pictogram would be the first decorative element on the site.
+   v12.0.0 put this in the header and styled it after
+   .sn-note-share__copy. Both were wrong. The header group is
+   space-between with two children by design, so a third stranded it in
+   the middle of the gap — and it was wearing the vocabulary of a
+   surface it did not live on.
 
-   The label is a WORD, not a glyph, because the button reports STATE
-   ("Light" = you are in light) while its accessible name reports the
-   ACTION. A sun icon cannot express that distinction, which is why
-   icon-only theme toggles are perennially ambiguous. */
+   It now COPIES .sn-cmdk-trigger, the button standing directly beside
+   it: Bebas at 0.7rem, 0.08em tracking, a 38%-alpha bone hairline,
+   blood fill on hover and focus. Same box, same density, so the two
+   read as one control group rather than two designs sharing a bar.
+
+   The label stays a WORD, not a glyph — the footer's own meta-nav
+   comment says none of its icons have a universal glyph, which is why
+   every one carries an aria-label and a title. That is a fair trade for
+   a link. It is not for a two-state control, where the button reports
+   STATE ("Light" = you are in light) while its accessible name reports
+   the ACTION. No icon expresses that difference, which is why icon-only
+   theme toggles are perennially ambiguous. */
 
 .sn-theme-toggle {
-	font-family: 'DM Mono', 'Courier New', monospace;
-	font-size: max(0.7rem, 11px);
-	font-weight: 500;
-	letter-spacing: 0.14em;
-	text-transform: uppercase;
-	color: var(--wp--preset--color--rust);
-	background: transparent;
-	border: 1px solid var(--wp--preset--color--concrete);
-	border-radius: 0;
-	padding: 0.4rem 0.7rem;
-	/* 44px is the pointer-target floor everywhere else in the theme; the
-	   header is dense, so this one meets it through padding + the
-	   surrounding hit area rather than by growing the box. */
-	min-height: 44px;
 	display: inline-flex;
 	align-items: center;
 	gap: 0.5rem;
+	padding: 0.4rem 0.8rem;
+	border: 1px solid color-mix( in srgb, var(--wp--preset--color--bone) 38%, transparent );
+	background: transparent;
+	color: var(--wp--preset--color--bone);
+	font-family: var(--wp--preset--font-family--heading);
+	font-size: 0.7rem;
+	line-height: 1;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
 	cursor: pointer;
-	transition: color 0.2s ease, border-color 0.2s ease;
+	transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
 }
-.sn-theme-toggle:hover,
+
+/* void, not bone — the same pairing note as .sn-cmdk-trigger. On hover the
+   background IS blood, and bone-on-blood is 4.19:1, under the 4.5 floor at
+   this size. void on blood is 5.01:1 under the light palettes and 6.01:1
+   under dark, and matches theme.json's own text-on-blood convention. */
+/* HOVER IS GUARDED FOR TOUCH. On iOS a tap applies :hover and KEEPS it until
+   you tap somewhere else, so an unguarded hover state does not read as feedback
+   — it reads as the control's resting appearance. The theme toggle showed this
+   plainly: tap it once on a phone and it stays outlined in blood, looking like
+   a permanently active or errored control.
+
+   `:focus-visible` stays OUTSIDE the guard. It is the keyboard affordance and
+   must work on every device. */
+@media (hover: hover) {
+	.sn-theme-toggle:hover {
+		background: var(--wp--preset--color--blood);
+		border-color: var(--wp--preset--color--blood);
+		color: var(--wp--preset--color--void);
+	}
+}
 .sn-theme-toggle:focus-visible {
-	color: var(--wp--preset--color--blood);
+	background: var(--wp--preset--color--blood);
 	border-color: var(--wp--preset--color--blood);
+	color: var(--wp--preset--color--void);
+	outline: none;
 }
 .sn-theme-toggle[hidden] {
 	display: none;
 }
 
-/* Filled in light, hollow in dark: the square reads as the amount of ink
-   on the page, which is the thing actually being toggled. */
+/* Filled in light, hollow in dark: the square reads as how much ink is on
+   the page, which is the thing being toggled. currentColor means it
+   inverts with the button on hover for free. */
 .sn-theme-toggle__dot {
-	width: 9px;
-	height: 9px;
+	width: 8px;
+	height: 8px;
 	flex: none;
 	background: currentColor;
 	border: 1px solid currentColor;
@@ -1776,4 +1805,21 @@ img.sn-img-dim {
 	img.sn-img-dim {
 		transition: none;
 	}
+}
+
+/* ── SOCIAL ICONS FOLLOW THE PALETTE (v12.0.1) ─────────────────────────
+   WordPress's social-links block saves the slug AND its resolved hex,
+   then renders the hex inline — so `rust` was frozen at #666666 and the
+   footer icons stayed a dim grey in dark mode instead of following the
+   token to #9e9e9e. parts/footer.html drops the stored value; this rule
+   is the backstop, because re-saving the block in the editor will write
+   it back. !important because an inline style outranks a class. */
+.wp-block-social-links.has-icon-color .wp-block-social-link-anchor,
+.wp-block-social-links.has-icon-color .wp-block-social-link-anchor svg {
+	color: var(--wp--preset--color--rust) !important;
+	fill: currentColor !important;
+}
+.wp-block-social-links .wp-block-social-link-anchor:hover,
+.wp-block-social-links .wp-block-social-link-anchor:focus-visible {
+	color: var(--wp--preset--color--blood) !important;
 }
