@@ -1,7 +1,14 @@
 <!-- wp:group {"className":"sn-footer","style":{"spacing":{"padding":{"top":"var:preset|spacing|20","bottom":"var:preset|spacing|20","left":"var:preset|spacing|40","right":"var:preset|spacing|40"}}},"backgroundColor":"void","layout":{"type":"flex","justifyContent":"space-between","verticalAlignment":"center","flexWrap":"wrap"}} -->
 <div class="wp-block-group sn-footer has-void-background-color has-background" style="padding-top:var(--wp--preset--spacing--20);padding-right:var(--wp--preset--spacing--40);padding-bottom:var(--wp--preset--spacing--20);padding-left:var(--wp--preset--spacing--40)">
 
-	<!-- wp:social-links {"iconColor":"rust","iconColorValue":"#666666","size":"has-normal-icon-size","className":"is-style-logos-only","style":{"spacing":{"blockGap":{"left":"var:preset|spacing|30"}}},"layout":{"type":"flex","justifyContent":"left"}} -->
+	<!-- v12.0.1: `iconColorValue` removed. WordPress's social-links block
+	     stores BOTH the slug and its RESOLVED HEX, and renders the hex as an
+	     inline style — so the icons were pinned to #666666 and could not
+	     follow the palette into dark, where `rust` is #9e9e9e. The slug alone
+	     resolves through the custom property. A CSS backstop in
+	     components.css carries !important in case the editor re-serialises
+	     the value on a future save. -->
+	<!-- wp:social-links {"iconColor":"rust","size":"has-normal-icon-size","className":"is-style-logos-only","style":{"spacing":{"blockGap":{"left":"var:preset|spacing|30"}}},"layout":{"type":"flex","justifyContent":"left"}} -->
 	<ul class="wp-block-social-links has-normal-icon-size has-icon-color is-style-logos-only">
 		<!-- wp:social-link {"url":"https://open.spotify.com/intl-es/artist/2R3HjldxV2PpYp9DQwMPq0","service":"spotify"} /-->
 		<!-- wp:social-link {"url":"https://www.linkedin.com/in/juanlentino/","service":"linkedin"} /-->
@@ -38,6 +45,22 @@
 		     conveys that it opens a dialog. -->
 		<!-- wp:html -->
 		<button type="button" class="sn-cmdk-trigger" aria-haspopup="dialog" aria-keyshortcuts="Control+K Meta+K /"><span class="sn-cmdk-trigger-label">Search</span><kbd class="sn-cmdk-hint" aria-hidden="true">&#8984;K</kbd></button>
+		<!-- /wp:html -->
+
+		<!-- v12.0.1: theme toggle. Belongs HERE, not in the header.
+		     The header group is layout:flex justifyContent:space-between with
+		     exactly two children — identity left, navigation right — so a third
+		     child does not join a cluster, it becomes a third distribution point
+		     and lands stranded in the middle of the gap. That is what v12.0.0
+		     shipped.
+		     This bar is already the site's preferences strip (search, Now,
+		     accessibility, colophon, stats, privacy) and it is fixed on desktop,
+		     so the control is always reachable. It sits beside .sn-cmdk-trigger
+		     rather than inside .sn-footer__meta-nav because both are BUTTONS —
+		     the nav holds links, and a state control with aria-pressed is not
+		     navigation. -->
+		<!-- wp:html -->
+		[sn_theme_toggle]
 		<!-- /wp:html -->
 
 		<!-- v10.21.2: icon meta-nav (owner request — icons instead of text,

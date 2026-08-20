@@ -28,7 +28,7 @@
 .sn-kbdn-backdrop {
 	position: absolute;
 	inset: 0;
-	background: color-mix( in srgb, var(--wp--preset--color--void) 82%, transparent );
+	background: color-mix( in srgb, var(--sn-panel-shadow) 82%, transparent );
 }
 
 .sn-kbdn-panel {
@@ -36,9 +36,9 @@
 	width: 100%;
 	max-width: 24rem;
 	padding: 1.5rem 1.6rem 1.7rem;
-	background: var(--wp--preset--color--bone);
-	border: 2px solid var(--wp--preset--color--void);
-	box-shadow: 8px 8px 0 var(--wp--preset--color--void);
+	background: var(--sn-panel);
+	border: 2px solid var(--sn-panel-edge);
+	box-shadow: 8px 8px 0 var(--sn-panel-shadow);
 }
 
 /* The panel is the modal's programmatic focus target (it holds no interactive

@@ -410,7 +410,7 @@ main { view-transition-name: sn-main; }
 	font-size: 0.8rem;
 	line-height: 1.5;
 	color: var(--wp--preset--color--bone);
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+	box-shadow: 0 4px 12px var(--sn-shadow-soft);
 	pointer-events: auto;
 }
 .sn-footnote-popover a {

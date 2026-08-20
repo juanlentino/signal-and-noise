@@ -2,6 +2,90 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.0.1] - 2026-08-20 — the release that shipped a dark flagship
+
+**Headline:** v12.0.0's own flagship ability was failing on the live site within
+minutes of install, and five surfaces were unreadable in the dark mode it shipped.
+This is the repair. No API changes.
+
+### Fixed
+- **`get-design-tokens` was returning an error on the live site.** The v12.0.0
+  reshape changed `colors` from a flat map to a struct and **did not update the
+  `output_schema` that declares it**, which still said every property of `colors`
+  is a hex string. The Abilities API validates execute results against that
+  schema, so the ability failed the moment the release installed.
+
+  It was invisible from every angle the repo can see. `sn-site-facts` degrades a
+  single failing fact to `{error:"unavailable"}` and returns its siblings
+  normally — by design — so nothing went red. And 2,349 assertions stayed green
+  because every test calls `sn_theme_ability_design_tokens()` **directly**,
+  which bypasses registration and therefore bypasses the schema. The payload was
+  asserted; the payload against its own declaration was not.
+
+  `tests/design-tokens.php` now walks the **registered** schema and validates the
+  real payload against it, with a negative control. Reverting the schema to the
+  v12.0.0 shape makes it fail with `resolved: expected string, got array` — so
+  it is verified against the actual defect, not a synthetic one.
+
+  The contract lived in two places and only one was changed. That is the same
+  failure as the palette itself: one description, several things being described.
+
+- **A whole family of surfaces double-inverted.** `bone` is the INK token. It
+  was also being used to mean "a surface that contrasts with the page" —
+  identical while the page is white, and the moment the palette inverted, every
+  one of those inverted a *second* time. The command palette, the keyboard-help
+  modal and the skip link became blinding white cards on black; the Spotify
+  backdrop turned white behind a player the theme squares off on purpose, which
+  is where the white corners came from.
+
+  Each rule was individually defensible; the aggregate was not. So the class got
+  a mechanism rather than each instance getting a patch: `--sn-panel` /
+  `--sn-panel-ink` / `--sn-panel-edge` / `--sn-panel-shadow` for surfaces that
+  contrast with the page (in dark these are a RAISED dark surface, because an
+  overlay's job is to sit above the page, not to blind), and
+  `--sn-embed-backdrop` for third-party chrome, **deliberately identical in both
+  schemes** because it is matching somebody else's card. `tests/dark-mode.php`
+  now caps ink-as-background per file, so a new one has to be argued for.
+
+- **The mobile nav overlay was a hardcoded `#ffffff` marked `!important`.** With
+  `#000000` links on it. Full-screen, and the least overridable surface on the
+  site: opening the menu on a phone in dark mode flashed the entire viewport
+  white. Now palette tokens, which invert on their own.
+
+- **The theme toggle stuck in blood red after being tapped.** On iOS a tap
+  applies `:hover` and keeps it until the next tap elsewhere, so an unguarded
+  hover state stops reading as feedback and becomes the control's apparent
+  resting style. `:hover` is now behind `@media (hover: hover)` on the toggle and
+  on `.sn-cmdk-trigger` beside it; `:focus-visible` stays outside the guard,
+  because it is the keyboard path.
+
+  **Known and unfixed:** the theme has 78 `:hover` rules and had zero touch
+  guards. This release guards the two utility-bar buttons it touches. The rest is
+  pre-existing and outstanding.
+
+- **The scanline vanished in dark**, drawn as a black striping gradient on a
+  black page — the same way the grain would have gone had its blend mode not
+  flipped. Now a token.
+- **Footer social icons were pinned to `#666666`.** WordPress's social-links
+  block saves the slug *and* its resolved hex and renders the hex inline, so the
+  icons could not follow `rust` to `#9e9e9e`. The stored value is dropped, with a
+  CSS backstop because re-saving the block writes it back.
+- **`.screen-reader-text:focus`** used hardcoded `#ddd` / `#444`.
+
+### Changed
+- **The theme toggle moved to the footer utility bar.** In the header it was the
+  third child of a `space-between` group whose layout assumes two — so it did not
+  join a cluster, it became a third distribution point and sat stranded in the
+  middle of the gap. The footer bar is already the site's preferences strip
+  (search, Now, accessibility, colophon, stats, privacy), is fixed on desktop, and
+  already holds a button. It now copies `.sn-cmdk-trigger` exactly, asserted by
+  comparing the two rules against each other rather than against copied literals.
+
+> **Why PATCH:** a live-outage fix plus visual repairs to what v12.0.0 shipped.
+> No public API changed — `colors` keeps the v12.0.0 struct; the schema is being
+> corrected to describe what was already being returned. No floors moved,
+> `theme.json` and `styles/` untouched.
+
 ## [12.0.0] - 2026-08-19 — Dark mode, and the palette stops being singular
 
 **BREAKING.** `get-design-tokens` returns `colors` as a **struct keyed by palette
