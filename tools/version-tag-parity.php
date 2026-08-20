@@ -2,8 +2,10 @@
 /**
  * Signal & Noise (theme) — does main's version header have a tag on main?
  *
- * SHIPS NOTHING. This is CI tooling; `tools/` is excluded from the built
- * plugin and from phpcs. Required as a library by tests/version-tag-parity.php
+ * SHIPS NOTHING. This is CI tooling, excluded from the built theme. It is NOT
+ * excluded from phpcs, and this file's own scoped disable below says why that
+ * is the right call; the wording here claimed the opposite until 2026-08-20,
+ * and claimed 'plugin' in the theme repo besides. Required as a library by tests/version-tag-parity.php
  * and run with --check by .github/workflows/version-tag-parity.yml.
  *
  * Releasing here is THREE steps — squash-merge, annotated tag, draft release —
