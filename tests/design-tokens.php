@@ -66,9 +66,25 @@ if ( ! function_exists( 'is_wp_error' ) ) {
 }
 
 // wp_get_global_settings() fixture — controllable per test block.
+//
+// v12.0.4: the stub now HONOURS THE PATH ARGUMENT, as the real function does.
+// It used to ignore it and return the whole tree, which is fine for the caller
+// that reads $settings['color']['palette'] itself but silently wrong for one
+// that asks for array('color','palette') — it got a tree where it expected a
+// list. A stub that is more forgiving than the real function does not test the
+// caller, it tests the stub.
 $GLOBALS['__test_global_settings'] = array();
 if ( ! function_exists( 'wp_get_global_settings' ) ) {
-	function wp_get_global_settings() { return $GLOBALS['__test_global_settings']; }
+	function wp_get_global_settings( $path = array() ) {
+		$node = $GLOBALS['__test_global_settings'];
+		foreach ( (array) $path as $key ) {
+			if ( ! is_array( $node ) || ! array_key_exists( $key, $node ) ) {
+				return array();
+			}
+			$node = $node[ $key ];
+		}
+		return $node;
+	}
 }
 
 if ( ! class_exists( 'SN_Test_Theme' ) ) {
@@ -435,6 +451,47 @@ $broken['colors']['resolved'] = 'not-an-object';
 $neg = array();
 dtk_schema_check( $broken, $schema, 'tokens', $neg );
 dtk_eq( false, empty( $neg ), 'negative control: a wrong-typed payload IS rejected' );
+
+// ── `served` MUST SURVIVE WORDPRESS'S OWN SLUGS (v12.0.4) ──────────────────
+// v12.0.3 shipped `served` as a two-way array_diff_assoc, which required the
+// resolved palette and a shipped one to be IDENTICAL. On the live site that can
+// never hold: wp_get_global_settings() returns the theme palette PLUS
+// WordPress's twelve core defaults. So a site running High Contrast reported
+// `served: "custom"` — the field that answers "what is actually live" claiming
+// the owner had hand-edited colours when they had not.
+//
+// It passed because the fixture here contained ONLY theme slugs. The fixture was
+// tidier than reality, and tidiness was the bug. This one carries the core slugs
+// exactly as WordPress hands them over.
+echo "\nGroup: served survives WordPress's core palette slugs\n";
+
+$hc = array();
+foreach ( ( json_decode( (string) file_get_contents( dirname( __DIR__ ) . '/styles/high-contrast.json' ), true )['settings']['color']['palette'] ?? array() ) as $e ) {
+	$hc[ $e['slug'] ] = strtolower( $e['color'] );
+}
+// WordPress core defaults, present on every real site and declared by no
+// shipped palette.
+$core = array(
+	'black' => '#000000', 'cyan-bluish-gray' => '#abb8c3', 'white' => '#ffffff',
+	'pale-pink' => '#f78da7', 'vivid-red' => '#cf2e2e', 'luminous-vivid-orange' => '#ff6900',
+);
+$GLOBALS['__test_global_settings'] = array(
+	'color' => array( 'palette' => array( 'default' => array(), 'theme' => array() ) ),
+);
+foreach ( $core as $slug => $hex ) {
+	$GLOBALS['__test_global_settings']['color']['palette']['default'][] = array( 'slug' => $slug, 'color' => $hex );
+}
+foreach ( $hc as $slug => $hex ) {
+	$GLOBALS['__test_global_settings']['color']['palette']['theme'][] = array( 'slug' => $slug, 'color' => $hex );
+}
+
+dtk_eq( 'high-contrast', sn_theme_served_palette_id(),
+	'a High Contrast site reports served=high-contrast even though WordPress adds its own slugs' );
+
+// And it must still be able to say `custom` when a theme slug genuinely differs.
+$GLOBALS['__test_global_settings']['color']['palette']['theme'][0]['color'] = '#123456';
+dtk_eq( 'custom', sn_theme_served_palette_id(),
+	'negative control: one altered THEME slug still reports custom' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
