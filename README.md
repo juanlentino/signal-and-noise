@@ -1,14 +1,17 @@
 # Signal & Noise
 
-A white-first, brutalist **WordPress Full Site Editing block theme** built for [juanlentino.com](https://juanlentino.com) — inspired by [nin.com](https://nin.com). Black text on white, generous whitespace, blood-red accents, and a Bebas Neue + DM Mono pairing. Buildless by design: vanilla CSS and JS, self-hosted fonts, zero npm/webpack.
+A white-first, brutalist **WordPress Full Site Editing block theme** built for [juanlentino.com](https://juanlentino.com), inspired by [nin.com](https://nin.com). Black text on white, generous whitespace, blood-red accents, and a Bebas Neue + DM Mono pairing, with a full dark inversion since v12.0.0. Buildless by design: vanilla CSS and JS, self-hosted fonts, zero npm/webpack.
 
 ![Signal & Noise](screenshot.png)
 
 ## Design DNA
 
 - **Palette** — `void` #ffffff · `asphalt` #f5f5f5 · `concrete` #d9d9d9 · `rust` #666 · `bone` #000 · `blood` #e00404 · `signal` #ff4c47 (all driven by `theme.json`)
+- **Three palettes, not one** — the site can present `root` (theme.json), the shipped `high-contrast` variation, and `dark`. `get-design-tokens` reports all three plus which one is served. Any color reasoning has to hold in all of them: `blood` #e00404 clears AA on white at 5.01:1 and fails on the dark ground at 3.95:1, which is why dark re-points it to #ff4c47 (6.01:1)
+- **Dark** — a token layer, not a second stylesheet. `:root[data-theme="dark"]` and a `prefers-color-scheme` block redefine the same `--wp--preset--color--*` properties every component already consumes, so nothing can be half-converted. Ground #0a0a0a, `bone` inverts to white, the film grain flips `multiply` to `screen` so the texture survives, and the logo inverts through a token. It writes nothing to the database
+- **Semantic tokens beyond the palette** — `--sn-panel*` for surfaces that deliberately contrast with the page (the command palette, the keyboard modal, the skip link: a *raised dark* surface in dark, never a white card), and `--sn-embed-backdrop` for third-party chrome, identical in both schemes because it matches somebody else's card
 - **Type** — Bebas Neue (display) + DM Mono (editorial), self-hosted woff2, no Google Fonts
-- **Aesthetic** — high-contrast industrial minimalism: film-grain overlay, grayscale image filters, no rounded corners, no gradients
+- **Aesthetic** — high-contrast industrial minimalism: film-grain overlay, grayscale image filters, no rounded corners, no gradients. Dark is an inversion rather than a softening: no elevation ramp, no gray "surfaces", hairlines stay hairlines
 - **Long-form** — frontmatter spec card, drop caps, footnotes, sidenotes, justified text with hyphenation and hanging punctuation
 
 ## Stack
@@ -26,6 +29,8 @@ Block templates for the homepage, long-form **notes**, and the standing pages �
 
 - **Command palette** (`⌘`/`Ctrl-K` or `/`) — accessible, notes-scoped search and jump-to
 - **Keyboard nav** — `j`/`k` previous/next note, `?` cheat-sheet (progressive enhancement; links work without JS)
+- **Theme toggle** — follows the OS by default and persists an explicit choice. It renders in whichever bar is *persistent* at that width: the footer utility strip at ≥782px, the header at ≤781px, keyed to the same 781px boundary that makes the footer static on a phone. Ships `hidden` and is revealed only by the script that makes it work, because a toggle that cannot persist a choice is worse than none
+- **Touch-correct hover** — every `:hover` rule sits behind `@media (hover: hover)`, with `:focus-visible` deliberately outside it. On iOS a tap applies `:hover` and keeps it until the next tap elsewhere, so an unguarded hover state stops reading as feedback and becomes the control's apparent resting style. A `(hover: none)` block also neutralizes the unguarded hovers WordPress generates from `theme.json` into `global-styles-inline-css`, which the theme cannot reach any other way
 - **Reading aids** — article TOC with a sticky progress bar, shared-tag related notes, a frontmatter spec card, and reading time
 - **Provenance** — each Note carries a byline verification chip and an expandable record panel showing it's Ed25519-signed and Bitcoin-anchored, with links to the on-chain block and the public ledger. The plugin owns the markup (`sn_prov_render_chip` / `sn_prov_render_panel`); the theme places them in the byline + closing parts (see `inc/provenance-surface.php`)
 - **Pillar essays** — the curated cornerstone essays render through the owner-placeable `signal-noise/pillar-essays` block, numbered with the owner's editorial designations (№ 1.01); a flagged essay's own page carries that designation as an eyebrow (`inc/pillar-title-eyebrow.php`)
