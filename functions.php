@@ -150,3 +150,5 @@ require_once __DIR__ . '/inc/availability.php'; // D5 (v10.9.0): [sn_availabilit
 require_once __DIR__ . '/inc/contact-email.php'; // v10.16.0: [sn_email] scraper-resistant /contact aliases (client-side assembly, no plaintext/mailto in source)
 require_once __DIR__ . '/inc/feed-websub.php'; // D4 (v10.9.0): WebSub <atom:link rel="hub"> advertisement in the RSS2 + Atom feeds
 require_once __DIR__ . '/inc/reading-path-slot.php'; // v11.9.0: [sn_reading_path] block bridge — the plugin's reading-chain nav resolves on single Notes (empty slot when the plugin is absent)
+require_once __DIR__ . '/inc/palettes.php'; // v12.0.0: every palette the site can present (root + variations + dark), read from the files that define them
+require_once __DIR__ . '/inc/dark-mode.php'; // v11.13.0: dark palette plumbing — pre-paint data-theme stamp, per-scheme theme-color + favicon, [sn_theme_toggle]

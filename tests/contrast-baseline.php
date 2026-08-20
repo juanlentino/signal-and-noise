@@ -113,25 +113,33 @@ function snt_test_all_palettes() {
 		return $cache;
 	}
 
-	$read = function ( $path ) {
-		$data = json_decode( (string) file_get_contents( $path ), true );
-		$out  = array();
-		foreach ( ( $data['settings']['color']['palette'] ?? array() ) as $e ) {
-			if ( isset( $e['slug'], $e['color'] ) ) {
-				$out[ $e['slug'] ] = snt_test_norm_hex( $e['color'] );
-			}
+	// v12.0.0: DELEGATES to sn_theme_all_palettes() (inc/palettes.php) — the
+	// same enumerator the get-design-tokens ability uses. This function used to
+	// glob styles/*.json itself, which meant the suite and the runtime each had
+	// their own idea of how many palettes exist. They agreed right up until
+	// they did not: the ability shipped a flat one-palette contract while this
+	// file was already scoring three.
+	//
+	// One reader, or the test eventually certifies something the site does not
+	// do.
+	if ( ! function_exists( 'sn_theme_all_palettes' ) ) {
+		if ( ! defined( 'ABSPATH' ) ) {
+			define( 'ABSPATH', 1 );
 		}
-		return $out;
-	};
-
-	$root  = $read( __DIR__ . '/../theme.json' );
-	$cache = array( 'root (theme.json)' => $root );
-
-	foreach ( (array) glob( __DIR__ . '/../styles/*.json' ) as $file ) {
-		$overrides = $read( $file );
-		if ( $overrides ) {
-			$cache[ 'variation: ' . basename( $file, '.json' ) ] = array_merge( $root, $overrides );
+		if ( ! function_exists( 'get_theme_file_path' ) ) {
+			eval( 'function get_theme_file_path( $p = "" ) { return dirname( __DIR__ ) . "/" . ltrim( $p, "/" ); }' );
 		}
+		require_once __DIR__ . '/../inc/palettes.php';
+	}
+
+	$cache = array();
+	foreach ( sn_theme_all_palettes() as $id => $meta ) {
+		$label = 'root' === $id ? 'root (theme.json)' : $id . ' (' . $meta['source'] . ')';
+		$norm  = array();
+		foreach ( $meta['colors'] as $slug => $hex ) {
+			$norm[ $slug ] = snt_test_norm_hex( $hex );
+		}
+		$cache[ $label ] = $norm;
 	}
 
 	return $cache;

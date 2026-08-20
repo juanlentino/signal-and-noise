@@ -68,7 +68,7 @@ body::before {
 	background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
 	background-repeat: repeat;
 	background-size: 200px 200px;
-	mix-blend-mode: multiply;
+	mix-blend-mode: var(--sn-grain-blend, multiply);
 }
 
 /* --- Scanline effect --- */
@@ -266,4 +266,40 @@ summary:focus-visible {
 	@view-transition {
 		navigation: auto;
 	}
+}
+
+/* ============================================
+   TEXT-WRAP — display headings (v11.13.0)
+   ============================================
+
+   The theme's whole identity is Bebas Neue set very large:
+   .sn-index-headline runs to clamp(3rem, 8vw, 7rem), the notes hero
+   to a similar scale. At that size the browser's greedy line-breaker
+   routinely leaves a single short word alone on the last line, and a
+   one-word widow under a 7rem headline is the most conspicuous
+   typographic defect the site can produce.
+
+   `balance` equalises line lengths across the block. Browsers cap it
+   at a small number of lines (Chromium: 6), which is precisely why it
+   is safe here and NOT applied to prose — past the cap it is ignored,
+   and below it the cost is bounded to short blocks. Prose gets
+   `text-wrap: pretty` in article.css instead, which only rescues the
+   final line.
+
+   Unsupported browsers ignore the declaration and get today's greedy
+   breaking, so there is nothing to feature-detect.
+
+   The hand-rolled display classes are listed explicitly because they
+   are not headings in the DOM sense: .sn-notes-hero-title is a <div>
+   (inc/page-notes-render.php) and .sn-index-headline is rendered by
+   inc/page-index.php, so an element-only selector misses both. */
+
+h1,
+h2,
+h3,
+.sn-index-headline,
+.sn-index-section-label,
+.sn-notes-hero-title,
+.sn-notes-row-title {
+	text-wrap: balance;
 }

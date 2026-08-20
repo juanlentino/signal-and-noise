@@ -581,6 +581,17 @@ main { view-transition-name: sn-main; }
 	hanging-punctuation: first last allow-end;
 }
 
+/* Orphan control on prose. `pretty` leaves the body of the paragraph on the
+   browser's normal greedy breaks and only reworks the last few lines to avoid
+   a single stranded word — so unlike `balance` (headings only, see base.css)
+   it is safe to run over a full-length article without a line cap or a layout
+   cost that scales with the text. */
+.wp-block-post-content p,
+.wp-block-post-content li,
+.sn-pull-quote__body {
+	text-wrap: pretty;
+}
+
 /* Tabular figures on numeric columns. NOTE: the body face (DM Mono) is
    monospaced and its subset carries no `tnum`, so figures are already
    fixed-width — this is a forward-compat / intent declaration today, not a

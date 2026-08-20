@@ -458,5 +458,37 @@ foreach ( array( 'null' => null, 'WP_Error' => new WP_Error(), 'empty' => array(
 	ok( ids_of( $res ) === array( 2, 3, 4 ), "kernel: $case → byte-identical legacy fallback (2,3,4): " . implode( ',', ids_of( $res ) ) );
 }
 
+// ── THE FOOTER ROWS ASK THEIR OWN COLUMN (v11.13.0) ─────────────────────────
+// These rows live inside the article column, which is narrower than the
+// viewport at every size. A `@media (min-width: 720px)` switch therefore asked
+// a question whose answer is never about this element: at a 1200px viewport the
+// rows split into a 140px spec column + content while sitting in a column that
+// may be ~640px wide, and at no point did the breakpoint describe the box it
+// was styling. The container query asks the list.
+echo "\nGroup: related / cited-by rows switch on their own inline size\n";
+$comp = (string) file_get_contents( __DIR__ . '/../assets/css/components.css' );
+ok( '' !== $comp, 'components.css is readable' );
+
+// ONE container name, not two: the related list and the cited-by list are
+// styled by a single shared selector list, so giving them separate names would
+// invent a distinction the stylesheet does not make. They never nest, so the
+// nearest-container lookup is unambiguous.
+ok( strpos( $comp, 'container-name: sn-notes-footer-list' ) !== false, 'the shared container name is declared' );
+ok( substr_count( $comp, 'container-name: sn-notes-footer-list' ) === 1, 'declared once, on the shared rule' );
+ok( strpos( $comp, '@container sn-notes-footer-list (min-width: 34rem)' ) !== false,
+	'the two-column switch is an @container query on the list' );
+ok( preg_match( '/@media \(min-width: 720px\) \{\s*\.sn-related-notes \.sn-notes-row/', $comp ) !== 1,
+	'the viewport @media switch for the footer rows is GONE' );
+
+// These rows never used named areas, so there is no grid-area to strand — the
+// asserted invariant is simply that the container is the list, not the row.
+ok( preg_match( '/\.sn-related-notes__list,\s*\.sn-cited-by__list\s*\{[^}]*container-type:\s*inline-size/s', $comp ) === 1,
+	'the container is the LIST element of both footers, not the row' );
+// 34rem, not 720px: the number now describes the column the rows sit in, so a
+// viewport-sized figure carried over unchanged would be a lie about the box.
+ok( strpos( $comp, '@media (min-width: 720px)' ) === false
+	|| preg_match( '/@media \(min-width: 720px\) \{\s*\.sn-related-notes/', $comp ) !== 1,
+	'no viewport breakpoint is left describing these rows' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

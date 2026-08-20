@@ -288,6 +288,14 @@ wp_head();
 	margin: 0;
 	padding: 0;
 	counter-reset: sn-note-counter;
+	/* v11.13.0 — THE ROW ASKS ITS OWN COLUMN HOW WIDE IT IS.
+	   The row layout below switches on this list's inline size, not the
+	   viewport's. That is the honest question: the row is a ledger line
+	   inside a 60rem column, and whether it can carry three columns is a
+	   fact about the column, not about the device. It also makes the list
+	   reusable at any width without a new breakpoint. */
+	container-type: inline-size;
+	container-name: sn-notes-list;
 }
 .sn-notes-row {
 	display: grid;
@@ -303,18 +311,6 @@ wp_head();
 .sn-notes-row:last-child {
 	border-bottom: 0;
 }
-@media (min-width: 720px) {
-	.sn-notes-row {
-		/* date | title | meta — a ledger line, not a card. */
-		grid-template-columns: 108px minmax(0, 1fr) auto;
-		grid-template-areas:
-			"spec title meta"
-			".    excerpt excerpt";
-		gap: 0 1.5rem;
-		align-items: baseline;
-	}
-}
-
 /* The hover affordance moves from padding (which reflowed the row) to a
    background wash + the blood date already established as this list's idiom. */
 .sn-notes-row:hover,
@@ -323,7 +319,6 @@ wp_head();
 }
 
 .sn-notes-row-spec {
-	grid-area: spec;
 	font-family: 'DM Mono', 'Courier New', monospace;
 	font-size: 0.6875rem; /* 11px floor */
 	letter-spacing: 0.12em;
@@ -349,7 +344,6 @@ wp_head();
    signals only — never traffic or decay, which would publish per-note
    performance and turn a reading list into a leaderboard. */
 .sn-notes-row-meta {
-	grid-area: meta;
 	font-family: 'DM Mono', 'Courier New', monospace;
 	font-size: 0.6875rem;
 	letter-spacing: 0.12em;
@@ -358,8 +352,12 @@ wp_head();
 	display: flex;
 	flex-wrap: wrap;
 	gap: 0.5rem;
+	row-gap: 0.15rem;
 	align-items: baseline;
-	justify-content: flex-end;
+	/* Left-aligned and wrapping is the DEFAULT (v11.12.4: tags are shown at
+	   every width, and the meta owns its own full line when the row stacks).
+	   The right-hand stamp is the wide-column case and is set in the
+	   @container block, so the two never declare the same property twice. */
 }
 .sn-notes-row-meta a {
 	color: inherit;
@@ -379,24 +377,7 @@ wp_head();
 	color: var(--wp--preset--color--blood);
 	white-space: nowrap;
 }
-@media (max-width: 719px) {
-	/* v11.12.4: TAGS ARE BACK ON A PHONE.
-	 *
-	 * They were hidden with "the date + reading time carry the row on a phone",
-	 * which was true when the row was still a cramped desktop-shaped grid — the
-	 * meta had to share a line with the title and the date. Since v11.12.3 the
-	 * row stacks and the meta owns its own full width, so the reason expired
-	 * with the layout it described. Wrapping keeps a long pair honest rather
-	 * than truncating it. */
-	.sn-notes-row-meta {
-		justify-content: flex-start;
-		flex-wrap: wrap;
-		row-gap: 0.15rem;
-	}
-}
-
 .sn-notes-row-content {
-	grid-area: title;
 	min-width: 0;
 }
 .sn-notes-row-title {
@@ -431,36 +412,9 @@ wp_head();
    grid-template-rows 0fr → 1fr animates the reveal without animating height
    on the element itself, and without the row ever reflowing at rest. */
 .sn-notes-row-excerpt-wrap {
-	grid-area: excerpt;
 	display: grid;
 	grid-template-rows: 0fr;
 	transition: grid-template-rows 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* ── BELOW 720px THE NAMED AREAS DO NOT EXIST ───────────────────────────────
- *
- * `grid-template-areas` is declared ONLY inside @media (min-width: 720px), but
- * the four children carry `grid-area: spec|title|meta|excerpt` unconditionally.
- * On a phone the row is a single `1fr` column with no areas defined, so every
- * one of those names is unresolvable — the browser invents implicit lines and
- * drops all four children into the SAME cell. Measured live at 375x812:
- * computed `grid-template-columns: 0px 0px 327px`, date/title/meta/excerpt all
- * at an identical top. Every note's date printed over its title.
- *
- * POSITION IS LOAD-BEARING. v11.12.2 put this block ABOVE those four rules.
- * Equal specificity, later wins — so it never applied, and shipped as a tagged
- * release that changed nothing. It must stay BELOW the last `grid-area`
- * declaration in this file. The v11.12.2 verification missed it because the fix
- * was tested by injecting a <style> at the end of <head>, which is the one
- * position where it wins for free.
- * ────────────────────────────────────────────────────────────────────────── */
-@media (max-width: 719px) {
-	.sn-notes-row-spec,
-	.sn-notes-row-content,
-	.sn-notes-row-meta,
-	.sn-notes-row-excerpt-wrap {
-		grid-area: auto;
-	}
 }
 
 .sn-notes-row:hover .sn-notes-row-excerpt-wrap,
@@ -490,6 +444,60 @@ wp_head();
 @media (prefers-reduced-motion: reduce) {
 	.sn-notes-row-excerpt-wrap {
 		transition: none;
+	}
+}
+
+/* ── THE WIDE-COLUMN ROW ─────────────────────────────────────────────────────
+ *
+ * Everything above describes a row stacked in one column: date, then title,
+ * then meta, then excerpt, in source order, with no named areas involved. That
+ * is the layout a narrow column gets, and it is the layout you get if this
+ * block never applies at all — an older browser, a print sheet, a reader mode.
+ * It is a complete, readable row on its own.
+ *
+ * This block is the ONLY place the ledger form exists: three columns, and the
+ * four `grid-area` names that address them. THE NAMES AND THE TEMPLATE ARE ONE
+ * BLOCK BY CONSTRUCTION. That is the whole point of writing it this way.
+ *
+ * v11.12.2 and v11.12.3 were both spent on the bug that arrangement makes
+ * impossible: the names used to be declared unconditionally while the template
+ * they referred to was declared only inside a min-width media query, so below
+ * that width every name resolved to nothing and all four children collapsed
+ * into a single cell — every note's date printed on top of its title. The fix
+ * shipped as a `grid-area: auto` counter-rule whose correctness depended on
+ * sitting below four unrelated declarations; written above them it lost on
+ * source order and a tagged release changed nothing on the live site.
+ *
+ * There is no counter-rule here to position, because there is no broken state
+ * to undo. A name cannot outlive its template when they share a brace.
+ *
+ * The query is on the LIST (`container-name: sn-notes-list`), not the viewport,
+ * so the row asks the column that actually holds it. Placed last so the two
+ * properties it genuinely overrides — the row's `gap` and `grid-template-
+ * columns` — resolve the ordinary way, an override after the base it overrides.
+ * ────────────────────────────────────────────────────────────────────────── */
+@container sn-notes-list (min-width: 720px) {
+	.sn-notes-row {
+		/* date | title | meta — a ledger line, not a card. */
+		grid-template-columns: 108px minmax(0, 1fr) auto;
+		grid-template-areas:
+			"spec title meta"
+			".    excerpt excerpt";
+		gap: 0 1.5rem;
+		align-items: baseline;
+	}
+	.sn-notes-row-spec {
+		grid-area: spec;
+	}
+	.sn-notes-row-content {
+		grid-area: title;
+	}
+	.sn-notes-row-meta {
+		grid-area: meta;
+		justify-content: flex-end;
+	}
+	.sn-notes-row-excerpt-wrap {
+		grid-area: excerpt;
 	}
 }
 

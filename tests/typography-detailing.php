@@ -37,5 +37,37 @@ ok( strpos( $css, '.sn-disco-count' ) !== false, 'tabular-nums targets discograp
 ok( strpos( $css, '.sn-frac' ) !== false, '.sn-frac utility present' );
 ok( strpos( $css, 'font-variant-numeric: diagonal-fractions' ) !== false, 'diagonal-fractions declared on the opt-in utility' );
 
+
+// ── TEXT-WRAP (v11.13.0) ────────────────────────────────────────────────────
+// The theme's identity is Bebas Neue display type at clamp(3rem, 8vw, 7rem).
+// At that size a one-word last line is the most visible typographic defect on
+// the site, and it is the exact defect `text-wrap: balance` exists to remove.
+// Headings get `balance` (browser-capped at a handful of lines, so the cost is
+// bounded); prose gets `pretty`, which only rescues the last line and is safe
+// to run over a whole article body.
+echo "\nGroup: text-wrap\n";
+
+$base = (string) file_get_contents( realpath( __DIR__ . '/..' ) . '/assets/css/base.css' );
+ok( '' !== $base, 'base.css is readable' );
+ok( strpos( $base, 'text-wrap: balance' ) !== false, 'display headings declare text-wrap: balance' );
+
+// Balance is for HEADINGS ONLY. Applied to a long body it is either ignored
+// (past the browser's line cap) or a layout cost paid for nothing, so the
+// selector list is asserted rather than left to drift onto prose later.
+ok(
+	preg_match( '/h1,\s*h2,\s*h3,/', $base ) === 1,
+	'balance targets the heading elements, not a blanket selector'
+);
+foreach ( array( '.sn-index-headline', '.sn-notes-row-title', '.sn-notes-hero-title' ) as $sel ) {
+	ok( strpos( $base, $sel ) !== false, "balance reaches the hand-rolled display class $sel" );
+}
+
+// Prose gets `pretty` — orphan control only, no re-balancing of every line.
+ok( strpos( $css, 'text-wrap: pretty' ) !== false, 'prose declares text-wrap: pretty' );
+ok(
+	preg_match( '/text-wrap: pretty/', $css ) === 1 && strpos( $css, 'text-wrap: balance' ) === false,
+	'article.css carries pretty for prose and does NOT balance body copy'
+);
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
