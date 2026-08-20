@@ -197,8 +197,10 @@ summary:focus-visible {
 	border-radius: 0;
 }
 
-::-webkit-scrollbar-thumb:hover {
-	background: var(--wp--preset--color--blood);
+@media (hover: hover) {
+	::-webkit-scrollbar-thumb:hover {
+		background: var(--wp--preset--color--blood);
+	}
 }
 
 /* ── Forced colors / high contrast (a11y, v10.20.0) ─────────────────────

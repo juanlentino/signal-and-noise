@@ -95,8 +95,11 @@
 	}
 
 	/* Disable hover transforms on touch */
-	.wp-block-column:hover {
-		transform: none;
+	@media (hover: hover) {
+		.wp-block-column:hover {
+			transform: none;
+
+		}
 	}
 
 	/* Credibility strip stacks */
@@ -331,8 +334,11 @@
 @media (min-width: 1200px) {
 
 	/* Hover effects only on desktop (pointer device) */
-	.wp-block-column:has(.sn-service-image):hover {
-		transform: translateX(4px);
+	@media (hover: hover) {
+		.wp-block-column:has(.sn-service-image):hover {
+			transform: translateX(4px);
+
+		}
 	}
 }
 
@@ -445,16 +451,25 @@
 
 @media (hover: none) and (pointer: coarse) {
 	/* Disable hover transforms on touch devices */
-	.wp-block-column:has(.sn-service-image):hover {
-		transform: none !important;
+	@media (hover: hover) {
+		.wp-block-column:has(.sn-service-image):hover {
+			transform: none !important;
+
+		}
 	}
 
-	.wp-block-button__link:hover {
-		transform: none !important;
-		box-shadow: none !important;
+	@media (hover: hover) {
+		.wp-block-button__link:hover {
+			transform: none !important;
+			box-shadow: none !important;
+
+		}
 	}
 
-	.sn-logo-link:hover .sn-logo-img {
-		opacity: 1;
+	@media (hover: hover) {
+		.sn-logo-link:hover .sn-logo-img {
+			opacity: 1;
+
+		}
 	}
 }

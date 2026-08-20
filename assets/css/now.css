@@ -92,8 +92,10 @@
 .sn-now-item:last-child {
 	border-bottom: 0;
 }
-.sn-now-item:hover {
-	padding-left: 6px;
+@media (hover: hover) {
+	.sn-now-item:hover {
+		padding-left: 6px;
+	}
 }
 .sn-now-item-text {
 	font-family: 'DM Mono', 'Courier New', monospace;

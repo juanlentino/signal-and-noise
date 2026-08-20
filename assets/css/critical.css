@@ -52,6 +52,10 @@
 	   of it. So in dark these become a raised dark surface, not white. */
 	--sn-panel: #000000;
 	--sn-panel-ink: #ffffff;
+	/* Secondary text ON a panel. Was `asphalt`, which is near-white on a black
+	   panel and #171717 on a #161616 one — invisible in dark. Panel ink has to
+	   come from the panel's own scale, never from the page palette. */
+	--sn-panel-ink-dim: #e0e0e0;
 	--sn-panel-edge: #ffffff;
 	--sn-panel-shadow: #ffffff;
 
@@ -98,6 +102,7 @@
 	--sn-shadow-soft: rgba(0, 0, 0, 0.55);
 	--sn-panel: #161616;
 	--sn-panel-ink: #ffffff;
+	--sn-panel-ink-dim: #a3a3a3;
 	--sn-panel-edge: #3a3a3a;
 	--sn-panel-shadow: #000000;
 	--wp--preset--color--void: #0a0a0a;
@@ -123,6 +128,7 @@
 		--sn-shadow-soft: rgba(0, 0, 0, 0.55);
 		--sn-panel: #161616;
 		--sn-panel-ink: #ffffff;
+		--sn-panel-ink-dim: #a3a3a3;
 		--sn-panel-edge: #3a3a3a;
 		--sn-panel-shadow: #000000;
 		--wp--preset--color--void: #0a0a0a;
@@ -321,8 +327,10 @@ body::after {
 	filter: invert(var(--sn-mark-invert, 0));
 }
 
-.sn-logo-link:hover .sn-logo-img {
-	opacity: 0.7;
+@media (hover: hover) {
+	.sn-logo-link:hover .sn-logo-img {
+		opacity: 0.7;
+	}
 }
 /* ============================================
    HEADER
@@ -393,8 +401,10 @@ body {
 	transition: width 0.3s ease;
 }
 
-.wp-block-navigation a:hover::after {
-	width: 100%;
+@media (hover: hover) {
+	.wp-block-navigation a:hover::after {
+		width: 100%;
+	}
 }
 
 /* ============================================
@@ -643,7 +653,12 @@ body {
 	text-align: center !important;
 	transition: color 0.2s ease !important;
 }
-.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation-item a:hover,
+@media (hover: hover) {
+	.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation-item a:hover {
+		color: var(--wp--preset--color--blood) !important;
+	}
+}
+
 .wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation-item a:active {
 	color: var(--wp--preset--color--blood) !important;
 }

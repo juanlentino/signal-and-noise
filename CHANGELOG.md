@@ -2,6 +2,55 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.0.3] - 2026-08-20 — the command palette was unreadable, and hover stopped sticking
+
+**Headline:** v12.0.1 converted the overlay SURFACES to the panel tokens and left
+the INK on them behind, so the command palette's rows went invisible in dark. Plus
+the touch-hover sweep v12.0.1 deferred, now complete.
+
+### Fixed
+- **The command palette was unreadable in dark.** v12.0.1 introduced `--sn-panel`
+  and moved `.sn-cmdk-panel` onto it — but the row labels still drew `color` from
+  `void`, which is white on a black panel in light and `#0a0a0a` on a `#161616`
+  panel in dark. Every row vanished. The secondary label and the input
+  placeholder had the same defect via `asphalt` (near-white in light, `#171717`
+  in dark) and were invisible in the same screenshot without anyone noticing.
+
+  Converting a surface without converting the ink that sits on it is the same
+  half-migration as the ink-as-chrome class itself. New `--sn-panel-ink-dim`
+  joins `--sn-panel-ink`; the text on the nested blood-filled row correctly keeps
+  `void`, and that exception is now listed by name in the test rather than
+  pattern-matched, because a selector cannot tell you what surface it sits on
+  when the background is declared in a different rule.
+
+  Guarded by computing the real contrast of each panel ink against the panel in
+  BOTH schemes: 21.00 / 15.91 light, 18.10 / 7.17 dark.
+
+- **All 70 `:hover` rules are now guarded for touch.** v12.0.1 fixed the two
+  utility-bar buttons and recorded the rest as outstanding; this closes it. On
+  iOS a tap applies `:hover` and keeps it until the next tap elsewhere, so an
+  unguarded hover state stops reading as feedback and becomes the control's
+  apparent resting appearance.
+
+  `:hover` moved behind `@media (hover: hover)`; `:focus-visible` deliberately
+  stayed outside it, because it is the keyboard path and must work on every
+  device. Rules mixing the two were split; selector lists mixing `:hover` with a
+  state class (`.is-active`) were split so only the hover half is gated.
+
+  The transformation was mechanical and is verified mechanically:
+  `tests/dark-mode.php` parses every declaration block and fails on any `:hover`
+  rule outside a `(hover: hover)` query, with a negative control proving the
+  parser can actually see one. A partial sweep would have left the same trap in
+  every surface nobody happened to screenshot.
+
+### Notes
+- The earlier "78 hover rules" figure was wrong — that was `grep -c` counting
+  LINES containing `:hover`, which over-counts multi-line selector lists and
+  comments. The real number is 70 rules.
+
+> **Why PATCH:** repairs to what v12.0.1 shipped plus a mechanical CSS sweep. No
+> API changes, no floors moved, `theme.json` and `styles/` untouched.
+
 ## [12.0.2] - 2026-08-20 — the toggle follows the bar you can actually see
 
 **Headline:** v12.0.1 moved the theme toggle to the footer utility bar. That bar

@@ -103,8 +103,10 @@
 		align-items: baseline;
 	}
 }
-.sn-index-row:hover {
-	padding-left: 6px;
+@media (hover: hover) {
+	.sn-index-row:hover {
+		padding-left: 6px;
+	}
 }
 .sn-index-row-spec {
 	font-family: 'DM Mono', 'Courier New', monospace;
@@ -134,9 +136,11 @@
 	transition: background-size 0.3s ease, color 0.2s ease;
 	padding-bottom: 2px;
 }
-.sn-index-row-title a:hover {
-	color: var(--wp--preset--color--blood);
-	background-size: 100% 1px;
+@media (hover: hover) {
+	.sn-index-row-title a:hover {
+		color: var(--wp--preset--color--blood);
+		background-size: 100% 1px;
+	}
 }
 .sn-index-row-sub {
 	font-size: 0.9rem;
