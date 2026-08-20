@@ -34,6 +34,10 @@ cd "$(dirname "$0")/.." || exit 2
 SKIP=""
 
 only="${1:-}"
+# A COUNT, not a flag. The sibling plugin repo keeps this as a 0/1 flag and
+# prints it as "$fail SUITE(S) FAILED", so three broken suites report as one —
+# the exit code is right and the sentence a human quotes is not. Counting costs
+# nothing and makes the line true.
 fail=0
 total=0
 skipped=0
@@ -73,7 +77,7 @@ for f in tests/*.php; do
 	if [ -z "$summary" ]; then
 		annotate "$f" "no test summary line — the suite did not assert (crash, fatal, or silent skip). NOT a pass."
 		echo "$out" | tail -3
-		fail=1
+		fail=$((fail + 1))
 		continue
 	fi
 
@@ -88,13 +92,13 @@ for f in tests/*.php; do
 	# should be deleted rather than swept.
 	if [ "${p_count:-0}" -eq 0 ] && [ "${f_count:-0}" -eq 0 ]; then
 		annotate "$f" "summary present but ZERO assertions — the suite ran and tested nothing. NOT a pass."
-		fail=1
+		fail=$((fail + 1))
 		continue
 	fi
 
 	if [ "${f_count:-0}" -gt 0 ]; then
 		annotate "$f" "$summary"
-		fail=1
+		fail=$((fail + 1))
 	else
 		echo "OK ($summary): $base"
 	fi
@@ -105,5 +109,21 @@ if [ -n "$only" ] && [ "$total" -eq 0 ] && [ "$skipped" -eq 0 ]; then
 	exit 2
 fi
 
-echo "-- swept $total suites, $passed assertions passed, $skipped skipped --"
-exit $fail
+# THE SUMMARY LINE MUST REPORT FAILURES. It used to print only the suite count,
+# assertions passed and skips — so a run with two broken suites ended on a line
+# that read healthy while the script exited 1. That is not hypothetical: a
+# session in THIS repo quoted "2,349 assertions, 0 failed" into a CHANGELOG, a
+# commit message and a PR body from a run that was failing. The exit code was
+# always right; the sentence a human copies was not, and the sentence is what
+# gets quoted.
+#
+# `$passed` deliberately still counts assertions from suites that FAILED — a
+# failing suite's passing assertions really did pass. That is why the failure
+# count has to appear beside it: the assertion total alone always looks healthy.
+if [ "$fail" -gt 0 ]; then
+	echo "-- swept $total suites, $passed assertions passed, $fail SUITE(S) FAILED, $skipped skipped --"
+	exit 1
+fi
+
+echo "-- swept $total suites, $passed assertions passed, 0 failed, $skipped skipped --"
+exit 0
