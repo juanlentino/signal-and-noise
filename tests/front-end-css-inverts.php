@@ -45,6 +45,7 @@ function ok( $c, $m ) { global $pass, $fail; if ( $c ) { ++$pass; echo "PASS: $m
 echo "no stylesheet paints a hardcoded colour\n\n";
 
 $root = realpath( __DIR__ . '/..' );
+require_once __DIR__ . '/lib/sn-print-media.php';
 
 /** Colours not inside a var() fallback, an allow-listed rule, a comment, or a token definition. */
 function sn_naked_colours( $css ) {
@@ -60,23 +61,6 @@ function sn_naked_colours( $css ) {
 	return $m[0];
 }
 
-/**
- * Stylesheets the theme enqueues with media="print", read from the enqueue.
- *
- * Matches wp_enqueue_style() calls that name a file under assets/css/ AND pass
- * 'print' as the media argument. The onload-swap trick lives in a
- * style_loader_tag filter and touches no assets/css/ path, so it cannot leak in.
- */
-function sn_print_media_sheets( $php ) {
-	$out = array();
-	if ( preg_match_all( '/wp_enqueue_style\s*\((.*?)\);/s', $php, $calls ) ) {
-		foreach ( $calls[1] as $args ) {
-			if ( ! preg_match( "/'print'\s*$/", trim( $args ) ) ) { continue; }
-			if ( preg_match( "#assets/css/([a-z0-9-]+\.css)#", $args, $f ) ) { $out[] = $f[1]; }
-		}
-	}
-	return array_values( array_unique( $out ) );
-}
 
 $enqueue = (string) file_get_contents( $root . '/inc/assets-frontend.php' );
 $print   = sn_print_media_sheets( $enqueue );

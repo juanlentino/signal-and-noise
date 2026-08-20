@@ -1,0 +1,9 @@
+/* Fixture for tests/front-end-css-contrast.php. NOT enqueued anywhere.
+   Rule 1 is a ROLE error: `asphalt` is a page GROUND, so as ink it is
+   near-white on white in light and #171717 on #0a0a0a in dark. Every value is
+   a token, so the literal sweep passes it — that is the point.
+   Rule 2 draws `void` on the page, which IS void: 1.00:1. Text is never
+   deliberately invisible, so that must class as UNMAPPED (the assumption is
+   wrong) rather than as a contrast bug. */
+.sn-fx-role-error{color:var(--wp--preset--color--asphalt);background:var(--wp--preset--color--void)}
+.sn-fx-unmapped{color:var(--wp--preset--color--void)}
