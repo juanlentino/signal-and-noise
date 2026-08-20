@@ -117,7 +117,15 @@ if ( PHP_SAPI === 'cli' && isset( $argv[1] ) && '--check' === $argv[1] ) {
 		exit( 1 );
 	}
 
+	// phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped -- CLI
+	// output. This block is unreachable outside `php … --check` on the command
+	// line (guarded above), the destination is a terminal or an Actions log,
+	// and esc_html() does not exist here: nothing loads WordPress. Escaping for
+	// HTML would corrupt the message without protecting anything. Scoped to
+	// these two lines rather than excluding tools/ wholesale, so the next file
+	// added there is still swept.
 	echo ( $v['ok'] ? 'OK: ' : 'FAIL: ' ) . $v['message'] . "\n";
 	echo 'version=' . $ver . ' code=' . $v['code'] . ' tags_on_main=' . count( $on_main ) . "\n";
+	// phpcs:enable WordPress.Security.EscapeOutput.OutputNotEscaped
 	exit( $v['ok'] ? 0 : 1 );
 }
