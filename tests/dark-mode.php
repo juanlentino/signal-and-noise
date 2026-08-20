@@ -158,14 +158,59 @@ echo "\nGroup: the toggle lives on the utility bar\n";
 $header = (string) file_get_contents( $root . '/parts/header.html' );
 $footer = (string) file_get_contents( $root . '/parts/footer.html' );
 
-ok( strpos( $header, 'sn_theme_toggle' ) === false,
-	'THE HEADER DOES NOT CARRY THE TOGGLE — space-between with two children is the layout, and a third strands itself in the gap' );
+// v12.0.2: the header carries a toggle AGAIN — but the v12.0.1 ban is not
+// simply reversed, it is replaced by the condition that made it necessary.
+//
+// v12.0.0 stranded the toggle because it was a third child of a space-between
+// group, which turns two visual clusters into three distribution points. The
+// fix then was "no third child". The fix now is `margin-right: auto` on
+// .sn-site-title, which pins the logo left and lets the remaining children
+// cluster right — so a third child is safe BECAUSE of that rule and only
+// because of it. Asserted together: the markup and the rule that makes it
+// legal cannot be separated without this failing.
+ok( strpos( $header, '[sn_theme_toggle placement="header"]' ) !== false,
+	'the header carries the MOBILE instance' );
 ok( strpos( $footer, '[sn_theme_toggle]' ) !== false,
-	'the footer utility bar carries it' );
+	'the footer utility bar carries the desktop instance' );
+
+$comp_pre = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( $root . '/assets/css/components.css' ) );
+ok( preg_match( '/\.sn-header \.sn-site-title\s*\{[^}]*margin-right:\s*auto/s', $comp_pre ) === 1,
+	'THE LOGO HOLDS THE LEFT EDGE (margin-right: auto) — the only reason a third header child does not strand mid-gap' );
+
+// Exactly one is visible at any width, and the switch is tied to the SAME
+// boundary that makes the footer static. A toggle in a bar the reader cannot
+// see is the bug this release exists to fix.
+ok( preg_match( '/\.sn-theme-toggle--header\s*\{\s*display:\s*none/s', $comp_pre ) === 1,
+	'the header instance is hidden by default (desktop shows the footer one)' );
+ok( preg_match( '/@media\s*\(max-width:\s*781px\)\s*\{[^}]*\.sn-theme-toggle--footer\s*\{\s*display:\s*none/s', $comp_pre ) === 1,
+	'below 781px the FOOTER instance hides — that is where the footer stops being fixed' );
+ok( preg_match( '/@media\s*\(max-width:\s*781px\)\s*\{.*?\.sn-theme-toggle--header\s*\{\s*display:\s*inline-flex/s', $comp_pre ) === 1,
+	'below 781px the HEADER instance shows' );
+
+// The boundary is shared, not coincidental.
+$resp = (string) file_get_contents( $root . '/assets/css/responsive.css' );
+ok( strpos( $resp, 'max-width: 781px' ) !== false,
+	'781px is the SAME boundary responsive.css uses — the toggle follows the persistent bar, it does not invent a breakpoint' );
+
+// Two instances means an id would be duplicated. It must be class-bound.
+$mod = (string) file_get_contents( $root . '/inc/dark-mode.php' );
+ok( strpos( $mod, "id=\"sn-theme-toggle\"" ) === false && strpos( $mod, "id='sn-theme-toggle'" ) === false,
+	'NO id on the button — two instances would duplicate it and getElementById would pick one arbitrarily' );
+$js = (string) file_get_contents( $root . '/assets/js/dark-mode-toggle.js' );
+ok( strpos( $js, "querySelectorAll( '.sn-theme-toggle' )" ) !== false,
+	'the script binds EVERY instance by class' );
+// Comments stripped first. The module explains WHY getElementById is wrong
+// here, in prose, right above the line that avoids it — and a substring search
+// that cannot tell code from commentary reads the warning as the violation.
+// This is the third time this session a comment has tripped its own guard;
+// strip before matching, always.
+$js_code = (string) preg_replace( '#//[^\n]*|/\*.*?\*/#s', '', $js );
+ok( strpos( $js_code, 'getElementById' ) === false,
+	'and no longer reaches for a single id' );
 
 // Beside the search trigger, not inside the meta-nav: both are BUTTONS, and a
 // <nav> of links is the wrong container for a state control with aria-pressed.
-$toggle_at = strpos( $footer, '[sn_theme_toggle]' );
+$toggle_at = strpos( $footer, '[sn_theme_toggle]' ); // footer instance (no placement attr)
 $cmdk_at   = strpos( $footer, 'sn-cmdk-trigger' );
 $nav_at    = strpos( $footer, '<nav class="sn-footer__meta-nav"' );
 ok( false !== $cmdk_at && false !== $nav_at, 'the footer utility cluster is intact (search trigger + meta nav)' );

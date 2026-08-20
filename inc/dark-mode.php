@@ -103,22 +103,38 @@ add_action(
 /**
  * The toggle button.
  *
- * Ships with `hidden` and is revealed by assets/js/dark-mode-toggle.js. Without
- * that script the control cannot persist a choice, and a toggle that forgets
- * what you told it is worse than no toggle — so it is simply not there. Readers
- * without JS still get the OS setting honoured by the media query in CSS, which
- * is the whole of dark mode minus the override.
+ * TWO PLACEMENTS, ONE CONTROL — and the reason is the footer, not the toggle.
+ * Below 781px `.sn-footer` is `position: static` (v11.12.2, because a fixed
+ * footer cost 23.5% of a phone screen). So the footer bar is always on screen
+ * on desktop and always BELOW THE FOLD on a phone: v12.0.1 put the toggle there
+ * and it needed 180px of scrolling on every page to reach. Correct for desktop,
+ * unreachable on mobile.
  *
- * `aria-pressed` rather than a switch role: this is a two-state button, and
- * `aria-pressed` is announced correctly by every screen reader without needing
- * the extra semantics a switch implies. The label text is the CURRENT theme,
- * and the accessible name says what pressing it does — a button labelled only
- * "DARK" is ambiguous about whether that is the state or the action.
+ * So the control follows its bar. At >=782px it lives in the footer utility
+ * strip; at <=781px that strip stops being persistent, and it moves to the
+ * header — into the RIGHT cluster beside the menu button, never beside the
+ * logo. Both instances render; CSS shows exactly one, keyed to the same 781px
+ * boundary that governs the footer, so the two can never disagree about which
+ * bar is persistent.
  *
+ * NO `id`. Two instances mean an id would be duplicated, which is invalid and
+ * would make getElementById pick one arbitrarily. The script binds by class and
+ * keeps every instance in sync.
+ *
+ * `aria-pressed` rather than a switch role: a two-state button is announced
+ * correctly by every screen reader without the extra semantics a switch
+ * implies. The visible label reports STATE ("Light" = you are in light); the
+ * accessible name reports the ACTION.
+ *
+ * @since theme v12.0.2
+ * @param array $atts Shortcode attributes. `placement`: 'footer' (default) or 'header'.
  * @return string Button markup.
  */
-function sn_dark_mode_toggle_markup() {
-	return '<button type="button" class="sn-theme-toggle" id="sn-theme-toggle" hidden'
+function sn_dark_mode_toggle_markup( $atts = array() ) {
+	$atts      = shortcode_atts( array( 'placement' => 'footer' ), (array) $atts, 'sn_theme_toggle' );
+	$placement = ( 'header' === $atts['placement'] ) ? 'header' : 'footer';
+
+	return '<button type="button" class="sn-theme-toggle sn-theme-toggle--' . esc_attr( $placement ) . '" hidden'
 		. ' aria-pressed="false"'
 		. ' aria-label="' . esc_attr__( 'Switch to dark theme', 'signal-noise' ) . '">'
 		. '<span class="sn-theme-toggle__dot" aria-hidden="true"></span>'
@@ -129,13 +145,6 @@ function sn_dark_mode_toggle_markup() {
 		. '</button>';
 }
 
-/**
- * Expose the toggle to the block editor and template parts as a shortcode.
- *
- * parts/header.html is a static FSE file, so the control is placed there via a
- * wp:html block calling this shortcode rather than by string-appending to the
- * rendered header — the same route every other theme-owned control takes.
- */
 add_shortcode( 'sn_theme_toggle', 'sn_dark_mode_toggle_markup' );
 
 /**

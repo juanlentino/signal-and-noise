@@ -18,9 +18,17 @@
 
 	var KEY = 'sn-theme'; // Mirrors SN_THEME_STORAGE_KEY in inc/dark-mode.php.
 	var root = document.documentElement;
-	var btn = document.getElementById( 'sn-theme-toggle' );
 
-	if ( ! btn ) {
+	// TWO INSTANCES, ONE STATE. The toggle renders in both the footer bar and
+	// the header, and CSS shows exactly one depending on which bar is
+	// persistent at that width (see inc/dark-mode.php). Binding by class rather
+	// than by id is not a style choice — two elements sharing an id is invalid
+	// and getElementById would silently pick one. Every instance is wired and
+	// every instance is re-synced, so the hidden one is already correct if a
+	// resize or an orientation change reveals it.
+	var buttons = [].slice.call( document.querySelectorAll( '.sn-theme-toggle' ) );
+
+	if ( ! buttons.length ) {
 		return;
 	}
 
@@ -58,21 +66,25 @@
 	}
 
 	function sync() {
-		var now = effective();
-		var isDark = 'dark' === now;
-		var label = btn.querySelector( '.sn-theme-toggle__label' );
+		var isDark = 'dark' === effective();
 
-		btn.setAttribute( 'aria-pressed', isDark ? 'true' : 'false' );
-		// The accessible name states the ACTION; the visible label states the
-		// STATE. A button reading only "Dark" cannot tell you which it means.
-		btn.setAttribute( 'aria-label', isDark ? 'Switch to light theme' : 'Switch to dark theme' );
-		if ( label ) {
-			label.textContent = isDark
-				? ( label.getAttribute( 'data-label-dark' ) || 'Dark' )
-				: ( label.getAttribute( 'data-label-light' ) || 'Light' );
-		}
+		buttons.forEach( function ( btn ) {
+			var label = btn.querySelector( '.sn-theme-toggle__label' );
+
+			btn.setAttribute( 'aria-pressed', isDark ? 'true' : 'false' );
+			// The accessible name states the ACTION; the visible label states
+			// the STATE. A button reading only "Dark" cannot tell you which it
+			// means.
+			btn.setAttribute( 'aria-label', isDark ? 'Switch to light theme' : 'Switch to dark theme' );
+			if ( label ) {
+				label.textContent = isDark
+					? ( label.getAttribute( 'data-label-dark' ) || 'Dark' )
+					: ( label.getAttribute( 'data-label-light' ) || 'Light' );
+			}
+		} );
 	}
 
+	buttons.forEach( function ( btn ) {
 	btn.addEventListener( 'click', function () {
 		var next = 'dark' === effective() ? 'light' : 'dark';
 
@@ -96,6 +108,7 @@
 			apply();
 		}
 	} );
+	} );
 
 	// Follow the OS while the reader has expressed no preference of their own.
 	if ( mq && mq.addEventListener ) {
@@ -107,5 +120,7 @@
 	}
 
 	sync();
-	btn.hidden = false;
+	buttons.forEach( function ( btn ) {
+		btn.hidden = false;
+	} );
 }() );
