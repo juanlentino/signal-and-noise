@@ -2,6 +2,145 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.0.0] - 2026-08-19 — Dark mode, and the palette stops being singular
+
+**BREAKING.** `get-design-tokens` returns `colors` as a **struct keyed by palette
+identity** — `{ served, resolved, palettes: { root, high-contrast, dark } }` —
+instead of a flat `slug => hex`. Any client indexing `colors.void` gets nothing.
+The flat map is removed, not aliased. The ability reaches MCP clients through
+`sn-site-facts`' `design_tokens` fact (the plugin's v12.0.0 retired its own door
+and dispatches to it verbatim), so that payload changes shape with it.
+
+**Headline:** the theme ships dark mode — and the moment it did, every surface
+that reported "the palette" became a half-truth. The major is the second half,
+not the first.
+
+### New
+- **Dark mode.** A token layer, not a second stylesheet: `:root[data-theme="dark"]`
+  and a `prefers-color-scheme` block redefine the same `--wp--preset--color--*`
+  properties every component already consumes, so nothing can be half-converted.
+  Follows the OS by default; a header toggle overrides it and persists. Reading
+  with no stored choice tracks the system setting as it changes.
+- **The palette is an inversion, not a softening.** True-ish black ground
+  (`#0a0a0a`), white `bone`, hairlines that stay hairlines, no elevation ramp and
+  no gray "surfaces". `blood` re-points to the lighter red because `#e00404` is
+  **3.95:1 against the `#0a0a0a` ground the theme actually paints** and fails
+  AA (`#ff4c47` is 6.01:1) — the mirror of the defect High Contrast exposed in
+  v11.7.1, caught this time before shipping rather than after.
+
+  Worth recording how the first draft of this line got the number wrong: it
+  said *4.19:1 on black*. 4.19 is real — it is `bone` on `blood`, the pair
+  v11.7.1 fixed, and since that pair is black-and-red it is also `blood` on
+  TRUE black. But the dark ground is `#0a0a0a`, not `#000000`. The figure was
+  correct for a pair the site does paint and wrong for the one being
+  described, which is exactly why it read as familiar and survived a re-read.
+  Caught by the plugin session. Scoring against a colour adjacent to the one
+  actually painted is the same error as measuring one palette and reporting it
+  as all of them.
+- **`[sn_theme_toggle]`.** Ships `hidden` and is revealed only by the script that
+  makes it work: a toggle that cannot persist a choice is worse than no toggle.
+  Without JS the OS setting still applies, which is all of dark mode minus the
+  override.
+- **Opt-in image classes.** `.sn-img-invert` for line art and diagrams,
+  `.sn-img-dim` for over-bright photographs. **Photographs are never inverted by
+  default** — turning a portrait into a negative is the most common way a dark
+  mode ruins a site, and only the author knows which kind of image it is.
+
+### Changed
+- **`get-design-tokens`: `colors` is keyed by palette IDENTITY.** These values
+  are embedded into AI prompts by the `markdown` and `compact-text` formatters,
+  so the flat map was actively telling a model the page ground is `#ffffff`
+  while High Contrast readers saw `#e0e0e0` asphalt and dark readers a
+  `#0a0a0a` ground. Both formatters now emit every palette, labelled with its id
+  and scheme, and mark the one being served.
+
+  **The site has never served one palette** — `theme.json` is the default,
+  `styles/high-contrast.json` is a shipped variation (and the one the live site
+  actually runs), and this release adds a dark token layer. The ability was
+  blind to the variation as well as to dark; `tests/contrast-baseline.php` was
+  already scoring all three, so the suite and the public contract disagreed
+  about how many palettes exist.
+
+  **Identity keys, not `{light, dark}`.** That was the obvious shape and it is a
+  trap: High Contrast is itself a LIGHT palette, so it has nowhere to go, and
+  adding it later would be a SECOND break to the same field. Identity keys make
+  a fourth palette additive. Each entry carries its own `scheme`, which is the
+  axis a key name cannot express — and the axes really are orthogonal, since the
+  dark layer overrides `:root` and therefore REPLACES whatever variation is
+  active rather than sitting beside it. (Caught by the plugin session, which
+  pointed out that `{light, dark}` would spend the major on a shape already
+  known to be incomplete.)
+
+  `served` names which shipped palette WordPress actually resolved, matched
+  rather than assumed — `custom` when the owner has edited colours in the Site
+  Editor and the repo cannot describe what is live. `resolved` is the palette
+  for this request. No palette is restated in PHP: `root` and the variations are
+  read from their own files, `dark` is parsed from the stylesheet that ships it,
+  all through `inc/palettes.php`, which `tests/contrast-baseline.php` now
+  delegates to as well. A copy does not drift loudly; it drifts silently and
+  keeps passing.
+- **The notes index and the related / cited-by rows switch on their own width.**
+  `@media (min-width: 720px)` became `@container`. The footer rows sit inside the
+  article column, so a viewport breakpoint could never describe them — at a
+  1200px window they were splitting into a 140px spec column inside a box about
+  half that wide.
+- **`text-wrap`.** `balance` on display headings, `pretty` on prose. At
+  `clamp(3rem, 8vw, 7rem)` a one-word last line is the most visible typographic
+  defect the site can produce.
+- **`theme-color` and the favicon are per-scheme**, and moved to `inc/dark-mode.php`
+  so one module owns them. The old single `#e00404` painted the mobile browser bar
+  brand-red regardless of the page beneath it, which read as a notification rather
+  than as chrome. The dark favicons invert RGB and leave **alpha** alone — inverting
+  alpha too is how a dark favicon ships as an opaque white square.
+- **The film grain survives the inversion.** It composited with
+  `mix-blend-mode: multiply`, a no-op on black, so dark mode would have silently
+  deleted the only texture the brand has. It flips to `screen` through a token.
+
+### Fixed
+- **The `grid-area` bug class is now unrepresentable.** v11.12.2 and v11.12.3 were
+  two releases on one bug: the row's `grid-template-areas` lived in a min-width
+  media query while its four children carried `grid-area` unconditionally, so
+  below that width every name resolved to nothing and all four stacked into one
+  cell. v11.12.2's fix depended on sitting below four unrelated declarations;
+  written above them it lost on source order and shipped as a tagged no-op. The
+  names now live **inside** the block that defines the template. There is no
+  counter-rule to position because there is no broken state to undo.
+- **The logo no longer vanishes.** It is `#171718` on transparency. It inverts
+  through a token — exact for a monochrome mark, and no second asset, which
+  matters because `parts/header.html` hardcodes its uploads URL.
+
+### Notes
+- `tests/contrast-baseline.php` **Test 7 now delegates to `sn_theme_all_palettes()`**
+  instead of globbing `styles/*.json` itself, so the suite and the runtime can no
+  longer disagree about how many palettes exist — which they already did. Dark is
+  contrast-gated in CI like every other shipped palette. **Test 6 still cannot run
+  in CI** and still belongs in the post-install routine.
+- `sn_theme_design_tokens_has_content()` counts **only `resolved`**. `palettes`
+  is read from files that always exist, so letting it vouch for content would
+  have turned a failed WordPress read into a plausible-looking token set
+  carrying three palettes and no live data. The existing hollow-read assertions
+  caught that regression during this release.
+- **The plugin has the same blindness, in two places.** `sn_health_contrast_named_palette()`
+  and `sn_health_allowed_palette_hexes()` read `wp_get_global_settings()`
+  directly and will measure one palette while the site serves three. Correct
+  today (the live theme is v11.12.4, one palette); wrong the moment this tags.
+  Logged by the plugin session, deferred there by owner decision, and triggered
+  by this tag.
+- **This release writes nothing to the database.** The dark layer wins on
+  specificity over WordPress's bare `:root`, so unlike v11.7.1 it cannot ship
+  inert while a `wp_global_styles` copy quietly disagrees.
+- Post-install: any hardcoded colour in the Site Editor's Additional CSS (post
+  1182) will not invert. Not visible from the repo.
+
+> **Why MAJOR:** a reshaped public response on the Abilities surface — `colors`
+> renamed from a flat map to an identity-keyed struct, with the old shape removed
+> rather than aliased. Gated on a real break, not on the counter: the deprecation
+> ladder is empty, `Requires at least: 7.0` and `Requires PHP: 8.3` are unchanged,
+> `theme.json` and `styles/` are untouched, and no floor was raised to manufacture
+> one. Dark mode by itself would have been a MINOR. Paired with plugin v12.0.0,
+> whose own major retired `get-design-tokens` from the MCP door and absorbed it
+> into `sn-site-facts` — the same payload, now reshaped underneath it.
+
 ## [11.12.4] - 2026-08-19 — tags return to the notes index on a phone
 
 ### Changed

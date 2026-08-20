@@ -197,30 +197,68 @@ ok( 2 === count( $g[2026] ), 'posts land in the right year' );
 ok( ! sn_notes_year_spine_is_useful( sn_notes_group_by_year( $one_year ) ), 'one year → spine not useful' );
 ok( sn_notes_year_spine_is_useful( $g ), 'two years → spine useful' );
 
-// ── CASCADE ORDER IS THE CONTRACT (v11.12.3) ────────────────────────────────
-// v11.12.2 shipped a mobile fix that did nothing. The
-// `@media (max-width: 719px) { … grid-area: auto }` override was written ABOVE
-// the four `grid-area: spec|meta|title|excerpt` declarations it has to beat.
-// Equal specificity, later wins — so the override never applied, and a tagged
-// release changed nothing on the live site.
+// ── THE BUG CLASS IS NOW UNREPRESENTABLE (v11.13.0) ─────────────────────────
+// HISTORY. v11.12.2 and v11.12.3 were two releases spent on one bug: the row's
+// `grid-template-areas` lived inside `@media (min-width: 720px)` while its four
+// children carried `grid-area: spec|title|meta|excerpt` UNCONDITIONALLY. Below
+// 720px the names resolved to nothing and all four children stacked into one
+// cell. v11.12.2's fix (`grid-area: auto` under max-width: 719px) was written
+// above the declarations it had to beat, so at equal specificity it lost on
+// source order and shipped as a tagged no-op.
 //
-// It was missed because the fix was verified by injecting a <style> at the end
-// of <head>, the one position where any rule wins for free. A rule's POSITION is
-// part of the rule, so it gets an assertion.
-echo "\nGroup: the mobile grid-area override comes last\n";
+// The v11.12.3 repair was a test asserting the OVERRIDE'S POSITION. That guards
+// the workaround; it does not remove the thing being worked around. A rule whose
+// correctness depends on which line it sits on is a rule that will be moved.
+//
+// v11.13.0 removes the split instead. The 720px switch is an `@container` query
+// on the list, and every `grid-area` name now lives INSIDE the same block that
+// declares `grid-template-areas`. A name can no longer outlive the template that
+// defines it, because they are the same block — so there is no override to
+// position, and no source order to get wrong.
+echo "\nGroup: the row template and its area names are one block\n";
 $css_src = (string) file_get_contents( __DIR__ . '/../inc/page-notes-render.php' );
 
-$override = strpos( $css_src, 'grid-area: auto;' );
-ok( false !== $override, 'the mobile grid-area override exists' );
+ok( strpos( $css_src, 'container-type: inline-size' ) !== false,
+	'.sn-notes-index-list establishes a size container' );
+ok( preg_match( '/\.sn-notes-index-list\s*\{[^}]*container-type:\s*inline-size/s', $css_src ) === 1,
+	'the container is the LIST — the row cannot be its own query subject' );
+ok( strpos( $css_src, 'container-name: sn-notes-list' ) !== false,
+	'the container is named, so the query cannot bind to some future ancestor container' );
 
-$named = array();
-foreach ( array( 'grid-area: spec;', 'grid-area: meta;', 'grid-area: title;', 'grid-area: excerpt;' ) as $decl ) {
-	$at = strrpos( $css_src, $decl );
-	ok( false !== $at, "declaration present: $decl" );
-	$named[ $decl ] = $at;
+// The switch is driven by the LIST's width, not the viewport's.
+ok( strpos( $css_src, '@container sn-notes-list (min-width: 720px)' ) !== false,
+	'the 720px switch is an @container query' );
+ok( preg_match( '/@media\s*\(\s*min-width:\s*720px\s*\)\s*\{\s*\.sn-notes-row\s*\{/', $css_src ) !== 1,
+	'the old viewport @media switch for .sn-notes-row is GONE' );
+
+// Brace-match the @container block and prove containment.
+$at = strpos( $css_src, '@container sn-notes-list (min-width: 720px)' );
+$open = strpos( $css_src, '{', $at );
+$depth = 0; $close = $open;
+for ( $i = $open; $i < strlen( $css_src ); $i++ ) {
+	if ( '{' === $css_src[ $i ] ) { $depth++; }
+	if ( '}' === $css_src[ $i ] ) { $depth--; if ( 0 === $depth ) { $close = $i; break; } }
 }
-ok( $override > max( $named ),
-	'THE OVERRIDE IS BELOW EVERY NAMED grid-area — equal specificity means source order decides, and above them it is a silent no-op' );
+$block = substr( $css_src, $open, $close - $open );
+ok( $close > $open, 'the @container block brace-matches' );
+
+ok( strpos( $block, 'grid-template-areas:' ) !== false,
+	'grid-template-areas is declared inside the @container block' );
+foreach ( array( 'grid-area: spec;', 'grid-area: title;', 'grid-area: meta;', 'grid-area: excerpt;' ) as $decl ) {
+	ok( strpos( $block, $decl ) !== false, "INSIDE the block that defines the areas: $decl" );
+	ok( substr_count( $css_src, $decl ) === 1,
+		"declared exactly once, so no copy of it survives outside the block: $decl" );
+}
+
+// The workaround is gone, not merely repositioned. Comments are stripped first:
+// the history of WHY it is gone is written in a comment right there in the file,
+// and a substring search that cannot tell prose from a declaration would read
+// that explanation as the thing it is warning about.
+$decls_only = (string) preg_replace( '#/\*.*?\*/#s', '', $css_src );
+ok( strpos( $decls_only, 'grid-area: auto' ) === false,
+	'THE `grid-area: auto` WORKAROUND IS GONE — there is no longer a broken state for it to undo' );
+ok( preg_match( '/@media\s*\(\s*max-width:\s*719px\s*\)/', $css_src ) !== 1,
+	'no max-width: 719px counter-rules remain for the row' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

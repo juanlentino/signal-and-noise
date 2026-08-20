@@ -1,6 +1,105 @@
 /* Critical above-the-fold CSS — inlined for fast first paint */
 
 /* ============================================
+   PALETTE — light default + dark inversion
+   ============================================
+
+   Dark mode is a TOKEN LAYER. It redefines the same
+   `--wp--preset--color--*` custom properties every component already
+   consumes, so no component needs a dark rule of its own and nothing
+   can be half-converted.
+
+   WHY IT LIVES HERE. This file is inlined into <head> by
+   inc/assets-frontend.php. A palette in any deferred sheet repaints
+   after first paint, which is a white flash on every navigation for
+   every dark-mode reader.
+
+   WHY IT CANNOT SHIP INERT. The live site's palette comes from the
+   `wp_global_styles` post (the activated High Contrast copy), which
+   beats theme.json — v11.7.1 shipped a token change that never reached
+   the site for exactly this reason. This layer does not compete with
+   that copy on its own ground; it overrides whatever the database
+   resolved to, so there is no second place to keep in sync.
+
+   WHY IT NEEDS NO PARTICULAR POSITION. WordPress emits its palette on a
+   bare `:root` (0,1,0). `:root[data-theme="dark"]` is (0,1,1) and
+   `:root:not([data-theme="light"])` is (0,2,0), both strictly higher.
+   The override wins on specificity, so unlike the v11.12.2 grid-area
+   fix there is no source order here to get wrong.
+
+   THE TWO BLOCKS MUST STAY IDENTICAL. One is the explicit choice, one
+   is the OS default. Plain CSS gives no way to share them, so
+   tests/dark-mode.php asserts they are the same declaration set. Add a
+   token to one, and the suite fails until it is in both.
+   ============================================ */
+
+:root {
+	/* Native UI — form controls, scrollbars, <select> popups — follows
+	   this, not our custom properties. Without it a dark page keeps a
+	   light scrollbar and light form widgets. */
+	color-scheme: light;
+
+	/* Veils: translucent white-over-content washes (the fixed header
+	   backdrop, the hero fade). These were rgba(255,255,255,…) literals,
+	   which are white BY VALUE and therefore ignore any palette — they
+	   would paint a white band across the top of a black page. */
+	--sn-veil: rgba(255, 255, 255, 0.72);
+	--sn-veil-strong: rgba(255, 255, 255, 0.85);
+	--sn-hero-veil-from: rgba(255, 255, 255, 0.2);
+	--sn-hero-veil-to: rgba(255, 255, 255, 0.95);
+	--sn-header-shadow: rgba(0, 0, 0, 0.06);
+
+	/* The film grain darkens the page it sits on. `multiply` is a no-op
+	   against black, so on a dark ground the theme silently loses the
+	   only texture it has. Dark flips it to `screen`, which lightens. */
+	--sn-grain-blend: multiply;
+
+	/* The logo is a near-black mark (#171718) on transparency, and the
+	   header markup hardcodes its uploads URL, so there is no second
+	   asset to swap in. Inverting the one file is exact for a
+	   monochrome mark and costs no extra request. */
+	--sn-mark-invert: 0;
+}
+
+:root[data-theme="dark"] {
+	color-scheme: dark;
+	--wp--preset--color--void: #0a0a0a;
+	--wp--preset--color--asphalt: #171717;
+	--wp--preset--color--concrete: #383838;
+	--wp--preset--color--rust: #9e9e9e;
+	--wp--preset--color--bone: #ffffff;
+	--wp--preset--color--blood: #ff4c47;
+	--wp--preset--color--signal: #ff6b66;
+	--sn-veil: rgba(10, 10, 10, 0.72);
+	--sn-veil-strong: rgba(10, 10, 10, 0.85);
+	--sn-hero-veil-from: rgba(10, 10, 10, 0.2);
+	--sn-hero-veil-to: rgba(10, 10, 10, 0.95);
+	--sn-header-shadow: rgba(0, 0, 0, 0.5);
+	--sn-grain-blend: screen;
+	--sn-mark-invert: 1;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme="light"]) {
+		color-scheme: dark;
+		--wp--preset--color--void: #0a0a0a;
+		--wp--preset--color--asphalt: #171717;
+		--wp--preset--color--concrete: #383838;
+		--wp--preset--color--rust: #9e9e9e;
+		--wp--preset--color--bone: #ffffff;
+		--wp--preset--color--blood: #ff4c47;
+		--wp--preset--color--signal: #ff6b66;
+		--sn-veil: rgba(10, 10, 10, 0.72);
+		--sn-veil-strong: rgba(10, 10, 10, 0.85);
+		--sn-hero-veil-from: rgba(10, 10, 10, 0.2);
+		--sn-hero-veil-to: rgba(10, 10, 10, 0.95);
+		--sn-header-shadow: rgba(0, 0, 0, 0.5);
+		--sn-grain-blend: screen;
+		--sn-mark-invert: 1;
+	}
+}
+
+/* ============================================
    BASE / GLOBAL
    ============================================ */
 
@@ -38,7 +137,7 @@ body::before {
 	background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
 	background-repeat: repeat;
 	background-size: 200px 200px;
-	mix-blend-mode: multiply;
+	mix-blend-mode: var(--sn-grain-blend, multiply);
 }
 
 /* --- Scanline effect --- */
@@ -172,6 +271,11 @@ body::after {
 	height: 80px;
 	object-fit: contain;
 	transition: opacity 0.3s ease, width 0.3s ease, height 0.3s ease;
+	/* The mark is #171718 on transparency — invisible on a dark ground.
+	   `invert()` on a monochrome mark is exact (it lands on #e8e8e7) and
+	   needs no second asset, which matters because parts/header.html
+	   hardcodes the uploads URL and has no dark src to point at. */
+	filter: invert(var(--sn-mark-invert, 0));
 }
 
 .sn-logo-link:hover .sn-logo-img {
@@ -189,7 +293,7 @@ body::after {
 	z-index: 10000;
 	transition: padding 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
 	border-bottom: none !important;
-	background-color: rgba(255, 255, 255, 0.72) !important;
+	background-color: var(--sn-veil) !important;
 	-webkit-backdrop-filter: blur(12px) saturate(1.2);
 	backdrop-filter: blur(12px) saturate(1.2);
 }
@@ -202,8 +306,8 @@ body::after {
 .sn-header.is-scrolled {
 	padding-top: 0.4rem !important;
 	padding-bottom: 0.4rem !important;
-	background-color: rgba(255, 255, 255, 0.85) !important;
-	box-shadow: 0 1px 8px rgba(0, 0, 0, 0.06);
+	background-color: var(--sn-veil-strong) !important;
+	box-shadow: 0 1px 8px var(--sn-header-shadow);
 }
 
 .sn-header.is-scrolled .sn-logo-img {
@@ -270,8 +374,8 @@ body {
 	inset: 0;
 	background: linear-gradient(
 		180deg,
-		rgba(255, 255, 255, 0.2) 0%,
-		rgba(255, 255, 255, 0.95) 100%
+		var(--sn-hero-veil-from) 0%,
+		var(--sn-hero-veil-to) 100%
 	);
 	z-index: 1;
 	pointer-events: none;

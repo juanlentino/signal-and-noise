@@ -141,13 +141,11 @@ add_action( 'wp_enqueue_scripts', function() {
  * Also output favicon link tags as theme-level fallback.
  */
 add_action( 'wp_head', function() {
-	// A4: brand theme-color for mobile browser chrome / PWA UI. Literal hex
-	// (the brand `blood` palette slug, theme.json) — a CSS var() cannot be
-	// resolved inside a <meta>. Single value by design: the site is white-first
-	// with no dark mode, so no prefers-color-scheme variant is emitted.
-	echo '<meta name="theme-color" content="#e00404">' . "\n";
-	echo '<link rel="icon" type="image/png" sizes="32x32" href="' . esc_url( get_theme_file_uri( 'assets/images/favicon-32.png' ) ) . '">' . "\n";
-	echo '<link rel="apple-touch-icon" sizes="180x180" href="' . esc_url( get_theme_file_uri( 'assets/images/favicon-180.png' ) ) . '">' . "\n";
+	// v11.13.0: theme-color and the favicon links moved to inc/dark-mode.php,
+	// which emits a per-colour-scheme pair of each. The old single values were a
+	// brand-red bar (which read as a notification rather than as chrome) and one
+	// near-black mark that vanished into a dark tab strip. Nothing is emitted
+	// here any more so there is exactly one owner and the two cannot disagree.
 	echo '<link rel="preload" href="' . esc_url( get_theme_file_uri( 'assets/fonts/bebas-neue-latin.woff2' ) ) . '" as="font" type="font/woff2" crossorigin>' . "\n";
 	echo '<link rel="preload" href="' . esc_url( get_theme_file_uri( 'assets/fonts/dm-mono-300-latin.woff2' ) ) . '" as="font" type="font/woff2" crossorigin>' . "\n";
 }, 1 );

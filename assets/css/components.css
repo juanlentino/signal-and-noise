@@ -761,6 +761,13 @@
 	list-style: none;
 	margin: 0;
 	padding: 0;
+	/* v11.13.0 — these rows live INSIDE the article column, which is narrower
+	   than the viewport at every size. A viewport breakpoint could therefore
+	   never describe them: at a 1200px window the rows were splitting into a
+	   140px spec column while sitting in a box roughly half that wide. The
+	   switch below asks this list how wide IT is. */
+	container-type: inline-size;
+	container-name: sn-notes-footer-list;
 }
 .sn-related-notes .sn-notes-row,
 .sn-cited-by .sn-notes-row {
@@ -775,7 +782,7 @@
 .sn-cited-by .sn-notes-row:last-child {
 	border-bottom: 0;
 }
-@media (min-width: 720px) {
+@container sn-notes-footer-list (min-width: 34rem) {
 	.sn-related-notes .sn-notes-row,
 	.sn-cited-by .sn-notes-row {
 		grid-template-columns: 140px 1fr;
@@ -800,7 +807,7 @@
 	align-items: baseline;
 	transition: color 0.2s ease;
 }
-@media (min-width: 720px) {
+@container sn-notes-footer-list (min-width: 34rem) {
 	.sn-related-notes .sn-notes-row-spec,
 	.sn-cited-by .sn-notes-row-spec {
 		flex-direction: column;
@@ -1653,4 +1660,120 @@
    future readers; the segment inside carries its own colour. */
 .sn-catalog-eyebrow.sn-prov-brow-solo {
 	color: var(--wp--preset--color--rust);
+}
+
+/* ── THEME TOGGLE (v11.13.0) ───────────────────────────────────────────
+   Rendered by [sn_theme_toggle] into parts/header.html; behaviour in
+   assets/js/dark-mode-toggle.js.
+
+   Deliberately COPIES the .sn-note-share__copy vocabulary rather than
+   inventing a control: mono uppercase tracked label, 1px concrete
+   outline, zero radius, blood on hover and focus. The one addition is a
+   filled square that empties in dark — no sun, no moon, no icon font. A
+   pictogram would be the first decorative element on the site.
+
+   The label is a WORD, not a glyph, because the button reports STATE
+   ("Light" = you are in light) while its accessible name reports the
+   ACTION. A sun icon cannot express that distinction, which is why
+   icon-only theme toggles are perennially ambiguous. */
+
+.sn-theme-toggle {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.7rem, 11px);
+	font-weight: 500;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--rust);
+	background: transparent;
+	border: 1px solid var(--wp--preset--color--concrete);
+	border-radius: 0;
+	padding: 0.4rem 0.7rem;
+	/* 44px is the pointer-target floor everywhere else in the theme; the
+	   header is dense, so this one meets it through padding + the
+	   surrounding hit area rather than by growing the box. */
+	min-height: 44px;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	cursor: pointer;
+	transition: color 0.2s ease, border-color 0.2s ease;
+}
+.sn-theme-toggle:hover,
+.sn-theme-toggle:focus-visible {
+	color: var(--wp--preset--color--blood);
+	border-color: var(--wp--preset--color--blood);
+}
+.sn-theme-toggle[hidden] {
+	display: none;
+}
+
+/* Filled in light, hollow in dark: the square reads as the amount of ink
+   on the page, which is the thing actually being toggled. */
+.sn-theme-toggle__dot {
+	width: 9px;
+	height: 9px;
+	flex: none;
+	background: currentColor;
+	border: 1px solid currentColor;
+	transition: background-color 0.2s ease;
+}
+.sn-theme-toggle[aria-pressed="true"] .sn-theme-toggle__dot {
+	background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.sn-theme-toggle,
+	.sn-theme-toggle__dot {
+		transition: none;
+	}
+}
+
+/* ── CONTENT IMAGES IN DARK (v11.13.0) ─────────────────────────────────
+   PHOTOGRAPHS ARE NEVER INVERTED. Inverting reader-facing media is the
+   single most common way a dark mode ruins a site: a portrait becomes a
+   negative. So no blanket filter is applied to .wp-block-image.
+
+   What IS handled is the narrower, real problem — an image authored on
+   white (a diagram, a screenshot, a chart) glares as a lit rectangle on
+   a dark page. Two opt-ins, because only the author knows which kind of
+   image it is:
+
+     .sn-img-invert  — line art / diagrams: invert and re-rotate hue so
+                       colour content survives the inversion.
+     .sn-img-dim     — photographs that are simply too bright: a small
+                       brightness pull, no colour change at all.
+
+   Both are inert in light mode: the filter tokens resolve to none. */
+
+.sn-img-invert img,
+img.sn-img-invert,
+.sn-img-dim img,
+img.sn-img-dim {
+	transition: filter 0.2s ease;
+}
+:root[data-theme="dark"] .sn-img-invert img,
+:root[data-theme="dark"] img.sn-img-invert {
+	filter: invert(1) hue-rotate(180deg);
+}
+:root[data-theme="dark"] .sn-img-dim img,
+:root[data-theme="dark"] img.sn-img-dim {
+	filter: brightness(0.82);
+}
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme="light"]) .sn-img-invert img,
+	:root:not([data-theme="light"]) img.sn-img-invert {
+		filter: invert(1) hue-rotate(180deg);
+	}
+	:root:not([data-theme="light"]) .sn-img-dim img,
+	:root:not([data-theme="light"]) img.sn-img-dim {
+		filter: brightness(0.82);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.sn-img-invert img,
+	img.sn-img-invert,
+	.sn-img-dim img,
+	img.sn-img-dim {
+		transition: none;
+	}
 }

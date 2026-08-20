@@ -401,6 +401,17 @@ if ( ! function_exists( 'sn_llms_txt_body' ) ) {
 // calls inside the SUT land on the no-op stubs above. Placed BEFORE the
 // harness helpers so test blocks below can introspect $GLOBALS state
 // the SUT may have seeded at load time.
+// v12.0.0: the ability enumerates every palette the site can present via
+// inc/palettes.php. Loaded here with a real theme root so the fixture reads the
+// SHIPPED theme.json, styles/*.json and critical.css — the same files the
+// runtime reads. Stubbing the palettes instead would make this suite agree with
+// a fixture rather than with the theme, which is the failure mode that let a
+// flat one-palette contract survive three shipped palettes.
+if ( ! function_exists( 'get_theme_file_path' ) ) {
+	function get_theme_file_path( $p = '' ) { return dirname( __DIR__ ) . '/' . ltrim( $p, '/' ); }
+}
+require_once __DIR__ . '/../inc/palettes.php';
+
 require_once __DIR__ . '/../inc/abilities-registration.php';
 
 // --- Harness -----------------------------------------------------------
@@ -522,8 +533,10 @@ ha_true( isset( $result['colors'] ),     'output has colors key' );
 ha_true( isset( $result['typography'] ), 'output has typography key' );
 ha_true( isset( $result['spacing'] ),    'output has spacing key' );
 ha_true( isset( $result['version'] ),    'output has version key' );
-ha_eq( '#ffffff', $result['colors']['void'],    'void color flattened from palette' );
-ha_eq( '#e00404', $result['colors']['blood'],   'blood color flattened from palette' );
+// v12.0.0: origin-flattening is unchanged; it now applies inside `light`.
+ha_eq( '#ffffff', $result['colors']['resolved']['void'],  'void color flattened from palette (resolved)' );
+ha_eq( '#e00404', $result['colors']['resolved']['blood'], 'blood color flattened from palette (resolved)' );
+ha_true( ! isset( $result['colors']['void'] ), 'the old flat colors map is removed' );
 ha_eq( 2, count( $result['typography']['fontFamilies'] ), 'typography.fontFamilies passthrough' );
 
 // ─── Test: get-seo-route-meta (v10.29.0) ─────────────────────────
@@ -864,7 +877,7 @@ $json = call_user_func( $ability['execute_callback'], array( 'format' => 'json' 
 ha_eq( 'json', $json['format'], 'json format echoed' );
 $decoded = json_decode( $json['summary'], true );
 ha_true( is_array( $decoded ),                'json summary is parseable' );
-ha_true( isset( $decoded['colors']['void'] ), 'json contains tokens passthrough' );
+ha_true( isset( $decoded['colors']['resolved']['void'] ), 'json contains tokens passthrough (identity-keyed struct)' );
 
 // ─── Test: ai-generate-page-note-summary ─────────────────────────
 echo "\nTest signal-and-noise/ai-generate-page-note-summary\n";

@@ -82,6 +82,17 @@ if ( ! class_exists( 'SN_Test_Theme' ) ) {
 if ( ! function_exists( 'wp_get_theme' ) ) { function wp_get_theme() { return new SN_Test_Theme(); } }
 
 // ─── Load the SUT ────────────────────────────────────────────────────
+// v12.0.0: the ability enumerates every palette the site can present via
+// inc/palettes.php. Loaded here with a real theme root so the fixture reads the
+// SHIPPED theme.json, styles/*.json and critical.css — the same files the
+// runtime reads. Stubbing the palettes instead would make this suite agree with
+// a fixture rather than with the theme, which is the failure mode that let a
+// flat one-palette contract survive three shipped palettes.
+if ( ! function_exists( 'get_theme_file_path' ) ) {
+	function get_theme_file_path( $p = '' ) { return dirname( __DIR__ ) . '/' . ltrim( $p, '/' ); }
+}
+require_once __DIR__ . '/../inc/palettes.php';
+
 require_once __DIR__ . '/../inc/abilities-diagnostics.php';
 
 // ─── Harness ─────────────────────────────────────────────────────────
@@ -165,9 +176,38 @@ $GLOBALS['__test_global_settings'] = array(
 $tokens = sn_theme_ability_design_tokens();
 dtk_true( is_array( $tokens ), 'origin-keyed fixture: returns array, not WP_Error' );
 
-dtk_eq( 2, count( $tokens['colors'] ), 'colors: 2 flattened entries (not the 2 origin BUCKETS misread as entries)' );
-dtk_eq( '#ffffff', $tokens['colors']['void'], 'colors: void unique to default, passes through' );
-dtk_eq( '#e00404', $tokens['colors']['bone'], 'colors: bone — theme origin wins over default (same slug)' );
+// v12.0.0: `colors` is scheme-keyed. The origin-flattening behaviour these
+// assertions were written for is unchanged — it now applies within `light`.
+// v12.0.0: `colors` is a struct — served / resolved / palettes. `resolved` is
+// what WordPress hands back for THIS request, so the origin-flattening these
+// assertions were written for now applies there.
+dtk_eq( array( 'served', 'resolved', 'palettes' ), array_keys( $tokens['colors'] ), 'colors: served + resolved + palettes' );
+dtk_eq( 2, count( $tokens['colors']['resolved'] ), 'colors.resolved: 2 flattened entries (not the 2 origin BUCKETS misread as entries)' );
+dtk_eq( '#ffffff', $tokens['colors']['resolved']['void'], 'colors.resolved: void unique to default, passes through' );
+dtk_eq( '#e00404', $tokens['colors']['resolved']['bone'], 'colors.resolved: bone — theme origin wins over default (same slug)' );
+
+// THE FLAT MAP IS GONE, not aliased. An alias would let every existing consumer
+// keep reading one palette and never discover the others, which is the entire
+// failure this release exists to close.
+dtk_eq( false, isset( $tokens['colors']['void'] ), 'the old FLAT colors map is removed, not kept as an alias' );
+
+// KEYED BY IDENTITY, NOT BY SCHEME. `{light,dark}` was the shape this release
+// nearly shipped, and it is a trap: high-contrast is itself a LIGHT palette, so
+// it has nowhere to live, and adding it later would be a SECOND break to the
+// same field. Identity keys make a fourth palette additive. Asserted because
+// the whole point is that this cannot quietly regress to two.
+$ids = array_keys( (array) $tokens['colors']['palettes'] );
+dtk_eq( true, in_array( 'root', $ids, true ), 'palettes: root is enumerated' );
+dtk_eq( true, in_array( 'high-contrast', $ids, true ), 'palettes: the SHIPPED VARIATION is enumerated — the ability was blind to it until v12.0.0' );
+dtk_eq( true, in_array( 'dark', $ids, true ), 'palettes: dark is enumerated' );
+dtk_eq( false, in_array( 'light', $ids, true ), 'palettes: NOT keyed by scheme — "light" is not a palette identity' );
+dtk_eq( 'light', $tokens['colors']['palettes']['high-contrast']['scheme'], 'high-contrast carries scheme=light (a variation is not an alternative to dark)' );
+dtk_eq( 'dark', $tokens['colors']['palettes']['dark']['scheme'], 'dark carries scheme=dark' );
+// Every entry is a COMPLETE palette, so no consumer needs to know the
+// variation-overrides-root fallback rule to read one correctly.
+foreach ( $tokens['colors']['palettes'] as $pid => $pmeta ) {
+	dtk_eq( 7, count( $pmeta['colors'] ), "palette '$pid' is complete (all 7 slugs), not a partial override" );
+}
 
 dtk_eq( 3, count( $tokens['typography']['fontFamilies'] ), 'fontFamilies: 3 real entries merged across default+theme (not 2, the bucket count)' );
 $ff_slugs = array_column( $tokens['typography']['fontFamilies'], 'slug' );
@@ -242,7 +282,7 @@ $GLOBALS['__test_global_settings'] = array(
 );
 $flat_result = sn_theme_ability_design_tokens();
 dtk_true( is_array( $flat_result ), 'flat (non-origin-keyed) fixture: still returns array, not WP_Error' );
-dtk_eq( '#e00404', $flat_result['colors']['blood'], 'flat fixture: colors flattened as before' );
+dtk_eq( '#e00404', $flat_result['colors']['resolved']['blood'], 'flat fixture: colors flattened as before, under resolved' );
 dtk_eq( 1, count( $flat_result['typography']['fontFamilies'] ), 'flat fixture: fontFamilies passthrough count unchanged' );
 
 // ════════════════════════════════════════════════════════════════════

@@ -375,7 +375,18 @@ add_action( 'wp_abilities_api_init', 'sn_theme_register_diagnostics_abilities' )
  * @return bool
  */
 function sn_theme_design_tokens_has_content( $tokens ) {
-	if ( ! empty( $tokens['colors'] ) ) {
+	// v12.0.0: `colors` is a STRUCT now, so a non-empty outer array is no
+	// longer evidence of content — array('served'=>'','resolved'=>array(),
+	// 'palettes'=>array()) is truthy and carries nothing. The check has to
+	// reach actual colours.
+	// ONLY `resolved` counts, deliberately. `palettes` is read from theme.json,
+	// styles/*.json and critical.css — files that are always present — so it is
+	// non-empty even when the WordPress read this function exists to validate
+	// returned nothing. Letting it vouch for content would defeat the whole
+	// guarantee: a hollow read would come back as a plausible-looking token set
+	// carrying three palettes and no live data. Caught by the hollow-read
+	// assertions in tests/design-tokens.php while shipping v12.0.0.
+	if ( ! empty( $tokens['colors']['resolved'] ) ) {
 		return true;
 	}
 	$font_families = isset( $tokens['typography']['fontFamilies'] ) ? (array) $tokens['typography']['fontFamilies'] : array();
@@ -490,8 +501,42 @@ function sn_theme_ability_design_tokens() {
 		$theme   = function_exists( 'wp_get_theme' ) ? wp_get_theme() : null;
 		$version = $theme && method_exists( $theme, 'get' ) ? (string) $theme->get( 'Version' ) : '';
 
+		// ── BREAKING (v12.0.0): `colors` IS KEYED BY PALETTE IDENTITY ─────
+		// Was a flat slug => hex map. The site has never served one palette —
+		// theme.json is the default, styles/high-contrast.json is a shipped
+		// variation (and the one the live site actually runs), and v12.0.0 adds
+		// a dark token layer. This field described exactly one of the three.
+		//
+		// It is not cosmetic: these values are embedded into AI prompts by the
+		// formatters below, so the flat map was telling a model the ground is
+		// #ffffff while High Contrast readers saw #e0e0e0 asphalt and dark
+		// readers saw a #0a0a0a ground.
+		//
+		// KEYED BY IDENTITY, NOT BY SCHEME. `{light, dark}` was the obvious
+		// shape and it is a trap: High Contrast is itself a LIGHT palette, so it
+		// has nowhere to go, and adding it later would be a SECOND break to the
+		// same field. Identity keys make every future palette additive. Each
+		// entry carries its own `scheme`, which is the axis a key name cannot
+		// express — and the two axes are genuinely orthogonal, because the dark
+		// layer overrides :root and therefore REPLACES whatever variation is
+		// active rather than sitting beside it.
+		//
+		// The flat map is REMOVED, not aliased. An alias would let every
+		// existing consumer keep reading the half-truth and never learn there
+		// were other palettes — the wrong call has to stop being expressible.
+		$palettes = function_exists( 'sn_theme_all_palettes' ) ? sn_theme_all_palettes() : array();
+		$served   = function_exists( 'sn_theme_served_palette_id' ) ? sn_theme_served_palette_id() : '';
+
+		// `resolved` is what WordPress hands back for THIS request — the
+		// activated variation's database copy, not theme.json. Kept as its own
+		// key because it is the only entry that answers "what is live right
+		// now", and `served` names which shipped palette it matched.
 		$tokens = array(
-			'colors'     => $colors,
+			'colors'     => array(
+				'served'   => $served,
+				'resolved' => $colors,
+				'palettes' => $palettes,
+			),
 			'typography' => array(
 				'fontFamilies' => sn_theme_flatten_preset_origins( isset( $typography['fontFamilies'] ) ? $typography['fontFamilies'] : array() ),
 				'fontSizes'    => sn_theme_flatten_preset_origins( isset( $typography['fontSizes'] )    ? $typography['fontSizes']    : array() ),
@@ -697,9 +742,20 @@ function sn_theme_ability_design_system_summary( $input = array() ) {
 		$summary = '';
 		switch ( $format ) {
 			case 'compact-text':
+				// EVERY palette, labelled with its id and scheme. A model told
+				// only one will happily approve a colour that is unreadable in
+				// another — which is the whole reason this field changed shape.
 				$color_pairs = array();
-				foreach ( (array) $tokens['colors'] as $slug => $hex ) {
-					$color_pairs[] = $slug . $hex;
+				foreach ( (array) ( $tokens['colors']['palettes'] ?? array() ) as $id => $meta ) {
+					if ( empty( $meta['colors'] ) ) {
+						continue;
+					}
+					$pairs = array();
+					foreach ( (array) $meta['colors'] as $slug => $hex ) {
+						$pairs[] = $slug . $hex;
+					}
+					$mark = ( isset( $tokens['colors']['served'] ) && $id === $tokens['colors']['served'] ) ? '*' : '';
+					$color_pairs[] = $id . $mark . ':' . ( $meta['scheme'] ?? '?' ) . '(' . implode( ',', $pairs ) . ')';
 				}
 				$font_slugs = array();
 				foreach ( (array) $tokens['typography']['fontFamilies'] as $ff ) {
@@ -727,8 +783,26 @@ function sn_theme_ability_design_system_summary( $input = array() ) {
 				$lines[] = '# Signal & Noise design system';
 				$lines[] = '';
 				$lines[] = '## Colors';
-				foreach ( (array) $tokens['colors'] as $slug => $hex ) {
-					$lines[] = "- `$slug` — $hex";
+				$served = isset( $tokens['colors']['served'] ) ? (string) $tokens['colors']['served'] : '';
+				$lines[] = '';
+				$lines[] = 'This site presents more than one palette. A colour choice must hold in ALL of them.';
+				if ( '' !== $served ) {
+					$lines[] = '';
+					$lines[] = 'custom' === $served
+						? 'Currently serving: a CUSTOM palette edited in the Site Editor — not any shipped below.'
+						: "Currently serving: `$served`.";
+				}
+				foreach ( (array) ( $tokens['colors']['palettes'] ?? array() ) as $id => $meta ) {
+					if ( empty( $meta['colors'] ) ) {
+						continue;
+					}
+					$scheme = isset( $meta['scheme'] ) ? (string) $meta['scheme'] : '';
+					$lines[] = '';
+					$lines[] = "### `$id`" . ( '' !== $scheme ? " ($scheme)" : '' )
+						. ( $id === $served ? ' — currently serving' : '' );
+					foreach ( (array) $meta['colors'] as $slug => $hex ) {
+						$lines[] = "- `$slug` — $hex";
+					}
 				}
 				$lines[] = '';
 				$lines[] = '## Typography';

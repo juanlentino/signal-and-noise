@@ -39,7 +39,7 @@
 	z-index: 10000;
 	transition: padding 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
 	border-bottom: none !important;
-	background-color: rgba(255, 255, 255, 0.72) !important;
+	background-color: var(--sn-veil) !important;
 	-webkit-backdrop-filter: blur(12px) saturate(1.2);
 	backdrop-filter: blur(12px) saturate(1.2);
 }
@@ -48,8 +48,8 @@
 .sn-header.is-scrolled {
 	padding-top: 0.4rem !important;
 	padding-bottom: 0.4rem !important;
-	background-color: rgba(255, 255, 255, 0.85) !important;
-	box-shadow: 0 1px 8px rgba(0, 0, 0, 0.06);
+	background-color: var(--sn-veil-strong) !important;
+	box-shadow: 0 1px 8px var(--sn-header-shadow);
 }
 
 .sn-header.is-scrolled .sn-logo-img {
@@ -230,8 +230,8 @@ body {
 	inset: 0;
 	background: linear-gradient(
 		180deg,
-		rgba(255, 255, 255, 0.2) 0%,
-		rgba(255, 255, 255, 0.95) 100%
+		var(--sn-hero-veil-from) 0%,
+		var(--sn-hero-veil-to) 100%
 	);
 	z-index: 1;
 	pointer-events: none;

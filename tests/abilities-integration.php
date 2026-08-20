@@ -433,6 +433,17 @@ if ( ! function_exists( 'wp_get_ability' ) ) {
 }
 
 // ─── Load the SUT ───────────────────────────────────────────────────
+// v12.0.0: the ability enumerates every palette the site can present via
+// inc/palettes.php. Loaded here with a real theme root so the fixture reads the
+// SHIPPED theme.json, styles/*.json and critical.css — the same files the
+// runtime reads. Stubbing the palettes instead would make this suite agree with
+// a fixture rather than with the theme, which is the failure mode that let a
+// flat one-palette contract survive three shipped palettes.
+if ( ! function_exists( 'get_theme_file_path' ) ) {
+	function get_theme_file_path( $p = '' ) { return dirname( __DIR__ ) . '/' . ltrim( $p, '/' ); }
+}
+require_once __DIR__ . '/../inc/palettes.php';
+
 require_once __DIR__ . '/../inc/abilities-registration.php';
 
 // Trigger registration (the action stubs above are no-ops, so call directly).
@@ -577,7 +588,13 @@ echo "\nCategory: read abilities — happy path via execute()\n";
 ap_reset_caps();
 $out = wp_get_ability( 'signal-and-noise/get-design-tokens' )->execute( array() );
 ap_true( is_array( $out ), 'get-design-tokens: execute returns array' );
-ap_true( isset( $out['colors']['blood'] ) && '#e00404' === $out['colors']['blood'], 'get-design-tokens: blood color in output' );
+// v12.0.0: `colors` is scheme-keyed — the palette the site serves is no longer
+// a single map. Asserted on BOTH schemes so a regression that silently drops
+// one back to flat cannot pass by satisfying the other.
+ap_true( isset( $out['colors']['resolved']['blood'] ) && '#e00404' === $out['colors']['resolved']['blood'], 'get-design-tokens: blood in the resolved palette' );
+ap_true( isset( $out['colors']['palettes']['dark'] ), 'get-design-tokens: dark is enumerated' );
+ap_true( isset( $out['colors']['palettes']['high-contrast'] ), 'get-design-tokens: the shipped variation is enumerated' );
+ap_true( ! isset( $out['colors']['blood'] ), 'get-design-tokens: the old flat map is gone, not aliased' );
 ap_true( isset( $out['typography'], $out['spacing'], $out['version'] ), 'get-design-tokens: required keys present per schema' );
 
 // list-block-patterns
