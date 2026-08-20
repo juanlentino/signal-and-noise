@@ -39,6 +39,41 @@ Together these provide stronger triggers for version transitions than the cap ru
 - `v4.4.0` → `v4.4.1` → `v4.4.2` → ... → `v4.4.20` is valid; patches accumulate without forcing a minor.
 - `v5.0.0` happens when actual breaking changes accumulate enough to warrant it, OR when a coherent architectural milestone deliberately batches them.
 
+## Worked example: why v12.0.0 was a major (and dark mode was not the reason)
+
+Recorded 2026-08-20 because it is the cleanest case of the rule the cap policy
+above exists to protect, and because the obvious answer was wrong.
+
+v12.0.0 shipped **dark mode**. That is a big, visible, user-facing capability,
+and it is a **MINOR**. It removes nothing, renames nothing, moves no floor, and
+requires no user action: it follows the OS, degrades to the light palette, and
+writes nothing to the database. "Feels large" is not a SemVer criterion.
+
+The major was earned by something the dark mode *exposed*. The site has never
+served one palette (`theme.json`, the shipped `high-contrast` variation, and now
+`dark`), and `get-design-tokens` had always returned `colors` as a flat
+`slug => hex` map describing exactly one of them. Reshaping that field into a
+struct is a **removed/renamed public response on the Abilities surface**, with
+the old shape deleted rather than aliased. That is the break.
+
+Every manufactured alternative was checked and rejected first:
+
+| Candidate | Verdict |
+|---|---|
+| Deprecation-ladder removals | Empty. No `@deprecated`, no `_deprecated_function` anywhere. |
+| WP floor 7.0 to 7.1 | Manufactured. Tested to 7.1, but nothing depends on a 7.1 feature. |
+| PHP floor 8.3 to 8.4 | Same. Cloudways runs 8.4; no 8.4 syntax is used. |
+| theme.json v3 to v4 | WP has not shipped a v4 schema. Nothing to migrate. |
+| Back-compat shims | The one in `abilities-registration.php` is documented "for tests only". Not public. |
+
+**The test to apply:** would you still make this change if the version number
+were not in question? If yes, it is earned. If the change exists to justify the
+number, it is the fictional major the caps were dropped to prevent.
+
+The five follow-on releases (v12.0.1 through v12.0.4) were all PATCH. One of
+them fixed a live outage and another rewrote 68 CSS rules, and neither touches
+the public contract, which is the only thing MAJOR measures.
+
 ## What does and does NOT bump version
 
 | Change | Bump? |

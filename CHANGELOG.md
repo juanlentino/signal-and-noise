@@ -64,6 +64,50 @@ comparing against the wrong thing and reporting the result confidently.
   cap and the unguarded-`:hover` parser each fired on the deliberate additions.
   The caps were raised with the reasons written down rather than nudged.
 
+### The v12.0.x arc, in one place
+
+Five releases in two days, from one question about whether a brutalist theme can
+be modern. Recorded together because the individual entries above read as five
+unrelated repairs, and they were not: four of them are the same mistake.
+
+| | what shipped | what it broke |
+|---|---|---|
+| **12.0.0** | Dark mode; `colors` reshaped to a palette struct | Its own flagship ability, live, within minutes |
+| **12.0.1** | `output_schema` fixed; panel + embed tokens; mobile nav overlay | Left the ink behind on the surfaces it converted |
+| **12.0.2** | Toggle follows the persistent bar | (clean) |
+| **12.0.3** | Palette ink; all 70 `:hover` rules guarded | Made WordPress's own hovers the ones that stick on touch |
+| **12.0.4** | `served` matcher; `(hover: none)` reset; player corners | (clean) |
+
+**The recurring mistake was scoping a fix to what was visible rather than to the
+class.** `bone` is the ink token and was also being used to mean "a surface that
+contrasts with the page", which is the same thing only while the page is white.
+When the palette inverted, every one of those inverted twice. Fixing the command
+palette did not fix the keyboard modal, the skip link, or the Spotify backdrop,
+because each was found by someone looking at it. The class was only closed when
+it got a mechanism (`--sn-panel*`, `--sn-embed-backdrop`) and a test that caps
+ink-as-background per file, so a new one has to be argued for.
+
+**The contract lived in two places, repeatedly.** The payload and its
+`output_schema`. The CSS surface and the ink on it. The theme's hover rules and
+WordPress's generated ones. The resolved palette and what it was compared
+against. Every one shipped green.
+
+**Verification found what the suite could not, in both directions.** The suite
+grew from 2,285 to 2,408 assertions across the arc and never once caught a live
+defect first. The schema break needed a real WordPress; `served` needed a live
+read; the touch-hover gap needed counting rules in the *served* stylesheets
+rather than the repo's, where a repo-only sweep reported "0 unguarded" while 5
+were live. Two separate diagnoses were nearly shipped from broken instruments (a
+backgrounded automation pane with frozen animation clocks, and a contrast
+measured against the wrong background) and both were caught by a positive
+control rather than by care.
+
+**And the summary line lied.** `tests/run.sh` closes with `swept N suites, M
+assertions passed, S skipped`. That reports passed and skipped, never failed, so
+the number rises as things break. "0 failed" was quoted in a CHANGELOG, two
+commit messages and a PR body across this arc, and was never in the output. CI
+caught it because CI gates on the exit code. `$?` is the only honest signal.
+
 > **Why PATCH:** two defect fixes and a hardening. No API changes — the
 > `colors` struct is unchanged; `served` now returns a correct value where it
 > previously returned a wrong one.
