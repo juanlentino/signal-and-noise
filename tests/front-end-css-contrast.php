@@ -255,6 +255,143 @@ function sn_fecc_audit( $file, $palettes, $on_surface, $skip_ink, $root, $local 
 	return $out;
 }
 
+
+/**
+ * Alpha of a colour value: rgba(), or a color-mix() against `transparent`.
+ *
+ * `color-mix( in srgb, var(--x) 38%, transparent )` is this theme's idiom for a
+ * token at partial alpha — five uses before today. Treated as opaque it scores
+ * a ratio no reader meets, which is the same error as ignoring rgba()'s alpha.
+ */
+function sn_fecc_alpha( $value ) {
+	$v = trim( (string) $value );
+	if ( preg_match( '/^rgba\(\s*[0-9]+[,\s]+[0-9]+[,\s]+[0-9]+[,\s\/]+([0-9.]+)\s*\)$/i', $v, $m ) ) {
+		return (float) $m[1];
+	}
+	if ( preg_match( '/color-mix\(\s*in\s+srgb\s*,(.+?)\s+([0-9.]+)%\s*,\s*transparent\s*\)/i', $v, $m ) ) {
+		return ( (float) $m[2] ) / 100;
+	}
+	return 1.0;
+}
+
+/** The colour inside a color-mix(...) against transparent, or the value itself. */
+function sn_fecc_base_colour( $value ) {
+	if ( preg_match( '/color-mix\(\s*in\s+srgb\s*,(.+?)\s+[0-9.]+%\s*,\s*transparent\s*\)/i', (string) $value, $m ) ) {
+		return trim( $m[1] );
+	}
+	return $value;
+}
+
+/** Composite a possibly-translucent colour over an opaque ground: c = a*fg + (1-a)*bg. */
+function sn_fecc_over( $value, $surface, $tokens ) {
+	$fg = sn_fecc_rgb( sn_fecc_resolve( sn_fecc_base_colour( $value ), $tokens ) );
+	$bg = sn_fecc_rgb( $surface );
+	if ( null === $fg || null === $bg ) { return null; }
+	$a   = sn_fecc_alpha( $value );
+	$out = array();
+	foreach ( array( 0, 1, 2 ) as $i ) { $out[] = (int) round( $a * $fg[ $i ] + ( 1 - $a ) * $bg[ $i ] ); }
+	return 'rgb(' . implode( ', ', $out ) . ')';
+}
+
+/**
+ * Non-text contrast (WCAG 2.2 1.4.11, 3:1) for the marks that carry MEANING.
+ *
+ * SCOPE IS DERIVED FROM WHAT THE SELECTOR MEANS, not from a file list:
+ *   - every OUTLINE with a colour, because a focus indicator is never
+ *     decorative — it is the only thing telling a keyboard user where they are;
+ *   - every BORDER on a rule whose selector carries a STATE (:focus, :hover,
+ *     .is-active, [aria-current], :target, .is-selected), because 1.4.11 covers
+ *     "visual information required to identify components and their states".
+ * A plain hairline under a table row is decoration and is not checked — WCAG
+ * exempts decoration, and a blanket rule would red every rule in the codebase
+ * against a standard that does not apply to it.
+ *
+ * AN OUTLINE AND A BORDER DO NOT SIT ON THE SAME THING. An outline is drawn
+ * OUTSIDE the border edge, so it meets whatever the ancestor painted. A border
+ * is drawn over the element's own background (`background-clip` is border-box
+ * by default). Using one rule for both is wrong twice over, and the companion
+ * plugin shipped exactly that error in its v12.5.0.
+ */
+function sn_fecc_nontext_audit( $file, $palettes, $on_surface, $root, $local ) {
+	$rules = sn_fecc_rules( (string) file_get_contents( $file ) );
+	$rel   = 'assets/css/' . basename( $file );
+	$out   = array( 'contrast' => array(), 'unresolved' => array(), 'checked' => 0, 'same_as_ground' => 0 );
+
+	// System keywords resolve inside the OS, not the stylesheet. `Highlight` is
+	// the forced-colors focus colour; scoring it here would be inventing a value.
+	$skip = array( 'none', 'currentcolor', 'inherit', 'transparent', 'unset', 'initial', 'revert', 'highlight', 'canvas', 'canvastext', 'linktext', 'buttontext' );
+	$state_re = '/:focus|:hover|\.is-active|\[aria-current|:target|\.is-selected/';
+
+	foreach ( $rules as $rule ) {
+		list( $sel, $body ) = $rule;
+		if ( false !== strpos( $sel, ':root' ) ) { continue; }
+		$flat  = trim( preg_replace( '/\s+/', ' ', $sel ) );
+		$decls = sn_fecc_decls( $body );
+
+		$marks = array();
+		foreach ( array( 'outline-color', 'outline' ) as $p ) {
+			if ( isset( $decls[ $p ] ) ) { $marks[] = array( 'outline', $p, $decls[ $p ] ); break; }
+		}
+		if ( preg_match( $state_re, $flat ) ) {
+			// Every form a border colour can arrive in, including the per-side
+			// SHORTHANDS. Listing only `border` and `border-*-color` missed
+			// `border-bottom: 2px solid var(--x)` entirely — marks that were
+			// never measured and therefore never in the pass they appeared to
+			// clear.
+			foreach ( array( 'border-color', 'border', 'border-top', 'border-bottom', 'border-left', 'border-right', 'border-top-color', 'border-bottom-color', 'border-left-color', 'border-right-color' ) as $p ) {
+				if ( isset( $decls[ $p ] ) ) { $marks[] = array( 'border', $p, $decls[ $p ] ); }
+			}
+		}
+		if ( ! $marks ) { continue; }
+
+		foreach ( $marks as list( $kind, $prop, $raw ) ) {
+			// Pull the colour out of a shorthand like `2px solid var(--x)`.
+			if ( preg_match( '/(var\(.*\)|color-mix\(.*\)|#[0-9a-fA-F]{3,8}|rgba?\([^)]*\))/', $raw, $m ) ) {
+				$value = $m[1];
+			} else {
+				$value = trim( (string) preg_replace( '/^[0-9.]+(px|em|rem)\s+\w+\s*/', '', $raw ) );
+			}
+			if ( in_array( strtolower( trim( $value ) ), $skip, true ) ) { continue; }
+
+			// An outline meets the ancestor ground; a border meets its own fill.
+			$own = $decls['background-color'] ?? ( $decls['background'] ?? '' );
+			if ( 'border' === $kind && '' !== $own && ( false !== strpos( $own, 'var(' ) || null !== sn_fecc_rgb( $own ) ) ) {
+				$surfaces = array( $own );
+			} elseif ( isset( $on_surface[ $flat ] ) ) {
+				$surfaces = $on_surface[ $flat ];
+			} else {
+				$surfaces = array( 'var(--wp--preset--color--void)' );
+			}
+
+			foreach ( $surfaces as $surface ) {
+				if ( is_array( $surface ) && isset( $surface['from'] ) ) {
+					$resolved = sn_fecc_bg_of_selector( $rules, $surface['from'] );
+					if ( null === $resolved ) { continue; }
+					$surface = $resolved;
+				}
+				foreach ( $palettes as $id => $tokens ) {
+					$map = array_merge( $tokens, $local['light'], 'dark' === $id ? $local['dark'] : array() );
+					$b   = sn_fecc_resolve( $surface, $map );
+					if ( null === $b ) { $out['unresolved'][] = "$rel :: $flat :: $prop [$id] surface=$surface"; continue; }
+					$a = sn_fecc_over( $value, $b, $map );
+					if ( null === $a ) { $out['unresolved'][] = "$rel :: $flat :: $prop [$id] value=$value"; continue; }
+					// A mark the same colour as its ground is not a mark — it is
+					// fill. Common here: a hover state that sets `background`
+					// AND `border-color` to `blood` to draw a solid chip.
+					// COUNTED, not silently dropped, so the measured total below
+					// is explainable rather than merely small.
+					if ( strtolower( $a ) === strtolower( sn_fecc_rgb( $b ) ? 'rgb(' . implode( ', ', sn_fecc_rgb( $b ) ) . ')' : '' ) ) { ++$out['same_as_ground']; continue; }
+					++$out['checked'];
+					$r = sn_fecc_ratio( $a, $b );
+					if ( null === $r || $r >= 3.0 ) { continue; }
+					$out['contrast'][] = sprintf( '%s :: %s :: %s [%s] %s over %s = %.2f:1 (non-text needs 3.0)', $rel, $flat, $prop, $id, $a, $b, $r );
+				}
+			}
+		}
+	}
+	return $out;
+}
+
 echo "\nGroup: every ink/surface pair clears AA (4.5:1) in all three palettes\n";
 // Print stylesheets are excluded: paper is white and dark mode never reaches
 // it, so scoring `color:#000` against the dark palette is a question about a
@@ -283,6 +420,43 @@ foreach ( $unmapped as $u ) { echo "  -> UNMAPPED (fix the map, not the colour):
 foreach ( $contrast as $c ) { echo "  -> CONTRAST: $c\n"; }
 ok( empty( $unmapped ), sprintf( 'no ink resolves to its own assumed surface — every nested surface is mapped (%d unmapped)', count( $unmapped ) ) );
 ok( empty( $contrast ), sprintf( 'no text falls below AA on the surface it sits on (%d finding(s))', count( $contrast ) ) );
+
+
+// ── non-text contrast (3:1) for focus indicators and state marks ───────────
+echo "\nGroup: focus indicators and state marks clear 3:1, composited\n";
+$nt = array( 'contrast' => array(), 'unresolved' => array(), 'checked' => 0, 'same_as_ground' => 0 );
+foreach ( $files as $file ) {
+	$a = sn_fecc_nontext_audit( $file, $palettes, $on_surface, $root, $tokens_all );
+	$nt['contrast']   = array_merge( $nt['contrast'], $a['contrast'] );
+	$nt['unresolved'] = array_merge( $nt['unresolved'], $a['unresolved'] );
+	$nt['checked']   += $a['checked'];
+	$nt['same_as_ground'] += $a['same_as_ground'];
+}
+echo sprintf( "  (%d comparisons measured, %d skipped as mark-equals-its-own-fill)\n", $nt['checked'], $nt['same_as_ground'] );
+// A pass over nothing is not a pass. The scope rule is narrow BY DESIGN, so the
+// count is the only thing separating "every mark cleared 3:1" from "the scope
+// matched no marks at all" — and those read identically from the outside.
+// Floor set BELOW the observed 42 with room for ordinary CSS edits, not at it —
+// the job is to catch the scope rule collapsing to nothing, not to break on the
+// next hover state someone adds or removes.
+ok( $nt['checked'] >= 30, sprintf( 'the non-text pass actually measured marks (%d comparisons across 3 palettes)', $nt['checked'] ) );
+foreach ( array_slice( $nt['unresolved'], 0, 6 ) as $u ) { echo "  -> UNRESOLVED (not measured): $u\n"; }
+foreach ( $nt['contrast'] as $c ) { echo "  -> $c\n"; }
+ok( empty( $nt['unresolved'] ), sprintf( 'every non-text mark RESOLVED and was actually measured (%d unresolved)', count( $nt['unresolved'] ) ) );
+ok( empty( $nt['contrast'] ), sprintf( 'no focus indicator or state mark falls below 3:1 (%d finding(s))', count( $nt['contrast'] ) ) );
+
+// Controls for the alpha maths, on hand-computable values.
+ok( 0.38 === sn_fecc_alpha( 'color-mix( in srgb, var(--x) 38%, transparent )' ), 'alpha is read from a color-mix() against transparent — this theme\'s idiom for a token at partial alpha' );
+ok( 0.45 === sn_fecc_alpha( 'rgba(18,112,58,.45)' ), 'and from an rgba()' );
+ok( 1.0 === sn_fecc_alpha( 'var(--wp--preset--color--blood)' ), 'an opaque token reports alpha 1.0' );
+ok( 'rgb(255, 128, 128)' === sn_fecc_over( 'rgba(255,0,0,0.5)', '#ffffff', array() ), 'NEGATIVE CONTROL: 50% red over white composites to rgb(255, 128, 128) — hand-computable' );
+ok( 'rgb(128, 128, 128)' === sn_fecc_over( 'color-mix( in srgb, #000000 50%, transparent )', '#ffffff', array() ), 'and a 50% color-mix composites identically — the two idioms agree' );
+// Drive the real auditor on planted marks, so falsifiability is PINNED rather
+// than demonstrated once by hand and then trusted.
+$ntp = sn_fecc_nontext_audit( $root . '/tests/fixtures/theme-contrast-probe.css', $palettes, $on_surface, $root, $tokens_all );
+ok( 3 === count( $ntp['contrast'] ), 'NEGATIVE CONTROL: a weak focus ring IS caught, once per palette (' . count( $ntp['contrast'] ) . ')' );
+ok( 3 === $ntp['same_as_ground'], 'and a state mark the same colour as its own fill is SKIPPED as fill, once per palette (' . $ntp['same_as_ground'] . ')' );
+ok( 1 === count( preg_grep( '/\[dark\]/', $ntp['contrast'] ) ), 'the planted ring is reported in the dark palette too — an outline is measured against the ANCESTOR ground, which inverts' );
 
 echo "\nGroup: negative controls\n";
 ok( abs( sn_fecc_ratio( '#000000', '#ffffff' ) - 21.0 ) < 0.01, 'the maths agrees with the spec boundary: black on white is 21:1' );
