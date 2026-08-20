@@ -76,7 +76,7 @@
 
 @media (hover: hover) {
 	.wp-block-button__link:hover {
-		box-shadow: 0 4px 20px rgba(224, 4, 4, 0.2);
+		box-shadow: 0 4px 20px color-mix( in srgb, var(--wp--preset--color--blood) 20%, transparent );
 	}
 }
 
@@ -1178,7 +1178,9 @@
 	height: 58px;
 	border-radius: 50%;
 	background: var(--wp--preset--color--blood);
-	box-shadow: 0 6px 22px rgba(224, 4, 4, 0.4);
+	/* The fill was already the token; the halo was still the light-mode literal,
+	   so in dark this circle turned #ff4c47 and kept a #e00404 shadow. */
+	box-shadow: 0 6px 22px color-mix( in srgb, var(--wp--preset--color--blood) 40%, transparent );
 }
 .sn-disco-play-circle::after {
 	content: "";

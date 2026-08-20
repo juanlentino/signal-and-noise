@@ -166,9 +166,14 @@ summary:focus-visible {
 	96% { opacity: 1; transform: translateX(0); }
 }
 
+/* The glow follows `blood`, which inverts: #e00404 on light, #ff4c47 on dark.
+   Hardcoded, this halo stayed the LIGHT red around an element that had already
+   turned — the same half-migration as converting a surface and leaving its ink.
+   color-mix on the token is the pattern this repo already uses for a token at
+   partial alpha (command-palette.css, components.css). */
 @keyframes pulseGlow {
-	0%, 100% { text-shadow: 0 0 8px rgba(224, 4, 4, 0.2); }
-	50% { text-shadow: 0 0 20px rgba(224, 4, 4, 0.4), 0 0 40px rgba(224, 4, 4, 0.1); }
+	0%, 100% { text-shadow: 0 0 8px color-mix( in srgb, var(--wp--preset--color--blood) 20%, transparent ); }
+	50% { text-shadow: 0 0 20px color-mix( in srgb, var(--wp--preset--color--blood) 40%, transparent ), 0 0 40px color-mix( in srgb, var(--wp--preset--color--blood) 10%, transparent ); }
 }
 
 @media (prefers-reduced-motion: no-preference) {

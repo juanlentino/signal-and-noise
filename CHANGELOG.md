@@ -2,6 +2,52 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.1.0] - 2026-08-20 — the glow follows the palette, and a sweep says so
+
+Dark mode is a token layer defined in this repo, and this repo had no sweep for
+the one thing a token layer cannot fix: a hardcoded colour. The companion plugin
+cut that sweep in its v12.2.0 after /stats rendered its charts as solid white
+blocks. Here the same class was found by SCREENSHOT twice (the command palette,
+v12.0.3). This makes it mechanical.
+
+### Added
+- **[tests/front-end-css-inverts.php](tests/front-end-css-inverts.php)** — no
+  screen stylesheet may paint a hardcoded colour. Fifteen assertions, seven of
+  them controls.
+
+### Fixed
+- **Five blood-red glows stayed the light-mode colour in dark.** `blood` inverts
+  (`#e00404` → `#ff4c47`); `rgba(224, 4, 4, α)` cannot. The clearest case is the
+  discography play circle, whose `background` was ALREADY the token while its
+  `box-shadow` was still the literal — so in dark the circle turned and kept a
+  light-red halo. The same half-migration as converting a surface and leaving
+  its ink behind. All five now use `color-mix()` on the token, the pattern this
+  repo already uses in five places for a token at partial alpha.
+
+### Decisions
+- **Both exemptions are DERIVED, never listed.**
+  - A *token definition* may hold a literal — that is what a token is, and this
+    theme owns the palette, so `critical.css` is literals by design.
+  - *Print stylesheets* are exempt because paper is white and `color:#000` there
+    is correct rather than tolerated. Which sheets those are is read from the
+    **enqueue** — `wp_enqueue_style()` calls whose media argument is `'print'` —
+    so a new print stylesheet is exempt automatically and a screen stylesheet
+    can never be exempted by being named in a test.
+- **The `media='print' onload="this.media='all'"` trick must never grant that
+  exemption.** It is an async-LOADING hack applied to `wp-block-library` and
+  `trp-language-switcher` through `style_loader_tag`, not an enqueue argument,
+  and it touches no `assets/css/` path. Asserted by a control, because an
+  exemption rule that inverts on a lookalike is worse than no rule.
+
+### Verified
+- **96 suites, 2,440 assertions, `EXIT=0`.** PHPStan clean.
+- **Mutation-tested**: restoring one `rgba(224, 4, 4, 0.4)` fires that file and
+  nothing else.
+- **What this cannot see, stated:** it reads stylesheets, not rendered pages. A
+  token used in the wrong ROLE — the theme's own ink-as-chrome class — passes
+  cleanly. That needs a real render or a per-palette contrast pass, which the
+  companion plugin has and this repo does not yet.
+
 ## [12.0.4] - 2026-08-20 — `served` was lying, and core's hovers still stuck
 
 **Headline:** found by checking the live site after v12.0.3 rather than by any
