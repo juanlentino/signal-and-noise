@@ -1,0 +1,60 @@
+name: Release tag parity
+
+# Does main's version header have a matching tag ON main?
+#
+# Ported from the sibling plugin repo on 2026-08-20, where the failure was a
+# version bumped and never tagged. HERE the failure took the other documented
+# shape, and it was live when this landed: an ancestry sweep of the 40 most
+# recent tags found THREE — v12.0.2, v12.0.3, v12.0.4 — pointing at their
+# PRE-SQUASH branch commits instead of main. That is the linked-worktree trap:
+# a tag cut from .claude/worktrees/<name>/ lands on the branch tip, and its log
+# SUBJECT matches the squash commit exactly, so it reads as correct.
+#
+# IT MATTERS MORE HERE THAN IN THE PLUGIN. deploy.yml is dispatched ON A TAG and
+# checks that ref out, so the tag is literally what ships. In that instance the
+# trees were byte-identical and nothing wrong reached the site — luck, not
+# design. A branch tip that diverged from its squash result would have deployed
+# code that was never on main.
+#
+# WHY SCHEDULED AND NOT ON PUSH. The tag is cut a minute or two AFTER the merge
+# commit lands, so a push-triggered check would fail on essentially every
+# release and teach everyone to ignore it. The failure being guarded is "nobody
+# noticed for days" — a STATE, not an event. workflow_dispatch is here for an
+# immediate answer after a release.
+#
+# Schedules fire only on the default branch, and GitHub disables them after 60
+# days of REPOSITORY inactivity (public repos). Never read a silent cron as
+# evidence of a clean repo: an ABSENT run looks exactly like a passing one.
+#
+# Cost: this repo is PUBLIC, so standard-runner minutes are free. timeout-minutes
+# is still set — a hung job holds a runner for up to six hours by default.
+
+on:
+  schedule:
+    - cron: '20 7 * * *'   # 07:20 UTC daily, offset from the plugin repo's 07:00
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  parity:
+    name: Version header has a tag on main
+    runs-on: ubuntu-latest
+    # Initial estimate, not a measurement: checkout + one PHP script. The
+    # sibling repo measures 7s. Revisit against real runs.
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Tags are the entire subject of this check, and ancestry needs real
+          # history — a shallow clone makes every tag look absent.
+          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: false
+
+      - name: Version header has a matching tag on main
+        # Uses the runner image's PHP: the script is plain PHP with no
+        # extensions, and every tool download is another thing that can die
+        # mid-outage and red a green repo.
+        run: php tools/version-tag-parity.php --check
