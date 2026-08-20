@@ -266,10 +266,14 @@ $ALLOWED = array(
 	// A 1px rule. Ink drawn as a line: inverts correctly, black rule on white
 	// becomes white rule on black.
 	'assets/css/article.css'    => 1,
-	// Two BUTTON fills (outline-button hover, file-download button). A solid
+	// THREE button fills: outline-button hover, file-download button, and
+	// (v12.0.4) the (hover: none) reset that restores theme.json's resting
+	// button background on touch. All three are the same case — a solid
 	// ink-coloured button that flips to a solid white button on a dark page is
-	// a correct inversion — the button is meant to read as a block of ink.
-	'assets/css/components.css' => 2,
+	// a correct inversion, because the button is meant to read as a block of
+	// ink. Raised deliberately: the cap exists to force this sentence to be
+	// written, not to be nudged upward whenever it fires.
+	'assets/css/components.css' => 3,
 );
 
 $offenders = array();
@@ -494,9 +498,18 @@ foreach ( glob( $root . '/assets/css/*.css' ) as $file ) {
 			continue;
 		}
 		$before = substr( $css, 0, $at );
-		// Inside an open (hover: hover) block? The nearest such opener must come
+		// Inside an open hover-media block? The nearest such opener must come
 		// after the last block that closed at column zero.
-		if ( strrpos( $before, '@media (hover: hover)' ) > strrpos( $before, "\n}\n" ) ) {
+		//
+		// (hover: none) counts as guarded too, and is not a loophole: it is the
+		// mirror image — a rule that exists ONLY on touch, to neutralise the
+		// unguarded hover styles WordPress generates from theme.json into
+		// global-styles-inline-css, which the theme cannot reach any other way.
+		$last_close = strrpos( $before, "\n}\n" );
+		$in_hover   = strrpos( $before, '@media (hover: hover)' );
+		$in_none    = strrpos( $before, '@media (hover: none)' );
+		if ( max( (int) $in_hover, (int) $in_none ) > (int) $last_close
+			&& ( false !== $in_hover || false !== $in_none ) ) {
 			++$guarded;
 			continue;
 		}

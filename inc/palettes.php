@@ -221,11 +221,35 @@ function sn_theme_served_palette_id() {
 		return '';
 	}
 
+	// SUBSET MATCH ON THE THEME'S OWN SLUGS — not set equality.
+	//
+	// v12.0.3 required the two maps to be identical in both directions, and on
+	// the live site that could never be true: wp_get_global_settings() returns
+	// the theme palette PLUS WordPress's twelve core defaults (black, pale-pink,
+	// vivid-red, …), which no shipped palette declares. So the diff was never
+	// empty and this returned 'custom' on a site running High Contrast — the one
+	// field that answers "what is actually live" was reporting that the owner
+	// had hand-edited colours when they had not.
+	//
+	// It passed its test because the fixture contained only theme slugs. The
+	// fixture was cleaner than reality, which is the tell: shapes have to come
+	// from the emitter, not from what is convenient to write.
+	//
+	// A palette matches when every slug IT declares is present in the resolved
+	// set with the same value. Extra slugs in `resolved` are WordPress's, not
+	// ours, and say nothing about which of our palettes is active.
 	foreach ( sn_theme_all_palettes() as $id => $meta ) {
 		if ( 'dark' === $id ) {
 			continue; // Not selectable — it is a reader-side override.
 		}
-		if ( ! array_diff_assoc( $resolved, $meta['colors'] ) && ! array_diff_assoc( $meta['colors'], $resolved ) ) {
+		$matches = true;
+		foreach ( $meta['colors'] as $slug => $hex ) {
+			if ( ! isset( $resolved[ $slug ] ) || $resolved[ $slug ] !== $hex ) {
+				$matches = false;
+				break;
+			}
+		}
+		if ( $matches ) {
 			return $id;
 		}
 	}

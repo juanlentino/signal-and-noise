@@ -1996,3 +1996,53 @@ img.sn-img-dim {
 		display: inline-flex;
 	}
 }
+
+/* ── CORE'S GENERATED HOVERS, NEUTRALISED ON TOUCH (v12.0.4) ───────────
+   v12.0.3 guarded all 70 of the THEME's :hover rules. That left a gap it
+   actually widened: WordPress generates its own unguarded hover rules
+   from theme.json `elements.link:hover` and `elements.button:hover` into
+   global-styles-inline-css, and once the theme's equivalents were behind
+   (hover: hover), core's became the ones that apply on a phone. Measured
+   on the live site: 5 unguarded :hover rules served, all core's.
+
+   So on touch, tapping a button left it blood-filled and tapping a link
+   left it bone + underlined until the next tap elsewhere — the exact bug
+   the sweep was meant to end, arriving from the other direction.
+
+   theme.json cannot express a media query, so the reset lives here.
+   Specificity is deliberate: core emits `:root :where(…)`, which is
+   (0,1,0) because :where() contributes nothing, so these plain
+   :root-prefixed selectors win without !important. */
+
+@media (hover: none) {
+	:root .wp-block-button__link:hover,
+	:root .wp-element-button:hover {
+		/* theme.json elements.button resting state. */
+		background-color: var(--wp--preset--color--bone);
+		color: var(--wp--preset--color--void);
+	}
+
+	:root a:not(.wp-element-button):not(.wp-block-button__link):hover {
+		/* theme.json elements.link resting state. */
+		color: var(--wp--preset--color--blood);
+		text-decoration: none;
+	}
+}
+
+/* ── FEATURED PLAYER CORNERS (v12.0.4) ─────────────────────────────────
+   .sn-music-featured__player is a bare iframe with no background, so
+   Spotify's rounded card lets the parent show through at the corners —
+   which is exactly right, and why they currently blend. But it relies on
+   the browser leaving a cross-origin iframe canvas transparent, which is
+   not ours to guarantee; when it does not, the corners paint white. That
+   is what the white corners on /music were.
+
+   Matching the parent explicitly makes the corners blend BY
+   CONSTRUCTION, in both schemes, whatever the browser does with the
+   canvas. Note this is `asphalt` (the box it sits in), NOT
+   --sn-embed-backdrop: a black backdrop here would replace white notches
+   with dark ones against a #171717 box. The block-embed rule keeps the
+   black backdrop because that embed sits on the page, not in a card. */
+.sn-music-featured__player {
+	background-color: var(--wp--preset--color--asphalt);
+}

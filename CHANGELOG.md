@@ -2,6 +2,72 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.0.4] - 2026-08-20 — `served` was lying, and core's hovers still stuck
+
+**Headline:** found by checking the live site after v12.0.3 rather than by any
+test. Two defects in what this release series shipped, both of the same shape:
+comparing against the wrong thing and reporting the result confidently.
+
+### Fixed
+- **`get-design-tokens` reported `served: "custom"` on a High Contrast site.**
+  v12.0.0 matched the resolved palette against each shipped one with a two-way
+  `array_diff_assoc`, requiring them to be identical. On a real site that can
+  never hold: `wp_get_global_settings()` returns the theme palette **plus
+  WordPress's twelve core defaults** (`black`, `pale-pink`, `vivid-red`, …),
+  which no shipped palette declares. So the one field that answers "what is
+  actually live" claimed the owner had hand-edited colours when they had not.
+
+  Now a subset match on the palette's **own** slugs: extra slugs are
+  WordPress's and say nothing about which of ours is active.
+
+  It passed its test because the fixture contained only theme slugs — tidier
+  than reality, and the tidiness was the bug. The fixture now carries the core
+  slugs exactly as WordPress hands them over. The `wp_get_global_settings()`
+  stub was also made to **honour its path argument**, as the real function does;
+  it had been returning the whole tree regardless, which is forgiving in a way
+  the real function is not, so it tested the stub rather than the caller.
+
+- **WordPress's own hover rules still stuck on touch — and v12.0.3 widened the
+  gap.** Core generates unguarded `:hover` rules from `theme.json`
+  `elements.link:hover` and `elements.button:hover` into
+  `global-styles-inline-css`. Once the theme's equivalents went behind
+  `(hover: hover)`, core's became the ones that apply on a phone. Measured on
+  the live site: 5 unguarded `:hover` rules served, **all of them core's**.
+
+  So tapping a button left it blood-filled and tapping a link left it bone and
+  underlined — the exact bug the sweep was meant to end, arriving from the other
+  direction. `theme.json` cannot express a media query, so a `(hover: none)`
+  block restores the resting values. Core emits `:root :where(…)`, which is
+  (0,1,0) because `:where()` contributes nothing, so a plain `:root`-prefixed
+  selector wins without `!important`.
+
+- **The /music featured player's corners are now correct by construction.**
+  `.sn-music-featured__player` is a bare iframe with no background, so Spotify's
+  rounded card lets the parent show through at the corners — which is why they
+  currently blend. But that relies on the browser leaving a cross-origin iframe
+  canvas transparent, which is not ours to guarantee; when it does not, the
+  corners paint white, and that is what was reported on /music. It now matches
+  its parent explicitly.
+
+  Worth recording: **v12.0.1's embed fix could never have applied here.**
+  `.wp-block-embed-spotify` is not emitted by any theme markup — it only appears
+  when a Spotify URL is embedded in post content. That rule is still correct for
+  notes; it was simply not the fix for this page, and the corners looking right
+  today is not evidence that it was.
+
+### Notes
+- **Verification caught what the suite could not**, in both directions. The
+  `served` defect needed a live read; the touch-hover gap needed counting rules
+  in the *served* stylesheets rather than the repo's. A repo-only sweep reported
+  "0 unguarded" while 5 were being served.
+- Both new rules tripped their own guards on the first run — the ink-as-chrome
+  cap and the unguarded-`:hover` parser each fired on the deliberate additions.
+  The caps were raised with the reasons written down rather than nudged.
+
+> **Why PATCH:** two defect fixes and a hardening. No API changes — the
+> `colors` struct is unchanged; `served` now returns a correct value where it
+> previously returned a wrong one.
+
 ## [12.0.3] - 2026-08-20 — the command palette was unreadable, and hover stopped sticking
 
 **Headline:** v12.0.1 converted the overlay SURFACES to the panel tokens and left
