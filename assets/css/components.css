@@ -1823,3 +1823,40 @@ img.sn-img-dim {
 .wp-block-social-links .wp-block-social-link-anchor:focus-visible {
 	color: var(--wp--preset--color--blood) !important;
 }
+
+/* ── ONE TOGGLE, TWO HOMES (v12.0.2) ───────────────────────────────────
+   The control follows whichever bar is PERSISTENT at that width.
+
+   >= 782px: the footer is fixed, so the footer instance shows.
+   <= 781px: the footer is static (v11.12.2 — a fixed footer cost 23.5%
+             of a phone screen), so it is below the fold on every page and
+             the header instance takes over.
+
+   The 781px figure is not chosen here; it is the SAME boundary that makes
+   the footer static in responsive.css. Tying both to it is what stops the
+   two from ever disagreeing about which bar a reader can actually see.
+
+   Both instances render and both are wired, so a resize or an orientation
+   change reveals an already-correct control rather than a stale one. */
+
+.sn-theme-toggle--header {
+	display: none;
+}
+
+/* The logo holds the left edge; the toggle and the menu button cluster on
+   the right. This is what lets the header carry a third child without
+   repeating v12.0.0's mistake, where a third child of a space-between
+   group became a third distribution point and stranded itself in the
+   middle of the gap, competing with the logo. */
+.sn-header .sn-site-title {
+	margin-right: auto;
+}
+
+@media (max-width: 781px) {
+	.sn-theme-toggle--footer {
+		display: none;
+	}
+	.sn-theme-toggle--header {
+		display: inline-flex;
+	}
+}

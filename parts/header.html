@@ -11,6 +11,22 @@
 	</div>
 	<!-- /wp:group -->
 
+	<!-- v12.0.2: the MOBILE home for the theme toggle. Below 781px the footer
+	     stops being fixed (v11.12.2, a fixed footer cost 23.5% of a phone
+	     screen), so the footer instance sits below the fold and needs 180px of
+	     scrolling on every page. This one takes over at that width and the footer
+	     one hides; CSS keys both to the same 781px boundary.
+
+	     It is the THIRD child of a space-between group — the arrangement that
+	     stranded it mid-gap in v12.0.0. It does not strand here because
+	     .sn-site-title carries `margin-right: auto` (components.css), which pins
+	     the logo left and lets the toggle and the menu button cluster on the
+	     right. Two visual clusters, three DOM children, and nothing beside the
+	     logo. -->
+	<!-- wp:html -->
+	[sn_theme_toggle placement="header"]
+	<!-- /wp:html -->
+
 	<!-- wp:navigation {"ariaLabel":"Main navigation","overlayMenu":"mobile","style":{"typography":{"fontStyle":"normal","fontWeight":"400","letterSpacing":"0.14em","textTransform":"uppercase","fontSize":"1.125rem"},"spacing":{"blockGap":"var:preset|spacing|40"}},"fontFamily":"heading","layout":{"type":"flex"}} -->
 		<!-- wp:navigation-link {"label":"Home","url":"/","kind":"custom","isTopLevelLink":true} /-->
 		<!-- wp:navigation-link {"label":"About","url":"/about","kind":"custom","isTopLevelLink":true} /-->

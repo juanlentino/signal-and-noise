@@ -2,6 +2,53 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.0.2] - 2026-08-20 — the toggle follows the bar you can actually see
+
+**Headline:** v12.0.1 moved the theme toggle to the footer utility bar. That bar
+is fixed on desktop and **static on a phone**, so on mobile the control landed
+180px below the fold on every page. Correct for desktop, unreachable on mobile.
+
+### Fixed
+- **The toggle is reachable on mobile again.** It now follows whichever bar is
+  PERSISTENT at that width: the footer strip at ≥782px, the header at ≤781px.
+  781px is not a new breakpoint — it is the same boundary `responsive.css`
+  already uses to make `.sn-footer` static (v11.12.2, where a fixed footer was
+  measured at 23.5% of a phone screen). Tying both to one number is what stops
+  the toggle and the footer from ever disagreeing about which bar a reader can
+  see.
+
+  Both instances render and both are wired, so a rotation or a resize reveals an
+  already-correct control rather than a stale one.
+
+- **The header can carry a third child now, and the reason is written down.**
+  v12.0.0 stranded the toggle mid-gap because a third child of a
+  `space-between` group becomes a third distribution point rather than joining a
+  cluster. v12.0.1 fixed that by banning the third child. This release instead
+  fixes the *cause*: `.sn-site-title` carries `margin-right: auto`, pinning the
+  logo to the left edge so the toggle and the menu button cluster on the right.
+  Two visual clusters, three DOM children, and nothing beside the logo.
+  `tests/dark-mode.php` asserts the markup and that rule **together**, so they
+  cannot be separated.
+
+- **The button lost its `id`.** Two instances would have duplicated it, which is
+  invalid, and `getElementById` would have picked one arbitrarily and left the
+  other permanently stale. The script binds every instance by class.
+
+### Notes
+- **A diagnosis I nearly shipped wrong.** Measuring the live site, `.sn-footer`
+  read `opacity: 0.01` with its `fadeInUp` animation stuck at `currentTime: 0`
+  — which looks exactly like a real bug, and I was one step from "the blanket
+  `.wp-block-group` animation never ticks below the fold". A positive control
+  killed it: a freshly injected probe element read `currentTime: 0` too, and so
+  did the header, which is plainly visible. `document.hidden` was `true` — the
+  automation pane was backgrounded and Chrome had frozen every animation clock.
+  The instrument was broken, not the site. Same class as the plugin session's
+  retracted "live regression" the same evening: check the instrument against a
+  known-positive before believing what it reports about the subject.
+
+> **Why PATCH:** a reachability fix for what v12.0.1 shipped. No API changes, no
+> floors moved, `theme.json` and `styles/` untouched.
+
 ## [12.0.1] - 2026-08-20 — the release that shipped a dark flagship
 
 **Headline:** v12.0.0's own flagship ability was failing on the live site within
