@@ -2,6 +2,38 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.1.1] - 2026-08-21 — one opt-in for view transitions, and a comment that said the opposite
+
+The cross-document morph works: the `/notes` index emits a distinct
+`sn-note-<slug>` per row from PHP and the note hero carries the match, verified
+live on three pairs. Nothing here changes that. What changed is the two places
+that described it.
+
+### Fixed
+- **`base.css` carried a SECOND `@view-transition` opt-in.** Added at v11.9.2,
+  three versions after the real block moved from `critical.css` to
+  `article.css` (v10.49.0), and with a different conditional shape:
+  `article.css` declares `navigation: auto` and overrides to `none` under
+  `reduce`; `base.css` gated `auto` behind `no-preference`. They agreed only by
+  accident of cascade order — `article.css` loads last, so its rule was the one
+  in effect and the duplicate was inert. Removed. **No behaviour change**, and
+  the cascade order was confirmed in the served HTML before removing it.
+- **The comment above it asserted the opposite of the truth.** It said named
+  element morphs were *"NOT"* being done *"yet"* and belonged with the
+  notes-index redesign. That redesign shipped in v11.10.0, orphaned the naming,
+  and v11.12.0 fixed it. The comment described shipped, working behaviour as
+  future work — which is how live code gets deleted as dead.
+
+### Added
+- **A pin for the invariant** (`tests/view-transitions.php`, Test 7): exactly
+  one stylesheet may declare `@view-transition`. It counts the AT-RULE rather
+  than the word, because the comments now mention it deliberately.
+  Mutation-tested — re-adding a duplicate to `base.css` fires it.
+
+### Verified
+- 99 suites, 2,504 assertions, `EXIT=0`. Both view-transition suites green
+  (13→14 and 16).
+
 ## [12.1.0] - 2026-08-20 — the glow follows the palette, and a sweep says so
 
 Dark mode is a token layer defined in this repo, and this repo had no sweep for

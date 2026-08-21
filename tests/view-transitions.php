@@ -160,5 +160,29 @@ ha_true(
 	'reduced-motion block disables navigation transitions'
 );
 
+// --- Test 7: exactly ONE @view-transition opt-in in the theme (v12.1.1) ---
+// The duplicate this guards against was REAL: base.css carried a second
+// @view-transition from v11.9.2 until v12.1.1, added three versions after this
+// block moved to article.css, with a different conditional shape. Two at-rules
+// for one decision agreed only by accident of cascade order — edit either and
+// it silently stops mattering. There is no error state for that, which is why
+// it survived two minor versions. Count the at-rules; do not trust a comment.
+echo "\nTest: exactly one @view-transition opt-in across the theme's CSS\n";
+$vt_files = glob( __DIR__ . '/../assets/css/*.css' );
+$vt_owners = array();
+foreach ( $vt_files as $vt_file ) {
+	$body = (string) file_get_contents( $vt_file );
+	// The AT-RULE, not the word: comments mention it deliberately.
+	$n = preg_match_all( '/@view-transition\s*\{/', $body );
+	if ( $n > 0 ) {
+		$vt_owners[ basename( $vt_file ) ] = $n;
+	}
+}
+ha_eq(
+	array( 'article.css' => 2 ),
+	$vt_owners,
+	'article.css alone declares @view-transition (opt-in + reduced-motion guard); no other stylesheet does'
+);
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

@@ -30,6 +30,18 @@
  *
  * Respects user motion preferences via the standard prefers-reduced-
  * motion media query.
+ *
+ * THE SINGLE OPT-IN (v12.1.1). This is the only @view-transition rule in the
+ * theme, and base.css says so where its duplicate used to sit. A second one
+ * was added there at v11.9.2 — three versions after this block moved here
+ * from critical.css (v10.49.0) — with a different conditional shape, and the
+ * two agreed only by accident of cascade order. If a transition needs
+ * changing, change it HERE; do not add a rule elsewhere and rely on which
+ * file loads last.
+ *
+ * Despite the filename this file is enqueued on EVERY page
+ * (inc/assets-frontend.php), which is what makes a cross-document transition
+ * possible at all: both the outgoing and incoming document need the opt-in.
  * ─────────────────────────────────────────────────────────────────── */
 
 @view-transition {
