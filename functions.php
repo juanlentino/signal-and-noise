@@ -68,10 +68,13 @@
  *   (inc/page-index-render.php   — full PHP render of /index; loaded by page-index-template.php, not here)
  *   (inc/abilities-*.php          — helpers/categories/content/diagnostics/ai-generation; loaded by abilities-registration.php)
  *
- * Operational tooling — REST surface, Plausible integration, admin UI, security
- * headers, Cloudflare purge, OG card generation, reading-time, content surfaces +
- * migrations — lives in the
- * [signal-and-noise-tools companion plugin](https://github.com/juanlentino/signal-and-noise-tools).
+ * Operational tooling lives in the
+ * [signal-and-noise-tools companion plugin](https://github.com/juanlentino/signal-and-noise-tools);
+ * its README is the current list. This docblock deliberately does not enumerate
+ * the plugin's features. It used to, and the list went stale without anyone
+ * noticing: it still advertised "Plausible integration" long after Plausible was
+ * retired in plugin v6.0.0 and replaced by first-party edge analytics. A
+ * second-hand feature list in another package is a claim nothing checks.
  * See [docs/WORDPRESS-REFERENCE.md](docs/WORDPRESS-REFERENCE.md) §10.0 for the
  * cross-package contract surface (9 theme-listener hooks as of the v11.4.5 sweep).
  *
