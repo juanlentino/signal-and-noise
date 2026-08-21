@@ -252,28 +252,32 @@ summary:focus-visible {
 }
 
 /* ============================================
-   VIEW TRANSITIONS (v11.9.2)
+   VIEW TRANSITIONS — declared in article.css, NOT here (v12.1.1)
    ============================================
 
-   Cross-document transitions for index → note → note, the site's dominant
-   navigation. Replaces the white flash between pages with a continuous fade,
-   which is motion that clarifies flow rather than decorating it.
+   There is deliberately no @view-transition rule in this file. The opt-in, the
+   persistent-shell names (.sn-header/.sn-footer/main) and the reduced-motion
+   guard all live together in assets/css/article.css, which despite its name is
+   enqueued on every page and lands LAST in the combined cascade — so its
+   declaration is the one in effect.
 
-   Declared INSIDE prefers-reduced-motion: no-preference so a reader who asked
-   for less motion gets none of it — the same opt-in posture the fadeInUp block
-   above uses. Browsers without support ignore the at-rule entirely, so this
-   degrades to the previous instant navigation.
+   This block used to carry a second @view-transition opt-in, added at v11.9.2,
+   three versions AFTER the real one had already moved from critical.css to
+   article.css in v10.49.0. Two at-rules for one decision, in two files, with
+   different conditional shapes: article.css declares navigation: auto and
+   overrides to none under `reduce`; this file gated auto behind
+   `no-preference`. They agreed today only by accident of cascade order, and
+   editing either one would have silently stopped mattering.
 
-   NOT doing named element morphs (index row title → note title) yet:
-   view-transition-name must be UNIQUE per document, so a 32-row index needs a
-   distinct name emitted per row from PHP. That belongs with the notes-index
-   redesign, where the row markup is being rewritten anyway. */
+   Its comment also asserted that named element morphs were "NOT" being done
+   "yet" and belonged with the notes-index redesign. That redesign shipped in
+   v11.10.0, orphaned the naming, and v11.12.0 fixed it: the index emits a
+   distinct `sn-note-<slug>` per row from PHP and the note hero carries the
+   match — verified live on three pairs. The comment described shipped
+   behaviour as future work, which is how working code gets deleted as dead.
 
-@media (prefers-reduced-motion: no-preference) {
-	@view-transition {
-		navigation: auto;
-	}
-}
+   Pinned by tests/view-transitions.php (Test 6) and
+   tests/view-transition-names.php, both of which read article.css. */
 
 /* ============================================
    TEXT-WRAP — display headings (v11.13.0)
