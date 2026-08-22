@@ -11,12 +11,54 @@
  */
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
+/**
+ * The registered feed slug. ONE source: both URL forms below and the
+ * registration itself read it, so renaming the feed moves all three together
+ * instead of leaving one pointing at a feed that no longer exists.
+ *
+ * @since 12.2.0
+ * @return string
+ */
+function sn_feed_json_slug() {
+	return 'json';
+}
+
+/**
+ * The MACHINE URL — <head> autodiscovery and the feed's own feed_url.
+ *
+ * Deliberately the query form: 'feed' is a core public query var, so this
+ * resolves on every install immediately. The pretty path below only exists
+ * after the PLUGIN's next rewrite flush (the theme must never flush), so a
+ * cold deploy would 404 on it (JF-1). A reader that autodiscovers must never
+ * meet that window.
+ *
+ * @since 12.2.0
+ * @return string
+ */
+function sn_feed_json_url() {
+	return home_url( '/?feed=' . sn_feed_json_slug() );
+}
+
+/**
+ * The HUMAN URL — what /notes/subscribe/ shows someone to copy into a reader.
+ *
+ * Pretty, because a person reads and retypes it. Safe here and nowhere else:
+ * the subscribe page is a human destination, not an autodiscovery target, and
+ * the rewrite rule is long since flushed on the live site.
+ *
+ * @since 12.2.0
+ * @return string
+ */
+function sn_feed_json_pretty_url() {
+	return home_url( '/feed/' . sn_feed_json_slug() . '/' );
+}
+
 function sn_feed_json_register() {
-	add_feed( 'json', 'sn_feed_json_render' );
+	add_feed( sn_feed_json_slug(), 'sn_feed_json_render' );
 }
 
 function sn_feed_json_content_type( $type, $feed ) {
-	return ( 'json' === $feed ) ? 'application/feed+json' : $type;
+	return ( sn_feed_json_slug() === $feed ) ? 'application/feed+json' : $type;
 }
 
 /**
@@ -86,7 +128,7 @@ function sn_feed_json_render( $is_comment_feed = false, $feed = 'json' ) {
 		// /feed/json/ only works after the PLUGIN's next rewrite flush (the theme
 		// must not flush), so a self-referential /feed/json/ would 404 on a cold
 		// deploy (JF-1). ?feed=json is always live.
-		'feed_url'      => home_url( '/?feed=json' ),
+		'feed_url'      => sn_feed_json_url(),
 		'description'   => get_bloginfo( 'description' ),
 		'language'      => get_bloginfo( 'language' ),
 		// v10.13.0: feed-level authors (applies to all items per JSON Feed 1.1).
@@ -175,7 +217,7 @@ function sn_feed_json_head_link() {
 	printf(
 		'<link rel="alternate" type="application/feed+json" title="%s" href="%s">' . "\n",
 		esc_attr( get_bloginfo( 'name' ) . ' — JSON Feed' ),
-		esc_url( home_url( '/?feed=json' ) )
+		esc_url( sn_feed_json_url() )
 	);
 }
 

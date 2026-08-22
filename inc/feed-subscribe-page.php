@@ -70,6 +70,7 @@ function sn_subscribe_render() {
 	header( 'Content-Type: text/html; charset=' . get_option( 'blog_charset' ) );
 
 	$feed  = sn_subscribe_feed_url();
+	$json  = sn_feed_json_pretty_url();
 	$posts = get_posts( array(
 		'post_type'        => 'post',
 		'post_status'      => 'publish',
@@ -135,7 +136,8 @@ function sn_subscribe_render() {
 			<div class="sn-notes-hero-title">
 				<h1 class="sn-notes-headline">Follow.</h1>
 				<p class="sn-notes-dek">No subscription form, no schedule, no algorithm deciding what
-					you see. Notes go out over RSS, an open format any reader can follow.</p>
+					you see. Notes go out over RSS &#8212; an open format any reader can follow
+					&#8212; and as a JSON Feed for readers that prefer it.</p>
 			</div>
 		</header>
 
@@ -152,6 +154,27 @@ function sn_subscribe_render() {
 				turn that same address into messages in your inbox.</p>
 			<p class="sn-subscribe-help">First time? <a href="<?php echo esc_url( home_url( '/notes/start-here/' ) ); ?>">Start here</a>
 				reads the argument in order, or <a href="<?php echo esc_url( home_url( '/notes/' ) ); ?>">browse every note</a>.</p>
+		</section>
+
+		<hr class="sn-notes-rule" aria-hidden="true">
+
+		<section class="sn-subscribe-step" aria-labelledby="sn-sub-json">
+			<p class="sn-notes-section-label" id="sn-sub-json">The same notes, as JSON Feed</p>
+			<p class="sn-subscribe-url"><code><?php echo esc_html( $json ); ?></code></p>
+			<p class="sn-subscribe-help">Identical contents in JSON Feed 1.1, for readers that speak it
+				&#8212; NetNewsWire, Reeder, Feedbin and others. RSS above stays the primary channel;
+				take whichever your reader prefers, not both.</p>
+		</section>
+
+		<hr class="sn-notes-rule" aria-hidden="true">
+
+		<section class="sn-subscribe-step" aria-labelledby="sn-sub-terms">
+			<p class="sn-notes-section-label" id="sn-sub-terms">Passing it on</p>
+			<p class="sn-subscribe-help">Subscribing hands you the words, and republishing them
+				elsewhere is welcome on the terms set out in the
+				<a href="<?php echo esc_url( home_url( '/tdm-policy/' ) ); ?>">reuse and text-and-data-mining policy</a>.
+				That page is the canonical statement of them, kept deliberately in one place
+				rather than repeated here.</p>
 		</section>
 
 		<?php if ( $posts ) : ?>
