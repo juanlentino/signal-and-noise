@@ -85,5 +85,14 @@ ok( false === strpos( $src, 'font-size: clamp(4rem' ), 'the pre-v11.4.1 176px ou
 // v11.4.2: top alignment is the single split-hero rule across notes/now/uses.
 ok( false !== strpos( $src, 'align-items: start' ), 'hero grid top-aligns (v11.4.2 single split-hero rule)' );
 
+// v12.2.1: the hero POINTS at the subscribe page instead of enumerating
+// channels inline. It listed RSS + two email relays and would have gone on
+// omitting the JSON Feed forever — the same drift the terms link avoids, in
+// the same repo. One door, named once, kept in one place.
+ok( false !== strpos( $src, '/notes/subscribe/' ), 'hero links the subscribe page' );
+foreach ( array( 'Blogtrottr', 'Feedrabbit' ) as $relay ) {
+	ok( false === stripos( $src, $relay ), "hero does NOT enumerate the relay '$relay' (it lives on the subscribe page)" );
+}
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

@@ -57,12 +57,57 @@ function sn_subscribe_feed_url() {
 }
 
 /**
+ * Is the LIVE request this page? Read in one place so the renderer and the
+ * title filter can never disagree about which route they are on.
+ *
+ * @since 12.2.1
+ * @return bool
+ */
+function sn_subscribe_is_current_request() {
+	if ( ! isset( $_SERVER['REQUEST_URI'] ) ) {
+		return false;
+	}
+	return sn_subscribe_is_request( wp_unslash( $_SERVER['REQUEST_URI'] ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- path-compared, never echoed.
+}
+
+/**
+ * The document title.
+ *
+ * WHY THIS IS NEEDED (v12.2.1): this route answers 200 from template_redirect,
+ * but WP's query never resolved to a post, so wp_get_document_title() fell all
+ * the way through to "Page not found" — on a live, indexable page, from
+ * v11.9.4 until now. pre_get_document_title short-circuits WP's resolver, the
+ * same fix inc/page-notes-template.php and inc/page-index-template.php use for
+ * their synthetic routes.
+ *
+ * Deliberately NOT solved by creating a "Subscribe" Page in wp-admin: this
+ * renderer exits on template_redirect, so a real Page at this path would never
+ * render, and its title would live in the database — outside the repo, absent
+ * from a fresh install, and pinned by nothing.
+ *
+ * @since 12.2.1
+ * @param string $title Incoming title.
+ * @return string
+ */
+function sn_subscribe_document_title( $title ) {
+	return sn_subscribe_is_current_request() ? sn_subscribe_title() : $title;
+}
+
+/**
+ * @since 12.2.1
+ * @return string
+ */
+function sn_subscribe_title() {
+	return 'Subscribe — ' . get_bloginfo( 'name' );
+}
+
+/**
  * template_redirect: serve the page.
  *
  * @return void
  */
 function sn_subscribe_render() {
-	if ( ! isset( $_SERVER['REQUEST_URI'] ) || ! sn_subscribe_is_request( wp_unslash( $_SERVER['REQUEST_URI'] ) ) ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- path-compared, never echoed.
+	if ( ! sn_subscribe_is_current_request() ) {
 		return;
 	}
 
@@ -83,6 +128,18 @@ function sn_subscribe_render() {
 	<style>
 	/* Self-contained: the /notes/ hero styles are inline in page-notes-render.php
 	   and do not load on this route. Same tokens, so the two surfaces agree. */
+	/* v12.2.1 — THE CONTAINER. .sn-notes-page carries the width, the gutter and
+	   the clearance for the fixed .sn-footer, and it is declared in
+	   page-notes-render.php's INLINE style, which does not load here. So from
+	   v11.9.4 this page rendered flush against the viewport edge with no width
+	   and no gutter at all. Declared locally, and tests/feed-subscribe-page.php
+	   compares it declaration-for-declaration against the /notes/ rule so the
+	   two cannot drift apart again. */
+	.sn-notes-page.sn-subscribe {
+		padding: clamp(2rem, 5vw, 4.5rem) clamp(1.25rem, 3vw, 3rem) 160px;
+		max-width: 1320px;
+		margin: 0 auto;
+	}
 	.sn-subscribe .sn-notes-hero { padding: clamp(2rem,6vw,5rem) 0 0; }
 	.sn-subscribe .sn-notes-eyebrow,
 	.sn-subscribe .sn-notes-section-label {
@@ -203,4 +260,5 @@ function sn_subscribe_render() {
 
 if ( ! defined( 'SN_SUBSCRIBE_TEST' ) || ! SN_SUBSCRIBE_TEST ) {
 	add_action( 'template_redirect', 'sn_subscribe_render' );
+	add_filter( 'pre_get_document_title', 'sn_subscribe_document_title', 999 );
 }

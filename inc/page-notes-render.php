@@ -865,7 +865,7 @@ echo $sn_header_html;
 		</div>
 		<div class="sn-notes-hero-side">
 			<p class="sn-notes-subscribe">
-				No subscription form. No schedule. Notes via <a href="/notes/subscribe/">RSS</a>, or via email through <a href="https://blogtrottr.com/" target="_blank" rel="noopener noreferrer" data-sn-subscribe="email">Blogtrottr</a> or <a href="https://www.feedrabbit.com/" target="_blank" rel="noopener noreferrer" data-sn-subscribe="email">Feedrabbit</a>.<span class="sn-notes-cursor" aria-hidden="true"></span>
+				No subscription form. No schedule. Notes via <a href="/notes/subscribe/">RSS, JSON Feed or email</a>.<span class="sn-notes-cursor" aria-hidden="true"></span>
 			</p>
 			<?php if ( ! $sn_filtered ) : ?>
 			<?php // Corpus stats: entry count + last-updated, the side column's
