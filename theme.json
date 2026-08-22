@@ -206,6 +206,14 @@
 					"typography": {
 						"textDecoration": "underline"
 					}
+				},
+				":focus-visible": {
+					"outline": {
+						"width": "2px",
+						"style": "solid",
+						"color": "var(--wp--preset--color--blood)",
+						"offset": "3px"
+					}
 				}
 			},
 			"button": {
@@ -234,6 +242,14 @@
 					"color": {
 						"background": "var(--wp--preset--color--blood)",
 						"text": "var(--wp--preset--color--void)"
+					}
+				},
+				":focus-visible": {
+					"outline": {
+						"width": "2px",
+						"style": "solid",
+						"color": "var(--wp--preset--color--blood)",
+						"offset": "3px"
 					}
 				}
 			},

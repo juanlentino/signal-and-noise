@@ -107,5 +107,57 @@ if ( is_array( $cite ) ) {
 	tje_eq( $cite['color']['text'] ?? null, $rust_color, 'cite.color.text is rust' );
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+   v12.3.0 — the keyboard focus ring is DECLARED, not only styled.
+
+   Verified against the shipped WP stubs, not the 7.1 RC notes:
+     VALID_ELEMENT_PSEUDO_SELECTORS = link + button, each accepting
+       :link :any-link :visited :hover :focus :focus-visible :active
+     VALID_BLOCK_PSEUDO_SELECTORS   = core/button ONLY
+   So :focus-visible IS declarable at element level (the RC-era note that
+   block pseudo-states also covered Navigation Link is wrong for shipped 7.1).
+
+   WHY DECLARE IT AT ALL, when assets/css/base.css already ships the ring:
+   theme.json declared 2 :hover and ZERO focus states, so the Site Editor
+   showed nothing where the front end has a tested WCAG 2.4.7 treatment. The
+   authoring surface was lying about what the theme does.
+
+   WHY THE CSS RULE STAYS: that single rule also covers [role="button"],
+   [role="link"], input[type=submit|button|checkbox|radio] and summary —
+   none of which theme.json can express. Replacing it would cut 2.4.7
+   coverage from ten selectors to two. This ADDS a declaration; it removes
+   nothing. The parity assertion below is what keeps the duplication honest.
+   ───────────────────────────────────────────────────────────────────────── */
+$tj   = json_decode( file_get_contents( __DIR__ . '/../theme.json' ), true );
+$base = file_get_contents( __DIR__ . '/../assets/css/base.css' );
+
+foreach ( array( 'link', 'button' ) as $el ) {
+	$o = $tj['styles']['elements'][ $el ][':focus-visible']['outline'] ?? null;
+	tje_ok( is_array( $o ), "elements.$el declares a :focus-visible outline" );
+	foreach ( array( 'width', 'style', 'color', 'offset' ) as $k ) {
+		tje_ok( isset( $o[ $k ] ) && '' !== $o[ $k ], "elements.$el :focus-visible outline declares $k" );
+	}
+}
+
+// PARITY with the shipped rule. Two places now describe one ring; this is the
+// assertion that stops them drifting.
+tje_ok(
+	1 === preg_match( '/a:focus-visible,.*?\{([^}]*)\}/s', $base, $m_ring ),
+	'the global :focus-visible rule was located in base.css (guard: the regex still matches)'
+);
+$ring = preg_replace( '/\s+/', ' ', $m_ring[1] ?? '' );
+preg_match( '/outline:\s*([^;]+);/', $ring, $m_o );
+preg_match( '/outline-offset:\s*([^;]+);/', $ring, $m_off );
+$css_outline = trim( $m_o[1] ?? '' );
+$css_offset  = trim( $m_off[1] ?? '' );
+tje_ok( '' !== $css_outline && '' !== $css_offset, 'the CSS ring declares both outline and outline-offset' );
+
+foreach ( array( 'link', 'button' ) as $el ) {
+	$o = $tj['styles']['elements'][ $el ][':focus-visible']['outline'] ?? array();
+	$composed = trim( ( $o['width'] ?? '' ) . ' ' . ( $o['style'] ?? '' ) . ' ' . ( $o['color'] ?? '' ) );
+	tje_ok( $composed === $css_outline, "elements.$el ring matches base.css: '$composed' vs '$css_outline'" );
+	tje_ok( ( $o['offset'] ?? '' ) === $css_offset, "elements.$el offset matches base.css ('$css_offset')" );
+}
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
