@@ -94,5 +94,44 @@ foreach ( array( 'Blogtrottr', 'Feedrabbit' ) as $relay ) {
 	ok( false === stripos( $src, $relay ), "hero does NOT enumerate the relay '$relay' (it lives on the subscribe page)" );
 }
 
+// v12.2.2: THE HERO MUST NOT RESTATE THE PAGE IT POINTS AT.
+// The hero is a door: it says what you get and where to go. /notes/subscribe/
+// owns the argument, the addresses and the caveats. The first version of this
+// line lifted "open formats any reader can follow" and "nothing about you is
+// collected" almost verbatim from that page — two copies of the same sentences,
+// free to drift apart, which is the exact failure the terms link avoids.
+//
+// Measured as shared word-runs rather than a phrase blocklist, so it catches
+// duplication nobody thought to forbid.
+function sn_words( $html ) {
+	$t = preg_replace( '/<\?php.*?\?>/s', ' ', $html );
+	$t = preg_replace( '/<[^>]*>/', ' ', (string) $t );
+	$t = html_entity_decode( (string) $t, ENT_QUOTES, 'UTF-8' );
+	$t = strtolower( preg_replace( '/[^a-z0-9\s]/i', ' ', (string) $t ) );
+	return array_values( array_filter( explode( ' ', preg_replace( '/\s+/', ' ', $t ) ) ) );
+}
+function sn_ngrams( $words, $n ) {
+	$out = array();
+	for ( $i = 0; $i + $n <= count( $words ); $i++ ) {
+		$out[ implode( ' ', array_slice( $words, $i, $n ) ) ] = true;
+	}
+	return $out;
+}
+
+// the hero line only
+preg_match( '/<p class="sn-notes-subscribe">(.*?)<\/p>/s', $src, $m_hero );
+ok( ! empty( $m_hero[1] ), 'the hero subscribe line was located (guard: the regex still matches)' );
+
+// the subscribe page's visible prose only
+$sub_src = file_get_contents( __DIR__ . '/../inc/feed-subscribe-page.php' );
+preg_match_all( '/<p class="sn-(?:notes-dek|subscribe-help)">(.*?)<\/p>/s', $sub_src, $m_sub );
+ok( count( $m_sub[1] ) >= 3, 'the subscribe page prose was located (guard: the regex still matches)' );
+
+$shared = array_intersect_key(
+	sn_ngrams( sn_words( $m_hero[1] ), 6 ),
+	sn_ngrams( sn_words( implode( ' ', $m_sub[1] ) ), 6 )
+);
+ok( array() === $shared, 'hero shares NO 6-word run with the page it links to' . ( $shared ? ' — found: "' . implode( '" / "', array_keys( $shared ) ) . '"' : '' ) );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

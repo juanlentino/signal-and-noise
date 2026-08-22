@@ -123,8 +123,39 @@ function sn_subscribe_render() {
 		'suppress_filters' => false,
 	) );
 
-	get_header();
+	// PRE-RENDER both template parts so their block-layout CSS (the
+	// .wp-container-core-group-is-layout-… flex rules) is registered with
+	// WP_Style_Engine BEFORE wp_head prints the stylesheet. Without this
+	// two-pass those rules are queued too late and land nowhere: the header nav
+	// packs left instead of right. inc/page-notes-render.php carries the same
+	// constraint and the same comment — this route simply never had it.
+	//
+	// v12.2.2: this replaced the get_header / get_footer pair. There is no header.php
+	// in a block theme, so get_header fell through to core's theme-compat
+	// fallback (wp-includes/theme-compat/header.php) and rendered a generic
+	// site-title-and-tagline header. That was the giant flush-left wordmark and
+	// the missing nav from v11.9.4 until now.
+	ob_start();
+	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- trusted do_blocks() output (the theme's own header template part); captured to register block-layout styles before wp_head runs.
+	echo do_blocks( '<!-- wp:template-part {"slug":"header","area":"header"} /-->' );
+	$sn_header_html = ob_get_clean();
+
+	ob_start();
+	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- trusted do_blocks() output (the theme's own footer template part); must not be escaped.
+	echo do_blocks( '<!-- wp:template-part {"slug":"footer","area":"footer"} /-->' );
+	$sn_footer_html = ob_get_clean();
 	?>
+<!DOCTYPE html>
+<html <?php language_attributes(); ?>>
+<head>
+<meta charset="<?php bloginfo( 'charset' ); ?>">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<?php
+	// <title> comes from core's _wp_render_title_tag() during wp_head, fed by
+	// sn_subscribe_document_title() above. Never echo a manual <title> here —
+	// that produced a duplicate on /notes before v9.5.1.
+	wp_head();
+?>
 	<style>
 	/* Self-contained: the /notes/ hero styles are inline in page-notes-render.php
 	   and do not load on this route. Same tokens, so the two surfaces agree. */
@@ -187,14 +218,21 @@ function sn_subscribe_render() {
 	.sn-subscribe .sn-notes-row-title a:hover,
 	.sn-subscribe .sn-notes-row-title a:focus-visible { color: var(--wp--preset--color--blood); }
 	</style>
+</head>
+<body <?php body_class( 'sn-notes-body sn-subscribe-body' ); ?>>
+<?php wp_body_open(); ?>
+<?php
+	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $sn_header_html is trusted do_blocks() output captured above; must not be re-escaped.
+	echo $sn_header_html;
+?>
 	<main class="sn-notes-page sn-subscribe" id="wp--skip-link--target">
 		<header class="sn-notes-hero">
 			<p class="sn-notes-eyebrow">Notes &#183; Subscribe</p>
 			<div class="sn-notes-hero-title">
 				<h1 class="sn-notes-headline">Follow.</h1>
 				<p class="sn-notes-dek">No subscription form, no schedule, no algorithm deciding what
-					you see. Notes go out over RSS &#8212; an open format any reader can follow
-					&#8212; and as a JSON Feed for readers that prefer it.</p>
+					you see. Notes go out over RSS — an open format any reader can follow
+					— and as a JSON Feed for readers that prefer it.</p>
 			</div>
 		</header>
 
@@ -219,7 +257,7 @@ function sn_subscribe_render() {
 			<p class="sn-notes-section-label" id="sn-sub-json">The same notes, as JSON Feed</p>
 			<p class="sn-subscribe-url"><code><?php echo esc_html( $json ); ?></code></p>
 			<p class="sn-subscribe-help">Identical contents in JSON Feed 1.1, for readers that speak it
-				&#8212; NetNewsWire, Reeder, Feedbin and others. RSS above stays the primary channel;
+				— NetNewsWire, Reeder, Feedbin and others. RSS above stays the primary channel;
 				take whichever your reader prefers, not both.</p>
 		</section>
 
@@ -253,8 +291,14 @@ function sn_subscribe_render() {
 		</section>
 		<?php endif; ?>
 	</main>
+<?php
+	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $sn_footer_html is trusted do_blocks() output captured above; must not be re-escaped.
+	echo $sn_footer_html;
+?>
+<?php wp_footer(); ?>
+</body>
+</html>
 	<?php
-	get_footer();
 	exit;
 }
 

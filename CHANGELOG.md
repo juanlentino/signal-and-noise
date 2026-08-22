@@ -2,6 +2,56 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.2.2] - 2026-08-22 — the subscribe page was rendering WordPress's fallback header
+
+v12.2.1 gave this page its container back and the page still looked wrong,
+because the container was never the whole problem. The chrome around it was not
+ours at all.
+
+### Fixed
+- **`get_header()` / `get_footer()` in a block theme render core's
+  theme-compat fallback.** This theme has no `header.php` and no `footer.php` —
+  its header and footer are block **template parts**. So
+  `wp-includes/theme-compat/header.php` answered instead, which emits a generic
+  site-title-and-tagline masthead. That is the giant flush-left "JUAN LENTINO"
+  wordmark, the missing navigation, and the missing footer that this page has
+  shown since v11.9.4. No amount of page CSS could fix it; the site's own
+  chrome was never on the page.
+
+  The route now builds its document the way `inc/page-notes-render.php` does:
+  `do_blocks()` on the header and footer template parts, its own
+  `<!DOCTYPE>` / `<head>` / `wp_head()` / `body_class()` / `wp_body_open()` /
+  `wp_footer()`.
+- **And it does it in the required order.** Both template parts are rendered
+  **before** `wp_head()`, so their block-layout CSS (the
+  `.wp-container-core-group-is-layout-…` flex rules) reaches `WP_Style_Engine`
+  before the stylesheet prints. Queued after, those rules land nowhere and the
+  header nav packs left instead of right. `/notes/` carries this constraint in
+  a twenty-line comment; this route simply never had it. The order is now
+  pinned by a test, and the pin was mutation-tested **with a negative control**
+  so it fires on the regression rather than on any nearby edit.
+
+### Changed
+- **The `/notes/` hero stops restating the page it points at.** v12.2.1 traded
+  the inline enumeration for a link and cut the line too close to the bone; the
+  replacement then overcorrected by lifting *"open formats any reader can
+  follow"* and *"nothing about you is collected"* almost verbatim from
+  `/notes/subscribe/` — two copies of the same sentences, free to drift, which
+  is the exact failure the terms link exists to avoid.
+
+  The hero now does the job a hero does: says what you get and where to go, and
+  lets the destination own the argument, the addresses and the caveats. **A test
+  measures this as shared word-runs**, not a phrase blocklist — the hero may
+  share no six-word run with the subscribe page's prose — so it catches
+  duplication nobody thought to forbid. Against the offending copy it reported
+  twelve shared runs.
+- **House em-dash style applied.** `docs/VOICE-GUIDE.md`: *"em-dashes for
+  elevation, not for qualification."* The line's colon was doing qualifying
+  work and is now an em-dashed aside. The dashes are written as the **literal
+  character**, matching the 42 already in `page-notes-render.php` against zero
+  entities — three `&#8212;` entities introduced earlier in this arc were
+  normalized in both files.
+
 ## [12.2.1] - 2026-08-22 — the subscribe page had no container and no title
 
 Two defects the page has carried since v11.9.4, both found by looking at the
