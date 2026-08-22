@@ -2,6 +2,46 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.2.1] - 2026-08-22 — the subscribe page had no container and no title
+
+Two defects the page has carried since v11.9.4, both found by looking at the
+rendered page rather than the code. Neither was visible in any suite, because
+nothing asserted on either.
+
+### Fixed
+- **The page had no container at all.** `<main>` carries `.sn-notes-page`, and
+  that rule — the max width, the gutter, and the 160px clearance for the fixed
+  `.sn-footer` — is declared in `inc/page-notes-render.php`'s **inline** style,
+  which does not load on this route. So the page rendered flush against the
+  left edge of the viewport at full width: no design at all, on the one page
+  the site's RSS link points at. The rule is now declared locally, and
+  `tests/feed-subscribe-page.php` extracts **both** rules and compares them
+  declaration-for-declaration, so a change to the `/notes/` container that is
+  not mirrored here fails the build instead of silently re-orphaning this page.
+- **The document title read "Page not found — Juan Lentino".** The route answers
+  200 from `template_redirect`, but WP's query never resolved to a post, so
+  `wp_get_document_title()` fell through to the 404 string — on a live page with
+  no `noindex`, which search engines were free to index under that title.
+  `pre_get_document_title` now short-circuits it at priority 999, the same fix
+  `inc/page-notes-template.php` and `inc/page-index-template.php` already use
+  for their synthetic routes.
+
+  **Not** solved by creating a "Subscribe" Page in wp-admin, which is the
+  tempting fix: `sn_subscribe_render()` exits on `template_redirect`, so a real
+  Page at that path would never render — its content would be dead weight and
+  its title would live in the database, outside the repo, absent from a fresh
+  install and pinned by nothing.
+
+### Changed
+- **The `/notes/` hero links the subscribe page instead of listing channels.**
+  It read "Notes via RSS, or via email through Blogtrottr or Feedrabbit" — an
+  inline enumeration that had just been left behind by v12.2.0 and would have
+  gone on omitting the JSON Feed indefinitely. It now reads "Notes via RSS,
+  JSON Feed or email" pointing at `/notes/subscribe/`, which is where the
+  channels and the relays are described in one place. Same discipline as the
+  terms link: name the door, do not restate what is behind it. A test forbids
+  the relay names returning to the hero.
+
 ## [12.2.0] - 2026-08-22 — the JSON feed gets a door, and the terms get a link
 
 `/notes/subscribe/` shipped in v11.9.4 as the human answer to a feed URL that no

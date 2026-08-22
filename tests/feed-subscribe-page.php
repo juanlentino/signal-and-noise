@@ -18,10 +18,13 @@ function ok( $c, $m ) { global $pass, $fail; if ( $c ) { $pass++; echo "PASS: $m
 function add_action( $h, $cb, $p = 10, $a = 1 ) { return true; }
 function trailingslashit( $s ) { return rtrim( (string) $s, '/\\' ) . '/'; }
 function wp_parse_url( $u, $c = -1 ) { return parse_url( (string) $u, $c ); }
+function wp_unslash( $v ) { return is_string( $v ) ? stripslashes( $v ) : $v; }
 function home_url( $p = '' ) { return 'https://x.test' . $p; }
+function get_bloginfo( $k = 'name' ) { return 'Signal & Noise'; }
 
 define( 'SN_FEED_JSON_TEST', true ); // suppress its wiring; we want the accessors
 require __DIR__ . '/../inc/feed-json.php'; // the REAL producer, not a stub
+$_SERVER['REQUEST_URI'] = '/';
 require __DIR__ . '/../inc/feed-subscribe-page.php';
 
 echo "/notes/subscribe/ route (v11.9.4)\n\n";
@@ -82,6 +85,47 @@ ok( false !== strpos( $src, '/tdm-policy/' ), 'page links the terms at /tdm-poli
 foreach ( array( 'CC BY', 'Creative Commons', 'ShareAlike', 'NonCommercial', 'NoDerivatives', 'licen' ) as $term ) {
 	ok( false === stripos( $src, $term ), "page does NOT restate the terms: '$term'" );
 }
+
+// --- v12.2.1: the two defects the page shipped with in v11.9.4 ---
+
+// DEFECT 1 — the title. This route 200s, but WP's query never resolved to a
+// post, so wp_get_document_title() fell through to "Page not found" on a live,
+// indexable page. Same fix the other synthetic routes use (page-index-template,
+// page-notes-template): short-circuit pre_get_document_title. NOT a wp-admin
+// Page — sn_subscribe_render() exits on template_redirect, so a real Page at
+// this path would never render, and its title would live outside the repo.
+$_SERVER['REQUEST_URI'] = '/notes/subscribe/';
+ok( 'Subscribe — Signal & Noise' === sn_subscribe_document_title( 'Page not found — Signal & Noise' ), 'title is replaced on the subscribe route' );
+$_SERVER['REQUEST_URI'] = '/notes/';
+ok( 'untouched' === sn_subscribe_document_title( 'untouched' ), 'title passes through on every other route' );
+ok( false !== strpos( $src, "add_filter( 'pre_get_document_title'" ), 'the title filter is registered' );
+ok( false !== strpos( $src, ', 999 )' ), 'registered at 999, matching the other synthetic routes' );
+
+// DEFECT 2 — no container. .sn-notes-page carries the width, gutter and
+// footer clearance, and it is declared in page-notes-render.php's INLINE style,
+// which does not load on this route. The page rendered flush against the
+// viewport edge with no design at all.
+ok( 1 === preg_match( '/\.sn-notes-page\.sn-subscribe\s*\{/', $src ), 'the route declares its own container rule' );
+
+// And the two must not drift. Both rules are extracted and compared
+// declaration-for-declaration, so a change to the /notes/ container that is not
+// mirrored here fails rather than silently re-orphaning this page.
+function sn_css_rule( $css, $selector ) {
+	$q = preg_quote( $selector, '/' );
+	if ( ! preg_match( '/' . $q . '\s*\{([^}]*)\}/s', $css, $m ) ) { return null; }
+	$out = array();
+	foreach ( explode( ';', $m[1] ) as $d ) {
+		$d = trim( preg_replace( '/\s+/', ' ', $d ) );
+		if ( '' !== $d ) { $out[] = $d; }
+	}
+	sort( $out );
+	return $out;
+}
+$notes_css = file_get_contents( __DIR__ . '/../inc/page-notes-render.php' );
+$canonical = sn_css_rule( $notes_css, '.sn-notes-page' );
+$local     = sn_css_rule( $src, '.sn-notes-page.sn-subscribe' );
+ok( is_array( $canonical ) && $canonical, 'the canonical /notes/ container rule was found (guard: the regex still matches)' );
+ok( $canonical === $local, 'the subscribe container matches the /notes/ container declaration-for-declaration' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
