@@ -2,6 +2,42 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.2.2] - 2026-08-22 — the subscribe page was rendering WordPress's fallback header
+
+v12.2.1 gave this page its container back and the page still looked wrong,
+because the container was never the whole problem. The chrome around it was not
+ours at all.
+
+### Fixed
+- **`get_header()` / `get_footer()` in a block theme render core's
+  theme-compat fallback.** This theme has no `header.php` and no `footer.php` —
+  its header and footer are block **template parts**. So
+  `wp-includes/theme-compat/header.php` answered instead, which emits a generic
+  site-title-and-tagline masthead. That is the giant flush-left "JUAN LENTINO"
+  wordmark, the missing navigation, and the missing footer that this page has
+  shown since v11.9.4. No amount of page CSS could fix it; the site's own
+  chrome was never on the page.
+
+  The route now builds its document the way `inc/page-notes-render.php` does:
+  `do_blocks()` on the header and footer template parts, its own
+  `<!DOCTYPE>` / `<head>` / `wp_head()` / `body_class()` / `wp_body_open()` /
+  `wp_footer()`.
+- **And it does it in the required order.** Both template parts are rendered
+  **before** `wp_head()`, so their block-layout CSS (the
+  `.wp-container-core-group-is-layout-…` flex rules) reaches `WP_Style_Engine`
+  before the stylesheet prints. Queued after, those rules land nowhere and the
+  header nav packs left instead of right. `/notes/` carries this constraint in
+  a twenty-line comment; this route simply never had it. The order is now
+  pinned by a test, and the pin was mutation-tested **with a negative control**
+  so it fires on the regression rather than on any nearby edit.
+
+### Changed
+- **The `/notes/` hero line has its weight back.** v12.2.1 traded an
+  enumeration for a link and cut it too close to the bone. It now reads: no
+  subscription form, no schedule, no algorithm deciding what you see — notes
+  over RSS, JSON Feed or email, open formats any reader can follow, and nothing
+  about you collected. Still one link, still no relay names.
+
 ## [12.2.1] - 2026-08-22 — the subscribe page had no container and no title
 
 Two defects the page has carried since v11.9.4, both found by looking at the

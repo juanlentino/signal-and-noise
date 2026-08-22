@@ -865,7 +865,9 @@ echo $sn_header_html;
 		</div>
 		<div class="sn-notes-hero-side">
 			<p class="sn-notes-subscribe">
-				No subscription form. No schedule. Notes via <a href="/notes/subscribe/">RSS, JSON Feed or email</a>.<span class="sn-notes-cursor" aria-hidden="true"></span>
+				No subscription form. No schedule. No algorithm deciding what you see.
+				Notes go out over <a href="/notes/subscribe/">RSS, JSON Feed or email</a> &#8212;
+				open formats any reader can follow, and nothing about you is collected.<span class="sn-notes-cursor" aria-hidden="true"></span>
 			</p>
 			<?php if ( ! $sn_filtered ) : ?>
 			<?php // Corpus stats: entry count + last-updated, the side column's

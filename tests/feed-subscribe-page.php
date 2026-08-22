@@ -127,5 +127,30 @@ $local     = sn_css_rule( $src, '.sn-notes-page.sn-subscribe' );
 ok( is_array( $canonical ) && $canonical, 'the canonical /notes/ container rule was found (guard: the regex still matches)' );
 ok( $canonical === $local, 'the subscribe container matches the /notes/ container declaration-for-declaration' );
 
+// --- v12.2.2: the page must build its own document ---
+// This is a BLOCK theme: there is no header.php, so get_header() fell through
+// to core's theme-compat fallback (wp-includes/theme-compat/header.php), which
+// renders a generic site-title-and-tagline header. That is the giant flush-left
+// wordmark, the missing nav, and the missing block-layout CSS — not a styling
+// bug but a whole chrome that was never ours.
+ok( false === strpos( $src, 'get_header()' ), 'does NOT call get_header() (theme-compat fallback in a block theme)' );
+ok( false === strpos( $src, 'get_footer()' ), 'does NOT call get_footer()' );
+ok( false !== strpos( $src, '"slug":"header","area":"header"' ), 'renders the real header template part' );
+ok( false !== strpos( $src, '"slug":"footer","area":"footer"' ), 'renders the real footer template part' );
+ok( false !== strpos( $src, 'wp_head()' ), 'emits wp_head()' );
+ok( false !== strpos( $src, 'wp_body_open()' ), 'emits wp_body_open()' );
+ok( false !== strpos( $src, 'wp_footer()' ), 'emits wp_footer()' );
+ok( false !== strpos( $src, 'body_class(' ), 'emits body_class()' );
+
+// THE LOAD-BEARING PIN: the two-pass. Both template parts must be rendered
+// BEFORE wp_head(), or their block-layout CSS is queued after the stylesheet
+// has already printed and lands nowhere — the header nav packs left instead of
+// right. page-notes-render.php carries the same constraint in a 20-line comment.
+$p_header_part = strpos( $src, '"slug":"header","area":"header"' );
+$p_footer_part = strpos( $src, '"slug":"footer","area":"footer"' );
+$p_wp_head     = strpos( $src, 'wp_head()' );
+ok( $p_header_part < $p_wp_head, 'header template part is pre-rendered BEFORE wp_head()' );
+ok( $p_footer_part < $p_wp_head, 'footer template part is pre-rendered BEFORE wp_head()' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
