@@ -2,6 +2,50 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.3.0] - 2026-08-22 — the keyboard focus ring is declared, not only styled
+
+The theme has shipped a WCAG 2.4.7 focus ring since v8.5.6 and `theme.json`
+declared **zero** focus states — 2 `:hover` and nothing else. The Site Editor
+showed empty where the front end has a tested treatment: an authoring surface
+lying about what the theme does.
+
+### Added
+- **`elements.link` and `elements.button` declare `:focus-visible`**, mirroring
+  the shipped ring exactly (`2px solid` blood, `3px` offset). No front-end
+  change — the values are identical to the CSS that already renders. What
+  changes is that the Site Editor and Global Styles now know the ring exists.
+
+### Not done, with the measurement so it is not re-litigated
+Checked against the **shipped** WP 7.1 constants in `vendor/php-stubs`, not the
+RC notes this was scoped from:
+
+- `VALID_BLOCK_PSEUDO_SELECTORS` is **`core/button` only**. The 2026-08-11
+  research recorded "Button and Navigation Link"; Navigation Link is not in the
+  shipped constant. So block-level pseudo-states have no subject here, exactly
+  as that session concluded for a different reason.
+- `VALID_ELEMENT_PSEUDO_SELECTORS` **does** include `:focus-visible` for both
+  link and button. That is the one thing worth adopting, and it is what shipped.
+- Of the theme's 101 interactive CSS rules, **77** target `.sn-*` components and
+  **24** target blocks — but nearly all of those 24 are structurally
+  inexpressible in `theme.json`: `:has()`, descendant-plus-pseudo-element
+  (`.wp-block-navigation a:hover::after`), style variations
+  (`.is-style-outline`), state classes (`.is-menu-open`), and contextual
+  selectors (`.single-post …`). The two that *are* expressible were already
+  declared as `elements.button.:hover` / `elements.link.:hover`.
+
+### Why the CSS rule stays
+The hand-rolled rule was **not** replaced. One rule covers ten selectors —
+`a`, `button`, `[role="button"]`, `[role="link"]`, `input[type=submit|button|
+checkbox|radio]`, `.wp-block-button__link` and `summary`. `theme.json` reaches
+two of them. Swapping to native would have cut 2.4.7 coverage from ten
+selectors to two, which is why "replace the hand-rolled states with native
+ones" is the wrong shape and only the addition shipped.
+
+Two places now describe one ring, so `tests/theme-json-elements.php` extracts
+both and asserts they agree. Mutation-tested **from both directions** — drifting
+`theme.json` and drifting `base.css` each go red — with a negative control that
+stays green.
+
 ## [12.2.2] - 2026-08-22 — the subscribe page was rendering WordPress's fallback header
 
 v12.2.1 gave this page its container back and the page still looked wrong,
