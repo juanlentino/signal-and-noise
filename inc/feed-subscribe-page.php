@@ -231,8 +231,8 @@ function sn_subscribe_render() {
 			<div class="sn-notes-hero-title">
 				<h1 class="sn-notes-headline">Follow.</h1>
 				<p class="sn-notes-dek">No subscription form, no schedule, no algorithm deciding what
-					you see. Notes go out over RSS &#8212; an open format any reader can follow
-					&#8212; and as a JSON Feed for readers that prefer it.</p>
+					you see. Notes go out over RSS — an open format any reader can follow
+					— and as a JSON Feed for readers that prefer it.</p>
 			</div>
 		</header>
 
@@ -257,7 +257,7 @@ function sn_subscribe_render() {
 			<p class="sn-notes-section-label" id="sn-sub-json">The same notes, as JSON Feed</p>
 			<p class="sn-subscribe-url"><code><?php echo esc_html( $json ); ?></code></p>
 			<p class="sn-subscribe-help">Identical contents in JSON Feed 1.1, for readers that speak it
-				&#8212; NetNewsWire, Reeder, Feedbin and others. RSS above stays the primary channel;
+				— NetNewsWire, Reeder, Feedbin and others. RSS above stays the primary channel;
 				take whichever your reader prefers, not both.</p>
 		</section>
 

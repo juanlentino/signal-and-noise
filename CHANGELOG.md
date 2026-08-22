@@ -32,11 +32,25 @@ ours at all.
   so it fires on the regression rather than on any nearby edit.
 
 ### Changed
-- **The `/notes/` hero line has its weight back.** v12.2.1 traded an
-  enumeration for a link and cut it too close to the bone. It now reads: no
-  subscription form, no schedule, no algorithm deciding what you see — notes
-  over RSS, JSON Feed or email, open formats any reader can follow, and nothing
-  about you collected. Still one link, still no relay names.
+- **The `/notes/` hero stops restating the page it points at.** v12.2.1 traded
+  the inline enumeration for a link and cut the line too close to the bone; the
+  replacement then overcorrected by lifting *"open formats any reader can
+  follow"* and *"nothing about you is collected"* almost verbatim from
+  `/notes/subscribe/` — two copies of the same sentences, free to drift, which
+  is the exact failure the terms link exists to avoid.
+
+  The hero now does the job a hero does: says what you get and where to go, and
+  lets the destination own the argument, the addresses and the caveats. **A test
+  measures this as shared word-runs**, not a phrase blocklist — the hero may
+  share no six-word run with the subscribe page's prose — so it catches
+  duplication nobody thought to forbid. Against the offending copy it reported
+  twelve shared runs.
+- **House em-dash style applied.** `docs/VOICE-GUIDE.md`: *"em-dashes for
+  elevation, not for qualification."* The line's colon was doing qualifying
+  work and is now an em-dashed aside. The dashes are written as the **literal
+  character**, matching the 42 already in `page-notes-render.php` against zero
+  entities — three `&#8212;` entities introduced earlier in this arc were
+  normalized in both files.
 
 ## [12.2.1] - 2026-08-22 — the subscribe page had no container and no title
 
