@@ -30,6 +30,10 @@ function get_post_meta( $id, $key, $single = false ) { return $GLOBALS['__meta']
 function sn_get_reading_time( $id = null ) { return $GLOBALS['__rt'] ?? 0; }
 if ( ! function_exists( 'wp_json_encode' ) ) { function wp_json_encode( $v, $flags = 0, $depth = 512 ) { return json_encode( $v, $flags, $depth ); } }
 
+// esc_* seams for the <head> autodiscovery link, unpinned since v9.11.0.
+if ( ! function_exists( 'esc_attr' ) ) { function esc_attr( $s ) { return htmlspecialchars( (string) $s, ENT_QUOTES ); } }
+if ( ! function_exists( 'esc_url' ) ) { function esc_url( $s ) { return (string) $s; } }
+
 require __DIR__ . '/../inc/note-uid.php'; // v10.49.0: canonical uid read the module now calls
 require __DIR__ . '/../inc/feed-json.php';
 
@@ -111,6 +115,35 @@ ok( (int) sn_feed_json_query_args()['posts_per_page'] === 20, 'json-feed: defaul
 ok( false === ( sn_feed_json_query_args()['has_password'] ?? null ), 'json-feed: query excludes password-protected posts (has_password=false)' );
 $protected = sn_feed_json_build_item( (object) array( 'ID' => 13, 'post_content' => 'secret body', 'post_password' => 'pw' ) );
 ok( null === $protected, 'json-feed: build_item refuses a password-protected post outright' );
+
+// --- v12.2.0: TWO URL forms, one registration (JF-1) ---
+// The subscribe page teaches the pretty path because a human copies it; the
+// <head> link and the feed's own feed_url keep the query form because that one
+// resolves on a cold deploy, before the PLUGIN's next rewrite flush. Two forms
+// is a deliberate split, so both derive from ONE slug accessor: renaming the
+// registered feed moves both, and neither can be left pointing at nothing.
+ok( 'json' === sn_feed_json_slug(), 'slug accessor returns the registered feed slug' );
+ok( 'https://x.test/?feed=json' === sn_feed_json_url(), 'machine URL is the always-live query form (JF-1)' );
+ok( 'https://x.test/feed/json/' === sn_feed_json_pretty_url(), 'human URL is the pretty path' );
+ok( false !== strpos( sn_feed_json_url(), sn_feed_json_slug() ), 'machine URL is derived from the slug' );
+ok( false !== strpos( sn_feed_json_pretty_url(), sn_feed_json_slug() ), 'human URL is derived from the slug' );
+
+// Source-level: the registration and the content-type filter must READ the
+// accessor, not repeat the literal. A literal here is how the two silently
+// diverge from the URLs above.
+$json_src = file_get_contents( __DIR__ . '/../inc/feed-json.php' );
+ok( false !== strpos( $json_src, 'add_feed( sn_feed_json_slug()' ), 'add_feed() registers via the slug accessor, not a literal' );
+ok( false !== strpos( $json_src, 'sn_feed_json_slug() === $feed' ), 'content_type filter compares against the slug accessor' );
+
+// --- The <head> autodiscovery link: shipped v9.11.0, PINNED v12.2.0 ---
+// It has been live on production this whole time with zero assertions on it.
+ob_start(); sn_feed_json_head_link(); $head = ob_get_clean();
+ok( false !== strpos( $head, 'rel="alternate"' ), 'head link is a rel=alternate' );
+ok( false !== strpos( $head, 'type="application/feed+json"' ), 'head link declares the JSON Feed media type' );
+ok( false !== strpos( $head, sn_feed_json_url() ), 'head link advertises the MACHINE url' );
+ok( false === strpos( $head, sn_feed_json_pretty_url() ), 'head link does NOT advertise the pretty path (JF-1: it 404s on a cold deploy)' );
+
+// The feed document's self-reference obeys the same rule.
 
 echo "Result: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

@@ -2,6 +2,66 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.2.0] - 2026-08-22 — the JSON feed gets a door, and the terms get a link
+
+`/notes/subscribe/` shipped in v11.9.4 as the human answer to a feed URL that no
+browser will render. It was right, and it was incomplete: it named RSS four
+times and JSON zero times, and it handed a reader the words without ever saying
+on what terms they could pass them on.
+
+### Added
+- **The JSON feed is now advertised to people, not only to machines.** The theme
+  has served valid JSON Feed 1.1 at `/feed/json/` since v9.11.0, and the only
+  thing pointing at it was `inc/agents-manifest.php` — a **machine** manifest. A
+  working capability that no human is told about is a part without a door. The
+  subscribe page now carries it as a second channel, with the URL shown to copy
+  and one line on who it is for. RSS stays primary; this is an addition, not a
+  demotion.
+- **A link to `/tdm-policy/`, and deliberately nothing more.** Subscribing *is*
+  redistribution — a reader republishes the words elsewhere — and the subscribe
+  page is the one surface that hands them over. It now links the terms.
+
+  **It does not restate them, and a test forbids restating them.**
+  `sn-rights-signals-worker` owns all four rights surfaces and
+  `sn-provenance-worker` OTS-anchors them hourly; theme pages are **not** among
+  the anchored surfaces. A copy of anchored text living here would be free to
+  drift from the canonical with nothing detecting the drift. The pin asserts the
+  *absence* of licence wording, so a future edit that helpfully pastes the terms
+  in fails the build.
+- **`sn_feed_json_slug()`, `sn_feed_json_url()` and `sn_feed_json_pretty_url()`.**
+  There are deliberately **two** URL forms for one feed, and they are not
+  interchangeable:
+
+  - `?feed=json` — the **machine** form, used by the `<head>` autodiscovery link
+    and the feed's own `feed_url`. `feed` is a core public query var, so it
+    resolves on any install immediately.
+  - `/feed/json/` — the **human** form, shown on the subscribe page because a
+    person reads and retypes it. It only exists after the *plugin's* next
+    rewrite flush (the theme must never flush), so advertising it to a reader
+    would 404 on a cold deploy — the JF-1 constraint recorded in
+    `inc/feed-json.php` since v9.11.0.
+
+  Both derive from the one slug accessor, and the registration and the
+  `feed_content_type` filter read it too. Renaming the feed moves all four
+  together instead of stranding one on a slug that no longer exists.
+
+### Fixed
+- **The `<head>` JSON alternate had zero assertions on it.** `sn_feed_json_head_link()`
+  has been hooked on `wp_head` and live in production since v9.11.0, and a grep
+  across `tests/` returned only its own definition. It is now pinned: the media
+  type, the `rel=alternate`, that it advertises the machine URL — and that it
+  does **not** advertise the pretty path, so the JF-1 reasoning above cannot be
+  undone by a well-meaning tidy-up.
+
+### Changed
+- **`docs/WP-7.0-CHECKLIST.md` is marked HISTORICAL**, not edited and not
+  deleted. It was stale twice over: WP 7.1 "Mary Lou" superseded 7.0 on
+  2026-08-19, and it still walks through four Plausible dashboard widgets
+  retired in plugin v6.0.0 whose Railway service was torn down this month. It is
+  still linked as a live pre-flight from `WP-7.0-AI-API-MAP.md`, so the notice
+  sits at the very top where that link lands. The body is untouched on purpose —
+  an audit trail that gets quietly corrected stops being an audit trail.
+
 ## [12.1.1] - 2026-08-21 — one opt-in for view transitions, and a comment that said the opposite
 
 The cross-document morph works: the `/notes` index emits a distinct
