@@ -117,8 +117,8 @@ add_action( 'wp_enqueue_scripts', function() {
 	$combined = function_exists( 'sn_css_ensure_combined' ) ? sn_css_ensure_combined() : null;
 	if ( null !== $combined ) {
 		wp_enqueue_style( 'sn-styles', $combined['url'], array(), $combined['ver'] );
-		// Alias for the five sibling modules (keyboard-nav + the
-		// now/index/accessibility/uses routes) that declare a hard
+		// Alias for the six sibling modules (keyboard-nav + the
+		// now/index/accessibility/uses/notes routes) that declare a hard
 		// dependency on 'sn-components' — a handle only the fallback
 		// branch registers. WP_Dependencies silently drops any handle
 		// whose dependency is unregistered (no <link>, only a
