@@ -2,6 +2,43 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.4.2] - 2026-08-22 — /notes stops looking hovered after a tap
+
+On iOS a tap applies `:hover` and **keeps it** until you tap somewhere else. An
+unguarded hover state therefore does not read as feedback on a phone — it reads
+as the control's resting appearance. The theme has guarded against this
+everywhere for versions; `/notes/` was the exception, and nothing noticed
+because those rules lived inside a PHP file where the check could not see them.
+
+v12.4.1 moved that CSS into `assets/css/notes.css`, and `tests/dark-mode.php`
+— which globs `assets/css/*.css` — immediately found **12 `:hover` occurrences
+with zero `@media (hover: hover)` guards**. The extraction did not create the
+defect; it revealed it.
+
+### Fixed
+- **Every `:hover` in `notes.css` now sits behind `@media (hover: hover)`.** The
+  index rows, row titles, meta links, month bands, search button, section-clear,
+  pagination and start-here link all stop sticking in their hover treatment
+  after a tap.
+- **Every `:focus-*` sibling stays OUTSIDE the guard.** The keyboard affordance
+  must work on every device, so each paired rule was split rather than wrapped:
+  `.sn-notes-row:focus-within` keeps its treatment unguarded while
+  `.sn-notes-row:hover` moves inside. Eleven of the twelve had a focus sibling;
+  the twelfth (`.sn-notes-subscribe a:hover`) is a link, whose focus ring comes
+  from `base.css`'s global `:focus-visible` rule.
+
+### Pinned
+Splitting one rule into two duplicates its declarations, so the halves are
+asserted **identical**: edit a hover treatment and forget the focus copy, and
+keyboard users would silently get a different result from mouse users. The
+hover-only rule is **named** in the assertion, so that set cannot grow in
+silence either.
+
+The v12.4.1 exemption in `tests/dark-mode.php` is removed — it existed for
+exactly one release, which is what a dated exemption is for.
+
+**Reader-visible on touch devices only.** On a mouse, nothing changes.
+
 ## [12.4.1] - 2026-08-22 — the /notes stylesheet moves into a file
 
 `inc/page-notes-render.php` was **1,007 lines, 702 of them a single inline
