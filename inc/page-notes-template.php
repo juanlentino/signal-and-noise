@@ -110,6 +110,52 @@ function sn_notes_is_tag_request() {
 }
 
 /**
+ * Does this request belong to the /notes renderer?
+ *
+ * ONE gate, called by both the template_redirect short-circuit below and
+ * sn_notes_enqueue(). They must fire on exactly the same requests: a view the
+ * renderer claims but the enqueue does not would render with no stylesheet at
+ * all — the silent-unstyled failure /notes/subscribe/ shipped with from
+ * v11.9.4 to v12.2.1. Sharing the predicate makes that drift impossible rather
+ * than merely detectable, and a third route added later reaches both.
+ *
+ * @since 12.4.1
+ * @return bool
+ */
+function sn_notes_owns_request() {
+	return sn_notes_is_index_request() || sn_notes_is_tag_request();
+}
+
+/**
+ * Enqueue the /notes stylesheet on the /notes routes only. Mirrors
+ * sn_index_enqueue() in inc/page-index-template.php: fired during the render
+ * file's wp_head() (which triggers wp_enqueue_scripts), gated by the route so
+ * it never loads elsewhere.
+ *
+ * The `sn-components` dependency is load-bearing, not decorative.
+ * WP_Dependencies silently drops any handle whose dependency is unregistered
+ * (no <link>, only a _doing_it_wrong). In combined mode inc/assets-frontend.php
+ * registers `sn-components` as an alias resolving to `sn-styles`; declaring the
+ * dependency is what opts this stylesheet into that. Five sibling modules
+ * vanished in combined mode in v10.21.6-.8 for exactly this reason.
+ *
+ * @since 12.4.1
+ * @return void
+ */
+function sn_notes_enqueue() {
+	if ( ! sn_notes_owns_request() ) {
+		return;
+	}
+	wp_enqueue_style(
+		'sn-notes',
+		get_theme_file_uri( 'assets/css/notes.css' ),
+		array( 'sn-components' ),
+		sn_asset_ver( 'assets/css/notes.css' )
+	);
+}
+add_action( 'wp_enqueue_scripts', 'sn_notes_enqueue', 30 );
+
+/**
  * PRIMARY override: short-circuit on `template_redirect`, render
  * the PHP file directly, and exit. This sidesteps the entire WP
  * template-include pipeline so nothing downstream can cache, mask,
@@ -124,7 +170,7 @@ function sn_notes_is_tag_request() {
  * (eventually) load templates/page-notes.html as a safety net.
  */
 add_action( 'template_redirect', function() {
-	if ( ! sn_notes_is_index_request() && ! sn_notes_is_tag_request() ) {
+	if ( ! sn_notes_owns_request() ) {
 		return;
 	}
 	$render = get_theme_file_path( 'inc/page-notes-render.php' );

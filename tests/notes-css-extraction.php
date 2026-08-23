@@ -62,5 +62,28 @@ ok( 1 === preg_match( '/\.sn-notes-page\s*\{[^}]*max-width:\s*1320px/s', $css ),
 ok( 1 === preg_match( '/\.sn-notes-page\s*\{[^}]*margin:\s*0 auto/s', $css ), 'the container keeps margin: 0 auto' );
 ok( 1 === preg_match( '/\.sn-notes-page\s*\{[^}]*160px/s', $css ), 'the container keeps the 160px fixed-footer clearance' );
 
+
+// ── ONE GATE, NOT TWO ───────────────────────────────────────────────────────
+// The renderer's short-circuit and the stylesheet's enqueue must fire on
+// exactly the same requests. Rather than parse both and compare, they share a
+// single predicate — drift becomes structurally impossible instead of merely
+// detectable. A third route added later reaches both automatically.
+$tpl = file_get_contents( __DIR__ . '/../inc/page-notes-template.php' );
+
+ok( false !== strpos( $tpl, 'function sn_notes_owns_request()' ), 'the shared route predicate exists' );
+ok( 1 === preg_match( '/function sn_notes_owns_request\(\)\s*\{\s*return\s+sn_notes_is_index_request\(\)\s*\|\|\s*sn_notes_is_tag_request\(\);/s', $tpl ), 'the shared predicate is the OR of both route checks' );
+ok( false !== strpos( $tpl, 'function sn_notes_enqueue()' ), 'the enqueue function exists' );
+ok( 1 === preg_match( '/function sn_notes_enqueue\(\)\s*\{\s*if \(\s*! sn_notes_owns_request\(\)\s*\)/s', $tpl ), 'the enqueue gates on the SHARED predicate' );
+ok( 1 === preg_match( "/add_action\(\s*'wp_enqueue_scripts',\s*'sn_notes_enqueue',\s*30\s*\)/", $tpl ), 'the enqueue is hooked on wp_enqueue_scripts at 30, matching sn_index_enqueue' );
+
+// The dependency is load-bearing. WP_Dependencies silently DROPS a handle whose
+// dependency is unregistered — no <link>, only a _doing_it_wrong — which is how
+// five route stylesheets vanished in combined mode in v10.21.6-.8.
+ok( 1 === preg_match( "/'sn-notes',\s*get_theme_file_uri\(\s*'assets\/css\/notes\.css'\s*\),\s*array\(\s*'sn-components'\s*\)/s", $tpl ), "the enqueue declares array( 'sn-components' ) — without it the stylesheet vanishes in combined mode" );
+ok( false !== strpos( $tpl, "sn_asset_ver( 'assets/css/notes.css' )" ), 'the enqueue versions via sn_asset_ver()' );
+
+// The renderer's own short-circuit must use the shared predicate too.
+ok( 1 === preg_match( '/template_redirect.*?! sn_notes_owns_request\(\)/s', $tpl ), 'the render short-circuit uses the SHARED predicate' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
