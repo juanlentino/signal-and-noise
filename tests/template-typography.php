@@ -67,7 +67,7 @@ ok( ( $custom['letterSpacing']['displayTight'] ?? '' ) === '-0.03em', 'letterSpa
 // 4. Single-use font-size tokens. These stay block attributes referencing
 //    var(), so they never enter the editor's font-size picker.
 foreach ( array(
-	'nav' => '1.125rem', 'proseLg' => '1.15rem', 'micro' => '0.7rem',
+	'micro' => '0.7rem',
 	'displayXs' => 'clamp(1.5rem, 3vw, 2.5rem)',
 	'displayXl' => 'clamp(3rem, 7vw, 5.5rem)',
 	'displayXxl' => 'clamp(3rem, 9vw, 7rem)',
@@ -87,14 +87,40 @@ foreach ( $theme['settings']['typography']['fontSizes'] ?? array() as $fs ) {
 }
 foreach ( array(
 	'eyebrow' => '0.75rem', 'prose' => '1rem', 'eyebrow-lg' => '0.85rem',
-	'caption' => '0.9rem',
+	'caption' => '0.9rem', 'nav' => '1.125rem', 'prose-lg' => '1.15rem',
 	'display-lg' => 'clamp(2.5rem, 6vw, 5rem)',
 	'display-md' => 'clamp(2rem, 4vw, 2.8rem)',
 	'display-sm' => 'clamp(1.8rem, 3vw, 2.5rem)',
 ) as $slug => $size ) {
 	ok( isset( $sizes[ $slug ] ), "preset '$slug' exists" );
 	ok( ( $sizes[ $slug ]['size'] ?? '' ) === $size, "preset '$slug' size === $size" );
-	ok( ( $sizes[ $slug ]['fluid'] ?? null ) === false, "preset '$slug' has fluid:false" );
+}
+
+// THE FLUID FLOOR RULE — v12.6.1, and the reason it exists.
+//
+// WordPress applies fluid typography to a block's own custom fontSize, not just
+// to presets, but only ABOVE a 14px floor. v12.6.0 replaced those literals with
+// var() references, which WordPress cannot parse as a length — so it emitted
+// them FLAT and every size at or above the floor silently lost its fluid
+// scaling. Measured live: the nav went 17.552px -> 18px, the hero subtitle
+// 17.9072px -> 18.4px.
+//
+// A preset carrying "fluid": false has exactly the same effect. So: a preset
+// whose size is a BARE LENGTH at or above 0.875rem (14px) must NOT opt out.
+// Below the floor WordPress skips fluid anyway, so opting out there is honest
+// and keeps the value verbatim. Clamps are never fluidised either way.
+foreach ( $sizes as $slug => $fs ) {
+	$size = (string) ( $fs['size'] ?? '' );
+	if ( ! preg_match( '/^([0-9.]+)rem$/', $size, $mm ) ) {
+		continue; // a clamp() or other function: fluid does not touch it
+	}
+	$px = (float) $mm[1] * 16;
+	if ( $px >= 14 ) {
+		ok( ( $fs['fluid'] ?? null ) !== false,
+			"preset '$slug' ($size = {$px}px, at/above the 14px fluid floor) does NOT opt out of fluid" );
+	} else {
+		ok( true, "preset '$slug' ($size = {$px}px) is below the fluid floor — opting out is inert" );
+	}
 }
 
 // 6. The six pre-existing slugs are KEPT. Theme CSS references small, medium

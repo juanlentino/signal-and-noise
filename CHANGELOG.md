@@ -2,6 +2,52 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.6.1] - 2026-08-23 — the fluid scaling comes back
+
+A regression in v12.6.0, caught by the post-install baseline diff it shipped
+with. **Install this on top of 12.6.0.**
+
+### What broke
+WordPress applies fluid typography to a block's **own custom `fontSize`**, not
+only to presets — but only above a **14px floor**. v12.6.0 replaced those
+literals with `var(--wp--…)` references, which WordPress cannot parse as a
+length, so it emitted them flat. Every size at or above the floor silently lost
+its fluid scaling.
+
+Measured live after install:
+
+| element | v12.5.0 | v12.6.0 | now |
+| --- | --- | --- | --- |
+| nav | 17.552px | **18px** | 17.552px |
+| hero subtitle | 17.9072px | **18.4px** | 17.9072px |
+
+Sizes below the floor were never fluidised and did not move: the footer at
+`0.7rem` (11.2px) and the note links at `0.85rem` (13.6px) were correct
+throughout, as were all `clamp()` values, which fluid never touches.
+
+### The fix
+`settings.custom` is never fluidised; a `fontSizes` preset with fluid **enabled**
+is. So `var(--wp--preset--font-size--prose)` used inline resolves to the very
+clamp WordPress would have computed for the block's own `1rem` — same input,
+same algorithm, same output — with inline specificity preserved.
+
+- `prose` (1rem) and `caption` (0.9rem) no longer carry `"fluid": false`.
+- `nav` (1.125rem) and `prose-lg` (1.15rem) move from `settings.custom` to
+  presets, because `settings.custom` cannot be fluidised at all.
+- `eyebrow` (0.75rem), `eyebrow-lg` (0.85rem) and `micro` (0.7rem) keep their
+  opt-out: below the floor WordPress skips fluid anyway, so it is inert and
+  keeps the value verbatim.
+
+### Pinned
+A preset whose size is a bare length at or above `0.875rem` (14px) must not opt
+out of fluid. The suite now checks that for **every** preset, the six
+pre-existing ones included, so this cannot come back the next time someone wants
+a value emitted verbatim.
+
+The phantom-token guard added in v12.6.0 earned its keep during this fix: a
+half-applied edit left two templates pointing at presets that did not exist yet,
+and the suite named both immediately.
+
 ## [12.6.0] - 2026-08-23 — the templates join the token layer
 
 Phase 2. All **53 blocks** that carried literal typography now reference the
