@@ -76,5 +76,38 @@ foreach ( array(
 	ok( ( $custom['fontSize'][ $k ] ?? '' ) === $v, "custom.fontSize.$k === $v" );
 }
 
+// 5. New presets exist, carry fluid:false, and hold the exact authored value.
+//    fluid:false is what makes adoption non-breaking. With fluid on, WordPress
+//    RE-DERIVES the value at generation time: measured on this very site,
+//    0.8rem became 13px and 1rem became clamp(14px … 20px). Adopting presets
+//    without the opt-out would have resized every site it touched.
+$sizes = array();
+foreach ( $theme['settings']['typography']['fontSizes'] ?? array() as $fs ) {
+	$sizes[ $fs['slug'] ] = $fs;
+}
+foreach ( array(
+	'eyebrow' => '0.75rem', 'prose' => '1rem', 'eyebrow-lg' => '0.85rem',
+	'caption' => '0.9rem',
+	'display-lg' => 'clamp(2.5rem, 6vw, 5rem)',
+	'display-md' => 'clamp(2rem, 4vw, 2.8rem)',
+	'display-sm' => 'clamp(1.8rem, 3vw, 2.5rem)',
+) as $slug => $size ) {
+	ok( isset( $sizes[ $slug ] ), "preset '$slug' exists" );
+	ok( ( $sizes[ $slug ]['size'] ?? '' ) === $size, "preset '$slug' size === $size" );
+	ok( ( $sizes[ $slug ]['fluid'] ?? null ) === false, "preset '$slug' has fluid:false" );
+}
+
+// 6. The six pre-existing slugs are KEPT. Theme CSS references small, medium
+//    and large; removal is a separate, evidence-gated change.
+foreach ( array( 'small', 'medium', 'large', 'x-large', 'xx-large', 'xxx-large' ) as $slug ) {
+	ok( isset( $sizes[ $slug ] ), "pre-existing preset '$slug' retained" );
+}
+
+// 7. No slug contains a digit. Per the handbook, a key 'abc123' becomes
+//    'abc-1-2-3' — digits are hyphenated like uppercase letters.
+foreach ( array_keys( $sizes ) as $slug ) {
+	ok( preg_match( '/[0-9]/', $slug ) === 0, "slug '$slug' contains no digit" );
+}
+
 echo "\n$pass passed, $fail failed\n";
 exit( $fail > 0 ? 1 : 0 );

@@ -101,7 +101,14 @@
 				{ "slug": "large", "size": "1.25rem", "name": "Large" },
 				{ "slug": "x-large", "size": "clamp(2rem, 4vw, 3.5rem)", "name": "Extra Large" },
 				{ "slug": "xx-large", "size": "clamp(3rem, 7vw, 6rem)", "name": "Huge" },
-				{ "slug": "xxx-large", "size": "clamp(4rem, 10vw, 9rem)", "name": "Massive" }
+				{ "slug": "xxx-large", "size": "clamp(4rem, 10vw, 9rem)", "name": "Massive" },
+				{ "slug": "eyebrow", "size": "0.75rem", "name": "Eyebrow", "fluid": false },
+				{ "slug": "eyebrow-lg", "size": "0.85rem", "name": "Eyebrow Large", "fluid": false },
+				{ "slug": "prose", "size": "1rem", "name": "Prose", "fluid": false },
+				{ "slug": "caption", "size": "0.9rem", "name": "Caption", "fluid": false },
+				{ "slug": "display-sm", "size": "clamp(1.8rem, 3vw, 2.5rem)", "name": "Display Small", "fluid": false },
+				{ "slug": "display-md", "size": "clamp(2rem, 4vw, 2.8rem)", "name": "Display Medium", "fluid": false },
+				{ "slug": "display-lg", "size": "clamp(2.5rem, 6vw, 5rem)", "name": "Display Large", "fluid": false }
 			]
 		},
 		"spacing": {
