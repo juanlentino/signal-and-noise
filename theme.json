@@ -104,11 +104,13 @@
 				{ "slug": "xxx-large", "size": "clamp(4rem, 10vw, 9rem)", "name": "Massive" },
 				{ "slug": "eyebrow", "size": "0.75rem", "name": "Eyebrow", "fluid": false },
 				{ "slug": "eyebrow-lg", "size": "0.85rem", "name": "Eyebrow Large", "fluid": false },
-				{ "slug": "prose", "size": "1rem", "name": "Prose", "fluid": false },
-				{ "slug": "caption", "size": "0.9rem", "name": "Caption", "fluid": false },
+				{ "slug": "prose", "size": "1rem", "name": "Prose" },
+				{ "slug": "caption", "size": "0.9rem", "name": "Caption" },
 				{ "slug": "display-sm", "size": "clamp(1.8rem, 3vw, 2.5rem)", "name": "Display Small", "fluid": false },
 				{ "slug": "display-md", "size": "clamp(2rem, 4vw, 2.8rem)", "name": "Display Medium", "fluid": false },
-				{ "slug": "display-lg", "size": "clamp(2.5rem, 6vw, 5rem)", "name": "Display Large", "fluid": false }
+				{ "slug": "display-lg", "size": "clamp(2.5rem, 6vw, 5rem)", "name": "Display Large", "fluid": false },
+				{ "slug": "nav", "size": "1.125rem", "name": "Navigation" },
+				{ "slug": "prose-lg", "size": "1.15rem", "name": "Prose Large" }
 			]
 		},
 		"spacing": {
@@ -155,8 +157,6 @@
 				"displayTight": "-0.03em"
 			},
 			"fontSize": {
-				"nav": "1.125rem",
-				"proseLg": "1.15rem",
 				"micro": "0.7rem",
 				"displayXs": "clamp(1.5rem, 3vw, 2.5rem)",
 				"displayXl": "clamp(3rem, 7vw, 5.5rem)",
