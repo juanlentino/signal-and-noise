@@ -216,7 +216,9 @@ ok( sn_notes_year_spine_is_useful( $g ), 'two years → spine useful' );
 // defines it, because they are the same block — so there is no override to
 // position, and no source order to get wrong.
 echo "\nGroup: the row template and its area names are one block\n";
-$css_src = (string) file_get_contents( __DIR__ . '/../inc/page-notes-render.php' );
+// v12.4.1: the /notes CSS moved out of the renderer into its own route-scoped
+// stylesheet. Same rules, new home.
+$css_src = (string) file_get_contents( __DIR__ . '/../assets/css/notes.css' );
 
 ok( strpos( $css_src, 'container-type: inline-size' ) !== false,
 	'.sn-notes-index-list establishes a size container' );

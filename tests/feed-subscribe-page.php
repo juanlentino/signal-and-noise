@@ -121,7 +121,8 @@ function sn_css_rule( $css, $selector ) {
 	sort( $out );
 	return $out;
 }
-$notes_css = file_get_contents( __DIR__ . '/../inc/page-notes-render.php' );
+// v12.4.1: the canonical /notes container rule now lives in its own stylesheet.
+$notes_css = file_get_contents( __DIR__ . '/../assets/css/notes.css' );
 $canonical = sn_css_rule( $notes_css, '.sn-notes-page' );
 $local     = sn_css_rule( $src, '.sn-notes-page.sn-subscribe' );
 ok( is_array( $canonical ) && $canonical, 'the canonical /notes/ container rule was found (guard: the regex still matches)' );

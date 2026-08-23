@@ -20,6 +20,9 @@
 if ( PHP_SAPI !== 'cli' && ! defined( 'WP_CLI' ) ) { http_response_code( 404 ); exit; }
 
 $src = file_get_contents( __DIR__ . '/../inc/page-notes-render.php' );
+// v12.4.1: MARKUP assertions stay on the renderer; the hero's CSS moved to its
+// own route-scoped stylesheet. Two subjects, two sources.
+$css = file_get_contents( __DIR__ . '/../assets/css/notes.css' );
 
 $pass = 0; $fail = 0;
 function ok( $c, $m ) { global $pass, $fail; if ( $c ) { ++$pass; echo "PASS: $m\n"; } else { ++$fail; echo "FAIL: $m\n"; } }
@@ -77,13 +80,13 @@ ok( false !== $p_start_here && $p_start_here < $p_side,
 
 // v11.4.1: the headline joined the site-wide uniform title scale. Pinned so a
 // future hero edit cannot silently reintroduce the 176px outlier.
-ok( false !== strpos( $src, 'font-size: clamp(3rem, 8vw, 7rem)' ), 'headline DECLARES the uniform title scale clamp(3rem, 8vw, 7rem)' );
+ok( false !== strpos( $css, 'font-size: clamp(3rem, 8vw, 7rem)' ), 'headline DECLARES the uniform title scale clamp(3rem, 8vw, 7rem)' );
 // Declaration form only — inc/page-notes-render.php:188 keeps the superseded
 // value in a prose comment as history, which must not trip this guard.
 ok( false === strpos( $src, 'font-size: clamp(4rem' ), 'the pre-v11.4.1 176px outlier is not a live declaration' );
 
 // v11.4.2: top alignment is the single split-hero rule across notes/now/uses.
-ok( false !== strpos( $src, 'align-items: start' ), 'hero grid top-aligns (v11.4.2 single split-hero rule)' );
+ok( false !== strpos( $css, 'align-items: start' ), 'hero grid top-aligns (v11.4.2 single split-hero rule)' );
 
 // v12.2.1: the hero POINTS at the subscribe page instead of enumerating
 // channels inline. It listed RSS + two email relays and would have gone on
