@@ -481,8 +481,8 @@ main { view-transition-name: sn-main; }
 }
 .sn-post-frontmatter > * {
 	font-family: 'DM Mono', 'Courier New', monospace;
-	font-size: max(0.75rem, 11px);
-	letter-spacing: 0.15em;
+	font-size: max(var(--wp--preset--font-size--eyebrow), 11px);
+	letter-spacing: var(--wp--custom--letter-spacing--wide);
 	text-transform: uppercase;
 	margin: 0;
 }

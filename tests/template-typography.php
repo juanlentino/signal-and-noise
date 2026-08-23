@@ -158,5 +158,81 @@ foreach ( array( 'hairline', 'signal', 'epigraph', 'references' ) as $name ) {
 		"PHP-registered block style '$name' still registered" );
 }
 
+// 11. NO UNGOVERNED LITERAL in migrated files.
+//
+//     Every typography value in a migrated file must be a var(--wp--...)
+//     reference, a preset slug, or supplied by a block style variation. A bare
+//     length, clamp or keyword is an ungoverned literal.
+//
+//     UNMIGRATED FILES ARE A DECLARED, SHRINKING EXEMPTION — the same device
+//     v12.4.1 used and v12.4.2 removed after exactly one release. The list is
+//     printed on every run so it cannot quietly become permanent, and the test
+//     fails if a file on it turns out to be already clean (a stale exemption is
+//     as much a defect as a missing one).
+$exempt = array(
+	'templates/home.html',
+	'templates/index.html',
+	'templates/404.html',
+	'templates/single.html',
+	'templates/front-page.html',
+	'templates/page.html',
+	'templates/page-notes.html',
+	'patterns/hero-dossier.php',
+	'patterns/section-constrained.php',
+);
+
+$typo_keys = array( 'fontSize', 'lineHeight', 'letterSpacing' );
+$files     = array();
+foreach ( array( 'templates', 'parts', 'patterns' ) as $d ) {
+	foreach ( (array) glob( "$theme_root/$d/*" ) as $f ) {
+		if ( is_file( $f ) ) { $files[] = $f; }
+	}
+}
+
+$literals_by_file = array();
+foreach ( $files as $f ) {
+	$rel = ltrim( str_replace( $theme_root, '', $f ), '/' );
+	$src = (string) file_get_contents( $f );
+	// Block comments, including self-closing — a `/-->` block carries
+	// attributes too, and missing them is how the original census lost the
+	// dynamic blocks.
+	preg_match_all( '/<!--\s*wp:[a-zA-Z0-9\/-]+\s*(\{.*?\})\s*\/?-->/s', $src, $m );
+	foreach ( (array) $m[1] as $raw ) {
+		$a = json_decode( $raw, true );
+		if ( ! is_array( $a ) ) { continue; }
+		$t = isset( $a['style']['typography'] ) ? $a['style']['typography'] : array();
+		foreach ( $typo_keys as $k ) {
+			if ( ! isset( $t[ $k ] ) ) { continue; }
+			$v = (string) $t[ $k ];
+			if ( 0 === strpos( $v, 'var(--wp--' ) || 0 === strpos( $v, 'var:' ) ) { continue; }
+			$literals_by_file[ $rel ][] = "$k=$v";
+		}
+	}
+}
+
+foreach ( $files as $f ) {
+	$rel = ltrim( str_replace( $theme_root, '', $f ), '/' );
+	$has = isset( $literals_by_file[ $rel ] );
+	if ( in_array( $rel, $exempt, true ) ) {
+		// A stale exemption is a defect: it hides the fact that the work is done.
+		ok( $has, "EXEMPT (still unmigrated, as declared): $rel" );
+		continue;
+	}
+	ok( ! $has, "no ungoverned typography literal: $rel"
+		. ( $has ? ' — found ' . implode( ', ', $literals_by_file[ $rel ] ) : '' ) );
+}
+
+echo "\n  -- declared exemptions still standing: " . count( $exempt ) . " file(s) --\n";
+
+// 12. THE ONE DECLARED VISUAL CHANGE. parts/header.html's navigation carried
+//     letter-spacing:0.14em against 0.15em at the other twenty sites. It now
+//     points at the shared token. Measured before the change: +0.176px per
+//     character, ~7px across the nav, against 16px of slack at 1280px and
+//     259.9px at 800px. No wrap at any width.
+$header = (string) file_get_contents( "$theme_root/parts/header.html" );
+ok( false === strpos( $header, '0.14em' ), 'the 0.14em nav drift is gone' );
+ok( false !== strpos( $header, 'var(--wp--custom--letter-spacing--wide)' ),
+	'the nav now uses the same letter-spacing token as every other eyebrow' );
+
 echo "\n$pass passed, $fail failed\n";
 exit( $fail > 0 ? 1 : 0 );
