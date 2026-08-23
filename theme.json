@@ -135,12 +135,26 @@
 		"custom": {
 			"lineHeight": {
 				"tight": 1.1,
-				"normal": 1.7
+				"normal": 1.7,
+				"snug": 1.6,
+				"loose": 1.8,
+				"flat": 1,
+				"display": 1.02
 			},
 			"letterSpacing": {
 				"tight": "-0.02em",
 				"wide": "0.15em",
-				"ultra": "0.3em"
+				"ultra": "0.3em",
+				"displayTight": "-0.03em"
+			},
+			"fontSize": {
+				"nav": "1.125rem",
+				"proseLg": "1.15rem",
+				"micro": "0.7rem",
+				"displayXs": "clamp(1.5rem, 3vw, 2.5rem)",
+				"displayXl": "clamp(3rem, 7vw, 5.5rem)",
+				"displayXxl": "clamp(3rem, 9vw, 7rem)",
+				"displayHero": "clamp(5rem, 15vw, 12rem)"
 			}
 		}
 	},
