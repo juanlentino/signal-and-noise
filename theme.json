@@ -101,7 +101,14 @@
 				{ "slug": "large", "size": "1.25rem", "name": "Large" },
 				{ "slug": "x-large", "size": "clamp(2rem, 4vw, 3.5rem)", "name": "Extra Large" },
 				{ "slug": "xx-large", "size": "clamp(3rem, 7vw, 6rem)", "name": "Huge" },
-				{ "slug": "xxx-large", "size": "clamp(4rem, 10vw, 9rem)", "name": "Massive" }
+				{ "slug": "xxx-large", "size": "clamp(4rem, 10vw, 9rem)", "name": "Massive" },
+				{ "slug": "eyebrow", "size": "0.75rem", "name": "Eyebrow", "fluid": false },
+				{ "slug": "eyebrow-lg", "size": "0.85rem", "name": "Eyebrow Large", "fluid": false },
+				{ "slug": "prose", "size": "1rem", "name": "Prose", "fluid": false },
+				{ "slug": "caption", "size": "0.9rem", "name": "Caption", "fluid": false },
+				{ "slug": "display-sm", "size": "clamp(1.8rem, 3vw, 2.5rem)", "name": "Display Small", "fluid": false },
+				{ "slug": "display-md", "size": "clamp(2rem, 4vw, 2.8rem)", "name": "Display Medium", "fluid": false },
+				{ "slug": "display-lg", "size": "clamp(2.5rem, 6vw, 5rem)", "name": "Display Large", "fluid": false }
 			]
 		},
 		"spacing": {
@@ -135,12 +142,26 @@
 		"custom": {
 			"lineHeight": {
 				"tight": 1.1,
-				"normal": 1.7
+				"normal": 1.7,
+				"snug": 1.6,
+				"loose": 1.8,
+				"flat": 1,
+				"display": 1.02
 			},
 			"letterSpacing": {
 				"tight": "-0.02em",
 				"wide": "0.15em",
-				"ultra": "0.3em"
+				"ultra": "0.3em",
+				"displayTight": "-0.03em"
+			},
+			"fontSize": {
+				"nav": "1.125rem",
+				"proseLg": "1.15rem",
+				"micro": "0.7rem",
+				"displayXs": "clamp(1.5rem, 3vw, 2.5rem)",
+				"displayXl": "clamp(3rem, 7vw, 5.5rem)",
+				"displayXxl": "clamp(3rem, 9vw, 7rem)",
+				"displayHero": "clamp(5rem, 15vw, 12rem)"
 			}
 		}
 	},

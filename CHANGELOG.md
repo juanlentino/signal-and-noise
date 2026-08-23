@@ -2,6 +2,56 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.5.0] - 2026-08-23 — the type scale becomes the theme's own
+
+Foundation only. Nothing consumes these yet, so nothing rendered moves — the
+templates migrate onto them in a following release.
+
+### Why
+
+A census of every block comment in `templates/`, `parts/` and `patterns/` found
+**53 blocks carrying literal typography and zero using a font-size preset.** The
+six-slug fluid scale in `theme.json` shipped to the editor's picker and governed
+nothing the theme actually rendered. Picking "Large" while writing gave a size
+with no relationship to the theme's real type steps.
+
+It also found `letter-spacing:0.14em` in `parts/header.html` against `0.15em` at
+the other twenty sites — and against `--wp--custom--letter-spacing--wide`, which
+has held `0.15em` all along. That drift was invisible to every existing check,
+because `core/navigation` is a **dynamic block**: its inline style is generated
+at render, so measuring serialized `style="` output never saw it.
+
+### Added
+- **Seven font-size presets** naming the theme's real type steps — `eyebrow`,
+  `eyebrow-lg`, `prose`, `caption`, `display-sm`, `display-md`, `display-lg`.
+  Each carries **`"fluid": false`**.
+- **Typography tokens in `settings.custom`** — four line-heights, one
+  letter-spacing, and seven single-use font sizes. WordPress has no preset
+  namespace for line-height or letter-spacing, so `--wp--custom--*` is the
+  native home for those, not a workaround.
+- **Three block style variations** as JSON in `styles/blocks/` — Eyebrow,
+  Eyebrow (Large), Caption. The eyebrow pair shares one letter-spacing token, so
+  the twenty-one eyebrow sites cannot drift apart again.
+- **`tools/typography-baseline.js`** — captures rendered computed styles across
+  six routes via same-origin iframes, for before/after-install comparison.
+
+### Why `fluid: false` is load-bearing
+Fluid typography **re-derives** preset values at generation time. Measured on the
+live site: `"0.8rem"` ships as `13px` and `"1rem"` ships as `clamp(14px … 20px)`,
+while values already authored as `clamp()` pass through untouched. Adopting the
+preset scale without the documented per-size opt-out would have resized every
+block it touched, in a change advertised as a pure refactor.
+
+### Kept deliberately
+- **The six pre-existing slugs.** No content uses them — 25 notes and 6 pages
+  scanned, zero uses — but theme CSS references `small`, `medium` and `large`,
+  and user-saved Global Styles live in the database where no page scan reaches.
+  Adding breaks nothing; removing might. Pruning is its own change.
+- **The four PHP-registered block styles.** JSON provably cannot express them:
+  `hairline` needs `border-top-color … !important` to beat an `!important` base
+  rule, and `signal` styles a descendant `cite`. theme.json styles reach blocks
+  and elements, not arbitrary child selectors.
+
 ## [12.4.2] - 2026-08-22 — /notes stops looking hovered after a tap
 
 On iOS a tap applies `:hover` and **keeps it** until you tap somewhere else. An
