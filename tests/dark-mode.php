@@ -503,7 +503,7 @@ $guarded   = 0;
 // against "renders identically".
 //
 // REMOVE THIS ENTRY when the hover work lands.
-$hover_exempt = array( 'notes.css' );
+$hover_exempt = array();
 $hover_exempted = array();
 
 foreach ( glob( $root . '/assets/css/*.css' ) as $file ) {
@@ -544,7 +544,7 @@ ok( $guarded >= 68, "at least 68 :hover rules are guarded (found $guarded)" );
 // prevent, so a passing run SAYS what it skipped — and pins the set, so a
 // second exemption cannot be added without this assertion moving.
 ok(
-	array( 'notes.css' ) === $hover_exempted,
+	array() === $hover_exempted,
 	'hover-guard exemptions are exactly the declared set: ' . ( $hover_exempted ? implode( ', ', $hover_exempted ) : 'none' )
 );
 ok( empty( $unguarded ),

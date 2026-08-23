@@ -85,5 +85,51 @@ ok( false !== strpos( $tpl, "sn_asset_ver( 'assets/css/notes.css' )" ), 'the enq
 // The renderer's own short-circuit must use the shared predicate too.
 ok( 1 === preg_match( '/template_redirect.*?! sn_notes_owns_request\(\)/s', $tpl ), 'the render short-circuit uses the SHARED predicate' );
 
+
+// ── v12.4.2: HOVER IS GUARDED, FOCUS IS NOT ─────────────────────────────────
+// On iOS a tap applies :hover and KEEPS it until you tap elsewhere, so an
+// unguarded hover reads as the control's resting appearance rather than as
+// feedback. Every :hover here now sits behind @media (hover: hover); every
+// :focus-* sibling stays OUTSIDE it, because the keyboard affordance must work
+// on every device.
+//
+// Splitting one rule into two duplicates its declarations, so the two halves
+// are pinned as identical: edit the hover treatment and forget the focus copy
+// and keyboard users silently get a different result from mouse users.
+preg_match_all( '/@media \(hover: hover\)\s*\{\s*([^{]+?)\s*\{([^}]*)\}/s', $css, $guards, PREG_SET_ORDER );
+ok( count( $guards ) >= 12, 'every :hover rule is behind a hover guard (found ' . count( $guards ) . ', expected >= 12)' );
+
+$norm = function ( $decls ) {
+	return trim( preg_replace( '/\s+/', ' ', (string) $decls ) );
+};
+$checked = 0; $mismatched = array(); $solo = array();
+foreach ( $guards as $g ) {
+	$hover_sel  = $norm( $g[1] );
+	$hover_body = $norm( $g[2] );
+	$found      = false;
+	foreach ( array( ':focus-visible', ':focus-within', ':focus' ) as $pseudo ) {
+		$focus_sel = str_replace( ':hover', $pseudo, $hover_sel );
+		// The unguarded sibling, matched at column zero so a guarded rule is
+		// never mistaken for its own sibling.
+		if ( preg_match( '/^' . preg_quote( $focus_sel, '/' ) . '\s*\{([^}]*)\}/m', $css, $sib ) ) {
+			$found = true;
+			$checked++;
+			if ( $norm( $sib[1] ) !== $hover_body ) {
+				$mismatched[] = $focus_sel;
+			}
+			break;
+		}
+	}
+	if ( ! $found ) {
+		$solo[] = $hover_sel;
+	}
+}
+ok( $checked > 0, "guarded hover rules were matched to focus siblings (guard: $checked pairs found)" );
+ok( array() === $mismatched, 'each guarded :hover declares exactly what its focus sibling declares' . ( $mismatched ? ' — drifted: ' . implode( ', ', $mismatched ) : '' ) );
+// Hover-only rules are legitimate (a link's focus ring comes from base.css's
+// global :focus-visible rule), but they are NAMED so the set cannot grow in
+// silence.
+ok( count( $solo ) <= 1, 'at most one hover-only rule, named: ' . ( $solo ? implode( ' | ', $solo ) : 'none' ) );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
