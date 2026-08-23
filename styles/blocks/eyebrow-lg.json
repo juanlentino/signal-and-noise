@@ -1,0 +1,14 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/theme.json",
+	"version": 3,
+	"title": "Eyebrow (Large)",
+	"slug": "eyebrow-lg",
+	"blockTypes": ["core/paragraph", "core/heading"],
+	"styles": {
+		"typography": {
+			"fontSize": "var:preset|font-size|eyebrow-lg",
+			"letterSpacing": "var:custom|letter-spacing|wide",
+			"textTransform": "uppercase"
+		}
+	}
+}

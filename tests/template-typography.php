@@ -109,5 +109,54 @@ foreach ( array_keys( $sizes ) as $slug ) {
 	ok( preg_match( '/[0-9]/', $slug ) === 0, "slug '$slug' contains no digit" );
 }
 
+// 8. Block style variations exist and are built from tokens, not literals.
+$variations = array(
+	'eyebrow'    => array( 'title' => 'Eyebrow',         'fontSize' => 'var:preset|font-size|eyebrow' ),
+	'eyebrow-lg' => array( 'title' => 'Eyebrow (Large)', 'fontSize' => 'var:preset|font-size|eyebrow-lg' ),
+	'caption'    => array( 'title' => 'Caption',         'fontSize' => 'var:preset|font-size|caption' ),
+);
+foreach ( $variations as $name => $expect ) {
+	$path = "$theme_root/styles/blocks/$name.json";
+	ok( file_exists( $path ), "styles/blocks/$name.json exists" );
+	if ( ! file_exists( $path ) ) { continue; }
+	$v = json_decode( file_get_contents( $path ), true );
+	ok( is_array( $v ), "$name.json parses" );
+	ok( ( $v['title'] ?? '' ) === $expect['title'], "$name title === {$expect['title']}" );
+	ok( ( $v['slug'] ?? '' ) === $name, "$name slug === $name" );
+	ok( in_array( 'core/paragraph', $v['blockTypes'] ?? array(), true ), "$name applies to core/paragraph" );
+	$typo = $v['styles']['typography'] ?? array();
+	ok( ( $typo['fontSize'] ?? '' ) === $expect['fontSize'], "$name fontSize is a preset reference" );
+	// No literal may appear in a variation — that is the entire point. Keyword
+	// properties are exempt because 'uppercase' and 'italic' ARE the value;
+	// there is no token form of them.
+	foreach ( $typo as $prop => $val ) {
+		if ( in_array( $prop, array( 'textTransform', 'fontStyle' ), true ) ) { continue; }
+		ok( strpos( (string) $val, 'var:' ) === 0,
+			"$name.$prop is a token reference, not a literal (got: $val)" );
+	}
+}
+
+// 9. The eyebrow pair carries the shared letter-spacing token and uppercase.
+//    They share one token, so the 21 eyebrow sites cannot drift apart again.
+foreach ( array( 'eyebrow', 'eyebrow-lg' ) as $name ) {
+	$path = "$theme_root/styles/blocks/$name.json";
+	$v = file_exists( $path ) ? json_decode( file_get_contents( $path ), true ) : array();
+	$typo = $v['styles']['typography'] ?? array();
+	ok( ( $typo['letterSpacing'] ?? '' ) === 'var:custom|letter-spacing|wide',
+		"$name uses the shared letterSpacing.wide token" );
+	ok( ( $typo['textTransform'] ?? '' ) === 'uppercase', "$name is uppercase" );
+}
+
+// 10. The four PHP-registered block styles are untouched. JSON provably cannot
+//     express them: hairline needs border-top-color !important against an
+//     !important base rule, and signal styles a descendant `cite` selector.
+//     Regex, not strpos on an aligned literal — the source pads => with spaces,
+//     and a reformat would break a whitespace-exact pin on intact code.
+$bs = file_get_contents( "$theme_root/inc/block-styles.php" );
+foreach ( array( 'hairline', 'signal', 'epigraph', 'references' ) as $name ) {
+	ok( preg_match( "/'name'\\s*=>\\s*'" . preg_quote( $name, '/' ) . "'/", $bs ) === 1,
+		"PHP-registered block style '$name' still registered" );
+}
+
 echo "\n$pass passed, $fail failed\n";
 exit( $fail > 0 ? 1 : 0 );
