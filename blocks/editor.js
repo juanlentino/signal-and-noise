@@ -53,4 +53,40 @@
 		},
 		save: function () { return null; }
 	} );
+
+	// ── v12.4.0: the four block STYLES, surfaced as inserter VARIATIONS ──────
+	// A style only appears once a block is already inserted, in the sidebar
+	// Styles panel. A variation appears in the inserter and answers the `/`
+	// slash menu, which is where a writer actually is. Measured across the 25
+	// notes in /feed/json/ before this shipped: 339 paragraphs, 87 headings and
+	// ZERO uses of any of these four.
+	//
+	// This table is the JS half of a parity contract —
+	// tests/editor-variations-parity.php asserts it is SET-EQUAL to what
+	// inc/block-styles.php registers. Adding a style there without a row here
+	// fails the build, and vice versa. Keep each row on ONE line, block first
+	// and style second — the test parses this table, so prose must never imitate
+	// a row's shape (an earlier draft of this comment did, and parsed as a fifth).
+	var SN_STYLE_VARIATIONS = [
+		{ block: 'core/separator', style: 'hairline', title: 'Hairline', description: 'A sharp 1px concrete rule.' },
+		{ block: 'core/quote', style: 'signal', title: 'Signal', description: 'Brutalist quote with the blood accent.' },
+		{ block: 'core/quote', style: 'epigraph', title: 'Epigraph', description: 'An opening quotation, set above the argument.' },
+		{ block: 'core/list', style: 'references', title: 'References', description: 'A source list set in mono.' }
+	];
+
+	SN_STYLE_VARIATIONS.forEach( function ( v ) {
+		blocks.registerBlockVariation( v.block, {
+			name: 'sn-' + v.style,
+			title: v.title,
+			description: v.description,
+			// The style ships its own CSS already; the variation only presets
+			// the class. Derived, never retyped — the test pins that too.
+			attributes: { className: 'is-style-' + v.style },
+			// INSERTER ONLY. Without this scope a variation can be treated as
+			// the block's default insert, changing what a plain quote does.
+			scope: [ 'inserter' ],
+			keywords: [ v.style, v.title.toLowerCase() ]
+		} );
+	} );
+
 } )( window.wp.blocks, window.wp.element, window.wp.blockEditor, window.wp.serverSideRender );

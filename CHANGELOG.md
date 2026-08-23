@@ -2,6 +2,46 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.4.0] - 2026-08-22 — the vocabulary answers the slash menu
+
+The theme has registered four block styles and three custom blocks for
+versions. Measured across the 25 notes in `/feed/json/`: **339 paragraphs, 87
+headings, and nothing else** — not one use of `hairline`, `signal`, `epigraph`,
+`references`, or any custom block. Registered, allowlisted, insertable, and
+unreachable at the moment of writing.
+
+### Added
+- **The four block styles are now inserter variations.** A style only appears
+  once a block is already inserted, in the sidebar Styles panel; a variation
+  appears in the inserter and answers `/`. Typing `/epigraph` mid-sentence now
+  inserts one.
+- **`example` previews on `sidenote` and `pull-quote`**, so the inserter renders
+  them instead of showing an icon and a sentence.
+
+### Kept deliberately small
+No new styles, no new CSS, no new hook, and no editor React. The variations ride
+the already-registered `signal-noise-blocks-editor` handle, so `blocks/editor.js`
+grows 56 → 92 lines and nothing else moves. `pillar-essays` gets no example: its
+edit renders through `serverSideRender`, so one would fire a REST round-trip on
+every inserter hover, and it declares zero attributes.
+
+The essays are prose and are expected to stay prose — this makes the vocabulary
+reachable when it is wanted, and buys nothing else.
+
+### Pinned
+Two producers now describe one vocabulary, so `tests/editor-variations-parity.php`
+asserts **set equality** between the styles `inc/block-styles.php` registers and
+the variations the JS surfaces — a fifth style without a variation fails the
+build, and so does a variation naming a style that does not exist. The example
+rule is an invariant over every manifest rather than a list: declare attributes
+and you must carry an example; declare none and you are exempt, which is what
+excuses `pillar-essays` without an allowlist to drift.
+
+Both mutation-tested, each with a negative control. The parity pin caught its
+own author during implementation: the first draft of the comment above the
+variation table contained the literal row shape, and the parser read the
+**comment** as a fifth row.
+
 ## [12.3.0] - 2026-08-22 — the keyboard focus ring is declared, not only styled
 
 The theme has shipped a WCAG 2.4.7 focus ring since v8.5.6 and `theme.json`
