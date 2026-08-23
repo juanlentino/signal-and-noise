@@ -2,6 +2,58 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.6.0] - 2026-08-23 — the templates join the token layer
+
+Phase 2. All **53 blocks** that carried literal typography now reference the
+token layer v12.5.0 introduced. Zero typography literals remain in
+`templates/`, `parts/` or `patterns/`.
+
+### Proven, not asserted
+**99 values checked against v12.5.0, 0 unintended mismatches.** Every token
+resolves through `theme.json` to exactly the literal it replaced. The two
+changes below are the only ones, and both are declared.
+
+### The two declared changes
+- **`parts/header.html` nav: `letter-spacing:0.14em` → the shared `wide` token
+  (`0.15em`).** A drift against the twenty other eyebrow sites. Measured before
+  changing it: +0.176px per character, ~7px across the nav, against 16px of
+  slack at 1280px and 259.9px at 800px. No wrap at any width; below the
+  responsive breakpoint the nav collapses to a hamburger where letter-spacing
+  cannot reflow anything.
+- **`parts/post-frontmatter.html`: an accessibility floor comes back to life.**
+  Its five blocks were duplicating `article.css`'s
+  `.sn-post-frontmatter > *`, which sets `max(0.75rem, 11px)` — and the inline
+  `font-size:0.75rem` was overriding it, so the 11px floor has been inert. At
+  default root size both compute to 12px, which is why it went unseen. The
+  duplication is removed and the floor applies again.
+
+### Why values were tokenized IN PLACE rather than converted to preset slugs
+A preset slug removes the inline style and adds a class. **That is a specificity
+downgrade from ~1000 to a class**, and this theme has media-query rules that
+currently lose to inline styles:
+
+| rule | `!important` | today |
+| --- | --- | --- |
+| `.sn-hero-title` @≤480px | yes | applies |
+| `.sn-hero-subtitle` @≥1440px | yes | applies |
+| `.sn-notes-dek` @≤640px | **no** | **dormant** |
+| `.sn-note-card-excerpt` @≤640px | **no** | **dormant** |
+
+Converting those to slugs would have woken two dormant mobile overrides — a real
+change at ≤640px, shipped under the banner of a refactor. Keeping the reference
+inline preserves specificity exactly, so nothing moves. The two dormant rules
+remain dormant and are recorded as a separate finding.
+
+### Added
+- **No-ungoverned-literal gate** with a declared, shrinking exemption list. It
+  fails on a STALE exemption too — a file that turns out clean must be removed
+  from the list, so finished work cannot hide behind a declaration. Emptied in
+  this same release.
+- **Phantom-token guard**: every `var(--wp--…)` reference in block markup must
+  resolve to something `theme.json` defines. An unresolvable reference yields no
+  declaration at all and fails silently in the browser — the font-size twin of
+  the phantom colour slug that shipped four times. Mutation-tested.
+
 ## [12.5.0] - 2026-08-23 — the type scale becomes the theme's own
 
 Foundation only. Nothing consumes these yet, so nothing rendered moves — the

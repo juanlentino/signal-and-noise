@@ -170,15 +170,10 @@ foreach ( array( 'hairline', 'signal', 'epigraph', 'references' ) as $name ) {
 //     fails if a file on it turns out to be already clean (a stale exemption is
 //     as much a defect as a missing one).
 $exempt = array(
-	'templates/home.html',
-	'templates/index.html',
-	'templates/404.html',
-	'templates/single.html',
-	'templates/front-page.html',
-	'templates/page.html',
-	'templates/page-notes.html',
-	'patterns/hero-dossier.php',
-	'patterns/section-constrained.php',
+	// EMPTY as of v12.6.0. Every file migrated in the same release that
+	// introduced this list, so it never got the chance to become permanent.
+	// Kept as a named, empty array rather than deleted: the mechanism is the
+	// point, and the next migration should reach for it rather than reinvent it.
 );
 
 $typo_keys = array( 'fontSize', 'lineHeight', 'letterSpacing' );
@@ -233,6 +228,41 @@ $header = (string) file_get_contents( "$theme_root/parts/header.html" );
 ok( false === strpos( $header, '0.14em' ), 'the 0.14em nav drift is gone' );
 ok( false !== strpos( $header, 'var(--wp--custom--letter-spacing--wide)' ),
 	'the nav now uses the same letter-spacing token as every other eyebrow' );
+
+// 13. NO PHANTOM TOKEN. Every var(--wp--...) reference in block markup must
+//     resolve to something theme.json actually defines. A reference to a token
+//     that does not exist yields no declaration at all — the browser drops it
+//     silently, the element falls back to inherited type, and nothing anywhere
+//     reports an error. This is the font-size twin of the phantom COLOR slug
+//     that shipped four times before tests/color-slug-integrity.php closed it.
+$defined = array();
+foreach ( $theme['settings']['typography']['fontSizes'] ?? array() as $fs ) {
+	$defined[ 'var(--wp--preset--font-size--' . $fs['slug'] . ')' ] = true;
+}
+$walk = function ( $node, $prefix ) use ( &$walk, &$defined ) {
+	foreach ( (array) $node as $k => $v ) {
+		$key = strtolower( preg_replace( '/(?<!^)(?=[A-Z])/', '-', (string) $k ) );
+		if ( is_array( $v ) ) {
+			$walk( $v, array_merge( $prefix, array( $key ) ) );
+		} else {
+			$defined[ 'var(--wp--custom--' . implode( '--', array_merge( $prefix, array( $key ) ) ) . ')' ] = true;
+		}
+	}
+};
+$walk( $theme['settings']['custom'] ?? array(), array() );
+
+$referenced = array();
+foreach ( $files as $f ) {
+	$rel = ltrim( str_replace( $theme_root, '', $f ), '/' );
+	preg_match_all( '/var\(--wp--(?:preset--font-size|custom)--[a-z0-9-]+\)/', (string) file_get_contents( $f ), $mm );
+	foreach ( (array) $mm[0] as $ref ) {
+		$referenced[ $ref ][] = $rel;
+	}
+}
+ok( count( $referenced ) > 0, 'templates reference the token layer at all' );
+foreach ( $referenced as $ref => $where ) {
+	ok( isset( $defined[ $ref ] ), "token resolves: $ref (used in " . implode( ', ', array_unique( $where ) ) . ')' );
+}
 
 echo "\n$pass passed, $fail failed\n";
 exit( $fail > 0 ? 1 : 0 );

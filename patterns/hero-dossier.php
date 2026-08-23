@@ -26,12 +26,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 	<p class="sn-catalog-eyebrow"><?php echo esc_html__( 'Dossier · Section Name', 'signal-noise' ); ?></p>
 	<!-- /wp:paragraph -->
 
-	<!-- wp:heading {"level":1,"style":{"typography":{"fontSize":"clamp(3rem, 7vw, 5.5rem)","lineHeight":"1"}}} -->
-	<h1 class="wp-block-heading" style="font-size:clamp(3rem, 7vw, 5.5rem);line-height:1"><?php echo esc_html__( 'PAGE TITLE', 'signal-noise' ); ?></h1>
+	<!-- wp:heading {"level":1,"style":{"typography":{"fontSize":"var(--wp--custom--font-size--display-xl)","lineHeight":"var(--wp--custom--line-height--flat)"}}} -->
+	<h1 class="wp-block-heading" style="font-size:var(--wp--custom--font-size--display-xl);line-height:var(--wp--custom--line-height--flat)"><?php echo esc_html__( 'PAGE TITLE', 'signal-noise' ); ?></h1>
 	<!-- /wp:heading -->
 
-	<!-- wp:paragraph {"style":{"typography":{"fontSize":"1rem","lineHeight":"1.8"}},"textColor":"rust","fontFamily":"body"} -->
-	<p class="has-rust-color has-text-color has-body-font-family" style="font-size:1rem;line-height:1.8"><?php echo esc_html__( 'A one- or two-sentence intro that sets the scope of the page. Brutalist typography expects tight prose; resist the urge to pad.', 'signal-noise' ); ?></p>
+	<!-- wp:paragraph {"style":{"typography":{"fontSize":"var(--wp--preset--font-size--prose)","lineHeight":"var(--wp--custom--line-height--loose)"}},"textColor":"rust","fontFamily":"body"} -->
+	<p class="has-rust-color has-text-color has-body-font-family" style="font-size:var(--wp--preset--font-size--prose);line-height:var(--wp--custom--line-height--loose)"><?php echo esc_html__( 'A one- or two-sentence intro that sets the scope of the page. Brutalist typography expects tight prose; resist the urge to pad.', 'signal-noise' ); ?></p>
 	<!-- /wp:paragraph -->
 
 	<!-- wp:paragraph {"className":"sn-catalog-meta"} -->
