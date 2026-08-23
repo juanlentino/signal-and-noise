@@ -13,5 +13,10 @@
 	},
 	"supports": { "html": false, "reusable": false },
 	"editorScript": "signal-noise-blocks-editor",
+	"example": {
+		"attributes": {
+			"content": "Tufte set his notes in the margin so the eye never leaves the argument."
+		}
+	},
 	"render": "file:./render.php"
 }

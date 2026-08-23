@@ -14,5 +14,11 @@
 	},
 	"supports": { "html": false, "align": ["wide", "full"] },
 	"editorScript": "signal-noise-blocks-editor",
+	"example": {
+		"attributes": {
+			"body": "The pen is not the notary.",
+			"attribution": "Notes, 2026"
+		}
+	},
 	"render": "file:./render.php"
 }

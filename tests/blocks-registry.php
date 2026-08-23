@@ -88,5 +88,54 @@ ok( ! empty( array_filter( $GLOBALS['__reg_blocks'], fn( $d ) => false !== strpo
 $cats = signal_noise_block_category( array() );
 ok( ! empty( array_filter( $cats, fn( $c ) => ( $c['slug'] ?? '' ) === 'signal-noise' ) ), 'block_categories_all adds a signal-noise category' );
 
+
+/* ── v12.4.0: INSERTER PREVIEWS ──────────────────────────────────────────────
+ * A block without an `example` shows an icon and a sentence in the inserter.
+ * With one, the inserter renders a live preview from example.attributes. All
+ * three blocks carried a description and four keywords and NO example, which is
+ * the same reach problem the style variations fix one level down.
+ *
+ * The rule, not a list: a block that DECLARES attributes must carry an example,
+ * and every key in example.attributes must be one of those attributes (an
+ * example naming an attribute the block does not declare previews as nothing).
+ * A block declaring no attributes is exempt by construction — which is what
+ * excuses signal-noise/pillar-essays without an allowlist to drift, and what
+ * makes a fourth block added later obey the rule automatically.
+ *
+ * Deliberately GLOBS rather than reusing the hardcoded slug list above: a
+ * hardcoded list cannot deliver the invariant's whole point.
+ *
+ * pillar-essays is excluded deliberately: its edit renders through
+ * serverSideRender, so an example would fire a REST render round-trip on every
+ * inserter hover, and it declares zero attributes so there is nothing to vary.
+ */
+$manifests = glob( __DIR__ . '/../blocks/*/block.json' );
+ok( count( $manifests ) >= 3, 'block manifests were found (guard: the glob still matches)' );
+
+foreach ( $manifests as $manifest ) {
+	$json  = json_decode( file_get_contents( $manifest ), true );
+	$name  = $json['name'] ?? basename( dirname( $manifest ) );
+	$attrs = $json['attributes'] ?? array();
+
+	if ( ! is_array( $attrs ) || array() === $attrs ) {
+		ok( true, "$name declares no attributes — exempt from the example rule by construction" );
+		continue;
+	}
+
+	$example = $json['example'] ?? null;
+	ok( is_array( $example ), "$name declares attributes, so it must carry an example" );
+
+	$example_attrs = is_array( $example ) ? ( $example['attributes'] ?? array() ) : array();
+	$unknown       = array_diff( array_keys( $example_attrs ), array_keys( $attrs ) );
+	ok(
+		array() === $unknown,
+		"$name's example only names declared attributes" . ( $unknown ? ' — unknown: ' . implode( ', ', $unknown ) : '' )
+	);
+	ok(
+		array() !== $example_attrs,
+		"$name's example actually sets attributes (an empty example previews as nothing)"
+	);
+}
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
