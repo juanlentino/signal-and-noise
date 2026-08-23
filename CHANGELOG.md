@@ -2,6 +2,65 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.4.1] - 2026-08-22 — the /notes stylesheet moves into a file
+
+`inc/page-notes-render.php` was **1,007 lines, 702 of them a single inline
+`<style>` block** — 23.1 KB of CSS shipped inside every `/notes/` response, in a
+file called a renderer. `/notes` was also the only route-specific CSS in the
+theme that was not a route-scoped file; `index`, `resume`, `uses`, `now`,
+`accessibility` and `keyboard-nav` all are.
+
+It had already cost something. `.sn-notes-page` — the container carrying the
+max-width, gutter and fixed-footer clearance — was declared **only** inside that
+block, so `/notes/subscribe/` (same class) rendered flush against the viewport
+edge from v11.9.4 until v12.2.1, and the fix had to duplicate the rule.
+
+### Changed
+- **`assets/css/notes.css`** — the block, moved **verbatim**. Verified two ways
+  against a baseline captured before the cut: `diff` reports byte-identical, and
+  the selector inventory (64 entries) is unchanged. Nothing was renamed, merged
+  or tidied — a CSS refactor hidden inside a file move is unreviewable. The
+  renderer lands at **303 lines**.
+- **One gate, not two.** The renderer's `template_redirect` short-circuit and
+  the new `sn_notes_enqueue()` both call `sn_notes_owns_request()`. A view the
+  renderer claims but the enqueue does not would render with no stylesheet at
+  all, so the two conditions are one function and a third route added later
+  reaches both automatically.
+- **Four suites followed the CSS.** Three were pure repoints, including the
+  v12.2.1 container-parity pin. `notes-hero-structure.php` was split: markup
+  assertions stay on the renderer, CSS assertions move.
+
+### Found, not caused
+`tests/dark-mode.php` globs `assets/css/*.css`, so moving the CSS into the CSS
+directory brought it under a guard that already existed: `/notes/` carries **12
+`:hover` occurrences and zero `@media (hover: hover)` guards**. On iOS a tap
+applies `:hover` and keeps it, so an unguarded hover reads as the control's
+resting appearance rather than as feedback. Those rules were invisible to this
+check for as long as they lived inside a PHP file.
+
+Guarding them is not a wrapper — each pairs `:hover` with `:focus-within` or
+`:focus-visible` in the same selector list, and the `:focus-*` half must stay
+**outside** the guard. Splitting them changes touch behaviour, which is
+deliberately not part of a verbatim move. `notes.css` is a **declared, dated
+exemption**: the run prints what it skipped and pins the set, so a second
+exemption cannot be added silently. The hover fix is its own release.
+
+### Why the inlining comment did not survive
+It said *"if this file deploys, the whole page deploys."* Both halves were
+tested. The theme ships through the WordPress updater, which installs a whole
+GitHub tag ZIP (`deploy.yml` is dispatch-only and last ran 2026-07-17), so a
+partial deploy is not a mechanism that exists. And the better objection the
+comment never made — edge-cache skew on a `cf-cache-status: HIT` route — is
+already handled: `sn_auto_purge_on_update()` purges every cache on theme update,
+closing the window at the moment a deploy happens.
+
+Content-hashing this file like the combined bundle was considered and rejected
+on cost: `sn_css_ensure_combined()` prunes with `glob( 'sn-styles-*.css' )` and
+would delete a second bundle.
+
+**No visual change.** `/notes/` renders identically; if it does not, something
+was lost in the move.
+
 ## [12.4.0] - 2026-08-22 — the vocabulary answers the slash menu
 
 The theme has registered four block styles and three custom blocks for
