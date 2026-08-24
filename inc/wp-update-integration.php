@@ -48,6 +48,14 @@ const SN_GH_THEME_REPO          = 'signal-and-noise';
 const SN_GH_THEME_CACHE_KEY     = 'sn_gh_latest_theme';
 const SN_GH_THEME_CACHE_TTL     = HOUR_IN_SECONDS; // v8.5.3: 12h → 1h (mirrors plugin v1.11.1)
 const SN_GH_THEME_STYLESHEET    = 'signal-and-noise';
+/**
+ * The theme's Text Domain, which is NOT the stylesheet slug (`signal-noise` vs
+ * `signal-and-noise`). Used to identify our own package on the upload path —
+ * see sn_gh_theme_source_is_ours().
+ *
+ * @since 12.7.0
+ */
+const SN_GH_THEME_TEXT_DOMAIN   = 'signal-noise';
 const SN_GH_THEME_LAST_SEEN_OPT = 'sn_last_seen_theme_version';
 /**
  * Why the last tag fetch failed, in prose, for the Dashboard card. Lives beside
@@ -525,9 +533,57 @@ add_filter( 'pre_set_site_transient_update_themes', function( $transient ) {
  * on this prevents us from renaming other themes that pass through the
  * same filter during a multi-update batch.
  */
+/**
+ * Does this unpacked package directory contain OUR theme?
+ *
+ * Used only on the UPLOAD path, where WP gives us no `$hook_extra['theme']` to
+ * gate on and the directory name is whatever GitHub's archive produced. Keys on
+ * the exact Text Domain, which no other theme can legitimately carry.
+ *
+ * Deliberately stricter than the retired mu-plugin this replaces, which matched
+ * `strpos( $data['Name'], 'Signal' )` and would therefore have claimed — and
+ * renamed, and thereby broken — any theme called "Signal Boost" or "Signals".
+ *
+ * @since 12.7.0
+ * @param string $source Absolute path to the unpacked package directory.
+ * @return bool
+ */
+function sn_gh_theme_source_is_ours( $source ) {
+	if ( ! function_exists( 'get_file_data' ) ) {
+		return false;
+	}
+
+	$style = trailingslashit( (string) $source ) . 'style.css';
+	if ( ! is_readable( $style ) ) {
+		return false;
+	}
+
+	$data = get_file_data( $style, array( 'TextDomain' => 'Text Domain' ) );
+
+	return SN_GH_THEME_TEXT_DOMAIN === trim( (string) ( $data['TextDomain'] ?? '' ) );
+}
+
 add_filter( 'upgrader_source_selection', function( $source, $remote_source, $upgrader, $hook_extra ) {
 	$theme = isset( $hook_extra['theme'] ) ? (string) $hook_extra['theme'] : '';
-	if ( $theme !== SN_GH_THEME_STYLESHEET ) {
+	$ours  = ( SN_GH_THEME_STYLESHEET === $theme );
+
+	// v12.7.0 — also claim a manual UPLOAD.
+	//
+	// `$hook_extra['theme']` is set for an update and unset for an Upload
+	// Theme, so the gate above can never match an upload: GitHub's archive
+	// unpacks to `signal-and-noise-<version>/` and that version-suffixed
+	// directory used to land in wp-content/themes/ under the wrong slug,
+	// deactivating the theme. This was covered until now by an untracked
+	// must-use plugin on the server (`mu-plugins/sn-theme-updater.php`),
+	// retired in this release; only the safe half of it moved here.
+	//
+	// Scoped by the package's own Text Domain rather than by anything the
+	// caller supplies, so a foreign theme passes through untouched.
+	if ( ! $ours && '' === $theme && sn_gh_theme_source_is_ours( $source ) ) {
+		$ours = true;
+	}
+
+	if ( ! $ours ) {
 		return $source;
 	}
 
@@ -559,12 +615,25 @@ add_filter( 'upgrader_source_selection', function( $source, $remote_source, $upg
  * - WP UI install completes → next admin pageview clears the cache
  * - workflow_dispatch deploy lands → next admin pageview clears the cache
  *
- * Costs one get_option() call per admin pageview. Negligible.
+ * Costs one get_option() call per request. Negligible.
  *
- * Added in v8.5.3 (2026-05-16). Mirrors plugin v1.11.1's admin_init
- * cache-invalidation handler.
+ * HOOK CHOICE — `init`, NOT `admin_init` (v12.7.0, 2026-08-24)
+ *
+ * Registered on `admin_init` from v8.5.3 until v12.7.0, so it only ever fired
+ * for a logged-in wp-admin pageview. WP-CLI is not an admin request and neither
+ * is wp-cron, so the two contexts that most need the invalidation never got it.
+ * On a site with a persistent object cache the stale value lives in Redis,
+ * where `wp transient delete --all` cannot reach it either — so the
+ * self-healing existed but was unreachable from the way the theme is operated.
+ *
+ * `init` fires in wp-admin, on the front end, under wp-cron and under WP-CLI,
+ * and precedes `admin_init` in admin requests, so it strictly dominates the old
+ * registration. `wp_clean_themes_cache()` lives in wp-includes/theme.php, so
+ * unlike the plugin's counterpart it needs no wp-admin include.
+ *
+ * Added in v8.5.3 (2026-05-16). Mirrors plugin v12.25.0.
  */
-add_action( 'admin_init', function() {
+function sn_gh_theme_version_watchdog() {
 	$last_seen = (string) get_option( SN_GH_THEME_LAST_SEEN_OPT, '' );
 	$current   = (string) wp_get_theme( SN_GH_THEME_STYLESHEET )->get( 'Version' );
 	if ( $current && $last_seen !== $current ) {
@@ -586,4 +655,5 @@ add_action( 'admin_init', function() {
 		}
 		update_option( SN_GH_THEME_LAST_SEEN_OPT, $current );
 	}
-} );
+}
+add_action( 'init', 'sn_gh_theme_version_watchdog' );
