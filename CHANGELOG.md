@@ -2,6 +2,75 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.7.0] - 2026-08-24 — the theme reclaims its updater from an untracked mu-plugin
+
+`wp-content/mu-plugins/sn-theme-updater.php` had been running on the live site
+with no source in this repository or the plugin's: no version, no CI, no tests,
+loading on every request, and updatable by nothing. Reading it turned up one
+behaviour worth keeping and one that had to go.
+
+### Added
+
+- **The upload path is claimed properly.** `upgrader_source_selection` gated on
+  `$hook_extra['theme']`, which WordPress sets for an *update* and leaves unset
+  for a manual Upload Theme. The gate therefore never matched an upload, so
+  GitHub's `signal-and-noise-<version>/` directory landed in `wp-content/themes/`
+  under the wrong slug and deactivated the theme. `sn_gh_theme_source_is_ours()`
+  now identifies our own package by its exact **Text Domain** (`signal-noise` —
+  note this is not the stylesheet slug), and the filter claims uploads that
+  match.
+
+  Stricter than what it replaces: the mu-plugin matched
+  `strpos( $data['Name'], 'Signal' )`, which would have claimed, renamed and
+  thereby broken any theme called "Signal Boost" or "Signals".
+
+### Removed (not ported — this is the point of the release)
+
+- **An unscoped removal of a core safety guard.** The mu-plugin also filtered
+  `upgrader_package_options` and, for *any* package whose
+  `hook_extra['action']` was `install`, set `clear_destination = true` and
+  `abort_if_destination_exists = false`. That filter is applied in
+  `WP_Upgrader::run()` for every install and update of every plugin, theme, core
+  and language pack, and the branch carried **no scope check at all** — not to
+  this theme, not to themes.
+
+  Core's default `abort_if_destination_exists => true` is what returns
+  `WP_Error( 'folder_exists' )` rather than overwriting something already
+  installed. Switching it off site-wide meant any install whose target directory
+  already existed silently recursive-deleted it first — taking with it anything
+  not in the incoming package: uploaded data, custom config, a `.git` checkout.
+  Verified against `wp-admin/includes/class-wp-upgrader.php` (filter at the
+  `run()` level; defaults and the abort branch in `install_package()`).
+
+  Nothing replaces it. WordPress's own "Replace current with uploaded" flow
+  covers the case it was presumably written for.
+
+### Fixed
+
+- **The version watchdog moved from `admin_init` to `init`** and became the
+  named `sn_gh_theme_version_watchdog()`. WP-CLI and wp-cron are not admin
+  requests, so neither ever fired it; with site transients in Redis,
+  `wp transient delete --all` could not clear the stale value either. `init`
+  fires in wp-admin, on the front end, under wp-cron and under WP-CLI, and
+  precedes `admin_init` in admin requests, so nothing that worked before stops
+  working. Mirrors plugin v12.25.0.
+
+### The tests that pin them
+
+`tests/updater-source-and-watchdog.php` builds **real** unpacked package
+directories on disk and moves them with a filesystem stub that really renames,
+so "renamed" means renamed rather than "the function returned a string". It
+pins the near-miss explicitly — a theme named "Signal Boost" must pass through
+untouched — and carries a regression guard that the pre-existing update path is
+unchanged. That guard passed before the change was written, which is how it
+earns the name.
+
+### Operator note
+
+The mu-plugin is now redundant and should be deleted from the server:
+`rm wp-content/mu-plugins/sn-theme-updater.php`. Until it is, its unscoped
+`upgrader_package_options` branch is still live regardless of this release.
+
 ## [12.6.1] - 2026-08-23 — the fluid scaling comes back
 
 A regression in v12.6.0, caught by the post-install baseline diff it shipped
