@@ -35,7 +35,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<!-- /wp:list-item -->
 
 		<!-- wp:list-item -->
-		<li><strong>Verify at every distribution layer.</strong> DSP, social, archive — not just a single platform check.</li>
+		<li><strong>Verify at every distribution layer.</strong> DSP, social, archive: not just a single platform check.</li>
 		<!-- /wp:list-item -->
 	</ol>
 	<!-- /wp:list -->

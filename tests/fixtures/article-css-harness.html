@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>article.css harness — steps + bleed fixes</title>
+<style>
+  /* Minimal stand-ins for the theme presets article.css consumes. */
+  :root {
+    --wp--preset--color--asphalt: #1c1c1c;
+    --wp--preset--color--bone: #e8e4da;
+    --wp--preset--color--rust: #b7410e;
+    --wp--preset--color--blood: #8a0303;
+    --wp--preset--color--concrete: #8a8a8a;
+    --wp--preset--font-family--body: Georgia, serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #111; color: #e8e4da; font-family: Georgia, serif; }
+
+  /* Core constrained-layout emulation: the exact rules the fixes fight.
+     Specificity 0,1,0 on the child selector, auto margins !important —
+     mirrors wp-includes layout support output for contentSize 650px. */
+  .is-layout-constrained > * {
+    max-width: 650px;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  /* Theme container padding: exactly 1rem at narrow widths. The shell is
+     itself a constrained parent, exactly like main.sn-note-single in
+     templates/single.html — so .wp-block-post-content is capped and
+     centered by the SAME core rule, and 100% inside it is the text
+     column, matching the real containing-block chain. */
+  .entry-shell { padding-left: 1rem; padding-right: 1rem; }
+</style>
+<link rel="stylesheet" href="../../assets/css/article.css">
+</head>
+<body>
+<div class="entry-shell is-layout-constrained">
+  <div class="entry-content wp-block-post-content is-layout-constrained">
+    <p>Lead paragraph establishing the text column edge for flush checks.</p>
+
+    <!-- patterns/steps-enumerated.php, sample content as shipped -->
+    <div class="wp-block-group sn-pattern-steps-enumerated">
+      <p class="sn-steps__label">What provenance requires</p>
+      <ol class="wp-block-list sn-steps__list">
+        <li><strong>Capture artist signature at session start.</strong> Cryptographic identity established before any sound is recorded.</li>
+        <li><strong>Embed C2PA manifest in the render.</strong> Provenance travels with the file, not in a separate registry.</li>
+        <li><strong>Verify at every distribution layer.</strong> DSP, social, archive: not just a single platform check.</li>
+      </ol>
+    </div>
+
+    <!-- patterns/pull-quote.php wrapper -->
+    <aside class="wp-block-group sn-pattern-pull-quote">
+      <p class="sn-pull-quote__body">"The classifier always loses on cost before it loses on accuracy."</p>
+      <p class="sn-pull-quote__attribution">From the post above</p>
+    </aside>
+
+    <!-- compare-columns wrapper (bleed check only) -->
+    <div class="wp-block-group sn-pattern-compare-columns">
+      <div class="wp-block-columns"><div class="sn-compare__col">Left column copy.</div><div class="sn-compare__col">Right column copy.</div></div>
+    </div>
+
+    <p>Trailing paragraph for the flush comparison below the patterns.</p>
+  </div>
+</div>
+</body>
+</html>

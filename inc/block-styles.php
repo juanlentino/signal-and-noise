@@ -125,6 +125,12 @@ function signal_noise_register_block_styles() {
 					'border:0;' .
 					'border-left:1px solid var(--wp--preset--color--concrete);' .
 					'margin-block:clamp(1.5rem,3vw,2.5rem);' .
+					// Constrained layout centers any width-capped child via
+					// margin-left/right:auto !important (0,1,0). An epigraph
+					// sits flush with the text edge, so the left auto is
+					// overridden at equal importance and higher specificity
+					// (this selector is 0,2,0); the right one stays auto.
+					'margin-left:0 !important;' .
 					'padding:0.1rem 0 0.1rem 1.25rem;' .
 					'max-width:46ch;' .
 					'font-style:italic;' .
