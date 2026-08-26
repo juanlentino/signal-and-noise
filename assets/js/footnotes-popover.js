@@ -24,6 +24,21 @@
 
 	var activePopover = null;
 
+	/**
+	 * The footnote marker anchor inside a sup, in EITHER format: the
+	 * hand-authored href="#footnote-…" this module originally expected, or
+	 * what core's footnotes block actually renders — <sup data-fn="UUID">
+	 * with href="#UUID". The original selector alone meant real footnotes
+	 * never got a popover (v12.7.x harness, section 07).
+	 */
+	function findFootnoteAnchor( sup ) {
+		var anchor = sup.querySelector( 'a[href^="#footnote-"]' );
+		if ( ! anchor && sup.hasAttribute( 'data-fn' ) ) {
+			anchor = sup.querySelector( 'a[href^="#"]' );
+		}
+		return anchor;
+	}
+
 	function buildPopover( anchorLink ) {
 		var href = anchorLink.getAttribute( 'href' );
 		if ( ! href || href.charAt( 0 ) !== '#' ) {
@@ -39,14 +54,18 @@
 		popover.className = 'sn-footnote-popover';
 
 		// Safe DOM clone: iterate child nodes, cloneNode each, appendChild.
-		// Skip back-link anchors (we're at the source). NO innerHTML.
+		// Skip back-link anchors (we're at the source), in either format:
+		// hand-authored "#footnote-ref-…", or core's "#<uuid>-link". NO innerHTML.
 		var children = Array.prototype.slice.call( targetLi.childNodes );
 		for ( var i = 0; i < children.length; i++ ) {
 			var node = children[ i ].cloneNode( true );
-			if ( node.nodeType === 1
-				&& node.tagName === 'A'
-				&& node.getAttribute( 'href' )
-				&& node.getAttribute( 'href' ).indexOf( '#footnote-ref-' ) === 0 ) {
+			var nodeHref = node.nodeType === 1 && node.tagName === 'A'
+				? node.getAttribute( 'href' )
+				: null;
+			if ( nodeHref
+				&& ( nodeHref.indexOf( '#footnote-ref-' ) === 0
+					|| ( nodeHref.charAt( 0 ) === '#'
+						&& nodeHref.slice( -5 ) === '-link' ) ) ) {
 				continue;
 			}
 			popover.appendChild( node );
@@ -83,7 +102,7 @@
 	function onEnter( event ) {
 		var sup = event.target.closest( 'sup' );
 		if ( ! sup ) { return; }
-		var anchor = sup.querySelector( 'a[href^="#footnote-"]' );
+		var anchor = findFootnoteAnchor( sup );
 		if ( ! anchor ) { return; }
 		removeActive();
 		var popover = buildPopover( anchor );
@@ -111,7 +130,7 @@
 	function onFocusIn( event ) {
 		var sup = event.target.closest( 'sup' );
 		if ( ! sup ) { return; }
-		var anchor = sup.querySelector( 'a[href^="#footnote-"]' );
+		var anchor = findFootnoteAnchor( sup );
 		if ( ! anchor || anchor !== event.target ) { return; }
 		removeActive();
 		var popover = buildPopover( anchor );

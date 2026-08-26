@@ -2,6 +2,44 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.7.2] - 2026-08-25 — real footnotes work for the first time, and the sidenote reaches the margin
+
+Both found by reviewing v12.7.1's changes against a live formatting-harness
+draft (post 2518), whose section 07 was built to ask exactly this question.
+
+### Fixed
+
+- **Footnote markers and popovers never worked on real footnotes.** The
+  marker CSS ([assets/css/article.css](assets/css/article.css)) and
+  [assets/js/footnotes-popover.js](assets/js/footnotes-popover.js) matched
+  only a hand-authored `href="#footnote-…"` format; core's footnotes block
+  renders `<sup data-fn="UUID">` with UUID hrefs and `-link` back-links.
+  Since v9.3.0, every real footnote rendered an unstyled 12px marker with
+  no popover — invisible because red and monospace coincide with the
+  generic link styles. Both formats now match, both entry points route
+  through one `findFootnoteAnchor()`, and core back-links are skipped when
+  the popover clones the footnote body. Verified behaviorally in the
+  committed harness: hover on a core-format marker produces the popover.
+- **The sidenote's 200px column escape was silently dead since it
+  shipped.** `margin-right:-200px` lost to core's constrained-layout
+  `margin-right:auto !important` (importance beats specificity, and auto
+  on a float resolves to 0) — the fifth member of the defect family
+  v12.7.1 fixed three of. Now `!important` at higher specificity; measured
+  exactly 200px past the column at 1440px. The `.single-post` scoping
+  decision on sidenotes and footnotes is unchanged.
+
+### Changed
+
+- [tests/footnote-selector-core-format.php](tests/footnote-selector-core-format.php)
+  pins the selectors in both formats with counted assertions, and the
+  harness fixture now carries a core-format footnote plus the popover
+  script so the behavior stays reproducible. The CHANGELOG records, for
+  honesty's sake, that the guard's first cut was vacuous (a substring the
+  hover selector also satisfied) and that a careless mutation-restore
+  briefly produced a self-recursive helper the guard could not see — both
+  caught before commit, the first by mutation-checking the guard, the
+  second by reading the file and re-verifying behavior in the harness.
+
 ## [12.7.1] - 2026-08-25 — the article patterns render as designed, and the samples obey the house style
 
 Four article-surface fixes, each its own commit on the branch.

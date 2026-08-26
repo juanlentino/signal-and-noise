@@ -390,7 +390,15 @@ main { view-transition-name: sn-main; }
 
 /* --- FOOTNOTES (core/footnotes block, brutalist styling) --- */
 
-.single-post .wp-block-post-content sup a[href^="#footnote-"] {
+/* Two marker formats, deliberately. Core's footnotes block renders
+   <sup data-fn="UUID"><a href="#UUID">, never href="#footnote-…" — the
+   original selector matched only a hand-authored format and left every
+   REAL footnote marker unstyled (12px default vs this rule's 0.75em; the
+   red+mono coincidence with generic link styles is why it went unseen —
+   found by the v12.7.x formatting harness, section 07). The legacy
+   selector stays for hand-authored anchors. */
+.single-post .wp-block-post-content sup a[href^="#footnote-"],
+.single-post .wp-block-post-content sup[data-fn] a {
 	font-family: 'DM Mono', 'Courier New', monospace;
 	font-size: 0.75em;
 	color: var(--wp--preset--color--blood);
@@ -399,7 +407,8 @@ main { view-transition-name: sn-main; }
 	letter-spacing: 0.05em;
 }
 @media (hover: hover) {
-	.single-post .wp-block-post-content sup a[href^="#footnote-"]:hover {
+	.single-post .wp-block-post-content sup a[href^="#footnote-"]:hover,
+	.single-post .wp-block-post-content sup[data-fn] a:hover {
 		text-decoration: underline;
 	}
 }
@@ -472,7 +481,13 @@ main { view-transition-name: sn-main; }
 		float: right;
 		clear: right;
 		width: 180px;
-		margin-right: -200px;
+		/* !important is load-bearing: the sidenote is a direct child of
+		   .is-layout-constrained, where core sets margin-right: auto
+		   !important — importance beats specificity, and auto on a float
+		   resolves to 0, so the escape was silently dead (measured
+		   pastColumnEdge: 0 on the v12.7.x harness). Equal importance +
+		   this rule's higher specificity (0,2,0 vs core's 0,1,0) wins. */
+		margin-right: -200px !important;
 		margin-top: 0;
 		margin-bottom: 1rem;
 		padding-left: 1rem;
