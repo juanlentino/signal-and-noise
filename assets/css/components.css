@@ -1946,6 +1946,17 @@ img.sn-img-dim {
    presentation attribute, so the remap belongs here and the published
    posts stay byte-identical — no ledger event, not even a coalescing one.
 
+   THE SELECTOR, and why it is not `.wp-block-html`: core/html is a
+   PASSTHROUGH block. Unlike almost every other core block it emits its raw
+   HTML with NO wrapper element, so `.wp-block-html` exists nowhere in the
+   rendered document, and v12.7.4 shipped a remap matching zero elements.
+   Measured on the live page after that release: computed fill still
+   rgb(34,34,34) on rgb(10,10,10) — 1.24:1, unchanged. The figures sit
+   directly inside .entry-content, which is what wp:post-content renders.
+   A CSS-TEXT TEST CANNOT SEE THIS. It checks a selector's shape, never
+   whether the document contains it. Re-verify in a browser after any change
+   to this selector.
+
    DARK ONLY, deliberately. Light mode measures fine today and is left
    exactly as authored. currentColor (65 declarations) already follows
    the cascade and is untouched.
@@ -1958,77 +1969,77 @@ img.sn-img-dim {
    a regression the guard caught before it shipped. #888 (5.6:1) and
    #16a34a (6.0:1) are excluded for the same reason. */
 /* ink — figure titles and body labels; #222 measures 1.2:1 on the dark ground */
-:root[data-theme="dark"] .wp-block-html svg [fill="#000"],
-:root[data-theme="dark"] .wp-block-html svg [fill="#222"] {
+:root[data-theme="dark"] .sn-note-single .entry-content svg [fill="#000"],
+:root[data-theme="dark"] .sn-note-single .entry-content svg [fill="#222"] {
 	fill: var(--wp--preset--color--bone);
 }
-:root[data-theme="dark"] .wp-block-html svg [stroke="#000"],
-:root[data-theme="dark"] .wp-block-html svg [stroke="#222"] {
+:root[data-theme="dark"] .sn-note-single .entry-content svg [stroke="#000"],
+:root[data-theme="dark"] .sn-note-single .entry-content svg [stroke="#222"] {
 	stroke: var(--wp--preset--color--bone);
 }
 /* secondary ink — axis captions and series labels, 2.7:1 and 3.4:1 */
-:root[data-theme="dark"] .wp-block-html svg [fill="#555"],
-:root[data-theme="dark"] .wp-block-html svg [fill="#666"] {
+:root[data-theme="dark"] .sn-note-single .entry-content svg [fill="#555"],
+:root[data-theme="dark"] .sn-note-single .entry-content svg [fill="#666"] {
 	fill: var(--wp--preset--color--rust);
 }
-:root[data-theme="dark"] .wp-block-html svg [stroke="#555"],
-:root[data-theme="dark"] .wp-block-html svg [stroke="#666"] {
+:root[data-theme="dark"] .sn-note-single .entry-content svg [stroke="#555"],
+:root[data-theme="dark"] .sn-note-single .entry-content svg [stroke="#666"] {
 	stroke: var(--wp--preset--color--rust);
 }
 /* local surfaces — the white discs and boxes these figures paint under their own dark text; they MUST follow the ground or the remapped ink lands white-on-white */
-:root[data-theme="dark"] .wp-block-html svg [fill="#fff"],
-:root[data-theme="dark"] .wp-block-html svg [fill="white"] {
+:root[data-theme="dark"] .sn-note-single .entry-content svg [fill="#fff"],
+:root[data-theme="dark"] .sn-note-single .entry-content svg [fill="white"] {
 	fill: var(--wp--preset--color--void);
 }
-:root[data-theme="dark"] .wp-block-html svg [stroke="#fff"],
-:root[data-theme="dark"] .wp-block-html svg [stroke="white"] {
+:root[data-theme="dark"] .sn-note-single .entry-content svg [stroke="#fff"],
+:root[data-theme="dark"] .sn-note-single .entry-content svg [stroke="white"] {
 	stroke: var(--wp--preset--color--void);
 }
 /* alert red — the detection/failure series, 4.1:1 and 3.9:1 */
-:root[data-theme="dark"] .wp-block-html svg [fill="#dc2626"],
-:root[data-theme="dark"] .wp-block-html svg [fill="#e00404"] {
+:root[data-theme="dark"] .sn-note-single .entry-content svg [fill="#dc2626"],
+:root[data-theme="dark"] .sn-note-single .entry-content svg [fill="#e00404"] {
 	fill: var(--wp--preset--color--blood);
 }
-:root[data-theme="dark"] .wp-block-html svg [stroke="#dc2626"],
-:root[data-theme="dark"] .wp-block-html svg [stroke="#e00404"] {
+:root[data-theme="dark"] .sn-note-single .entry-content svg [stroke="#dc2626"],
+:root[data-theme="dark"] .sn-note-single .entry-content svg [stroke="#e00404"] {
 	stroke: var(--wp--preset--color--blood);
 }
 
 @media (prefers-color-scheme: dark) {
 	/* ink — figure titles and body labels; #222 measures 1.2:1 on the dark ground */
-	:root:not([data-theme="light"]) .wp-block-html svg [fill="#000"],
-	:root:not([data-theme="light"]) .wp-block-html svg [fill="#222"] {
+	:root:not([data-theme="light"]) .sn-note-single .entry-content svg [fill="#000"],
+	:root:not([data-theme="light"]) .sn-note-single .entry-content svg [fill="#222"] {
 		fill: var(--wp--preset--color--bone);
 	}
-	:root:not([data-theme="light"]) .wp-block-html svg [stroke="#000"],
-	:root:not([data-theme="light"]) .wp-block-html svg [stroke="#222"] {
+	:root:not([data-theme="light"]) .sn-note-single .entry-content svg [stroke="#000"],
+	:root:not([data-theme="light"]) .sn-note-single .entry-content svg [stroke="#222"] {
 		stroke: var(--wp--preset--color--bone);
 	}
 	/* secondary ink — axis captions and series labels, 2.7:1 and 3.4:1 */
-	:root:not([data-theme="light"]) .wp-block-html svg [fill="#555"],
-	:root:not([data-theme="light"]) .wp-block-html svg [fill="#666"] {
+	:root:not([data-theme="light"]) .sn-note-single .entry-content svg [fill="#555"],
+	:root:not([data-theme="light"]) .sn-note-single .entry-content svg [fill="#666"] {
 		fill: var(--wp--preset--color--rust);
 	}
-	:root:not([data-theme="light"]) .wp-block-html svg [stroke="#555"],
-	:root:not([data-theme="light"]) .wp-block-html svg [stroke="#666"] {
+	:root:not([data-theme="light"]) .sn-note-single .entry-content svg [stroke="#555"],
+	:root:not([data-theme="light"]) .sn-note-single .entry-content svg [stroke="#666"] {
 		stroke: var(--wp--preset--color--rust);
 	}
 	/* local surfaces — the white discs and boxes these figures paint under their own dark text; they MUST follow the ground or the remapped ink lands white-on-white */
-	:root:not([data-theme="light"]) .wp-block-html svg [fill="#fff"],
-	:root:not([data-theme="light"]) .wp-block-html svg [fill="white"] {
+	:root:not([data-theme="light"]) .sn-note-single .entry-content svg [fill="#fff"],
+	:root:not([data-theme="light"]) .sn-note-single .entry-content svg [fill="white"] {
 		fill: var(--wp--preset--color--void);
 	}
-	:root:not([data-theme="light"]) .wp-block-html svg [stroke="#fff"],
-	:root:not([data-theme="light"]) .wp-block-html svg [stroke="white"] {
+	:root:not([data-theme="light"]) .sn-note-single .entry-content svg [stroke="#fff"],
+	:root:not([data-theme="light"]) .sn-note-single .entry-content svg [stroke="white"] {
 		stroke: var(--wp--preset--color--void);
 	}
 	/* alert red — the detection/failure series, 4.1:1 and 3.9:1 */
-	:root:not([data-theme="light"]) .wp-block-html svg [fill="#dc2626"],
-	:root:not([data-theme="light"]) .wp-block-html svg [fill="#e00404"] {
+	:root:not([data-theme="light"]) .sn-note-single .entry-content svg [fill="#dc2626"],
+	:root:not([data-theme="light"]) .sn-note-single .entry-content svg [fill="#e00404"] {
 		fill: var(--wp--preset--color--blood);
 	}
-	:root:not([data-theme="light"]) .wp-block-html svg [stroke="#dc2626"],
-	:root:not([data-theme="light"]) .wp-block-html svg [stroke="#e00404"] {
+	:root:not([data-theme="light"]) .sn-note-single .entry-content svg [stroke="#dc2626"],
+	:root:not([data-theme="light"]) .sn-note-single .entry-content svg [stroke="#e00404"] {
 		stroke: var(--wp--preset--color--blood);
 	}
 }

@@ -69,7 +69,7 @@ ok( '#0a0a0a' === $ground, "the dark ground parses as #0a0a0a (got '$ground')" )
 function svg_map( $css, $prefix ) {
 	$map = array();
 	$q = preg_quote( $prefix, '/' );
-	if ( preg_match_all( '/((?:' . $q . '\s+\.wp-block-html\s+svg\s+\[(?:fill|stroke)="[^"]+"\]\s*,?\s*)+)\{\s*(fill|stroke)\s*:\s*var\((--wp--preset--color--[a-z-]+)\)/s', $css, $ms, PREG_SET_ORDER ) ) {
+	if ( preg_match_all( '/((?:' . $q . '\s+\.sn-note-single\s+\.entry-content\s+svg\s+\[(?:fill|stroke)="[^"]+"\]\s*,?\s*)+)\{\s*(fill|stroke)\s*:\s*var\((--wp--preset--color--[a-z-]+)\)/s', $css, $ms, PREG_SET_ORDER ) ) {
 		foreach ( $ms as $set ) {
 			preg_match_all( '/\[(fill|stroke)="([^"]+)"\]/', $set[1], $lits, PREG_SET_ORDER );
 			foreach ( $lits as $l ) { $map[ $l[1] . '|' . $l[2] ] = $set[3]; }
@@ -108,8 +108,29 @@ ok( ! isset( $a['fill|currentColor'] ) && ! isset( $a['stroke|currentColor'] ), 
 ok( ! isset( $a['fill|#16a34a'] ) && ! isset( $a['stroke|#16a34a'] ), 'the green is NOT remapped — it clears AA on the dark ground and this palette has no green to map it to' );
 ok( svg_ratio( '#16a34a', $ground ) >= 4.5, 'and that exclusion is measured, not assumed: #16a34a clears AA on the dark ground' );
 
+/* ── the CONTAINER, pinned. v12.7.4 shipped this remap scoped to
+ *    `.wp-block-html`, which does not exist: core/html is a PASSTHROUGH block
+ *    that emits raw HTML with NO wrapper. The rules matched zero elements and
+ *    every assertion in this file still passed, because a CSS-text test checks
+ *    a selector's SHAPE and never whether the document contains it. Measured
+ *    live after that release: 1.24:1, unchanged.
+ *
+ *    This pins the container against the theme's own template so the two
+ *    cannot drift, and states plainly what still has to be checked by hand. ── */
+$single = (string) file_get_contents( $root . '/templates/single.html' );
+ok( false !== strpos( $single, 'wp:post-content' ), 'single.html renders wp:post-content (which emits .entry-content)' );
+ok( false !== strpos( $single, 'sn-note-single' ), 'and the single-note main carries .sn-note-single' );
+// Scan the RULES, not the prose about them: the comment above this remap
+// necessarily NAMES .wp-block-html in order to explain why it is not used, and
+// a raw-text scan reads a note ABOUT a selector as a use OF it. Same shape as
+// the retired-property trap in front-end-css-contrast.php.
+$css_rules = preg_replace( '#/\*.*?\*/#s', '', $css );
+ok( false === strpos( $css_rules, '.wp-block-html' ), 'no RULE scopes to .wp-block-html — core/html emits no wrapper, so that selector matches nothing' );
+ok( false !== strpos( $css, '.wp-block-html' ), 'and the comment still explains why, so the reason survives the next reader' );
+ok( false !== strpos( $css, '.sn-note-single .entry-content svg' ), 'it scopes to .sn-note-single .entry-content svg, the container wp:post-content actually renders' );
+
 /* ── light mode is deliberately untouched ── */
-ok( 0 === preg_match( '/(?<!\w)\.wp-block-html\s+svg\s+\[(?:fill|stroke)=/', preg_replace( '/:root(\[data-theme="dark"\]|:not\(\[data-theme="light"\]\))[^{]*\{[^}]*\}/s', '', $css ) ), 'no UNSCOPED .wp-block-html svg remap exists — light mode renders exactly as authored' );
+ok( 0 === preg_match( '/(?<!\w)\.sn-note-single\s+\.entry-content\s+svg\s+\[(?:fill|stroke)=/', preg_replace( '/:root(\[data-theme="dark"\]|:not\(\[data-theme="light"\]\))[^{]*\{[^}]*\}/s', '', $css ) ), 'no UNSCOPED .sn-note-single .entry-content svg remap exists — light mode renders exactly as authored' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
