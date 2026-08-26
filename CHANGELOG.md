@@ -2,6 +2,46 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.7.6] - 2026-08-26 — the featured player's white corners, removed geometrically
+
+The Spotify embed at the top of `/music` renders four white notches at the
+corners of its card in dark mode. v12.0.4 already tried to fix this by giving
+`.sn-music-featured__player` a `background-color` matching the box it sits in,
+and that rule is live and computing correctly — measured on the deployed page,
+the element's background equals its parent's **exactly**, in system-dark, in
+`data-theme="dark"`, and in `data-theme="light"`.
+
+It still did not fix it, because **the fix was aimed at the wrong layer.** An
+element's `background-color` paints *behind* the iframe's document. It can only
+reach the corners while Spotify leaves its canvas transparent — and whether it
+does depends on who is looking:
+
+- **Signed out**, the anonymous "Preview" render leaves the canvas transparent.
+  Flooding the element magenta turned the corner triangles magenta, proving the
+  background does paint them. This is the case v12.0.4 was measured against, and
+  it is why the rule looked correct.
+- **Signed in**, the full player (progress bar, Save on Spotify) paints its own
+  opaque card. The element background sits underneath it and can never show, so
+  the corners render white. Reproduced by the site owner in both Chrome and
+  Safari; a hard reload and a fresh tab changed nothing.
+
+No colour can win against an opaque cross-origin canvas — layer order decides
+it. So the corner region is removed instead of recoloured: the element is
+clipped to `--sn-spotify-radius` (12px, matching Spotify's own card), leaving no
+corner to paint. Verified with magenta as a stand-in for *whatever* draws there:
+present at `border-radius: 0`, gone at `12px`.
+
+`-webkit-mask-image` rides along because Safari has a long history of not
+clipping composited cross-origin iframes to their own radius, and Safari is a
+confirmed carrier here. The mask is fully opaque — it forces the clip without
+changing a drawn pixel.
+
+**This gives up the squared-off corner** that the `.wp-block-embed-spotify` rule
+still keeps. The trade is forced, not chosen: squaring the card means painting
+over pixels inside a cross-origin iframe, which is not possible from here. A
+rounded card with no white notches is the best available, and it matches what
+the embed already draws.
+
 ## [12.7.5] - 2026-08-26 — the dark remap reaches the figures it was written for
 
 v12.7.4 shipped the SVG dark-mode remap scoped to `.wp-block-html`. **That

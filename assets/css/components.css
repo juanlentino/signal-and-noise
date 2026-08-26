@@ -2156,7 +2156,41 @@ img.sn-img-dim {
    canvas. Note this is `asphalt` (the box it sits in), NOT
    --sn-embed-backdrop: a black backdrop here would replace white notches
    with dark ones against a #171717 box. The block-embed rule keeps the
-   black backdrop because that embed sits on the page, not in a card. */
+   black backdrop because that embed sits on the page, not in a card.
+
+   ── v12.7.6: THE BACKGROUND ALONE IS NOT ENOUGH ──────────────────────
+   The rule above only reaches the corners while Spotify's canvas is
+   TRANSPARENT, and that depends on who is looking. Measured on the live
+   page 2026-08-26:
+
+     - Signed OUT, the anonymous "Preview" render: canvas transparent.
+       Flooding this element magenta turned the corner triangles magenta,
+       so the background above genuinely paints them and they blend.
+     - Signed IN, the full player (progress bar, Save on Spotify): the
+       embed paints its OWN opaque card. This element's background sits
+       BEHIND that paint and can never show, so the corners render white.
+
+   An element background can never win against an opaque cross-origin
+   canvas — the layer order decides it, not the colour. So the corners
+   are removed geometrically instead: clipping this element to the same
+   radius as Spotify's card means there is no corner region left to
+   paint, whatever the embed does with it.
+
+   This DOES give up the squared-off corner the block-embed rule keeps.
+   That trade is forced, not chosen: squaring the card requires painting
+   over pixels inside a cross-origin iframe, which is not possible. A
+   rounded card with no white notches is the honest best available.
+
+   --sn-spotify-radius matches Spotify's own card. If a future embed
+   revision changes it, a sliver of white (too small) or a shaved card
+   edge (too large) is the symptom — retune here, one value. */
 .sn-music-featured__player {
+	--sn-spotify-radius: 12px;
 	background-color: var(--wp--preset--color--asphalt);
+	border-radius: var(--sn-spotify-radius);
+	/* Safari has a long history of NOT clipping a composited cross-origin
+	   iframe to its own border-radius — and Safari is a confirmed carrier
+	   of this bug, so the clip has to hold there specifically. An opaque
+	   mask forces the clip without changing a pixel of what is drawn. */
+	-webkit-mask-image: -webkit-radial-gradient(white, black);
 }
