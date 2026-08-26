@@ -2,6 +2,36 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.7.1] - 2026-08-25 — the article patterns render as designed, and the samples obey the house style
+
+Four article-surface fixes, each its own commit on the branch.
+
+### Fixed
+
+- **Steps list rendered one word per line.** An li shaped
+  `<strong>Title.</strong> Description.` produces THREE grid items under the
+  old `3rem 1fr` grid (::before, the strong, and an anonymous box for the
+  trailing text), so the description wrapped into the 3rem numeral column.
+  The shipped sample in [patterns/steps-enumerated.php](patterns/steps-enumerated.php)
+  triggered it as written. Replaced with the absolute-numeral idiom
+  `.wp-block-footnotes li` already uses ([assets/css/article.css](assets/css/article.css)).
+- **The 1rem pattern bleed never applied.** Pull-quote, compare-columns and
+  steps-enumerated all set `margin: 2.5rem -1rem` as direct children of
+  `.is-layout-constrained`, where core's `margin-left/right: auto !important`
+  silently discards the horizontal half — flush since v9.2.0. Now
+  `left:-1rem; width:calc(100% + 2rem); max-width:none`, scoped under
+  `.wp-block-post-content` so it wins on specificity. Measured in
+  [tests/fixtures/article-css-harness.html](tests/fixtures/article-css-harness.html):
+  1440px gives a symmetric 16px bleed, 360px lands flush on both viewport
+  edges with zero horizontal overflow.
+- **Epigraph centered instead of sitting flush left.** `max-width:46ch` plus
+  core's auto margins centered it; `margin-left:0 !important` in
+  [inc/block-styles.php](inc/block-styles.php) wins on specificity (0,2,0 vs
+  0,1,0) and leaves the right margin auto.
+- **Em dashes in pattern sample copy.** Both patterns imported a house-style
+  violation on every insertion; the attribution drops its leading dash and
+  the steps line takes a colon. Docblocks untouched.
+
 ## [12.7.0] - 2026-08-24 — the theme reclaims its updater from an untracked mu-plugin
 
 `wp-content/mu-plugins/sn-theme-updater.php` had been running on the live site
