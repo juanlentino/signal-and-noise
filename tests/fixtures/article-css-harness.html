@@ -34,7 +34,7 @@
 </style>
 <link rel="stylesheet" href="../../assets/css/article.css">
 </head>
-<body>
+<body class="single-post">
 <div class="entry-shell is-layout-constrained">
   <div class="entry-content wp-block-post-content is-layout-constrained">
     <p>Lead paragraph establishing the text column edge for flush checks.</p>
@@ -60,8 +60,18 @@
       <div class="wp-block-columns"><div class="sn-compare__col">Left column copy.</div><div class="sn-compare__col">Right column copy.</div></div>
     </div>
 
+    <!-- v12.7.2: sidenote escape + core-format footnote marker -->
+    <p>Host paragraph for the sidenote, long enough to wrap beside the float
+       at the widths under test, with a core-format footnote marker at its
+       end<sup data-fn="a1b2c3d4-0000-4000-8000-000000000001" class="fn"><a href="#a1b2c3d4-0000-4000-8000-000000000001" id="a1b2c3d4-0000-4000-8000-000000000001-link">1</a></sup>.</p>
+    <aside class="sn-sidenote">This box should hang 200px past the column edge at 1280px and above.</aside>
+    <ol class="wp-block-footnotes">
+      <li id="a1b2c3d4-0000-4000-8000-000000000001">A core-format footnote body. <a href="#a1b2c3d4-0000-4000-8000-000000000001-link" aria-label="Jump to footnote reference 1">↩︎</a></li>
+    </ol>
+
     <p>Trailing paragraph for the flush comparison below the patterns.</p>
   </div>
 </div>
+<script src="../../assets/js/footnotes-popover.js"></script>
 </body>
 </html>
