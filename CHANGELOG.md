@@ -2,6 +2,73 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.7.4] - 2026-08-26 — the SVG figures follow the palette into dark
+
+13 hand-authored `core/html` SVG figures across 12 published notes paint no
+background of their own, so they sit directly on the page ground. Their colours
+are literal SVG presentation attributes, and **nothing in this repo could reach
+them**: `tests/front-end-css-contrast.php` reads stylesheets, and raw SVG inside
+`post_content` is not a stylesheet.
+
+Measured on the dark ground (`#0a0a0a`):
+
+| literal | role | ratio |
+| --- | --- | --- |
+| `#222` | figure TITLE in 5 notes | **1.2:1** |
+| `#000` | ink | **1.1:1** |
+| `#555` | axis captions | 2.7:1 |
+| `#666` | labels | 3.4:1 |
+| `#dc2626` / `#e00404` | alert series | 4.1:1 / 3.9:1 |
+
+The figure title in *Detection scales the wrong way*, *Signing the inputs*,
+*Provenance as a CFO problem*, *Open standards or no standards* and
+*Falsifiability is the line* was effectively unrendered for any reader in dark
+mode.
+
+### Fixed
+
+- **Dark-scheme remap** in [assets/css/components.css](assets/css/components.css):
+  the failing literals resolve to palette tokens via attribute selectors. CSS
+  overrides an SVG presentation attribute, which is the only mechanism that
+  works here — `var()` is inert in a presentation attribute, and 238 of the 256
+  declarations are exactly that, so the obvious "swap the literal for a token"
+  fix would have broken all 13 figures.
+
+  **The published posts are byte-identical.** No content edit, no ledger event,
+  not even a coalescing one.
+
+### Scope, and what is deliberately NOT remapped
+
+Dark only. Light mode measures fine and renders exactly as authored.
+
+- `currentColor` (65 declarations) already follows the cascade.
+- `#16a34a` clears AA at 6.0:1 and this palette has no green to map it to.
+- `#aaa` / `#bbb` / `#ddd` / `#eee` measure 8.5:1 to 17.1:1 — already legible.
+  An earlier draft mapped them to `concrete` and drove them to **1.7:1**. The
+  new guard caught that regression before it shipped, which is the reason the
+  "every remap must be JUSTIFIED" assertion exists rather than only checking
+  that the destination is legible.
+- `#fff` / `white` map to `void` — the ground itself. These are never text; they
+  are the local discs and boxes the figures paint under their own dark ink, so
+  they have to disappear into the page. Remapping the ink without them would
+  have put white text on still-white discs.
+
+### Guarded
+
+- [tests/svg-figure-dark-remap.php](tests/svg-figure-dark-remap.php) (new, 54
+  assertions): both dark blocks parsed independently and asserted byte-mirrored;
+  every remap justified by measurement against the dark palette read from
+  `critical.css`; every destination checked at its role's threshold; the three
+  exclusions pinned, with the `#16a34a` one measured rather than asserted; and a
+  check that no UNSCOPED rule exists, so light mode cannot drift.
+
+  Every parse asserts a non-zero count first — `front-end-css-contrast.php`
+  records shipping a first version whose regex matched nothing and passed
+  vacuously, and this file is written to be incapable of that.
+
+  Mutation-verified: editing one dark block alone → 1 FAIL; adding an
+  unjustified remap → 1 FAIL; retargeting ink to a failing token → 3 FAIL.
+
 ## [12.7.3] - 2026-08-25 — the dynamic-block render contract, pinned
 
 The plugin's provenance normalizer moves to sn-normalize-v2
