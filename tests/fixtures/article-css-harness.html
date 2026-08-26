@@ -25,13 +25,17 @@
     margin-left: auto !important;
     margin-right: auto !important;
   }
-  /* Theme container padding: exactly 1rem at narrow widths. */
+  /* Theme container padding: exactly 1rem at narrow widths. The shell is
+     itself a constrained parent, exactly like main.sn-note-single in
+     templates/single.html — so .wp-block-post-content is capped and
+     centered by the SAME core rule, and 100% inside it is the text
+     column, matching the real containing-block chain. */
   .entry-shell { padding-left: 1rem; padding-right: 1rem; }
 </style>
 <link rel="stylesheet" href="../../assets/css/article.css">
 </head>
 <body>
-<div class="entry-shell">
+<div class="entry-shell is-layout-constrained">
   <div class="entry-content wp-block-post-content is-layout-constrained">
     <p>Lead paragraph establishing the text column edge for flush checks.</p>
 

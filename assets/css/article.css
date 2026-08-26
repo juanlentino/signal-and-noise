@@ -66,9 +66,19 @@ main { view-transition-name: sn-main; }
    the box frame must target it too, not only the pattern wrapper, or the block
    renders as bare text. */
 
-.sn-pattern-pull-quote,
-.sn-pull-quote {
-	margin: 2.5rem -1rem;
+/* Bleed 1rem past the text column. NOT negative margins: these render as
+   direct children of .is-layout-constrained, where core sets
+   margin-left/right auto !important (0,1,0), silently discarding the
+   horizontal half of any margin shorthand. left/width sidestep the
+   !important entirely; the .wp-block-post-content scope (0,2,0) outranks
+   core's max-width on specificity rather than source order. */
+.wp-block-post-content .sn-pattern-pull-quote,
+.wp-block-post-content .sn-pull-quote {
+	position: relative;
+	left: -1rem;
+	width: calc(100% + 2rem);
+	max-width: none;
+	margin: 2.5rem 0;
 	padding: 2rem 1.5rem;
 	background: var(--wp--preset--color--asphalt);
 	border-top: 3px solid var(--wp--preset--color--bone);
@@ -95,8 +105,13 @@ main { view-transition-name: sn-main; }
 
 /* ─── v9.2.0: compare-columns pattern (patterns/compare-columns.php) ─── */
 
-.sn-pattern-compare-columns {
-	margin: 2.5rem -1rem;
+/* Same bleed recipe as the pull-quote above — see the comment there. */
+.wp-block-post-content .sn-pattern-compare-columns {
+	position: relative;
+	left: -1rem;
+	width: calc(100% + 2rem);
+	max-width: none;
+	margin: 2.5rem 0;
 	background: var(--wp--preset--color--asphalt);
 	border-top: 1px solid var(--wp--preset--color--concrete);
 	border-bottom: 1px solid var(--wp--preset--color--concrete);
@@ -156,8 +171,13 @@ main { view-transition-name: sn-main; }
 
 /* ─── v9.2.0: steps-enumerated pattern (patterns/steps-enumerated.php) ── */
 
-.sn-pattern-steps-enumerated {
-	margin: 2.5rem -1rem;
+/* Same bleed recipe as the pull-quote above — see the comment there. */
+.wp-block-post-content .sn-pattern-steps-enumerated {
+	position: relative;
+	left: -1rem;
+	width: calc(100% + 2rem);
+	max-width: none;
+	margin: 2.5rem 0;
 	padding: 2rem 1.5rem;
 	background: var(--wp--preset--color--asphalt);
 }
