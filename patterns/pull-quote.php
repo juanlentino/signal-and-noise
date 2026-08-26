@@ -26,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	<!-- /wp:paragraph -->
 
 	<!-- wp:paragraph {"className":"sn-pull-quote__attribution"} -->
-	<p class="sn-pull-quote__attribution">— from the post above</p>
+	<p class="sn-pull-quote__attribution">From the post above</p>
 	<!-- /wp:paragraph -->
 </aside>
 <!-- /wp:group -->
