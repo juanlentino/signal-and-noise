@@ -1931,6 +1931,107 @@ img.sn-img-dim {
 		filter: brightness(0.82);
 	}
 }
+
+/* ── v12.7.4: hand-authored SVG figures follow the palette into dark ──
+   13 core/html figures across 12 published notes paint no background of
+   their own, so they sit on the page ground. Their colours are literal
+   presentation attributes, and NOTHING in this theme could reach them:
+   tests/front-end-css-contrast.php reads stylesheets, and raw SVG in
+   post_content is not a stylesheet. Measured on the dark ground
+   (#0a0a0a): fill="#222" — the figure TITLE in five notes — resolves to
+   1.2:1, and #000 to 1.1:1. Effectively unrendered.
+
+   var() cannot fix this at source: 238 of 256 declarations are SVG
+   presentation attributes, where var() is inert. CSS overrides a
+   presentation attribute, so the remap belongs here and the published
+   posts stay byte-identical — no ledger event, not even a coalescing one.
+
+   DARK ONLY, deliberately. Light mode measures fine today and is left
+   exactly as authored. currentColor (65 declarations) already follows
+   the cascade and is untouched.
+
+   ONLY literals that actually FAIL on the dark ground are remapped, and
+   tests/svg-figure-dark-remap.php enforces that in both directions. The
+   light greys are deliberately excluded: #aaa/#bbb/#ddd/#eee measure
+   8.5:1 to 17.1:1 on the dark ground and are already legible, and an
+   earlier draft that mapped them to `concrete` drove them to 1.7:1 --
+   a regression the guard caught before it shipped. #888 (5.6:1) and
+   #16a34a (6.0:1) are excluded for the same reason. */
+/* ink — figure titles and body labels; #222 measures 1.2:1 on the dark ground */
+:root[data-theme="dark"] .wp-block-html svg [fill="#000"],
+:root[data-theme="dark"] .wp-block-html svg [fill="#222"] {
+	fill: var(--wp--preset--color--bone);
+}
+:root[data-theme="dark"] .wp-block-html svg [stroke="#000"],
+:root[data-theme="dark"] .wp-block-html svg [stroke="#222"] {
+	stroke: var(--wp--preset--color--bone);
+}
+/* secondary ink — axis captions and series labels, 2.7:1 and 3.4:1 */
+:root[data-theme="dark"] .wp-block-html svg [fill="#555"],
+:root[data-theme="dark"] .wp-block-html svg [fill="#666"] {
+	fill: var(--wp--preset--color--rust);
+}
+:root[data-theme="dark"] .wp-block-html svg [stroke="#555"],
+:root[data-theme="dark"] .wp-block-html svg [stroke="#666"] {
+	stroke: var(--wp--preset--color--rust);
+}
+/* local surfaces — the white discs and boxes these figures paint under their own dark text; they MUST follow the ground or the remapped ink lands white-on-white */
+:root[data-theme="dark"] .wp-block-html svg [fill="#fff"],
+:root[data-theme="dark"] .wp-block-html svg [fill="white"] {
+	fill: var(--wp--preset--color--void);
+}
+:root[data-theme="dark"] .wp-block-html svg [stroke="#fff"],
+:root[data-theme="dark"] .wp-block-html svg [stroke="white"] {
+	stroke: var(--wp--preset--color--void);
+}
+/* alert red — the detection/failure series, 4.1:1 and 3.9:1 */
+:root[data-theme="dark"] .wp-block-html svg [fill="#dc2626"],
+:root[data-theme="dark"] .wp-block-html svg [fill="#e00404"] {
+	fill: var(--wp--preset--color--blood);
+}
+:root[data-theme="dark"] .wp-block-html svg [stroke="#dc2626"],
+:root[data-theme="dark"] .wp-block-html svg [stroke="#e00404"] {
+	stroke: var(--wp--preset--color--blood);
+}
+
+@media (prefers-color-scheme: dark) {
+	/* ink — figure titles and body labels; #222 measures 1.2:1 on the dark ground */
+	:root:not([data-theme="light"]) .wp-block-html svg [fill="#000"],
+	:root:not([data-theme="light"]) .wp-block-html svg [fill="#222"] {
+		fill: var(--wp--preset--color--bone);
+	}
+	:root:not([data-theme="light"]) .wp-block-html svg [stroke="#000"],
+	:root:not([data-theme="light"]) .wp-block-html svg [stroke="#222"] {
+		stroke: var(--wp--preset--color--bone);
+	}
+	/* secondary ink — axis captions and series labels, 2.7:1 and 3.4:1 */
+	:root:not([data-theme="light"]) .wp-block-html svg [fill="#555"],
+	:root:not([data-theme="light"]) .wp-block-html svg [fill="#666"] {
+		fill: var(--wp--preset--color--rust);
+	}
+	:root:not([data-theme="light"]) .wp-block-html svg [stroke="#555"],
+	:root:not([data-theme="light"]) .wp-block-html svg [stroke="#666"] {
+		stroke: var(--wp--preset--color--rust);
+	}
+	/* local surfaces — the white discs and boxes these figures paint under their own dark text; they MUST follow the ground or the remapped ink lands white-on-white */
+	:root:not([data-theme="light"]) .wp-block-html svg [fill="#fff"],
+	:root:not([data-theme="light"]) .wp-block-html svg [fill="white"] {
+		fill: var(--wp--preset--color--void);
+	}
+	:root:not([data-theme="light"]) .wp-block-html svg [stroke="#fff"],
+	:root:not([data-theme="light"]) .wp-block-html svg [stroke="white"] {
+		stroke: var(--wp--preset--color--void);
+	}
+	/* alert red — the detection/failure series, 4.1:1 and 3.9:1 */
+	:root:not([data-theme="light"]) .wp-block-html svg [fill="#dc2626"],
+	:root:not([data-theme="light"]) .wp-block-html svg [fill="#e00404"] {
+		fill: var(--wp--preset--color--blood);
+	}
+	:root:not([data-theme="light"]) .wp-block-html svg [stroke="#dc2626"],
+	:root:not([data-theme="light"]) .wp-block-html svg [stroke="#e00404"] {
+		stroke: var(--wp--preset--color--blood);
+	}
+}
 @media (prefers-reduced-motion: reduce) {
 	.sn-img-invert img,
 	img.sn-img-invert,

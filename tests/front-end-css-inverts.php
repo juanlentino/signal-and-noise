@@ -57,6 +57,18 @@ function sn_naked_colours( $css ) {
 	$css = preg_replace( '#/\*.*?\*/#s', '', $css );
 	// Token DEFINITIONS: where a literal belongs.
 	$css = preg_replace( '/--[a-zA-Z0-9-]+\s*:[^;}]*/', '', $css );
+	// SELECTORS paint nothing. v12.7.4 added attribute selectors that MATCH on
+	// a literal in order to remap it — `[fill="#222"] { fill: var(...) }` — and
+	// a scan reading selector text calls that a hardcoded colour while the
+	// declaration beside it is a token.
+	//
+	// Rather than strip selectors, KEEP only what can paint: the innermost
+	// `{...}` bodies. Stripping was tried first and is subtly wrong — consuming
+	// the opening brace leaves the next selector unanchored, so the first rule
+	// inside an at-rule survived. Extraction has no such ordering hazard, and
+	// at-rule preludes fall out for free.
+	preg_match_all( '/\{([^{}]*)\}/', $css, $blocks );
+	$css = implode( ';', $blocks[1] );
 	preg_match_all( '/#[0-9a-fA-F]{3,8}|rgba?\([^)]*\)/', $css, $m );
 	return $m[0];
 }
@@ -93,6 +105,10 @@ ok( empty( $dirty ), sprintf( 'NO screen stylesheet paints a hardcoded colour (%
 echo "\nGroup: negative controls\n";
 ok( array() !== sn_naked_colours( '.x{background:#fff}' ), 'NEGATIVE CONTROL: a bare literal IS detected' );
 ok( array() === sn_naked_colours( '.x{background:var(--wp--preset--color--void,#fff)}' ), 'a var() fallback is NOT flagged' );
+ok( array() === sn_naked_colours( '[fill="#222"]{fill:var(--wp--preset--color--bone)}' ), 'a literal in a SELECTOR is NOT flagged — an attribute selector matches, it does not paint (v12.7.4 SVG remap)' );
+ok( array() !== sn_naked_colours( '[fill="#222"]{fill:#fff}' ), 'NEGATIVE CONTROL: the same selector with a literal DECLARATION is still caught, so the selector exemption cannot be used to smuggle a paint' );
+ok( array() !== sn_naked_colours( '@media (prefers-color-scheme: dark){.x{color:#123456}}' ), 'NEGATIVE CONTROL: a literal nested inside an at-rule is still caught' );
+ok( array() === sn_naked_colours( '@media (x){[fill="#222"]{fill:var(--wp--preset--color--bone)}}' ), 'the FIRST selector inside an at-rule is stripped too — it follows `{`, not `}`, which a brace-only anchor misses' );
 ok( array() === sn_naked_colours( ':root{--sn-x:#12703a}' ), 'a token DEFINITION is not flagged — that is where a literal belongs' );
 ok( array() !== sn_naked_colours( ':root{--sn-x:#12703a;background:#fff}' ), 'but a naked literal in the SAME rule as a definition still is' );
 ok( array() === sn_naked_colours( '/* the old value was #b00303 */ .x{color:var(--y)}' ), 'a hex quoted in a COMMENT is not a paint instruction' );
