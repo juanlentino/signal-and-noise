@@ -2,6 +2,44 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.7.5] - 2026-08-26 — the dark remap reaches the figures it was written for
+
+v12.7.4 shipped the SVG dark-mode remap scoped to `.wp-block-html`. **That
+selector matches nothing.** `core/html` is a passthrough block: unlike almost
+every other core block it emits its raw HTML with no wrapper element, so
+`.wp-block-html` exists nowhere in the rendered document.
+
+Measured on the live page after v12.7.4 deployed:
+
+```
+wrapperExists:  false
+computedFill:   rgb(34, 34, 34)     <- unchanged
+pageBackground: rgb(10, 10, 10)
+contrastRatio:  1.24                <- the exact number v12.7.4 set out to fix
+```
+
+Every assertion in `tests/svg-figure-dark-remap.php` passed anyway, because a
+CSS-text test checks a selector's SHAPE and never whether the document
+contains it. The file's neighbour, `front-end-css-contrast.php`, documents the
+same class of blindness about post_content; this was the mirror image, and it
+took a browser to see.
+
+### Fixed
+
+- The remap is scoped to `.sn-note-single .entry-content svg` — the container
+  `wp:post-content` actually renders. Verified in the browser before shipping
+  this time: computed fill flips to `rgb(255,255,255)`, **19.80:1**.
+
+### Guarded
+
+- The container is now pinned against `templates/single.html` itself, so the
+  selector and the template cannot drift apart, and a rule scoped to
+  `.wp-block-html` fails outright.
+- That check scans the RULES, not the prose: the comment above the remap has to
+  NAME `.wp-block-html` in order to explain why it is not used, and a raw-text
+  scan reads a note about a selector as a use of it. A second assertion pins
+  that the explanation survives.
+
 ## [12.7.4] - 2026-08-26 — the SVG figures follow the palette into dark
 
 13 hand-authored `core/html` SVG figures across 12 published notes paint no
