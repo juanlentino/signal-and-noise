@@ -2,6 +2,36 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.7.3] - 2026-08-25 — the dynamic-block render contract, pinned
+
+The plugin's provenance normalizer moves to sn-normalize-v2
+(signal-and-noise-tools v13.4.0): the text carried in a VOID
+`signal-noise/*` block's top-level string attributes is now part of the
+signed prose — expanded in attribute order, empty slots skipped — and
+public verification compares that signed prose byte-equal against the
+rendered page. That puts a CONTRACT on this theme's dynamic blocks:
+
+> A text-bearing dynamic block must render exactly its string attributes'
+> text, in attribute order, empty slots omitted, and nothing else. A block
+> whose render derives text from anywhere else (site state, queries, meta)
+> can never appear in a SIGNED subject's content — its rendered words
+> cannot be in the signed record by construction. `pillar-essays` is the
+> standing example of the second kind, and stays out of signed Notes.
+
+### Added
+
+- [tests/blocks-render-parity.php](tests/blocks-render-parity.php): drives
+  every `blocks/*/block.json` + `render.php` pair (the REAL files) and
+  fails the moment a block breaks the contract — at authoring time, not at
+  verification time. A future block that obeys it is signed on
+  registration with zero plugin edits; one that breaks it goes red here
+  before it ships. Mutation-checked (a stray `<p>` injected into the
+  pull-quote render → 3 reds). Sidenote and pull-quote both hold the
+  contract today; `pillar-essays` is pinned as the attribute-less
+  derived-render exception.
+
+PATCH: tests + documentation only; no runtime file changes.
+
 ## [12.7.2] - 2026-08-25 — real footnotes work for the first time, and the sidenote reaches the margin
 
 Both found by reviewing v12.7.1's changes against a live formatting-harness
