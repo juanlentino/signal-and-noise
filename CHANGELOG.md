@@ -2,6 +2,26 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.10.1] - 2026-08-27 — the stub-drift ambush becomes a red line here too
+
+`tools/stub-parity.php`, the sibling of the plugin's copy (same precedent as
+`tools/version-tag-parity.php`: each repo carries its own). It compares every
+function the standalone suites define against the pinned
+`php-stubs/wordpress-stubs` PHPStan already trusts, and fails on a WP-shaped
+stub core does not have that production calls unguarded — the class of incident
+where a plausible invented name passes the suite and fatals live — or on
+by-reference drift, where writes through the reference diverge silently.
+Guarded forward-compat calls are reported as notes; the file states the limit
+out loud, that this is name and signature parity only, never behavior.
+
+Runs in CI inside the existing PHPCS job, which already did `composer install`,
+so no new job rounds up an extra billed minute. A `--self-test` negative control
+runs first and must detect a seeded phantom API and a seeded by-reference drift
+while leaving clean fixtures silent — so a green sweep is never a broken sweep.
+
+The theme's 109 suites sweep clean: 706 known-WordPress stubs verified, zero
+failures, zero notes.
+
 ## [12.10.0] - 2026-08-27 — the corpus glances at itself: hover previews for note links
 
 Internal note links now carry their destination with them. Hover (or Tab
