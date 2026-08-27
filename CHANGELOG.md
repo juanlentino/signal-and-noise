@@ -2,6 +2,32 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.11.0] - 2026-08-27 — a tag archive gets to speak for itself
+
+All 23 tag archives render the same hero dek — "Working notes on music, AI,
+and the infrastructure underneath" — because the notes index is what serves a
+tag request. Twenty-three pages repeating one sentence is the thin-content
+shape the contentless-page rule warns about, and it sits on pages that are
+indexable today.
+
+`sn_notes_tag_description()` returns the queried term's own description,
+stripped; the hero renders it in place of the corpus dek when it exists and
+keeps the corpus dek when it does not. A tag with nothing written gets no
+invented sentence — the same refusal to fabricate the rest of the codebase
+makes, and a whitespace-only description counts as unwritten rather than as
+content.
+
+Paired with plugin v13.14.0, which reads the SAME term description for the tag
+meta description and gave those archives the canonical they never had. One
+written sentence per tag now lights up both surfaces at once — which makes the
+23 descriptions an editorial task with a visible payoff, not a chore.
+
+- `tests/notes-tag-description.php` — 10 assertions on the real helper,
+  including the degenerate cases (no queried object, a term with no
+  description property) and three that pin the TEMPLATE's two dek branches, so
+  the fallback cannot be deleted silently. A seeded mutation that fabricated a
+  description turned it red.
+
 ## [12.10.2] - 2026-08-27 — CI finally tests the PHP the site actually runs
 
 The same three-lane matrix as the plugin's v13.11.2, for the same reason: every

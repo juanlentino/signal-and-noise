@@ -241,6 +241,34 @@ function sn_notes_current_tag_id() {
 }
 
 /**
+ * The queried tag's own description for a tag-archive request, else ''.
+ *
+ * The hero dek is otherwise the same sentence on all 23 tag archives, which
+ * is the thin-content shape the contentless-page rule warns about. A term
+ * that carries a description gets to speak for itself; one that does not
+ * keeps the generic dek, because an invented sentence per tag would be
+ * exactly the fabrication the rest of this codebase refuses.
+ *
+ * The plugin reads the SAME term description for the meta description
+ * (v13.14.0), so writing one sentence lights up both surfaces at once.
+ *
+ * @since theme v12.11.0
+ * @return string Stripped description, or '' when absent or not a tag view.
+ */
+function sn_notes_tag_description() {
+	if ( ! function_exists( 'is_tag' ) || ! is_tag() ) {
+		return '';
+	}
+	$obj = function_exists( 'get_queried_object' ) ? get_queried_object() : null;
+	if ( ! $obj || ! isset( $obj->description ) ) {
+		return '';
+	}
+	$desc = (string) $obj->description;
+	$desc = function_exists( 'wp_strip_all_tags' ) ? wp_strip_all_tags( $desc ) : strip_tags( $desc );
+	return trim( $desc );
+}
+
+/**
  * Is $post_id a published Note (post_type=post)? Guarded for the test
  * harness — returns false when the WP accessors are absent.
  *

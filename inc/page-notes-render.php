@@ -142,7 +142,19 @@ echo $sn_header_html;
 		<p class="sn-notes-eyebrow"><?php if ( $sn_tag ) : ?>Topic &middot; <?php echo esc_html( $sn_tag_name ); ?><?php else : ?>Index &middot; <?php echo esc_html( wp_date( 'Y' ) ); ?><?php endif; ?></p>
 		<div class="sn-notes-hero-title">
 			<h1 class="sn-notes-headline">Notes.</h1>
+			<?php
+			// A tag archive that carries its own description says THAT; every
+			// other view keeps the corpus dek. Without this, all 23 tag
+			// archives repeat one identical sentence — the thin-content shape
+			// the contentless-page rule warns about. A tag with no description
+			// written yet falls back rather than inventing one.
+			$sn_tag_desc = function_exists( 'sn_notes_tag_description' ) ? sn_notes_tag_description() : '';
+			?>
+			<?php if ( '' !== $sn_tag_desc ) : ?>
+			<p class="sn-notes-dek"><?php echo esc_html( $sn_tag_desc ); ?></p>
+			<?php else : ?>
 			<p class="sn-notes-dek">Working notes on music, AI, and the infrastructure underneath. Written when there&rsquo;s something worth writing.</p>
+			<?php endif; ?>
 			<?php
 			// Start Here is a PAGE under /notes/, so it is absent from the post
 			// query that builds the index below — without this link the corpus
