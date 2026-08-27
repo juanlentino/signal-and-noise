@@ -196,14 +196,22 @@ jobs:
           #
           # smoke-test fires HOURLY (17 * * * *). Watched at 48h it could miss
           # twenty-two consecutive runs and still report health, which is the
-          # exact blindness this guard exists to remove. 6h is set from
-          # measurement, not instinct: over the last 20 scheduled runs the
-          # largest gap between consecutive ones was 2.2h, so 6h clears real
-          # GitHub queueing drift by ~2.7x while still catching a dead hourly
-          # cron within a quarter of a day instead of two full days.
+          # exact blindness this guard exists to remove.
+          #
+          # RECALIBRATED 2026-08-27, same method as the original: the 6h grace
+          # was measured (max observed gap 2.2h x ~2.7), and then GitHub's
+          # scheduler drifted out from under it — measured again over the last
+          # 50 scheduled runs: median gap 1.0h, p90 2.3h, but outliers of 4.2h
+          # and 10.3h with every run succeeding. A grace below the scheduler's
+          # own worst drift makes this check red on GitHub's weather, and a
+          # required check that reds on weather trains people to re-run and
+          # stop reading (this file's own words, above). 24h covers the 10.3h
+          # outlier at ~2.3x and still catches a dead hourly cron within one
+          # day. The nominal schedule is not the measured delivery; calibrate
+          # to the delivery.
           rows=$(printf '%s\n' \
             'version-tag-parity.yml:48' \
-            'smoke-test.yml:6' \
+            'smoke-test.yml:24' \
             | while IFS=: read -r wf grace; do
                 [ -n "$wf" ] || continue
                 created=$(api "repos/${REPO}/actions/workflows/${wf}" '.created_at') || created=""
