@@ -10,9 +10,12 @@ package version, read 2026-08-27). CI had never exercised the version the theme
 is actually served on, and 8.3 left ACTIVE support on 2025-12-31.
 
 - **8.4 — production parity.** Blocking.
-- **8.5 — current stable**, the next upgrade target. Blocking, after measuring
-  both suites clean on a local 8.5.9 (with a negative control confirming the
-  harness surfaces deprecations rather than swallowing them).
+- **8.5 — current stable upstream. READINESS, not parity:** the host does not
+  offer 8.5 yet (owner-confirmed 2026-08-27). Blocking anyway, and only after
+  measuring — both suites clean on a local 8.5.9, with a negative control
+  confirming the harness surfaces deprecations rather than swallowing them. If
+  it ever reds for a version the site cannot run, demote it to step-level
+  `continue-on-error`.
 - **8.6 — nightly `8.6.0-dev`.** Non-blocking at STEP level, including the
   setup step, because job-level `continue-on-error` still reds the PR.
 
