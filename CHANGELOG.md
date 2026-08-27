@@ -2,6 +2,45 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.8.0] - 2026-08-27 — the two planned accessibility rows: motion that asks, contrast that measures
+
+Both planned rows on the maturity board's Accessibility family, shipped
+together as instruments in the estate's own idiom — report first, negative-
+controlled, honest about what they cannot see.
+
+**Motion that asks first** (`tests/motion-pairing.php`, 9 assertions). A
+CSS walker inventories every animation and every vestibular transition with
+its `@media` context, prints the complete map, then asserts: every motion
+site is guarded — OPTIN (declared inside `prefers-reduced-motion:
+no-preference`, this theme's dominant idiom), RESET (a reduce-context
+counterpart), or SOFTEN (a reduce-context redefinition to something
+non-vestibular, the `.sn-logo-img` pattern the first scan draft missed).
+Non-vestibular transitions are exempt by stated policy. Every JS file
+touching a motion API must be classified in a map whose claims are verified
+by grep — a guard claimed is a guard found. First run surfaced real work:
+the service-card transform transitions sat outside the PA-12 gate that
+guards their transforms (moved inside), and two `transition: all`
+declarations were narrowed to the properties their hovers actually change —
+`all` includes transform, and nothing there moves.
+
+**Contrast from computed styles** (`tools/contrast-computed.js`, the
+typography-baseline pattern: same-origin iframes, run against live, capture
+→ fix → capture). The remaining half of the token-level audit: real
+nesting, inline overrides, the opacity chain — measured, not read from
+files. 510 unique pairs across 15 pages × light + dark. Two findings, two
+lessons kept in the file: run one reported 451 violations that were all
+exactly fg===bg — entrance animations paused at `from{opacity:.01}` in
+offscreen iframes; the injected animation-kill is the difference between
+measuring the page and measuring its opening frame. Run two found 6 real
+rows: the /verify ghost numerals (aria-hidden — decorative by declaration,
+now skipped as WCAG intends) and the roadmap legend badges (fixed
+plugin-side in v13.8.1, verified to clear AA on both grounds before
+shipping).
+
+The high-contrast axis stays with the source-level test
+(`tests/front-end-css-contrast.php`): one variation serves live, and this
+instrument measures what is served.
+
 ## [12.7.6] - 2026-08-26 — the featured player's white corners, removed geometrically
 
 The Spotify embed at the top of `/music` renders four white notches at the
