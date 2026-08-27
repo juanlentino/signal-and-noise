@@ -55,14 +55,22 @@ const SN_EMAIL_DEFAULT_DOMAIN = 'juanlentino.com';
  *
  * @param string $user   Local part (left of @), e.g. 'research'.
  * @param string $domain Domain (right of @), e.g. 'juanlentino.com'.
+ * @param array  $args   Optional. 'subject' — plain-text mail subject, shipped
+ *                       base64 in data-esj and appended by contact-aliases.js as
+ *                       ?subject= on the runtime mailto (the subject is not a
+ *                       secret; encoding only keeps the attribute regex-quiet).
+ *                       'goal' — override for the data-sn-goal conversion name
+ *                       (default 'contact-<user>'); slugged the same way.
  * @return string Span HTML, or '' when either part is missing (no broken element).
  */
-function sn_email_markup( $user, $domain ) {
+function sn_email_markup( $user, $domain, $args = array() ) {
 	$user   = trim( (string) $user );
 	$domain = trim( (string) $domain );
 	if ( '' === $user || '' === $domain ) {
 		return '';
 	}
+	$args    = is_array( $args ) ? $args : array();
+	$subject = isset( $args['subject'] ) ? trim( (string) $args['subject'] ) : '';
 	// Split the domain on the LAST dot so the "[dot]" fallback reads naturally
 	// for multi-label domains (sub.example.co.uk -> "sub.example.co [dot] uk").
 	$dot      = strrpos( $domain, '.' );
@@ -78,13 +86,20 @@ function sn_email_markup( $user, $domain ) {
 	// otherwise see (it deliberately ignores mailto:). Aggregate counter only: no
 	// address, and the beacon's DNT/GPC gate still suppresses opted-out visitors.
 	// Slugged so an odd alias can't emit a malformed event name.
-	$goal = 'contact-' . trim( preg_replace( '/[^a-z0-9]+/', '-', strtolower( $user ) ), '-' );
+	$goal = isset( $args['goal'] ) ? (string) $args['goal'] : 'contact-' . $user;
+	$goal = trim( preg_replace( '/[^a-z0-9]+/', '-', strtolower( $goal ) ), '-' );
+	// data-esj rides only when a subject was asked for, so the five /contact
+	// aliases keep emitting byte-identical markup to every shipped version.
+	$esj = ( '' !== $subject )
+		? sprintf( ' data-esj="%s"', esc_attr( base64_encode( $subject ) ) )
+		: '';
 	return sprintf(
-		'<span class="sn-email" data-sn-goal="%4$s" data-eu="%1$s" data-ed="%2$s">%3$s</span>',
+		'<span class="sn-email" data-sn-goal="%4$s" data-eu="%1$s" data-ed="%2$s"%5$s>%3$s</span>',
 		esc_attr( base64_encode( $user ) ),
 		esc_attr( base64_encode( $domain ) ),
 		esc_html( $fallback ),
-		esc_attr( $goal )
+		esc_attr( $goal ),
+		$esj
 	);
 }
 

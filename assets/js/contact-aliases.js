@@ -36,9 +36,19 @@
 			if (!user || !domain) {
 				continue; // malformed → keep the [at]/[dot] fallback in place
 			}
+			// The decoded parts are server-authored, but validate anyway: the
+			// strict shapes stop a DOM-injected .sn-email span from smuggling
+			// extra mailto params (cc, body) through a crafted "address".
+			if (!/^[A-Za-z0-9._%+-]+$/.test(user) || !/^[A-Za-z0-9.-]+$/.test(domain)) {
+				continue; // hostile or mangled parts → keep the inert fallback
+			}
 			var address = user + '@' + domain;
+			// Optional subject (data-esj, base64) — [sn_note_reply] prefills
+			// "Re: <note title>"; the five /contact aliases ship none.
+			var subject = decode(el.getAttribute('data-esj') || '');
 			var link = document.createElement('a');
-			link.href = 'mailto:' + address;
+			link.href = 'mailto:' + encodeURIComponent(user) + '@' + encodeURIComponent(domain)
+				+ (subject ? '?subject=' + encodeURIComponent(subject) : '');
 			link.textContent = address;
 			el.textContent = ''; // clear the [at]/[dot] fallback
 			el.appendChild(link); // clickable address — assembled only at runtime

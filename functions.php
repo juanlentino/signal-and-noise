@@ -39,6 +39,7 @@
  *   inc/cited-by.php             — [sn_cited_by] reverse-link footer (v10.21.0)
  *   inc/404-recovery.php         — helpful 404: search + recent-notes suggestions ([sn_404_suggestions])
  *   inc/post-share.php           — [sn_note_share] copy-permalink + native share row
+ *   inc/note-reply.php           — [sn_note_reply] reply-by-email row, contact-alias machinery (v12.9.0)
  *   inc/article-toc.php          — in-article TOC + reading-progress bar (the_content filter, single notes ≥3 H2s)
  *   inc/feed-json.php            — JSON Feed 1.1 for the Notes corpus (v9.11.0; provenance extension v10.48.0)
  *   inc/feed-enrichment.php      — RSS media:content + reading-time + noteUid enrichment, plugin-guarded (v9.11.0)
@@ -127,6 +128,7 @@ require_once __DIR__ . '/inc/related-notes.php';
 require_once __DIR__ . '/inc/cited-by.php'; // v10.21.0: [sn_cited_by] reverse-link footer (complement to deliberately-dead pingbacks)
 require_once __DIR__ . '/inc/404-recovery.php';
 require_once __DIR__ . '/inc/post-share.php';
+require_once __DIR__ . '/inc/note-reply.php'; // v12.9.0: [sn_note_reply] reply-by-correspondence row (reuses the contact-alias machinery)
 require_once __DIR__ . '/inc/article-toc.php';
 require_once __DIR__ . '/inc/feed-json.php';
 require_once __DIR__ . '/inc/feed-enrichment.php';
