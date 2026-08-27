@@ -2,6 +2,27 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.10.2] - 2026-08-27 — CI finally tests the PHP the site actually runs
+
+The same three-lane matrix as the plugin's v13.11.2, for the same reason: every
+job here pinned PHP **8.3**, while the live server runs **8.4** (Cloudways
+package version, read 2026-08-27). CI had never exercised the version the theme
+is actually served on, and 8.3 left ACTIVE support on 2025-12-31.
+
+- **8.4 — production parity.** Blocking.
+- **8.5 — current stable upstream. READINESS, not parity:** the host does not
+  offer 8.5 yet (owner-confirmed 2026-08-27). Blocking anyway, and only after
+  measuring — both suites clean on a local 8.5.9, with a negative control
+  confirming the harness surfaces deprecations rather than swallowing them. If
+  it ever reds for a version the site cannot run, demote it to step-level
+  `continue-on-error`.
+- **8.6 — nightly `8.6.0-dev`.** Non-blocking at STEP level, including the
+  setup step, because job-level `continue-on-error` still reds the PR.
+
+`fail-fast: false`; every lane runs the same committed `tests/run.sh`. The live
+server runs `error_reporting = E_ALL & ~E_DEPRECATED`, so a deprecation notice
+is invisible in production and CI is the only place it can surface.
+
 ## [12.10.1] - 2026-08-27 — the stub-drift ambush becomes a red line here too
 
 `tools/stub-parity.php`, the sibling of the plugin's copy (same precedent as
