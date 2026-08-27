@@ -23,14 +23,15 @@
    SERVICE CARDS
    ============================================ */
 
-/* Service columns act as cards — target wp-block-column inside services sections */
-.wp-block-columns .wp-block-column:has(.sn-service-image) {
-	transition: transform 0.3s ease;
-}
+/* Service columns act as cards — target wp-block-column inside services sections.
+   The transform TRANSITIONS live inside the PA-12 no-preference gate below,
+   beside the transforms they animate — a transition for motion that reduced-
+   motion users never receive is inert, but pairing them keeps the motion
+   scan (tests/motion-pairing.php) honest without HTML knowledge. */
 
 .sn-service-image img {
 	filter: grayscale(40%) contrast(1.1);
-	transition: filter 0.5s ease, transform 0.5s ease;
+	transition: filter 0.5s ease; /* non-vestibular; stays ungated */
 }
 
 @media (hover: hover) {
@@ -39,12 +40,18 @@
 	}
 }
 
-/* Motion-only enhancement: gate transform on reduced-motion preference. Audit D PA-12. */
+/* Motion-only enhancement: gate transform on reduced-motion preference. Audit D PA-12.
+   v12.8.0: the transform TRANSITIONS moved in here beside their transforms. */
 @media (prefers-reduced-motion: no-preference) {
+	.wp-block-columns .wp-block-column:has(.sn-service-image) {
+		transition: transform 0.3s ease;
+	}
+	.sn-service-image img {
+		transition: filter 0.5s ease, transform 0.5s ease;
+	}
 	@media (hover: hover) {
 		.wp-block-column:hover .sn-service-image img {
 			transform: scale(1.02);
-
 		}
 	}
 }
@@ -70,7 +77,7 @@
 .wp-block-button__link {
 	position: relative;
 	overflow: hidden;
-	transition: all 0.3s ease;
+	transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease; /* was `all` — narrowed v12.8.0: `all` includes transform, and nothing here moves */
 	border: 1px solid transparent;
 }
 
@@ -183,7 +190,7 @@
 	letter-spacing: 0.15em;
 	border-radius: 0;
 	padding: 0.9rem 2rem;
-	transition: all 0.3s ease;
+	transition: background-color 0.3s ease, color 0.3s ease; /* was `all` — narrowed v12.8.0 */
 }
 
 @media (hover: hover) {
