@@ -37,8 +37,11 @@
 				continue; // malformed → keep the [at]/[dot] fallback in place
 			}
 			var address = user + '@' + domain;
+			// Optional subject (data-esj, base64) — [sn_note_reply] prefills
+			// "Re: <note title>"; the five /contact aliases ship none.
+			var subject = decode(el.getAttribute('data-esj') || '');
 			var link = document.createElement('a');
-			link.href = 'mailto:' + address;
+			link.href = 'mailto:' + address + (subject ? '?subject=' + encodeURIComponent(subject) : '');
 			link.textContent = address;
 			el.textContent = ''; // clear the [at]/[dot] fallback
 			el.appendChild(link); // clickable address — assembled only at runtime

@@ -995,6 +995,53 @@
 	}
 }
 
+/* ── NOTE REPLY ROW ──────────────────────────────────────────────────
+   Rendered by [sn_note_reply] (inc/note-reply.php) directly under the
+   share row in the single-note footer. Same label voice as Share; the
+   .sn-email span holds the [at]/[dot] fallback until contact-aliases.js
+   swaps in the runtime mailto anchor. */
+.sn-note-reply {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.75rem;
+	margin-top: clamp(0.75rem, 1.5vw, 1.25rem);
+}
+.sn-note-reply__label {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.7rem, 11px);
+	font-weight: 500;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--rust);
+	margin-right: 0.25rem;
+}
+.sn-note-reply .sn-email {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.7rem, 11px);
+	letter-spacing: 0.06em;
+	color: var(--wp--preset--color--bone);
+}
+.sn-note-reply .sn-email a {
+	color: var(--wp--preset--color--bone);
+	text-decoration: underline;
+	text-underline-offset: 0.2em;
+	transition: color 0.2s ease;
+}
+@media (hover: hover) {
+	.sn-note-reply .sn-email a:hover {
+		color: var(--wp--preset--color--blood);
+	}
+}
+.sn-note-reply .sn-email a:focus-visible {
+	color: var(--wp--preset--color--blood);
+}
+@media (prefers-reduced-motion: reduce) {
+	.sn-note-reply .sn-email a {
+		transition: none;
+	}
+}
+
 /* ── DISCOGRAPHY COVER-GRID (/music) ─────────────────────────────────
    v9.14.0 — /music redesign. The [sn_discography] shortcode (rendered by
    inc/discography-render.php from the plugin-supplied store) emits a sticky

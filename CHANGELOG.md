@@ -2,6 +2,37 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.9.0] - 2026-08-27 — reply by correspondence: the door instead of the wall
+
+The site has no comments by design; this release completes that posture with
+a door. Every single note's closing footer now carries a **Reply** row — the
+research@ alias with the subject prefilled "Re: <note title>" — so a reader
+who wants to answer a note answers it the way the site answers everything:
+in writing, addressed, on the record.
+
+**The scraper posture holds on notes exactly as on /contact.** The row is
+built on the same machinery as the contact aliases (`inc/contact-email.php`):
+split base64 `data-*` parts, a readable `[at]/[dot]` fallback, and the
+clickable `mailto:` assembled only at runtime by `contact-aliases.js`. No
+contiguous address, no `@`, no `mailto:` in any served source — asserted by
+the new suite. `sn_email_markup()` gains an optional third argument
+(`subject`, `goal`); the two-argument /contact call emits byte-identical
+markup to every shipped version, also asserted.
+
+- New `inc/note-reply.php` — `[sn_note_reply]`, single-post gated, with the
+  share row's render_block bridge and a same-handle conditional enqueue of
+  `contact-aliases.js` on single notes (footer + deferred; without JS the
+  fallback stays readable, just not clickable).
+- `contact-aliases.js` appends `?subject=` from `data-esj` when present.
+- `parts/post-closing.html` renders the row under the share row; print.css
+  strips it (a mailto means nothing on paper).
+- Clicks count as an aggregate `reply-note` conversion through the existing
+  `data-sn-goal` hook — DNT/GPC gate applies, no address in any event.
+- `tests/note-reply.php` — 20 assertions driving the REAL producers (both
+  modules loaded, no stubs of either), including a hostile-title round trip
+  and the back-compat byte-stability of the contact aliases. Mutation-checked
+  red on two seeded defects before landing.
+
 ## [12.8.0] - 2026-08-27 — the two planned accessibility rows: motion that asks, contrast that measures
 
 Both planned rows on the maturity board's Accessibility family, shipped
