@@ -2,6 +2,38 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.10.0] - 2026-08-27 — the corpus glances at itself: hover previews for note links
+
+Internal note links now carry their destination with them. Hover (or Tab
+to) a link from one note to another and a small card shows the target's
+title, its opening, and its date · reading time — the weave of the corpus
+made glanceable without leaving the paragraph.
+
+**Server-stamped, never fetched.** A `the_content` filter
+(`inc/note-link-previews.php`, single notes only) resolves qualifying
+`/notes/<slug>/` anchors at render time and stamps them with
+`data-sn-preview-*` attributes; the reader-side JS
+(`note-link-previews.js`) builds the card from those attributes with
+`createElement` + `textContent` only — no innerHTML, no fetch, no network
+on the reader's path. The summary is the note's OPENING: the hand-set
+excerpt when present, else the first 28 words — the same derivation
+llms.txt uses. Stored content is never modified, so provenance signatures
+are untouched by construction.
+
+- Same-site anchors only (host-checked), published targets only, never a
+  self-link, idempotent under double filtering — all asserted.
+- Coarse pointers skipped entirely (tap navigates); 120ms hover-intent
+  delay so sweeping a paragraph sprays nothing; keyboard parity via
+  focusin/focusout with Escape to dismiss; the card is aria-hidden and
+  pointer-events: none — a glance, never a target.
+- Surface identity mirrors the footnote popover (void ground, concrete
+  hairline, blood top rule); no animation at all, so there is nothing for
+  prefers-reduced-motion to guard.
+- `tests/note-link-previews.php` — 16 assertions driving the REAL filter
+  plus the real date/reading-time helpers; hostile-title escaping and the
+  byte-identical pass-through cases pinned. Two seeded mutations
+  (escaping removed, host check removed) both turned the suite red.
+
 ## [12.9.0] - 2026-08-27 — reply by correspondence: the door instead of the wall
 
 The site has no comments by design; this release completes that posture with
