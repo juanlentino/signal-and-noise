@@ -2,6 +2,30 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.11.1] - 2026-08-27 — the reply alias becomes a setting, without becoming a text field
+
+`[sn_note_reply]` sent replies to `research@` because the constant was
+hardcoded, and rerouting them meant editing a file. It is now filterable —
+`sn_note_reply_alias` — which the companion plugin fills from
+`theme.note_reply_alias` (plugin v13.17.0). The theme's own default keeps the
+row working with no plugin at all.
+
+**It is a CHOICE, never free text, and the theme enforces that itself.** The
+reason the alias was hardcoded in v12.9.0 is that an arbitrary value mints an
+address the mailbox does not filter — the downstream half of the contact-email
+threat model, and the layer that actually stops spam once a JS-executing
+scraper has assembled the address. So `SN_NOTE_REPLY_ALLOWED` lists the five
+real /contact aliases, and an off-list value falls back to `research` rather
+than rendering. The plugin validates its setting against the same list; this
+check is the SECOND one on purpose, so a misconfigured or compromised filter
+still cannot put an unfiltered address in front of a reader.
+
+Case and surrounding whitespace are normalised before the check, so a value
+saved as " PRESS " resolves rather than silently falling back.
+
+Nine assertions cover it, including five refusals (`notes`, `hello`, a full
+address, empty, and a shell-ish string). Removing the allowlist reds five.
+
 ## [12.11.0] - 2026-08-27 — a tag archive gets to speak for itself
 
 All 23 tag archives render the same hero dek — "Working notes on music, AI,
