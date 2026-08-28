@@ -35,6 +35,40 @@ if ( ! defined( 'ABSPATH' ) ) {
 const SN_NOTE_REPLY_USER = 'research';
 
 /**
+ * The aliases this site actually filters, and the ONLY values the alias may
+ * take. This list is the safety property, not a convenience: the whole reason
+ * the alias was hardcoded is that a free-text value can mint an address the
+ * mailbox does not filter — the downstream half of the contact-email threat
+ * model. The plugin validates its own setting against the same list, and this
+ * check is the second one on purpose: a misconfigured or compromised filter
+ * still cannot put an unfiltered address in front of a reader.
+ *
+ * Mirrors the five /contact aliases (see inc/contact-email.php).
+ */
+const SN_NOTE_REPLY_ALLOWED = array( 'research', 'press', 'speaking', 'role', 'music' );
+
+/**
+ * The alias replies travel to, after the optional plugin override.
+ *
+ * The companion plugin supplies the chosen value via
+ * sn_setting('theme.note_reply_alias'); this filter is the seam, and the
+ * theme's own default keeps the row working with no plugin at all. An
+ * off-list value falls back rather than being rendered — never a fatal, never
+ * an unfiltered address.
+ *
+ * @since theme v12.11.1
+ * @return string One of SN_NOTE_REPLY_ALLOWED.
+ */
+function sn_note_reply_alias() {
+	$alias = SN_NOTE_REPLY_USER;
+	if ( function_exists( 'apply_filters' ) ) {
+		$alias = (string) apply_filters( 'sn_note_reply_alias', SN_NOTE_REPLY_USER );
+	}
+	$alias = strtolower( trim( $alias ) );
+	return in_array( $alias, SN_NOTE_REPLY_ALLOWED, true ) ? $alias : SN_NOTE_REPLY_USER;
+}
+
+/**
  * Build the Reply row for one note.
  *
  * @param int $post_id Note ID.
@@ -48,7 +82,7 @@ function sn_note_reply_markup( $post_id ) {
 	$title   = trim( (string) get_the_title( $post_id ) );
 	$subject = ( '' !== $title ) ? 'Re: ' . $title : '';
 	$span    = sn_email_markup(
-		SN_NOTE_REPLY_USER,
+		sn_note_reply_alias(),
 		SN_EMAIL_DEFAULT_DOMAIN,
 		array(
 			'subject' => $subject,

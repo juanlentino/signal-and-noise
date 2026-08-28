@@ -24,6 +24,13 @@ function esc_html( $s ) { return htmlspecialchars( (string) $s, ENT_QUOTES ); }
 function esc_attr( $s ) { return htmlspecialchars( (string) $s, ENT_QUOTES ); }
 function esc_html__( $s, $d = null ) { return htmlspecialchars( (string) $s, ENT_QUOTES ); }
 function do_shortcode( $s ) { return $s; }
+$GLOBALS['__alias_filter'] = null;
+function apply_filters( $tag, $value ) {
+	if ( 'sn_note_reply_alias' === $tag && null !== $GLOBALS['__alias_filter'] ) {
+		return $GLOBALS['__alias_filter'];
+	}
+	return $value;
+}
 function shortcode_unautop( $s ) { return $s; }
 function shortcode_atts( $defaults, $atts, $tag = '' ) { return array_merge( $defaults, is_array( $atts ) ? $atts : array() ); }
 
@@ -78,6 +85,27 @@ ok( '' === sn_note_reply_shortcode(), 'shortcode is inert off single posts' );
 $GLOBALS['__is_single_post'] = true;
 ok( false !== strpos( sn_note_reply_shortcode(), 'sn-note-reply' ), 'shortcode renders on a single post' );
 ok( '' === sn_note_reply_markup( 0 ), 'id 0 renders nothing rather than a broken row' );
+
+// ── 5b. The alias is filterable, and the filter cannot mint a new address ──
+// The plugin supplies theme.note_reply_alias through this seam. The theme
+// validates independently: the whole reason the alias was hardcoded is that a
+// free-text value can mint an address the mailbox does not filter.
+ok( 'research' === sn_note_reply_alias(), 'ALIAS: defaults to research with no filter applied' );
+
+$GLOBALS['__alias_filter'] = 'press';
+ok( 'press' === sn_note_reply_alias(), 'ALIAS: an allowlisted override is honoured' );
+ok( 'press' === base64_decode( attr_of( sn_note_reply_markup( 7 ), 'data-eu' ) ),
+	'ALIAS: and reaches the rendered row, not just the helper' );
+
+$GLOBALS['__alias_filter'] = '  PRESS  ';
+ok( 'press' === sn_note_reply_alias(), 'ALIAS: case and whitespace are normalised before the check' );
+
+foreach ( array( 'notes', 'hello', 'research@juanlentino.com', '', 'press;rm -rf' ) as $bad ) {
+	$GLOBALS['__alias_filter'] = $bad;
+	ok( 'research' === sn_note_reply_alias(),
+		'ALIAS REFUSED: "' . $bad . '" is off-list and falls back to research, never minting an unfiltered address' );
+}
+$GLOBALS['__alias_filter'] = null;
 
 // ── 6. Back-compat: the two-arg /contact call emits the pre-12.9.0 shape ──
 $press = sn_email_markup( 'press', 'juanlentino.com' );
