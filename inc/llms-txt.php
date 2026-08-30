@@ -134,6 +134,20 @@ function sn_llms_txt_body( $full = false, $notes = array(), $pillars = array() )
 		// the whole term. Substance is pinned in tests/llms-txt.php.
 		'- [RSL license](' . $home . '/license.xml): machine-readable terms. Search and AI input are permitted unconditionally and free. AI training is reserved by default and permitted only under the attribution conditions stated in the TDM policy.',
 		'- [TDM policy](' . $home . '/tdm-policy/): the text-and-data-mining reservation behind the TDM-Reservation headers and [tdmrep.json](' . $home . '/.well-known/tdmrep.json), and the conditions a training licence requires.',
+		// v12.12.0. sn-rights-signals v1.24.0 answers a VERIFIED agent with the
+		// terms in its response headers, keyed to the identity it proved. Stated
+		// here because otherwise the behaviour is undiscoverable: only an agent
+		// that ALREADY signs would ever see those headers, so the agents most
+		// worth reaching — the ones deciding whether signing is worth
+		// implementing — would never learn it exists.
+		//
+		// The final clause is load-bearing and must not be trimmed. It is the
+		// v11.5.2 lesson in a new place: there the copy drifted into announcing a
+		// conditional licence as a standing permission. The same misreading is
+		// available here and is worse — proving WHO you are is not meeting the
+		// conditions, and an agent concluding "signed, therefore licensed" would
+		// take a licence it does not hold. Pinned in tests/llms-txt.php.
+		'- **Identified agents**: a request signed with [Web Bot Auth](https://datatracker.ietf.org/doc/html/draft-meunier-web-bot-auth-architecture-02) and verified at the edge is answered with the licence terms in its `TDM-Licence-*` response headers, keyed to the identity it proved. That is an offer addressed to a known party, not a grant: proving who you are does not satisfy the training conditions, which apply in full.',
 		'',
 	) );
 

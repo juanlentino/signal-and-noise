@@ -118,6 +118,33 @@ function sn_agents_manifest() {
 			'type'        => 'JSON-LD',
 			'embedded_in' => 'the <head> of every page (schema.org @graph)',
 		),
+		// v12.12.0. `surfaces` lists things with URLs; this is a BEHAVIOUR of
+		// every response, so it sits here beside structured_data, which already
+		// describes a behaviour rather than an address.
+		//
+		// Stated at all because sn-rights-signals v1.24.0's handshake is
+		// otherwise undiscoverable: only an agent that ALREADY signs would see
+		// the headers, so the agents deciding whether to implement signing would
+		// never learn the offer exists.
+		'rights'          => array(
+			// The default, first. Nothing in this block may read as a permission
+			// before the reservation it is an exception to — the v11.5.2 rule
+			// that llms.txt's Rights copy already follows.
+			'reservation'        => true,
+			'policy'             => $home . '/tdm-policy/',
+			'signed_agent_offer' => array(
+				'mechanism'     => 'Web Bot Auth (RFC 9421 Ed25519 HTTP Message Signatures), verified at the edge',
+				'header_prefix' => 'TDM-Licence-',
+				'description'   => 'A verified agent receives the licence terms in its response headers, keyed to the identity it proved.',
+				// A FIELD, not a sentence in a description someone can drop. A
+				// manifest is read by machines that will not read prose, and the
+				// misreading available here — "signed, therefore licensed" —
+				// would have an agent take a licence it does not hold. Proving
+				// WHO you are is not meeting the conditions.
+				'grants_licence' => false,
+				'conditions_apply_in_full' => true,
+			),
+		),
 	);
 }
 

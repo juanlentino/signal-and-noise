@@ -2,6 +2,50 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.12.0] - 2026-08-30 — the signed-agent handshake becomes discoverable
+
+Consumes `sn-rights-signals` **v1.24.0**, which answers a VERIFIED agent with
+the licence terms in `TDM-Licence-*` response headers, keyed to the identity it
+proved (survey item A2).
+
+The theme owns **discovery** of the worker-served rights surfaces, and without a
+word here that behaviour is undiscoverable: only an agent that ALREADY signs
+would ever see those headers, so the agents most worth reaching — the ones
+deciding whether implementing Web Bot Auth is worth it — would never learn the
+offer exists.
+
+### Added — `/llms.txt` Rights names the handshake
+
+[inc/llms-txt.php](inc/llms-txt.php) gains one line under the existing
+reservation, never before it: a request signed with Web Bot Auth and verified at
+the edge is answered with the terms in its `TDM-Licence-*` headers.
+
+**The closing clause is load-bearing and must not be trimmed** — "proving who
+you are does not satisfy the training conditions, which apply in full". This is
+the v11.5.2 lesson in a new place. There the copy drifted into announcing a
+conditional licence as a standing permission; the same misreading is available
+here and is worse, because an agent concluding *signed, therefore licensed*
+would take a licence it does not hold. Pinned, including the ordering pin that
+keeps the reservation ahead of anything resembling a permission.
+
+### Added — `/.well-known/agents.json` gains a `rights` block
+
+[inc/agents-manifest.php](inc/agents-manifest.php). `surfaces` lists things with
+URLs; the handshake has none — it is a behaviour of every response — so it rides
+a descriptive block beside `structured_data`, which already describes a
+behaviour rather than an address.
+
+`reservation: true` comes first, then `policy`, then `signed_agent_offer` with
+its mechanism and header prefix. The disclaimer is a **field**, not a sentence:
+`grants_licence: false` and `conditions_apply_in_full: true`. A manifest is read
+by machines that will not read prose, and a caveat buried in a description is
+one someone can drop.
+
+### Tests — 11 new, both anti-misreading pins negative-controlled
+
+Removing the "does not satisfy" clause from `/llms.txt` fails its pin; flipping
+`grants_licence` to true fails its own. Sweep: 110 suites, 2,955 assertions.
+
 ## [12.11.1] - 2026-08-27 — the reply alias becomes a setting, without becoming a text field
 
 `[sn_note_reply]` sent replies to `research@` because the constant was
