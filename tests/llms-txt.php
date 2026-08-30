@@ -120,5 +120,26 @@ $sn_llms_src = (string) file_get_contents( __DIR__ . '/../inc/llms-txt.php' );
 ok( false !== strpos( $sn_llms_src, "'has_password'        => false," ), 'the recent-notes query excludes password-protected posts' );
 ok( false !== strpos( $sn_llms_src, "if ( '' !== (string) ( \$post->post_password ?? '' ) ) {" ), 'and the row loop carries the defense-in-depth belt' );
 
+// ── v12.12.0: the signed-agent handshake is DISCOVERABLE ──────────────────────
+//
+// sn-rights-signals v1.24.0 answers a VERIFIED agent with the licence terms in
+// `TDM-Licence-*` response headers, keyed to the identity it proved. Without a
+// line here that behaviour is undiscoverable: only an agent that ALREADY signs
+// would ever see the headers, so the agents most worth reaching — the ones
+// deciding whether signing is worth implementing — never learn it exists.
+ok( strpos( $body, 'TDM-Licence' ) !== false, 'the Rights section names the licence headers a verified agent receives' );
+ok( strpos( $body, 'Web Bot Auth' ) !== false, 'and names the mechanism that earns them' );
+
+// THE ANTI-MISREADING PIN, and the direct descendant of the v11.5.2 lesson
+// above. There the copy drifted into announcing a conditional licence as a
+// standing permission. The same misreading is available here and is worse:
+// proving WHO you are is not meeting C1-C5, and an agent that concluded
+// "signed, therefore licensed" would take a licence it does not hold.
+ok( strpos( $body, 'does not satisfy' ) !== false, 'and says outright that signing satisfies none of the conditions' );
+
+// Ordering again: a machine that stops reading early must hit the reservation
+// before anything that sounds like a permission.
+ok( strpos( $body, 'reserved by default' ) < strpos( $body, 'TDM-Licence' ), 'the reservation is stated BEFORE the handshake that offers terms under it' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

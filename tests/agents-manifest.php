@@ -108,5 +108,25 @@ require_once __DIR__ . '/../inc/content-json.php';
 $c_surfaces = sn_content_json_advertise_surface( sn_agents_surfaces() );
 ok( in_array( 'content-json', array_column( $c_surfaces, 'type' ), true ), 'content-json surface can be advertised into the manifest' );
 
+// ── v12.12.0: the manifest describes the signed-agent handshake ──────────────
+//
+// `surfaces` lists things with URLs. The handshake has none — it is a BEHAVIOUR
+// of every response — so it rides a descriptive block beside `structured_data`,
+// which already carries a behaviour rather than an address.
+$rights = $m['rights'] ?? null;
+ok( is_array( $rights ), 'the manifest carries a rights block' );
+ok( isset( $rights['reservation'] ) && true === $rights['reservation'], 'which states the reservation as the DEFAULT, before any offer' );
+ok( isset( $rights['policy'] ) && false !== strpos( (string) $rights['policy'], '/tdm-policy/' ), 'and points at the operative text rather than restating it' );
+
+$hs = $rights['signed_agent_offer'] ?? null;
+ok( is_array( $hs ), 'and describes the signed-agent offer' );
+ok( isset( $hs['mechanism'] ) && false !== stripos( (string) $hs['mechanism'], 'web bot auth' ), 'naming the mechanism that earns it' );
+ok( isset( $hs['header_prefix'] ) && 'TDM-Licence-' === $hs['header_prefix'], 'and the header prefix the terms arrive under' );
+
+// The same anti-misreading pin llms.txt carries. A manifest is read by machines
+// that will not read prose, so the disclaimer has to be a FIELD, not a sentence
+// buried in a description someone can drop.
+ok( isset( $hs['grants_licence'] ) && false === $hs['grants_licence'], 'and states explicitly that proving identity does NOT grant the licence' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
