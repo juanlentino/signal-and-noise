@@ -180,13 +180,26 @@ echo $sn_header_html;
 			      // was a paragraph naming two third-party bridges, and naming
 			      // vendors here reads wrong beside the rest of the page.
 			      //
+			      // v12.14.0: the reader names come back. The retired page carried
+			      // them ("NetNewsWire, Reeder, Feedbin and others") and I dropped
+			      // them with it, generalising an argument that was only ever about
+			      // the EMAIL bridges — those are a service you sign into, and
+			      // naming them here reads like an endorsement. A feed reader is
+			      // different: it is the thing that makes "RSS" mean anything, and
+			      // "whatever reader you already use" strands anyone who has none.
+			      // Plain text, not links, exactly as the retired page had them:
+			      // apps a visitor installs, not destinations to send them to.
+			      // "among others" is deliberate — this is a claim about
+			      // third-party software that can age, and the hedge is what keeps
+			      // it from becoming wrong if one of the three drops JSON Feed.
+			      //
 			      // Both URLs come from their ACCESSORS, never a literal: the
 			      // retired page's own suite pinned exactly that, and this hero
 			      // is now the second reader of both facts. Two copies of a feed
 			      // path is two things to keep in step. ?>
 			<p class="sn-notes-subscribe">
 				Every note lands in whatever reader you already use, the day it goes up
-				&mdash; <a href="<?php echo esc_url( function_exists( 'sn_subscribe_feed_url' ) ? sn_subscribe_feed_url() : home_url( '/notes/feed/' ) ); ?>">RSS</a> or <a href="<?php echo esc_url( function_exists( 'sn_feed_json_pretty_url' ) ? sn_feed_json_pretty_url() : home_url( '/feed/json/' ) ); ?>">JSON Feed</a>.<span class="sn-notes-cursor" aria-hidden="true"></span>
+				&mdash; <a href="<?php echo esc_url( function_exists( 'sn_subscribe_feed_url' ) ? sn_subscribe_feed_url() : home_url( '/notes/feed/' ) ); ?>">RSS</a> or <a href="<?php echo esc_url( function_exists( 'sn_feed_json_pretty_url' ) ? sn_feed_json_pretty_url() : home_url( '/feed/json/' ) ); ?>">JSON Feed</a>. No reader yet? NetNewsWire, Reeder and Feedbin read both, among others.<span class="sn-notes-cursor" aria-hidden="true"></span>
 			</p>
 			<?php // The one sentence worth carrying over from that page. On a site
 			      // arguing about what gets recorded about people, how the feed
