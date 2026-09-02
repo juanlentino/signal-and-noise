@@ -216,6 +216,15 @@ echo $sn_header_html;
 					<span class="sn-notes-meta-bullet" aria-hidden="true">&middot;</span>
 					<span>Last updated <?php echo esc_html( $latest_date ); ?></span>
 				<?php endif; ?>
+				<?php // v12.16.0: the ONLY route to /notes/tags/. It belongs on this
+				      // line rather than in the top nav: the glossary is a fact about
+				      // the corpus, which is what this stamp states, and a nav entry
+				      // would rank a secondary index alongside Home and About. Sits
+				      // inside the same suppression as the rest of the stamp — in a
+				      // filtered view these figures describe the result set, and a
+				      // corpus-wide link would read as part of that claim. ?>
+				<span class="sn-notes-meta-bullet" aria-hidden="true">&middot;</span>
+				<span><a href="<?php echo esc_url( home_url( '/notes/tags/' ) ); ?>">All tags</a></span>
 			</p>
 			<?php endif; ?>
 		</div>

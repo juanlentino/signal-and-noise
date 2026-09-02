@@ -2,6 +2,46 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.16.0] - 2026-09-02 — the glossary gets a gutter, and a door
+
+### Fixed — /notes/tags/ shipped with three class names that do not exist
+
+The page rendered flush against the left viewport edge. `<main>` carried
+`sn-notes-main`; the real class is `sn-notes-page`, and it is the one holding
+`padding: clamp(2rem, 5vw, 4.5rem) clamp(1.25rem, 3vw, 3rem) 160px` and
+`max-width: 1320px`. Two more alongside it: `sn-notes-hero-main` (real:
+`sn-notes-hero-title`) and `sn-notes-title` (real: `sn-notes-headline`). The
+`id="wp--skip-link--target"` anchor was dropped too, which is an accessibility
+regression, not cosmetics.
+
+I wrote the renderer from the SHAPE of the index template rather than from its
+class names, and nothing could catch that: CSS has no such thing as an
+unresolved selector, so an invented class is indistinguishable from a correct
+one until a human looks at the page. All 111 suites passed on the broken build.
+
+- **[`tests/notes-tags-class-parity.php`](tests/notes-tags-class-parity.php)** —
+  the actual fix. Every class the renderer emits must exist in notes.css or in
+  the index renderer it borrows its shell from. Carries vacuity guards (an
+  extraction finding nothing would pass everything) and strips comments first,
+  because a class NAMED in prose is not a class in use. It found a fourth
+  orphan on its first run — `sn-tags-page`, a hook I emitted with no rule
+  behind it — which was removed rather than exempted.
+
+### Added — a route to the glossary
+
+`/notes/tags/` had no inbound link from anywhere. It now sits in the index
+hero's closing stamp: `38 entries · Last updated … · All tags`. That line, not
+the top nav: the glossary is a fact about the corpus, which is what the stamp
+states, and a nav entry would rank a secondary index alongside Home and About.
+It inherits the stamp's existing suppression in search and tag views, where the
+figures describe a filtered result set rather than the corpus.
+
+The tags hero gains the mirror stamp — `25 tags · 4 groups`. Not decoration:
+`.sn-notes-hero` is a two-column grid above 900px, so a hero with one child
+left the right half empty and squeezed the dek into 1.15fr. Counts are stated
+here ABOUT the vocabulary, which is a different claim from a count on each row
+— that one ranks tags by size, the tag-cloud failure the page exists to avoid.
+
 ## [12.15.0] - 2026-09-02 — a glossary, not a tag cloud
 
 ### Added — /notes/tags/
