@@ -656,13 +656,18 @@ details.sn-notes-year > summary:focus-visible .sn-notes-year-band {
    in blood. Cursor terminates the sentence as a "live system" beat
    inherited from the previous footer aesthetic. */
 
+/* Prose register (v12.14.1). This was uppercase at 0.18em tracking, which was
+   right while the line was a six-word navigational beat. v12.13.1 folded
+   /notes/subscribe/ into it and it became four sentences — the length at which
+   the rule below already says uppercase is unreadable, and long enough that
+   uppercasing flattened NetNewsWire's camel case into NETNEWSWIRE. Uppercase
+   stays on the entry-count meta line, which is still a beat. */
 .sn-notes-subscribe {
 	margin: 1.25rem 0 0;
 	font-family: 'DM Mono', 'Courier New', monospace;
-	font-size: max(0.7rem, 11px);
-	letter-spacing: 0.18em;
-	text-transform: uppercase;
-	line-height: 1.7;
+	font-size: max(0.75rem, 12px);
+	letter-spacing: 0.01em;
+	line-height: 1.6;
 	color: var(--wp--preset--color--rust);
 	max-width: 48ch;
 }
@@ -678,11 +683,10 @@ details.sn-notes-year > summary:focus-visible .sn-notes-year-band {
 	}
 }
 /* The feed's privacy note (v12.13.1), carried over when /notes/subscribe/ was
-   folded into this line. DELIBERATELY NOT the .sn-notes-subscribe register
-   above: that one is uppercase at 0.18em tracking, which is right for a
-   six-word navigational beat and unreadable as a twenty-word sentence. This is
-   prose, so it takes the dek's sentence voice at the side column's scale —
-   quiet, lowercase, same rust, no cursor. */
+   folded into this line. Shares the register of .sn-notes-subscribe above —
+   they are two paragraphs of one prose block and reading as a pair is the
+   point. Subordinate to it by opacity alone, and no cursor: the cursor ends
+   the block, not each paragraph. */
 .sn-notes-subscribe-privacy {
 	margin: 0.6rem 0 0;
 	font-size: max(0.75rem, 12px);

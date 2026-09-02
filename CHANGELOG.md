@@ -2,6 +2,36 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.14.1] - 2026-09-02 — the subscribe line stops shouting
+
+### Fixed — the hero's subscribe line was in the wrong register
+
+`.sn-notes-subscribe` was uppercase at 0.18em tracking. That was right when the
+line was a six-word navigational beat. v12.13.1 folded `/notes/subscribe/` into
+it and it became four sentences — and the comment I wrote in that same release,
+sitting on the paragraph directly below, already said why that fails: uppercase
+at this tracking is *"right for a six-word navigational beat and unreadable as a
+twenty-word sentence."* I applied that reasoning to the sentence I was adding
+and never re-read it against the sentence I had just quadrupled in length.
+
+Three consequences, all visible in the rendered hero:
+
+- Four lines of uppercase monospace at 0.18em, which is the exact failure the
+  comment names.
+- `NetNewsWire` rendered as `NETNEWSWIRE`. Uppercasing a proper noun destroys
+  its camel case; that is an error, not a preference.
+- Two adjacent paragraphs of one prose block in two different registers, which
+  reads as a mistake regardless of how well each rule is justified alone.
+
+`.sn-notes-subscribe` now shares the prose register of
+`.sn-notes-subscribe-privacy` (12px, 0.01em tracking, sentence case, 1.6 line
+height), so the pair reads as the single block it is, in the same voice as the
+hero dek in the left column. Uppercase stays on `.sn-notes-meta`, the entry-count
+line, which is still an actual beat and the thing that register exists for.
+
+Markup is untouched — this is two CSS rules and the stale comment that described
+the one I removed.
+
 ## [12.14.0] - 2026-09-02 — the readers come back, and a retired tag keeps its address
 
 ### Added — reader names in the hero
