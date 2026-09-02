@@ -88,53 +88,34 @@ ok( false === strpos( $src, 'font-size: clamp(4rem' ), 'the pre-v11.4.1 176px ou
 // v11.4.2: top alignment is the single split-hero rule across notes/now/uses.
 ok( false !== strpos( $css, 'align-items: start' ), 'hero grid top-aligns (v11.4.2 single split-hero rule)' );
 
-// v12.2.1: the hero POINTS at the subscribe page instead of enumerating
-// channels inline. It listed RSS + two email relays and would have gone on
-// omitting the JSON Feed forever — the same drift the terms link avoids, in
-// the same repo. One door, named once, kept in one place.
-ok( false !== strpos( $src, '/notes/subscribe/' ), 'hero links the subscribe page' );
-foreach ( array( 'Blogtrottr', 'Feedrabbit' ) as $relay ) {
-	ok( false === stripos( $src, $relay ), "hero does NOT enumerate the relay '$relay' (it lives on the subscribe page)" );
-}
-
-// v12.2.2: THE HERO MUST NOT RESTATE THE PAGE IT POINTS AT.
-// The hero is a door: it says what you get and where to go. /notes/subscribe/
-// owns the argument, the addresses and the caveats. The first version of this
-// line lifted "open formats any reader can follow" and "nothing about you is
-// collected" almost verbatim from that page — two copies of the same sentences,
-// free to drift apart, which is the exact failure the terms link avoids.
+// v12.2.1 pointed the hero at /notes/subscribe/ instead of enumerating channels
+// inline, because the inline list named RSS and two email relays and would have
+// gone on omitting the JSON Feed forever. v12.13.1 retired that page — 241 words
+// whose deliverable was one URL — and the hero now names the TWO channels that
+// are actually addresses, each read from its accessor. The drift rule survives
+// in the form that matters: no channel is spelled as a literal path.
 //
-// Measured as shared word-runs rather than a phrase blocklist, so it catches
-// duplication nobody thought to forbid.
-function sn_words( $html ) {
-	$t = preg_replace( '/<\?php.*?\?>/s', ' ', $html );
-	$t = preg_replace( '/<[^>]*>/', ' ', (string) $t );
-	$t = html_entity_decode( (string) $t, ENT_QUOTES, 'UTF-8' );
-	$t = strtolower( preg_replace( '/[^a-z0-9\s]/i', ' ', (string) $t ) );
-	return array_values( array_filter( explode( ' ', preg_replace( '/\s+/', ' ', $t ) ) ) );
-}
-function sn_ngrams( $words, $n ) {
-	$out = array();
-	for ( $i = 0; $i + $n <= count( $words ); $i++ ) {
-		$out[ implode( ' ', array_slice( $words, $i, $n ) ) ] = true;
-	}
-	return $out;
+// COMMENT-STRIPPED, and the guard below says why. This assertion's ancestor read
+// the raw file for '/notes/subscribe/' and PASSED after the link was removed,
+// because the hero's new comment names the retired page to explain what it
+// replaced. It went green over exactly the change it was watching for.
+$src_markup = (string) preg_replace( '#/\*.*?\*/|//[^\n]*#s', '', $src );
+ok( false !== strpos( $src, '/notes/subscribe/' ), 'VACUITY: the retired path IS in the file, in a comment — so stripping them is doing real work here' );
+ok( false === strpos( $src_markup, '/notes/subscribe/' ), 'the hero no longer links the retired page' );
+ok( false !== strpos( $src, 'sn_subscribe_feed_url()' ) && false !== strpos( $src, 'sn_feed_json_pretty_url()' ), 'it names both channels, each from its accessor rather than a literal path' );
+foreach ( array( 'Blogtrottr', 'Feedrabbit' ) as $relay ) {
+	ok( false === stripos( $src, $relay ), "hero does NOT enumerate the relay '$relay' — email went with the page, by owner decision" );
 }
 
-// the hero line only
+// v12.2.2 pinned that the hero must not restate the page it pointed at. There is
+// no page to restate now, so the duplication check retires with its subject —
+// but the shape it guarded against is worth keeping in view: the retired page's
+// second half re-listed the eight newest notes using the index's own row
+// classes, which is the same defect one level up. What replaces the check is
+// simply that the hero is two sentences and links two feeds.
 preg_match( '/<p class="sn-notes-subscribe">(.*?)<\/p>/s', $src, $m_hero );
 ok( ! empty( $m_hero[1] ), 'the hero subscribe line was located (guard: the regex still matches)' );
-
-// the subscribe page's visible prose only
-$sub_src = file_get_contents( __DIR__ . '/../inc/feed-subscribe-page.php' );
-preg_match_all( '/<p class="sn-(?:notes-dek|subscribe-help)">(.*?)<\/p>/s', $sub_src, $m_sub );
-ok( count( $m_sub[1] ) >= 3, 'the subscribe page prose was located (guard: the regex still matches)' );
-
-$shared = array_intersect_key(
-	sn_ngrams( sn_words( $m_hero[1] ), 6 ),
-	sn_ngrams( sn_words( implode( ' ', $m_sub[1] ) ), 6 )
-);
-ok( array() === $shared, 'hero shares NO 6-word run with the page it links to' . ( $shared ? ' — found: "' . implode( '" / "', array_keys( $shared ) ) . '"' : '' ) );
+ok( 1 === preg_match( '/<p class="sn-notes-subscribe-privacy">/', $src ), 'and the privacy line beside it, which is the one sentence carried over from the page' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

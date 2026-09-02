@@ -2,6 +2,58 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.13.1] - 2026-09-02 — /notes/subscribe/ folds into the line that linked it
+
+### Changed — the page is retired; its two addresses move into the hero
+
+241 words whose deliverable was a single URL, and whose second half re-listed
+the eight newest notes using the index's own row classes — the index, twice,
+under a page about a feed address. One internal link pointed at it: the hero
+line itself. It was absent from the sitemap, and llms.txt named the feed rather
+than the page.
+
+The hero now links both channels directly, so a reader reaches the feed in one
+click instead of two:
+
+> Every note lands in whatever reader you already use, the day it goes up —
+> **RSS** or **JSON Feed**.
+> Nothing is sent to me, and nothing about you is collected — a reader fetches
+> the file the same way a browser fetches a page.
+
+Email went with the page (owner decision): it was never a link, it was a
+paragraph naming two third-party bridges, and naming vendors in the hero of the
+notes index reads wrong beside the rest of the page. The reuse terms already
+lived at `/tdm-policy/`, which the retired page itself deferred to as canonical.
+
+Both URLs are read from their accessors — `sn_subscribe_feed_url()` and
+`sn_feed_json_pretty_url()` — never written as literals. The retired page's own
+suite pinned exactly that rule; the rule outlived its reader and followed it here.
+
+`/notes/subscribe/` **301s** to `/notes/`. It answered 200 and carried no
+noindex, so deleting the module outright would have turned a live URL into a
+404. The path match is unchanged from the page it replaces — exact path, query
+string ignored, trailing slash optional — because the URL being retired is the
+one the page answered, not a new guess at it. The module drops 308 lines to 78.
+
+The privacy sentence gets a rule of its own rather than inheriting
+`.sn-notes-subscribe`, which is uppercase at 0.18em tracking: right for a
+six-word navigational beat, unreadable at twenty words.
+
+### Tests
+`tests/feed-subscribe-page.php` keeps the path match — a loose one would now
+REDIRECT other URLs rather than merely mis-serve them — and drops every
+assertion describing the removed document. `tests/notes-hero-structure.php` is
+rewritten around the fold.
+
+**One of its assertions was passing falsely.** `hero links the subscribe page`
+read the raw file for `/notes/subscribe/` and stayed green after the link was
+removed, because the hero's new comment names the retired page to explain what
+it replaced. It went green over exactly the change it was watching for. Both
+suites now strip comments before scanning, each with a vacuity guard asserting
+the retired string IS present in a comment — so the strip is provably doing work.
+That is the fourth instance of the comment-versus-declaration trap in one
+evening, after a CSS scan, a wording scan and an orphan-class scan.
+
 ## [12.13.0] - 2026-09-02 — a tag archive browses, it does not search
 
 ### Fixed — tags were grouped with search in two places, and the reason fits only search

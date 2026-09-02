@@ -54,8 +54,31 @@ foreach ( array(
 }
 
 // The taught URL is the real feed, not the page itself.
-ok( 'https://x.test/notes/feed/' === sn_subscribe_feed_url(), 'the page teaches the REAL feed URL' );
-ok( sn_subscribe_feed_url() !== 'https://x.test' . SN_SUBSCRIBE_PATH, 'feed URL is not the subscribe page' );
+// v12.13.1: the page is retired and the URL now 301s to the index. The PATH
+// MATCH above is unchanged and stays the load-bearing assertion — this route
+// still runs on template_redirect for every front-end request, so a loose match
+// would hijack other URLs, and now it would REDIRECT them rather than merely
+// mis-serve them. Every near-miss above must still be false.
+ok( 'https://x.test/notes/' === sn_subscribe_redirect_target(), 'the retired URL sends a reader to the index, whose hero now carries both feed links' );
+ok( sn_subscribe_redirect_target() !== 'https://x.test' . SN_SUBSCRIBE_PATH, 'and never to itself — that is the loop' );
+ok( ! function_exists( 'sn_subscribe_render' ), 'the 241-word page renderer is gone, not merely unreachable' );
+
+// The hero line it folded into: both feeds linked directly, email dropped.
+$sn_hero = (string) file_get_contents( __DIR__ . '/../inc/page-notes-render.php' );
+// Comment-stripped, and the vacuity guard says why: the hero's own comment
+// NAMES the retired page to explain what it replaced. A raw scan reads that
+// explanation as a live link and fails the fix it is describing — the third
+// time this exact shape has bitten tonight, after a CSS scan and a wording one.
+$sn_hero_markup = (string) preg_replace( '#/\*.*?\*/|//[^\n]*#s', '', $sn_hero );
+ok( false !== strpos( $sn_hero, '/notes/subscribe/' ), 'VACUITY: the retired path IS named in the file (in a comment), so a comment-stripped scan is doing real work' );
+ok( false === strpos( $sn_hero_markup, '/notes/subscribe/' ), 'nothing in the theme still LINKS the retired page' );
+ok( false !== strpos( $sn_hero, 'nothing about you is collected' ), 'the privacy sentence survived the fold — it is the point, not a footnote' );
+
+// A class with no rule renders unstyled, and a 20-word sentence in the
+// subscribe line's uppercase 0.18em register would be a wall. Pin the rule.
+$sn_css = (string) file_get_contents( __DIR__ . '/../assets/css/notes.css' );
+ok( 1 === preg_match( '/\.sn-notes-subscribe-privacy\s*\{/', $sn_css ), 'the privacy line has a rule of its own — not an invented class' );
+ok( 0 === preg_match( '/\.sn-notes-subscribe-privacy\s*\{[^}]*text-transform:\s*uppercase/s', $sn_css ), 'and it is NOT uppercase: that register is right for six words, unreadable at twenty' );
 
 // --- v12.2.0: the page carries BOTH channels, and the terms it never restates ---
 // The markup lives in a render function that emits a document and exits, so it
@@ -66,92 +89,28 @@ $src = file_get_contents( __DIR__ . '/../inc/feed-subscribe-page.php' );
 // The JSON accessor is the REAL one, required across the file boundary: a stub
 // here would pin this suite's own invention instead of the shipped contract.
 ok( 'https://x.test/feed/json/' === sn_feed_json_pretty_url(), 'the real JSON accessor yields the pretty path' );
+ok( 'https://x.test/notes/feed/' === sn_subscribe_feed_url(), 'the RSS accessor survived the page it was written for' );
 ok( sn_feed_json_pretty_url() !== sn_subscribe_feed_url(), 'the two channels are different URLs' );
 
-ok( false !== strpos( $src, 'sn_feed_json_pretty_url()' ), 'page reads the JSON URL from the accessor' );
-ok( false === strpos( $src, '/feed/json' ), 'page hardcodes NO JSON feed path (that is how the two drift)' );
-ok( false !== strpos( $src, 'sn_subscribe_feed_url()' ), 'page still reads the RSS URL from its accessor' );
-ok( false !== strpos( $src, 'JSON Feed' ), 'page names the JSON channel in words, not just a URL' );
+// THE READER MOVED, THE RULE DID NOT. This suite's sharpest assertion was that
+// nothing hardcodes a feed path — two copies are two things to keep in step.
+// The retired page was the reader; the /notes hero is the reader now, so the
+// assertion follows it there rather than retiring with the page.
+ok( false !== strpos( $sn_hero, 'sn_feed_json_pretty_url()' ), 'the hero reads the JSON URL from the accessor' );
+ok( false !== strpos( $sn_hero, 'sn_subscribe_feed_url()' ), 'and the RSS URL from its accessor' );
+ok( 0 === preg_match( '#href="/feed/json/"#', $sn_hero_markup ), 'no literal JSON path in the markup (that is how the two drift)' );
+ok( 0 === preg_match( '#href="/notes/feed/"#', $sn_hero_markup ), 'no literal RSS path either' );
+// ── everything below this line described the retired PAGE ──────────────────
+// Its title filter, its container-CSS parity with /notes/, its header/footer
+// template-part pre-render, wp_head/wp_body_open/body_class ordering: all
+// assertions about a 241-word document that no longer exists. Deleted with it
+// rather than left asserting over a redirect — a suite that keeps testing a
+// removed surface is how a file grows a section nobody can explain.
+//
+// What SURVIVED is above, and it is the part that was never about the page:
+// the path match (a loose one would now redirect other URLs, not merely
+// mis-serve them) and the no-hardcoded-feed-path rule, which followed its
+// reader to the /notes hero.
 
-// The terms. Subscribing IS redistribution, so the one page that hands someone
-// the words links the policy.
-ok( false !== strpos( $src, '/tdm-policy/' ), 'page links the terms at /tdm-policy/' );
-
-// THE PIN THAT MATTERS MOST. sn-rights-signals-worker owns /tdm-policy/ and
-// sn-provenance-worker OTS-anchors it hourly; theme pages are NOT anchored.
-// Restating a term here creates an unanchored copy of anchored text, free to
-// drift from the canonical with nothing detecting it. The other pins fail
-// loudly on their own; this one guards a slow forking.
-foreach ( array( 'CC BY', 'Creative Commons', 'ShareAlike', 'NonCommercial', 'NoDerivatives', 'licen' ) as $term ) {
-	ok( false === stripos( $src, $term ), "page does NOT restate the terms: '$term'" );
-}
-
-// --- v12.2.1: the two defects the page shipped with in v11.9.4 ---
-
-// DEFECT 1 — the title. This route 200s, but WP's query never resolved to a
-// post, so wp_get_document_title() fell through to "Page not found" on a live,
-// indexable page. Same fix the other synthetic routes use (page-index-template,
-// page-notes-template): short-circuit pre_get_document_title. NOT a wp-admin
-// Page — sn_subscribe_render() exits on template_redirect, so a real Page at
-// this path would never render, and its title would live outside the repo.
-$_SERVER['REQUEST_URI'] = '/notes/subscribe/';
-ok( 'Subscribe — Signal & Noise' === sn_subscribe_document_title( 'Page not found — Signal & Noise' ), 'title is replaced on the subscribe route' );
-$_SERVER['REQUEST_URI'] = '/notes/';
-ok( 'untouched' === sn_subscribe_document_title( 'untouched' ), 'title passes through on every other route' );
-ok( false !== strpos( $src, "add_filter( 'pre_get_document_title'" ), 'the title filter is registered' );
-ok( false !== strpos( $src, ', 999 )' ), 'registered at 999, matching the other synthetic routes' );
-
-// DEFECT 2 — no container. .sn-notes-page carries the width, gutter and
-// footer clearance, and it is declared in page-notes-render.php's INLINE style,
-// which does not load on this route. The page rendered flush against the
-// viewport edge with no design at all.
-ok( 1 === preg_match( '/\.sn-notes-page\.sn-subscribe\s*\{/', $src ), 'the route declares its own container rule' );
-
-// And the two must not drift. Both rules are extracted and compared
-// declaration-for-declaration, so a change to the /notes/ container that is not
-// mirrored here fails rather than silently re-orphaning this page.
-function sn_css_rule( $css, $selector ) {
-	$q = preg_quote( $selector, '/' );
-	if ( ! preg_match( '/' . $q . '\s*\{([^}]*)\}/s', $css, $m ) ) { return null; }
-	$out = array();
-	foreach ( explode( ';', $m[1] ) as $d ) {
-		$d = trim( preg_replace( '/\s+/', ' ', $d ) );
-		if ( '' !== $d ) { $out[] = $d; }
-	}
-	sort( $out );
-	return $out;
-}
-// v12.4.1: the canonical /notes container rule now lives in its own stylesheet.
-$notes_css = file_get_contents( __DIR__ . '/../assets/css/notes.css' );
-$canonical = sn_css_rule( $notes_css, '.sn-notes-page' );
-$local     = sn_css_rule( $src, '.sn-notes-page.sn-subscribe' );
-ok( is_array( $canonical ) && $canonical, 'the canonical /notes/ container rule was found (guard: the regex still matches)' );
-ok( $canonical === $local, 'the subscribe container matches the /notes/ container declaration-for-declaration' );
-
-// --- v12.2.2: the page must build its own document ---
-// This is a BLOCK theme: there is no header.php, so get_header() fell through
-// to core's theme-compat fallback (wp-includes/theme-compat/header.php), which
-// renders a generic site-title-and-tagline header. That is the giant flush-left
-// wordmark, the missing nav, and the missing block-layout CSS — not a styling
-// bug but a whole chrome that was never ours.
-ok( false === strpos( $src, 'get_header()' ), 'does NOT call get_header() (theme-compat fallback in a block theme)' );
-ok( false === strpos( $src, 'get_footer()' ), 'does NOT call get_footer()' );
-ok( false !== strpos( $src, '"slug":"header","area":"header"' ), 'renders the real header template part' );
-ok( false !== strpos( $src, '"slug":"footer","area":"footer"' ), 'renders the real footer template part' );
-ok( false !== strpos( $src, 'wp_head()' ), 'emits wp_head()' );
-ok( false !== strpos( $src, 'wp_body_open()' ), 'emits wp_body_open()' );
-ok( false !== strpos( $src, 'wp_footer()' ), 'emits wp_footer()' );
-ok( false !== strpos( $src, 'body_class(' ), 'emits body_class()' );
-
-// THE LOAD-BEARING PIN: the two-pass. Both template parts must be rendered
-// BEFORE wp_head(), or their block-layout CSS is queued after the stylesheet
-// has already printed and lands nowhere — the header nav packs left instead of
-// right. page-notes-render.php carries the same constraint in a 20-line comment.
-$p_header_part = strpos( $src, '"slug":"header","area":"header"' );
-$p_footer_part = strpos( $src, '"slug":"footer","area":"footer"' );
-$p_wp_head     = strpos( $src, 'wp_head()' );
-ok( $p_header_part < $p_wp_head, 'header template part is pre-rendered BEFORE wp_head()' );
-ok( $p_footer_part < $p_wp_head, 'footer template part is pre-rendered BEFORE wp_head()' );
-
-echo "\nResult: $pass passed, $fail failed.\n";
+echo "\n$pass passed, $fail failed\n";
 exit( $fail > 0 ? 1 : 0 );
