@@ -2,6 +2,46 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.13.0] - 2026-09-02 — a tag archive browses, it does not search
+
+### Fixed — tags were grouped with search in two places, and the reason fits only search
+
+`/tag/provenance/` paginated at 20 and showed 13 of 26, with `page/2` live, while
+`/notes/` showed all 38 in one response. The query builder's condition read
+`'' === $term && $tag_id <= 0`, and the comment defending it said *"a search
+result set is unbounded by nature."* True of search. False of a tag: 23 curated
+terms cut down from 83, the largest holding 26 of 38 notes, every member chosen.
+A tag cannot exceed its own count.
+
+The render branch carried the same conflation with a different justification —
+*"a search result set is ordered by relevance to the query, and folding it by
+year would impose a spine on a list whose structure is the QUERY, not the
+calendar."* Also true of search only. A tag archive is ordered by date, exactly
+like browse, so the calendar **is** its structure and the year spine belongs on
+it. That branch now keys on `$sn_searching` rather than `$sn_filtered`.
+
+- **Visible today:** one page. Provenance (26) was the only tag above the
+  20-per-page default; the other 22 archives already returned everything. It is
+  also the page carrying two thirds of the corpus, and `page/2` was a weaker
+  crawl path for exactly the notes Google has not indexed.
+- **Invisible today, by design:** `sn_notes_year_spine_is_useful()` draws nothing
+  while the corpus spans one year, so the spine change moves no pixel until 2027
+  — and then a tag archive folds prior years the way the index already does,
+  which is what keeps it browsable as it grows past 26.
+- **Unchanged:** search keeps `sn_notes_per_page()` and stays flat.
+  `$sn_filtered` still governs the hero corpus stats and the Start Here link,
+  where "search OR tag" remains the right distinction — which is why it was not
+  changed wholesale.
+
+### Tests
+`tests/notes-index-helpers.php` gains tag-state stubs (`is_tag`,
+`get_queried_object`), without which the suite could only ever exercise browse
+and search — the two states that already agreed, which is how the conflation
+survived. Seven assertions pin that a tag returns `-1`/page 1 and stays
+Notes-only, that search still paginates, that browse is unchanged, and that both
+halves of the reasoning are stated at their source. Reverting either half turns
+the suite red.
+
 ## [12.12.0] - 2026-08-30 — the signed-agent handshake becomes discoverable
 
 Consumes `sn-rights-signals` **v1.24.0**, which answers a VERIFIED agent with
