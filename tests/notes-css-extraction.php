@@ -71,7 +71,14 @@ ok( 1 === preg_match( '/\.sn-notes-page\s*\{[^}]*160px/s', $css ), 'the containe
 $tpl = file_get_contents( __DIR__ . '/../inc/page-notes-template.php' );
 
 ok( false !== strpos( $tpl, 'function sn_notes_owns_request()' ), 'the shared route predicate exists' );
-ok( 1 === preg_match( '/function sn_notes_owns_request\(\)\s*\{\s*return\s+sn_notes_is_index_request\(\)\s*\|\|\s*sn_notes_is_tag_request\(\);/s', $tpl ), 'the shared predicate is the OR of both route checks' );
+ok( 1 === preg_match( '/function sn_notes_owns_request\(\)\s*\{\s*return\s+sn_notes_is_index_request\(\)\s*\|\|\s*sn_notes_is_tag_request\(\)\s*\|\|\s*sn_notes_is_tags_request\(\);/s', $tpl ), 'the shared predicate is the OR of all three route checks' );
+// Pinned as an exact OR chain rather than a loose "contains" match: the value
+// of this gate is that the predicate carries NO logic of its own. A route that
+// is true for the renderer and false for the enqueue is the /notes/subscribe/
+// unstyled bug, which shipped for eleven releases. Adding a fourth route means
+// editing this line, and that edit is the point.
+ok( false !== strpos( $tpl, 'function sn_notes_is_tags_request()' ), '/notes/tags/ has its own route predicate' );
+ok( false !== strpos( $tpl, 'function sn_notes_render_file()' ), 'one resolver picks the render file for every owned route' );
 ok( false !== strpos( $tpl, 'function sn_notes_enqueue()' ), 'the enqueue function exists' );
 ok( 1 === preg_match( '/function sn_notes_enqueue\(\)\s*\{\s*if \(\s*! sn_notes_owns_request\(\)\s*\)/s', $tpl ), 'the enqueue gates on the SHARED predicate' );
 ok( 1 === preg_match( "/add_action\(\s*'wp_enqueue_scripts',\s*'sn_notes_enqueue',\s*30\s*\)/", $tpl ), 'the enqueue is hooked on wp_enqueue_scripts at 30, matching sn_index_enqueue' );

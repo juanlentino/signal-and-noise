@@ -783,3 +783,82 @@ details.sn-notes-year > summary:focus-visible .sn-notes-year-band {
 	color: var(--wp--preset--color--bone);
 	font-weight: 700;
 }
+
+/* /notes/tags/ — the glossary (v12.15.0).
+   A ROW, not a pill. Every term is the same size on purpose: varying type by
+   frequency is the tag-cloud tell, and it encodes the one property a reader
+   cannot act on. The row is the site's split composition at small scale —
+   term left in the label register, its prose right. */
+.sn-tags-group {
+	margin: 3.5rem 0 0;
+}
+.sn-tags-group-head {
+	margin: 0 0 1.25rem;
+	padding: 0 0 0.75rem;
+	border-bottom: 1px solid var(--wp--preset--color--concrete);
+}
+.sn-tags-group-title {
+	margin: 0;
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.7rem, 11px);
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	font-weight: 400;
+	color: var(--wp--preset--color--blood);
+}
+.sn-tags-group-dek {
+	margin: 0.5rem 0 0;
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.75rem, 12px);
+	line-height: 1.6;
+	color: var(--wp--preset--color--rust);
+	max-width: 62ch;
+}
+.sn-tags-list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.sn-tags-row + .sn-tags-row {
+	border-top: 1px solid var(--wp--preset--color--concrete);
+}
+.sn-tags-link {
+	display: grid;
+	grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+	gap: 0 2rem;
+	align-items: baseline;
+	padding: 1rem 0;
+	text-decoration: none;
+	color: inherit;
+}
+.sn-tags-term {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.75rem, 12px);
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--bone);
+	transition: color 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.sn-tags-desc {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.75rem, 12px);
+	line-height: 1.6;
+	color: var(--wp--preset--color--rust);
+}
+/* :hover split from :focus-visible and guarded by (hover: hover) — the
+   theme-wide rule tests/dark-mode.php enforces. A touch device resolves a
+   bare :hover on tap and leaves the row stuck in its hover colour. */
+.sn-tags-link:focus-visible .sn-tags-term {
+	color: var(--wp--preset--color--blood);
+}
+@media (hover: hover) {
+	.sn-tags-link:hover .sn-tags-term {
+		color: var(--wp--preset--color--blood);
+	}
+}
+@media (max-width: 600px) {
+	.sn-tags-link {
+		grid-template-columns: minmax(0, 1fr);
+		gap: 0.4rem 0;
+	}
+}

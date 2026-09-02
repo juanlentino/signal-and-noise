@@ -2,6 +2,66 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.15.0] - 2026-09-02 — a glossary, not a tag cloud
+
+### Added — /notes/tags/
+
+Twenty-five tags, grouped into four editorial sections, each row carrying the
+tag's own description. Deliberately NOT a tag cloud. A cloud encodes frequency
+as type size, and frequency is the one property a reader cannot act on: knowing
+a tag has fifteen notes does not say whether they want them. The thin tags here
+are the most specific ones, so frequency-as-salience actively inverts the
+page's usefulness. Every term renders at exactly one size — measured in the
+browser, not asserted — and the space a cloud spends on scale is spent on the
+description instead.
+
+Composition is the site's split-hero at row scale: term left in the label
+register, prose right. New page, existing visual language.
+
+- **[`inc/notes-tags-data.php`](inc/notes-tags-data.php)** — the four groups,
+  by SLUG (a rename must not drop a tag out of its group) plus
+  `sn_notes_tag_groups_resolved()`, which resolves them against the live
+  vocabulary. Any in-use tag named in NO group falls through to a trailing
+  "Not yet filed" group. A hardcoded grouping drifts the moment a tag is added
+  and the natural failure is SILENT — the tag simply is not on the page and
+  nothing reports it. Falling through is loud by comparison.
+- **[`inc/page-notes-tags-render.php`](inc/page-notes-tags-render.php)** — the
+  renderer, reusing the header/footer pre-render-before-`wp_head()` ordering
+  from the index renderer. That ordering is load-bearing: `do_blocks()`
+  registers the block-layout styles and `wp_head()` prints them.
+- **[`inc/page-notes-template.php`](inc/page-notes-template.php)** —
+  `sn_notes_is_tags_request()` (path-matched: nothing in WP resolves this URL,
+  so WP sets a 404 the dispatcher must clear — `is_404 = false` AND
+  `status_header( 200 )`, since clearing the flag alone renders the page
+  correctly and still answers 404 to every crawler) and
+  `sn_notes_render_file()`, one resolver both dispatchers share. The route
+  joins the existing `sn_notes_owns_request()` gate, so the renderer and the
+  stylesheet enqueue cannot disagree about it.
+- **[`tests/notes-tags-index.php`](tests/notes-tags-index.php)** — 15
+  assertions on TOTALITY: every in-use tag reaches the page exactly once.
+  Three mutations proved red before this shipped (delete the fallback, render
+  empty groups, declare a slug twice).
+
+### Fixed — a docblock that described a URL the site does not serve
+
+`sn_notes_is_tag_request()`'s docblock said tag archives live at
+`/notes/tag/{slug}/`, "under the /notes permalink front". They do not: that
+path 404s for a live tag, and the canonical path is `/tag/{slug}/`. The comment
+was wrong for its entire life and stayed harmless only because nothing was
+built on it — the v12.14.0 retired-tag map matched the correct path because it
+was written from the live URLs rather than from this comment. Had it been
+written from the comment, it would have matched nothing and its test would have
+passed, both from the same wrong premise.
+
+### Also
+
+`.sn-tags-link:hover` was initially unguarded and `tests/dark-mode.php` caught
+it; hover is now split from `:focus-visible` and wrapped in
+`@media (hover: hover)`, the theme-wide rule. `tests/notes-css-extraction.php`
+pinned `sn_notes_owns_request()` as a two-route OR and now pins three — still
+an exact chain, because the value of that gate is that the predicate carries no
+logic of its own.
+
 ## [12.14.1] - 2026-09-02 — the subscribe line stops shouting
 
 ### Fixed — the hero's subscribe line was in the wrong register
