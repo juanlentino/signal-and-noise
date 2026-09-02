@@ -88,11 +88,17 @@ function sn_notes_is_index_request() {
 }
 
 /**
- * Detect a /notes tag-archive request (/notes/tag/{slug}/).
+ * Detect a tag-archive request (/tag/{slug}/).
  *
- * All post_tag archives live under the /notes permalink front (the
- * `/notes/%postname%/` structure carries onto the tag base), so is_tag()
- * alone identifies the route. The gate also requires a REAL queried term:
+ * CORRECTED in v12.15.0: this said the archives live at /notes/tag/{slug}/,
+ * "under the /notes permalink front". They do not — the `/notes/%postname%/`
+ * structure does NOT carry onto the tag base, and /notes/tag/{slug}/ 404s for
+ * a live tag. The canonical path is /tag/{slug}/, which is what the site emits
+ * and what the retired-tag map in this file matches. The comment was wrong for
+ * its whole life; nothing was built on it, which is the only reason it stayed
+ * harmless. is_tag() identifies the route either way, so no code changes.
+ *
+ * The gate also requires a REAL queried term:
  * a non-existent tag slug resolves to no term (WP sets the 404), so we
  * never short-circuit it — and never force a bogus tag to HTTP 200.
  *
@@ -123,7 +129,44 @@ function sn_notes_is_tag_request() {
  * @return bool
  */
 function sn_notes_owns_request() {
-	return sn_notes_is_index_request() || sn_notes_is_tag_request();
+	return sn_notes_is_index_request() || sn_notes_is_tag_request() || sn_notes_is_tags_request();
+}
+
+/**
+ * Detect the /notes/tags/ glossary request.
+ *
+ * Path-matched, because nothing in WordPress resolves this URL: there is no
+ * page and no post with that slug, so WP sets a 404 and the dispatcher has to
+ * clear it. Matching the path is therefore not a fallback here (as it is for
+ * /notes, which IS a real page) — it is the only signal.
+ *
+ * `/notes` and `/notes/tags` cannot collide: sn_notes_is_index_request()
+ * compares against the exact bare path.
+ *
+ * @since 12.15.0
+ * @return bool
+ */
+function sn_notes_is_tags_request() {
+	$req  = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
+	$path = strtok( $req, '?' );
+	$path = '/' . trim( (string) $path, '/' );
+	return ( '/notes/tags' === $path );
+}
+
+/**
+ * Which render file owns this request.
+ *
+ * One resolver so the template_redirect short-circuit and the template_include
+ * belt-and-suspenders can never disagree about which file to include — the
+ * same reason sn_notes_owns_request() is shared with the enqueue.
+ *
+ * @since 12.15.0
+ * @return string Absolute path, or '' when no file exists.
+ */
+function sn_notes_render_file() {
+	$file   = sn_notes_is_tags_request() ? 'inc/page-notes-tags-render.php' : 'inc/page-notes-render.php';
+	$render = get_theme_file_path( $file );
+	return file_exists( $render ) ? $render : '';
 }
 
 /**
@@ -306,9 +349,21 @@ add_action( 'template_redirect', function() {
 	if ( ! sn_notes_owns_request() ) {
 		return;
 	}
-	$render = get_theme_file_path( 'inc/page-notes-render.php' );
-	if ( ! file_exists( $render ) ) {
+	$render = sn_notes_render_file();
+	if ( '' === $render ) {
 		return;
+	}
+	// /notes/tags/ resolves to nothing in WP, so the main query has already
+	// set 404 by the time we get here. Clearing is_404 is not enough on its
+	// own — status_header() is what actually changes the response line, and
+	// without it the page renders correctly and still answers 404 to every
+	// crawler. Both, or neither is worth doing.
+	if ( sn_notes_is_tags_request() ) {
+		global $wp_query;
+		if ( $wp_query instanceof WP_Query ) {
+			$wp_query->is_404 = false;
+		}
+		status_header( 200 );
 	}
 	include $render;
 	exit;
@@ -321,14 +376,11 @@ add_action( 'template_redirect', function() {
  * outcome.
  */
 add_filter( 'template_include', function( $template ) {
-	if ( ! sn_notes_is_index_request() && ! sn_notes_is_tag_request() ) {
+	if ( ! sn_notes_owns_request() ) {
 		return $template;
 	}
-	$render = get_theme_file_path( 'inc/page-notes-render.php' );
-	if ( ! file_exists( $render ) ) {
-		return $template;
-	}
-	return $render;
+	$render = sn_notes_render_file();
+	return '' !== $render ? $render : $template;
 }, 999 );
 
 /**
@@ -397,6 +449,14 @@ add_filter( 'pre_get_document_title', function( $title ) {
 	}
 	if ( sn_notes_is_tag_request() ) {
 		return sn_notes_tag_title();
+	}
+	// Ordered AFTER the tag branch on purpose: /notes/tags/ is not a tag
+	// archive and get_queried_object() is null there, so sn_notes_tag_title()
+	// would fall back to a bare "Notes" and the glossary would be
+	// indistinguishable from the index in search results and browser tabs.
+	if ( sn_notes_is_tags_request() ) {
+		$site = get_bloginfo( 'name' );
+		return $site ? 'Tags — ' . $site : 'Tags';
 	}
 	return $title;
 }, 999 );
