@@ -261,7 +261,17 @@ add_action( 'wp_enqueue_scripts', 'sn_notes_enqueue', 30 );
  */
 function sn_notes_retired_tags() {
 	return array(
-		'provenance' => '/notes/',
+		// v12.14.0: split into three narrower tags, so no single successor.
+		'provenance'          => '/notes/',
+		// v12.17.0: leftovers from the 83 -> 23 vocabulary migration. Found via
+		// Search Console, NOT by reading the code: both were still EARNING
+		// IMPRESSIONS while answering 404. A retired tag stops existing in the
+		// database long before it stops existing in Google's index, and nothing
+		// on this side reports that gap — the only instrument that sees it is
+		// the coverage/performance read. These two have real successors, so
+		// they point at the topic rather than at the index.
+		'cryptography'        => '/tag/cryptographic-signatures/',
+		'music-identification' => '/tag/music-metadata/',
 	);
 }
 
