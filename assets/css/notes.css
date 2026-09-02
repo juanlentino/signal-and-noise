@@ -677,6 +677,21 @@ details.sn-notes-year > summary:focus-visible .sn-notes-year-band {
 		border-bottom-color: var(--wp--preset--color--blood);
 	}
 }
+/* The feed's privacy note (v12.13.1), carried over when /notes/subscribe/ was
+   folded into this line. DELIBERATELY NOT the .sn-notes-subscribe register
+   above: that one is uppercase at 0.18em tracking, which is right for a
+   six-word navigational beat and unreadable as a twenty-word sentence. This is
+   prose, so it takes the dek's sentence voice at the side column's scale —
+   quiet, lowercase, same rust, no cursor. */
+.sn-notes-subscribe-privacy {
+	margin: 0.6rem 0 0;
+	font-size: max(0.75rem, 12px);
+	line-height: 1.6;
+	color: var(--wp--preset--color--rust);
+	max-width: 48ch;
+	opacity: 0.85;
+}
+
 .sn-notes-cursor {
 	display: inline-block;
 	width: 0.4em;
