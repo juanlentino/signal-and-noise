@@ -242,10 +242,24 @@ echo $sn_header_html;
 			wp_reset_postdata();
 
 			$sn_row_args = array( 'show_type' => (bool) $sn_searching );
-			if ( $sn_filtered ) {
-				// Filtered views stay flat: a search result set is ordered by
-				// relevance to the query, and folding it by year would impose a
-				// spine on a list whose structure is the QUERY, not the calendar.
+			// v12.13.0: $sn_searching, NOT $sn_filtered. The rule below is about
+			// RELEVANCE ORDER, and only search has one — a tag archive is
+			// ordered by date, exactly like browse, so the calendar IS its
+			// structure and the spine belongs on it. Grouping tags with search
+			// here was the same conflation the query builder carried (see
+			// inc/notes-index-helpers.php): a reason that fits search applied to
+			// a set it does not describe.
+			//
+			// Invisible today by design: sn_notes_year_spine_is_useful() draws
+			// nothing while the corpus spans one year, so this changes no pixel
+			// until 2027 — and then a tag archive folds prior years the way the
+			// index already does, which is what keeps it browsable as it grows.
+			// $sn_filtered still governs the hero corpus stats and Start Here,
+			// where "search OR tag" remains the right distinction.
+			if ( $sn_searching ) {
+				// Search stays flat: a result set is ordered by relevance to the
+				// query, and folding it by year would impose a spine on a list
+				// whose structure is the QUERY, not the calendar.
 				sn_notes_render_row_list( wp_list_pluck( $sn_rows, 'post' ), $sn_row_args );
 			} else {
 				// Browse mode. The pinned row sits ABOVE the spine — it is

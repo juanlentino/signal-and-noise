@@ -106,9 +106,22 @@ function sn_notes_query_posts() {
 	// pagination entirely. Pagination is what you reach for when a list has no
 	// structure but recency; the year spine bounds the VISIBLE page instead
 	// (prior years collapse to one line each), so paging would only re-hide
-	// what the spine already folds. Filtered modes keep sn_notes_per_page():
-	// a search result set is unbounded by nature and has no spine to fold it.
-	$browse_all = ( '' === $term_for_mode && $tag_id <= 0 );
+	// what the spine already folds.
+	//
+	// v12.13.0: A TAG ARCHIVE BROWSES, IT DOES NOT SEARCH. The condition used to
+	// read `&& $tag_id <= 0`, grouping tags with search as "filtered" — and the
+	// reason given for paginating ("a search result set is unbounded by nature")
+	// is true of search and false of a tag. A tag is a BOUNDED, curated set: 23
+	// terms deliberately cut down from 83, the largest holding 26 of 38 notes,
+	// and every member chosen. It cannot exceed its own count. Search takes an
+	// arbitrary string and can return anything, so it keeps sn_notes_per_page().
+	//
+	// Only Provenance (26) exceeded the 20-per-page default, so this consolidates
+	// exactly one page today — but it is the page most likely to carry the notes
+	// Google has not indexed, and /tag/provenance/page/2/ was a weaker crawl path
+	// for two thirds of the corpus. The sibling half of this fix is in
+	// inc/page-notes-render.php: the year spine now folds a tag archive too.
+	$browse_all = ( '' === $term_for_mode );
 	$args = array(
 		'post_type'           => 'post',
 		'post_status'         => 'publish',

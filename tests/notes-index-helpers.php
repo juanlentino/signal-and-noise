@@ -57,6 +57,17 @@ if ( ! function_exists( 'get_post_meta' ) ) {
 if ( ! class_exists( 'WP_Query' ) ) {
 	class WP_Query { public $args; public function __construct( $a = array() ) { $this->args = $a; } }
 }
+// v12.13.0: tag state, so the browse-vs-search distinction is drivable here.
+// sn_notes_current_tag_id() reads is_tag() + get_queried_object(); without both
+// the suite could only ever exercise the two states it already had, which is
+// exactly why the tag/search conflation went unnoticed in the query builder.
+$GLOBALS['__is_tag'] = false;
+if ( ! function_exists( 'is_tag' ) ) {
+	function is_tag() { return (bool) $GLOBALS['__is_tag']; }
+}
+if ( ! function_exists( 'get_queried_object' ) ) {
+	function get_queried_object() { return $GLOBALS['__is_tag'] ? (object) array( 'term_id' => 7 ) : null; }
+}
 if ( ! function_exists( 'sanitize_text_field' ) ) {
 	function sanitize_text_field( $v ) { return trim( strip_tags( (string) $v ) ); }
 }
@@ -148,6 +159,37 @@ ok( in_array( 'noindex', $out, true ) && in_array( 'follow', $out, true ), 'sear
 ok( in_array( 'max-snippet:-1', $out, true ), 'existing directives preserved' );
 ok( array_values( $out ) === $out, 'returns a list, the seam contract shape' );
 ok( $dirs === array( 'max-snippet:-1', 'max-image-preview:large' ), 'input array not mutated' );
+
+
+// ── v12.13.0: A TAG ARCHIVE BROWSES, IT DOES NOT SEARCH ────────────────────
+// The query builder grouped tag with search and paginated both. The stated
+// reason — "a search result set is unbounded by nature" — is true of search and
+// false of a tag: 23 curated terms, the largest holding 26 of 38 notes, every
+// member chosen. Only Provenance exceeded the 20 default, so this consolidated
+// exactly one page; it is also the page carrying two thirds of the corpus, and
+// page/2 was a weaker crawl path for it.
+$GLOBALS['__query_vars']['s'] = '';
+$GLOBALS['__is_tag'] = true;
+$args = sn_notes_query_posts()->args;
+ok( -1 === ( $args['posts_per_page'] ?? null ), 'a TAG archive returns every matching note in one response, like browse' );
+ok( 1 === ( $args['paged'] ?? null ), 'and asks for page 1, so no page/2 exists to split the crawl' );
+ok( 'post' === ( $args['post_type'] ?? null ), 'a tag stays Notes-only — it never widens to pages the way search does' );
+
+$GLOBALS['__query_vars']['s'] = 'signal';
+$args = sn_notes_query_posts()->args;
+ok( sn_notes_per_page() === ( $args['posts_per_page'] ?? null ), 'SEARCH still paginates: an arbitrary string can return anything, and that is the case the rule was written for' );
+$GLOBALS['__is_tag'] = false;
+$GLOBALS['__query_vars']['s'] = '';
+$args = sn_notes_query_posts()->args;
+ok( -1 === ( $args['posts_per_page'] ?? null ), 'browse is unchanged' );
+
+// The reason, pinned at the source: a comment that still called a tag unbounded
+// would be the conflation growing back in prose after being removed in code.
+$sn_src = (string) file_get_contents( __DIR__ . '/../inc/notes-index-helpers.php' );
+ok( false !== strpos( $sn_src, 'A TAG ARCHIVE BROWSES, IT DOES NOT SEARCH' ), 'the query builder states WHY a tag is not a search' );
+$sn_render = (string) file_get_contents( __DIR__ . '/../inc/page-notes-render.php' );
+ok( 1 === preg_match( '/if \( \$sn_searching \) \{/', $sn_render ), 'the render branch keys on $sn_searching, so the year spine folds a tag archive too' );
+ok( 1 === preg_match( '/\$sn_filtered\s*\?\s*0\s*:\s*sn_notes_start_here_id/', $sn_render ), 'and $sn_filtered still governs Start Here — "search OR tag" is right THERE, which is why it was not changed wholesale' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
