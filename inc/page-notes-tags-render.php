@@ -48,15 +48,36 @@ $sn_footer_html = ob_get_clean();
 echo $sn_header_html;
 ?>
 
-<main class="sn-notes-main sn-tags-main">
+<main class="sn-notes-page" id="wp--skip-link--target">
 
 	<header class="sn-notes-hero">
-		<div class="sn-notes-hero-main">
-			<p class="sn-notes-eyebrow">Index &middot; Tags</p>
-			<h1 class="sn-notes-title">Tags.</h1>
+		<p class="sn-notes-eyebrow">Index &middot; Tags</p>
+		<div class="sn-notes-hero-title">
+			<h1 class="sn-notes-headline">Tags.</h1>
 			<p class="sn-notes-dek">Every tag on the notes, grouped by the question it belongs to. Each one says what it covers, so you can tell before you click.</p>
 			<p class="sn-notes-start-here">
 				<a href="<?php echo esc_url( home_url( '/notes/' ) ); ?>">All notes<span class="sn-notes-start-here-arrow" aria-hidden="true">&rarr;</span></a>
+			</p>
+		</div>
+		<div class="sn-notes-hero-side">
+			<?php
+			// Mirrors the index hero's closing stamp, in the same register. Not
+			// decoration: .sn-notes-hero is a two-column grid above 900px, so a
+			// hero with one child leaves the right half empty and squeezes the
+			// dek into 1.15fr of the width. Counts are stated ABOUT the
+			// vocabulary here, which is a different claim from putting a count
+			// on each row — that one would rank the tags by size, which is the
+			// tag-cloud failure this page exists to avoid.
+			$sn_tag_total   = 0;
+			$sn_group_total = count( $sn_groups );
+			foreach ( $sn_groups as $sn_g ) {
+				$sn_tag_total += count( $sn_g['terms'] );
+			}
+			?>
+			<p class="sn-notes-meta">
+				<span><?php echo esc_html( sprintf( _n( '%d tag', '%d tags', $sn_tag_total, 'signal-noise' ), $sn_tag_total ) ); ?></span>
+				<span class="sn-notes-meta-bullet" aria-hidden="true">&middot;</span>
+				<span><?php echo esc_html( sprintf( _n( '%d group', '%d groups', $sn_group_total, 'signal-noise' ), $sn_group_total ) ); ?></span>
 			</p>
 		</div>
 	</header>
