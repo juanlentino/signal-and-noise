@@ -2,6 +2,61 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.14.0] - 2026-09-02 — the readers come back, and a retired tag keeps its address
+
+### Added — reader names in the hero
+
+The retired subscribe page carried "NetNewsWire, Reeder, Feedbin and others",
+and v12.13.1 dropped them with it. That was an over-generalisation: the argument
+for dropping the EMAIL bridges was that naming a service you sign into reads
+like an endorsement, and it was carried onto reader names that were never part
+of that decision. A feed reader is not a bridge — it is the thing that makes
+"RSS" mean anything, and "whatever reader you already use" strands a visitor who
+has none.
+
+> Every note lands in whatever reader you already use, the day it goes up —
+> **RSS** or **JSON Feed**. No reader yet? NetNewsWire, Reeder and Feedbin read
+> both, among others.
+
+Plain text, not links — apps a visitor installs, not destinations to send them
+to, exactly as the retired page had them. "Among others" is kept deliberately:
+this is a claim about third-party software that can age, and the hedge is what
+stops it becoming wrong if one of the three drops JSON Feed support.
+
+### Added — retired tags keep their addresses (`sn_notes_retired_tags()`)
+
+`Provenance` sat on **26 of 38 notes (68%)**, and every note tagged Authorship,
+AI Detection or C2PA was also tagged Provenance — at 100%. A term that
+co-occurs with almost every other term, on two thirds of the corpus, is not a
+category; it is the name of the site. Split three ways by owner decision:
+Creation-Time Capture (8), Verification Limits (10), Provenance Adoption (8),
+which lands the vocabulary beside its existing second tier rather than above it.
+
+`/tag/provenance/` was the most-crawled archive on the site, so the URL cannot
+simply stop existing — and it cannot point at one successor without lying about
+the other two. It **301s to `/notes/`**: the honest answer to "where did the
+provenance notes go" is "all of them, and they are still all here".
+
+Matched on the REQUEST PATH rather than a queried object, because once the term
+is deleted WordPress resolves nothing and would 404 before any `is_tag()` branch
+could fire. The URL outlives the term, which is the whole reason this exists.
+
+A MAP, not a special case: the vocabulary went 83 → 23 once already and split
+again here, so the next retirement is a row in `sn_notes_retired_tags()`, never a
+second copy of the function.
+
+### Tests
+Twelve assertions on the retirement map, including that the three successors are
+NOT redirected (a prefix match would erase the split it was made for) and that
+the match is case-exact. Seven on the reader names, including that none is
+linked.
+
+**A sixth comment-versus-declaration false pass, caught by mutation.** The hedge
+assertion scanned the raw file for "among others" and stayed green when the
+phrase was deleted from the markup, because the hero's own comment explains why
+the hedge exists and therefore contains it. Now comment-stripped with a vacuity
+guard, like its five siblings from this evening.
+
 ## [12.13.1] - 2026-09-02 — /notes/subscribe/ folds into the line that linked it
 
 ### Changed — the page is retired; its two addresses move into the hero

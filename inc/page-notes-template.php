@@ -195,6 +195,49 @@ add_action( 'wp_enqueue_scripts', 'sn_notes_enqueue', 30 );
  * so anything after it never runs.
  */
 /**
+ * Tags retired by an editorial split, and where each one's readers now go.
+ *
+ * v12.14.0. `Provenance` sat on 26 of 38 notes — 68% — and every note tagged
+ * Authorship, AI Detection or C2PA was also tagged Provenance, at 100%. A term
+ * that co-occurs with almost every other term, on two thirds of the corpus, is
+ * not a category; it is the name of the site. It was split three ways
+ * (Creation-Time Capture 8, Verification Limits 10, Provenance Adoption 8) and
+ * the term retired.
+ *
+ * ITS ARCHIVE WAS THE MOST-CRAWLED ON THE SITE, so the URL cannot simply stop
+ * existing. It also cannot point at one successor without lying about the other
+ * two, which is why the target is the index rather than a nominated heir: the
+ * honest answer to "where did the provenance notes go" is "all of them, and
+ * they are still all here".
+ *
+ * A MAP, not a special case. The split is an editorial act that will happen
+ * again — the vocabulary went 83 -> 23 once already — and the second retirement
+ * should be a line in this array, never a second copy of this function.
+ *
+ * @return array<string,string> retired tag slug => path it redirects to.
+ */
+function sn_notes_retired_tags() {
+	return array(
+		'provenance' => '/notes/',
+	);
+}
+
+/**
+ * PURE: the target for a retired tag slug, or '' when the slug is still live.
+ *
+ * Takes the slug rather than reading the query, so tests can drive it without a
+ * request — the lesson from sn_notes_paged_tag_target(), whose logic could not
+ * be exercised at all while it lived inside the hook closure.
+ *
+ * @param string $slug Requested tag slug.
+ * @return string Relative path, or '' to serve the request.
+ */
+function sn_notes_retired_tag_target( $slug ) {
+	$map = sn_notes_retired_tags();
+	return isset( $map[ (string) $slug ] ) ? $map[ (string) $slug ] : '';
+}
+
+/**
  * PURE: where a paginated tag URL should go, or '' to leave it alone.
  *
  * Extracted so the DECISION is testable. tests/notes-redirect.php stubs
@@ -228,6 +271,21 @@ function sn_notes_paged_tag_target( $is_tag, $term, $paged, $term_link ) {
 add_action( 'template_redirect', function() {
 	if ( is_admin() || is_feed() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
 		return;
+	}
+	// A retired tag is matched on the REQUEST PATH, not on a queried object:
+	// once the term is deleted WordPress resolves nothing and would 404 before
+	// any is_tag() branch could fire. The URL outlives the term, which is the
+	// whole reason this exists.
+	if ( isset( $_SERVER['REQUEST_URI'] ) ) {
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- path-compared against a fixed map, never echoed.
+		$sn_path = (string) wp_parse_url( wp_unslash( $_SERVER['REQUEST_URI'] ), PHP_URL_PATH );
+		if ( 1 === preg_match( '#^/tag/([a-z0-9-]+)/?$#', $sn_path, $sn_m ) ) {
+			$sn_gone = sn_notes_retired_tag_target( $sn_m[1] );
+			if ( '' !== $sn_gone ) {
+				wp_safe_redirect( home_url( $sn_gone ), 301 );
+				exit;
+			}
+		}
 	}
 	$term_obj  = sn_notes_is_tag_request() ? get_queried_object() : null;
 	$term_link = ( $term_obj && isset( $term_obj->term_id ) ) ? get_term_link( (int) $term_obj->term_id, 'post_tag' ) : '';

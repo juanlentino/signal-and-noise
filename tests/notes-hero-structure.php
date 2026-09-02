@@ -107,6 +107,22 @@ foreach ( array( 'Blogtrottr', 'Feedrabbit' ) as $relay ) {
 	ok( false === stripos( $src, $relay ), "hero does NOT enumerate the relay '$relay' — email went with the page, by owner decision" );
 }
 
+// v12.14.0: READERS ARE NOT BRIDGES, and dropping them with the email line was
+// an over-generalisation. A bridge is a service you sign into, and naming one
+// here reads like an endorsement. A feed reader is the thing that makes "RSS"
+// mean anything at all, and "whatever reader you already use" strands anyone
+// who has none — which is the gap the retired page had covered.
+foreach ( array( 'NetNewsWire', 'Reeder', 'Feedbin' ) as $app ) {
+	ok( false !== strpos( $src, $app ), "hero names the reader '$app' for a visitor who has none" );
+	ok( 0 === preg_match( '#<a [^>]*>' . preg_quote( $app, '#' ) . '#', $src ), "and does NOT link '$app' — an app a visitor installs, not a destination to send them to (the retired page's own treatment)" );
+}
+// COMMENT-STRIPPED, like every sibling scan here. The hero's own comment
+// explains why the hedge exists and therefore CONTAINS it, so a raw scan stays
+// green after the hedge is deleted from the markup. Caught by mutation, and it
+// is the fifth instance of this exact shape tonight.
+ok( false !== strpos( $src, 'among others' ), 'VACUITY: the hedge IS in the file (its comment explains it), so stripping comments is doing real work' );
+ok( false !== strpos( $src_markup, 'among others' ), 'the list is hedged IN THE MARKUP: a claim about third-party software that can age, and the hedge is what stops it becoming wrong' );
+
 // v12.2.2 pinned that the hero must not restate the page it pointed at. There is
 // no page to restate now, so the duplication check retires with its subject —
 // but the shape it guarded against is worth keeping in view: the retired page's

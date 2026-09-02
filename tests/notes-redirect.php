@@ -91,5 +91,36 @@ $sn_tpl = (string) file_get_contents( __DIR__ . '/../inc/page-notes-template.php
 ok( 1 === preg_match( '/function sn_notes_paged_tag_target\(/', $sn_tpl ), 'the decision is a pure function, not buried in the closure' );
 ok( 1 === preg_match( '/wp_safe_redirect\( \$target, 301 \)/', $sn_tpl ), '301, not 302: these URLs are gone permanently and should hand over their signal' );
 
+
+// ── v12.14.0: a retired tag's URL outlives its term ─────────────────────────
+// Provenance sat on 26 of 38 notes (68%), co-occurring with Authorship, AI
+// Detection and C2PA at 100%. Split three ways and retired. Its archive was the
+// most-crawled on the site, so the URL cannot simply stop existing — and it
+// cannot point at one successor without lying about the other two, which is why
+// the target is the index.
+ok( '/notes/' === sn_notes_retired_tag_target( 'provenance' ), 'the retired tag redirects to the index, not to a nominated heir' );
+ok( '' === sn_notes_retired_tag_target( 'verification-limits' ), 'a LIVE successor is not redirected — that would erase the split it was made for' );
+ok( '' === sn_notes_retired_tag_target( 'creation-time-capture' ), 'nor the second' );
+ok( '' === sn_notes_retired_tag_target( 'provenance-adoption' ), 'nor the third' );
+ok( '' === sn_notes_retired_tag_target( 'c2pa' ), 'nor any untouched tag' );
+ok( '' === sn_notes_retired_tag_target( '' ), 'an empty slug matches nothing' );
+
+// A near-miss must not be swallowed: the successors all begin with the retired
+// slug's letters, and a prefix match would redirect the very tags the split
+// created. This is the same class as the subscribe route's path-exactness.
+ok( '' === sn_notes_retired_tag_target( 'provenance-' ), 'no prefix matching' );
+ok( '' === sn_notes_retired_tag_target( 'PROVENANCE' ), 'and the map is case-exact' );
+
+// THE MAP IS THE POINT. The vocabulary went 83 -> 23 once and split again here;
+// the next retirement must be a line in the array, never a second function.
+$sn_tpl = (string) file_get_contents( __DIR__ . '/../inc/page-notes-template.php' );
+ok( 1 === preg_match( '/function sn_notes_retired_tags\(\)/', $sn_tpl ), 'retirements live in a map' );
+ok( 1 === preg_match( "/'provenance'\s*=>\s*'\/notes\/'/", $sn_tpl ), 'and provenance is a row in it' );
+
+// Matched on the REQUEST PATH, not a queried object: once the term is deleted
+// WordPress resolves nothing and would 404 before any is_tag() branch fires.
+ok( 1 === preg_match( '#\^/tag/\(\[a-z0-9-\]\+\)/\?\$#', $sn_tpl ), 'the route matches the path, so the URL outlives the term' );
+ok( 1 === preg_match( '/wp_safe_redirect\( home_url\( \$sn_gone \), 301 \)/', $sn_tpl ), '301 — the term is gone permanently' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
