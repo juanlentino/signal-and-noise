@@ -2,6 +2,43 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.17.1] - 2026-09-02 — the label register cannot carry prose
+
+### Added — the third vocabulary gets a guard
+
+Class names and colour tokens each got one earlier today. Type registers were
+the one left, and they are the vocabulary that actually broke: v12.13.1 folded
+`/notes/subscribe/` into `.sn-notes-subscribe` while it still carried the label
+register (uppercase, 0.18em tracking). The RULE never changed — the CONTENT
+grew from a six-word beat to four sentences. Four lines of wide-tracked
+uppercase shipped, and `NetNewsWire` rendered as `NETNEWSWIRE`.
+
+This is why an allowlist of "classes permitted to use the label register" would
+not have caught it: `.sn-notes-subscribe` was legitimately on that list. The
+invariant pairs a REGISTER with a CONTENT LENGTH, so
+[`tests/notes-type-register.php`](tests/notes-type-register.php) reads the
+stylesheet and the renderers together.
+
+- **The register is derived, never listed.** Any rule combining
+  `text-transform: uppercase` with `letter-spacing >= 0.1em` is a label. A new
+  label class joins automatically; one that stops being a label drops out.
+- **Only the selector SUBJECT counts** — the last class in each comma-separated
+  part. Taking every class marks `.sn-notes-page` a label via
+  `.sn-notes-page .sn-notes-empty`, and then counts the entire page as one
+  label. That was a real false positive during development, not a hypothetical.
+- **Threshold is 12 words**, taken from the bracket the original comment gave:
+  "right for a six-word navigational beat and unreadable as a twenty-word
+  sentence."
+
+Proved against the original defect: restoring the v12.13.1 rule reds the suite
+with `sn-notes-subscribe in inc/page-notes-render.php (31 words)`. Neutering
+the derivation trips five vacuity guards rather than passing silently.
+
+**Known limits, stated in the file so nobody over-trusts it:** PHP blocks are
+stripped, so the count is a FLOOR — every literal case is caught, a long
+interpolated string is not. Inner text stops at the first matching close tag,
+so same-tag nesting under-captures. It covers the /notes surface only.
+
 ## [12.17.0] - 2026-09-02 — two dead tag URLs that were still earning impressions
 
 ### Fixed — /tag/cryptography/ and /tag/music-identification/ answered 404
