@@ -2,6 +2,54 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.17.0] - 2026-09-02 — two dead tag URLs that were still earning impressions
+
+### Fixed — /tag/cryptography/ and /tag/music-identification/ answered 404
+
+Both are leftovers from the 83 → 23 tag-vocabulary migration, and both appear in
+Search Console's 28-day page report with live impressions while returning 404.
+A tag stops existing in the database long before it stops existing in Google's
+index, and nothing on this side reports that gap — the only instrument that sees
+it is the coverage/performance read, which is why this surfaced during an
+unrelated editorial review rather than from reading the code.
+
+Unlike `provenance` — split three ways, so no single heir could be named without
+lying about the other two — these have real successors, so they point at the
+topic rather than at the index:
+
+- `/tag/cryptography/` → `/tag/cryptographic-signatures/`
+- `/tag/music-identification/` → `/tag/music-metadata/`
+
+### Added — two invariants on the retired-tag map
+
+The map now holds three entries and will hold more, so
+[`tests/notes-redirect.php`](tests/notes-redirect.php) pins the two properties
+that rot silently as it grows:
+
+- **No chains.** A target that is itself retired sends a visitor through a
+  second redirect, and retired-pointing-at-retired can loop. Retiring a tag is a
+  normal act and nothing about doing it would prompt anyone to re-read this map.
+- **Rooted paths only.** The target is fed to `home_url()`, so an absolute URL
+  there produces a broken double-origin redirect.
+
+Both carry a vacuity guard — the chain check passes trivially on an empty map —
+and both were proved red by mutation before shipping.
+
+### Not changed — the 13 indexed notes with zero impressions
+
+Reviewed and deliberately left alone. Over 28 days the site drew 233 impressions
+and 3 clicks, and the notes that surface rank on page one (`why-c2pa` 3.8,
+`who-vouches` 4.0, `provenance-is-for-humans` 4.4, `provenance-at-every-layer`
+2.0). Only six queries produced any impressions at all, none of them topical:
+`provhub`, `verifiergo.com`, `machine readability`, the owner's name,
+`tdmrep.json`, `without verify`.
+
+Rank is not the constraint, so on-page work has nothing to move. Rewriting
+aphoristic titles into searchable ones would trade the voice — the actual
+product — for a rank gain with no demand behind it. Zero impressions on a title
+like "Nobody is paid to check" is the expected output of that title strategy,
+not a defect in it.
+
 ## [12.16.0] - 2026-09-02 — the glossary gets a gutter, and a door
 
 ### Fixed — /notes/tags/ shipped with three class names that do not exist

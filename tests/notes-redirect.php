@@ -111,6 +111,42 @@ ok( '' === sn_notes_retired_tag_target( '' ), 'an empty slug matches nothing' );
 ok( '' === sn_notes_retired_tag_target( 'provenance-' ), 'no prefix matching' );
 ok( '' === sn_notes_retired_tag_target( 'PROVENANCE' ), 'and the map is case-exact' );
 
+// ── v12.17.0: two dead URLs found in Search Console, not in the code ────────
+// Leftovers from the 83 -> 23 vocabulary migration. Both were answering 404
+// while still EARNING IMPRESSIONS. A tag stops existing in the database long
+// before it stops existing in Google's index, and nothing on this side reports
+// that gap. Unlike provenance these have real successors, so they point at the
+// topic rather than at the index.
+ok( '/tag/cryptographic-signatures/' === sn_notes_retired_tag_target( 'cryptography' ), 'cryptography points at its successor tag' );
+ok( '/tag/music-metadata/' === sn_notes_retired_tag_target( 'music-identification' ), 'music-identification points at its successor tag' );
+
+// NO CHAINS. A target that is itself retired sends a visitor through a second
+// redirect, and a target that is retired to something retired can loop. This is
+// the invariant that actually rots: retiring a tag later is a normal act, and
+// nothing about doing it would prompt anyone to re-read this map.
+$sn_map = sn_notes_retired_tags();
+$sn_chained = array();
+foreach ( $sn_map as $sn_from => $sn_to ) {
+	if ( 1 === preg_match( '#^/tag/([a-z0-9-]+)/$#', $sn_to, $sn_m ) && isset( $sn_map[ $sn_m[1] ] ) ) {
+		$sn_chained[] = $sn_from . ' -> ' . $sn_to;
+	}
+}
+ok( array() === $sn_chained, 'no retired tag points at another retired tag' . ( $sn_chained ? ' — chains: ' . implode( ', ', $sn_chained ) : '' ) );
+
+// Vacuity guard: the chain check above passes trivially on an empty map.
+ok( count( $sn_map ) >= 3, 'the map is populated (' . count( $sn_map ) . ' entries), so the chain check is not vacuous' );
+
+// Every target is a rooted path, never an absolute URL: sn_notes_retired_tag_target()
+// output is fed to home_url(), and an absolute URL there would produce a broken
+// double-origin redirect.
+$sn_bad = array();
+foreach ( $sn_map as $sn_from => $sn_to ) {
+	if ( '/' !== substr( $sn_to, 0, 1 ) || false !== strpos( $sn_to, '://' ) ) {
+		$sn_bad[] = $sn_from;
+	}
+}
+ok( array() === $sn_bad, 'every target is a rooted path, not an absolute URL' );
+
 // THE MAP IS THE POINT. The vocabulary went 83 -> 23 once and split again here;
 // the next retirement must be a line in the array, never a second function.
 $sn_tpl = (string) file_get_contents( __DIR__ . '/../inc/page-notes-template.php' );
