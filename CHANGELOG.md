@@ -33,6 +33,27 @@ it. That branch now keys on `$sn_searching` rather than `$sn_filtered`.
   where "search OR tag" remains the right distinction — which is why it was not
   changed wholesale.
 
+### Fixed — the paginated tag URLs this release would otherwise have orphaned
+
+Removing pagination leaves `/tag/<term>/page/2/` behind, and WordPress does not
+clean up after it: the MAIN query still parses `paged` and still uses the site
+`posts_per_page`, so it would answer **200** while the renderer — which ignores
+`paged` now — served page ONE's content there. A duplicate of the archive, at a
+URL Google has already crawled, carrying a self-canonical asserting it is the
+original. That is a defect this release would have introduced, so it is fixed in
+the same release rather than left for the coverage data to surface in a fortnight.
+
+Paginated tag URLs now **301** to the archive. Permanent, because they are gone
+permanently and the point is to hand their accumulated signal over rather than
+split it. A *searched* tag is excluded and keeps its pages, because
+`sn_notes_query_posts()` still applies `sn_notes_per_page()` whenever a term is
+present — redirecting those would strand a reader on page 1 of their own search.
+
+The decision lives in `sn_notes_paged_tag_target()`, a pure function, because
+`tests/notes-redirect.php` stubs `add_action()` to a no-op: logic left inside the
+closure could not have been exercised at all, and the searched-tag guard — the
+one that matters most — would have shipped unverified.
+
 ### Tests
 `tests/notes-index-helpers.php` gains tag-state stubs (`is_tag`,
 `get_queried_object`), without which the suite could only ever exercise browse
@@ -40,7 +61,10 @@ and search — the two states that already agreed, which is how the conflation
 survived. Seven assertions pin that a tag returns `-1`/page 1 and stays
 Notes-only, that search still paginates, that browse is unchanged, and that both
 halves of the reasoning are stated at their source. Reverting either half turns
-the suite red.
+the suite red. `tests/notes-redirect.php` adds ten more for the redirect: every
+page depth, the loop guard on page 1, the searched-tag exclusion at two depths,
+an unresolvable term link, and the 301. Dropping the search guard, redirecting
+page 1, or downgrading to 302 each turns it red.
 
 ## [12.12.0] - 2026-08-30 — the signed-agent handshake becomes discoverable
 

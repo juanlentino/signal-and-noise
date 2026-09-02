@@ -169,6 +169,81 @@ add_action( 'wp_enqueue_scripts', 'sn_notes_enqueue', 30 );
  * we don't exit — we let WP's normal template resolution run and
  * (eventually) load templates/page-notes.html as a safety net.
  */
+/**
+ * A tag archive has no page 2 any more — send its old paginated URLs home.
+ *
+ * v12.13.0 made a tag return every matching note in one response (a tag is a
+ * bounded, curated set; only search is unbounded). That leaves the paginated
+ * URLs behind: WP's MAIN query still parses `paged`, still uses the site
+ * posts_per_page, and still believes /tag/provenance/page/2/ exists — so it
+ * would answer 200 while the renderer, which ignores `paged` now, served page
+ * ONE's content there. A duplicate of the archive, at a URL Google has already
+ * crawled, carrying a self-canonical that asserts it is the original.
+ *
+ * That is a defect this release would have INTRODUCED, so it is fixed in the
+ * same release rather than left for the crawl data to surface in a fortnight.
+ *
+ * 301, not 302: these URLs are gone permanently, and the whole point is to hand
+ * their accumulated signal to the archive rather than split it.
+ *
+ * SEARCH IS EXCLUDED. A tag archive with ?s= still paginates (sn_notes_query_posts
+ * keeps sn_notes_per_page() whenever a term is present), so redirecting those
+ * would strand a reader on page 1 of their own search. The guard reads the same
+ * term the query builder reads, so the two cannot drift apart.
+ *
+ * Priority 0, beside the renderer's own hook, and BEFORE it: the render exits,
+ * so anything after it never runs.
+ */
+/**
+ * PURE: where a paginated tag URL should go, or '' to leave it alone.
+ *
+ * Extracted so the DECISION is testable. tests/notes-redirect.php stubs
+ * add_action() to a no-op — hooks never register there — so a closure carrying
+ * this logic could not be exercised at all, and the one guard that matters most
+ * (a searched tag still pages) would have shipped unverified.
+ *
+ * @param bool   $is_tag    Whether this is a tag archive request.
+ * @param string $term      The active search term ('' when not searching).
+ * @param int    $paged     The requested page number.
+ * @param string $term_link Permalink of the tag archive ('' when unresolvable).
+ * @return string Redirect target, or '' for "serve the request".
+ */
+function sn_notes_paged_tag_target( $is_tag, $term, $paged, $term_link ) {
+	if ( ! $is_tag ) {
+		return '';
+	}
+	// A searched tag still paginates (sn_notes_query_posts keeps
+	// sn_notes_per_page() whenever a term is present), so redirecting it would
+	// strand a reader on page 1 of their own search.
+	if ( '' !== (string) $term ) {
+		return '';
+	}
+	if ( (int) $paged < 2 ) {
+		return '';
+	}
+	// No target we can name: serve the page rather than guess one.
+	return is_string( $term_link ) && '' !== $term_link ? $term_link : '';
+}
+
+add_action( 'template_redirect', function() {
+	if ( is_admin() || is_feed() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
+		return;
+	}
+	$term_obj  = sn_notes_is_tag_request() ? get_queried_object() : null;
+	$term_link = ( $term_obj && isset( $term_obj->term_id ) ) ? get_term_link( (int) $term_obj->term_id, 'post_tag' ) : '';
+	$target    = sn_notes_paged_tag_target(
+		null !== $term_obj,
+		function_exists( 'sn_notes_search_term' ) ? sn_notes_search_term() : '',
+		(int) get_query_var( 'paged' ),
+		is_string( $term_link ) ? $term_link : ''
+	);
+	if ( '' === $target ) {
+		return;
+	}
+	wp_safe_redirect( $target, 301 );
+	exit;
+}, 0 );
+
 add_action( 'template_redirect', function() {
 	if ( ! sn_notes_owns_request() ) {
 		return;
