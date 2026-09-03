@@ -2,6 +2,62 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.18.0] - 2026-09-02 — the tag glossary is reachable from the tag pages
+
+`/notes/tags/` was hidden, and worse than hidden: it was unreachable from
+exactly the pages about tags.
+
+### The defect
+
+v12.16.0 gave the glossary a single site-wide link and put it at the tail of
+the corpus meta stamp — inside `if ( ! $sn_filtered )`. Since
+`$sn_filtered = $sn_searching || $sn_tag`, and real `/tag/<slug>/` archives
+route through this same renderer, the only route to the tag index disappeared
+on every tag archive and every search view.
+
+The reader who had just clicked a tag was the one reader who could not reach
+the tag index.
+
+The suppression itself is correct, for the figures it was written for: "59
+entries" and "Last updated" describe the CORPUS and would mislabel a filtered
+result set. A corpus-wide navigation link carries no such claim. **The link
+inherited a visibility rule written for the numbers beside it, purely by
+sitting inside their `<p>`.** Placement quietly became behaviour.
+
+### The fix
+
+A wayfinding row, rendered unconditionally, holding both wayfinding links.
+
+That argument was already in this file: the Start Here link is rendered
+unconditionally *because* "wayfinding is most useful precisely when a newcomer
+landed on a tag or search view". I wrote that two dozen lines above the link I
+then filed as metadata. The two are now siblings.
+
+Still deliberately NOT in the top nav — seven entries already, and a secondary
+index does not rank beside Home and About. The original reasoning about the nav
+holds; the reasoning about the stamp did not.
+
+### Rank, not repetition
+
+`.sn-notes-start-here` is a bordered target (v11.9.4). A second identical box
+would rank the glossary as an equal call to action, so `.sn-notes-all-tags`
+takes the same mono/blood voice with an underline instead of a border. Its
+`:focus-visible` declares exactly what its `:hover` declares — the theme's
+keyboard-parity invariant, which caught this on the first sweep when the two
+had drifted apart.
+
+### What is pinned
+
+`tests/notes-tags-reachability.php` — 11 assertions, and the guard needed
+repairing before it was worth anything. Its first draft found the end of the
+suppression block with `strpos( $code, 'endif;' )`, which returns the NESTED
+`if ( $latest_date )` — so the region it searched stopped before the tags link,
+and it **passed against the real pre-fix code**. Now depth-counted. The
+class-existence check had the same shape of hole: `strpos` matched
+`.sn-notes-wayfinding` inside `.sn-notes-wayfindingX`, so the invented-class
+control could not go red. Both verified against v12.17.2 itself rather than
+against a hand-made mutation, which is what exposed them.
+
 ## [12.17.2] - 2026-09-02 — the stacked hero's side column had no spacing of its own
 
 ### Fixed — /notes/tags/ stacked with a ZERO gap at mobile widths

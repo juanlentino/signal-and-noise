@@ -95,6 +95,56 @@
 	color: var(--wp--preset--color--rust);
 	margin: 0 0 1.5rem;
 }
+/* v12.18.0: the wayfinding ROW. Two links of DIFFERENT rank on one line.
+   Stacking them would read as two equal calls to action, and they are not:
+   Start Here is the bordered primary target, All tags is a secondary index.
+   margin:0 because .sn-notes-dek's 1.5rem bottom margin already spaces this
+   row from the dek above — the same arrangement .sn-notes-start-here relied on
+   before it gained a wrapper. */
+.sn-notes-wayfinding {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 0.9rem 1.4rem;
+	margin: 0;
+}
+
+/* Deliberately NOT .sn-notes-start-here's bordered treatment. Same mono/blood
+   voice so the two read as siblings, but an underline instead of a box: rank
+   by weight, not by repeating the same emphasis twice on one line. */
+.sn-notes-all-tags {
+	margin: 0;
+}
+.sn-notes-all-tags a {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.8rem, 13px);
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--blood);
+	text-decoration: none;
+	border-bottom: 1px solid var(--wp--preset--color--concrete);
+	padding-bottom: 0.2em;
+	transition: border-color 150ms ease;
+}
+/* Declares exactly what :hover declares — the theme's keyboard-parity
+   invariant (tests/notes-css-extraction.php), and the same arrangement
+   .sn-notes-start-here uses. No outline here on purpose: base.css already
+   gives every <a> a real :focus-visible ring, so this is added emphasis on
+   top of it rather than a competing one. */
+.sn-notes-all-tags a:focus-visible {
+	border-bottom-color: var(--wp--preset--color--blood);
+}
+@media (hover: hover) {
+	.sn-notes-all-tags a:hover {
+		border-bottom-color: var(--wp--preset--color--blood);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.sn-notes-all-tags a {
+		transition: none;
+	}
+}
+
 /* START HERE — hero wayfinding link. Takes the eyebrow's mono/blood treatment
    rather than the dek's prose voice: it is a navigational accent, not a
    sentence, and it should read as a sibling of the eyebrow above it. */
