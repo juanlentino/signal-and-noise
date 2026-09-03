@@ -2,6 +2,82 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.18.3] - 2026-09-03 — corrections get a style, because correcting the record is routine
+
+Notes here are permanently dated and keep one canonical live version, so a
+claim-changing edit has to be visible on the page. Two published notes already
+carried a correction paragraph — `detection-scales-the-wrong-way` (1587) and
+`verifying-the-artist-isnt-enough` (1549) — marked up as
+`{"className":"sn-correction"}` and rendering as plain body prose, because
+nothing styled that class.
+
+### The accent is `concrete`, deliberately
+
+`signal` and `blood` are this palette's alarm colours. Using either would frame
+a correction as an incident. It is bookkeeping, so the notice is a quiet
+`concrete` left rule on an `asphalt` ground with `rust` body copy — visually
+distinct from prose without raising its voice.
+
+### Three palettes, not two
+
+This theme serves `root`, `high-contrast` (the variation the live site actually
+runs) and `dark`. The notice clears WCAG AA for normal text in all three:
+
+| pairing | root | high-contrast (live) | dark |
+|---|---|---|---|
+| `rust` on `asphalt` (body) | 5.27:1 | 9.57:1 | 6.69:1 |
+| `bone` on `asphalt` (label) | 19.26:1 | 15.91:1 | 17.93:1 |
+
+So the `bone`-at-reduced-opacity fallback considered for the `rust`/`asphalt`
+pairing was not needed. `tests/front-end-css-contrast.php` measures the rule
+independently and agrees; confirmed by negative control — swapping the ink to
+`concrete` turns that suite red in all three palettes.
+
+### Notes on the implementation
+
+- **Colours are tokens, never literals.** `critical.css` redefines the
+  `--wp--preset--color--*` properties for dark, so a hex would freeze one
+  scheme — the failure that left a `#222` chart in post 1587 invisible on a
+  dark ground for four months.
+- **The rule declares its own background**, which makes it self-contained for
+  the contrast sweep: the suite measures the real pair instead of assuming the
+  page ground, and no `$on_surface` entry is needed.
+- **`strong` is set to 500, not left at the browser default 700.** `theme.json`
+  loads DM Mono at 300/400/500 only, so a default `<strong>` was being
+  faux-bolded — smeared stems on a monospace face.
+- **Margins are longhand.** Core sets `margin-right: auto !important` on
+  `.is-layout-constrained > *`, so a `margin` shorthand's implied
+  `margin-right: 0` is silently reverted — the importance trap already
+  documented on `.sn-sidenote`, avoided here by never declaring one.
+- Follows the sidenote's conventions exactly: `.single-post` scope, an explicit
+  DM Mono stack rather than inherited, and literal rem sizing with an 11px
+  floor rather than the spacing/font-size presets.
+
+### Audit: hardcoded hex outside the guarded stylesheets (no defects)
+
+`tests/front-end-css-inverts.php` already guards literals across
+`assets/css/*.css`. Sweeping what it cannot see — `templates/`, `parts/`,
+`patterns/`, `blocks/`, `inc/` — found 32 hex-shaped matches and **zero
+colours that fail to survive the dark palette**:
+
+- HTML entities, not colours: `&#8470;` (№), `&#8599;` (↗), `&#8217;` (’),
+  `&#8984;` (⌘)
+- palette values quoted in explanatory comments
+- an upstream issue reference (`WordPress/desktop-mode#362`)
+- one hex inside a brand-voice prompt string
+- the only live pair, `inc/dark-mode.php:78-79`, is the `theme-color` meta —
+  correctly split `#ffffff` light / `#0a0a0a` dark, since a meta tag cannot
+  take a custom property
+
+Every inline SVG paints with `currentColor`/`none`; not one literal fill or
+stroke. No fixes applied — reporting only.
+
+### Files
+
+- `assets/css/article.css` — new `.sn-correction` rule at the sidenote seam
+
+Suite: 114 suites, 3041 assertions, 0 failed.
+
 ## [12.18.2] - 2026-09-03 — a manual purge gets the second look auto purges already had
 
 The definitive fix, and it is one early return.

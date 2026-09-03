@@ -554,6 +554,58 @@ main { view-transition-name: sn-main; }
 	}
 }
 
+/* --- CORRECTION NOTICE (.sn-correction, authored in post content) --- */
+
+/* The corpus is permanently dated: a note keeps ONE canonical live version,
+   so a claim-changing edit has to be visible on the page rather than buried
+   in a revision nobody reads. Correcting the record is therefore normal
+   practice, not an incident — hence `concrete` for the rule and `asphalt`
+   for the ground. `signal` and `blood` are this palette's alarm colours and
+   are deliberately unused here: a correction should read as bookkeeping.
+
+   The class is authored in POST CONTENT (a paragraph's className), never in
+   a template, so nothing under templates/ or patterns/ will ever match it.
+   That is expected — it is not a missing registration.
+
+   Colours are tokens, never literals. critical.css redefines the
+   `--wp--preset--color--*` properties for dark, so a hex here would freeze
+   one scheme: post 1587 shipped a chart at #222 on a dark ground and was
+   invisible for four months. Declaring our OWN background additionally makes
+   this rule self-contained for tests/front-end-css-contrast.php, which then
+   measures the real pair instead of assuming the page ground. */
+.single-post .sn-correction {
+	/* Longhand, never the `margin` shorthand: core sets
+	   `margin-right: auto !important` on .is-layout-constrained > *, so a
+	   shorthand's implied margin-right:0 is silently reverted — the same
+	   importance trap documented on the sidenote above. Nothing here wants a
+	   horizontal margin, so none is declared and the conflict never arises. */
+	margin-top: 2rem;
+	margin-bottom: 1.5rem;
+	padding: 1rem 1.25rem;
+	border-left: 3px solid var(--wp--preset--color--concrete);
+	background-color: var(--wp--preset--color--asphalt);
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.8rem, 11px);
+	line-height: 1.55;
+	color: var(--wp--preset--color--rust);
+}
+
+/* The dated label carries the weight; the correction itself stays quiet.
+   500 is deliberate, not a downgrade from bold: theme.json loads DM Mono at
+   300/400/500 only, so a default <strong> at 700 is FAUX-bolded by the
+   browser — smeared stems on a monospace face. 500 is the real top weight,
+   and it matches .sn-post-frontmatter's emphasis above. */
+.single-post .sn-correction strong {
+	color: var(--wp--preset--color--bone);
+	font-weight: 500;
+}
+
+@media (max-width: 600px) {
+	.single-post .sn-correction {
+		padding: 0.85rem 1rem;
+	}
+}
+
 /* --- FRONTMATTER SPEC CARD (parts/post-frontmatter.html) --- */
 
 .sn-post-frontmatter {
