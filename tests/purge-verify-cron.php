@@ -208,10 +208,36 @@ $GLOBALS['__options']['sn_render_epoch'] = 7;
 $GLOBALS['sn_cf_verified_result']        = array( 'accepted' => true, 'http' => 200, 'cf_success' => true );
 $GLOBALS['__http_queue']                 = array( array( 'code' => 200, 'body' => epoch_html( 7 ), 'headers' => array( 'cf-cache-status' => 'MISS' ) ) );
 fire( 'sn_after_full_cache_flush', array( 'origin_html' => true, 'cloudflare' => true, 'verified' => true ), 0 );
-ok( 0 === count( cron_events( $HOOK ) ), 'a verified purge (probes inline) schedules no cron verify' );
+ok( 0 === count( cron_events( $HOOK ) ), 'a verified purge whose inline probe RESOLVED schedules no cron verify' );
 
 fire( 'sn_after_full_cache_flush', array( 'origin_html' => false, 'cloudflare' => false ), 0 );
 ok( 0 === count( cron_events( $HOOK ) ), 'a pure object-cache flush schedules no cron verify' );
+
+// ── 4b. A verified purge that did NOT resolve inline DOES defer (v12.18.2) ──
+// The inline probe runs in the request that dispatched the zone purge, so it
+// samples one moment of propagation. Manual purges used to return early on
+// `verified` outright and therefore had no second look at all — measured, four
+// of eleven recorded stale, including 04:09:13 fresh then 04:09:42 stale, while
+// every AUTO purge over the same window resolved because it took this path.
+echo "\nScenario 4b: a non-resolving verified purge defers like an auto purge\n";
+$GLOBALS['__cron']                       = array();
+$GLOBALS['__options']['sn_render_epoch'] = 11;
+$GLOBALS['sn_cf_verified_result']        = array( 'accepted' => true, 'http' => 200, 'cf_success' => true );
+// Every inline attempt sees the OLD epoch: the edge has not caught up yet.
+$GLOBALS['__http_queue']                 = array(
+	array( 'code' => 200, 'body' => epoch_html( 10 ), 'headers' => array() ),
+	array( 'code' => 200, 'body' => epoch_html( 10 ), 'headers' => array() ),
+	array( 'code' => 200, 'body' => epoch_html( 10 ), 'headers' => array() ),
+);
+fire( 'sn_after_full_cache_flush', array( 'origin_html' => true, 'cloudflare' => true, 'verified' => true ), 0 );
+$ev = cron_events( $HOOK );
+ok( 1 === count( $ev ), 'a verified purge whose inline probe did NOT resolve schedules the deferred verify' );
+ok( ! empty( $ev ) && array( 11 ) === $ev[0]['args'], 'and it is bound to THIS purge epoch, so a later purge supersedes it' );
+
+// The report it defers on must actually say unresolved — otherwise the branch
+// above could be firing for some unrelated reason and this suite would not know.
+$rep = $GLOBALS['__options'][ SN_LAST_PURGE_REPORT_OPT ] ?? array();
+ok( isset( $rep['resolved'] ) && false === $rep['resolved'], 'sanity: the inline probe really did record resolved:false here' );
 
 // ── 5. The handler merges the probe result onto the matching report ──
 echo "\nScenario 5: the cron handler verifies + merges onto the report\n";
