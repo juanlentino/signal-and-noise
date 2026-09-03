@@ -2,6 +2,35 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.17.2] - 2026-09-02 — the stacked hero's side column had no spacing of its own
+
+### Fixed — /notes/tags/ stacked with a ZERO gap at mobile widths
+
+Below the 900px grid breakpoint the hero is `display: block`, so the side column
+stacks under the title block with no `column-gap` to separate it. It has never
+had a margin of its own.
+
+`/notes/` looked right by **accident**: the first thing in its side column is
+`.sn-notes-subscribe`, which carries `margin: 1.25rem 0 0`. v12.16.0 put
+`.sn-notes-meta` in the tags hero instead — no top margin — and the gap collapsed
+to **zero**, so `25 TAGS · 4 GROUPS` read as attached to the button above it.
+Measured on the live site at 375px: `/notes/` 20px, `/notes/tags/` **0px**.
+
+The spacing is now stated on `.sn-notes-hero-side` rather than inherited from
+whichever child happens to carry one, and the first child's own top margin is
+zeroed so the total does not depend on which child that is. Reset inside the grid
+block, where `column-gap` does the separating.
+
+Verified against the live pages with the rule injected at 375px: `/notes/tags/`
+0 -> 24, `/notes/` 20 -> 24. Both now separated by the same stated amount instead
+of by two different accidents.
+
+### Also checked, and clean
+
+Tag archives at 375px: no horizontal scroll, the term/description rows stack
+correctly, and the tag description renders as the dek. `/notes/tags/` renders all
+25 rows in one column with no overflow.
+
 ## [12.17.1] - 2026-09-02 — the label register cannot carry prose
 
 ### Added — the third vocabulary gets a guard
