@@ -165,11 +165,36 @@ echo $sn_header_html;
 			// missing page removes the link rather than serving a 404.
 			$sn_start_here_page = sn_notes_start_here_page_id();
 			?>
-			<?php if ( $sn_start_here_page ) : ?>
+			<?php // v12.18.0: a wayfinding ROW, because "All tags" used to sit at the
+			      // tail of the corpus meta stamp below — inside `if ( ! $sn_filtered )`.
+			      // That made the ONLY site-wide route to /notes/tags/ disappear on
+			      // every tag archive and search view, so the reader who had just
+			      // clicked a tag was the one reader who could not reach the tag index.
+			      //
+			      // The suppression is right for the figures it was written for:
+			      // "59 entries" and "Last updated" describe the CORPUS and would
+			      // mislabel a filtered result set. A corpus-wide navigation link
+			      // carries no such claim. The link inherited a visibility rule
+			      // written for the numbers beside it, purely by sitting in their <p>.
+			      //
+			      // This is the argument the Start Here link already made two lines
+			      // up — rendered unconditionally because wayfinding matters most to
+			      // someone who landed mid-corpus — so the two now share a row.
+			      // Still deliberately NOT in the top nav: seven entries already, and
+			      // a secondary index does not rank beside Home and About. ?>
+			<div class="sn-notes-wayfinding">
+				<?php if ( $sn_start_here_page ) : ?>
 				<p class="sn-notes-start-here">
 					<a href="<?php echo esc_url( get_permalink( $sn_start_here_page ) ); ?>">First time? Start here<span class="sn-notes-start-here-arrow" aria-hidden="true">&rarr;</span></a>
 				</p>
-			<?php endif; ?>
+				<?php endif; ?>
+				<?php // Quiet by design: Start Here is a bordered target (v11.9.4) and
+				      // a second identical box would rank the glossary as an equal call
+				      // to action. Same mono/blood voice, underline instead of a border. ?>
+				<p class="sn-notes-all-tags">
+					<a href="<?php echo esc_url( home_url( '/notes/tags/' ) ); ?>">All tags</a>
+				</p>
+			</div>
 		</div>
 		<div class="sn-notes-hero-side">
 			<?php // v12.13.1: the two feed addresses, direct. This linked to
@@ -216,15 +241,6 @@ echo $sn_header_html;
 					<span class="sn-notes-meta-bullet" aria-hidden="true">&middot;</span>
 					<span>Last updated <?php echo esc_html( $latest_date ); ?></span>
 				<?php endif; ?>
-				<?php // v12.16.0: the ONLY route to /notes/tags/. It belongs on this
-				      // line rather than in the top nav: the glossary is a fact about
-				      // the corpus, which is what this stamp states, and a nav entry
-				      // would rank a secondary index alongside Home and About. Sits
-				      // inside the same suppression as the rest of the stamp — in a
-				      // filtered view these figures describe the result set, and a
-				      // corpus-wide link would read as part of that claim. ?>
-				<span class="sn-notes-meta-bullet" aria-hidden="true">&middot;</span>
-				<span><a href="<?php echo esc_url( home_url( '/notes/tags/' ) ); ?>">All tags</a></span>
 			</p>
 			<?php endif; ?>
 		</div>
