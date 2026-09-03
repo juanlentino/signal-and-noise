@@ -299,7 +299,12 @@ $GLOBALS['__http_queue']  = array(
 );
 $v = sn_purge_verify_routes( 7, 3, 0 );
 ok( true === $v['resolved'] && true === $v['routes'][0]['fresh'], 'stale-then-fresh escalation resolves' );
-ok( $GLOBALS['__cf_verified'] >= 1, 'a stale route re-evicts CF on escalation' );
+// v12.18.1 — WAS `>= 1`, pinning the defect. Re-evicting at the top of every
+// retry meant the loop only ever measured the edge moments after a purge: each
+// attempt invalidated the copy the previous wait was giving time to land, so
+// convergence was a coin flip and four of eight live purges recorded stale.
+// The first retry must WAIT OUT the purge that already went out.
+ok( 0 === $GLOBALS['__cf_verified'], 'a route that resolves on the first WAIT never re-evicts CF — waiting is tried before escalating' );
 
 $GLOBALS['__cf_verified'] = 0;
 $GLOBALS['__http_queue']  = array(
@@ -309,6 +314,42 @@ $GLOBALS['__http_queue']  = array(
 );
 $v = sn_purge_verify_routes( 7, 3, 0 );
 ok( false === $v['resolved'] && false === $v['routes'][0]['fresh'], 'a persistently-stale route reports resolved:false' );
+// The escalation still EXISTS — it is for an inner cache re-seeding CF with a
+// stale render, which waiting cannot fix. It just happens once, at the end,
+// after waiting has been given its chance.
+ok( 1 === $GLOBALS['__cf_verified'], 'a persistently-stale route escalates EXACTLY ONCE, on the final attempt' );
+
+// Budget of one: with attempts=2 the single retry IS the last, so escalation
+// still happens. Pinned because "only the last attempt" must not silently mean
+// "never" when the caller passes a small budget.
+$GLOBALS['__cf_verified'] = 0;
+$GLOBALS['__http_queue']  = array(
+	array( 'code' => 200, 'body' => epoch_html( 5 ), 'headers' => array() ),
+	array( 'code' => 200, 'body' => epoch_html( 5 ), 'headers' => array() ),
+);
+$v = sn_purge_verify_routes( 7, 2, 0 );
+ok( 1 === $GLOBALS['__cf_verified'], 'with attempts=2 the one retry still escalates — the budget never silently drops to zero purges' );
+
+// attempts=1 is probe-only by definition: nothing to wait for, nothing to
+// escalate. A re-evict here would purge on every single manual purge report.
+$GLOBALS['__cf_verified'] = 0;
+$GLOBALS['__http_queue']  = array( array( 'code' => 200, 'body' => epoch_html( 5 ), 'headers' => array() ) );
+$v = sn_purge_verify_routes( 7, 1, 0 );
+ok( 0 === $GLOBALS['__cf_verified'] && false === $v['resolved'], 'attempts=1 probes once and never escalates' );
+
+// ── 9b. The backoff DECISION (v12.18.1) ──
+// The sleep itself is not observable in a unit test, and a mutation deleting it
+// passed every assertion here while it lived inline. Extracting the decision is
+// what makes it guardable at all.
+echo "\nScenario 9b: growing backoff\n";
+ok( 0 === sn_purge_verify_backoff_for( 0, 1500000 ), 'attempt 0 never waits — nothing has been issued to wait for' );
+ok( 1500000 === sn_purge_verify_backoff_for( 1, 1500000 ), 'attempt 1 waits one interval for the purge that already went out' );
+ok( 3000000 === sn_purge_verify_backoff_for( 2, 1500000 ), 'attempt 2 waits TWO — it times a purge issued moments earlier' );
+ok( sn_purge_verify_backoff_for( 2, 1500000 ) > sn_purge_verify_backoff_for( 1, 1500000 ),
+	'the wait GROWS: a flat interval was the other half of the coin flip, since a zone purge has no fixed propagation time' );
+ok( 0 === sn_purge_verify_backoff_for( 3, 0 ), 'a zero base disables waiting, which is how these tests run fast' );
+ok( 0 === sn_purge_verify_backoff_for( -1, 1500000 ) && 0 === sn_purge_verify_backoff_for( 1, -5 ),
+	'negative input never becomes a negative sleep' );
 
 // ── 10. Verified purge report carries routes + resolved; auto defers ──
 echo "\nScenario 10: verified report carries routes; auto defers the probe\n";

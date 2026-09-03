@@ -2,6 +2,64 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.18.1] - 2026-09-03 — the purge verifier was measuring its own interference
+
+"It's already stale. Again." It was not the edge. The verifier could not
+observe a settled edge, by construction.
+
+### The defect
+
+`sn_purge_verify_routes()` probes `/`, `/notes/` and `/provenance/` for the
+current `sn-render-epoch`, and retried like this:
+
+```php
+if ( $i > 0 ) {
+    sn_cf_purge_everything_verified();   // re-purge FIRST
+    usleep( $backoff_us );               // then wait 1.5s
+}
+$probe = sn_purge_probe( $url, $expect_epoch );
+```
+
+**Every retry re-evicted CF before waiting.** So each attempt invalidated the
+copy the previous wait was giving time to land, and the loop could only ever
+measure the edge ~1.5 seconds after a zone purge. It never observed a settled
+edge at all. Whether a route read fresh came down to whether the colo serving
+the origin box had repopulated inside one fixed interval — a coin flip.
+
+Measured on the live purge log: **four of eight manual purges recorded stale**,
+including `03:55:31 fresh` followed by `03:56:05 stale`. The edge did not decay
+in thirty-four seconds; the second press re-emptied it and the probe caught the
+hole. Every post-save probe across the same window read fresh, so the failures
+tracked PRESSING THE BUTTON — and the surface's own advice, "give it a minute or
+purge again", fed the loop.
+
+### The fix
+
+Observe before escalating. The first retry now simply waits out the purge that
+already went out. Only the FINAL attempt re-purges, for the case the escalation
+was written for — an inner cache re-seeding CF with a stale render, which no
+amount of waiting fixes.
+
+The wait also grows: `sn_purge_verify_backoff_for()` returns one interval for
+attempt 1 and two for attempt 2, because a zone purge has no fixed propagation
+time and a flat 1.5s was the other half of the coin flip. Attempt 2 follows an
+escalation re-purge, so it is timing a purge issued moments earlier rather than
+one that has had the whole function's runtime to travel.
+
+### Why the backoff is a separate function
+
+It is not decomposition for its own sake. A mutation deleting the wait entirely
+passed EVERY assertion in `tests/purge-verify.php` while the sleep lived inline
+— `usleep` is not observable and the suite runs with `backoff_us = 0`. Pulling
+the decision out is what makes it guardable; deleting the wait or flattening the
+growth now both red.
+
+### What was NOT changed
+
+The plugin-side reporting. With the loop fixed, `resolved: false` is earned —
+observed stale after 1.5s, after 3s, and after one escalation purge — so
+recording it as `stale` is now correct rather than an artifact.
+
 ## [12.18.0] - 2026-09-02 — the tag glossary is reachable from the tag pages
 
 `/notes/tags/` was hidden, and worse than hidden: it was unreachable from

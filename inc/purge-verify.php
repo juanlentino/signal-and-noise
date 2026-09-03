@@ -266,6 +266,33 @@ function sn_purge_probe( $url, $expect_epoch ) {
 }
 
 /**
+ * How long to wait before retry attempt $i, in microseconds.
+ *
+ * GROWS with the attempt. A flat 1.5s was the other half of the coin flip: a
+ * Cloudflare zone purge does not reach every colo in a fixed interval, so one
+ * short wait either caught it or did not. Attempt 1 waits one interval for the
+ * purge that already went out; attempt 2 follows an escalation re-purge and
+ * waits two, because it is timing a purge issued moments earlier rather than
+ * one that has had the whole function's runtime to travel.
+ *
+ * Pure and separate so the DECISION is testable — the sleep itself is not
+ * observable in a unit test, and a mutation that deleted the wait passed every
+ * assertion in this suite while it lived inline.
+ *
+ * @param int $attempt Zero-based attempt index; 0 never waits.
+ * @param int $base    Base interval in microseconds.
+ * @return int Microseconds to sleep.
+ */
+function sn_purge_verify_backoff_for( $attempt, $base ) {
+	$attempt = (int) $attempt;
+	$base    = (int) $base;
+	if ( $attempt < 1 || $base <= 0 ) {
+		return 0;
+	}
+	return $base * $attempt;
+}
+
+/**
  * Probe every verified route; a route that reads stale is escalated — re-evict the
  * CDN (the Cloudways Varnish leg already fired once this request under its
  * per-request guard, so the resistant layer is CF re-seeding) + back off for
@@ -295,15 +322,37 @@ function sn_purge_verify_routes( $expect_epoch, $attempts = 3, $backoff_us = nul
 		$probe = null;
 		for ( $i = 0; $i < $attempts; $i++ ) {
 			if ( $i > 0 ) {
-				// Escalate the resistant layer: re-evict CF (verified, blocking) so a
-				// re-seed from a briefly-stale inner cache is cleared, then wait.
-				if ( function_exists( 'sn_cf_purge_everything_verified' ) ) {
-					sn_cf_purge_everything_verified();
-				} elseif ( function_exists( 'sn_cf_purge_everything' ) ) {
-					sn_cf_purge_everything();
+				// v12.18.1 — OBSERVE BEFORE RE-PURGING. This used to re-evict CF at
+				// the top of EVERY retry and then wait, which meant the loop could
+				// only ever measure the edge 1.5s after a zone purge: each attempt
+				// invalidated the copy the previous wait was giving time to land.
+				// Convergence became a coin flip on whether the colo serving this
+				// box had repopulated inside the backoff.
+				//
+				// Measured on the live log 2026-09-02/03: FOUR OF EIGHT manual
+				// purges recorded stale, including a fresh at 03:55:31 followed by
+				// a stale at 03:56:05 — the edge did not decay in 34 seconds, the
+				// second press re-emptied it and the probe caught the hole. Every
+				// post-save probe over the same window read fresh. So the failures
+				// tracked PRESSING THE BUTTON, and the surface's own advice
+				// ("purge again") fed the loop.
+				//
+				// A purge has already gone out before this function is called. The
+				// first retry now just WAITS for it, which is the whole fix. Only
+				// the final attempt escalates, for the case this was written for: an
+				// inner cache re-seeding CF with a stale render, which no amount of
+				// waiting resolves.
+				$is_last = ( $i === $attempts - 1 );
+				if ( $is_last ) {
+					if ( function_exists( 'sn_cf_purge_everything_verified' ) ) {
+						sn_cf_purge_everything_verified();
+					} elseif ( function_exists( 'sn_cf_purge_everything' ) ) {
+						sn_cf_purge_everything();
+					}
 				}
-				if ( $backoff_us > 0 ) {
-					usleep( $backoff_us ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions -- bounded, sync manual-purge only
+				$wait = sn_purge_verify_backoff_for( $i, $backoff_us );
+				if ( $wait > 0 ) {
+					usleep( $wait ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions -- bounded, sync manual-purge only
 				}
 			}
 			$probe = sn_purge_probe( $url, $expect_epoch );
