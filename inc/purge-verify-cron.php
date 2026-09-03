@@ -90,7 +90,7 @@ function sn_schedule_auto_purge_verify( $epoch ) {
  */
 function sn_after_purge_schedule_verify( $args, $cleared = 0 ) {
 	$args = (array) $args;
-	if ( ! empty( $args['verified'] ) || ! sn_purge_is_edge_affecting( $args ) ) {
+	if ( ! sn_purge_is_edge_affecting( $args ) ) {
 		return;
 	}
 
@@ -99,6 +99,26 @@ function sn_after_purge_schedule_verify( $args, $cleared = 0 ) {
 	// check is exact rather than a same-request coincidence.
 	$report = get_option( SN_LAST_PURGE_REPORT_OPT, null );
 	if ( ! is_array( $report ) || empty( $report['epoch'] ) ) {
+		return;
+	}
+
+	// v12.18.2 — A MANUAL PURGE DEFERS TOO, WHEN ITS INLINE PROBE DID NOT
+	// RESOLVE. This used to return early on `verified` outright, on the
+	// reasoning that a manual purge "already probed inline". It does — but that
+	// probe runs in the same request that dispatched the zone purge, so it can
+	// only sample one moment of propagation, and no wait budget a human will sit
+	// through (the loop's is a few seconds) reliably outlasts it.
+	//
+	// Measured across 2026-09-02/03: FOUR OF ELEVEN manual purges recorded
+	// stale, including 04:09:13 fresh followed by 04:09:42 stale — while every
+	// AUTO purge over the same window resolved fresh, because auto purges take
+	// the deferred path below. The reliable mechanism was already here and the
+	// button was the one case opted out of it.
+	//
+	// An inline probe that RESOLVED is still the last word: it saw the new epoch
+	// at the edge, which cannot be a false positive. Only a non-resolving one
+	// defers, so a clean purge still costs no cron event.
+	if ( ! empty( $args['verified'] ) && ! empty( $report['resolved'] ) ) {
 		return;
 	}
 

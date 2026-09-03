@@ -2,6 +2,57 @@
 
 All notable changes to Signal & Noise are documented here.
 
+## [12.18.2] - 2026-09-03 — a manual purge gets the second look auto purges already had
+
+The definitive fix, and it is one early return.
+
+### What was actually wrong
+
+`sn_after_purge_schedule_verify()` opened with:
+
+```php
+if ( ! empty( $args['verified'] ) || ! sn_purge_is_edge_affecting( $args ) ) {
+    return;   // "A verified (manual) purge already probed inline"
+}
+```
+
+**Deferred verification already existed and worked. Manual purges were the one
+case opted out of it.** An AUTO purge schedules a cron re-probe 75 seconds later,
+after propagation. The Purge button got only the inline probe — the one that runs
+in the same request that dispatched the zone purge, and therefore samples a
+single moment of propagation.
+
+That is why the two populations looked so different in the log: every auto purge
+resolved fresh, while FOUR OF ELEVEN manual purges recorded stale, including
+
+    04:09:13  fresh
+    04:09:42  stale
+
+29 seconds apart, on an edge that had not changed.
+
+### Why v12.18.1 was not enough
+
+That release stopped the retry loop re-purging before each wait, which was a real
+defect — the loop could only ever measure the edge moments after a purge. But it
+was still tuning a race inside a request a human is waiting on. No budget of a
+few seconds reliably outlasts zone-purge propagation, and the next press proved
+it. The answer is not a longer wait; it is not answering synchronously.
+
+### The fix
+
+A manual purge now defers exactly like an auto purge — but only when its inline
+probe did NOT resolve. An inline probe that resolved saw the new epoch at the
+edge, which cannot be a false positive, so a clean purge still costs no cron
+event and still updates the surface immediately.
+
+### Note on the guard that did not catch this
+
+`tests/purge-verify-cron.php` pinned "a verified purge schedules no cron verify"
+and kept passing after the change — correctly, because that scenario's inline
+probe resolves, which is still a no-schedule case. The property nobody had
+written was the other branch: a verified purge that did NOT resolve. Scenario 4b
+pins it now, along with the epoch binding that makes a later purge supersede it.
+
 ## [12.18.1] - 2026-09-03 — the purge verifier was measuring its own interference
 
 "It's already stale. Again." It was not the edge. The verifier could not
