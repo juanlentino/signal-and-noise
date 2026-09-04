@@ -78,9 +78,22 @@ add_action(
 		echo '<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">' . "\n";
 		echo '<meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)">' . "\n";
 
+		// `icon` (browser tab) keeps its transparency and its light/dark pair —
+		// a tab composites onto the browser's own chrome, which is the whole
+		// point of the alpha note above.
+		//
+		// `apple-touch-icon` keeps its light/dark pair — an existing pin asks
+		// for the dark variant and removing it to fix a transparency bug would
+		// have traded one defect for a regression — but it points at OPAQUE
+		// files. iOS does not composite home-screen icon transparency onto
+		// anything; it renders it BLACK. Measured on the marks this used to
+		// point at: favicon-180.png is 69% transparent pixels and the 512 Site
+		// Icon 63%, which is exactly the black tile the installed app showed.
+		// The opaque pair is those same marks flattened onto the two grounds the
+		// theme-color metas above already declare: #ffffff and #0a0a0a.
 		foreach ( array(
 			array( 'icon', '32x32', 'favicon-32.png', 'favicon-32-dark.png' ),
-			array( 'apple-touch-icon', '180x180', 'favicon-180.png', 'favicon-180-dark.png' ),
+			array( 'apple-touch-icon', '180x180', 'app-icon-180.png', 'app-icon-180-dark.png' ),
 		) as $icon ) {
 			list( $rel, $sizes, $light, $dark ) = $icon;
 			printf(
@@ -98,6 +111,27 @@ add_action(
 		}
 	},
 	1
+);
+
+/**
+ * Drop core's own apple-touch-icon.
+ *
+ * `wp_site_icon()` runs on wp_head at priority 99 — AFTER the block above at
+ * priority 1 — and emits `<link rel="apple-touch-icon">` pointing at the Site
+ * Icon upload, which is 65% transparent pixels. Being last, it is the one iOS
+ * takes, so shipping an opaque icon earlier would have changed nothing.
+ *
+ * Only the apple-touch-icon entry is removed. Core's `icon` and
+ * `msapplication-TileImage` tags are left alone: those surfaces composite
+ * transparency correctly and the mark is meant to be transparent there.
+ */
+add_filter(
+	'site_icon_meta_tags',
+	function ( $tags ) {
+		return array_values( array_filter( (array) $tags, static function ( $tag ) {
+			return false === strpos( (string) $tag, 'apple-touch-icon' );
+		} ) );
+	}
 );
 
 /**

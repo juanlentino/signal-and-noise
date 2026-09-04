@@ -151,7 +151,17 @@ ok( strpos( $head1, 'media="(prefers-color-scheme: dark)"' ) !== false, 'A4: the
 // The favicon links moved with it and got the same treatment: a #171718 mark
 // disappears into a dark tab strip exactly as it would into a dark page.
 ok( strpos( $head1, 'favicon-32-dark.png' ) !== false, 'A4: a dark favicon variant is offered' );
-ok( strpos( $head1, 'favicon-180-dark.png' ) !== false, 'A4: a dark apple-touch-icon variant is offered' );
+// v12.18.6: asserted by ROLE, not by filename. This pinned the literal
+// `favicon-180-dark.png`, and when the apple-touch-icon moved to an OPAQUE file
+// (iOS renders home-screen transparency as black — that file is 69% transparent
+// pixels) the pin went red on a change that preserved exactly the property it
+// was written to protect. A dark variant is still offered; it is a different
+// file, and the pin should not have cared which.
+ok( (bool) preg_match( '/rel="apple-touch-icon"[^>]*media="\(prefers-color-scheme: dark\)"/', $head1 )
+	|| (bool) preg_match( '/media="\(prefers-color-scheme: dark\)"[^>]*rel="apple-touch-icon"/', $head1 ),
+	'A4: a dark apple-touch-icon variant is offered' );
+ok( strpos( $head1, 'app-icon-180-dark.png' ) !== false,
+	'A4: and it is the OPAQUE one — a transparent home-screen icon renders as a black tile on iOS' );
 
 // ── 3. Drift guard: each meta MUST equal the GROUND of its own palette ──
 // Pinned to the RELATIONSHIP, not to a literal. A hardcoded '#0a0a0a' here
