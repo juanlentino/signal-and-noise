@@ -1,6 +1,6 @@
 # Versioning
 
-How releases work for Signal & Noise. Read this whenever you're about to bump the `Version:` header in [style.css](../style.css) or write a CHANGELOG entry.
+How releases work for Signal & Noise. Read this before opening a PR that changes shippable code, and before cutting a release. Short version: **a PR adds an `## [Unreleased]` bullet and closes an issue; only a release stamps `Version:`.**
 
 ## SemVer baseline
 
@@ -74,9 +74,13 @@ The five follow-on releases (v12.0.1 through v12.0.4) were all PATCH. One of
 them fixed a live outage and another rewrote 68 CSS rules, and neither touches
 the public contract, which is the only thing MAJOR measures.
 
-## What does and does NOT bump version
+## What is shippable (and therefore needs an Unreleased bullet)
 
-| Change | Bump? |
+A PR never stamps a version, so the question is no longer "does this bump?" but
+"does this change what a visitor or editor gets?" If yes, the PR adds a bullet
+under `## [Unreleased]`; the version digit is decided later, once, at the cut.
+
+| Change | Shippable? |
 |---|---|
 | Code change in `inc/`, `templates/`, or `assets/` | **Yes** |
 | New CSS rule, removed CSS rule, layout change | **Yes** |
@@ -90,61 +94,65 @@ the public contract, which is the only thing MAJOR measures.
 
 ### Content edits
 
-A "content-only template edit" is changing the words inside a `<!-- wp:paragraph -->` block when the change is purely editorial (typo fix, copy refinement, factual correction). It does NOT bump version because:
+A "content-only template edit" is changing the words inside a `<!-- wp:paragraph -->` block when the change is purely editorial (typo fix, copy refinement, factual correction). It is NOT shippable because:
 
 1. The deploy mechanism is the same (theme update via WP self-updater).
 2. The CSS, JS, and structural HTML are unchanged.
 3. The user-perceptible change is words, not capability.
 
-**Edge case:** if a copy edit accompanies a structural change (e.g. you rewrite a paragraph AND change its block structure), bump for the structural part.
+**Edge case:** if a copy edit accompanies a structural change (e.g. you rewrite a paragraph AND change its block structure), the structural part is shippable and takes a bullet.
 
 ## Workflow
 
-The full release workflow for a single change:
+**A pull request does not bump `Version` and does not tag.** A version marks a
+release. It stopped meaning that when every session stamped one, and the cost of
+that habit is an 8,000-line CHANGELOG and a number that records sittings rather
+than shipments.
+
+### What a PR does
 
 1. **Make the change.** Edit `inc/`, `templates/`, `assets/`, etc.
-2. **Bump `Version:` in [style.css](../style.css)** following the rules above. Mid-session it's fine to bump on each commit; per the global rule, "version bumps and tags only at END of session" applies to the FINAL bump that gets tagged.
-3. **Add a CHANGELOG entry** at the top of [CHANGELOG.md](../CHANGELOG.md). Format: `## [X.Y.Z] — One-line summary`. Body should explain WHAT changed, WHY, and (when relevant) WHY this version digit.
-4. **Commit** with a message starting with `vX.Y.Z: brief description`. Body should mirror the CHANGELOG entry's content but in commit-message form (paragraphs, not bullet-heavy).
-5. **Push** to `origin/main` (this project ships from `main` via the WP self-updater).
-6. **Tag** with `git tag -a vX.Y.Z -m "vX.Y.Z — One-line summary"` then `git push origin vX.Y.Z`. Tags happen at end of session for the final version reached, not per commit.
-7. **Smoke test** runs automatically on every push to main ([.github/workflows/smoke-test.yml](../.github/workflows/smoke-test.yml)).
-8. **Click Update** in WP Admin to deploy to Cloudways.
+2. **Close an issue.** Every PR carries `Fixes #N`. No issue, no PR.
+3. **Add an `## [Unreleased]` bullet** in [CHANGELOG.md](../CHANGELOG.md) if the
+   change is shippable (see the table above). One line under `### Added`,
+   `### Changed`, `### Fixed` or `### Removed`. Not a memoir — the reasoning
+   belongs in the PR body, which is where a reviewer is already looking.
+4. **Leave `Version:` alone.** In `style.css`, in `readme.txt`, everywhere.
 
-### Commit message format
+### What a release does
 
-```
-vX.Y.Z: one-line summary in the commit subject
+A release is a deliberate, separate act: `tools/cut-release.sh`.
 
-Body paragraph explaining what changed and why. Reference the
-CHANGELOG entry's reasoning if that's where the rationale lives.
+- Stamps `Version:` in `style.css` **and** `Stable tag:` in `readme.txt`, which
+  must never drift apart.
+- Promotes `## [Unreleased]` to `## [X.Y.Z] - YYYY-MM-DD - headline` and archives
+  the previous cut into `docs/changelog/`.
+- Creates or moves the GitHub milestone.
+- **Prints** the tag command rather than running it, unless given `--tag`.
+- Refuses a dirty worktree, and refuses an empty `Unreleased` — nothing to cut
+  is not a release.
 
-Mention any project-specific notes (defensive migrations, schema
-shims, etc).
+### Choosing the digit, once, at the cut
 
-Co-Authored-By: <if AI assisted>
-```
+| Digit | Means |
+|---|---|
+| **MAJOR** | A removed or renamed public contract: an Ability, an MCP slug, a theme hook. Something outside this repo breaks. |
+| **MINOR** | A capability a visitor or an editor can see that was not there before. |
+| **PATCH** | Everything else, batched. Fixes, refactors, performance, calibration. |
 
-### Tag format
-
-```bash
-git tag -a v7.2.0 -m "v7.2.0 — /services № markers breathing room"
-git push origin v7.2.0
-```
-
-- Lowercase `v` prefix.
-- Annotated tag (`-a`), not lightweight.
-- Tag message is the same one-line summary as the CHANGELOG entry's heading.
+A fix is a PATCH even when it adds code. If the capability gained cannot be
+named in one sentence without the words *fix*, *correct*, *restore* or
+*complete*, it is a PATCH.
 
 ## CHANGELOG conventions
 
 [CHANGELOG.md](../CHANGELOG.md) follows roughly the [Keep a Changelog](https://keepachangelog.com/) format with project-specific tweaks:
 
 - **Newest at top.**
-- **One section per tagged version.** Heading: `## [X.Y.Z] — One-line summary`.
+- **One section per RELEASE.** Heading: `## [X.Y.Z] - YYYY-MM-DD - one-line summary`, written by `cut-release.sh`, not by hand.
 - **Body sections** under each version, when relevant: `### Added`, `### Changed`, `### Fixed`, `### Removed`, `### Deprecated`. Inline-link to source files (`[inc/foo.php](inc/foo.php)`) so the entry is browseable from GitHub.
 - **Long-form rationale is welcome.** This isn't a public-facing changelog — future-you reads it more than anyone else. Document the WHY, especially for non-obvious decisions (defensive migrations, design reverts, accessibility gaps closed).
-- **`[Unreleased]`** section at the top accumulates changes during a long session before the final tag.
+- **`## [Unreleased]`** is the working log. It accumulates across PRs for as long as it takes, and is emptied only by a release. The root file holds Unreleased plus the current cut; everything older lives in `docs/changelog/`.
 
 ### Example entry
 
@@ -164,9 +172,15 @@ Fix: bumped each number's `margin-bottom` from `0` to `var:preset|spacing|10`
 
 ## When in doubt
 
-- **Bump it.** The cost of an extra version is essentially zero (it's just a tag + a CHANGELOG line). The cost of forgetting to bump is harder to recover from later.
-- **Document the reasoning.** Especially for rollovers and edge cases. The CHANGELOG is the durable record of "why did we choose this number?"
-- **End-of-session bump.** If a session contains many small changes, you can ship them under a single version at the end. The intermediate commits don't all need version bumps; the final commit + tag captures the session's net delta.
+- **Add an Unreleased bullet.** "When in doubt, bump it" is **REVOKED**. The cost
+  of an extra version is not zero: it is a heading nobody will read, a tag that
+  marks nothing, and one more line between a reader and the release they were
+  looking for. The cost of an extra Unreleased bullet is one line, and a bullet
+  that turns out not to matter is deleted at the cut for free.
+- **Document the reasoning in the PR.** The CHANGELOG records *what* shipped;
+  the PR records *why*, next to the diff that shows it.
+- **Do not stamp a version to mark that you did something.** A session is not a
+  release. If the work is worth recording, it is worth an issue and a bullet.
 
 ## See also
 
