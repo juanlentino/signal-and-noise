@@ -573,17 +573,42 @@ main { view-transition-name: sn-main; }
    invisible for four months. Declaring our OWN background additionally makes
    this rule self-contained for tests/front-end-css-contrast.php, which then
    measures the real pair instead of assuming the page ground. */
-.single-post .sn-correction {
-	/* Longhand, never the `margin` shorthand: core sets
-	   `margin-right: auto !important` on .is-layout-constrained > *, so a
-	   shorthand's implied margin-right:0 is silently reverted — the same
-	   importance trap documented on the sidenote above. Nothing here wants a
-	   horizontal margin, so none is declared and the conflict never arises. */
-	margin-top: 2rem;
-	margin-bottom: 1.5rem;
-	padding: 1rem 1.25rem;
-	border-left: 3px solid var(--wp--preset--color--concrete);
-	background-color: var(--wp--preset--color--asphalt);
+.wp-block-post-content .sn-correction {
+	/* FULL-BLEED, like every other asphalt block in prose. v12.18.3 shipped this
+	   as an INSET panel with a left rail — legible, AA-clear, and the only
+	   element in the corpus shaped that way. The rail-and-inset callout is
+	   imported vocabulary (the docs admonition), not this theme's: here an
+	   asphalt fill inside prose ALWAYS escapes the measure and carries hard
+	   rules top and bottom. Checked, not assumed — pull-quote (3px bone),
+	   compare-columns (1px concrete) and steps-enumerated (no rules) are all
+	   `left: -1rem; width: calc(100% + 2rem)`, and the only non-bleed asphalt
+	   blocks in the theme are page chrome, never prose.
+	
+	   The escape is byte-identical to those three rather than re-derived: it
+	   assumes the content column carries at least 1rem of side padding, an
+	   assumption those blocks have shipped on for many versions. If it is ever
+	   wrong it is wrong for all four together, which is the right failure mode
+	   — one fix, not four.
+	
+	   1px concrete rather than the pull-quote's 3px bone: a correction is a
+	   structural part of the record, not an interruption. This is the quietest
+	   rule weight the corpus uses, which is the whole brief — correcting the
+	   record is normal practice, so `signal` and `blood` stay unused.
+	
+	   Scoped to .wp-block-post-content, not .single-post, because the escape
+	   math is about THAT container. The three siblings scope the same way. */
+	position: relative;
+	left: -1rem;
+	width: calc(100% + 2rem);
+	max-width: none;
+	margin: 2.5rem 0;
+	/* 1.5rem, not the siblings' 2rem 1.5rem: a correction is one to three
+	   sentences, and 2rem of vertical padding around two lines reads as a
+	   display block rather than a note. */
+	padding: 1.5rem;
+	background: var(--wp--preset--color--asphalt);
+	border-top: 1px solid var(--wp--preset--color--concrete);
+	border-bottom: 1px solid var(--wp--preset--color--concrete);
 	font-family: 'DM Mono', 'Courier New', monospace;
 	font-size: max(0.8rem, 11px);
 	line-height: 1.55;
@@ -593,16 +618,15 @@ main { view-transition-name: sn-main; }
 /* The dated label carries the weight; the correction itself stays quiet.
    500 is deliberate, not a downgrade from bold: theme.json loads DM Mono at
    300/400/500 only, so a default <strong> at 700 is FAUX-bolded by the
-   browser — smeared stems on a monospace face. 500 is the real top weight,
-   and it matches .sn-post-frontmatter's emphasis above. */
-.single-post .sn-correction strong {
+   browser — smeared stems on a monospace face. */
+.wp-block-post-content .sn-correction strong {
 	color: var(--wp--preset--color--bone);
 	font-weight: 500;
 }
 
 @media (max-width: 600px) {
-	.single-post .sn-correction {
-		padding: 0.85rem 1rem;
+	.wp-block-post-content .sn-correction {
+		padding: 1.25rem 1rem;
 	}
 }
 
