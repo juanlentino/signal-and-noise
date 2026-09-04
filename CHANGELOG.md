@@ -12,6 +12,14 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Fixed
+- Block style variations are validated from the directory, not from a
+  hand-written list of three. A fourth variation was checked by nothing: one
+  carrying an invented font-size preset *and* a raw `letterSpacing` literal
+  shipped with the whole suite green. Preset references are now RESOLVED against
+  `theme.json` rather than only shape-checked, because a phantom slug paints
+  nothing and errors nowhere. (#268)
+
 ## [12.18.4] - 2026-09-04 — the correction notice joins the house vocabulary
 
 v12.18.3 shipped `.sn-correction` as an inset panel with a 3px left rail. Every

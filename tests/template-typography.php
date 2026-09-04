@@ -136,30 +136,88 @@ foreach ( array_keys( $sizes ) as $slug ) {
 }
 
 // 8. Block style variations exist and are built from tokens, not literals.
+//
+//    The expectation map below is HAND-WRITTEN and pins intent for the
+//    variations we designed. What it cannot do is notice a variation nobody
+//    wrote an expectation for: until #268 a fourth file could carry an invented
+//    preset AND a raw literal and the whole suite stayed green (115 suites,
+//    3055 assertions, 0 failed). The population is therefore DERIVED from the
+//    directory and reconciled against the map, and every file is checked
+//    generically whether or not it is listed.
 $variations = array(
 	'eyebrow'    => array( 'title' => 'Eyebrow',         'fontSize' => 'var:preset|font-size|eyebrow' ),
 	'eyebrow-lg' => array( 'title' => 'Eyebrow (Large)', 'fontSize' => 'var:preset|font-size|eyebrow-lg' ),
 	'caption'    => array( 'title' => 'Caption',         'fontSize' => 'var:preset|font-size|caption' ),
 );
+
+$variation_files = (array) glob( "$theme_root/styles/blocks/*.json" );
+$on_disk = array();
+foreach ( $variation_files as $vf ) { $on_disk[] = basename( $vf, '.json' ); }
+sort( $on_disk );
+$listed = array_keys( $variations );
+sort( $listed );
+
+ok( count( $on_disk ) > 0, 'styles/blocks/ holds variations to check (' . count( $on_disk ) . ')' );
+ok( $on_disk === $listed,
+	'the expectation map COVERS styles/blocks/ - on disk [' . implode( ', ', $on_disk )
+	. '] vs listed [' . implode( ', ', $listed ) . ']. A new variation must be described here, not shipped unchecked.' );
+
+// The vocabularies a variation may reference. Resolved from theme.json, never
+// restated: "an invented name is silent" - WP emits no rule for a preset slug
+// that does not exist, so the block renders at the inherited value and nothing
+// anywhere reports an error.
+$known_font_sizes = array();
+foreach ( $theme['settings']['typography']['fontSizes'] ?? array() as $fs ) { $known_font_sizes[] = $fs['slug']; }
+$known_letter_spacing = array_keys( $theme['settings']['custom']['letterSpacing'] ?? array() );
+ok( count( $known_font_sizes ) > 5 && count( $known_letter_spacing ) > 1,
+	'the reference vocabularies resolved from theme.json (' . count( $known_font_sizes ) . ' font sizes, '
+	. count( $known_letter_spacing ) . ' letter-spacings) - empty ones would make every check below vacuous' );
+
+/**
+ * Does a `var:preset|font-size|x` / `var:custom|letter-spacing|x` reference
+ * name something that exists? Returns true for a non-reference (a keyword
+ * value like `uppercase` is checked elsewhere).
+ */
+$resolves = static function ( $val ) use ( $known_font_sizes, $known_letter_spacing ) {
+	if ( 0 !== strpos( (string) $val, 'var:' ) ) { return true; }
+	if ( preg_match( '#^var:preset\|font-size\|(.+)$#', (string) $val, $m ) ) {
+		return in_array( $m[1], $known_font_sizes, true );
+	}
+	if ( preg_match( '#^var:custom\|letter-spacing\|(.+)$#', (string) $val, $m ) ) {
+		return in_array( $m[1], $known_letter_spacing, true );
+	}
+	return true; // a reference shape this suite does not model yet
+};
+
+// EVERY file on disk, listed or not.
+foreach ( $variation_files as $path ) {
+	$name = basename( $path, '.json' );
+	$v    = json_decode( (string) file_get_contents( $path ), true );
+	ok( is_array( $v ), "$name.json parses" );
+	if ( ! is_array( $v ) ) { continue; }
+	ok( ( $v['slug'] ?? '' ) === $name, "$name slug === $name" );
+	$typo = $v['styles']['typography'] ?? array();
+
+	foreach ( $typo as $prop => $val ) {
+		// Keyword properties are exempt because 'uppercase' and 'italic' ARE
+		// the value; there is no token form of them.
+		if ( in_array( $prop, array( 'textTransform', 'fontStyle' ), true ) ) { continue; }
+		ok( strpos( (string) $val, 'var:' ) === 0,
+			"$name.$prop is a token reference, not a literal (got: $val)" );
+		ok( $resolves( $val ),
+			"$name.$prop RESOLVES to something theme.json defines (got: $val) - a phantom slug paints nothing and errors nowhere" );
+	}
+}
+
+// The listed ones additionally pin their designed intent.
 foreach ( $variations as $name => $expect ) {
 	$path = "$theme_root/styles/blocks/$name.json";
 	ok( file_exists( $path ), "styles/blocks/$name.json exists" );
 	if ( ! file_exists( $path ) ) { continue; }
-	$v = json_decode( file_get_contents( $path ), true );
-	ok( is_array( $v ), "$name.json parses" );
+	$v = json_decode( (string) file_get_contents( $path ), true );
 	ok( ( $v['title'] ?? '' ) === $expect['title'], "$name title === {$expect['title']}" );
-	ok( ( $v['slug'] ?? '' ) === $name, "$name slug === $name" );
 	ok( in_array( 'core/paragraph', $v['blockTypes'] ?? array(), true ), "$name applies to core/paragraph" );
-	$typo = $v['styles']['typography'] ?? array();
-	ok( ( $typo['fontSize'] ?? '' ) === $expect['fontSize'], "$name fontSize is a preset reference" );
-	// No literal may appear in a variation — that is the entire point. Keyword
-	// properties are exempt because 'uppercase' and 'italic' ARE the value;
-	// there is no token form of them.
-	foreach ( $typo as $prop => $val ) {
-		if ( in_array( $prop, array( 'textTransform', 'fontStyle' ), true ) ) { continue; }
-		ok( strpos( (string) $val, 'var:' ) === 0,
-			"$name.$prop is a token reference, not a literal (got: $val)" );
-	}
+	ok( ( $v['styles']['typography']['fontSize'] ?? '' ) === $expect['fontSize'], "$name fontSize is a preset reference" );
 }
 
 // 9. The eyebrow pair carries the shared letter-spacing token and uppercase.
