@@ -186,5 +186,7 @@ Fix: bumped each number's `margin-bottom` from `0` to `var:preset|spacing|10`
 
 - Global versioning rules: `~/.claude/CLAUDE.md`
 - Project overrides: CLAUDE.md (`CLAUDE.md`, local-only)
+- Release script: [tools/cut-release.sh](../tools/cut-release.sh) — the only thing that stamps a version
+- Changelog archive: [docs/changelog/](changelog/) — everything older than the current cut
 - Smoke test workflow: [.github/workflows/smoke-test.yml](../.github/workflows/smoke-test.yml)
 - Self-updater: [inc/wp-update-integration.php](../inc/wp-update-integration.php) (how WP polls origin/main and offers updates)
