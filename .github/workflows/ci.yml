@@ -238,6 +238,60 @@ jobs:
             exit 1
           fi
           echo "readme.txt Stable tag matches style.css Version (${css_ver})."
+      # Rule 2. Shippable code changed but the version did not, so the rule above
+      # exited 0 without reading CHANGELOG.md. Require a line added under
+      # '## [Unreleased]' in the ROOT CHANGELOG.md.
+      #
+      # The root file is '## [Unreleased]' plus the current cut only; older
+      # history lives in docs/changelog/. Counting added lines anywhere in the
+      # root file would be satisfied by editing an already-released section, and
+      # archive edits touch a different file entirely.
+      #
+      # Escape hatch is the 'no-changelog' LABEL, evaluated by Actions rather
+      # than the shell - a label cannot inject into run: the way a title can.
+      - name: Require an Unreleased entry when shippable code changes
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'no-changelog') }}
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          set -e
+          base="origin/${BASE_REF}"
+
+          head_ver=$(grep -m1 -E '^Version:' style.css | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+          base_ver=$(git show "${base}:style.css" 2>/dev/null | grep -m1 -E '^Version:' | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || echo "")
+          if [ "$head_ver" != "$base_ver" ]; then
+            echo "Version bumped - the rule above already required the entry."
+            exit 0
+          fi
+
+          shipped=$(git diff --name-only "${base}...HEAD" \
+            | grep -E '^(inc/|templates/|parts/|patterns/|blocks/|assets/|functions\.php$|theme\.json$|style\.css$)' || true)
+          if [ -z "$shipped" ]; then
+            echo "No shippable code changed - CHANGELOG addition not required."
+            exit 0
+          fi
+
+          unreleased_lines() {
+            awk '/^## \[Unreleased\]/ { inside = 1; next }
+                 inside && /^## \[/    { exit }
+                 inside                { print }' \
+              | grep -c '[^[:space:]]' || true
+          }
+          head_unreleased=$(unreleased_lines < CHANGELOG.md)
+          base_unreleased=$(git show "${base}:CHANGELOG.md" 2>/dev/null | unreleased_lines)
+          head_unreleased=${head_unreleased:-0}
+          base_unreleased=${base_unreleased:-0}
+          echo "Unreleased section: ${base_unreleased} line(s) on base -> ${head_unreleased} on head."
+
+          if [ "$head_unreleased" -gt "$base_unreleased" ]; then
+            echo "CHANGELOG.md gained an Unreleased entry alongside shippable changes."
+            exit 0
+          fi
+
+          echo "Shippable files changed by this PR:"
+          printf '  %s\n' $shipped
+          echo "::error file=CHANGELOG.md::This PR changes shippable code but adds nothing under '## [Unreleased]' in CHANGELOG.md. A PR does not bump Version and does not add a '## [x.y.z]' heading - it adds a bullet under Unreleased. If it genuinely needs none, apply the 'no-changelog' label."
+          exit 1
 
   cron-liveness:
     name: Parity cron still firing
