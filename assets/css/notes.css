@@ -932,3 +932,20 @@ details.sn-notes-year > summary:focus-visible .sn-notes-year-band {
 		gap: 0.4rem 0;
 	}
 }
+
+/* ─── iOS: the search field must not zoom the page ──────────────────────────
+ * WebKit zooms in when a text-entry control smaller than 16px takes focus and
+ * does NOT zoom back out on blur — the visitor stays magnified until they
+ * pinch. The rule above computes to 14.4px (`max(0.9rem, 12px)`, and 0.9rem is
+ * 14.4px at the default root), and this is front-end, so nothing in wp-admin's
+ * CSS guards it.
+ *
+ * Raised only at phone width; the desktop size is deliberate. 782px is the
+ * breakpoint core uses for the same reason, kept here so the two agree.
+ * Fixes #276.
+ */
+@media screen and (max-width: 782px) {
+	.sn-notes-search input[type="search"] {
+		font-size: 16px;
+	}
+}
