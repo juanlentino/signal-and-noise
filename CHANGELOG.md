@@ -12,8 +12,10 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+## [12.18.7] - 2026-09-04 — the field that zoomed and never came back
+
 ### Fixed
-- The notes search field no longer zooms the page on an iPhone and leave it
+- The notes search field no longer zooms the page on an iPhone and leaves it
   magnified. `font-size: max(0.9rem, 12px)` computes to **14.4px** (0.9rem is
   14.4px at the default root), and WebKit zooms in when a text-entry control
   under 16px takes focus without zooming back out on blur. It is front-end, so
@@ -38,15 +40,4 @@ adds a bullet below. A release is a separate, deliberate act:
   the theme's single control is styled by element plus ancestor — so the pin is
   on the tag count, which is what distinguishes "no class-styled controls" from
   "the walk opened nothing". (#276)
-
-## [12.18.6] - 2026-09-04 — a home-screen icon that is not a black tile
-
-### Fixed
-- The installed PWA's home-screen icon is no longer a black tile. Every
-  `apple-touch-icon` on the site was transparent — measured at 63–69% of pixels
-  — and iOS renders home-screen transparency as black. The pair is now opaque,
-  flattened onto the two grounds the `theme-color` metas already declare, and
-  core's own transparent `apple-touch-icon` is filtered out: it runs at
-  `wp_head:99`, after this theme's `:1`, so it was the link iOS took. Browser-tab
-  icons keep their transparency, which is correct for a tab. (#273)
 
