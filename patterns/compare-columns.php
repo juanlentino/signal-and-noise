@@ -26,8 +26,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<p class="sn-compare__label">A · Detection</p>
 			<!-- /wp:paragraph -->
 
-			<!-- wp:heading {"level":4,"className":"sn-compare__title"} -->
-			<h4 class="wp-block-heading sn-compare__title">Costs scale up</h4>
+			<!-- wp:heading {"level":3,"className":"sn-compare__title"} -->
+			<h3 class="wp-block-heading sn-compare__title">Costs scale up</h3>
 			<!-- /wp:heading -->
 
 			<!-- wp:paragraph {"className":"sn-compare__body"} -->
@@ -42,8 +42,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<p class="sn-compare__label">B · Provenance</p>
 			<!-- /wp:paragraph -->
 
-			<!-- wp:heading {"level":4,"className":"sn-compare__title"} -->
-			<h4 class="wp-block-heading sn-compare__title">Costs scale down</h4>
+			<!-- wp:heading {"level":3,"className":"sn-compare__title"} -->
+			<h3 class="wp-block-heading sn-compare__title">Costs scale down</h3>
 			<!-- /wp:heading -->
 
 			<!-- wp:paragraph {"className":"sn-compare__body"} -->

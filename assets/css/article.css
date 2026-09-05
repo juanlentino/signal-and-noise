@@ -367,6 +367,27 @@ main { view-transition-name: sn-main; }
 	margin-bottom: 0.4em;
 }
 
+/* v12.18.8: the compare-columns title is a COMPONENT, not a body subhead, and
+   it has never won a single property it declares. `.sn-compare__title` (0,1,0)
+   loses to the three generic rules above (0,3,1), so the titles have always
+   been sized by whichever heading level the pattern happened to use — 1.1rem
+   was written in v9.2.0 and never once applied on a single post. Moving the
+   pattern from H4 to H3 (WCAG 1.3.1, no H2->H4 skip) would otherwise have
+   swapped one wrong size for a bigger wrong size.
+
+   Reclaims exactly the two properties the component declares and loses.
+   line-height stays with the generic rule deliberately: the component never
+   asked for one, and inventing a value here would be a second change wearing
+   this one's clothes.
+
+   The selector names NO element — (0,4,0) beats (0,3,1) on the class column
+   alone — so the next heading-level change cannot silently re-break this the
+   way the last one would have. */
+.single-post .wp-block-post-content .wp-block-heading.sn-compare__title {
+	font-size: 1.1rem;
+	margin: 0 0 0.5rem 0;
+}
+
 /* v10.14.2: body paragraphs use the full content column (760px) — the same
    width as the headings, title, and rules — so the prose reads uniform width
    throughout. Previously capped to ~68ch as a reading measure, but the
