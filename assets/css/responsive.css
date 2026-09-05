@@ -50,8 +50,16 @@
 		padding-top: 80px;
 	}
 
-	/* Header padding */
-	.sn-header {
+	/* Header padding.
+	   The second selector is not decoration. `.wp-block-group.has-background`
+	   below sets padding-left/right !important at (0,2,0); a bare `.sn-header`
+	   is (0,1,0) and loses, so these values have never applied to the site
+	   header, which carries `has-background` from parts/header.html. Between
+	   two !important declarations specificity still decides, and source order
+	   would not save it either - the generic rule comes later in this block.
+	   (0,3,0) settles it without depending on order. */
+	.sn-header,
+	.wp-block-group.sn-header.has-background {
 		padding-left: 1.25rem !important;
 		padding-right: 1.25rem !important;
 	}
@@ -177,8 +185,10 @@
 
 @media (max-width: 480px) {
 
-	/* Header tighter */
-	.sn-header {
+	/* Header tighter. Second selector: see the 781px block - padding-top and
+	   padding-bottom here were always fine, only left/right were overridden. */
+	.sn-header,
+	.wp-block-group.sn-header.has-background {
 		padding-left: 1rem !important;
 		padding-right: 1rem !important;
 		padding-top: 0.75rem !important;

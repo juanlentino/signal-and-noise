@@ -507,7 +507,10 @@ body {
 	body {
 		padding-top: 80px;
 	}
-	.sn-header {
+	/* See responsive.css: a bare `.sn-header` (0,1,0) loses to
+	   `.wp-block-group.has-background` (0,2,0), so this never applied. */
+	.sn-header,
+	.wp-block-group.sn-header.has-background {
 		padding-left: 1.25rem !important;
 		padding-right: 1.25rem !important;
 	}
@@ -534,7 +537,9 @@ body {
 
 /* Critical responsive — Mobile */
 @media (max-width: 480px) {
-	.sn-header {
+	/* See responsive.css: left/right lost to the generic background-group rule. */
+	.sn-header,
+	.wp-block-group.sn-header.has-background {
 		padding-left: 1rem !important;
 		padding-right: 1rem !important;
 		padding-top: 0.75rem !important;
