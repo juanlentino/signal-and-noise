@@ -761,32 +761,6 @@
 	margin: 0 0 0.5rem;
 }
 
-/* ── ON-SITE SEARCH ──────────────────────────────────────────────
-   templates/search.html grouped results + header trigger. Brand
-   vocabulary: DM Mono labels, Bebas titles (set on the blocks),
-   concrete hairlines, 11px floor. Reduced-motion safe. */
-.sn-search-section-label {
-	font-family: 'DM Mono', 'Courier New', monospace;
-	font-size: max(0.7rem, 11px);
-	letter-spacing: 0.18em;
-	text-transform: uppercase;
-	color: var(--wp--preset--color--rust);
-	margin: clamp(2rem, 4vw, 3rem) 0 clamp(1rem, 2vw, 1.5rem);
-	padding-bottom: 0.5rem;
-	border-bottom: 1px solid var(--wp--preset--color--concrete);
-}
-.sn-search-row {
-	border-bottom: 1px solid var(--wp--preset--color--concrete);
-}
-.sn-search-no-results {
-	font-family: 'DM Mono', 'Courier New', monospace;
-	font-size: 0.85rem;
-	letter-spacing: 0.1em;
-	text-transform: uppercase;
-	color: var(--wp--preset--color--rust);
-	padding: 1rem 0;
-}
-
 /* ── RELATED NOTES + CITED BY (single.html footers) ───────────────
    v9.10.0: shared-tag "More on this" footer below prev/next. Reuses
    the /notes index .sn-notes-row two-column idiom (mono date + reading

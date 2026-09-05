@@ -324,26 +324,34 @@ main { view-transition-name: sn-main; }
    ============================================ */
 
 /* --- v9.4.6: BODY HEADING SCALE ---
-   theme.json maps body h2 → xx-large = clamp(3rem, 7vw, 6rem) and
-   h3 → x-large = clamp(2rem, 4vw, 3.5rem). Both render LARGER than the
-   .sn-note-title h1 (clamp(2.5rem, 6vw, 5rem)) at common viewports — the
-   body scale was never re-calibrated after the .sn-note-title override
-   shrank h1 from the global xxx-large. Single-post body section headings
-   end up competing with or beating the post title.
+   theme.json maps body h2 -> xx-large (clamp(3rem, 7vw, 6rem)), which is
+   LARGER than the single-note h1 at common viewports: the post-title block
+   in templates/single.html carries an inline fontSize of display-lg
+   (clamp(2.5rem, 6vw, 5rem)) -- no stylesheet targets the sn-note-title
+   class on that block; it is a hook only -- and the body scale
+   was never re-calibrated against it. So body section headings ended up
+   competing with or beating the post title.
+
+   (Until v12.18.9 this comment also claimed h3 -> x-large = clamp(2rem, 4vw,
+   3.5rem) outranked the h1. It did not: that declared size never served.
+   Core dropped it for its own x-large, 42px fluid, and nothing said so --
+   see #284 and tests/theme-json-default-presets.php.)
 
    This override establishes a proper subordinate scale for single-post
    body content. Works whether body headings are stored as h3 (current
-   author convention — flagged by audit D PA-01 as WCAG 1.3.1 fail) or
+   author convention -- flagged by audit D PA-01 as WCAG 1.3.1 fail) or
    h2 (after the PA-01 content sweep). Either way the visual hierarchy
    reads cleanly.
 
-   v11.8.2: the H2 rule drops to the `large` preset var — the slot
-   theme.json maps h4 to — so the corpus's body subheads can migrate to
-   the semantically-correct H2 (H1 title → H2 sections, no WCAG 1.3.1
-   skip) while rendering at H4's intended size. The preset VAR, not a
-   copied clamp: the active global styles own what `large` resolves to.
+   v11.8.2: the H2 rule drops to the `large` preset var -- the slot
+   theme.json maps h4 to -- so the corpus's body subheads can migrate to
+   the semantically-correct H2 (H1 title -> H2 sections, no WCAG 1.3.1
+   skip) while rendering at H4's size. The preset VAR, not a copied clamp:
+   the active global styles own what `large` resolves to -- and what it
+   resolves to is 36px fluid (22px at 320px), the served value theme.json
+   declares since v12.18.9, not the 1.25rem it used to claim.
    Scope note: the "Related notes" / "Cited by" H2 labels are SIBLINGS
-   of the post-content block in templates/single.html — this selector
+   of the post-content block in templates/single.html -- this selector
    cannot reach them. */
 
 .single-post .wp-block-post-content h2.wp-block-heading {
@@ -719,26 +727,16 @@ main { view-transition-name: sn-main; }
 		border-color: var(--wp--preset--color--blood);
 	}
 }
-/* v9.11.0: the reading-time + pillar slots are now Block-Bindings paragraphs.
-   When a binding returns null (no pillar match; or the plugin is absent) WP keeps
-   the slot's empty fallback <p>, which would otherwise consume a flex gap. Hide
-   the empty flex item so the row stays tight (most posts have no pillar). */
-.sn-post-frontmatter__rt:empty,
-.sn-post-frontmatter__pillar-slot:empty {
+/* v9.11.0 made the reading-time slot a Block-Bindings paragraph; when the
+   binding returns null WP keeps the slot's empty fallback <p>, which would
+   otherwise consume a flex gap. Hide the empty flex item so the row stays
+   tight. (The sibling pillar slot from the same commit was reverted in
+   v9.11.1; its rules outlived the markup until v12.18.9.) */
+.sn-post-frontmatter__rt:empty {
 	display: none;
-}
-/* The pillar is now wrapped in a bound <p> slot, so the inner anchor's
-   margin-left:auto (which right-aligned the badge) no longer moves the flex
-   item — carry the auto margin on the slot to preserve the badge-at-row-end
-   intent. */
-.sn-post-frontmatter__pillar-slot {
-	margin-left: auto;
 }
 
 @media (max-width: 600px) {
-	.sn-post-frontmatter__pillar-slot {
-		margin-left: 0;
-	}
 	.sn-post-frontmatter {
 		gap: 0.35rem;
 	}

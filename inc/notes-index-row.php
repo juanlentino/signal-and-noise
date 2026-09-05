@@ -63,12 +63,18 @@ function sn_notes_render_row( $p, $args = array() ) {
 	// name, the row lost one, and a morph with a named destination and an
 	// unnamed source is just the root cross-fade. Same helper, same string.
 	$sn_vt = function_exists( 'sn_view_transition_name' ) ? sn_view_transition_name( $p->ID ) : '';
-	echo '<h3 class="sn-notes-row-title"';
+	// H2, not H3. The page's only heading above a row is the H1 headline
+	// (inc/page-notes-render.php) -- the section label beneath it is a <p>
+	// wired through aria-labelledby, so an H3 here skipped a level on every
+	// index, tag archive and search view (WCAG 1.3.1). The same row on the 404
+	// page has been an H2 since it was built; the cited-by and related-notes
+	// footers keep H3 because they sit under an H2 of their own.
+	echo '<h2 class="sn-notes-row-title"';
 	if ( '' !== $sn_vt ) {
 		echo ' style="view-transition-name: ' . esc_attr( $sn_vt ) . ';"';
 	}
 	echo '><a href="' . esc_url( get_permalink( $p ) ) . '">'
-		. esc_html( get_the_title( $p ) ) . '</a></h3>';
+		. esc_html( get_the_title( $p ) ) . '</a></h2>';
 	echo '</div>';
 
 	echo '<div class="sn-notes-row-meta">';

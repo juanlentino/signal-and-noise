@@ -50,6 +50,7 @@
 		},
 		"typography": {
 			"fluid": true,
+			"defaultFontSizes": false,
 			"textIndent": true,
 			"fontFamilies": [
 				{
@@ -96,10 +97,10 @@
 				}
 			],
 			"fontSizes": [
-				{ "slug": "small", "size": "0.8rem", "name": "Small" },
-				{ "slug": "medium", "size": "1rem", "name": "Medium" },
-				{ "slug": "large", "size": "1.25rem", "name": "Large" },
-				{ "slug": "x-large", "size": "clamp(2rem, 4vw, 3.5rem)", "name": "Extra Large" },
+				{ "slug": "small", "size": "13px", "name": "Small" },
+				{ "slug": "medium", "size": "20px", "name": "Medium" },
+				{ "slug": "large", "size": "36px", "name": "Large" },
+				{ "slug": "x-large", "size": "42px", "name": "Extra Large" },
 				{ "slug": "xx-large", "size": "clamp(3rem, 7vw, 6rem)", "name": "Huge" },
 				{ "slug": "xxx-large", "size": "clamp(4rem, 10vw, 9rem)", "name": "Massive" },
 				{ "slug": "eyebrow", "size": "0.75rem", "name": "Eyebrow", "fluid": false },
@@ -115,15 +116,16 @@
 		},
 		"spacing": {
 			"spacingScale": { "steps": 0 },
+			"defaultSpacingSizes": false,
 			"spacingSizes": [
 				{ "slug": "10", "size": "0.5rem", "name": "Tight" },
-				{ "slug": "20", "size": "1rem", "name": "Small" },
-				{ "slug": "30", "size": "1.5rem", "name": "Regular" },
-				{ "slug": "40", "size": "2.5rem", "name": "Medium" },
-				{ "slug": "50", "size": "4rem", "name": "Large" },
-				{ "slug": "60", "size": "6rem", "name": "XL" },
-				{ "slug": "70", "size": "8rem", "name": "XXL" },
-				{ "slug": "80", "size": "12rem", "name": "Huge" }
+				{ "slug": "20", "size": "0.44rem", "name": "Small" },
+				{ "slug": "30", "size": "0.67rem", "name": "Regular" },
+				{ "slug": "40", "size": "1rem", "name": "Medium" },
+				{ "slug": "50", "size": "1.5rem", "name": "Large" },
+				{ "slug": "60", "size": "2.25rem", "name": "XL" },
+				{ "slug": "70", "size": "3.38rem", "name": "XXL" },
+				{ "slug": "80", "size": "5.06rem", "name": "Huge" }
 			],
 			"units": ["%", "px", "em", "rem", "vh", "vw"]
 		},

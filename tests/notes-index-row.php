@@ -94,6 +94,12 @@ ok( false === strpos( $row_v1, 'sn-notes-row-prov' ), 'no provenance badge witho
 $row_pin = cap( function () { sn_notes_render_row( mk( 12, 'Start Here', '2026-04-01 00:00:00' ), array( 'pinned' => true ) ); } );
 ok( false !== strpos( $row_pin, 'is-pinned' ) && false !== strpos( $row_pin, 'Start here' ), 'pinned row keeps its blood flag' );
 ok( false !== strpos( $row_pin, 'sn-notes-row-title' ), 'pinned row uses the SAME row markup (it had drifted before)' );
+// v12.18.9: the row sits directly under the page's H1 (the section label is a
+// <p>), so its title is an H2 -- an H3 skipped a level on every index, tag
+// archive and search view. The 404 page's copy of this row has pinned H2
+// since v10 for the same reason (tests/404-recovery.php). (#285)
+ok( false !== strpos( $row_v1, '<h2 class="sn-notes-row-title"' ), 'a11y: the row title is an H2 (H1 headline -> H2 row, no skipped level)' );
+ok( false === strpos( $row_v1, '<h3' ), 'a11y: no H3 anywhere in a row' );
 
 echo "\nGroup: the year spine renders only when it discriminates\n";
 $one_year = array( mk( 1, 'A', '2026-08-14 00:00:00' ), mk( 2, 'B', '2026-05-02 00:00:00' ) );

@@ -9,7 +9,7 @@
  *
  * v11.12.0 — THE /notes INDEX NO LONGER RENDERS core/post-title. The v11.10.0
  * notes-index redesign replaced the core query loop with hand-rolled markup in
- * inc/notes-index-row.php, which echoes its own `<h3 class="sn-notes-row-title">`.
+ * inc/notes-index-row.php, which echoes its own `<h2 class="sn-notes-row-title">`.
  * This filter kept naming the single note's hero, so the destination half of the
  * morph still worked while the source half silently had no name at all — and a
  * morph with only one named side is just the root cross-fade. The row now calls
