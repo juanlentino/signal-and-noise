@@ -12,6 +12,23 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Fixed
+- The compare-columns pattern's column titles are H3, not H4. Notes use H2 for
+  body subheads, so inserting the pattern produced an H2 → H4 jump — the same
+  WCAG 1.3.1 heading skip `assets/css/article.css` already records for the
+  corpus. `className` and the rendered `class` are unchanged, and no other
+  pattern is touched. (#279)
+- And the component's own CSS now actually applies. `.sn-compare__title` is
+  (0,1,0) and loses every shared property to the generic body-subhead rules at
+  (0,3,1), so the `1.1rem` written in v9.2.0 has been dead on single posts ever
+  since — the titles rendered at whatever size their heading level resolved to.
+  The H4 → H3 move alone would have swapped one wrong size for a bigger one, so
+  a scoped override reclaims exactly the two properties the component declares
+  and loses. It names NO element — (0,4,0) beats (0,3,1) on the class column —
+  so the next heading-level change cannot silently re-break it. `line-height`
+  stays with the generic rule deliberately: the component never asked for one.
+  (#279)
+
 ## [12.18.7] - 2026-09-04 — the field that zoomed and never came back
 
 ### Fixed
