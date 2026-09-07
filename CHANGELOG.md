@@ -12,6 +12,10 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Fixed
+- Color-mode toggles retain the current page choice when browser storage is unavailable, keeping both labels and repeated clicks consistent.
+- Search and note keyboard shortcuts leave IME composition keys alone, so accepting or dismissing a candidate does not navigate or close the palette.
+
 ## [12.18.9] - 2026-09-05 — the presets the site actually serves
 
 ### Fixed

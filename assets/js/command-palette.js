@@ -250,6 +250,8 @@
 	// Focus trap: the dialog has exactly one tabbable control (the input), so
 	// Tab/Shift-Tab simply re-focus it. Escape restores focus to the opener.
 	function onTrapKeydown( e ) {
+		// Composition keys belong to the IME, including Enter and Escape.
+		if ( e.isComposing || e.keyCode === 229 ) { return; }
 		if ( ! isOpen ) { return; }
 		if ( e.key === 'Escape' || e.keyCode === 27 ) {
 			e.preventDefault();
@@ -314,6 +316,8 @@
 		input.addEventListener( 'input', function () { render( input.value ); } );
 
 		input.addEventListener( 'keydown', function ( e ) {
+			// Composition keys belong to the IME, including Enter and Escape.
+			if ( e.isComposing || e.keyCode === 229 ) { return; }
 			if ( e.key === 'ArrowDown' || e.keyCode === 40 ) {
 				e.preventDefault();
 				move( 1 );
@@ -358,6 +362,8 @@
 	}
 
 	function onGlobalKeydown( e ) {
+		// Composition keys belong to the IME, including Enter and Escape.
+		if ( e.isComposing || e.keyCode === 229 ) { return; }
 		// ⌘K / Ctrl-K — works everywhere.
 		var k = e.key ? e.key.toLowerCase() : '';
 		if ( ( e.metaKey || e.ctrlKey ) && ( k === 'k' || e.keyCode === 75 ) ) {
