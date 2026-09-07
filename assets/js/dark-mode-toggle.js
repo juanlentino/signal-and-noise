@@ -18,6 +18,8 @@
 
 	var KEY = 'sn-theme'; // Mirrors SN_THEME_STORAGE_KEY in inc/dark-mode.php.
 	var root = document.documentElement;
+	// Keep the page choice even when storage is blocked or full.
+	var preference = read();
 
 	// TWO INSTANCES, ONE STATE. The toggle renders in both the footer bar and
 	// the header, and CSS shows exactly one depending on which bar is
@@ -58,9 +60,8 @@
 
 	/** What the reader is looking at right now, chosen or inherited. */
 	function effective() {
-		var stored = read();
-		if ( stored ) {
-			return stored;
+		if ( preference ) {
+			return preference;
 		}
 		return ( mq && mq.matches ) ? 'dark' : 'light';
 	}
@@ -94,6 +95,7 @@
 		// transition and a camera flash. Gated on both support and the
 		// reader's motion preference; without either it simply swaps.
 		var apply = function () {
+			preference = next;
 			root.setAttribute( 'data-theme', next );
 			write( next );
 			sync();
@@ -113,7 +115,7 @@
 	// Follow the OS while the reader has expressed no preference of their own.
 	if ( mq && mq.addEventListener ) {
 		mq.addEventListener( 'change', function () {
-			if ( ! read() ) {
+			if ( ! preference ) {
 				sync();
 			}
 		} );

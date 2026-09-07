@@ -117,6 +117,8 @@
 	// ── Global key handling ──────────────────────────────────────────────────
 
 	function onKeydown( e ) {
+		// Composition keys belong to the IME, including Enter and Escape.
+		if ( e.isComposing || e.keyCode === 229 ) { return; }
 		// Never hijack a browser/OS chord.
 		if ( e.metaKey || e.ctrlKey || e.altKey ) { return; }
 
