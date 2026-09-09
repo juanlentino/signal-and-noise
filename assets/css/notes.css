@@ -59,8 +59,17 @@
 	.sn-notes-hero > .sn-notes-eyebrow {
 		grid-column: 1 / -1;
 	}
+	/* Hero-side rhythm (v12.19.0). The right column now leads with the owner
+	   slot, so the gaps below it are stated rather than inherited from
+	   whichever child happens to carry one. INSIDE this query on purpose: the
+	   base .sn-notes-meta rule sets margin:0, and a standalone version of
+	   these two rules would win at every width and re-space the stacked
+	   hero — the same accident the comment at the top of this file records. */
+	.sn-notes-hero-side .sn-notes-subscribe {
+		margin-top: 0.85rem;
+	}
 	.sn-notes-hero-side .sn-notes-meta {
-		margin-top: 1rem;
+		margin-top: 0.7rem;
 	}
 }
 .sn-notes-eyebrow,
@@ -739,7 +748,17 @@ details.sn-notes-year > summary:focus-visible .sn-notes-year-band {
 	letter-spacing: 0.01em;
 	line-height: 1.6;
 	color: var(--wp--preset--color--rust);
-	max-width: 48ch;
+	/* v12.19.0: 48ch -> 64ch. The column this sits in is 577px wide and 48ch
+	   rendered at 346px, leaving 231px unused — the cap, not the container,
+	   was the constraint. 64ch stays inside the 45-75ch readable measure and
+	   drops the block from 7 line boxes to 5. Raised HERE only: the dek keeps
+	   48ch, because its measure is doing real work beside a 112px headline.
+
+	   72ch, not 80ch: 80 would have packed it to 4 lines and bought the last
+	   6px, but 72 is the top of the readable measure and this paragraph is
+	   already the longest prose in the hero. The 6px is cheaper than the
+	   line length. */
+	max-width: 72ch;
 }
 .sn-notes-subscribe a {
 	color: var(--wp--preset--color--blood);
@@ -758,11 +777,11 @@ details.sn-notes-year > summary:focus-visible .sn-notes-year-band {
    point. Subordinate to it by opacity alone, and no cursor: the cursor ends
    the block, not each paragraph. */
 .sn-notes-subscribe-privacy {
-	margin: 0.6rem 0 0;
-	font-size: max(0.75rem, 12px);
-	line-height: 1.6;
-	color: var(--wp--preset--color--rust);
-	max-width: 48ch;
+	/* v12.19.0: a <span> inside .sn-notes-subscribe now, not a sibling <p>.
+	   Font, line-height, colour and measure all come from the parent, so only
+	   the thing that distinguished it — the opacity — is still declared here.
+	   The margin and max-width would be inert on an inline box; keeping them
+	   would read as if they still did something. */
 	opacity: 0.85;
 }
 

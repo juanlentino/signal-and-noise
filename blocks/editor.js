@@ -1,8 +1,10 @@
-( function ( blocks, element, blockEditor, serverSideRender ) {
+( function ( blocks, element, blockEditor, serverSideRender, components ) {
 	'use strict';
 	var el = element.createElement;
 	var useBlockProps = blockEditor.useBlockProps;
 	var RichText = blockEditor.RichText;
+	var InspectorControls = blockEditor.InspectorControls;
+	var Fragment = element.Fragment;
 
 	// Both blocks are DYNAMIC (render.php). Attributes are PLAIN (not source:html),
 	// so their values persist in the block's comment-delimiter JSON and arrive
@@ -41,15 +43,32 @@
 	// ServerSideRender (a bare text placeholder read as broken in v10.47.0,
 	// owner-reported). Static text stays only as a fallback when the
 	// server-side-render module is unavailable.
+	// v12.19.0: the density control. `compact` is declared in block.json, so
+	// ServerSideRender passes it to render.php and the preview re-renders on
+	// toggle — the owner sees the real thing in the editor, both ways.
 	blocks.registerBlockType( 'signal-noise/pillar-essays', {
-		edit: function () {
+		edit: function ( props ) {
 			var bp = useBlockProps();
-			if ( serverSideRender ) {
-				return el( 'div', bp,
-					el( serverSideRender, { block: 'signal-noise/pillar-essays' } ) );
-			}
-			return el( 'div', bp,
-				'Pillar Essays: renders the live pillar essay rail from published designated Pages.' );
+			var compact = !! props.attributes.compact;
+			var panel = ( InspectorControls && components && components.PanelBody )
+				? el( InspectorControls, {},
+					el( components.PanelBody, { title: 'Rail density', initialOpen: true },
+						el( components.ToggleControl, {
+							label: 'Compact',
+							help: compact
+								? 'One row per essay — designation, title, reading time.'
+								: 'Full cards — dek and a Read essay link.',
+							checked: compact,
+							onChange: function ( v ) { props.setAttributes( { compact: !! v } ); }
+						} ) ) )
+				: null;
+			var body = serverSideRender
+				? el( serverSideRender, {
+					block: 'signal-noise/pillar-essays',
+					attributes: { compact: compact }
+				} )
+				: 'Pillar Essays: renders the live pillar essay rail from published designated Pages.';
+			return el( Fragment, {}, panel, el( 'div', bp, body ) );
 		},
 		save: function () { return null; }
 	} );
@@ -89,4 +108,4 @@
 		} );
 	} );
 
-} )( window.wp.blocks, window.wp.element, window.wp.blockEditor, window.wp.serverSideRender );
+} )( window.wp.blocks, window.wp.element, window.wp.blockEditor, window.wp.serverSideRender, window.wp.components );

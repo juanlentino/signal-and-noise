@@ -131,7 +131,39 @@ ok( false !== strpos( $src_markup, 'among others' ), 'the list is hedged IN THE 
 // simply that the hero is two sentences and links two feeds.
 preg_match( '/<p class="sn-notes-subscribe">(.*?)<\/p>/s', $src, $m_hero );
 ok( ! empty( $m_hero[1] ), 'the hero subscribe line was located (guard: the regex still matches)' );
-ok( 1 === preg_match( '/<p class="sn-notes-subscribe-privacy">/', $src ), 'and the privacy line beside it, which is the one sentence carried over from the page' );
+// v12.19.0: the privacy sentence moved INSIDE the subscribe paragraph as a
+// <span>. Not a rewrite — same words, same 0.85 opacity — but the old check
+// pinned `<p class="sn-notes-subscribe-privacy">`, which was testing the tag
+// rather than the thing that matters. What matters is that the sentence is
+// still there, still individually addressable, and still visually its own
+// beat. Those are pinned below, plus the failure mode the merge introduces:
+// a <p> nested inside a <p> is invalid, and the parser silently closes the
+// outer one — which would put the sentence back OUTSIDE the paragraph while
+// every text-presence check here stayed green.
+preg_match( '/<p class="sn-notes-subscribe">(.*?)<\/p>/s', $src_markup, $m_para );
+$sn_para = $m_para[1] ?? '';
+ok( '' !== $sn_para, 'the subscribe paragraph was located in the MARKUP (guard: the regex still matches)' );
+ok(
+	false !== strpos( $sn_para, 'Nothing is sent to me' ),
+	'the privacy sentence is carried INSIDE the subscribe paragraph, which is what makes the pair cost 5 line boxes instead of 7'
+);
+ok(
+	false !== strpos( $sn_para, 'class="sn-notes-subscribe-privacy"' ),
+	'and it keeps its own class, so it stays individually addressable rather than dissolving into the paragraph'
+);
+ok(
+	0 === preg_match( '/<p class="sn-notes-subscribe-privacy"/', $src_markup ),
+	'and is NOT a <p>: nested paragraphs are invalid, and the parser would silently close the outer one and undo the merge'
+);
+// The distinguishing treatment has to survive the tag change, or "same words,
+// same look" is only half true. It is the ONLY property still declared for
+// this class — everything else now inherits from the parent paragraph.
+$sn_css = (string) file_get_contents( __DIR__ . '/../assets/css/notes.css' );
+preg_match( '/\.sn-notes-subscribe-privacy\s*\{(.*?)\}/s', $sn_css, $m_css );
+ok(
+	isset( $m_css[1] ) && false !== strpos( $m_css[1], 'opacity' ),
+	'the privacy sentence keeps its opacity, which is what set it apart from the line it now sits in'
+);
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
