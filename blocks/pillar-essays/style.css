@@ -149,3 +149,100 @@
 	.sn-notes-pillar { transition: none; }
 	.sn-notes-pillar::before { transition: none; }
 }
+
+/* COMPACT DENSITY ──────────────────────────────────────────────
+   One row per essay, for surfaces where the rail is supporting
+   cast (the /notes index hero). render.php has already dropped
+   the dek and the CTA and made the row itself the link; these
+   rules only re-lay what remains. The blood left-rail, the
+   hover translate and the reduced-motion opt-out are inherited
+   from .sn-notes-pillar above and deliberately not restated.
+   ────────────────────────────────────────────────────────────── */
+
+.is-compact .sn-notes-pillars {
+	gap: 0;
+}
+
+.is-compact .sn-notes-pillar {
+	/* number | title+time. The row IS the <a>, so it needs the
+	   baseline alignment the card's block layout gave for free. */
+	grid-template-columns: auto 1fr;
+	align-items: center;
+	/* Hairline between rows rather than a box per row: three boxed
+	   cards in a hero column read as three competing objects. The
+	   first row keeps a top border so the run is closed at both ends. */
+	border: 0;
+	border-bottom: 1px solid var(--wp--preset--color--concrete);
+	background: transparent;
+	min-height: 44px; /* pointer target floor — the whole row is the link. */
+}
+.is-compact .sn-notes-pillar:first-child {
+	border-top: 1px solid var(--wp--preset--color--concrete);
+}
+.is-compact .sn-notes-pillar::before {
+	/* Rail sits inside the row's own box, not a card edge. */
+	width: 2px;
+}
+.is-compact .sn-notes-pillar:hover::before {
+	width: 5px;
+}
+
+.is-compact .sn-notes-pillar-number {
+	font-size: max(0.75rem, 11px);
+	padding: 0 0.85rem 0 0.9rem;
+	align-self: center;
+}
+
+.is-compact .sn-notes-pillar-body {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0.2rem 0.7rem;
+	padding: 0.7rem 0.9rem 0.7rem 0;
+}
+
+.is-compact .sn-notes-pillar-title {
+	/* A <span> in compact, so the card's h2 margins do not apply. */
+	font-family: 'Bebas Neue', Impact, sans-serif;
+	font-weight: 400;
+	font-size: clamp(1.05rem, 1.5vw, 1.25rem);
+	line-height: 1.15;
+	letter-spacing: -0.005em;
+	margin: 0;
+	color: var(--wp--preset--color--bone);
+}
+
+.is-compact .sn-notes-pillar-eyebrow {
+	/* Reading time only — "Pillar Essay" is already the section label. */
+	margin: 0;
+	font-size: max(0.65rem, 10px);
+	color: var(--wp--preset--color--rust);
+	white-space: nowrap;
+}
+
+.is-compact .sn-notes-pillar:hover .sn-notes-pillar-title {
+	color: var(--wp--preset--color--blood);
+}
+
+/* Hero placement (v12.19.0) — the rail as the /notes hero's right column.
+   Scoped to .sn-notes-hero-side so /provenance, where the same block is
+   placed at full density, never sees any of it.
+
+   The row heights drop below the 44px floor here on purpose: that floor is
+   a TOUCH target rule, and this branch is gated to the pointer breakpoint.
+   Below 821px the hero stacks and the unscoped 44px rule above applies. */
+.sn-notes-hero-side .sn-notes-pillars-section {
+	width: 100%;
+	margin-bottom: 0;
+}
+@media (min-width: 900px) {
+	.sn-notes-hero-side .is-compact .sn-notes-pillar { min-height: 0; }
+	.sn-notes-hero-side .is-compact .sn-notes-pillar-body {
+		padding-top: 0.45rem;
+		padding-bottom: 0.45rem;
+	}
+	.sn-notes-hero-side .is-compact .sn-notes-section-wrap {
+		margin-bottom: 0.7rem;
+		padding-bottom: 0.35rem;
+	}
+}

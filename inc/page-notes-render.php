@@ -106,6 +106,41 @@ ob_start();
 // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- do_blocks() output is trusted rendered block HTML (the theme's own footer template part); must not be escaped.
 echo do_blocks( '<!-- wp:template-part {"slug":"footer","area":"footer"} /-->' );
 $sn_footer_html = ob_get_clean();
+
+// OWNER SLOT (v12.19.0). /notes is the one page whose body never rendered:
+// sn_notes_owns_request() short-circuits template_include to this file, so
+// the Notes Page's post_content was inert — measured empty (post 1489,
+// word_count 0), which is why turning it on is a no-op until the owner puts
+// something there.
+//
+// It renders into the hero's RIGHT COLUMN, which is where the room is: that
+// column runs ~100px shorter than the left one and its copy is capped well
+// inside its width, so a block placed here costs the page nothing until it
+// exceeds the left column's height. That is the whole reason this slot is
+// here and not between the hero and the index, where anything placed adds
+// its full height to every row below it.
+//
+// Pre-rendered with the header and footer for the same reason they are: a
+// block registered from block.json enqueues its stylesheet WHEN IT RENDERS,
+// and rendering inside <main> would queue that file after wp_head() has
+// already printed. The pass MUST run BEFORE wp_head().
+$sn_slot_html = '';
+$sn_slot_id   = function_exists( 'sn_notes_is_index_request' ) && sn_notes_is_index_request()
+	? (int) get_queried_object_id()
+	: 0;
+if ( ! $sn_slot_id && function_exists( 'get_page_by_path' ) ) {
+	$sn_slot_page = get_page_by_path( 'notes' );
+	$sn_slot_id   = $sn_slot_page ? (int) $sn_slot_page->ID : 0;
+}
+if ( $sn_slot_id ) {
+	$sn_slot_raw = (string) get_post_field( 'post_content', $sn_slot_id );
+	if ( '' !== trim( $sn_slot_raw ) ) {
+		ob_start();
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- do_blocks() output is trusted rendered block HTML from the owner's own Page body, the same trust model as any other WP page render.
+		echo do_blocks( $sn_slot_raw );
+		$sn_slot_html = ob_get_clean();
+	}
+}
 ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
@@ -197,6 +232,12 @@ echo $sn_header_html;
 			</div>
 		</div>
 		<div class="sn-notes-hero-side">
+			<?php
+			// The owner slot leads the column: the program above, the feed
+			// address below it. Empty body renders nothing at all.
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $sn_slot_html is trusted do_blocks() output captured above; must not be re-escaped.
+			echo $sn_slot_html;
+			?>
 			<?php // v12.13.1: the two feed addresses, direct. This linked to
 			      // /notes/subscribe/, a 241-word page whose deliverable was one
 			      // URL and whose second half re-listed the index below it. The
@@ -224,12 +265,20 @@ echo $sn_header_html;
 			      // path is two things to keep in step. ?>
 			<p class="sn-notes-subscribe">
 				Every note lands in whatever reader you already use, the day it goes up
-				&mdash; <a href="<?php echo esc_url( function_exists( 'sn_subscribe_feed_url' ) ? sn_subscribe_feed_url() : home_url( '/notes/feed/' ) ); ?>">RSS</a> or <a href="<?php echo esc_url( function_exists( 'sn_feed_json_pretty_url' ) ? sn_feed_json_pretty_url() : home_url( '/feed/json/' ) ); ?>">JSON Feed</a>. No reader yet? NetNewsWire, Reeder and Feedbin read both, among others.<span class="sn-notes-cursor" aria-hidden="true"></span>
+				&mdash; <a href="<?php echo esc_url( function_exists( 'sn_subscribe_feed_url' ) ? sn_subscribe_feed_url() : home_url( '/notes/feed/' ) ); ?>">RSS</a> or <a href="<?php echo esc_url( function_exists( 'sn_feed_json_pretty_url' ) ? sn_feed_json_pretty_url() : home_url( '/feed/json/' ) ); ?>">JSON Feed</a>. No reader yet? NetNewsWire, Reeder and Feedbin read both, among others. <span class="sn-notes-subscribe-privacy">Nothing is sent to me, and nothing about you is collected &mdash; a reader fetches the file the same way a browser fetches a page.</span><span class="sn-notes-cursor" aria-hidden="true"></span>
 			</p>
 			<?php // The one sentence worth carrying over from that page. On a site
 			      // arguing about what gets recorded about people, how the feed
-			      // behaves is the point, not a footnote. ?>
-			<p class="sn-notes-subscribe-privacy">Nothing is sent to me, and nothing about you is collected &mdash; a reader fetches the file the same way a browser fetches a page.</p>
+			      // behaves is the point, not a footnote.
+			      //
+			      // v12.19.0: a <span> inside the paragraph above, not a <p> after
+			      // it. Not a rewrite — every word, both links and the 0.85 opacity
+			      // are unchanged. Two paragraphs each round their last line up to a
+			      // whole line box, so the pair cost 7 line boxes for 5 lines of
+			      // text; one paragraph costs what the text costs. That reclaimed
+			      // ~25px, which is part of what lets the slot above sit in this
+			      // column for free. The CSS note that these "read as a pair" is
+			      // more true now, not less. ?>
 			<?php if ( ! $sn_filtered ) : ?>
 			<?php // Corpus stats: entry count + last-updated, the side column's
 			      // closing stamp. Suppressed in search/tag state — there the

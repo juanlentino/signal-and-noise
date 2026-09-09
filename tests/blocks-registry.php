@@ -107,8 +107,22 @@ ok( ! empty( array_filter( $cats, fn( $c ) => ( $c['slug'] ?? '' ) === 'signal-n
  *
  * pillar-essays is excluded deliberately: its edit renders through
  * serverSideRender, so an example would fire a REST render round-trip on every
- * inserter hover, and it declares zero attributes so there is nothing to vary.
+ * inserter hover.
+ *
+ * v12.19.0: that exemption used to be stated as "and it declares zero
+ * attributes so there is nothing to vary" — two reasons welded together, and
+ * the second one expired the moment the block gained its `compact` attribute.
+ * The suite caught it, correctly. Only the FIRST reason was ever load-bearing:
+ * the cost is the REST round-trip, and that cost does not depend on how many
+ * attributes the block declares.
+ *
+ * So the exemption is now DERIVED rather than named: a block is exempt when
+ * editor.js previews it through serverSideRender. Deriving it matters — a
+ * hardcoded 'signal-noise/pillar-essays' would silently exempt a block that
+ * later stopped being server-previewed, which is the exact failure mode this
+ * rule was written as a rule (not a list) to avoid.
  */
+$editor_js = (string) file_get_contents( __DIR__ . '/../blocks/editor.js' );
 $manifests = glob( __DIR__ . '/../blocks/*/block.json' );
 ok( count( $manifests ) >= 3, 'block manifests were found (guard: the glob still matches)' );
 
@@ -119,6 +133,19 @@ foreach ( $manifests as $manifest ) {
 
 	if ( ! is_array( $attrs ) || array() === $attrs ) {
 		ok( true, "$name declares no attributes — exempt from the example rule by construction" );
+		continue;
+	}
+
+	// Server-previewed blocks are exempt: an inserter example would fire a REST
+	// render per hover. Derived from the registration, never from a name list.
+	$reg_pos       = strpos( $editor_js, "'" . $name . "'" );
+	$server_preview = false;
+	if ( false !== $reg_pos ) {
+		$block_body     = substr( $editor_js, $reg_pos, 1400 );
+		$server_preview = false !== strpos( $block_body, 'serverSideRender' );
+	}
+	if ( $server_preview ) {
+		ok( true, "$name is previewed through serverSideRender — exempt (an example costs a REST render per inserter hover)" );
 		continue;
 	}
 
