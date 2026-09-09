@@ -246,3 +246,55 @@
 		padding-bottom: 0.35rem;
 	}
 }
+
+/* THE UNDERLINE (v12.20.0) ─────────────────────────────────────
+   Compact rows are <a>, so WordPress's own theme.json rule —
+   `:root :where(a:where(:not(.wp-element-button)):hover)` — drew a
+   single underline across the number, the title AND the reading
+   time. The full card never showed this because it is an <article>
+   whose only link is the CTA. The affordance is already the title
+   turning blood on hover; the rule is one class deep, so this wins
+   without !important. Focus keeps a REAL indicator — removing a
+   decoration must not remove the keyboard user's only cue. */
+.sn-notes-pillar:hover,
+.sn-notes-pillar:focus,
+.sn-notes-pillar:focus-visible {
+	text-decoration: none;
+}
+.sn-notes-pillar:focus-visible {
+	outline: 2px solid var(--wp--preset--color--blood);
+	outline-offset: -2px;
+}
+
+/* SUBORDINATION ────────────────────────────────────────────────
+   A sub-pillar is an essay UNDER a pillar (minor > 0 in the
+   designation), and the rail used to render it as a peer. Indent
+   plus a quieter number carries the hierarchy; the title stays
+   full-contrast bone because it is still a link and still has to
+   be read. Demoting its colour as well would have bought a little
+   more contrast between the rows at the cost of the row itself. */
+.sn-notes-pillar--sub .sn-notes-pillar-number {
+	color: var(--wp--preset--color--rust);
+}
+.sn-notes-pillar--sub::before {
+	/* The blood rail marks a pillar. A sub-pillar gets a hairline in
+	   its place — present, so the row still reads as part of the run,
+	   but not claiming the same rank. */
+	background: var(--wp--preset--color--concrete);
+}
+
+/* Scoped to the DENSITY, not to the hero. The first cut of this was under
+   `.sn-notes-hero-side`, so a compact rail placed anywhere else would have
+   lost its indent and rendered sub-pillars as peers again — the exact bug
+   the class exists to fix, hiding behind a placement that happens to be the
+   only one in use today. One clamp instead of two queries: the indent tracks
+   the viewport, so a narrow column never spends 24px it does not have. */
+.is-compact .sn-notes-pillar--sub {
+	padding-left: clamp(0.85rem, 2vw, 1.5rem);
+}
+
+/* Full density (/provenance): the cards are boxes, so the indent is the
+   card itself stepping in rather than its contents. */
+.sn-notes-pillars-section:not(.is-compact) .sn-notes-pillar--sub {
+	margin-left: clamp(1rem, 3vw, 2.5rem);
+}
