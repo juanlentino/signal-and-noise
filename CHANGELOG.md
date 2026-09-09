@@ -12,6 +12,9 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Fixed
+- The pillar rail in the /notes hero now has room below it. It ends on a hairline and sat 14px above the subscribe text, which read as attached to it; the gap is now 28px, about one and a half lines. The corpus stamp gets back the 1rem it had before the rail existed. The notes start 19px lower as a result.
+
 ## [12.19.1] - 2026-09-09 — the notes body is a slot, and its editor says so
 
 ### Fixed

@@ -60,16 +60,27 @@
 		grid-column: 1 / -1;
 	}
 	/* Hero-side rhythm (v12.19.0). The right column now leads with the owner
-	   slot, so the gaps below it are stated rather than inherited from
-	   whichever child happens to carry one. INSIDE this query on purpose: the
-	   base .sn-notes-meta rule sets margin:0, and a standalone version of
-	   these two rules would win at every width and re-space the stacked
-	   hero — the same accident the comment at the top of this file records. */
+	   slot, so the gap below it is stated rather than inherited from whichever
+	   child happens to carry one. INSIDE this query on purpose: the base
+	   .sn-notes-meta rule sets margin:0, and a standalone version would win at
+	   every width and re-space the stacked hero — the same accident the
+	   comment at the top of this file records.
+
+	   v12.19.1a: 1.75rem, not the 0.85rem this shipped at. The rail ends on a
+	   hairline, and a rule followed by body text needs MORE separation than
+	   two paragraphs do, not less — 0.85rem left 14px between a border and a
+	   12px line, which read as attached. 28px is ~1.5x the 19.2px line-height,
+	   the point at which the two stop reading as one block. The 0.85rem was
+	   never a design decision; it was 6px I was borrowing to keep the notes
+	   from moving, and the notes moving 19px is the cheaper of the two. */
 	.sn-notes-hero-side .sn-notes-subscribe {
-		margin-top: 0.85rem;
+		margin-top: 1.75rem;
 	}
+	/* The meta stamp keeps the 1rem it had before the slot existed. Cutting it
+	   to 0.7rem was part of the same borrowing, and it closed the gap between
+	   the prose and the stamp that closes it. */
 	.sn-notes-hero-side .sn-notes-meta {
-		margin-top: 0.7rem;
+		margin-top: 1rem;
 	}
 }
 .sn-notes-eyebrow,
