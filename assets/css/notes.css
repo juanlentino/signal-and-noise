@@ -215,7 +215,13 @@
 	flex-wrap: wrap;
 }
 .sn-notes-meta-bullet {
-	color: var(--wp--preset--color--blood);
+	/* v12.20.2: was blood. A separator glyph is not a signal, and the hero was
+	   carrying twelve red marks across six unrelated jobs — an accent that
+	   appears everywhere stops meaning anything. Red is now reserved for the
+	   things that act (wayfinding) and the things that are the work (pillar
+	   numbers). Inherits the meta line's own colour. */
+	color: inherit;
+	opacity: 0.6;
 }
 
 /* RULE — section divider, full-width hairline */
@@ -771,10 +777,25 @@ details.sn-notes-year > summary:focus-visible .sn-notes-year-band {
 	   line length. */
 	max-width: 72ch;
 }
+/* v12.20.2 — WCAG 1.4.1 (Use of Color). These two links sat at
+   text-decoration:none with the underline appearing only on :hover, so at rest
+   they were distinguished from the paragraph by COLOUR ALONE. Measured on live:
+   blood #ff4c47 against rust #9e9e9e is 1.23:1, where the technique for in-text
+   links wants 3:1 when colour is the only cue. A reader with low colour
+   discrimination could not tell "RSS" was a link.
+
+   The affordance was already built — the border-bottom and its transition were
+   here — it was just spent entirely on hover, which is a state a touch user and
+   a keyboard user may never enter. Making it visible at rest is the smaller
+   change and the correct one; hover now deepens it to full blood rather than
+   introducing it. */
 .sn-notes-subscribe a {
 	color: var(--wp--preset--color--blood);
 	text-decoration: none;
-	border-bottom: 1px solid transparent;
+	border-bottom: 1px solid currentColor;
+	/* Not the accent at full strength: the resting rule states "link", the
+	   hover states "this one". */
+	border-bottom-color: color-mix(in srgb, var(--wp--preset--color--blood) 55%, transparent);
 	transition: border-color 0.2s ease;
 }
 @media (hover: hover) {
@@ -788,11 +809,19 @@ details.sn-notes-year > summary:focus-visible .sn-notes-year-band {
    point. Subordinate to it by opacity alone, and no cursor: the cursor ends
    the block, not each paragraph. */
 .sn-notes-subscribe-privacy {
-	/* v12.19.0: a <span> inside .sn-notes-subscribe now, not a sibling <p>.
-	   Font, line-height, colour and measure all come from the parent, so only
-	   the thing that distinguished it — the opacity — is still declared here.
-	   The margin and max-width would be inert on an inline box; keeping them
-	   would read as if they still did something. */
+	/* v12.20.2: a sibling <p> again, so it declares its own box. The v12.19.0
+	   <span> was a space-saving measure that cost the column its air — see the
+	   note in inc/page-notes-render.php.
+
+	   The measure matches the paragraph above it (72ch, not the pre-v12.19.0
+	   48ch): they are two paragraphs of ONE prose block and a different line
+	   length would read as a different voice. Subordinate by opacity alone,
+	   exactly as before. */
+	margin: 0.7rem 0 0;
+	font-size: max(0.75rem, 12px);
+	line-height: 1.6;
+	color: var(--wp--preset--color--rust);
+	max-width: 72ch;
 	opacity: 0.85;
 }
 

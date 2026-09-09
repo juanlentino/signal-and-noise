@@ -46,15 +46,41 @@ $p_subscribe = strpos( $src, 'class="sn-notes-subscribe"' );
 $p_meta      = strpos( $src, 'class="sn-notes-meta"' );
 
 ok( $p_eyebrow < $p_title && $p_title < $p_side, 'source order: eyebrow → title column → side column' );
-ok( $p_subscribe < $p_meta, 'side column order: subscribe line precedes the corpus meta stamp' );
+/* ── THE CORPUS STAMP MOVED (v12.20.2) ─────────────────────────────────────
+ * It used to close the hero's side column. It was the third unrelated job in
+ * that column — programme, feed address, statistic, all in the same small grey
+ * mono — and half of it ("40 entries") restated the count already printed in
+ * the index header below. It now sits beside that count.
+ *
+ * The BEHAVIOURAL CONTRACT is unchanged and is what these assertions really
+ * protect: the corpus figures must never render in a filtered state, where
+ * they would describe a search or tag result set while claiming to describe
+ * the corpus. Only the guard's location moved — from ! $sn_filtered in the
+ * hero to the index-header branch that only the unfiltered view reaches.
+ */
+$hero = substr( $src, $p_side, max( 0, strpos( $src, '</header>' ) - $p_side ) );
+ok( false === strpos( $hero, 'class="sn-notes-meta"' ), 'the corpus stamp is NO LONGER in the hero side column' );
+// COMMENT-STRIPPED. The raw source carries "Last updated" three times: once in
+// the markup and TWICE in comments that explain the guard — including the very
+// comment describing why it moved. Counting the raw file reported 3 and read as
+// a duplication bug in a file that has exactly one. Third instance of this shape
+// today; strip first, then assert.
+$sn_code = (string) preg_replace( '#/\*.*?\*/|//[^\n]*#s', '', $src );
+ok( $sn_code !== $src, 'VACUITY: the file really does carry comments, so stripping them is doing work' );
+ok( 1 === substr_count( $sn_code, 'Last updated' ), 'and the stamp exists exactly once in the MARKUP — moved, not duplicated' );
 
-// THE BEHAVIORAL CONTRACT. The corpus meta must stay inside the ! $sn_filtered
-// guard: in search/tag state the entry count describes the filtered set, and
-// presenting it as the corpus count mislabels it.
-$hero  = substr( $src, $p_side, max( 0, strpos( $src, '</header>' ) - $p_side ) );
-ok( false !== strpos( $hero, 'if ( ! $sn_filtered ) :' ), 'corpus meta sits behind the ! $sn_filtered guard' );
-ok( strpos( $hero, 'if ( ! $sn_filtered ) :' ) < strpos( $hero, 'class="sn-notes-meta"' ),
-	'the guard OPENS before the meta paragraph (guard actually wraps it)' );
+$p_updated   = strpos( $sn_code, 'Last updated' );
+$p_indexlbl  = strpos( $sn_code, 'Notes: Index' );
+$p_searchlbl = strpos( $sn_code, 'Notes: Search' );
+$p_taglbl    = strpos( $sn_code, 'Notes: Tag' );
+ok( false !== $p_updated && false !== $p_indexlbl && $p_indexlbl < $p_updated, 'the stamp renders in the INDEX branch of the section header' );
+ok( $p_searchlbl < $p_updated && $p_taglbl < $p_updated, 'after both the search and tag branches — i.e. in the else, which only the unfiltered view reaches' );
+// The control: the filtered branches must carry their own clear-links and NOT
+// the corpus figures. If this ever inverts, a tag archive starts claiming the
+// corpus count.
+$p_endif_after = strpos( $sn_code, 'endif;', $p_updated );
+ok( false !== $p_endif_after, 'and the branch closes after it (the stamp is inside a conditional, not loose)' );
+ok( false === strpos( substr( $sn_code, $p_searchlbl, $p_indexlbl - $p_searchlbl ), 'Last updated' ), 'CONTROL: neither filtered branch carries the corpus figures' );
 
 // v11.9.1 START HERE CONTRACT. Start Here is a PAGE under /notes/, so it is
 // absent from the post query that builds the index below — this hero link is
@@ -140,20 +166,25 @@ ok( ! empty( $m_hero[1] ), 'the hero subscribe line was located (guard: the rege
 // a <p> nested inside a <p> is invalid, and the parser silently closes the
 // outer one — which would put the sentence back OUTSIDE the paragraph while
 // every text-presence check here stayed green.
+/* v12.19.0 folded the privacy sentence into the paragraph above as a <span>,
+ * to reclaim ~25px. v12.20.2 put it back. The 25px was borrowed to hold the
+ * notes at +0 when the rail moved into this column, and it turned two
+ * paragraphs with air between them into one five-line wall of 12px grey text.
+ * What these assertions protect is not the tag — it is that the sentence is
+ * present, individually addressable, and its OWN block. */
 preg_match( '/<p class="sn-notes-subscribe">(.*?)<\/p>/s', $src_markup, $m_para );
-$sn_para = $m_para[1] ?? '';
-ok( '' !== $sn_para, 'the subscribe paragraph was located in the MARKUP (guard: the regex still matches)' );
+ok( '' !== ( $m_para[1] ?? '' ), 'the subscribe paragraph was located in the MARKUP (guard: the regex still matches)' );
 ok(
-	false !== strpos( $sn_para, 'Nothing is sent to me' ),
-	'the privacy sentence is carried INSIDE the subscribe paragraph, which is what makes the pair cost 5 line boxes instead of 7'
+	1 === preg_match( '/<p class="sn-notes-subscribe-privacy">/', $src_markup ),
+	'the privacy sentence is its own paragraph again — a claim about what is NOT collected earns its own block'
 );
 ok(
-	false !== strpos( $sn_para, 'class="sn-notes-subscribe-privacy"' ),
-	'and it keeps its own class, so it stays individually addressable rather than dissolving into the paragraph'
+	false === strpos( $m_para[1] ?? '', 'Nothing is sent to me' ),
+	'and is NOT nested inside the subscribe paragraph (a <p> in a <p> is invalid; the parser would silently close the outer one)'
 );
 ok(
-	0 === preg_match( '/<p class="sn-notes-subscribe-privacy"/', $src_markup ),
-	'and is NOT a <p>: nested paragraphs are invalid, and the parser would silently close the outer one and undo the merge'
+	false !== strpos( $src_markup, 'Nothing is sent to me, and nothing about you is collected' ),
+	'with every word intact — this was never a rewrite'
 );
 // The distinguishing treatment has to survive the tag change, or "same words,
 // same look" is only half true. It is the ONLY property still declared for
@@ -163,6 +194,47 @@ preg_match( '/\.sn-notes-subscribe-privacy\s*\{(.*?)\}/s', $sn_css, $m_css );
 ok(
 	isset( $m_css[1] ) && false !== strpos( $m_css[1], 'opacity' ),
 	'the privacy sentence keeps its opacity, which is what set it apart from the line it now sits in'
+);
+
+
+/* ── WCAG 1.4.1, Use of Color (v12.20.2) ───────────────────────────────────
+ * RSS and JSON Feed sit inside a paragraph of rust prose. They were
+ * text-decoration:none with the underline appearing only on :hover, so at rest
+ * the ONLY thing marking them as links was their colour. Measured on the live
+ * page: blood #ff4c47 against rust #9e9e9e is 1.23:1, where the technique for
+ * in-text links asks for 3:1 when colour is the sole cue.
+ *
+ * The affordance already existed — border-bottom plus its transition — it was
+ * just spent entirely on hover, a state touch and keyboard users may never
+ * enter. The fix makes it visible at rest.
+ */
+$sn_css_raw = (string) file_get_contents( __DIR__ . '/../assets/css/notes.css' );
+$sn_css     = (string) preg_replace( '#/\*.*?\*/#s', '', $sn_css_raw );
+ok( $sn_css !== $sn_css_raw, 'VACUITY: notes.css carries comments, so stripping them is doing work' );
+
+preg_match( '/\.sn-notes-subscribe a \{(.*?)\}/s', $sn_css, $m_link );
+$sn_link_rule = $m_link[1] ?? '';
+ok( '' !== $sn_link_rule, 'the in-prose feed link rule was located' );
+ok(
+	0 === preg_match( '/border-bottom:\s*1px\s+solid\s+transparent/', $sn_link_rule ),
+	'the feed links are NOT transparent-bordered at rest — that made colour the only cue'
+);
+ok(
+	1 === preg_match( '/border-bottom(-color)?:/', $sn_link_rule ),
+	'they carry a visible resting underline, so the link is identifiable without perceiving hue'
+);
+ok(
+	1 === preg_match( '/\.sn-notes-subscribe a:hover/', $sn_css ),
+	'and hover still deepens it rather than introducing it'
+);
+
+/* The accent stops being spent on punctuation. The hero was carrying twelve
+ * red marks across six unrelated jobs; an accent that appears everywhere is a
+ * texture, not a signal. */
+preg_match( '/\.sn-notes-meta-bullet \{(.*?)\}/s', $sn_css, $m_bullet );
+ok(
+	0 === preg_match( '/color:\s*var\(\s*--wp--preset--color--blood/', $m_bullet[1] ?? '' ),
+	'the meta separator no longer spends the accent colour — a glyph is not a signal'
 );
 
 echo "\nResult: $pass passed, $fail failed.\n";

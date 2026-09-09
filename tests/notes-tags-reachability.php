@@ -126,26 +126,36 @@ ok( false !== strpos( $code, "home_url( '/notes/tags/' )" ), 'the renderer links
 //    code: the stamp contains a nested `if ( $latest_date ) :`, so the first
 //    endif closes THAT, and the extracted region stopped before the tags link
 //    was ever reached. A guard that reads the wrong region reports calm.
-$sup_start = strpos( $code, 'if ( ! $sn_filtered ) :' );
-ok( false !== $sup_start, 'the filtered-state suppression block still exists' );
+// v12.20.2: the hero's `! $sn_filtered` block is GONE, because the only thing
+// inside it — the corpus stamp — moved to the index section header. Both
+// properties this section protects survive; the second one's MECHANISM changed.
+//
+// P1 gets stronger, not weaker: there is no longer any suppression block in the
+// hero that could swallow the tags link. Asserted as an absence, then pinned
+// positively by the wayfinding-row check in (4).
+$hero_end   = strpos( $code, '</header>' );
+$hero_code  = false !== $hero_end ? substr( $code, 0, $hero_end ) : $code;
+ok( false === strpos( $hero_code, 'if ( ! $sn_filtered ) :' ), 'the hero carries no filtered-state suppression at all now — nothing there can swallow the tags link' );
+ok( false !== strpos( $hero_code, "home_url( '/notes/tags/' )" ), 'and the tags link is in the hero, unconditionally' );
 
-$sup_end = false !== $sup_start ? sn_matching_endif( $code, $sup_start ) : false;
-ok( false !== $sup_end, 'the suppression block is closed' );
-
-$suppressed = ( false !== $sup_start && false !== $sup_end )
-	? substr( $code, $sup_start, $sup_end - $sup_start )
-	: '';
-
+// 3. P2, relocated. Without this, P1 is satisfiable by deleting the guard
+//    outright and putting corpus figures back onto filtered views — the defect
+//    the suppression prevents. The figures now live in the index branch of the
+//    section header, which only the unfiltered view reaches, so that is what
+//    gets asserted.
+$p_upd    = strpos( $code, 'Last updated' );
+$p_index  = strpos( $code, 'Notes: Index' );
+$p_search = strpos( $code, 'Notes: Search' );
+$p_tag    = strpos( $code, 'Notes: Tag' );
+ok( false !== $p_upd && false !== $p_index && $p_index < $p_upd, 'the corpus figures render in the INDEX branch of the section header' );
 ok(
-	'' !== $suppressed && false === strpos( $suppressed, '/notes/tags/' ),
-	'the tags link is NOT inside the filtered-state suppression'
+	false !== $p_search && false !== $p_tag && $p_search < $p_upd && $p_tag < $p_upd,
+	'i.e. after both filtered branches — a tag or search view never reaches them'
 );
-
-// 3. The suppression still does its real job. Without this the guard above is
-//    satisfiable by deleting the block outright, which would put the corpus
-//    figures back onto filtered views — the defect this suppression prevents.
-ok( false !== strpos( $suppressed, 'sn-notes-meta' ), 'the corpus meta stamp IS still suppressed when filtered' );
-ok( false !== strpos( $suppressed, 'Last updated' ), 'the last-updated figure is still inside that suppression' );
+ok(
+	false === strpos( substr( $code, $p_search, max( 0, $p_index - $p_search ) ), 'Last updated' ),
+	'CONTROL: neither filtered branch carries the corpus figures (this is what stops P1 being met by deletion)'
+);
 
 // 4. It shares the Start Here row. Start Here is rendered unconditionally for
 //    the identical reason, and the two being siblings is what keeps a future
