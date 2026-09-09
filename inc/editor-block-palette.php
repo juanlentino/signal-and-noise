@@ -68,6 +68,32 @@ function sn_theme_allowed_blocks( $allowed, $context ) {
 		return $allowed;
 	}
 
+	// Firewall 3 (v12.19.1): the Notes Page's body is a SLOT, not a page body.
+	//
+	// /notes renders entirely from inc/page-notes-render.php — hero, search,
+	// rows, folds, pagination — because sn_notes_owns_request() short-circuits
+	// template_include. v12.19.0 made the Page's post_content render into ONE
+	// place inside that: the hero's right column, a ~577px rail beside the
+	// masthead.
+	//
+	// So this editor is NOT the /now, /uses, /resume situation, where the body
+	// IS the page and what you see is what you get. Here the body is a narrow
+	// column of a page you cannot otherwise edit, and the editor gives no hint
+	// of that: a Cover block or a gallery inserted here renders inside the
+	// rail. Narrowing the palette to the one block the slot exists for is the
+	// only thing on this screen that can say so.
+	//
+	// Resolved by ID through the same get_page_by_path('notes') the slot uses,
+	// never by comparing post_name here — two independent resolutions of "the
+	// Notes page" is exactly how the editor restriction and the slot end up
+	// pointing at different posts after a slug change.
+	if ( function_exists( 'get_page_by_path' ) && 'page' === ( $context->post->post_type ?? '' ) ) {
+		$sn_notes_page = get_page_by_path( 'notes' );
+		if ( $sn_notes_page && (int) $sn_notes_page->ID === (int) ( $context->post->ID ?? 0 ) ) {
+			return array( 'signal-noise/pillar-essays' );
+		}
+	}
+
 	// Every block the theme's templates / parts / patterns actually render.
 	// Enumerated from templates/*.html, parts/*.html, patterns/*.php — keep in
 	// sync when those gain a new block, or that block vanishes from the inserter.
