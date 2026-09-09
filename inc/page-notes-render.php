@@ -265,33 +265,44 @@ echo $sn_header_html;
 			      // path is two things to keep in step. ?>
 			<p class="sn-notes-subscribe">
 				Every note lands in whatever reader you already use, the day it goes up
-				&mdash; <a href="<?php echo esc_url( function_exists( 'sn_subscribe_feed_url' ) ? sn_subscribe_feed_url() : home_url( '/notes/feed/' ) ); ?>">RSS</a> or <a href="<?php echo esc_url( function_exists( 'sn_feed_json_pretty_url' ) ? sn_feed_json_pretty_url() : home_url( '/feed/json/' ) ); ?>">JSON Feed</a>. No reader yet? NetNewsWire, Reeder and Feedbin read both, among others. <span class="sn-notes-subscribe-privacy">Nothing is sent to me, and nothing about you is collected &mdash; a reader fetches the file the same way a browser fetches a page.</span><span class="sn-notes-cursor" aria-hidden="true"></span>
+				&mdash; <a href="<?php echo esc_url( function_exists( 'sn_subscribe_feed_url' ) ? sn_subscribe_feed_url() : home_url( '/notes/feed/' ) ); ?>">RSS</a> or <a href="<?php echo esc_url( function_exists( 'sn_feed_json_pretty_url' ) ? sn_feed_json_pretty_url() : home_url( '/feed/json/' ) ); ?>">JSON Feed</a>. No reader yet? NetNewsWire, Reeder and Feedbin read both, among others.<span class="sn-notes-cursor" aria-hidden="true"></span>
 			</p>
+			<p class="sn-notes-subscribe-privacy">Nothing is sent to me, and nothing about you is collected &mdash; a reader fetches the file the same way a browser fetches a page.</p>
 			<?php // The one sentence worth carrying over from that page. On a site
 			      // arguing about what gets recorded about people, how the feed
 			      // behaves is the point, not a footnote.
 			      //
-			      // v12.19.0: a <span> inside the paragraph above, not a <p> after
-			      // it. Not a rewrite — every word, both links and the 0.85 opacity
-			      // are unchanged. Two paragraphs each round their last line up to a
-			      // whole line box, so the pair cost 7 line boxes for 5 lines of
-			      // text; one paragraph costs what the text costs. That reclaimed
-			      // ~25px, which is part of what lets the slot above sit in this
-			      // column for free. The CSS note that these "read as a pair" is
-			      // more true now, not less. ?>
-			<?php if ( ! $sn_filtered ) : ?>
-			<?php // Corpus stats: entry count + last-updated, the side column's
-			      // closing stamp. Suppressed in search/tag state — there the
-			      // figures describe the filtered result set and would mislabel
-			      // the corpus (the count lives in the summary line below). ?>
-			<p class="sn-notes-meta">
-				<span><?php echo esc_html( sprintf( _n( '%d entry', '%d entries', $entry_count, 'signal-noise' ), $entry_count ) ); ?></span>
-				<?php if ( $latest_date ) : ?>
-					<span class="sn-notes-meta-bullet" aria-hidden="true">&middot;</span>
-					<span>Last updated <?php echo esc_html( $latest_date ); ?></span>
-				<?php endif; ?>
-			</p>
-			<?php endif; ?>
+			      // v12.19.0 folded this into the paragraph above as a <span> to
+			      // reclaim ~25px, because two paragraphs each round their last line
+			      // up to a whole line box. v12.20.2 puts it back.
+			      //
+			      // The 25px was borrowed to hold the notes at +0 when the pillar
+			      // rail moved into this column, and holding that number was never
+			      // worth what it cost: the merge turned two paragraphs with air
+			      // between them into one five-line wall of 12px grey text, sitting
+			      // directly under a bordered rail, in the column that used to be
+			      // the quiet one. The owner read it as crowded, and it was.
+			      //
+			      // A paragraph break is not decoration here. This sentence is a
+			      // claim about what the site does NOT collect, on a site whose
+			      // subject is what gets recorded about people. It earns its own
+			      // block. ?>
+			<?php // v12.20.2: the corpus stamp MOVED to the index section header
+			      // below, where the corpus it describes actually is.
+			      //
+			      // It was the third unrelated job in this column — the
+			      // programme (editorial), the feed address (utility) and a
+			      // statistic — all rendering in the same small grey mono. That
+			      // is not density, it is undifferentiated density: hierarchy
+			      // within each block and none between them. Removing a job is
+			      // what fixed the crowding; compressing the survivors, which is
+			      // what earlier attempts did, only ever bought pixels and cost
+			      // rhythm.
+			      //
+			      // It also had somewhere better to be: "40 entries" restated
+			      // the "40" already printed in the index header 200px down.
+			      // Moving it resolves a duplicate rather than relocating one.
+			      // The ! $sn_filtered guard travels with it. ?>
 		</div>
 	</header>
 
@@ -316,7 +327,21 @@ echo $sn_header_html;
 				<a class="sn-notes-section-clear" href="<?php echo esc_url( home_url( '/notes/' ) ); ?>">All notes</a>
 			<?php else : ?>
 				<p class="sn-notes-section-label" id="sn-index-heading">Notes: Index</p>
-				<span class="sn-notes-section-count"><?php echo esc_html( sprintf( '%02d', (int) $entry_count ) ); ?></span>
+				<?php // v12.20.2: the corpus stamp lives here now, beside the count it
+				      // was restating. Two corpus facts in one place, next to the
+				      // corpus. The last-updated half is conditional on the date
+				      // resolving, exactly as it was in the hero, and the whole
+				      // stamp inherits this branch's ! $sn_filtered guard: on a tag
+				      // or search view these figures would describe a filtered set
+				      // and mislabel the corpus. ?>
+				<span class="sn-notes-section-count"><?php
+					echo esc_html( sprintf( '%02d', (int) $entry_count ) );
+					if ( $latest_date ) {
+						echo ' ';
+						echo '<span class="sn-notes-meta-bullet" aria-hidden="true">&middot;</span> ';
+						echo esc_html( sprintf( 'Last updated %s', $latest_date ) );
+					}
+				?></span>
 			<?php endif; ?>
 		</div>
 
