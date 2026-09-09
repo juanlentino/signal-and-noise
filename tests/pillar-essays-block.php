@@ -37,6 +37,18 @@ $GLOBALS['__descriptors'] = array();
 function sn_theme_pillar_descriptors() { return $GLOBALS['__descriptors']; }
 $GLOBALS['__rt'] = array();
 function sn_notes_reading_time_for_slug( $slug ) { return $GLOBALS['__rt'][ $slug ] ?? '5 min'; }
+// Mirrors inc/abilities-helpers.php. render.php calls it to decide which rows
+// are sub-pillars; without it function_exists() is false and EVERY row renders
+// top-level — a silent pass for the subordination cases below.
+function sn_theme_pillar_designation_parts( $designation ) {
+	$designation = (string) $designation;
+	if ( '' === $designation ) { return null; }
+	$parts = explode( '.', $designation, 2 );
+	$major = trim( $parts[0] );
+	$minor = isset( $parts[1] ) ? trim( $parts[1] ) : '0';
+	if ( ! is_numeric( $major ) || ! is_numeric( $minor ) ) { return null; }
+	return array( (float) $major, (float) $minor );
+}
 
 function render_pillar_block() {
 	ob_start();
@@ -76,7 +88,10 @@ ok( 2 === substr_count( $out, 'sn-notes-pillar-dek' ), 'exactly the two non-empt
 ok( false !== strpos( $out, 'href="https://x.test/blog/provenance/over-detection/"' ), 'CTA is built from home_url(), correct under a subdirectory install' );
 ok( false === strpos( $out, 'href="/provenance/over-detection/"' ), 'CTA is no longer a bare root-relative path' );
 ok( 3 === substr_count( $out, 'sn-notes-pillar-cta' ), 'every card carries a Read essay CTA' );
-ok( 3 === substr_count( $out, '<article class="sn-notes-pillar">' ), 'one article per descriptor' );
+// v12.20.0: prefix, not the exact attribute. A sub-pillar row renders
+// class="sn-notes-pillar sn-notes-pillar--sub", so pinning the closing quote
+// counted 2 of 3 and read as a missing card rather than as a modifier.
+ok( 3 === substr_count( $out, '<article class="sn-notes-pillar' ), 'one article per descriptor' );
 
 // ── Singular count ───────────────────────────────────────────────────────
 $GLOBALS['__descriptors'] = array(
@@ -116,6 +131,63 @@ ok( false !== strpos( $editor_js, "registerBlockType( 'signal-noise/pillar-essay
 ok( false !== strpos( $editor_js, 'serverSideRender' ), 'editor preview uses ServerSideRender (not a bare text placeholder)' );
 $render_src = (string) file_get_contents( __DIR__ . '/../inc/page-notes-render.php' );
 ok( false === strpos( $render_src, 'sn-notes-pillar' ), 'the notes index no longer carries any pillar rail markup or CSS' );
+
+
+/* ── SUBORDINATION (v12.20.0) ───────────────────────────────────────────────
+ * major = the pillar, minor = an essay under it. Derived from the number the
+ * owner typed, never from position or count — so the treatment is right for
+ * zero sub-pillars, one, or nine without anyone revisiting render.php.
+ */
+$GLOBALS['__descriptors'] = array(
+	array( 'slug' => 'a', 'title' => 'Pillar one',    'dek' => '', 'designation' => '1.00' ),
+	array( 'slug' => 'b', 'title' => 'Under one',     'dek' => '', 'designation' => '1.01' ),
+	array( 'slug' => 'c', 'title' => 'Pillar two',    'dek' => '', 'designation' => '2.00' ),
+);
+$sub_out = render_pillar_block();
+ok( 1 === substr_count( $sub_out, 'sn-notes-pillar--sub' ), 'exactly one row is marked a sub-pillar — 1.00 and 2.00 are pillars' );
+ok( false !== strpos( $sub_out, 'Under one' ), 'and the rail still renders all three essays' );
+
+// The .00 boundary is the whole rule; assert it rather than trusting it.
+$GLOBALS['__descriptors'] = array(
+	array( 'slug' => 'a', 'title' => 'Zero minor', 'dek' => '', 'designation' => '3.00' ),
+);
+ok( false === strpos( render_pillar_block(), 'sn-notes-pillar--sub' ), 'X.00 is a PILLAR — a new paper landing is never subordinated' );
+
+$GLOBALS['__descriptors'] = array(
+	array( 'slug' => 'a', 'title' => 'Orphan sub', 'dek' => '', 'designation' => '2.01' ),
+);
+ok( false !== strpos( render_pillar_block(), 'sn-notes-pillar--sub' ), 'a sub-pillar is subordinated even when its own pillar is absent from the rail' );
+
+$GLOBALS['__descriptors'] = array(
+	array( 'slug' => 'a', 'title' => 'No number', 'dek' => '', 'designation' => '' ),
+	array( 'slug' => 'b', 'title' => 'Junk',      'dek' => '', 'designation' => 'draft' ),
+);
+ok( false === strpos( render_pillar_block(), 'sn-notes-pillar--sub' ), 'an undesignated or unparseable essay is top-level, never demoted by accident' );
+
+// Ready for anything: zero sub-pillars must render exactly as it did before.
+$GLOBALS['__descriptors'] = array(
+	array( 'slug' => 'a', 'title' => 'One', 'dek' => '', 'designation' => '1.00' ),
+	array( 'slug' => 'b', 'title' => 'Two', 'dek' => '', 'designation' => '2.00' ),
+);
+ok( false === strpos( render_pillar_block(), '--sub' ), 'a rail with no sub-pillars carries no subordination markup at all' );
+
+// ── The underline (v12.20.0) ───────────────────────────────────────────────
+// Compact rows are <a>, so WP's own theme.json rule underlines the whole row.
+// The override is one class deep, which beats `:root :where(a…:hover)`.
+$pillar_css_raw = (string) file_get_contents( __DIR__ . '/../blocks/pillar-essays/style.css' );
+// COMMENT-STRIPPED, like every sibling scan in this suite. The hero-scope check
+// below matched the COMMENT explaining why the hero scope was removed, and
+// reported the bug as still present in the fixed file.
+$pillar_css = (string) preg_replace( '#/\*.*?\*/#s', '', $pillar_css_raw );
+ok( $pillar_css !== $pillar_css_raw, 'VACUITY: the stylesheet really does carry comments, so stripping them is doing work' );
+ok( 1 === preg_match( '/\.sn-notes-pillar:hover[^{]*\{[^}]*text-decoration:\s*none/s', $pillar_css ), 'the row kills the inherited hover underline' );
+ok( 1 === preg_match( '/\.sn-notes-pillar:focus-visible\s*\{[^}]*outline:/s', $pillar_css ), 'and replaces it with a real focus indicator — removing a decoration must not strand keyboard users' );
+ok( false === strpos( $pillar_css, 'text-decoration: none !important' ), 'without reaching for !important (the theme.json rule is only one specificity point up)' );
+
+// Subordination styling must key off the DENSITY, not the placement. The first
+// cut scoped the indent to .sn-notes-hero-side, so a compact rail anywhere else
+// silently rendered sub-pillars as peers.
+ok( 0 === preg_match( '/\.sn-notes-hero-side[^{]*--sub/s', $pillar_css ), 'the sub-pillar indent is not scoped to the hero — it belongs to the density' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

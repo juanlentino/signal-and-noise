@@ -60,6 +60,23 @@ $sn_heading_id = function_exists( 'wp_unique_id' ) ? wp_unique_id( 'sn-pillars-h
 		$sn_slug        = (string) ( $sn_pillar['slug'] ?? '' );
 		$sn_designation = trim( (string) ( $sn_pillar['designation'] ?? '' ) );
 		$sn_number      = '' !== $sn_designation ? $sn_designation : sprintf( '%02d', $sn_pillar_i + 1 );
+		// SUBORDINATION (v12.20.0). The designation already encodes the shape of
+		// the programme: major = the pillar, minor = an essay underneath it.
+		// 1.00 is pillar one itself; 1.01 sits under it. Until now the rail
+		// rendered all of them as peers, which is the one thing the numbering
+		// says they are not.
+		//
+		// Derived, never a count or a position: a rail holding only 1.00 and
+		// 2.01 must still subordinate the second, and an essay with no
+		// designation at all is top-level rather than a straggler. That is what
+		// "ready for anything" has to mean here — the treatment follows from the
+		// number the owner typed, so zero sub-pillars, one, or nine all render
+		// correctly without anyone revisiting this file.
+		$sn_parts       = function_exists( 'sn_theme_pillar_designation_parts' )
+			? sn_theme_pillar_designation_parts( $sn_designation )
+			: null;
+		$sn_is_sub      = is_array( $sn_parts ) && $sn_parts[1] > 0;
+		$sn_row_class   = 'sn-notes-pillar' . ( $sn_is_sub ? ' sn-notes-pillar--sub' : '' );
 		// v11.4.6: home_url(), not a bare '/<slug>/'. Matches what the command
 		// palette already emits for the same pillar, and a root-relative href
 		// resolves outside the install on a subdirectory setup. CMA audit
@@ -69,7 +86,7 @@ $sn_heading_id = function_exists( 'wp_unique_id' ) ? wp_unique_id( 'sn-pillars-h
 		?>
 
 		<?php if ( $sn_compact ) : ?>
-		<a class="sn-notes-pillar" href="<?php echo esc_url( $sn_href ); ?>">
+		<a class="<?php echo esc_attr( $sn_row_class ); ?>" href="<?php echo esc_url( $sn_href ); ?>">
 			<span class="sn-notes-pillar-number" aria-hidden="true">&#8470; <?php echo esc_html( $sn_number ); ?></span>
 			<span class="sn-notes-pillar-body">
 				<span class="sn-notes-pillar-title"><?php echo esc_html( (string) ( $sn_pillar['title'] ?? '' ) ); ?></span>
@@ -79,7 +96,7 @@ $sn_heading_id = function_exists( 'wp_unique_id' ) ? wp_unique_id( 'sn-pillars-h
 			</span>
 		</a>
 		<?php else : ?>
-		<article class="sn-notes-pillar">
+		<article class="<?php echo esc_attr( $sn_row_class ); ?>">
 			<span class="sn-notes-pillar-number" aria-hidden="true">&#8470; <?php echo esc_html( $sn_number ); ?></span>
 			<div class="sn-notes-pillar-body">
 				<p class="sn-notes-pillar-eyebrow">Pillar Essay<?php if ( '' !== $sn_time ) : ?> &middot; <?php echo esc_html( $sn_time ); ?><?php endif; ?></p>
