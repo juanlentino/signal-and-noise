@@ -12,6 +12,9 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Fixed
+- Editing the Notes page now offers only the Pillar Essays block. Its body is not a page body — it renders into one place, the hero's right column opposite the title — and the editor had no way of saying so, which left a full palette pointed at a 577px rail. Every other Page, and the Site Editor, are untouched.
+
 ## [12.19.0] - 2026-09-09 — the pillar rail moves into the notes hero
 
 ### Added

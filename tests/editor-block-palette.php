@@ -40,6 +40,20 @@ if ( ! function_exists( 'add_filter' ) ) {
 	}
 }
 
+// get_page_by_path stub — firewall 3 resolves the Notes Page through it, so the
+// suite controls which post IS the Notes page. $GLOBALS so a case can move it.
+$GLOBALS['sn_test_notes_page_id'] = 99;
+if ( ! function_exists( 'get_page_by_path' ) ) {
+	function get_page_by_path( $path ) {
+		if ( 'notes' !== $path || ! isset( $GLOBALS['sn_test_notes_page_id'] ) ) {
+			return null;
+		}
+		$p     = new stdClass();
+		$p->ID = (int) $GLOBALS['sn_test_notes_page_id'];
+		return $p;
+	}
+}
+
 require_once __DIR__ . '/../inc/editor-block-palette.php';
 
 // --- Harness ------------------------------------------------------------
@@ -180,6 +194,51 @@ ha_true(
 echo "\nTest: pre-set array \$allowed (peer plugin) → returned unchanged\n";
 $peer = array( 'core/paragraph', 'core/heading' );
 ha_eq( $peer, sn_theme_allowed_blocks( $peer, $ctx_post ), 'existing array allowlist is not clobbered, even in post context' );
+
+
+/* ── Firewall 3 (v12.19.1): the Notes body is a SLOT ───────────────────────
+ * /notes renders from inc/page-notes-render.php; v12.19.0 made the Page's
+ * post_content render into ONE place inside it — the hero's right column.
+ * The editor cannot say that on its own, so the palette says it: on that one
+ * Page, the only insertable block is the rail the slot exists for.
+ *
+ * Resolution is by ID through get_page_by_path('notes'), the same call the
+ * slot makes. The control below is the point of the whole case: a DIFFERENT
+ * page must still get the full curated palette, or this is not a firewall,
+ * it is a site-wide lockout.
+ */
+echo "\nTest: the Notes Page → only the pillar rail is insertable\n";
+class SN_Test_Notes_Post {
+	public $ID        = 99;
+	public $post_type = 'page';
+}
+$ctx_notes       = new SN_Test_Editor_Context();
+$ctx_notes->post = new SN_Test_Notes_Post();
+$notes_allowed   = sn_theme_allowed_blocks( true, $ctx_notes );
+ha_eq( array( 'signal-noise/pillar-essays' ), $notes_allowed, 'the Notes Page offers exactly the pillar rail — the block its slot exists for' );
+
+echo "\nTest: CONTROL — any other Page keeps the full curated palette\n";
+class SN_Test_Other_Page {
+	public $ID        = 1490;
+	public $post_type = 'page';
+}
+$ctx_other       = new SN_Test_Editor_Context();
+$ctx_other->post = new SN_Test_Other_Page();
+$other_allowed   = sn_theme_allowed_blocks( true, $ctx_other );
+ha_true( count( $other_allowed ) > 20, 'a different Page is untouched — /provenance still reaches the whole palette (' . count( $other_allowed ) . ' blocks)' );
+ha_true( in_array( 'signal-noise/pillar-essays', $other_allowed, true ), 'and can still insert the rail at full density' );
+
+echo "\nTest: CONTROL — the Site Editor is never narrowed\n";
+$ctx_site        = new SN_Test_Editor_Context();
+$ctx_site->post  = new SN_Test_Notes_Post();
+$ctx_site->name  = 'core/edit-site';
+ha_eq( true, sn_theme_allowed_blocks( true, $ctx_site ), 'editing the Notes Page in the Site Editor keeps the full registered palette' );
+
+echo "\nTest: CONTROL — no Notes page resolved → nothing is narrowed\n";
+$GLOBALS['sn_test_notes_page_id'] = null;
+$fallback = sn_theme_allowed_blocks( true, $ctx_notes );
+ha_true( count( $fallback ) > 20, 'an unresolvable Notes page fails OPEN to the curated palette, never to a one-block editor' );
+$GLOBALS['sn_test_notes_page_id'] = 99;
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
