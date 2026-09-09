@@ -71,7 +71,14 @@ $out = render_pillar_block();
 
 ok( false !== strpos( $out, 'sn-notes-pillars-section' ), 'wrapper carries .sn-notes-pillars-section (block-scoped CSS hook)' );
 ok( false !== strpos( $out, '>Pillar Essays<' ), 'section label is "Pillar Essays"' );
-ok( false !== strpos( $out, '>3 essays<' ), 'plain "N essays" count (no positional "03 / 03" claim)' );
+// v12.20.1: the header counts the two kinds separately. The fixture is 1.00,
+// 1.01 and an undesignated essay — two pillars (undesignated renders as one)
+// and one sub-pillar. "3 essays" was true but undid the distinction the rows
+// draw: a reader who can SEE 1.01 sitting under 1.00 was told three peers.
+ok( false !== strpos( $out, '>2 pillars &middot; 1 sub-pillar<' ) || false !== strpos( $out, '>2 pillars · 1 sub-pillar<' ), 'the count separates pillars from sub-pillars' );
+// The original intent of this assertion, kept: no positional "03 / 03" claim,
+// which designations made false.
+ok( false === strpos( $out, ' / ' ), 'and still makes no positional claim' );
 ok( false === strpos( $out, '03 / 03' ), 'the old positional counter is retired' );
 ok( false !== strpos( $out, '&#8470; 1.00' ), 'designation renders on the № line when set' );
 ok( false !== strpos( $out, '&#8470; 1.01' ), 'each designated card carries its own designation' );
@@ -98,7 +105,8 @@ $GLOBALS['__descriptors'] = array(
 	array( 'slug' => 'provenance/solo', 'title' => 'Solo', 'dek' => '', 'last_path' => 'solo', 'date' => '2026-01-01 00:00:00', 'designation' => '' ),
 );
 $solo = render_pillar_block();
-ok( false !== strpos( $solo, '>1 essay<' ), 'singular "1 essay" count' );
+ok( false !== strpos( $solo, '>1 pillar<' ), 'singular "1 pillar" count' );
+ok( false === strpos( $solo, 'sub-pillar' ), 'and NO "0 sub-pillars" — an absence is not advertised, since there may never be another' );
 ok( false !== strpos( $solo, '&#8470; 01' ), 'single undesignated card numbers № 01' );
 
 // ── Escaping: title/dek sinks entity-escape hostile markup ───────────────
@@ -188,6 +196,25 @@ ok( false === strpos( $pillar_css, 'text-decoration: none !important' ), 'withou
 // cut scoped the indent to .sn-notes-hero-side, so a compact rail anywhere else
 // silently rendered sub-pillars as peers.
 ok( 0 === preg_match( '/\.sn-notes-hero-side[^{]*--sub/s', $pillar_css ), 'the sub-pillar indent is not scoped to the hero — it belongs to the density' );
+
+
+// ── The count follows the rows (v12.20.1) ─────────────────────────────────
+$GLOBALS['__descriptors'] = array(
+	array( 'slug' => 'a', 'title' => 'P1',  'dek' => '', 'designation' => '1.00' ),
+	array( 'slug' => 'b', 'title' => 'S1',  'dek' => '', 'designation' => '1.01' ),
+	array( 'slug' => 'c', 'title' => 'S2',  'dek' => '', 'designation' => '1.02' ),
+	array( 'slug' => 'd', 'title' => 'P2',  'dek' => '', 'designation' => '2.00' ),
+);
+$mixed = render_pillar_block();
+ok( 1 === preg_match( '/>2 pillars (?:&middot;|·) 2 sub-pillars</', $mixed ), 'plurals are independent — 2 pillars and 2 sub-pillars' );
+ok( 2 === substr_count( $mixed, 'sn-notes-pillar--sub' ), 'and the header agrees with the rows it heads' );
+
+// A sub-pillar whose own pillar is absent still counts as a sub-pillar.
+$GLOBALS['__descriptors'] = array(
+	array( 'slug' => 'a', 'title' => 'Orphan', 'dek' => '', 'designation' => '2.01' ),
+);
+$orphan = render_pillar_block();
+ok( 1 === preg_match( '/>0 pillars (?:&middot;|·) 1 sub-pillar</', $orphan ), 'an orphan sub-pillar is counted honestly as 0 pillars, not rounded up' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

@@ -41,6 +41,37 @@ if ( ! is_array( $sn_pillars ) || array() === $sn_pillars ) {
 // placement. The same block is on /provenance at full weight in the same
 // request-shape, so a global switch would be wrong by construction.
 $sn_compact = ! empty( $attributes['compact'] );
+
+// ONE classifier for both the header count and the per-row class. Two
+// independent readings of "is this a sub-pillar?" is how a header ends up
+// disagreeing with the rows underneath it.
+$sn_is_sub_fn = static function ( $designation ) {
+	if ( ! function_exists( 'sn_theme_pillar_designation_parts' ) ) {
+		return false;
+	}
+	$parts = sn_theme_pillar_designation_parts( $designation );
+	return is_array( $parts ) && $parts[1] > 0;
+};
+
+// v12.20.1: count the two kinds separately. "3 essays" was true but it undid
+// the distinction the rows had just drawn — a reader who can see that 1.01
+// sits under 1.00 is told the rail holds three peers. An undesignated essay
+// counts as a pillar, matching how it renders.
+$sn_n_pillars = 0;
+$sn_n_subs    = 0;
+foreach ( $sn_pillars as $sn_p ) {
+	if ( $sn_is_sub_fn( trim( (string) ( $sn_p['designation'] ?? '' ) ) ) ) {
+		++$sn_n_subs;
+	} else {
+		++$sn_n_pillars;
+	}
+}
+$sn_count_text = sprintf( _n( '%d pillar', '%d pillars', $sn_n_pillars, 'signal-noise' ), $sn_n_pillars );
+if ( $sn_n_subs > 0 ) {
+	// Only when they exist. A trailing "0 sub-pillars" would advertise an
+	// absence, and the owner's framing is that there may never be another.
+	$sn_count_text .= ' · ' . sprintf( _n( '%d sub-pillar', '%d sub-pillars', $sn_n_subs, 'signal-noise' ), $sn_n_subs );
+}
 $sn_wrapper = get_block_wrapper_attributes( array(
 	'class' => 'sn-notes-pillars-section' . ( $sn_compact ? ' is-compact' : '' ),
 ) );
@@ -51,7 +82,7 @@ $sn_heading_id = function_exists( 'wp_unique_id' ) ? wp_unique_id( 'sn-pillars-h
 <section <?php echo $sn_wrapper; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- core-escaped attribute markup from get_block_wrapper_attributes(). ?> aria-labelledby="<?php echo esc_attr( $sn_heading_id ); ?>">
 	<div class="sn-notes-section-wrap">
 		<p class="sn-notes-section-label" id="<?php echo esc_attr( $sn_heading_id ); ?>">Pillar Essays</p>
-		<span class="sn-notes-section-count"><?php echo esc_html( sprintf( _n( '%d essay', '%d essays', count( $sn_pillars ), 'signal-noise' ), count( $sn_pillars ) ) ); ?></span>
+		<span class="sn-notes-section-count"><?php echo esc_html( $sn_count_text ); ?></span>
 	</div>
 
 	<div class="sn-notes-pillars">
@@ -72,10 +103,7 @@ $sn_heading_id = function_exists( 'wp_unique_id' ) ? wp_unique_id( 'sn-pillars-h
 		// "ready for anything" has to mean here — the treatment follows from the
 		// number the owner typed, so zero sub-pillars, one, or nine all render
 		// correctly without anyone revisiting this file.
-		$sn_parts       = function_exists( 'sn_theme_pillar_designation_parts' )
-			? sn_theme_pillar_designation_parts( $sn_designation )
-			: null;
-		$sn_is_sub      = is_array( $sn_parts ) && $sn_parts[1] > 0;
+		$sn_is_sub      = $sn_is_sub_fn( $sn_designation );
 		$sn_row_class   = 'sn-notes-pillar' . ( $sn_is_sub ? ' sn-notes-pillar--sub' : '' );
 		// v11.4.6: home_url(), not a bare '/<slug>/'. Matches what the command
 		// palette already emits for the same pillar, and a root-relative href

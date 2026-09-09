@@ -12,6 +12,9 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Changed
+- The pillar rail's header counts pillars and sub-pillars separately — "2 pillars · 1 sub-pillar" rather than "3 essays". The rows had just been taught to show which is which, and the header was still calling them peers. No sub-pillars means no second half, rather than a "0 sub-pillars" that advertises an absence.
+
 ## [12.20.0] - 2026-09-09 — sub-pillars know their place
 
 ### Added
