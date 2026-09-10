@@ -74,5 +74,55 @@ foreach ( $selectors as $sel ) {
 	ok( 2 === substr_count( $sel, '.' ), "selector keeps two-class specificity to outrank core's layout rule — got: $sel" );
 }
 
+
+/* ── THE UNORDERED STEPS VARIANT (v12.20.5) ────────────────────────────────
+ * The counter is declared on `.sn-steps__list`, NOT on `<ol>`, so swapping the
+ * tag to `<ul>` fixes the semantics and leaves 01/02/03 rendering. Verified in
+ * a browser against the live stylesheet before this modifier was written:
+ * after replacing the <ol> with a <ul> carrying identical classes, every
+ * li::before still computed to counter(sn-step, decimal-leading-zero).
+ *
+ * That is the failure this variant prevents — markup announcing "unordered"
+ * while the pixels say "ordered", which tells a sighted reader and a screen
+ * reader two different things.
+ */
+preg_match( '/\.sn-steps__list--plain li \{(.*?)\}/s', $css, $m_plain );
+$sn_plain = $m_plain[1] ?? '';
+ok( '' !== $sn_plain, 'the unordered steps variant exists' );
+ok(
+	1 === preg_match( '/counter-increment:\s*none/', $sn_plain ),
+	'it stops the counter — otherwise the numerals persist through a tag swap'
+);
+
+preg_match( '/\.sn-steps__list--plain li::before \{(.*?)\}/s', $css, $m_marker );
+$sn_marker = $m_marker[1] ?? '';
+ok( '' !== $sn_marker, 'and it overrides the ::before marker' );
+ok(
+	0 === preg_match( '/counter\s*\(/', $sn_marker ),
+	'with something that is NOT a counter — the whole point of the variant'
+);
+ok(
+	1 === preg_match( '/content:\s*"\\\\2013"/', $sn_marker ) || false !== strpos( $sn_marker, '2013' ),
+	'an en-dash, matching the theme\'s existing unordered-list idiom'
+);
+
+// The variant must not re-declare what it inherits: the bleed panel, the
+// list-style reset and the label all come from the base rules. A variant that
+// restates them drifts from the base the first time the base changes.
+foreach ( array( 'background', 'list-style', 'float' ) as $inherited ) {
+	ok(
+		false === strpos( $sn_plain, $inherited . ':' ),
+		"the variant does not restate '$inherited' — it inherits from .sn-steps__list"
+	);
+}
+
+// And the BASE must keep its numerals: this variant is opt-in, so every
+// existing steps list is unchanged.
+preg_match( '/\.sn-steps__list li::before \{(.*?)\}/s', $css, $m_base );
+ok(
+	1 === preg_match( '/counter\s*\(\s*sn-step/', $m_base[1] ?? '' ),
+	'CONTROL: the base list still renders 01/02/03 — the variant is opt-in'
+);
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
