@@ -20,6 +20,15 @@
 		"compact": {
 			"type": "boolean",
 			"default": false
+		},
+		"headingLevel": {
+			"type": "integer",
+			"default": 2,
+			"enum": [
+				2,
+				3,
+				4
+			]
 		}
 	},
 	"editorScript": "signal-noise-blocks-editor",

@@ -42,6 +42,22 @@ if ( ! is_array( $sn_pillars ) || array() === $sn_pillars ) {
 // request-shape, so a global switch would be wrong by construction.
 $sn_compact = ! empty( $attributes['compact'] );
 
+// HEADING LEVEL (v12.20.3). The full card's title has always been an <h2>,
+// which is correct while the rail IS the page — /provenance today. It stops
+// being correct the moment the page grows H2 sections of its own: three essay
+// titles then read as siblings of "What would show this is wrong", i.e. as
+// top-level parts of the document rather than items in a list.
+//
+// The block cannot know its context, so the owner states it. Default 2 keeps
+// every existing placement byte-identical; 3 is for a rail sitting underneath
+// page prose. Clamped to the declared enum rather than trusted: block
+// attributes arrive from post content, and an h7 is not a thing.
+$sn_h_level = (int) ( $attributes['headingLevel'] ?? 2 );
+if ( ! in_array( $sn_h_level, array( 2, 3, 4 ), true ) ) {
+	$sn_h_level = 2;
+}
+$sn_h_tag = 'h' . $sn_h_level;
+
 // ONE classifier for both the header count and the per-row class. Two
 // independent readings of "is this a sub-pillar?" is how a header ends up
 // disagreeing with the rows underneath it.
@@ -128,7 +144,7 @@ $sn_heading_id = function_exists( 'wp_unique_id' ) ? wp_unique_id( 'sn-pillars-h
 			<span class="sn-notes-pillar-number" aria-hidden="true">&#8470; <?php echo esc_html( $sn_number ); ?></span>
 			<div class="sn-notes-pillar-body">
 				<p class="sn-notes-pillar-eyebrow">Pillar Essay<?php if ( '' !== $sn_time ) : ?> &middot; <?php echo esc_html( $sn_time ); ?><?php endif; ?></p>
-				<h2 class="sn-notes-pillar-title"><?php echo esc_html( (string) ( $sn_pillar['title'] ?? '' ) ); ?></h2>
+				<<?php echo esc_html( $sn_h_tag ); ?> class="sn-notes-pillar-title"><?php echo esc_html( (string) ( $sn_pillar['title'] ?? '' ) ); ?></<?php echo esc_html( $sn_h_tag ); ?>>
 				<?php if ( '' !== (string) ( $sn_pillar['dek'] ?? '' ) ) : ?>
 				<p class="sn-notes-pillar-dek"><?php echo esc_html( (string) $sn_pillar['dek'] ); ?></p>
 				<?php endif; ?>
