@@ -12,6 +12,9 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Added
+- The Pillar Essays block takes a heading level for its essay titles. They were always `<h2>`, which is right while the rail is the page — as on /provenance today — and wrong the moment that page grows sections of its own, because three essay titles then read as siblings of those sections instead of items in a list. Default stays H2, so nothing existing changes; pick H3 in the block sidebar when the rail sits under page prose.
+
 ## [12.20.2] - 2026-09-09 — the accent stops being a texture
 
 ### Fixed

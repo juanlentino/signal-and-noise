@@ -50,7 +50,14 @@ function sn_theme_pillar_designation_parts( $designation ) {
 	return array( (float) $major, (float) $minor );
 }
 
-function render_pillar_block() {
+// v12.20.3: takes attributes. It never did, so every call rendered the DEFAULT
+// density and level — which meant the compact branch had never been exercised
+// by this suite at all, and a new case setting $attributes at global scope was
+// silently testing the default and passing for the wrong reason. render.php
+// reads $attributes from its including scope, so the parameter has to carry
+// that exact name.
+function render_pillar_block( $attrs = array() ) {
+	$attributes = (array) $attrs;
 	ob_start();
 	include __DIR__ . '/../blocks/pillar-essays/render.php';
 	return ob_get_clean();
@@ -215,6 +222,57 @@ $GLOBALS['__descriptors'] = array(
 );
 $orphan = render_pillar_block();
 ok( 1 === preg_match( '/>0 pillars (?:&middot;|·) 1 sub-pillar</', $orphan ), 'an orphan sub-pillar is counted honestly as 0 pillars, not rounded up' );
+
+
+/* ── HEADING LEVEL (v12.20.3) ──────────────────────────────────────────────
+ * The full card's title was always <h2>. Correct while the rail IS the page
+ * (/provenance today); wrong the moment the page grows H2 sections of its own,
+ * because three essay titles then read as siblings of those sections rather
+ * than as items in a list. The block cannot know its context, so the owner
+ * states it — and the DEFAULT must stay 2, or every existing placement
+ * silently changes its outline.
+ */
+$GLOBALS['__descriptors'] = array(
+	array( 'slug' => 'a', 'title' => 'One', 'dek' => 'd', 'designation' => '1.00' ),
+);
+
+$h_default = render_pillar_block();
+ok( 1 === substr_count( $h_default, '<h2 class="sn-notes-pillar-title"' ), 'DEFAULT is h2 — no existing placement changes' );
+
+$h3 = render_pillar_block( array( 'headingLevel' => 3 ) );
+ok( 1 === substr_count( $h3, '<h3 class="sn-notes-pillar-title"' ) && false === strpos( $h3, '<h2 class="sn-notes-pillar-title"' ), 'headingLevel 3 renders h3, and no stray h2' );
+ok( false !== strpos( $h3, '</h3>' ), 'and CLOSES with the same tag — an unclosed or mismatched heading is invalid markup' );
+
+ok( false !== strpos( render_pillar_block( array( 'headingLevel' => 4 ) ), '<h4 class="sn-notes-pillar-title"' ), 'headingLevel 4 renders h4' );
+
+// Block attributes arrive from post content. Anything outside the declared
+// enum must fall back, not interpolate — <h7> is not a thing, and <h0> would
+// be an injection point if the value were trusted.
+foreach ( array( 7, 0, -1, 'h3', null, array( 3 ) ) as $bad ) {
+	$out_bad = render_pillar_block( array( 'headingLevel' => $bad ) );
+	ok(
+		1 === substr_count( $out_bad, '<h2 class="sn-notes-pillar-title"' ),
+		'out-of-enum headingLevel (' . ( is_scalar( $bad ) ? var_export( $bad, true ) : gettype( $bad ) ) . ') falls back to h2'
+	);
+}
+
+// '3; DROP' is NOT a fallback case and asserting that it was is how a test
+// starts describing a bug that is not there: (int) casts it to 3 BEFORE the
+// enum check, so it renders a perfectly valid h3. The property worth pinning
+// is that the cast happens first — no fragment of the raw value survives into
+// the markup.
+$out_inj = render_pillar_block( array( 'headingLevel' => '3; DROP TABLE' ) );
+ok( 1 === substr_count( $out_inj, '<h3 class="sn-notes-pillar-title"' ), "a numeric-leading string casts to its integer and renders that level" );
+ok( false === stripos( $out_inj, 'DROP' ), 'and nothing of the raw value reaches the output — the cast precedes the check' );
+ok( 0 === preg_match( '/<h[^234][^>]*sn-notes-pillar-title/', $out_inj ), 'the emitted tag is always one of h2/h3/h4' );
+
+// Compact renders spans, not headings — the control is hidden there, and the
+// render must agree with the editor about that.
+$h_compact = render_pillar_block( array( 'compact' => true, 'headingLevel' => 3 ) );
+ok( false === strpos( $h_compact, 'sn-notes-pillar-title"' ) || 0 === preg_match( '/<h[1-6][^>]*sn-notes-pillar-title/', $h_compact ), 'compact renders NO heading regardless of the level — its titles are spans' );
+// And while the harness can finally reach it: the compact branch itself.
+ok( 1 === substr_count( $h_compact, '<a class="sn-notes-pillar' ), 'compact renders the row as a link (first coverage of this branch in this suite)' );
+ok( false === strpos( $h_compact, 'Read essay' ), 'and drops the CTA' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

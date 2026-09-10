@@ -60,12 +60,25 @@
 								: 'Full cards — dek and a Read essay link.',
 							checked: compact,
 							onChange: function ( v ) { props.setAttributes( { compact: !! v } ); }
+						} ),
+						// Only the full card renders a heading; compact titles are
+						// spans, so offering the control there would be a dead knob.
+						compact ? null : el( components.SelectControl, {
+							label: 'Essay title heading level',
+							help: 'Use H3 when this rail sits under page sections of its own — otherwise the essay titles read as top-level parts of the page.',
+							value: String( props.attributes.headingLevel || 2 ),
+							options: [
+								{ label: 'H2 — the rail is the page', value: '2' },
+								{ label: 'H3 — the rail sits under page sections', value: '3' },
+								{ label: 'H4', value: '4' }
+							],
+							onChange: function ( v ) { props.setAttributes( { headingLevel: parseInt( v, 10 ) || 2 } ); }
 						} ) ) )
 				: null;
 			var body = serverSideRender
 				? el( serverSideRender, {
 					block: 'signal-noise/pillar-essays',
-					attributes: { compact: compact }
+					attributes: { compact: compact, headingLevel: props.attributes.headingLevel || 2 }
 				} )
 				: 'Pillar Essays: renders the live pillar essay rail from published designated Pages.';
 			return el( Fragment, {}, panel, el( 'div', bp, body ) );

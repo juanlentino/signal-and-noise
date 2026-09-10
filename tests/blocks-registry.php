@@ -138,10 +138,19 @@ foreach ( $manifests as $manifest ) {
 
 	// Server-previewed blocks are exempt: an inserter example would fire a REST
 	// render per hover. Derived from the registration, never from a name list.
-	$reg_pos       = strpos( $editor_js, "'" . $name . "'" );
+	// The region is from THIS registration to the NEXT one (or end of file) —
+	// not a fixed byte window. v12.20.3 used substr(..., 1400) and adding one
+	// SelectControl to the panel pushed serverSideRender past the cut-off, so
+	// the exemption evaporated and the rule fired on a block that had not
+	// changed in the way the rule cares about. A proximity window measures the
+	// window, not the code.
+	$reg_pos        = strpos( $editor_js, "'" . $name . "'" );
 	$server_preview = false;
 	if ( false !== $reg_pos ) {
-		$block_body     = substr( $editor_js, $reg_pos, 1400 );
+		$next_reg   = strpos( $editor_js, 'registerBlockType', $reg_pos + 1 );
+		$block_body = false !== $next_reg
+			? substr( $editor_js, $reg_pos, $next_reg - $reg_pos )
+			: substr( $editor_js, $reg_pos );
 		$server_preview = false !== strpos( $block_body, 'serverSideRender' );
 	}
 	if ( $server_preview ) {
