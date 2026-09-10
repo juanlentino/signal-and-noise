@@ -238,6 +238,35 @@ main { view-transition-name: sn-main; }
 	font-weight: 600;
 }
 
+/* UNORDERED VARIANT (v12.20.5). The counter lives on .sn-steps__list, not on
+   <ol>, so swapping the tag to <ul> fixes the SEMANTICS and leaves 01/02/03
+   rendering — markup saying "unordered", pixels saying "ordered", and sighted
+   and screen-reader readers told different things. This modifier makes the
+   two agree.
+
+   For a set whose items are ALTERNATIVES rather than steps: "if you make
+   records / if you hold a rights budget / if you work on standards" is a
+   choice, and numbering it tells a reader to go in order.
+
+   En-dash rather than a disc: the theme already uses that marker for an
+   unordered prose list (.sn-resume-list, resume.css) — but that stylesheet is
+   conditionally enqueued and absent from the bundle most templates load, so
+   the idiom is repeated here rather than reached for across a file that may
+   not be present. Keep the two in step if either changes.
+
+   Everything else — the bleed panel, the label, the reset list-style — is
+   inherited from .sn-steps__list above and deliberately not restated. */
+.sn-steps__list--plain li {
+	counter-increment: none;
+	padding-left: 1.4rem;
+}
+.sn-steps__list--plain li::before {
+	content: "\2013";
+	font-size: 1.05rem;
+	font-weight: 400;
+	color: var(--wp--preset--color--rust);
+}
+
 /* ─── v9.2.0: post-closing template part (parts/post-closing.html) ──── */
 
 .sn-post-closing {

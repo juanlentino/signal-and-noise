@@ -12,6 +12,9 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Added
+- The steps list takes an unordered variant. The 01/02/03 numerals come from a CSS counter on the list class, not from the `<ol>` tag, so switching a steps list to `<ul>` fixed its semantics and left the numbers rendering — markup saying unordered, pixels saying ordered. `sn-steps__list--plain` stops the counter and marks items with an en-dash instead, for sets whose items are alternatives rather than steps. The bleed panel and label are unchanged.
+
 ## [12.20.4] - 2026-09-10 — sidenotes work on pages
 
 ### Fixed
