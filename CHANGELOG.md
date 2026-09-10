@@ -12,11 +12,8 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+## [12.20.4] - 2026-09-10 — sidenotes work on pages
+
 ### Fixed
 - Sidenotes work on Pages, not just notes. Both rules — the wide float and the narrow inline fallback — were scoped to `.single-post`, so a sidenote inserted on a Page rendered with no styling at all: not a degraded sidenote, an invisible one. They are now scoped to the prose column, which is what the device actually needs and the same scope the pull-quote already used — which is exactly why that block worked everywhere and this one did not.
-
-## [12.20.3] - 2026-09-10 — the rail knows where it sits
-
-### Added
-- The Pillar Essays block takes a heading level for its essay titles. They were always `<h2>`, which is right while the rail is the page — as on /provenance today — and wrong the moment that page grows sections of its own, because three essay titles then read as siblings of those sections instead of items in a list. Default stays H2, so nothing existing changes; pick H3 in the block sidebar when the rail sits under page prose.
 
