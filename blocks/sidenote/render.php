@@ -3,8 +3,13 @@
  * Dynamic render for signal-noise/sidenote.
  *
  * $attributes is supplied by core's block render context. Emits the .sn-sidenote
- * paragraph that assets/css/critical.css targets (float-right at wide / inline
- * hairline at narrow). Content is wp_kses_post'd — rich inline text is allowed.
+ * paragraph that assets/css/article.css targets (float-right at >=1280px /
+ * inline hairline below). Content is wp_kses_post'd — rich inline text allowed.
+ *
+ * v12.20.4: this said critical.css. The rules are in article.css and are the
+ * only two in the theme — a stale pointer sends the next reader to the wrong
+ * file to debug a device whose whole behaviour lives in two media queries.
+ * Verified by grepping every stylesheet, not by trusting either comment.
  *
  * @package SignalNoise
  * @since 9.11.0
