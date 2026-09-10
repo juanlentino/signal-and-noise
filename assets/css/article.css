@@ -66,7 +66,20 @@ main { view-transition-name: sn-main; }
    the box frame must target it too, not only the pattern wrapper, or the block
    renders as bare text. */
 
-/* Bleed 1rem past the text column. NOT negative margins: these render as
+/* box-sizing: border-box is load-bearing, not hygiene. `width: calc(100% + 2rem)`
+   sizes the CONTENT box, so under content-box the horizontal padding is added ON
+   TOP of the intended 1rem bleed: 2rem of bleed + 3rem of padding = 100% + 80px.
+   Measured on /provenance at 375px (2026-09-10): the pull quote rendered 423px
+   wide against a 343px column and ran 48px past the viewport, clipped rather
+   than scrollable, slicing the last character off six lines.
+
+   The three .sn-pattern-* siblings never showed it because they are core
+   `wp:group` blocks and core already gives those border-box. Only .sn-pull-quote
+   is a custom <aside> (blocks/pull-quote/render.php), so only it inherited
+   nothing. The property is declared on all four so the idiom stops depending on
+   who happens to render the element.
+
+   Bleed 1rem past the text column. NOT negative margins: these render as
    direct children of .is-layout-constrained, where core sets
    margin-left/right auto !important (0,1,0), silently discarding the
    horizontal half of any margin shorthand. left/width sidestep the
@@ -75,6 +88,7 @@ main { view-transition-name: sn-main; }
 .wp-block-post-content .sn-pattern-pull-quote,
 .wp-block-post-content .sn-pull-quote {
 	position: relative;
+	box-sizing: border-box;
 	left: -1rem;
 	width: calc(100% + 2rem);
 	max-width: none;
@@ -108,6 +122,7 @@ main { view-transition-name: sn-main; }
 /* Same bleed recipe as the pull-quote above — see the comment there. */
 .wp-block-post-content .sn-pattern-compare-columns {
 	position: relative;
+	box-sizing: border-box;
 	left: -1rem;
 	width: calc(100% + 2rem);
 	max-width: none;
@@ -174,6 +189,7 @@ main { view-transition-name: sn-main; }
 /* Same bleed recipe as the pull-quote above — see the comment there. */
 .wp-block-post-content .sn-pattern-steps-enumerated {
 	position: relative;
+	box-sizing: border-box;
 	left: -1rem;
 	width: calc(100% + 2rem);
 	max-width: none;
@@ -671,6 +687,7 @@ main { view-transition-name: sn-main; }
 	   Scoped to .wp-block-post-content, not .single-post, because the escape
 	   math is about THAT container. The three siblings scope the same way. */
 	position: relative;
+	box-sizing: border-box;
 	left: -1rem;
 	width: calc(100% + 2rem);
 	max-width: none;
