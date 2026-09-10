@@ -542,10 +542,25 @@ main { view-transition-name: sn-main; }
 	color: var(--wp--preset--color--rust);
 }
 
-/* --- SIDENOTES (signal-noise/sidenote pattern) --- */
+/* --- SIDENOTES (signal-noise/sidenote block) ---
+   v12.20.4: scoped to .wp-block-post-content, not .single-post. Both rules —
+   the float AND the narrow fallback — were note-only, so a sidenote inserted
+   on a PAGE rendered with no styling at all: no float, no margin escape, no
+   hairline, no mono. Not a degraded sidenote, an invisible one, indistinguish-
+   able from the prose it annotates.
+
+   post-content is the right boundary because it is what the device actually
+   needs: a constrained prose column with room beside it. It is also the scope
+   the pull-quote already uses, which is exactly why that block works on every
+   template and this one did not.
+
+   Room verified on /provenance before widening, at the breakpoint where the
+   float turns on: 760px column, text ends at x=1020 in a 1280 viewport, 260px
+   to its right against the 200px the escape needs; 340px at 1440. `main` is
+   overflow:visible on both templates. */
 
 @media (min-width: 1280px) {
-	.single-post .sn-sidenote {
+	.wp-block-post-content .sn-sidenote {
 		float: right;
 		clear: right;
 		width: 180px;
@@ -568,7 +583,7 @@ main { view-transition-name: sn-main; }
 }
 
 @media (max-width: 1279.98px) {
-	.single-post .sn-sidenote {
+	.wp-block-post-content .sn-sidenote {
 		float: none;
 		width: auto;
 		margin-top: 0.75rem;

@@ -12,6 +12,9 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Fixed
+- Sidenotes work on Pages, not just notes. Both rules — the wide float and the narrow inline fallback — were scoped to `.single-post`, so a sidenote inserted on a Page rendered with no styling at all: not a degraded sidenote, an invisible one. They are now scoped to the prose column, which is what the device actually needs and the same scope the pull-quote already used — which is exactly why that block worked everywhere and this one did not.
+
 ## [12.20.3] - 2026-09-10 — the rail knows where it sits
 
 ### Added
