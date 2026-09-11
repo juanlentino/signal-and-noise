@@ -51,7 +51,7 @@ function sn_speculation_config( $config ) {
 add_filter( 'wp_speculation_rules_configuration', 'sn_speculation_config' );
 
 /**
- * wp_speculation_rules_href_exclude_paths — search and paginated notes are
+ * wp_speculation_rules_href_exclude_paths — paginated notes are
  * queries, not pages.
  *
  * @param string[] $paths Additional path patterns to disable speculative loading for.
