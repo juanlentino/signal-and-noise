@@ -41,6 +41,11 @@ function sn_notes_render_row( $p, $args = array() ) {
 	$show_type = ! empty( $args['show_type'] );
 
 	$excerpt = get_the_excerpt( $p );
+	// v13.0.0: in search mode the plugin may answer with the sentence that
+	// matched, query words in <mark>. Anything that is not literally the
+	// excerpt came from the filter and is trusted for exactly one tag.
+	$term    = function_exists( 'sn_notes_search_term' ) ? sn_notes_search_term() : '';
+	$snippet = ( '' !== $term ) ? (string) apply_filters( 'sn_notes_search_snippet', $excerpt, (int) $p->ID, $term ) : $excerpt;
 	$tags    = $pinned ? array() : sn_notes_row_tags( $p->ID, 2 );
 	$version = sn_notes_prov_version( $p->ID );
 
@@ -101,9 +106,16 @@ function sn_notes_render_row( $p, $args = array() ) {
 	}
 	echo '</div>';
 
-	if ( $excerpt ) {
+	if ( $excerpt || $snippet ) {
 		echo '<div class="sn-notes-row-excerpt-wrap">';
-		echo '<p class="sn-notes-row-excerpt">' . esc_html( wp_strip_all_tags( $excerpt ) ) . '</p>';
+		if ( $snippet !== $excerpt ) {
+			// wp_kses strips every attribute and every other tag; it does NOT balance
+			// tags, so force_balance_tags closes a <mark> a buggy filter left open first, and kses (outermost, as WPCS requires) strips the rest —
+			// styling bleed at worst, but one line closes it.
+			echo '<p class="sn-notes-row-excerpt">' . wp_kses( force_balance_tags( $snippet ), array( 'mark' => array() ) ) . '</p>';
+		} else {
+			echo '<p class="sn-notes-row-excerpt">' . esc_html( wp_strip_all_tags( $excerpt ) ) . '</p>';
+		}
 		echo '</div>';
 	}
 

@@ -147,6 +147,11 @@ function sn_notes_query_posts() {
 	if ( '' !== $term ) {
 		$args['s']         = $term;
 		$args['post_type'] = array( 'post', 'page' );
+		// v13.0.0: the companion plugin (>= 14.0.0) ranks NOTES with its
+		// kernel when this flag is present, by shaping this same query through
+		// posts_clauses; pages and LIKE-only notes keep their date order. With
+		// the plugin off the var is inert and this is the query it always was.
+		$args['sn_notes_search'] = true;
 	}
 	if ( $tag_id > 0 ) {
 		// Tag-archive mode: constrain to the queried post_tag.
