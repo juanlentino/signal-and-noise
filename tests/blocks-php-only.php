@@ -16,12 +16,10 @@ function register_block_type( $name, $args = array() ) { $GLOBALS['__blocks'][ $
 function add_action( $h, $cb, $p = 10, $a = 1 ) { if ( 'init' === $h ) { $GLOBALS['__init'][] = $cb; } return true; }
 function add_filter( $h, $cb, $p = 10, $a = 1 ) { return true; }
 function __( $s, $d = null ) { return $s; }
-$GLOBALS['__the_id'] = 7; $GLOBALS['__queried'] = 7; $GLOBALS['__setup'] = array();
+$GLOBALS['__the_id'] = 7; $GLOBALS['__queried'] = 7;
 function get_the_ID() { return $GLOBALS['__the_id']; }
 function get_queried_object_id() { return $GLOBALS['__queried']; }
 function get_post( $id = null ) { return (object) array( 'ID' => null === $id ? $GLOBALS['__the_id'] : (int) $id ); }
-function setup_postdata( $p ) { $GLOBALS['__setup'][] = 'setup:' . $p->ID; $GLOBALS['__the_id'] = (int) $p->ID; return true; }
-function wp_reset_postdata() { $GLOBALS['__setup'][] = 'reset'; $GLOBALS['__the_id'] = 7; }
 // The renderers, stubbed to echo which post they saw — parity is about the WRAPPER.
 function sn_prov_chip_shortcode()      { return '<chip:' . get_the_ID() . '>'; }
 function sn_prov_panel_shortcode()     { return '<panel:' . get_the_ID() . '>'; }
@@ -44,7 +42,7 @@ foreach ( $expected as $slug ) {
 }
 ok( 9 === count( array_filter( array_keys( $GLOBALS['__blocks'] ), static fn( $n ) => str_starts_with( $n, 'signal-noise/' ) ) ), 'exactly nine blocks registered by this module' );
 foreach ( array( 'prov-chip', 'prov-panel', 'related-notes', 'cited-by', 'note-share', 'note-reply', 'updated-date', 'post-pillar' ) as $slug ) {
-	ok( false === ( $GLOBALS['__blocks'][ 'signal-noise/' . $slug ]['supports']['multiple'] ?? true ) && array( 'postId' ) === ( $GLOBALS['__blocks'][ 'signal-noise/' . $slug ]['uses_context'] ?? array() ), "$slug is single-instance and uses postId context" );
+	ok( false === ( $GLOBALS['__blocks'][ 'signal-noise/' . $slug ]['supports']['multiple'] ?? true ), "$slug is single-instance" );
 }
 ok( ! isset( $GLOBALS['__blocks']['signal-noise/theme-toggle']['supports']['multiple'] ), 'theme-toggle allows two instances (header and footer)' );
 ok( array( 'placement' ) === array_keys( $GLOBALS['__blocks']['signal-noise/theme-toggle']['attributes'] ?? array() ) && array( 'header', 'footer' ) === ( $GLOBALS['__blocks']['signal-noise/theme-toggle']['attributes']['placement']['enum'] ?? array() ), 'theme-toggle has one attribute, placement enum header|footer' );
@@ -60,16 +58,6 @@ foreach ( $pairs as $slug => $fn ) {
 ok( $blk( 'theme-toggle', array(), array( 'placement' => 'header' ) ) === sn_dark_mode_toggle_markup( array( 'placement' => 'header' ) ), 'theme-toggle passes placement through' );
 ok( $blk( 'theme-toggle' ) === sn_dark_mode_toggle_markup(), 'theme-toggle with no attribute renders the footer form' );
 ok( $blk( 'theme-toggle', array(), array( 'placement' => 'sidebar' ) ) === sn_dark_mode_toggle_markup(), 'an unknown placement falls back to footer, never passes through' );
-
-echo "\nGroup: a differing context id is honoured (a future Query Loop placement)\n";
-$GLOBALS['__setup'] = array();
-$out = $blk( 'prov-chip', array( 'postId' => 42 ) );
-ok( '<chip:42>' === $out, 'the chip rendered for the CONTEXT post, not the global' );
-ok( array( 'setup:42', 'reset' ) === $GLOBALS['__setup'], 'setup_postdata/wp_reset_postdata bracketed the render' );
-ok( 7 === get_the_ID(), 'and the global is restored afterwards' );
-$GLOBALS['__setup'] = array();
-$blk( 'prov-chip', array( 'postId' => 7 ) );
-ok( array() === $GLOBALS['__setup'], 'a context equal to the global does NOT re-setup (no churn on single)' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

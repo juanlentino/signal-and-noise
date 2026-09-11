@@ -12,11 +12,10 @@
  * per block. The shortcodes stay registered through 13.1.x for anything
  * typed into post content; 13.2.0 retires them.
  *
- * Context: the renderers read the queried post. On `single` that is the
- * block's `postId` context, so parity is exact. A differing context id (a
- * future Query Loop placement) is honoured by bracketing the render in
- * setup_postdata()/wp_reset_postdata() — only when it differs, so single
- * pays nothing.
+ * Context: every renderer reads the queried/global post, exactly as its
+ * shortcode did, so parity is by construction. None of these blocks is
+ * placed inside a Query Loop; if one ever is, the renderer — not a wrapper —
+ * has to learn to take a post id.
  *
  * @package SignalNoise
  * @since 13.1.0
@@ -24,58 +23,36 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-/**
- * Run a renderer for the block's context post: set the global post to the
- * context id only when it differs from the current one, restore after.
- *
- * @param object   $block    WP_Block (or a stand-in exposing ->context).
- * @param callable $renderer The shortcode renderer.
- * @return string
- */
-function sn_php_block_render_for_context( $block, callable $renderer ) {
-	$ctx_id = ( is_object( $block ) && ! empty( $block->context['postId'] ) ) ? (int) $block->context['postId'] : 0;
-	if ( $ctx_id > 0 && $ctx_id !== (int) get_the_ID() ) {
-		$post = get_post( $ctx_id );
-		if ( $post ) {
-			setup_postdata( $post );
-			$out = (string) $renderer();
-			wp_reset_postdata();
-			return $out;
-		}
-	}
-	return (string) $renderer();
-}
-
 function sn_block_render_prov_chip( $attributes, $content, $block ) {
-	return sn_php_block_render_for_context( $block, 'sn_prov_chip_shortcode' );
+	return (string) sn_prov_chip_shortcode();
 }
 
 function sn_block_render_prov_panel( $attributes, $content, $block ) {
-	return sn_php_block_render_for_context( $block, 'sn_prov_panel_shortcode' );
+	return (string) sn_prov_panel_shortcode();
 }
 
 function sn_block_render_related_notes( $attributes, $content, $block ) {
-	return sn_php_block_render_for_context( $block, 'sn_related_notes_shortcode' );
+	return (string) sn_related_notes_shortcode();
 }
 
 function sn_block_render_cited_by( $attributes, $content, $block ) {
-	return sn_php_block_render_for_context( $block, 'sn_cited_by_shortcode' );
+	return (string) sn_cited_by_shortcode();
 }
 
 function sn_block_render_note_share( $attributes, $content, $block ) {
-	return sn_php_block_render_for_context( $block, 'sn_note_share_shortcode' );
+	return (string) sn_note_share_shortcode();
 }
 
 function sn_block_render_note_reply( $attributes, $content, $block ) {
-	return sn_php_block_render_for_context( $block, 'sn_note_reply_shortcode' );
+	return (string) sn_note_reply_shortcode();
 }
 
 function sn_block_render_updated_date( $attributes, $content, $block ) {
-	return sn_php_block_render_for_context( $block, 'sn_updated_date_shortcode' );
+	return (string) sn_updated_date_shortcode();
 }
 
 function sn_block_render_post_pillar( $attributes, $content, $block ) {
-	return sn_php_block_render_for_context( $block, 'sn_post_pillar_shortcode' );
+	return (string) sn_post_pillar_shortcode();
 }
 
 function sn_block_render_theme_toggle( $attributes, $content, $block ) {
@@ -95,10 +72,9 @@ function sn_register_php_only_blocks() {
 	}
 
 	$common = array(
-		'api_version'  => 3,
-		'category'     => 'signal-noise',
-		'uses_context' => array( 'postId' ),
-		'supports'     => array(
+		'api_version' => 3,
+		'category'    => 'signal-noise',
+		'supports'    => array(
 			'autoRegister' => true,
 			'html'         => false,
 			'multiple'     => false,
