@@ -26,6 +26,7 @@
  *   inc/cms-page-styles.php      — per-Page bespoke stylesheets: now/uses/accessibility (v10.36.0)
  *   inc/patterns.php             — Block Pattern category registration
  *   inc/blocks-register.php      — custom sidenote + pull-quote + pillar-essays dynamic blocks (v9.11.0, pillar-essays v10.47.0)
+ *   inc/blocks-php-only.php      — the nine template-furniture shortcodes as PHP-only blocks (v13.1.0)
  *   inc/block-styles.php         — block style variations
  *   inc/blocks-view-transitions.php — view-transition opt-in for block markup
  *   inc/abilities-registration.php — WP 7.0 Abilities registration (theme-owned read + generative; splits into abilities-*.php)
@@ -116,6 +117,7 @@ require_once __DIR__ . '/inc/page-index-template.php'; // C3 (v10.7.0): /index w
 require_once __DIR__ . '/inc/cms-page-styles.php'; // v10.36.0: per-Page bespoke stylesheets (now.css on /now, uses.css on /about/uses, accessibility.css on /accessibility)
 require_once __DIR__ . '/inc/patterns.php';
 require_once __DIR__ . '/inc/blocks-register.php';
+require_once __DIR__ . '/inc/blocks-php-only.php'; // v13.1.0: the template furniture as PHP-only blocks (WP 7.0 autoRegister)
 require_once __DIR__ . '/inc/block-styles.php';
 require_once __DIR__ . '/inc/blocks-view-transitions.php';
 require_once __DIR__ . '/inc/abilities-registration.php';
