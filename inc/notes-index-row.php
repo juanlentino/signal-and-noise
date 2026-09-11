@@ -110,9 +110,9 @@ function sn_notes_render_row( $p, $args = array() ) {
 		echo '<div class="sn-notes-row-excerpt-wrap">';
 		if ( $snippet !== $excerpt ) {
 			// wp_kses strips every attribute and every other tag; it does NOT balance
-			// tags, so force_balance_tags closes a <mark> a buggy filter left open —
+			// tags, so force_balance_tags closes a <mark> a buggy filter left open first, and kses (outermost, as WPCS requires) strips the rest —
 			// styling bleed at worst, but one line closes it.
-			echo '<p class="sn-notes-row-excerpt">' . force_balance_tags( wp_kses( $snippet, array( 'mark' => array() ) ) ) . '</p>';
+			echo '<p class="sn-notes-row-excerpt">' . wp_kses( force_balance_tags( $snippet ), array( 'mark' => array() ) ) . '</p>';
 		} else {
 			echo '<p class="sn-notes-row-excerpt">' . esc_html( wp_strip_all_tags( $excerpt ) ) . '</p>';
 		}
