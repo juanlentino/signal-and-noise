@@ -59,5 +59,27 @@ ok( $blk( 'theme-toggle', array(), array( 'placement' => 'header' ) ) === sn_dar
 ok( $blk( 'theme-toggle' ) === sn_dark_mode_toggle_markup(), 'theme-toggle with no attribute renders the footer form' );
 ok( $blk( 'theme-toggle', array(), array( 'placement' => 'sidebar' ) ) === sn_dark_mode_toggle_markup(), 'an unknown placement falls back to footer, never passes through' );
 
+echo "\nGroup: the templates place the blocks, not the shortcodes\n";
+$root  = dirname( __DIR__ );
+$files = array_merge( glob( $root . '/templates/*.html' ), glob( $root . '/parts/*.html' ) );
+$migrated = array( 'sn_prov_chip', 'sn_prov_panel', 'sn_related_notes', 'sn_cited_by', 'sn_note_share', 'sn_note_reply', 'sn_updated_date', 'sn_post_pillar', 'sn_theme_toggle' );
+$left = array(); $placed = array();
+foreach ( $files as $f ) {
+	$h = (string) file_get_contents( $f ); $rel = str_replace( $root . '/', '', $f );
+	foreach ( $migrated as $s ) { if ( false !== strpos( $h, '[' . $s ) ) { $left[] = "$rel [$s"; } }
+	if ( preg_match_all( '/<!-- wp:signal-noise\/([a-z-]+)( \{[^}]*\})? \/-->/', $h, $m ) ) { foreach ( $m[1] as $n ) { $placed[ $n ] = ( $placed[ $n ] ?? 0 ) + 1; } }
+}
+ok( array() === $left, 'no template or part emits a migrated shortcode' . ( $left ? ' — LEFT: ' . implode( ', ', $left ) : '' ) );
+$want = array( 'prov-chip' => 1, 'prov-panel' => 1, 'related-notes' => 1, 'cited-by' => 1, 'note-share' => 1, 'note-reply' => 1, 'updated-date' => 1, 'post-pillar' => 1, 'theme-toggle' => 2 );
+ksort( $want ); ksort( $placed );
+ok( $want === $placed, 'each block is placed exactly where its shortcode was (toggle twice): ' . json_encode( $placed ) );
+ok( false !== strpos( (string) file_get_contents( $root . '/parts/header.html' ), '<!-- wp:signal-noise/theme-toggle {"placement":"header"} /-->' ), 'the header toggle carries placement:header' );
+ok( false !== strpos( (string) file_get_contents( $root . '/parts/footer.html' ), '<!-- wp:signal-noise/theme-toggle /-->' ), 'the footer toggle carries no attribute (default footer)' );
+ok( false !== strpos( (string) file_get_contents( $root . '/templates/single.html' ), '[sn_reading_path]' ), 'the PLUGIN\'s [sn_reading_path] stays a shortcode — not this arc\'s' );
+// Palette: every block this module registers is in the editor allowlist.
+$palette = (string) file_get_contents( $root . '/inc/editor-block-palette.php' );
+$missing = array_filter( $expected, static fn( $s ) => false === strpos( $palette, "'signal-noise/$s'" ) );
+ok( array() === $missing, 'every PHP-only block is in the editor palette allowlist' . ( $missing ? ' — MISSING: ' . implode( ', ', $missing ) : '' ) );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

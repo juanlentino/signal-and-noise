@@ -54,8 +54,8 @@ $tpl = (string) file_get_contents( $root . '/templates/single.html' );
 $pc  = strpos( $tpl, 'wp:post-content' );
 ok( false !== $pc, 'single.html has the post-content block' );
 ok(
-	strpos( $tpl, '[sn_related_notes]' ) > $pc && strpos( $tpl, '[sn_cited_by]' ) > $pc,
-	'related-notes + cited-by shortcodes are siblings AFTER post-content, not inside it'
+	strpos( $tpl, '<!-- wp:signal-noise/related-notes /-->' ) > $pc && strpos( $tpl, '<!-- wp:signal-noise/cited-by /-->' ) > $pc,
+	'related-notes + cited-by blocks are siblings AFTER post-content, not inside it'
 );
 $components = (string) file_get_contents( $root . '/assets/css/components.css' );
 ok(

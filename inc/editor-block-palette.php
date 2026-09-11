@@ -181,6 +181,15 @@ function sn_theme_allowed_blocks( $allowed, $context ) {
 		'signal-noise/sidenote',
 		'signal-noise/pull-quote',
 		'signal-noise/pillar-essays',
+		'signal-noise/prov-chip',
+		'signal-noise/prov-panel',
+		'signal-noise/related-notes',
+		'signal-noise/cited-by',
+		'signal-noise/note-share',
+		'signal-noise/note-reply',
+		'signal-noise/updated-date',
+		'signal-noise/post-pillar',
+		'signal-noise/theme-toggle',
 	);
 
 	return array_values( array_unique( array_merge( $used, $authoring, $contact, $companion, $theme_blocks ) ) );
