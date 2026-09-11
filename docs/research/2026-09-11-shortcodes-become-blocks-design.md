@@ -62,6 +62,16 @@ is owned by PHPStan, now a required check, and the stub-parity sweep.
 `sn_updated_date` stays a block (§2): it renders a `<time datetime>` element,
 and a paragraph binding carries text, not markup.
 
+**Narrowed during implementation (2026-09-11):** three paragraphs bind, not
+five, and the pillar is a block, not a binding. The two pillar-card eyebrows
+on `/notes` are prefix text + figure in one `<p>` ("Pillar Essay · March 2026
+· 4 min read"); a `content` binding replaces the whole paragraph, so the
+prefix would vanish — they keep the plugin's `[sn_reading_time slug="…"]`,
+and the `slug` arg this section proposed has no consumer, so it is not
+added. `[sn_post_pillar]` sat in a `wp:shortcode` block (no wrapper); as a
+bound paragraph the `<a>` would gain a `<p>` wrapper — not parity — so it
+joins §2 as the ninth PHP-only block, `signal-noise/post-pillar`.
+
 ## 2. PHP-only blocks (WordPress 7.0)
 
 Eight blocks, one file `inc/blocks-php-only.php`, registered on `init` after
