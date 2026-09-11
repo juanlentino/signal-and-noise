@@ -189,6 +189,13 @@ and `wp_get_icon( $name, $args = array() )`, backed by
 markup. All three conditions in the decision rule hold. **Decision: YES —
 Task 8 runs.**
 
+**Dropped at implementation (2026-09-11):** the API is real, the fit is not.
+`render_block_core_icon()` wraps every icon in `<div class="wp-block-icon">`
+(`wp-includes/blocks/icon.php:129`), and the five footer icons sit inside
+`<a aria-label title>` links that an Icon block cannot carry — the anchor
+would still need the `wp:html` it has today, now with a wrapper div inside
+it. Nothing gained, parity lost. The footer keeps its inline SVGs.
+
 ## Tests (all standalone, in the sweep)
 
 - `tests/block-bindings-templates.php` — parse-level pin: every
