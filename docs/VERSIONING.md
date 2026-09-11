@@ -2,42 +2,51 @@
 
 How releases work for Signal & Noise. Read this before opening a PR that changes shippable code, and before cutting a release. Short version: **a PR adds an `## [Unreleased]` bullet and closes an issue; only a release stamps `Version:`.**
 
-## SemVer baseline
+## The WordPress shape (since 2026-09-11)
 
-We follow [Semantic Versioning](https://semver.org/) strictly. No caps on minor or patch numbers — they grow as needed. Format: `MAJOR.MINOR.PATCH`.
+`X.Y.0` is a **release**, `X.Y.Z` is a **fix** to it, and `X` rolls by itself
+when `Y` would reach 10 (`13.9.0 → 14.0.0`). This is how WordPress core
+numbers (4.9 → 5.0) and how WooCommerce, Jetpack, Yoast and ACF number, so a
+WordPress reader already knows how to read it. Three components always
+(`13.0.0`, the WooCommerce form — not core's `6.8`: `version_compare( '13.0',
+'13.0.0' )` calls the two-part form *older*, and every tool here parses three
+integers).
 
-| Bump | When | Examples on this project |
+| Component | Means | Moves when |
 |---|---|---|
-| **MAJOR** | Breaking change | Removed/renamed public API, settings schema migration, behavioural shift requiring user action. v6 → v7.0.0 was an architectural shift + (then-active) cap rollover — under current rules, a major requires an actual breaking change. |
-| **MINOR** | New user-visible capability | New page, new admin tool, new module like the catalog vocabulary rollout (v7.1.0). |
-| **PATCH** | Fix / perf / calibration / refactor | Bug fix, accessibility fix, visual spacing tweak, CSS cleanup, internal refactor with no user-visible change. |
+| `X` | the tens digit of the release count | `Y` would become 10 |
+| `Y` | a **release** — one arc of merged work, features or fixes | `tools/cut-release.sh release` |
+| `Z` | a **fix** to a shipped release | `tools/cut-release.sh fix` |
 
-**Definition of "breaking" on this project:** removed or renamed public API, settings schema change without a migration, or a behavioural shift that requires user action (e.g. clearing cache, re-seeding content, manual file edits). A pure bug fix is not breaking even if it changes observable output.
+**`X` is not a breaking-change flag.** A release that breaks something —
+removes or renames a public hook, changes a settings schema without a
+migration, shifts behaviour so that a site has to act — says **BREAKING** in
+its CHANGELOG headline and release title, on whatever number it happens to
+get. There is no `major` argument; the script refuses it and says why.
 
-## Cap policy: none
+**Cadence is the other half.** Each component stays two digits only if
+releases are cut per **arc**, not per merged fix. A `docs/`, `tools/`,
+`.github/`-only merge never gets its own cut.
 
-This project follows the global versioning rule from `~/.claude/CLAUDE.md`: **no caps on minor or patch numbers.** They grow as needed. Majors gate on actual breaking changes per SemVer (the table above) — never on counter math.
+### Why this replaced SemVer (2026-09-11)
 
-### Historical context (2026-05-26 — caps dropped)
+The rule until this date was strict SemVer with no caps. The plugin's minor
+reached **110** in seventeen days because it counted merged fixes at a dozen a
+day; its MAJOR moved once, because nothing broke — a signal with no receiver,
+since the theme is the plugin's only integrator and both are owned here.
+Owner: "I'm not liking the three digits" → "I'd go WordPress since it's a
+WordPress plugin." The survey of what the Linux kernel, Apple, Ubuntu and
+CalVer do about a number getting big is in the plugin repo,
+`docs/proposals/2026-09-11-versioning-scheme.md`. The theme's first release
+under the shape is **13.0.0** — the roll, not a break.
 
-This project previously overrode the global rule with `7 patches per minor` + `5 minors per major` caps. The caps were a discipline scaffolding — they forced periodic strategic thinking about majors when nothing else was triggering it.
+### Historical context (2026-05-26 — caps dropped; 2026-09-11 — SemVer dropped)
 
-The caps were dropped 2026-05-26 after the v4.4.x deep audit revealed they were producing fictional majors. v5.0.0 was scoped to "1 REMOVE (orphaned option) + counter reset" — not an actual breaking change by SemVer's definition. The cap was forcing a major version that wasn't earned by the codebase's actual semantic state.
-
-What replaced the caps:
-
-- **Roadmap brainstorm-checkpoints** — explicit deliberation moments before each new minor or major (see `docs/superpowers/specs/2026-05-26-roadmap-to-v5-and-v10-design.md`, local-only)
-- **Audit findings docs** — surface actual issues that warrant patches / minors / majors based on what the code is doing, not what the counter says
-- **Post-ship cycle template** (QA → Bugfix → UI/UX → Gate) — structured response to live findings
-- **Pre-major audit / scope docs** (e.g., v5.0.0-scope.md (`signal-and-noise-tools/docs/superpowers/specs/2026-05-26-v5.0.0-scope.md`, local-only)) — concrete inventory of what a major would actually need to break
-
-Together these provide stronger triggers for version transitions than the cap rule did. The cap is gone; the discipline isn't.
-
-### Practical impact
-
-- `v4.4.0` → `v4.5.0` → `v4.6.0` → ... is valid indefinitely as new minors ship; no forced rollover to `v5.0.0`.
-- `v4.4.0` → `v4.4.1` → `v4.4.2` → ... → `v4.4.20` is valid; patches accumulate without forcing a minor.
-- `v5.0.0` happens when actual breaking changes accumulate enough to warrant it, OR when a coherent architectural milestone deliberately batches them.
+Until 2026-05-26 this project had cap overrides (7 per minor, 5 per major)
+that forced fictional majors; the v4.4.x audit removed them and the project
+ran strict SemVer for three and a half months. The WordPress shape is not a
+cap: `X` rolling at `Y = 10` claims nothing about the release, which is the
+difference that made the old caps dishonest and this rule not.
 
 ## Worked example: why v12.0.0 was a major (and dark mode was not the reason)
 
@@ -134,15 +143,13 @@ A release is a deliberate, separate act: `tools/cut-release.sh`.
 
 ### Choosing the digit, once, at the cut
 
-| Digit | Means |
+| Argument | Means |
 |---|---|
-| **MAJOR** | A removed or renamed public contract: an Ability, an MCP slug, a theme hook. Something outside this repo breaks. |
-| **MINOR** | A capability a visitor or an editor can see that was not there before. |
-| **PATCH** | Everything else, batched. Fixes, refactors, performance, calibration. |
+| **release** | An arc closed: `Y + 1` (or `X + 1`, `Y = 0` when `Y` was 9). Features and fixes alike. |
+| **fix** | Something that must reach sites before the next arc: `Z + 1`. |
 
-A fix is a PATCH even when it adds code. If the capability gained cannot be
-named in one sentence without the words *fix*, *correct*, *restore* or
-*complete*, it is a PATCH.
+A cut is a release unless it is a hotfix to the release that just shipped.
+If the arc contains a breaking change, the headline starts with `BREAKING:`.
 
 ## CHANGELOG conventions
 
@@ -184,7 +191,7 @@ Fix: bumped each number's `margin-bottom` from `0` to `var:preset|spacing|10`
 
 ## See also
 
-- Global versioning rules: `~/.claude/CLAUDE.md`
+- Global versioning rules: `~/.claude/CLAUDE.md` (the SemVer line there is overridden for these two repos by this file)
 - Project overrides: CLAUDE.md (`CLAUDE.md`, local-only)
 - Release script: [tools/cut-release.sh](../tools/cut-release.sh) — the only thing that stamps a version
 - Changelog archive: [docs/changelog/](changelog/) — everything older than the current cut
