@@ -14,12 +14,15 @@
  * already opted the site out), and this module has no business turning it
  * back on.
  *
- * Search results and paginated note listings are excluded: each is a query
- * over the same page, not a distinct page — prerendering every /notes/page/N
- * or every keystroke of a live search would speculatively render pages that
- * are rarely the one the visitor lands on. Paths mirror core's own exclude
- * list shape (plain, unprefixed patterns — core prefixes them itself via
- * WP_URL_Pattern_Prefixer before merging with its base exclusions).
+ * Paginated note listings are excluded: /notes/page/N is a query over the
+ * same page, not a distinct page, and is rarely the one the visitor lands
+ * on. Search is NOT listed here: under pretty permalinks core already
+ * excludes every URL with a query string (`/*\?(.+)`), and in URLPattern
+ * syntax an unescaped `?` is the optional modifier, not a literal — a
+ * `/notes/?s=*` entry would be both redundant and wrong. Paths mirror core's
+ * own exclude list shape (plain, unprefixed patterns — core prefixes them
+ * itself via WP_URL_Pattern_Prefixer before merging with its base
+ * exclusions).
  *
  * @package SignalNoise
  * @since 13.110.0
@@ -55,7 +58,6 @@ add_filter( 'wp_speculation_rules_configuration', 'sn_speculation_config' );
  * @return string[]
  */
 function sn_speculation_exclude( $paths ) {
-	$paths[] = '/notes/?s=*';
 	$paths[] = '/notes/page/*';
 
 	return $paths;

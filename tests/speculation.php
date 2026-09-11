@@ -51,16 +51,16 @@ ok( 'nonsense' === $config_cb( 'nonsense' ), "a stray non-array, non-null value 
 echo "\nGroup: exclude paths — search and paginated notes added, base paths kept\n";
 $result = $exclude_cb( array( '/wp-admin/*' ) );
 ok( in_array( '/wp-admin/*', $result, true ), 'the incoming /wp-admin/* exclusion survives' );
-ok( in_array( '/notes/?s=*', $result, true ), 'search (/notes/?s=*) is excluded — a query, not a page' );
+ok( ! in_array( '/notes/?s=*', $result, true ), 'search is NOT listed: core excludes every query-string URL under pretty permalinks, and an unescaped ? is a URLPattern modifier' );
 ok( in_array( '/notes/page/*', $result, true ), 'paginated notes (/notes/page/*) are excluded — a query, not a page' );
-ok( 3 === count( $result ), 'exactly the incoming path plus the two additions, no surprises' );
+ok( 2 === count( $result ), 'exactly the incoming path plus the one addition, no surprises' );
 
-echo "\nGroup: negative control — an empty input yields only the two exclusions\n";
+echo "\nGroup: negative control — an empty input yields only the pagination exclusion\n";
 $empty_in = $exclude_cb( array() );
 sort( $empty_in );
-$expected = array( '/notes/?s=*', '/notes/page/*' );
+$expected = array( '/notes/page/*' );
 sort( $expected );
-ok( $expected === $empty_in, 'empty input → exactly the two exclusions, nothing invented, nothing dropped' );
+ok( $expected === $empty_in, 'empty input → exactly the one exclusion, nothing invented, nothing dropped' );
 
 $total = $pass + $fail;
 echo "\n$pass passed, $fail failed\n";
