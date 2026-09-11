@@ -426,6 +426,18 @@
 		grid-template-rows: 1fr;
 	}
 }
+
+/* v13.0.0: a search row's snippet marks the query words. Text colour, no
+   background block — the row already has enough surfaces. */
+.sn-notes-row-excerpt mark {
+	background: transparent;
+	color: var(--wp--preset--color--rust, inherit);
+	font-weight: 600;
+	text-decoration: underline;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 0.15em;
+}
+
 .sn-notes-row-excerpt {
 	overflow: hidden;
 	min-height: 0;

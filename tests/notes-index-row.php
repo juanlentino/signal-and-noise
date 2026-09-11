@@ -38,6 +38,7 @@ function esc_attr( $s ) { return esc_html( $s ); }
 function esc_url( $s ) { return $s; }
 function esc_html__( $s, $d = null ) { return esc_html( $s ); }
 function esc_attr__( $s, $d = null ) { return esc_html( $s ); }
+function force_balance_tags( $s ) { return (string) $s; } // stub: balancing is core's; the pin below guards the allowlist, not the balancer
 function wp_strip_all_tags( $s ) { return strip_tags( (string) $s ); }
 function number_format_i18n( $n ) { return (string) $n; }
 function date_i18n( $f, $ts ) { return gmdate( $f, (int) $ts ); }
@@ -48,6 +49,11 @@ function date_i18n( $f, $ts ) { return gmdate( $f, (int) $ts ); }
 function get_the_time( $fmt, $p ) { return gmdate( $fmt, strtotime( $p->post_date ) ); }
 function wp_date( $fmt, $ts ) { return gmdate( $fmt, (int) $ts ); }
 function get_post_type( $p ) { return 'post'; }
+// notes-index-row.php now calls sn_notes_search_term() (real helper) on every
+// row, which reads get_query_var( 's' ) — stub it to the empty default so this
+// browse-only fixture stays in browse mode, same as before the search flag.
+function get_query_var( $k, $d = '' ) { return $d; }
+function apply_filters( $h, $v ) { return $v; }
 
 require_once __DIR__ . '/../inc/notes-index-helpers.php';
 require_once __DIR__ . '/../inc/notes-index-row.php';
