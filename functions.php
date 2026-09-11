@@ -27,6 +27,7 @@
  *   inc/patterns.php             — Block Pattern category registration
  *   inc/blocks-register.php      — custom sidenote + pull-quote + pillar-essays dynamic blocks (v9.11.0, pillar-essays v10.47.0)
  *   inc/blocks-php-only.php      — the nine template-furniture shortcodes as PHP-only blocks (v13.1.0)
+ *   inc/block-hooks.php          — Block Hooks API: chip + closing part hooked into single by rule (v13.1.0)
  *   inc/block-styles.php         — block style variations
  *   inc/blocks-view-transitions.php — view-transition opt-in for block markup
  *   inc/abilities-registration.php — WP 7.0 Abilities registration (theme-owned read + generative; splits into abilities-*.php)
@@ -118,6 +119,7 @@ require_once __DIR__ . '/inc/cms-page-styles.php'; // v10.36.0: per-Page bespoke
 require_once __DIR__ . '/inc/patterns.php';
 require_once __DIR__ . '/inc/blocks-register.php';
 require_once __DIR__ . '/inc/blocks-php-only.php'; // v13.1.0: the template furniture as PHP-only blocks (WP 7.0 autoRegister)
+require_once __DIR__ . '/inc/block-hooks.php'; // v13.1.0: chip + closing part by rule on single (Block Hooks)
 require_once __DIR__ . '/inc/block-styles.php';
 require_once __DIR__ . '/inc/blocks-view-transitions.php';
 require_once __DIR__ . '/inc/abilities-registration.php';
