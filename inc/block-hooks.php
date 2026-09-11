@@ -2,22 +2,30 @@
 /**
  * Signal & Noise — Block Hooks API enforcement for the single template.
  *
- * `templates/single.html` already places `<!-- wp:signal-noise/prov-chip /-->`
- * after the title (v13.1.0, inc/blocks-php-only.php's chip block) and
- * `<!-- wp:template-part {"slug":"post-closing"} /-->` after the content —
- * both explicitly, by hand. This module makes the same placement a RULE via
- * the core Block Hooks API (`hooked_block_types` + the per-block-type
- * filter), scoped strictly to the `single` wp_template. WordPress records
- * `ignoredHookedBlocks` metadata on a template that already places a hooked
- * block, so nothing duplicates on the shipped template — the rule only fires
- * for a `single` template that lacks the explicit placement (a fresh export,
- * a reset, a future edit that drops the block).
+ * `templates/single.html` already places
+ * `<!-- wp:template-part {"slug":"post-closing"} /-->` after the content by
+ * hand. This module makes that placement a RULE via the core Block Hooks API
+ * (`hooked_block_types` + the per-block-type filter), scoped strictly to the
+ * `single` wp_template.
  *
- * Scope is deliberately narrow: `$context` must be a WP_Block_Template whose
- * `type` is `wp_template` and `slug` is `single` — never a template PART
- * (type `wp_template_part`; WordPress core has no separate
- * WP_Block_Template_Part class), never a WP_Post (block editor iframe /
- * post content), never an array (a pattern).
+ * Core applies block hooks to FILE-based templates too, at READ time
+ * (`apply_block_hooks_to_content()`, wp-includes/block-template-utils.php) —
+ * unlike a template saved to the database, a file-based template gets no
+ * automatic `ignoredHookedBlocks` metadata (that injection only runs on
+ * save). So `templates/single.html` declares
+ * `"metadata":{"ignoredHookedBlocks":["core/template-part"]}` on its
+ * `core/post-content` anchor BY HAND, telling core the part is already
+ * placed. Without that declaration the shipped template would render the
+ * closing part TWICE: once from the template's own explicit block, once
+ * from this rule firing on read. The rule itself exists for a `single`
+ * template that lacks the explicit placement — a fork, a reset, a db
+ * override that dropped the part.
+ *
+ * There is no equivalent rule for the provenance chip: it is placed inside
+ * `parts/post-frontmatter.html`, BEFORE the title, not after it — the
+ * Block Hooks API only supports hooking relative to a sibling anchor within
+ * the same block list, so "chip inside a different part, before the title"
+ * is not expressible as a hook and is left as explicit placement only.
  *
  * @package SignalNoise
  * @since 13.1.0
@@ -51,9 +59,7 @@ function sn_hooked_block_types( $hooked_block_types, $relative_position, $anchor
 		return $hooked_block_types;
 	}
 
-	if ( 'core/post-title' === $anchor_block_type ) {
-		$hooked_block_types[] = 'signal-noise/prov-chip';
-	} elseif ( 'core/post-content' === $anchor_block_type ) {
+	if ( 'core/post-content' === $anchor_block_type ) {
 		$hooked_block_types[] = 'core/template-part';
 	}
 
