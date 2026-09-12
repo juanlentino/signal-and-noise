@@ -102,6 +102,16 @@ ok( strpos( $aout, '<h2 id="custom-anchor">Alpha</h2>' ) !== false, 'author id l
 ok( strpos( $aout, '<a href="#custom-anchor">Alpha</a>' ) !== false, 'TOC links the author id' );
 ok( strpos( $aout, 'id="custom-anchor" id=' ) === false, 'no second id injected onto an already-anchored heading' );
 
+// ── An author-set id must be recorded, or a later generated heading can
+// duplicate it (theme #330): <h2 id="setup"> then a heading literally
+// titled "Setup" both slug to "setup" — two TOC links would jump to the
+// SAME (first) heading.
+$collide = '<h2 id="setup">Getting started</h2>' . $p . h2( 'Intro' ) . $p . h2( 'Setup' ) . $p;
+$cout    = sn_article_toc_apply( $collide );
+ok( 1 === substr_count( $cout, 'id="setup"' ), 'the author id is recorded, so the generated "Setup" heading does NOT reuse it' );
+ok( strpos( $cout, 'id="setup-2"' ) !== false, 'the generated heading gets the next free suffix instead' );
+ok( strpos( $cout, '<a href="#setup-2">Setup</a>' ) !== false, 'the TOC links the deduped id, not the author id, for the generated heading' );
+
 // ── Inline markup in a heading → clean label + slug ───────────────────
 $inline = '<h2 class="wp-block-heading"><em>Hello</em> <code>World</code></h2>' . $p . h2( 'Two' ) . $p . h2( 'Three' ) . $p;
 $iout = sn_article_toc_apply( $inline );

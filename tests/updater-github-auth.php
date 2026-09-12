@@ -78,6 +78,7 @@ function ok( $cond, $label ) {
 /** Fetch the most recent captured request's headers, after a forced (uncached) call. */
 function last_headers() {
     $GLOBALS['__captured_requests'] = array();
+    unset( $GLOBALS['sn_gh_theme_forced_tag_memo'] ); // #332: the forced fetch is memoized per request.
     sn_gh_latest_theme_tag( true ); // force_refresh = bypass cache
     $reqs = $GLOBALS['__captured_requests'];
     return $reqs ? ( $reqs[ count( $reqs ) - 1 ]['args']['headers'] ?? array() ) : array();
@@ -86,6 +87,7 @@ function last_headers() {
 /** Fetch the most recent captured request's full $args, after a forced (uncached) call. */
 function last_args() {
     $GLOBALS['__captured_requests'] = array();
+    unset( $GLOBALS['sn_gh_theme_forced_tag_memo'] );
     sn_gh_latest_theme_tag( true ); // force_refresh = bypass cache
     $reqs = $GLOBALS['__captured_requests'];
     return $reqs ? ( $reqs[ count( $reqs ) - 1 ]['args'] ?? array() ) : array();
@@ -151,10 +153,23 @@ $GLOBALS['__caps'] = array( 'update_themes' => true );
 ok( sn_gh_theme_force_refresh_requested() === true, 'force-refresh: ?force-check honored WITH update_themes cap' );
 unset( $_GET['force-check'] );
 
-// WP's own "Check Again" flow is already capability-gated → the constant forces regardless.
+// #332: WP_FORCE_UPDATE_CHECK is not a core constant — "Check Again" is
+// update-core.php?force-check=1, caught by the query-string branch above. The
+// dead branch is gone from the source; defining the constant changes nothing.
 define( 'WP_FORCE_UPDATE_CHECK', true );
 $GLOBALS['__caps'] = array();
-ok( sn_gh_theme_force_refresh_requested() === true, 'force-refresh: WP_FORCE_UPDATE_CHECK constant forces regardless of $_GET/caps' );
+ok( sn_gh_theme_force_refresh_requested() === false, 'force-refresh: WP_FORCE_UPDATE_CHECK (not a core constant) does not force (#332)' );
+ok( strpos( $src, 'WP_FORCE_UPDATE_CHECK' ) === false, 'the dead WP_FORCE_UPDATE_CHECK branch and its comments are gone from the source (#332)' );
+
+// #332: wp_update_themes() writes the transient twice per run, so the
+// pre_set_site_transient_update_themes filter runs twice; a forced check must
+// fetch ONCE per request, not once per write.
+unset( $GLOBALS['sn_gh_theme_forced_tag_memo'] );
+$GLOBALS['__captured_requests'] = array();
+$first  = sn_gh_latest_theme_tag( true );
+$second = sn_gh_latest_theme_tag( true );
+ok( 'v9.9.9' === $first && $first === $second, 'two forced calls in one request agree' );
+ok( 1 === count( $GLOBALS['__captured_requests'] ), 'two forced calls in one request make ONE tag fetch (#332)' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
