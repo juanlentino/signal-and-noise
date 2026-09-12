@@ -15,7 +15,7 @@ function fixture({ stored = null, dark = false, readFails = false, writeFails = 
   }));
   const mq = { matches: dark, addEventListener(type, fn) { this[type] = fn; } };
   vm.runInNewContext(source, {
-    document: { documentElement: { setAttribute(k, v) { attributes[k] = v; } }, querySelectorAll() { return buttons; } },
+    document: { documentElement: { setAttribute(k, v) { attributes[k] = v; } }, querySelectorAll(sel) { return sel === '.sn-theme-toggle' ? buttons : []; } },
     window: { matchMedia(query) { return query.includes('color-scheme') ? mq : { matches: true }; } },
     localStorage: {
       getItem() { if (readFails) throw new Error('blocked'); return stored; },
