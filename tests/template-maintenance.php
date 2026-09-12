@@ -201,6 +201,24 @@ fire_upgrader( array( 'type' => 'plugin', 'action' => 'update', 'plugins' => arr
 $c = purge_counts();
 ok( 1 === $c['breeze'] && 1 === $c['varnish'] && 1 === $c['cf'], 'plugin update fires Breeze + Varnish + Cloudflare' );
 
+// ── 5b. Single-package upgrades pass the singular key (#312) ──
+// Theme_Upgrader::upgrade() / Plugin_Upgrader::upgrade() (update.php?action=
+// upgrade-theme&theme=…) pass 'theme' / 'plugin', not the bulk arrays.
+echo "\nScenario 5b: singular hook_extra keys (single-package upgrade path)\n";
+reset_counters();
+fire_upgrader( array( 'type' => 'theme', 'action' => 'update', 'theme' => 'signal-and-noise' ) );
+$c = purge_counts();
+ok( 1 === $c['cf'], 'single theme upgrade (singular theme key) purges' );
+reset_counters();
+fire_upgrader( array( 'type' => 'plugin', 'action' => 'update', 'plugin' => 'signal-and-noise-tools/signal-and-noise-tools.php' ) );
+$c = purge_counts();
+ok( 1 === $c['cf'], 'single plugin upgrade (singular plugin key) purges' );
+reset_counters();
+fire_upgrader( array( 'type' => 'theme', 'action' => 'update', 'theme' => 'twentytwentyfive' ) );
+fire_upgrader( array( 'type' => 'plugin', 'action' => 'update', 'plugin' => 'akismet/akismet.php' ) );
+$c = purge_counts();
+ok( 0 === $c['cf'], 'singular keys naming other packages never purge' );
+
 // ── 6. Global-styles save → focused origin+CDN purge ──
 echo "\nScenario 6: Styles save (incl. Additional CSS) purges origin + CDN only\n";
 reset_counters();
