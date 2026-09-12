@@ -43,9 +43,20 @@
 				continue; // hostile or mangled parts → keep the inert fallback
 			}
 			var address = user + '@' + domain;
-			// Optional subject (data-esj, base64) — [sn_note_reply] prefills
-			// "Re: <note title>"; the five /contact aliases ship none.
+			// Optional subject (data-esj, base64 of a rawurlencode()'d UTF-8
+			// string) — [sn_note_reply] prefills "Re: <note title>"; the five
+			// /contact aliases ship none. decodeURIComponent() reverses the
+			// PHP-side rawurlencode(): plain atob() alone yields raw
+			// bytes-as-code-units, which mis-encodes (mojibake) any
+			// multibyte character once re-escaped into ?subject=.
 			var subject = decode(el.getAttribute('data-esj') || '');
+			if (subject) {
+				try {
+					subject = decodeURIComponent(subject);
+				} catch (e) {
+					subject = '';
+				}
+			}
 			var link = document.createElement('a');
 			link.href = 'mailto:' + encodeURIComponent(user) + '@' + encodeURIComponent(domain)
 				+ (subject ? '?subject=' + encodeURIComponent(subject) : '');
