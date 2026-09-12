@@ -18,7 +18,7 @@
  * and is unaffected by this default.
  *
  * @package SignalNoise
- * @since 13.110.0
+ * @since 13.1.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }

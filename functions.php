@@ -28,8 +28,8 @@
  *   inc/blocks-register.php      — custom sidenote + pull-quote + pillar-essays dynamic blocks (v9.11.0, pillar-essays v10.47.0)
  *   inc/blocks-php-only.php      — the nine template-furniture shortcodes as PHP-only blocks (v13.1.0)
  *   inc/block-hooks.php          — Block Hooks API: chip + closing part hooked into single by rule (v13.1.0)
- *   inc/template-part-areas.php  — declares the "article" template part area for post-frontmatter/post-closing (v13.110.0)
- *   inc/speculation.php          — speculative loading raised to prerender/moderate; search + pagination excluded (v13.110.0)
+ *   inc/template-part-areas.php  — declares the "article" template part area for post-frontmatter/post-closing (v13.1.0)
+ *   inc/speculation.php          — speculative loading raised to prerender/moderate; core's query-string exclusion already covers search + pagination (v13.1.0)
  *   inc/block-styles.php         — block style variations
  *   inc/blocks-view-transitions.php — view-transition opt-in for block markup
  *   inc/abilities-registration.php — WP 7.0 Abilities registration (theme-owned read + generative; splits into abilities-*.php)
@@ -122,8 +122,8 @@ require_once __DIR__ . '/inc/patterns.php';
 require_once __DIR__ . '/inc/blocks-register.php';
 require_once __DIR__ . '/inc/blocks-php-only.php'; // v13.1.0: the template furniture as PHP-only blocks (WP 7.0 autoRegister)
 require_once __DIR__ . '/inc/block-hooks.php'; // v13.1.0: chip + closing part by rule on single (Block Hooks)
-require_once __DIR__ . '/inc/template-part-areas.php'; // v13.110.0: declares the "article" template part area (post-frontmatter, post-closing)
-require_once __DIR__ . '/inc/speculation.php'; // v13.110.0: speculative loading raised to prerender/moderate, search + pagination excluded
+require_once __DIR__ . '/inc/template-part-areas.php'; // v13.1.0: declares the "article" template part area (post-frontmatter, post-closing)
+require_once __DIR__ . '/inc/speculation.php'; // v13.1.0: speculative loading raised to prerender/moderate; core's query-string exclusion already covers search + pagination
 require_once __DIR__ . '/inc/block-styles.php';
 require_once __DIR__ . '/inc/blocks-view-transitions.php';
 require_once __DIR__ . '/inc/abilities-registration.php';

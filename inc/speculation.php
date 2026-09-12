@@ -14,18 +14,16 @@
  * already opted the site out), and this module has no business turning it
  * back on.
  *
- * Paginated note listings are excluded: /notes/page/N is a query over the
- * same page, not a distinct page, and is rarely the one the visitor lands
- * on. Search is NOT listed here: under pretty permalinks core already
- * excludes every URL with a query string (`/*\?(.+)`), and in URLPattern
- * syntax an unescaped `?` is the optional modifier, not a literal — a
- * `/notes/?s=*` entry would be both redundant and wrong. Paths mirror core's
- * own exclude list shape (plain, unprefixed patterns — core prefixes them
- * itself via WP_URL_Pattern_Prefixer before merging with its base
- * exclusions).
+ * No href-exclude list is needed: pagination and search are both
+ * query-string URLs, and under pretty permalinks core already excludes
+ * every URL with a query string (`/*\?(.+)`, see
+ * wp-includes/speculative-loading.php). `/notes` paginates with `?paged=N`
+ * — a query string, already covered — and in URLPattern syntax an
+ * unescaped `?` is the optional modifier, not a literal, so a hand-rolled
+ * `/notes/page/*` or `/notes/?s=*` entry would be either redundant or wrong.
  *
  * @package SignalNoise
- * @since 13.110.0
+ * @since 13.1.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
@@ -49,17 +47,3 @@ function sn_speculation_config( $config ) {
 	return $config;
 }
 add_filter( 'wp_speculation_rules_configuration', 'sn_speculation_config' );
-
-/**
- * wp_speculation_rules_href_exclude_paths — paginated notes are
- * queries, not pages.
- *
- * @param string[] $paths Additional path patterns to disable speculative loading for.
- * @return string[]
- */
-function sn_speculation_exclude( $paths ) {
-	$paths[] = '/notes/page/*';
-
-	return $paths;
-}
-add_filter( 'wp_speculation_rules_href_exclude_paths', 'sn_speculation_exclude' );

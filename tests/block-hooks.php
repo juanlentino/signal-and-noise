@@ -86,6 +86,7 @@ $parsed = array( 'blockName' => 'core/template-part', 'attrs' => array(), 'inner
 $result = $block_cb( $parsed, 'core/template-part', 'after', $anchor, $single );
 ok( 'post-closing' === ( $result['attrs']['slug'] ?? null ), 'attrs.slug set to post-closing' );
 ok( 'article' === ( $result['attrs']['area'] ?? null ), 'attrs.area set to article' );
+ok( 'footer' === ( $result['attrs']['tagName'] ?? null ), 'attrs.tagName set to footer — mirrors templates/single.html\'s explicit {"slug":"post-closing","tagName":"footer"} placement' );
 
 $other_anchor = array( 'blockName' => 'core/post-title', 'attrs' => array() );
 $unchanged    = $block_cb( $parsed, 'core/template-part', 'after', $other_anchor, $single );

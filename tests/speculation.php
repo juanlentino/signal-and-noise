@@ -1,14 +1,14 @@
 <?php
 /**
- * Tests: speculative loading raised to prerender/moderate; search and
- * paginated notes excluded (each is a query over the same page, not a page
- * of its own). Filter contracts pinned against
- * wp-includes/speculative-loading.php: `wp_speculation_rules_configuration`
- * receives the array|null config and returns the same shape (null disables
- * the feature and must be respected, never overridden); the exclude paths
- * from `wp_speculation_rules_href_exclude_paths` are plain, unprefixed path
- * patterns (core prefixes them itself before merging with its own defaults).
- * @since theme v13.110.0
+ * Tests: speculative loading raised to prerender/moderate. Search and
+ * pagination need no exclusion list of our own — under pretty permalinks
+ * core already excludes every URL with a query string
+ * (`wp-includes/speculative-loading.php`), and `/notes` paginates via
+ * `?paged=N`, already a query string. Filter contract pinned against
+ * `wp_speculation_rules_configuration`: it receives the array|null config
+ * and returns the same shape (null disables the feature and must be
+ * respected, never overridden).
+ * @since theme v13.1.0
  */
 if ( PHP_SAPI !== 'cli' && ! defined( 'WP_CLI' ) ) { http_response_code( 404 ); exit; }
 if ( ! defined( 'ABSPATH' ) ) { define( 'ABSPATH', '/' ); }
@@ -29,13 +29,11 @@ function sn_test_filter_entry( $hook ) {
 }
 
 echo "Group: registration\n";
-$config_entry  = sn_test_filter_entry( 'wp_speculation_rules_configuration' );
-$exclude_entry = sn_test_filter_entry( 'wp_speculation_rules_href_exclude_paths' );
+$config_entry = sn_test_filter_entry( 'wp_speculation_rules_configuration' );
 ok( is_array( $config_entry ) && is_callable( $config_entry[0] ), 'wp_speculation_rules_configuration is filtered' );
-ok( is_array( $exclude_entry ) && is_callable( $exclude_entry[0] ), 'wp_speculation_rules_href_exclude_paths is filtered' );
+ok( ! isset( $GLOBALS['__filters']['wp_speculation_rules_href_exclude_paths'] ), 'no href_exclude_paths filter is registered — core already excludes every query-string URL under pretty permalinks' );
 
-$config_cb  = $config_entry[0];
-$exclude_cb = $exclude_entry[0];
+$config_cb = $config_entry[0];
 
 echo "\nGroup: config — raised to prerender/moderate\n";
 $raised = $config_cb( array( 'mode' => 'prefetch', 'eagerness' => 'conservative' ) );
@@ -48,19 +46,9 @@ ok( null === $config_cb( null ), 'null in → null out (another plugin/filter di
 echo "\nGroup: config — negative control, a non-array/non-null input passes through untouched\n";
 ok( 'nonsense' === $config_cb( 'nonsense' ), "a stray non-array, non-null value is returned as is, not coerced" );
 
-echo "\nGroup: exclude paths — search and paginated notes added, base paths kept\n";
-$result = $exclude_cb( array( '/wp-admin/*' ) );
-ok( in_array( '/wp-admin/*', $result, true ), 'the incoming /wp-admin/* exclusion survives' );
-ok( ! in_array( '/notes/?s=*', $result, true ), 'search is NOT listed: core excludes every query-string URL under pretty permalinks, and an unescaped ? is a URLPattern modifier' );
-ok( in_array( '/notes/page/*', $result, true ), 'paginated notes (/notes/page/*) are excluded — a query, not a page' );
-ok( 2 === count( $result ), 'exactly the incoming path plus the one addition, no surprises' );
-
-echo "\nGroup: negative control — an empty input yields only the pagination exclusion\n";
-$empty_in = $exclude_cb( array() );
-sort( $empty_in );
-$expected = array( '/notes/page/*' );
-sort( $expected );
-ok( $expected === $empty_in, 'empty input → exactly the one exclusion, nothing invented, nothing dropped' );
+echo "\nGroup: negative control — the module registers no href-exclude filter at all\n";
+$src = (string) file_get_contents( __DIR__ . '/../inc/speculation.php' );
+ok( false === strpos( $src, 'href_exclude_paths' ), 'the module source does not reference wp_speculation_rules_href_exclude_paths' );
 
 $total = $pass + $fail;
 echo "\n$pass passed, $fail failed\n";

@@ -3,14 +3,25 @@
  * Signal & Noise — the template furniture as PHP-only blocks (WordPress 7.0).
  *
  * Nine renderers that were [shortcodes] inside block templates become real
- * blocks: visible by name in the site editor, movable, styleable — with NO
- * JavaScript build. WordPress 7.0's `supports.autoRegister` exposes a
+ * blocks: listed by name in the site editor's List View and movable — with
+ * NO JavaScript build (the canvas shows nothing for a post-dependent block
+ * outside a post context). WordPress 7.0's `supports.autoRegister` exposes a
  * server-rendered block to the editor from its PHP registration alone.
  *
- * THE CONTRACT IS PARITY. Every render_callback returns the SAME string the
- * shortcode returns for the same post — tests/blocks-php-only.php pins it
- * per block. The shortcodes stay registered through 13.1.x for anything
- * typed into post content; 13.2.0 retires them.
+ * THE CONTRACT IS PARITY WITH `wpautop( shortcode )`, not the bare shortcode
+ * string. Each `[sn_x]` used to sit in a `core/shortcode` block, whose own
+ * renderer runs `wpautop()` on the expanded output — so the live HTML was
+ * always `wpautop( shortcode_output )`: a `<p>` wrapper around inline markup
+ * (the chip's two `<a>`s), `<br />` for embedded newlines (the panel), a
+ * trailing `\n` after block-level tags. `.sn-post-frontmatter`'s flex row is
+ * styled against that `<p>` wrapper, so the eight ex-`wp:shortcode` blocks
+ * below each return `wpautop( (string) sn_x_shortcode() )` — every
+ * render_callback returns the SAME string the `core/shortcode` block used to
+ * produce for the same post, and tests/blocks-php-only.php pins it per
+ * block. The toggle is the one exception: it was placed in `wp:html`, never
+ * autop'd, so its callback stays a bare string. The shortcodes stay
+ * registered through 13.1.x for anything typed into post content; 13.2.0
+ * retires them.
  *
  * Context: every renderer reads the queried/global post, exactly as its
  * shortcode did, so parity is by construction. None of these blocks is
@@ -24,35 +35,35 @@
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 function sn_block_render_prov_chip( $attributes, $content, $block ) {
-	return (string) sn_prov_chip_shortcode();
+	return wpautop( (string) sn_prov_chip_shortcode() );
 }
 
 function sn_block_render_prov_panel( $attributes, $content, $block ) {
-	return (string) sn_prov_panel_shortcode();
+	return wpautop( (string) sn_prov_panel_shortcode() );
 }
 
 function sn_block_render_related_notes( $attributes, $content, $block ) {
-	return (string) sn_related_notes_shortcode();
+	return wpautop( (string) sn_related_notes_shortcode() );
 }
 
 function sn_block_render_cited_by( $attributes, $content, $block ) {
-	return (string) sn_cited_by_shortcode();
+	return wpautop( (string) sn_cited_by_shortcode() );
 }
 
 function sn_block_render_note_share( $attributes, $content, $block ) {
-	return (string) sn_note_share_shortcode();
+	return wpautop( (string) sn_note_share_shortcode() );
 }
 
 function sn_block_render_note_reply( $attributes, $content, $block ) {
-	return (string) sn_note_reply_shortcode();
+	return wpautop( (string) sn_note_reply_shortcode() );
 }
 
 function sn_block_render_updated_date( $attributes, $content, $block ) {
-	return (string) sn_updated_date_shortcode();
+	return wpautop( (string) sn_updated_date_shortcode() );
 }
 
 function sn_block_render_post_pillar( $attributes, $content, $block ) {
-	return (string) sn_post_pillar_shortcode();
+	return wpautop( (string) sn_post_pillar_shortcode() );
 }
 
 function sn_block_render_theme_toggle( $attributes, $content, $block ) {

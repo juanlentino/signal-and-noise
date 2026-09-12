@@ -7,7 +7,7 @@
  * core the area exists (mirrors core's own area shape: area/label/description/
  * icon/area_tag — see get_allowed_block_template_part_areas() in
  * wp-includes/block-template-utils.php).
- * @since theme v13.110.0
+ * @since theme v13.1.0
  */
 if ( PHP_SAPI !== 'cli' && ! defined( 'WP_CLI' ) ) { http_response_code( 404 ); exit; }
 if ( ! defined( 'ABSPATH' ) ) { define( 'ABSPATH', '/' ); }

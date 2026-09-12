@@ -18,8 +18,12 @@
  * placed. Without that declaration the shipped template would render the
  * closing part TWICE: once from the template's own explicit block, once
  * from this rule firing on read. The rule itself exists for a `single`
- * template that lacks the explicit placement — a fork, a reset, a db
- * override that dropped the part.
+ * template that lacks the explicit placement: a db template saved from the
+ * editor always carries `ignoredHookedBlocks` (core injects it on every
+ * REST save), so an editor-side removal of the part is honoured and never
+ * re-added by this rule. It only fires on a `single` whose
+ * `core/post-content` carries no hook metadata at all — a fresh fork's
+ * file-based template that never went through a database save.
  *
  * There is no equivalent rule for the provenance chip: it is placed inside
  * `parts/post-frontmatter.html`, BEFORE the title, not after it — the
@@ -93,8 +97,9 @@ function sn_hooked_block_post_closing( $parsed_hooked_block, $hooked_block_type,
 		return $parsed_hooked_block;
 	}
 
-	$parsed_hooked_block['attrs']['slug'] = 'post-closing';
-	$parsed_hooked_block['attrs']['area'] = 'article';
+	$parsed_hooked_block['attrs']['slug']    = 'post-closing';
+	$parsed_hooked_block['attrs']['area']    = 'article';
+	$parsed_hooked_block['attrs']['tagName'] = 'footer';
 
 	return $parsed_hooked_block;
 }
