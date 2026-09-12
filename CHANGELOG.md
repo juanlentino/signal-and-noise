@@ -12,6 +12,9 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Fixed
+- `tools/cut-release.sh` no longer fails on an archive whose first line is already a release heading — BSD `head` rejects `-n 0` (#340). `docs/WORDPRESS-REFERENCE.md` stops naming a core constant that never existed (#341).
+
 ## [13.1.2] - 2026-09-12 — the bug sweep
 
 ### Fixed

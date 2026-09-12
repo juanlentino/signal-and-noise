@@ -90,5 +90,19 @@ if ( null !== $dir ) {
 	rrmdir( $dir );
 }
 
+// #340: an archive whose FIRST line is already a release heading has no
+// preamble; `head -n 0` is illegal on BSD head and the cut used to fail there.
+echo "\nGroup: heading-first archive (#340)\n";
+$dir2 = make_fixture();
+if ( null === $dir2 ) { ok( false, 'fixture 2 built' ); } else {
+	file_put_contents( $dir2 . '/docs/changelog/archive.md', "## [1.2.1] - 2025-12-01 — older\n- older bullet\n" );
+	exec( 'cd ' . escapeshellarg( $dir2 ) . ' && git add -A && git commit -q -m arch 2>&1' );
+	$r2 = run_cut_release( $dir2 );
+	ok( 0 === $r2['code'], 'the cut succeeds when the archive starts with a heading (exit ' . $r2['code'] . ')' );
+	$arch = (string) file_get_contents( $dir2 . '/docs/changelog/archive.md' );
+	ok( 0 === strpos( $arch, '## [1.2.2]' ) && false !== strpos( $arch, '## [1.2.1]' ), 'the previous cut is spliced in FRONT of the older heading, nothing lost' );
+	rrmdir( $dir2 );
+}
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
