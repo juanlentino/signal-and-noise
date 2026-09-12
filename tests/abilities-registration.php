@@ -391,7 +391,10 @@ if ( ! function_exists( 'sn_llms_txt_recent_notes' ) ) {
 	}
 }
 if ( ! function_exists( 'sn_llms_txt_body' ) ) {
-	function sn_llms_txt_body( $full = false, $notes = array() ) {
+	function sn_llms_txt_body( $full = false, $notes = array(), $pillars = array() ) {
+		// #311: the route passes the pillar descriptors as the third argument;
+		// the ability must too, or its body lacks the "Pillar essays" section.
+		$GLOBALS['__test_llms_body_pillars'] = $pillars;
 		return $full ? ( "# llms-full\n" . count( (array) $notes ) . ' notes' ) : '# llms index';
 	}
 }
@@ -576,6 +579,15 @@ $full = call_user_func( $ability['execute_callback'], array( 'full' => true ) );
 ha_eq( 'full', $full['variant'], 'full=true → full variant' );
 ha_true( strpos( $full['content'], 'llms-full' ) !== false, 'full variant renders the full body' );
 ha_true( strpos( $full['content'], '1 notes' ) !== false, 'recent Notes are fetched + passed ONLY for the full variant' );
+// Seed the descriptor memo (the seam sn_theme_pillar_descriptors() reads) so
+// the pin is non-vacuous; cleared afterwards so later blocks derive their own.
+$GLOBALS['sn_theme_pillar_descriptors_memo'] = array(
+	array( 'slug' => 'provenance/over-detection', 'title' => 'Provenance Over Detection', 'dek' => 'd', 'last_path' => 'over-detection', 'date' => '2026-05-07', 'designation' => '' ),
+);
+$GLOBALS['__test_llms_body_pillars'] = null;
+$full = call_user_func( $ability['execute_callback'], array( 'full' => true ) );
+ha_eq( $GLOBALS['sn_theme_pillar_descriptors_memo'], $GLOBALS['__test_llms_body_pillars'], 'pillar descriptors are passed to the body builder, as the /llms.txt route does (#311)' );
+unset( $GLOBALS['sn_theme_pillar_descriptors_memo'] );
 
 // ─── Test: list-block-patterns ───────────────────────────────────
 echo "\nTest signal-and-noise/list-block-patterns\n";

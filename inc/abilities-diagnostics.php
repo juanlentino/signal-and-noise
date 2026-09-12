@@ -1001,7 +1001,10 @@ function sn_theme_ability_llms_txt( $input = array() ) {
 		}
 		$full  = is_array( $input ) && ! empty( $input['full'] );
 		$notes = ( $full && function_exists( 'sn_llms_txt_recent_notes' ) ) ? sn_llms_txt_recent_notes() : array();
-		$body  = (string) sn_llms_txt_body( $full, $notes );
+		// #311: the route passes the pillar descriptors too; without them the
+		// body has no "Pillar essays" section and differs from /llms.txt.
+		$pillars = function_exists( 'sn_theme_pillar_descriptors' ) ? (array) sn_theme_pillar_descriptors() : array();
+		$body    = (string) sn_llms_txt_body( $full, $notes, $pillars );
 		return array(
 			'variant' => $full ? 'full' : 'index',
 			'content' => $body,
