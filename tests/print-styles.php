@@ -204,5 +204,12 @@ ok( strpos( $disco_js, "'track' : 'album'" ) !== false, 'discography.js picks th
 ok( strpos( $disco_js, "getAttribute( 'data-type' )" ) !== false, 'discography.js reads data-type from the trigger (render contract)' );
 ok( strpos( $disco_js, "createElement( 'iframe' )" ) !== false, 'discography.js mounts the iframe on demand (not server-rendered)' );
 
+// #325 — choosing preview B before A starts rejects A's play() promise with
+// AbortError; the unconditional `.catch( stop )` then stopped B, which was
+// legitimately playing. The catch must only stop if THIS button is still
+// the current one.
+ok( false === strpos( $disco_js, 'played.catch( function () { stop(); } )' ), '#325: play() rejection no longer stops unconditionally' );
+ok( (bool) preg_match( '/played\.catch\(\s*function\s*\(\s*\)\s*\{\s*if\s*\(\s*current === btn\s*\)\s*\{?\s*stop\(\);/', $disco_js ), '#325: play() rejection only stops if this button is still current' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

@@ -253,7 +253,10 @@
 					btn.setAttribute( 'aria-pressed', 'true' );
 					var played = audio.play();
 					if ( played && played.catch ) {
-						played.catch( function () { stop(); } );
+						// Choosing B before A's play() resolves rejects A's promise
+						// with AbortError; an unconditional stop() here would then
+						// stop B, which is legitimately playing (#325).
+						played.catch( function () { if ( current === btn ) { stop(); } } );
 					}
 				} );
 			} )( buttons[ i ] );
