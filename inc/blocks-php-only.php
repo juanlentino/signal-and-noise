@@ -34,36 +34,57 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
+/**
+ * The eight furniture blocks: wpautop( shortcode ), exactly what the
+ * core/shortcode block produced — and, when the render is empty under a REST
+ * request (the site editor's block-renderer preview, which has no post), a
+ * labelled placeholder instead of nothing, so the block is visible and
+ * selectable on the canvas. The front end never renders through REST, so a
+ * published page is never touched.
+ *
+ * @since 13.1.1
+ * @param string $html  The renderer's output.
+ * @param string $label The block title, for the placeholder.
+ * @return string
+ */
+function sn_php_block_output( $html, $label ) {
+	$html = wpautop( (string) $html );
+	if ( '' === $html && function_exists( 'wp_is_serving_rest_request' ) && wp_is_serving_rest_request() ) {
+		return '<div class="sn-block-placeholder">' . esc_html( $label ) . '</div>';
+	}
+	return $html;
+}
+
 function sn_block_render_prov_chip( $attributes, $content, $block ) {
-	return wpautop( (string) sn_prov_chip_shortcode() );
+	return sn_php_block_output( sn_prov_chip_shortcode(), __( 'Provenance chip', 'signal-noise' ) );
 }
 
 function sn_block_render_prov_panel( $attributes, $content, $block ) {
-	return wpautop( (string) sn_prov_panel_shortcode() );
+	return sn_php_block_output( sn_prov_panel_shortcode(), __( 'Provenance record', 'signal-noise' ) );
 }
 
 function sn_block_render_related_notes( $attributes, $content, $block ) {
-	return wpautop( (string) sn_related_notes_shortcode() );
+	return sn_php_block_output( sn_related_notes_shortcode(), __( 'Related notes', 'signal-noise' ) );
 }
 
 function sn_block_render_cited_by( $attributes, $content, $block ) {
-	return wpautop( (string) sn_cited_by_shortcode() );
+	return sn_php_block_output( sn_cited_by_shortcode(), __( 'Cited by', 'signal-noise' ) );
 }
 
 function sn_block_render_note_share( $attributes, $content, $block ) {
-	return wpautop( (string) sn_note_share_shortcode() );
+	return sn_php_block_output( sn_note_share_shortcode(), __( 'Share this note', 'signal-noise' ) );
 }
 
 function sn_block_render_note_reply( $attributes, $content, $block ) {
-	return wpautop( (string) sn_note_reply_shortcode() );
+	return sn_php_block_output( sn_note_reply_shortcode(), __( 'Reply by email', 'signal-noise' ) );
 }
 
 function sn_block_render_updated_date( $attributes, $content, $block ) {
-	return wpautop( (string) sn_updated_date_shortcode() );
+	return sn_php_block_output( sn_updated_date_shortcode(), __( 'Updated date', 'signal-noise' ) );
 }
 
 function sn_block_render_post_pillar( $attributes, $content, $block ) {
-	return wpautop( (string) sn_post_pillar_shortcode() );
+	return sn_php_block_output( sn_post_pillar_shortcode(), __( 'Pillar link', 'signal-noise' ) );
 }
 
 function sn_block_render_theme_toggle( $attributes, $content, $block ) {

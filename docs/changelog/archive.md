@@ -1,4 +1,4 @@
-# Changelog archive — through v12.18.3
+# Changelog archive — every release before the current one
 
 Frozen history. New cuts are appended here by `tools/cut-release.sh`; the root
 [CHANGELOG.md](../../CHANGELOG.md) carries only `## [Unreleased]` plus the
