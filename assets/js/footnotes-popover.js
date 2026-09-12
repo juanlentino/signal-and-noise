@@ -79,10 +79,14 @@
 		var popoverRect = popover.getBoundingClientRect();
 		var spaceBelow = window.innerHeight - anchorRect.bottom;
 		var top;
+		// Flush against the anchor, no gap: a 4px gap meant `pointerleave`
+		// fired on the sup while crossing it (relatedTarget = the paragraph,
+		// not the popover) and removed the popover before the pointer ever
+		// reached it (#323).
 		if ( spaceBelow >= popoverRect.height + 16 ) {
-			top = anchorRect.bottom + window.scrollY + 4;
+			top = anchorRect.bottom + window.scrollY;
 		} else {
-			top = anchorRect.top + window.scrollY - popoverRect.height - 4;
+			top = anchorRect.top + window.scrollY - popoverRect.height;
 		}
 		var left = anchorRect.left + window.scrollX;
 		var maxLeft = window.scrollX + window.innerWidth - popoverRect.width - 8;
