@@ -16,6 +16,8 @@ function get_the_title( $p = null ) { return 'Note "' . ( is_object( $p ) ? $p->
 function get_post_time( $f, $gmt, $p ) { return $GLOBALS['__pubdate'] ?? '2026-06-07T12:00:00+00:00'; }
 function get_post_modified_time( $f, $gmt, $p ) { return $GLOBALS['__moddate'] ?? '2026-06-07T13:00:00+00:00'; }
 function get_the_category( $id ) { $c = new stdClass(); $c->name = 'analysis'; return array( $c ); }
+$GLOBALS['__tags'] = false; // false = no tags, mirrors get_the_tags()'s real return shape
+function get_the_tags( $id ) { return $GLOBALS['__tags']; }
 function has_excerpt( $p ) { return false; }
 function get_the_excerpt( $p ) { return ''; }
 $GLOBALS['__filters'] = array();
@@ -44,6 +46,19 @@ ok( is_string( $item['id'] ) && $item['id'] !== '', 'item id is a non-empty stri
 ok( isset( $item['content_html'] ) && $item['content_html'] !== '', 'content_html present + non-empty (required field)' );
 ok( preg_match( '/^\d{4}-\d{2}-\d{2}T/', $item['date_published'] ) === 1, 'date_published is RFC 3339 shape' );
 ok( in_array( 'analysis', $item['tags'], true ), 'tags carries category names' );
+
+// #334: RSS2 core emits BOTH categories and post_tag names into <category>;
+// the JSON Feed twin shipped only the single category, dropping the 23-term
+// tag vocabulary entirely. post_tag names ride AFTER category names, in the
+// same array — matching what RSS2 does, and what the pin above never ruled
+// out (it only asserted category names were present, not that tags were absent).
+$t1 = new stdClass(); $t1->name = 'provenance';
+$t2 = new stdClass(); $t2->name = 'mir';
+$GLOBALS['__tags'] = array( $t1, $t2 );
+$tagged = sn_feed_json_build_item( (object) array( 'ID' => 11, 'post_content' => 'x' ) );
+ok( array( 'analysis', 'provenance', 'mir' ) === $tagged['tags'],
+	'tags = [category names..., post_tag names...] in that order — got: ' . wp_json_encode( $tagged['tags'] ?? null ) );
+$GLOBALS['__tags'] = false;
 
 // v10.13.0: per-item image from the featured thumbnail (omitted when absent).
 ok( ! isset( $item['image'] ), 'item has no image when there is no featured thumbnail' );

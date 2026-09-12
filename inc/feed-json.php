@@ -149,9 +149,18 @@ function sn_feed_json_build_item( $post ) {
 	if ( '' !== (string) ( $post->post_password ?? '' ) ) {
 		return null;
 	}
+	// Category names first, then post_tag names — the same order RSS2 core
+	// emits both into <category> (#334). This feed carried only the single
+	// category, silently dropping the 23-term tag vocabulary from the twin.
 	$tags = array();
 	foreach ( (array) get_the_category( $post->ID ) as $cat ) {
 		$tags[] = $cat->name;
+	}
+	$post_tags = function_exists( 'get_the_tags' ) ? get_the_tags( $post->ID ) : false;
+	if ( is_array( $post_tags ) ) {
+		foreach ( $post_tags as $tag ) {
+			$tags[] = $tag->name;
+		}
 	}
 	$item = array(
 		'id'           => (string) get_permalink( $post ),
