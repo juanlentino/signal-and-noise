@@ -154,6 +154,23 @@ ok( strpos( $print_css, '.sn-related-notes' ) !== false, 'FIX 7: print.css hides
 ok( 0 === preg_match( '/(^|[,\s])footer\.wp-block-template-part\b/m', $print_css ), '#318: print.css no longer hides every <footer>, only .sn-footer' );
 ok( strpos( $print_css, '.sn-footer' ) !== false, '#318: .sn-footer still hides the real site footer' );
 
+// #319 — `:root[data-theme="dark"]` is an ATTRIBUTE selector, not a media
+// query, so it stays active in print. critical.css sets bone (ink) to
+// #ffffff there; print only forces #000 on html/body/p/li/h1-h3/a, so a
+// bone-colored element (steps-list numerals, .sn-correction strong) prints
+// white on the forced-white page for anyone who had toggled dark mode.
+// print.css must re-assert the LIGHT token values under that same selector.
+ok(
+	(bool) preg_match( '/:root\[data-theme="dark"\]\s*\{[^}]*--wp--preset--color--bone:\s*#000000/i', $print_css ),
+	'#319: print.css re-declares --wp--preset--color--bone to the light value under :root[data-theme="dark"]'
+);
+foreach ( array( 'void', 'asphalt', 'rust', 'concrete' ) as $token ) {
+	ok(
+		(bool) preg_match( '/:root\[data-theme="dark"\]\s*\{[^}]*--wp--preset--color--' . $token . ':/i', $print_css ),
+		"#319: print.css also re-declares --wp--preset--color--$token under :root[data-theme=\"dark\"]"
+	);
+}
+
 // ── DISCOGRAPHY ENQUEUE (v9.13.0): /music-page-scoped lazy-embed JS ──
 function reset_scripts() {
 	$GLOBALS['__enqueued_scripts'] = array();
