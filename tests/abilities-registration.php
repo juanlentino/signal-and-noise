@@ -639,6 +639,14 @@ $GLOBALS['__test_block_templates']['signal-and-noise//page'] = array(
 	'id'      => 'signal-and-noise//page',
 	'content' => '<!-- wp:template-part {"slug":"header"} /--><!-- wp:post-content /--><!-- wp:template-part {"slug":"footer"} /-->',
 );
+// #310: a slug-matched template outranks the generic one, as in core's
+// hierarchy (page-{post_name} before page). One block, so the two are
+// distinguishable by count as well as by slug.
+$GLOBALS['__test_block_templates']['signal-and-noise//page-about'] = array(
+	'slug'    => 'page-about',
+	'id'      => 'signal-and-noise//page-about',
+	'content' => '<!-- wp:post-content /-->',
+);
 // Seed a fixture post resolving to that template.
 $GLOBALS['__test_posts'][42] = array(
 	'ID'          => 42,
@@ -658,13 +666,19 @@ ha_eq( 'diagnostics', $ability['category'], 'category is diagnostics' );
 
 $result = call_user_func( $ability['execute_callback'], array( 'post_id' => 42 ) );
 ha_true( is_array( $result ), 'returns array' );
-ha_eq( 'page', $result['template_slug'], 'resolves template_slug=page' );
+ha_eq( 'page-about', $result['template_slug'], 'resolves template_slug=page-about (slug-matched template wins, #310)' );
 ha_true( isset( $result['blocks'] ) && is_array( $result['blocks'] ), 'has blocks array' );
-ha_true( count( $result['blocks'] ) >= 1, 'parses at least one block from fixture' );
+ha_eq( 1, count( $result['blocks'] ), 'blocks come from page-about, not page' );
 
 $result_slug = call_user_func( $ability['execute_callback'], array( 'slug' => 'about', 'post_type' => 'page' ) );
 ha_true( is_array( $result_slug ), 'slug input also resolves' );
-ha_eq( 'page', $result_slug['template_slug'], 'slug->template_slug=page' );
+ha_eq( 'page-about', $result_slug['template_slug'], 'slug->template_slug=page-about' );
+
+// Without a slug-matched template the generic one is the fallback.
+unset( $GLOBALS['__test_block_templates']['signal-and-noise//page-about'] );
+$result_generic = call_user_func( $ability['execute_callback'], array( 'post_id' => 42 ) );
+ha_eq( 'page', $result_generic['template_slug'], 'falls back to page when page-about is absent' );
+ha_eq( 3, count( $result_generic['blocks'] ), 'fallback blocks come from page' );
 
 $missing = call_user_func( $ability['execute_callback'], array( 'post_id' => 9999 ) );
 ha_true( is_wp_error( $missing ), 'missing post returns WP_Error' );

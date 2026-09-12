@@ -302,6 +302,12 @@ $GLOBALS['__test_block_templates'] = array(
 		'id'      => 'signal-and-noise//page',
 		'content' => '<!-- wp:template-part {"slug":"header"} /--><!-- wp:post-content /-->',
 	),
+	// #310: the 'about' page has a slug-matched template, as 11 of 13 live pages do.
+	'signal-and-noise//page-about' => array(
+		'slug'    => 'page-about',
+		'id'      => 'signal-and-noise//page-about',
+		'content' => '<!-- wp:post-content /-->',
+	),
 );
 if ( ! function_exists( 'get_block_template' ) ) {
 	function get_block_template( $id ) {
@@ -605,7 +611,8 @@ ap_eq( 2, count( $out['patterns'] ), 'list-block-patterns: returns 2 fixture pat
 // get-active-template-structure (by post_id)
 $out = wp_get_ability( 'signal-and-noise/get-active-template-structure' )->execute( array( 'post_id' => 42 ) );
 ap_true( is_array( $out ) && isset( $out['template_slug'], $out['blocks'] ), 'get-active-template-structure: required keys present' );
-ap_eq( 'page', $out['template_slug'], 'get-active-template-structure: template_slug=page' );
+ap_eq( 'page-about', $out['template_slug'], 'get-active-template-structure: template_slug=page-about (slug-matched, #310)' );
+ap_eq( 1, count( $out['blocks'] ), 'get-active-template-structure: blocks are page-about\'s, not page\'s' );
 
 // get-theme-version
 $out = wp_get_ability( 'signal-and-noise/get-theme-version' )->execute( array() );
@@ -682,7 +689,7 @@ ap_eq( 'post_not_found', $res->get_error_code(), 'get-active-template-structure:
 
 // get-active-template-structure: by slug (resolves)
 $res = wp_get_ability( 'signal-and-noise/get-active-template-structure' )->execute( array( 'slug' => 'about', 'post_type' => 'page' ) );
-ap_true( is_array( $res ) && 'page' === $res['template_slug'], 'get-active-template-structure: slug input resolves' );
+ap_true( is_array( $res ) && 'page-about' === $res['template_slug'], 'get-active-template-structure: slug input resolves' );
 
 // ── v9.15.4: get-active-template-structure must NOT be an existence/post_type
 // oracle for non-public posts. A bare `read`-cap user probing a draft they
