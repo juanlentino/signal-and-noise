@@ -147,6 +147,13 @@ ok( strpos( $print_css, '.sn-note-share' ) !== false, 'print.css hides the share
 // strips it, so the selector must actually be in the hide list.
 ok( strpos( $print_css, '.sn-related-notes' ) !== false, 'FIX 7: print.css hides the Related Notes footer (.sn-related-notes)' );
 
+// #318 — `footer.wp-block-template-part` also matches the post-closing
+// template part (templates/single.html renders it with tagName: footer), so
+// the provenance record it holds never printed. `.sn-footer` alone still
+// hides the real site footer; the element selector must be gone.
+ok( 0 === preg_match( '/(^|[,\s])footer\.wp-block-template-part\b/m', $print_css ), '#318: print.css no longer hides every <footer>, only .sn-footer' );
+ok( strpos( $print_css, '.sn-footer' ) !== false, '#318: .sn-footer still hides the real site footer' );
+
 // ── DISCOGRAPHY ENQUEUE (v9.13.0): /music-page-scoped lazy-embed JS ──
 function reset_scripts() {
 	$GLOBALS['__enqueued_scripts'] = array();
