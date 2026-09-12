@@ -356,6 +356,11 @@ add_action( 'template_redirect', function() {
 }, 0 );
 
 add_action( 'template_redirect', function() {
+	// #313: /notes/?feed=rss2 resolves to the notes Page; core has already
+	// sent the feed Content-Type, so the HTML index must not print under it.
+	if ( is_feed() ) {
+		return;
+	}
 	if ( ! sn_notes_owns_request() ) {
 		return;
 	}
@@ -386,6 +391,9 @@ add_action( 'template_redirect', function() {
  * outcome.
  */
 add_filter( 'template_include', function( $template ) {
+	if ( is_feed() ) {
+		return $template;
+	}
 	if ( ! sn_notes_owns_request() ) {
 		return $template;
 	}

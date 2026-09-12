@@ -10,6 +10,19 @@
 	margin: 2cm;
 }
 
+/* ── `:root[data-theme="dark"]` is an attribute selector, not a media query,
+   so it stays active in print. Without this, a bone-colored element (the
+   steps-list numerals, .sn-correction strong) prints white on the forced-
+   white page for anyone who had toggled dark mode (#319). Re-assert the
+   LIGHT token values here, loaded after critical.css so it wins the tie. ── */
+:root[data-theme="dark"] {
+	--wp--preset--color--bone: #000000;
+	--wp--preset--color--void: #ffffff;
+	--wp--preset--color--asphalt: #f5f5f5;
+	--wp--preset--color--concrete: #d9d9d9;
+	--wp--preset--color--rust: #666666;
+}
+
 /* ── Force black-on-white. Brutalist on screen; legible + ink-frugal in print. ── */
 html,
 body {
@@ -29,7 +42,6 @@ body * {
 #wp-skip-link,
 header.wp-block-template-part,
 .sn-header,
-footer.wp-block-template-part,
 .sn-footer,
 .wp-block-navigation,
 .sn-post-closing__nav,

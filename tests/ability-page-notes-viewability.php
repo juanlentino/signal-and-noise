@@ -12,8 +12,11 @@ define( 'ABSPATH', '/' );
 if ( ! defined( 'OBJECT' ) ) { define( 'OBJECT', 'OBJECT' ); }
 if ( ! function_exists( 'add_action' ) ) { function add_action() {} }
 
-$GLOBALS['__last_path'] = 'prov-p1';
-function sn_theme_pillar_descriptors() { return array( array( 'slug' => 'p1', 'title' => 'P1', 'dek' => 'd', 'last_path' => $GLOBALS['__last_path'], 'date' => '2026-01-01 00:00:00', 'designation' => '1.00' ) ); }
+// #314: the ability resolves by the FULL path ('provenance/prov-p1'), because
+// every live pillar is a child of the hub and core's get_page_by_path() with a
+// single segment requires post_parent 0. The fixture drives the slug.
+$GLOBALS['__slug'] = 'provenance/prov-p1';
+function sn_theme_pillar_descriptors() { return array( array( 'slug' => $GLOBALS['__slug'], 'title' => 'P1', 'dek' => 'd', 'last_path' => basename( $GLOBALS['__slug'] ), 'date' => '2026-01-01 00:00:00', 'designation' => '1.00' ) ); }
 function sn_notes_reading_time_for_slug( $s ) { return '5 min'; }
 function home_url( $p = '' ) { return $p; }
 $GLOBALS['__viewable'] = true;
@@ -23,8 +26,9 @@ function is_post_publicly_viewable( $post ) { return ! empty( $GLOBALS['__viewab
 // The fixture carries one page and one same-named post so a wrong-type lookup
 // is observably different from a missing one.
 $GLOBALS['__test_posts'] = array(
-	array( 'post_name' => 'prov-p1', 'post_type' => 'page', 'post_modified' => '2026-01-15 12:00:00' ),
-	array( 'post_name' => 'a-real-post', 'post_type' => 'post', 'post_modified' => '2026-02-02 09:00:00' ),
+	array( 'ID' => 1, 'post_name' => 'provenance', 'post_type' => 'page', 'post_modified' => '2025-01-01 00:00:00' ),
+	array( 'ID' => 2, 'post_name' => 'prov-p1', 'post_parent' => 1, 'post_type' => 'page', 'post_modified' => '2026-01-15 12:00:00' ),
+	array( 'ID' => 3, 'post_name' => 'a-real-post', 'post_parent' => 1, 'post_type' => 'post', 'post_modified' => '2026-02-02 09:00:00' ),
 );
 // Models core's REAL post_type filter: WP matches post_type IN ($post_type,
 // 'attachment'), so a 'post' lookup can never return a page. The pre-v11.4.5
@@ -32,14 +36,25 @@ $GLOBALS['__test_posts'] = array(
 // unconditionally — which is why 3 assertions stayed green while the live
 // ability returned last_modified:"" for every pillar. Same false-green class
 // the v11.2.2 reading-time fix removed from the two other ability suites.
+// Hierarchy-aware (#314): the path is walked through post_parent, so a child
+// page looked up by its last segment alone is null — the live failure.
 function get_page_by_path( $path, $out = OBJECT, $type = 'page' ) {
-	foreach ( $GLOBALS['__test_posts'] as $p ) {
-		if ( $p['post_name'] === $path
-			&& in_array( $p['post_type'], array( $type, 'attachment' ), true ) ) {
-			return (object) $p;
+	$parent = 0;
+	$found  = null;
+	foreach ( explode( '/', trim( (string) $path, '/' ) ) as $segment ) {
+		$found = null;
+		foreach ( $GLOBALS['__test_posts'] as $p ) {
+			if ( $p['post_name'] === $segment && (int) ( $p['post_parent'] ?? 0 ) === $parent ) {
+				$found = $p;
+				break;
+			}
 		}
+		if ( null === $found ) {
+			return null;
+		}
+		$parent = (int) $found['ID'];
 	}
-	return null;
+	return ( $found && in_array( $found['post_type'], array( $type, 'attachment' ), true ) ) ? (object) $found : null;
 }
 
 require_once __DIR__ . '/../inc/abilities-content.php';
@@ -66,15 +81,15 @@ ok( isset( $out['pillars'][0]['designation'] ) && '1.00' === $out['pillars'][0][
 // v11.4.5 regression: the resolution must ask for a PAGE. Before the fix the
 // ability asked for 'post', so this next assertion is what was silently
 // failing on production for every pillar.
-$GLOBALS['__viewable']  = true;
-$GLOBALS['__last_path'] = 'prov-p1';
+$GLOBALS['__viewable'] = true;
+$GLOBALS['__slug']     = 'provenance/prov-p1';
 $out = sn_theme_ability_page_notes_pillars();
 ok( '2026-01-15' === $out['pillars'][0]['last_modified'],
-	'pillar last_path resolves as a PAGE → live mtime emitted (regression: was "" on production)' );
+	'pillar path resolves as a PAGE → live mtime emitted (regression: was "" on production)' );
 
 // A path that exists only as a POST must NOT resolve — the descriptor set is
 // page-only, so a same-named post is not the pillar and must not lend its mtime.
-$GLOBALS['__last_path'] = 'a-real-post';
+$GLOBALS['__slug'] = 'provenance/a-real-post';
 $out = sn_theme_ability_page_notes_pillars();
 ok( '' === $out['pillars'][0]['last_modified'],
 	'a same-named POST does not satisfy a pillar lookup → last_modified withheld' );

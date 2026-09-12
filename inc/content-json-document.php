@@ -28,13 +28,16 @@ function sn_content_json_breadcrumb( $post ) {
 	} else {
 		foreach ( array_reverse( get_post_ancestors( $post ) ) as $ancestor_id ) {
 			$crumbs[] = array(
-				'name' => wp_strip_all_tags( get_the_title( $ancestor_id ) ),
+				// html_entity_decode() BEFORE stripping tags: get_the_title()
+				// returns entity-encoded text (WordPress stores "&" as
+				// "&#038;"), and this document is read programmatically (#335).
+				'name' => wp_strip_all_tags( html_entity_decode( get_the_title( $ancestor_id ), ENT_QUOTES, 'UTF-8' ) ),
 				'url'  => get_permalink( $ancestor_id ),
 			);
 		}
 	}
 	$crumbs[] = array(
-		'name' => wp_strip_all_tags( get_the_title( $post ) ),
+		'name' => wp_strip_all_tags( html_entity_decode( get_the_title( $post ), ENT_QUOTES, 'UTF-8' ) ),
 		'url'  => get_permalink( $post ),
 	);
 	return $crumbs;
@@ -56,7 +59,7 @@ function sn_content_json_document( $post ) {
 	$doc = array(
 		'url'            => $permalink,
 		'type'           => $is_post ? 'note' : 'page',
-		'title'          => wp_strip_all_tags( get_the_title( $post ) ),
+		'title'          => wp_strip_all_tags( html_entity_decode( get_the_title( $post ), ENT_QUOTES, 'UTF-8' ) ),
 		'date_published' => get_the_date( 'c', $post ),
 		'date_modified'  => get_the_modified_date( 'c', $post ),
 		'author'         => array(

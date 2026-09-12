@@ -43,35 +43,39 @@ function sn_article_toc_apply( $html ) {
 		return $html;
 	}
 
-	$items = array(); // [ ['id'=>, 'label'=>], ... ] in document order.
-	$seen  = array(); // slug => count, for collision suffixes.
+	$items    = array(); // [ ['id'=>, 'label'=>], ... ] in document order.
+	$used_ids = array(); // EVERY id emitted so far (author-set or generated) => true.
 
 	$new_html = preg_replace_callback(
 		'/<h2\b([^>]*)>(.*?)<\/h2>/is',
-		function ( $m ) use ( &$items, &$seen ) {
+		function ( $m ) use ( &$items, &$used_ids ) {
 			$attrs = $m[1];
 			$label = trim( wp_strip_all_tags( $m[2] ) );
 			if ( '' === $label ) {
 				return $m[0]; // skip empty headings entirely.
 			}
 
-			// Respect an author-set id; otherwise slug from the label.
+			// Respect an author-set id; otherwise slug from the label. Either
+			// way the id is recorded in the SAME shared map, so a later
+			// generated heading can never silently reuse an earlier
+			// author-set id (#330) — it bumps its own suffix instead.
 			if ( preg_match( '/\bid\s*=\s*([\'"])(.*?)\1/i', $attrs, $idm ) ) {
-				$id  = $idm[2];
-				$tag = $m[0]; // already anchored — leave the tag untouched.
+				$id                = $idm[2];
+				$used_ids[ $id ]   = true;
+				$tag               = $m[0]; // already anchored — leave the tag untouched.
 			} else {
 				$base = sanitize_title( $label );
 				if ( '' === $base ) {
 					$base = 'section';
 				}
 				$id = $base;
-				if ( isset( $seen[ $base ] ) ) {
-					$seen[ $base ]++;
-					$id = $base . '-' . $seen[ $base ];
-				} else {
-					$seen[ $base ] = 1;
+				$n  = 2;
+				while ( isset( $used_ids[ $id ] ) ) {
+					$id = $base . '-' . $n;
+					$n++;
 				}
-				$tag = '<h2' . $attrs . ' id="' . esc_attr( $id ) . '">' . $m[2] . '</h2>';
+				$used_ids[ $id ] = true;
+				$tag             = '<h2' . $attrs . ' id="' . esc_attr( $id ) . '">' . $m[2] . '</h2>';
 			}
 
 			$items[] = array( 'id' => $id, 'label' => $label );

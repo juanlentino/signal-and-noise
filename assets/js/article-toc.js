@@ -71,6 +71,12 @@
   }
   window.addEventListener('scroll', onScroll, { passive: true });
   window.addEventListener('resize', onScroll, { passive: true });
+  // The header shrinks over a 300ms transition after `.is-scrolled` toggles;
+  // `bar.style.top` was only re-read on scroll/resize, so a single wheel
+  // notch across the toggle left the bar lagging the header's final height
+  // by up to ~33px until the next scroll event fired. Re-read once the
+  // header's own transition settles (#322).
+  if (header) { header.addEventListener('transitionend', onScroll); }
   update();
 
   // ── Smooth-scroll on TOC click (reduced-motion aware) ───────────────

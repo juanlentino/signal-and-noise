@@ -19,6 +19,10 @@
  * @package signal-and-noise
  */
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Resolve the [sn_reading_path] token inside core/shortcode block output.
  *

@@ -231,13 +231,29 @@ if ( ! function_exists( 'get_page_by_path' ) ) {
 		// ($post_type, 'attachment'), so a 'page' lookup never returns a post.
 		// The pre-v11.2.2 stub ignored $post_type ("ignore ... for stub"), which
 		// hid the live minutes=0 bug for published posts over MCP.
-		foreach ( $GLOBALS['__test_posts'] as $id => $p ) {
-			if ( isset( $p['post_name'] ) && $p['post_name'] === $slug
-				&& in_array( $p['post_type'] ?? 'page', array( $post_type, 'attachment' ), true ) ) {
-				return (object) $p;
+		// #314: hierarchy-aware, as core is. The path is walked segment by
+		// segment through post_parent (default 0), so a single-segment slug
+		// resolves ONLY a top-level post — a child page looked up by its last
+		// segment is null, which the flat stub could not see.
+		$parent = 0;
+		$found  = null;
+		foreach ( explode( '/', trim( (string) $slug, '/' ) ) as $segment ) {
+			$found = null;
+			foreach ( $GLOBALS['__test_posts'] as $id => $p ) {
+				if ( isset( $p['post_name'] ) && $p['post_name'] === $segment
+					&& (int) ( $p['post_parent'] ?? 0 ) === $parent ) {
+					$found = $p;
+					break;
+				}
 			}
+			if ( null === $found ) {
+				return null;
+			}
+			$parent = (int) ( $found['ID'] ?? 0 );
 		}
-		return null;
+		return ( $found && in_array( $found['post_type'] ?? 'page', array( $post_type, 'attachment' ), true ) )
+			? (object) $found
+			: null;
 	}
 }
 // v10.46.0: the dynamic pillar descriptors query the /provenance/ hub's
@@ -391,7 +407,10 @@ if ( ! function_exists( 'sn_llms_txt_recent_notes' ) ) {
 	}
 }
 if ( ! function_exists( 'sn_llms_txt_body' ) ) {
-	function sn_llms_txt_body( $full = false, $notes = array() ) {
+	function sn_llms_txt_body( $full = false, $notes = array(), $pillars = array() ) {
+		// #311: the route passes the pillar descriptors as the third argument;
+		// the ability must too, or its body lacks the "Pillar essays" section.
+		$GLOBALS['__test_llms_body_pillars'] = $pillars;
 		return $full ? ( "# llms-full\n" . count( (array) $notes ) . ' notes' ) : '# llms index';
 	}
 }
@@ -576,6 +595,15 @@ $full = call_user_func( $ability['execute_callback'], array( 'full' => true ) );
 ha_eq( 'full', $full['variant'], 'full=true → full variant' );
 ha_true( strpos( $full['content'], 'llms-full' ) !== false, 'full variant renders the full body' );
 ha_true( strpos( $full['content'], '1 notes' ) !== false, 'recent Notes are fetched + passed ONLY for the full variant' );
+// Seed the descriptor memo (the seam sn_theme_pillar_descriptors() reads) so
+// the pin is non-vacuous; cleared afterwards so later blocks derive their own.
+$GLOBALS['sn_theme_pillar_descriptors_memo'] = array(
+	array( 'slug' => 'provenance/over-detection', 'title' => 'Provenance Over Detection', 'dek' => 'd', 'last_path' => 'over-detection', 'date' => '2026-05-07', 'designation' => '' ),
+);
+$GLOBALS['__test_llms_body_pillars'] = null;
+$full = call_user_func( $ability['execute_callback'], array( 'full' => true ) );
+ha_eq( $GLOBALS['sn_theme_pillar_descriptors_memo'], $GLOBALS['__test_llms_body_pillars'], 'pillar descriptors are passed to the body builder, as the /llms.txt route does (#311)' );
+unset( $GLOBALS['sn_theme_pillar_descriptors_memo'] );
 
 // ─── Test: list-block-patterns ───────────────────────────────────
 echo "\nTest signal-and-noise/list-block-patterns\n";
@@ -639,6 +667,14 @@ $GLOBALS['__test_block_templates']['signal-and-noise//page'] = array(
 	'id'      => 'signal-and-noise//page',
 	'content' => '<!-- wp:template-part {"slug":"header"} /--><!-- wp:post-content /--><!-- wp:template-part {"slug":"footer"} /-->',
 );
+// #310: a slug-matched template outranks the generic one, as in core's
+// hierarchy (page-{post_name} before page). One block, so the two are
+// distinguishable by count as well as by slug.
+$GLOBALS['__test_block_templates']['signal-and-noise//page-about'] = array(
+	'slug'    => 'page-about',
+	'id'      => 'signal-and-noise//page-about',
+	'content' => '<!-- wp:post-content /-->',
+);
 // Seed a fixture post resolving to that template.
 $GLOBALS['__test_posts'][42] = array(
 	'ID'          => 42,
@@ -658,13 +694,19 @@ ha_eq( 'diagnostics', $ability['category'], 'category is diagnostics' );
 
 $result = call_user_func( $ability['execute_callback'], array( 'post_id' => 42 ) );
 ha_true( is_array( $result ), 'returns array' );
-ha_eq( 'page', $result['template_slug'], 'resolves template_slug=page' );
+ha_eq( 'page-about', $result['template_slug'], 'resolves template_slug=page-about (slug-matched template wins, #310)' );
 ha_true( isset( $result['blocks'] ) && is_array( $result['blocks'] ), 'has blocks array' );
-ha_true( count( $result['blocks'] ) >= 1, 'parses at least one block from fixture' );
+ha_eq( 1, count( $result['blocks'] ), 'blocks come from page-about, not page' );
 
 $result_slug = call_user_func( $ability['execute_callback'], array( 'slug' => 'about', 'post_type' => 'page' ) );
 ha_true( is_array( $result_slug ), 'slug input also resolves' );
-ha_eq( 'page', $result_slug['template_slug'], 'slug->template_slug=page' );
+ha_eq( 'page-about', $result_slug['template_slug'], 'slug->template_slug=page-about' );
+
+// Without a slug-matched template the generic one is the fallback.
+unset( $GLOBALS['__test_block_templates']['signal-and-noise//page-about'] );
+$result_generic = call_user_func( $ability['execute_callback'], array( 'post_id' => 42 ) );
+ha_eq( 'page', $result_generic['template_slug'], 'falls back to page when page-about is absent' );
+ha_eq( 3, count( $result_generic['blocks'] ), 'fallback blocks come from page' );
 
 $missing = call_user_func( $ability['execute_callback'], array( 'post_id' => 9999 ) );
 ha_true( is_wp_error( $missing ), 'missing post returns WP_Error' );
@@ -711,23 +753,26 @@ $GLOBALS['__test_page_children'] = array(
 	(object) array( 'post_name' => 'verify', 'post_title' => 'Verify a Note', 'post_excerpt' => 'How to verify.', 'post_date' => '2026-07-09 13:09:30' ),
 );
 
-// Seed posts behind the pillar slugs so url + last_modified resolve.
+// Seed the Pages behind the pillar slugs so url + last_modified resolve. They
+// are CHILDREN of the hub (post_parent 1490), as every live pillar is (#314).
 $GLOBALS['__test_posts'][101] = array(
 	'ID'                => 101,
 	'post_name'         => 'over-detection',
+	'post_parent'       => 1490,
 	'post_title'        => 'Provenance Over Detection',
 	'post_modified'     => '2026-03-15 12:00:00',
 	'post_modified_gmt' => '2026-03-15 12:00:00',
-	'post_type'         => 'post',
+	'post_type'         => 'page',
 	'post_status'       => 'publish',
 );
 $GLOBALS['__test_posts'][102] = array(
 	'ID'                => 102,
 	'post_name'         => 'as-substrate',
+	'post_parent'       => 1490,
 	'post_title'        => 'Provenance as Substrate',
 	'post_modified'     => '2026-05-10 12:00:00',
 	'post_modified_gmt' => '2026-05-10 12:00:00',
-	'post_type'         => 'post',
+	'post_type'         => 'page',
 	'post_status'       => 'publish',
 );
 
@@ -748,6 +793,9 @@ ha_eq( 'Provenance Over Detection', $result['pillars'][0]['title'], 'pillar 1 ti
 ha_true( false !== strpos( $result['pillars'][0]['url'], '/provenance/over-detection' ), 'pillar 1 url contains slug' );
 ha_eq( 'provenance/as-substrate', $result['pillars'][1]['slug'], 'pillar 2 slug' );
 ha_true( isset( $result['pillars'][0]['reading_time_minutes'] ), 'reading_time_minutes present' );
+// #314: the child Page resolves by its full path, so last_modified is populated.
+ha_eq( '2026-03-15', $result['pillars'][0]['last_modified'], 'pillar 1 last_modified resolves through the hub path (#314)' );
+ha_eq( '2026-05-10', $result['pillars'][1]['last_modified'], 'pillar 2 last_modified resolves through the hub path (#314)' );
 // v10.47.0: designation is additive output — '' on the hub-children fallback
 // path this fixture seeds (no _sn_pillar-flagged Pages).
 ha_true( isset( $result['pillars'][0]['designation'] ) && '' === $result['pillars'][0]['designation'], 'designation present, empty on the fallback path' );
@@ -764,10 +812,15 @@ $GLOBALS['__test_reading_times'] = array(
 // v9.15.5: the ability now resolves the page (get_page_by_path) and gates on
 // viewability before returning a reading time, so the legitimate happy-path
 // slug must resolve to a publicly-viewable page fixture.
+$GLOBALS['__test_posts'][1490] = array(
+	'ID' => 1490, 'post_name' => 'provenance', 'post_title' => 'Provenance',
+	'post_type' => 'page', 'post_status' => 'publish',
+);
 $GLOBALS['__test_posts']['rt'] = array(
 	'ID'          => 770,
 	'post_type'   => 'page',
-	'post_name'   => 'provenance/over-detection',
+	'post_name'   => 'over-detection',
+	'post_parent' => 1490,
 	'post_status' => 'publish',
 );
 // v11.2.2: minutes now come straight from the plugin's sn_get_reading_time
@@ -1224,6 +1277,11 @@ $result_pl = call_user_func( $ability['execute_callback'], array( 'source_text' 
 ha_true( false !== strpos( $GLOBALS['__test_ai_last_prompt'], 'PRESERVE LINKS: yes' ), 'preserve_links=true surfaced in prompt' );
 ha_true( isset( $result_pl['preserved_elements']['links_count'] ), 'preserved_elements.links_count present' );
 ha_eq( 1, $result_pl['preserved_elements']['links_count'], 'counted 1 link in source' );
+
+// #315: list markers — numbered items count too, and a lone digit is not one.
+$with_lists = "Intro.\n1. First\n2. Second\n- third\n10. ten\n* five\n+ six\n7 not a list\n";
+$result_ls  = call_user_func( $ability['execute_callback'], array( 'source_text' => $with_lists, 'preserve_lists' => true ) );
+ha_eq( 6, $result_ls['preserved_elements']['lists_count'], 'counts -, *, + and N. markers; a lone digit + space is not a marker (#315)' );
 
 // ─── Test: get-latest-theme-tag (v9.9.0) ─────────────────────────
 echo "\nTest signal-and-noise/get-latest-theme-tag\n";

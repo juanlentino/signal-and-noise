@@ -135,7 +135,35 @@ if [ "$DRY_RUN" -eq 1 ]; then
   exit 0
 fi
 
-# ── 1. BOTH version files, together ─────────────────────────────────────
+# ── 1. archive receives the previous cut, newest-first under the header ──
+# Done BEFORE any file is mutated: a bad archive must be diagnosed, not
+# discovered halfway through a release that already rewrote style.css.
+if [ -n "$PREVIOUS_CUT" ]; then
+  # Never archive a section the archive already carries. Root holds the current
+  # cut, the archive holds everything older, so this should be impossible - but a
+  # duplicated release section is corruption nobody notices until they are
+  # reading history, so it is checked rather than assumed.
+  prev_heading="$(printf '%s' "$PREVIOUS_CUT" | grep -m1 -oE '^## \[[0-9.]+\]' || true)"
+  if [ -n "$prev_heading" ] && grep -qF "$prev_heading" "$ARCHIVE"; then
+    die "archive already contains ${prev_heading} - refusing to duplicate it. Root and archive have drifted; fix that before cutting."
+  fi
+  # Insert directly above the archive's newest entry so the file stays
+  # newest-first. The split point is FOUND, not a hardcoded line number: the
+  # preamble's length changes whenever someone edits it, and a stale constant
+  # would splice a release section into the middle of a sentence.
+  # `|| true` on the pipeline: under `set -euo pipefail`, a headingless
+  # archive makes grep exit 1, pipefail propagates it, and set -e killed the
+  # script right here — silently, before the die() below ever ran (#327).
+  first_heading_line="$(grep -n -m1 -E '^## \[' "$ARCHIVE" | cut -d: -f1 || true)"
+  [ -n "$first_heading_line" ] || die "no '## [' heading found in ${ARCHIVE}."
+  archive_tmp="$(mktemp)"
+  head -n $((first_heading_line - 1)) "$ARCHIVE" > "$archive_tmp"
+  printf '%s\n\n' "$PREVIOUS_CUT" >> "$archive_tmp"
+  tail -n +"$first_heading_line" "$ARCHIVE" >> "$archive_tmp"
+  mv "$archive_tmp" "$ARCHIVE"
+fi
+
+# ── 2. BOTH version files, together ─────────────────────────────────────
 tmp="$(mktemp)"
 # `next` is an awk STATEMENT, not a usable variable name. Passing -v next=...
 # breaks this substitution AND the CHANGELOG rewrite below, and --dry-run does
@@ -150,29 +178,6 @@ awk -v cur="$CURRENT" -v nextver="$NEXT" '
   !done && /^Stable tag:/ { sub(cur, nextver); done = 1 }
   { print }
 ' "$README_FILE" > "$tmp" && mv "$tmp" "$README_FILE"
-
-# ── 2. archive receives the previous cut, newest-first under the header ──
-if [ -n "$PREVIOUS_CUT" ]; then
-  # Never archive a section the archive already carries. Root holds the current
-  # cut, the archive holds everything older, so this should be impossible - but a
-  # duplicated release section is corruption nobody notices until they are
-  # reading history, so it is checked rather than assumed.
-  prev_heading="$(printf '%s' "$PREVIOUS_CUT" | grep -m1 -oE '^## \[[0-9.]+\]' || true)"
-  if [ -n "$prev_heading" ] && grep -qF "$prev_heading" "$ARCHIVE"; then
-    die "archive already contains ${prev_heading} - refusing to duplicate it. Root and archive have drifted; fix that before cutting."
-  fi
-  # Insert directly above the archive's newest entry so the file stays
-  # newest-first. The split point is FOUND, not a hardcoded line number: the
-  # preamble's length changes whenever someone edits it, and a stale constant
-  # would splice a release section into the middle of a sentence.
-  first_heading_line="$(grep -n -m1 -E '^## \[' "$ARCHIVE" | cut -d: -f1)"
-  [ -n "$first_heading_line" ] || die "no '## [' heading found in ${ARCHIVE}."
-  tmp="$(mktemp)"
-  head -n $((first_heading_line - 1)) "$ARCHIVE" > "$tmp"
-  printf '%s\n\n' "$PREVIOUS_CUT" >> "$tmp"
-  tail -n +"$first_heading_line" "$ARCHIVE" >> "$tmp"
-  mv "$tmp" "$ARCHIVE"
-fi
 
 # ── 3. root: fresh empty Unreleased, old Unreleased becomes the new cut ──
 # Consolidate duplicate "### X" headings before promoting (#271). Rule 2 has

@@ -48,5 +48,14 @@ ok( false !== strpos( $js, '#footnote-ref-' ), 'and still skips hand-authored ba
 // ── the sidenote escape carries its !important (fix B, same release) ──
 ok( 1 === preg_match( '/margin-right:\s*-200px\s*!important/', $css ), 'sidenote margin-right:-200px carries !important — without it core\'s auto !important zeroes the escape' );
 
+// ── #323: the popover sits FLUSH against the sup, no gap ──
+// A 4px gap meant `pointerleave` fired on the sup while crossing it
+// (relatedTarget = the paragraph, not the popover), and removeActive() ran
+// before the pointer ever reached the popover — its own pointerleave
+// handler and pointer-events:auto (article.css:490) were unreachable.
+ok( false === strpos( $js, 'anchorRect.bottom + window.scrollY + 4' ), '#323: the below-anchor placement no longer adds a 4px gap' );
+ok( false === strpos( $js, 'popoverRect.height - 4' ), '#323: the above-anchor placement no longer subtracts a 4px gap' );
+ok( false !== strpos( $js, 'anchorRect.bottom + window.scrollY;' ), '#323: the popover is placed flush against the anchor\'s bottom edge' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

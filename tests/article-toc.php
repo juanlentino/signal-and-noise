@@ -102,6 +102,16 @@ ok( strpos( $aout, '<h2 id="custom-anchor">Alpha</h2>' ) !== false, 'author id l
 ok( strpos( $aout, '<a href="#custom-anchor">Alpha</a>' ) !== false, 'TOC links the author id' );
 ok( strpos( $aout, 'id="custom-anchor" id=' ) === false, 'no second id injected onto an already-anchored heading' );
 
+// ── An author-set id must be recorded, or a later generated heading can
+// duplicate it (theme #330): <h2 id="setup"> then a heading literally
+// titled "Setup" both slug to "setup" — two TOC links would jump to the
+// SAME (first) heading.
+$collide = '<h2 id="setup">Getting started</h2>' . $p . h2( 'Intro' ) . $p . h2( 'Setup' ) . $p;
+$cout    = sn_article_toc_apply( $collide );
+ok( 1 === substr_count( $cout, 'id="setup"' ), 'the author id is recorded, so the generated "Setup" heading does NOT reuse it' );
+ok( strpos( $cout, 'id="setup-2"' ) !== false, 'the generated heading gets the next free suffix instead' );
+ok( strpos( $cout, '<a href="#setup-2">Setup</a>' ) !== false, 'the TOC links the deduped id, not the author id, for the generated heading' );
+
 // ── Inline markup in a heading → clean label + slug ───────────────────
 $inline = '<h2 class="wp-block-heading"><em>Hello</em> <code>World</code></h2>' . $p . h2( 'Two' ) . $p . h2( 'Three' ) . $p;
 $iout = sn_article_toc_apply( $inline );
@@ -126,6 +136,16 @@ ok( sn_article_toc_the_content( $body ) === $body, 'guard: secondary query → u
 
 $GLOBALS['__is_singular_post'] = true; $GLOBALS['__in_the_loop'] = true; $GLOBALS['__is_main_query'] = true;
 ok( strpos( sn_article_toc_the_content( $body ), '<nav class="sn-article-toc"' ) === 0, 'guard: main single-post query → TOC applied' );
+
+// ── JS SOURCE: the progress bar re-reads the header's shrunk height (#322) ──
+// `bar.style.top` was only re-read on scroll/resize while `.sn-header`
+// transitions for 300ms after `.is-scrolled` toggles — one wheel notch
+// across scrollY 50 left ~33px of content showing between the bar and the
+// header. A `transitionend` listener re-runs the same update once the
+// header's own transition settles.
+$toc_js = (string) @file_get_contents( realpath( __DIR__ . '/..' ) . '/assets/js/article-toc.js' );
+ok( '' !== $toc_js, 'article-toc.js is readable' );
+ok( strpos( $toc_js, "addEventListener('transitionend'" ) !== false, '#322: article-toc.js listens for the header\'s transitionend to re-read its shrunk height' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

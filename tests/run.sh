@@ -120,6 +120,18 @@ fi
 # `$passed` deliberately still counts assertions from suites that FAILED — a
 # failing suite's passing assertions really did pass. That is why the failure
 # count has to appear beside it: the assertion total alone always looks healthy.
+# v13.1.2: the node suites (tests/js/*.test.cjs) run in CI as their own step;
+# the sweep counts them too, so a red there is a red here (#337 shipped a
+# harness break the PHP sweep could not see).
+if command -v node >/dev/null 2>&1 && ls tests/js/*.test.cjs >/dev/null 2>&1; then
+	if node --test tests/js/*.test.cjs >/dev/null 2>&1; then
+		total=$((total + 1))
+	else
+		total=$((total + 1)); fail=$((fail + 1))
+		echo "ERROR  tests/js/*.test.cjs (node --test) failed"
+	fi
+fi
+
 if [ "$fail" -gt 0 ]; then
 	echo "-- swept $total suites, $passed assertions passed, $fail SUITE(S) FAILED, $skipped skipped --"
 	exit 1

@@ -76,11 +76,17 @@ $GLOBALS['__qargs'] = array();
 sn_index_notes_query();
 ok( $GLOBALS['__qargs'][0]['post_type'] === 'post', 'notes query targets post_type=post' );
 ok( $GLOBALS['__qargs'][0]['post_status'] === 'publish', 'notes query is publish-only' );
+// v11.4.6 symmetry (#331): password-protected posts stay off every index —
+// the notes index, the feeds, llms.txt, the JSON twin — and /index too.
+ok( ( $GLOBALS['__qargs'][0]['has_password'] ?? null ) === false,
+	'notes query excludes password-protected notes, matching every other index surface' );
 
 ok( function_exists( 'sn_index_pages_query' ), 'sn_index_pages_query() is defined' );
 $GLOBALS['__qargs'] = array();
 sn_index_pages_query();
 ok( $GLOBALS['__qargs'][0]['post_type'] === 'page', 'pages query targets post_type=page' );
+ok( ( $GLOBALS['__qargs'][0]['has_password'] ?? null ) === false,
+	'pages query excludes password-protected pages, matching every other index surface' );
 
 ok( function_exists( 'sn_index_music_entries' ), 'sn_index_music_entries() is defined' );
 ok( sn_index_music_entries() === array(), 'music entries default to [] (plugin absent / standalone-safe)' );

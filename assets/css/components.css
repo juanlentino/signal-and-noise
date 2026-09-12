@@ -1034,10 +1034,14 @@
 /* Controls rail: count + role chips (sticky). */
 .sn-disco-controls {
 	position: sticky;
-	/* Stick BELOW the fixed header (108/80/65px staircase), not at top:0 where the
-	   header (z-index 10000) occluded the rail mid-scroll. z-index sits above page
-	   content but below the footer (9990). Responsive top overrides below. */
-	top: 108px;
+	/* Stick BELOW the fixed header, not at top:0 where the header (z-index
+	   10000) occluded the rail mid-scroll. z-index sits above page content
+	   but below the footer (9990). 108px was the UNSCROLLED header's height
+	   (body's own padding-top); by the time a sticky rail actually engages,
+	   the header is already shrunk to its scrolled ~61px, leaving a
+	   14-47px band of grid between them (#322). Responsive overrides below
+	   are a separate, already-correct staircase. */
+	top: 61px;
 	z-index: 9985;
 	display: flex;
 	flex-wrap: wrap;
@@ -1637,6 +1641,13 @@
 	outline-offset: 2px;
 	border-bottom-color: var(--wp--preset--color--blood);
 }
+/* `medium` is a fluid preset and clamps to 14–14.6px at phone width, under
+ * WebKit's 16px zoom threshold (issue #317). */
+@media screen and (max-width: 782px) {
+	.sn-404-search__input {
+		font-size: 16px;
+	}
+}
 .sn-404-search__submit {
 	flex: 0 0 auto;
 	padding: 0.4rem 1rem;
@@ -2164,7 +2175,14 @@ img.sn-img-dim {
 		color: var(--wp--preset--color--void);
 	}
 
-	:root a:not(.wp-element-button):not(.wp-block-button__link):hover {
+	/* :where() zeroes this selector's own specificity (#321). Without it,
+	   (0,3,1) beat every component-level link color rule in the codebase
+	   (most are (0,1,1), same as `.sn-article-toc__list a`), so tapping any
+	   deliberately-colored link forced it to blood/no-underline too. Zeroed,
+	   it still wins the tie against core's own zero-specificity
+	   `:root :where(a:hover)` by loading later, but now loses to any
+	   component rule that has real specificity of its own. */
+	:where(:root a:not(.wp-element-button):not(.wp-block-button__link):hover) {
 		/* theme.json elements.link resting state. */
 		color: var(--wp--preset--color--blood);
 		text-decoration: none;

@@ -106,6 +106,8 @@ function reset_state( $http = null ) {
 	$GLOBALS['__transients'] = array();
 	$GLOBALS['__calls']      = 0;
 	$GLOBALS['__http']       = $http;
+	// #332: a forced fetch is memoized per request; each case is a new request.
+	unset( $GLOBALS['sn_gh_theme_forced_tag_memo'] );
 }
 
 echo "Theme self-updater — failure modes (v10.43.0)\n\n";
@@ -144,6 +146,7 @@ reset_state( array( 'response' => array( 'code' => 503 ), 'body' => '' ) );
 sn_gh_latest_theme_tag( true );
 ok( '' !== sn_gh_latest_theme_tag_error(), 'precondition: an error is on record' );
 $GLOBALS['__http'] = null; // healthy
+unset( $GLOBALS['sn_gh_theme_forced_tag_memo'] ); // the recovery is a LATER poll — a new request (#332).
 ok( 'v9.9.9' === sn_gh_latest_theme_tag( true ), 'recovery: a healthy fetch returns the tag' );
 ok( '' === sn_gh_latest_theme_tag_error(), 'recovery CLEARS the reason — no stale caption after GitHub recovers' );
 ok( '' === (string) apply_filters( 'sn_gh_latest_theme_tag_error_result', '' ), '…and the card renders nothing' );

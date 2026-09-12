@@ -50,6 +50,11 @@ function sn_index_notes_query() {
 		'order'               => 'DESC',
 		'no_found_rows'       => true,
 		'ignore_sticky_posts' => true,
+		// v11.4.6 symmetry (#331): every other index surface (notes index,
+		// feeds, llms.txt, the JSON twin) excludes password-protected
+		// entries; /index must too, or a protected note's row (and its
+		// placeholder excerpt) leaks here instead.
+		'has_password'        => false,
 	) );
 }
 
@@ -66,6 +71,7 @@ function sn_index_pages_query() {
 		'orderby'        => 'title',
 		'order'          => 'ASC',
 		'no_found_rows'  => true,
+		'has_password'   => false, // v11.4.6 symmetry (#331) — see the notes query above.
 	) );
 }
 

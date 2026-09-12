@@ -30,7 +30,17 @@ define( 'MINUTE_IN_SECONDS', 60 );
 $GLOBALS['__captured_requests'] = array();
 $GLOBALS['__transients']        = array();
 
-if ( ! function_exists( 'add_filter' ) )  { function add_filter() {} }
+// Stateful hook stubs: the download step attaches the token filter around ONE
+// request, and the pins below read which requests saw it attached.
+$GLOBALS['__filters'] = array();
+if ( ! function_exists( 'add_filter' ) )  { function add_filter( $tag, $cb = null ) { $GLOBALS['__filters'][ $tag ][] = $cb; } }
+if ( ! function_exists( 'remove_filter' ) ) {
+    function remove_filter( $tag, $cb = null ) {
+        $GLOBALS['__filters'][ $tag ] = array_values( array_filter( $GLOBALS['__filters'][ $tag ] ?? array(), function ( $c ) use ( $cb ) { return $c !== $cb; } ) );
+        return true;
+    }
+}
+function token_filter_attached() { return in_array( 'sn_gh_theme_inject_token_header', $GLOBALS['__filters']['http_request_args'] ?? array(), true ); }
 if ( ! function_exists( 'add_action' ) )  { function add_action() {} }
 if ( ! function_exists( 'home_url' ) )    { function home_url( $p = '' ) { return 'https://example.test' . $p; } }
 if ( ! function_exists( 'get_site_transient' ) ) {
@@ -57,9 +67,26 @@ if ( ! function_exists( 'wp_remote_retrieve_response_code' ) ) {
 if ( ! function_exists( 'wp_remote_retrieve_body' ) ) {
     function wp_remote_retrieve_body( $r ) { return $r['body'] ?? ''; }
 }
-if ( ! function_exists( 'remove_filter' ) ) { function remove_filter() {} }
 if ( ! function_exists( 'download_url' ) ) {
-    function download_url( $url ) { $GLOBALS['__download_url'] = $url; return '/tmp/fake.zip'; }
+    function download_url( $url ) {
+        $GLOBALS['__download_url']      = $url;
+        $GLOBALS['__download_filtered'] = token_filter_attached();
+        return '/tmp/fake.zip';
+    }
+}
+// The first hop: the API zipball answers 302 to a pre-signed codeload URL.
+$GLOBALS['__zipball_location'] = 'https://codeload.github.com/juanlentino/signal-and-noise/legacy.zip/refs/tags/v9.9.9?token=presigned';
+if ( ! function_exists( 'wp_safe_remote_get' ) ) {
+    function wp_safe_remote_get( $url, $args = array() ) {
+        $GLOBALS['__hop1'] = array( 'url' => $url, 'args' => $args, 'filtered' => token_filter_attached() );
+        $loc = $GLOBALS['__zipball_location'];
+        return '' === $loc
+            ? array( 'response' => array( 'code' => 200 ), 'headers' => array(), 'body' => 'zipbytes' )
+            : array( 'response' => array( 'code' => 302 ), 'headers' => array( 'location' => $loc ), 'body' => '' );
+    }
+}
+if ( ! function_exists( 'wp_remote_retrieve_header' ) ) {
+    function wp_remote_retrieve_header( $r, $h ) { return $r['headers'][ strtolower( $h ) ] ?? ''; }
 }
 $GLOBALS['__caps'] = array(); // cap => bool, controllable
 if ( ! function_exists( 'current_user_can' ) ) {
@@ -78,6 +105,7 @@ function ok( $cond, $label ) {
 /** Fetch the most recent captured request's headers, after a forced (uncached) call. */
 function last_headers() {
     $GLOBALS['__captured_requests'] = array();
+    unset( $GLOBALS['sn_gh_theme_forced_tag_memo'] ); // #332: the forced fetch is memoized per request.
     sn_gh_latest_theme_tag( true ); // force_refresh = bypass cache
     $reqs = $GLOBALS['__captured_requests'];
     return $reqs ? ( $reqs[ count( $reqs ) - 1 ]['args']['headers'] ?? array() ) : array();
@@ -86,6 +114,7 @@ function last_headers() {
 /** Fetch the most recent captured request's full $args, after a forced (uncached) call. */
 function last_args() {
     $GLOBALS['__captured_requests'] = array();
+    unset( $GLOBALS['sn_gh_theme_forced_tag_memo'] );
     sn_gh_latest_theme_tag( true ); // force_refresh = bypass cache
     $reqs = $GLOBALS['__captured_requests'];
     return $reqs ? ( $reqs[ count( $reqs ) - 1 ]['args'] ?? array() ) : array();
@@ -127,6 +156,32 @@ ok( sn_gh_theme_authenticated_download( false, 'https://example.com/other.zip' )
 ok( sn_gh_theme_authenticated_download( false, 'https://api.github.com/repos/juanlentino/signal-and-noise/zipball/v9.9.9' ) === '/tmp/fake.zip',
     'pre_download: our zipball → authenticated download returns temp path' );
 
+// ── The download step resolves the release redirect ITSELF. download_url()
+//    follows redirects with the same request args, so a header filter attached
+//    around it is re-applied on the 302 hop to codeload. Hop 1 (api.github.com,
+//    redirection => 0) runs with the filter attached; hop 2 (the pre-signed
+//    Location) runs through download_url() with the filter detached. ──
+ok( isset( $GLOBALS['__hop1'] ) && 0 === strpos( $GLOBALS['__hop1']['url'], 'https://api.github.com/' ),
+    'download: hop 1 is a request to the api.github.com zipball' );
+ok( isset( $GLOBALS['__hop1']['args']['redirection'] ) && 0 === (int) $GLOBALS['__hop1']['args']['redirection'],
+    'download: hop 1 pins redirection => 0 (the redirect is read, not followed)' );
+ok( ! empty( $GLOBALS['__hop1']['filtered'] ),
+    'download: the token filter is attached for hop 1' );
+ok( $GLOBALS['__download_url'] === $GLOBALS['__zipball_location'],
+    'download: hop 2 fetches the Location the zipball answered with' );
+ok( empty( $GLOBALS['__download_filtered'] ),
+    'download: the token filter is DETACHED for hop 2 (the pre-signed codeload URL)' );
+ok( ! token_filter_attached(), 'download: the filter is not left attached afterwards' );
+
+// No redirect → the current path: download_url() on the package itself, filter attached.
+$GLOBALS['__zipball_location'] = '';
+unset( $GLOBALS['__download_url'], $GLOBALS['__download_filtered'] );
+ok( sn_gh_theme_authenticated_download( false, 'https://api.github.com/repos/juanlentino/signal-and-noise/zipball/v9.9.9' ) === '/tmp/fake.zip',
+    'download: no redirect → still returns the temp path' );
+ok( $GLOBALS['__download_url'] === 'https://api.github.com/repos/juanlentino/signal-and-noise/zipball/v9.9.9' && ! empty( $GLOBALS['__download_filtered'] ),
+    'download: no redirect → download_url() on the package with the filter attached (the fallback)' );
+ok( ! token_filter_attached(), 'download: the filter is not left attached after the fallback either' );
+
 // ── Case 2 (documented): when the constant is UNDEFINED, no Authorization. ──
 // Can't undefine a constant mid-process, so this is asserted structurally:
 // the source guards the header with `if ( defined( 'SNT_GITHUB_TOKEN' ) && ... )`,
@@ -151,10 +206,23 @@ $GLOBALS['__caps'] = array( 'update_themes' => true );
 ok( sn_gh_theme_force_refresh_requested() === true, 'force-refresh: ?force-check honored WITH update_themes cap' );
 unset( $_GET['force-check'] );
 
-// WP's own "Check Again" flow is already capability-gated → the constant forces regardless.
+// #332: WP_FORCE_UPDATE_CHECK is not a core constant — "Check Again" is
+// update-core.php?force-check=1, caught by the query-string branch above. The
+// dead branch is gone from the source; defining the constant changes nothing.
 define( 'WP_FORCE_UPDATE_CHECK', true );
 $GLOBALS['__caps'] = array();
-ok( sn_gh_theme_force_refresh_requested() === true, 'force-refresh: WP_FORCE_UPDATE_CHECK constant forces regardless of $_GET/caps' );
+ok( sn_gh_theme_force_refresh_requested() === false, 'force-refresh: WP_FORCE_UPDATE_CHECK (not a core constant) does not force (#332)' );
+ok( strpos( $src, 'WP_FORCE_UPDATE_CHECK' ) === false, 'the dead WP_FORCE_UPDATE_CHECK branch and its comments are gone from the source (#332)' );
+
+// #332: wp_update_themes() writes the transient twice per run, so the
+// pre_set_site_transient_update_themes filter runs twice; a forced check must
+// fetch ONCE per request, not once per write.
+unset( $GLOBALS['sn_gh_theme_forced_tag_memo'] );
+$GLOBALS['__captured_requests'] = array();
+$first  = sn_gh_latest_theme_tag( true );
+$second = sn_gh_latest_theme_tag( true );
+ok( 'v9.9.9' === $first && $first === $second, 'two forced calls in one request agree' );
+ok( 1 === count( $GLOBALS['__captured_requests'] ), 'two forced calls in one request make ONE tag fetch (#332)' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

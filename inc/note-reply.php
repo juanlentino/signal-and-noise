@@ -79,7 +79,10 @@ function sn_note_reply_markup( $post_id ) {
 	if ( $post_id <= 0 ) {
 		return '';
 	}
-	$title   = trim( (string) get_the_title( $post_id ) );
+	// get_the_title() returns entity-encoded text (WordPress stores "&" in a
+	// title as "&#038;"); decode it back to the literal character before it
+	// becomes a mail subject, or a reader's mail client shows "&#038;" (#328).
+	$title   = trim( wp_specialchars_decode( (string) get_the_title( $post_id ), ENT_QUOTES ) );
 	$subject = ( '' !== $title ) ? 'Re: ' . $title : '';
 	$span    = sn_email_markup(
 		sn_note_reply_alias(),

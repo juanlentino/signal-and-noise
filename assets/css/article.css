@@ -295,6 +295,11 @@ main { view-transition-name: sn-main; }
 	border-top: 1px solid var(--wp--preset--color--bone);
 	margin: 0 0 1.5rem 0;
 	background: none;
+	/* .wp-block-separator (components.css) sets border-color + opacity with
+	   !important; an !important declaration beats a plain one regardless of
+	   specificity, so this has to fight it back the same way (#320). */
+	border-top-color: var(--wp--preset--color--bone) !important;
+	opacity: 1;
 }
 
 /* .sn-post-closing__tags removed in v10.14.1 — tags now render only in the

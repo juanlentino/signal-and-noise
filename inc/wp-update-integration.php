@@ -236,8 +236,10 @@ add_filter( 'sn_gh_latest_theme_tag_error_result', function ( $reason ) {
  *
  * @param bool $force_refresh When true, bypass the cache and re-fetch.
  *                            Used when WP's "Check Again" button is
- *                            clicked (WP_FORCE_UPDATE_CHECK constant
- *                            or `?force-check=1` query arg). Added v8.5.3.
+ *                            clicked (`?force-check=1`). Added v8.5.3.
+ *                            Memoized per request (#332): wp_update_themes()
+ *                            writes the transient twice per run, so the
+ *                            filter runs twice; one click is one fetch.
  */
 function sn_gh_latest_theme_tag( $force_refresh = false ) {
 	if ( ! $force_refresh ) {
@@ -245,7 +247,22 @@ function sn_gh_latest_theme_tag( $force_refresh = false ) {
 		if ( $cached !== false ) {
 			return $cached === '' ? null : $cached;
 		}
+	} elseif ( array_key_exists( 'sn_gh_theme_forced_tag_memo', $GLOBALS ) ) {
+		return $GLOBALS['sn_gh_theme_forced_tag_memo'];
 	}
+	// A global, not a static, so the standalone tests can reset it between
+	// scenarios (the sn_css_combined_memo convention).
+	$GLOBALS['sn_gh_theme_forced_tag_memo'] = sn_gh_latest_theme_tag_fetch();
+	return $GLOBALS['sn_gh_theme_forced_tag_memo'];
+}
+
+/**
+ * The uncached tag fetch behind sn_gh_latest_theme_tag().
+ *
+ * @since 13.1.2
+ * @return string|null Highest vX.Y.Z tag, or null on failure / no tags.
+ */
+function sn_gh_latest_theme_tag_fetch() {
 
 	$url     = 'https://api.github.com/repos/' . SN_GH_THEME_OWNER . '/' . SN_GH_THEME_REPO . '/tags?per_page=100';
 	$headers = array(
@@ -402,10 +419,17 @@ function sn_gh_theme_inject_token_header( $args, $url ) {
  * WP core's WP_Upgrader::download_package() fetches the `package` URL with no
  * auth — fine for a public archive, but a private repo's API zipball needs a
  * Bearer token. This intercepts ONLY our zipball package (and only when a token
- * is set), performs an authenticated download_url() with the token scoped to
- * api.github.com, and returns the temp-file path — short-circuiting WP's
+ * is set) and returns the temp-file path — short-circuiting WP's
  * unauthenticated fetch. Any other package, or no token, returns $reply
  * unchanged so WP proceeds normally (public-repo path is untouched).
+ *
+ * The redirect is resolved here, in two requests. The API zipball answers 302
+ * to a pre-signed codeload.github.com URL, and download_url() follows a
+ * redirect with the same request args, so a header filter attached around it
+ * would be applied on the second host too. Hop 1 asks api.github.com with
+ * redirection => 0 and the token filter attached, reads the Location, and
+ * detaches the filter; hop 2 is a plain download_url() of that Location. With
+ * no redirect the package is downloaded as before, filter attached.
  *
  * @since 10.11.0
  * @param bool|WP_Error|string $reply      Default short-circuit value (false).
@@ -433,10 +457,32 @@ function sn_gh_theme_authenticated_download( $reply, $package, $upgrader = null,
 	}
 	add_filter( 'http_request_args', 'sn_gh_theme_inject_token_header', 10, 2 );
 	try {
+		$hop = wp_safe_remote_get(
+			$package,
+			array(
+				'timeout'     => 30,
+				'redirection' => 0,
+				'headers'     => array(
+					'Accept'     => 'application/vnd.github+json',
+					'User-Agent' => 'WordPress; ' . home_url(),
+				),
+			)
+		);
+	} finally {
+		// Always detach the token filter, even if the request throws — never
+		// leave it attached for subsequent requests in this process.
+		remove_filter( 'http_request_args', 'sn_gh_theme_inject_token_header', 10 );
+	}
+	$location = is_wp_error( $hop ) ? '' : wp_remote_retrieve_header( $hop, 'location' );
+	$location = is_array( $location ) ? (string) reset( $location ) : (string) $location;
+	if ( '' !== $location ) {
+		return download_url( $location );
+	}
+	// No redirect: download the package itself, header applied to this one host.
+	add_filter( 'http_request_args', 'sn_gh_theme_inject_token_header', 10, 2 );
+	try {
 		$file = download_url( $package );
 	} finally {
-		// Always detach the token filter, even if download_url() throws — never
-		// leave it attached for subsequent requests in this process.
 		remove_filter( 'http_request_args', 'sn_gh_theme_inject_token_header', 10 );
 	}
 	return $file;
@@ -454,20 +500,17 @@ add_filter( 'upgrader_pre_download', 'sn_gh_theme_authenticated_download', 10, 4
 /**
  * Whether a forced (cache-bypassing) update check was requested.
  *
- * A ?force-check= cache-bust triggers a live GitHub API call — a real side
- * effect that spends the rate-limit budget — so the query-string path is gated
- * on the update_themes capability. Without that gate, any logged-in user (or a
- * CSRF <img> pointing at an admin URL) could force repeated API calls and
- * exhaust the token's hourly budget. WP's own "Check Again" flow sets
- * WP_FORCE_UPDATE_CHECK and is already capability-gated, so that path is trusted.
+ * WP's "Check Again" button is update-core.php?force-check=1; there is no
+ * core constant for it (#332). A ?force-check= cache-bust triggers a live
+ * GitHub API call — a real side effect that spends the rate-limit budget — so
+ * it is gated on the update_themes capability. Without that gate, any
+ * logged-in user (or a CSRF <img> pointing at an admin URL) could force
+ * repeated API calls and exhaust the token's hourly budget.
  *
  * @since 10.11.2
  * @return bool
  */
 function sn_gh_theme_force_refresh_requested() {
-	if ( defined( 'WP_FORCE_UPDATE_CHECK' ) && WP_FORCE_UPDATE_CHECK ) {
-		return true;
-	}
 	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only cache-buster, capability-gated on this line.
 	return ! empty( $_GET['force-check'] ) && current_user_can( 'update_themes' );
 }
@@ -477,9 +520,9 @@ add_filter( 'pre_set_site_transient_update_themes', function( $transient ) {
 		$transient = new stdClass();
 	}
 
-	// v8.5.3: honor WP's "Check Again" button (WP_FORCE_UPDATE_CHECK), and a
-	// capability-gated ?force-check= cache-bust. Without this, our cached value
-	// persists even when the user explicitly asks for a fresh check.
+	// v8.5.3: honor WP's "Check Again" button (a capability-gated
+	// ?force-check= cache-bust). Without this, our cached value persists even
+	// when the user explicitly asks for a fresh check.
 	$force_refresh = sn_gh_theme_force_refresh_requested();
 
 	$latest_tag = sn_gh_latest_theme_tag( $force_refresh );

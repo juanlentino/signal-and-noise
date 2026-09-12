@@ -666,19 +666,32 @@ function sn_theme_ability_active_template_structure( $input ) {
 			);
 		}
 
-		// Best-effort template resolution. WP's logic for picking the
-		// template for a post is complex; for the diagnostics surface a
-		// simple post_type-based slug is sufficient and matches what the
-		// FSE engine resolves to in 90%+ of cases.
-		$template_slug = 'page' === $post->post_type ? 'page' : 'single';
+		// Template resolution in core's hierarchy order (#310): a slug-matched
+		// template (page-about, single-post-foo) outranks the post-type one.
+		// Most of this theme's page templates are slug-matched, so the
+		// generic slug alone described a template the page never renders.
+		$post_name  = isset( $post->post_name ) ? (string) $post->post_name : '';
+		$candidates = 'page' === $post->post_type
+			? array( 'page-' . $post_name, 'page' )
+			: array( 'single-' . $post->post_type . '-' . $post_name, 'single-' . $post->post_type, 'single' );
 
 		$theme = function_exists( 'wp_get_theme' ) ? wp_get_theme() : null;
 		$theme_stylesheet = $theme && method_exists( $theme, 'get_stylesheet' )
 			? (string) $theme->get_stylesheet()
 			: 'signal-and-noise';
 
-		$template_id   = $theme_stylesheet . '//' . $template_slug;
-		$template      = function_exists( 'get_block_template' ) ? get_block_template( $template_id ) : null;
+		$template_slug = end( $candidates );
+		$template      = null;
+		foreach ( $candidates as $candidate ) {
+			$found = function_exists( 'get_block_template' )
+				? get_block_template( $theme_stylesheet . '//' . $candidate )
+				: null;
+			if ( $found ) {
+				$template_slug = $candidate;
+				$template      = $found;
+				break;
+			}
+		}
 		$blocks_summary = array();
 		$part_slugs    = array();
 
@@ -988,7 +1001,10 @@ function sn_theme_ability_llms_txt( $input = array() ) {
 		}
 		$full  = is_array( $input ) && ! empty( $input['full'] );
 		$notes = ( $full && function_exists( 'sn_llms_txt_recent_notes' ) ) ? sn_llms_txt_recent_notes() : array();
-		$body  = (string) sn_llms_txt_body( $full, $notes );
+		// #311: the route passes the pillar descriptors too; without them the
+		// body has no "Pillar essays" section and differs from /llms.txt.
+		$pillars = function_exists( 'sn_theme_pillar_descriptors' ) ? (array) sn_theme_pillar_descriptors() : array();
+		$body    = (string) sn_llms_txt_body( $full, $notes, $pillars );
 		return array(
 			'variant' => $full ? 'full' : 'index',
 			'content' => $body,

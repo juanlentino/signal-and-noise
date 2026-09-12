@@ -66,8 +66,59 @@
 		return ( mq && mq.matches ) ? 'dark' : 'light';
 	}
 
+	// Mirrors the two literals in inc/dark-mode.php's theme-color metas. Both
+	// theme-color metas and both favicon variants are media-gated on the OS
+	// scheme, not on data-theme — a reader who toggles against their OS
+	// scheme would otherwise get browser chrome and a favicon that still
+	// followed the OS (#333). Updating BOTH metas'/links' values to the
+	// chosen theme (rather than adding a third, un-media'd meta) keeps the
+	// two-meta shape tests/head-sweep.php pins exactly as it is.
+	var CHROME_COLOR = { dark: '#0a0a0a', light: '#ffffff' };
+
+	// The light/dark href PAIR for each favicon rel, read ONCE from the
+	// pristine markup before syncChrome() ever runs. syncChrome() writes the
+	// SAME target href onto both the light-media and dark-media <link> for a
+	// rel (so whichever one the browser honours shows the chosen theme) — if
+	// it re-read hrefs from the DOM on every call instead of this cache, the
+	// first call would overwrite the dark-media link's href with the light
+	// one, permanently losing the dark variant for every call after.
+	var FAVICON_HREFS = {};
+	[ 'icon', 'apple-touch-icon' ].forEach( function ( rel ) {
+		var links = document.querySelectorAll( 'link[rel="' + rel + '"]' );
+		var pair  = { light: null, dark: null };
+		[].forEach.call( links, function ( link ) {
+			var media = link.getAttribute( 'media' ) || '';
+			if ( media.indexOf( 'dark' ) !== -1 ) {
+				pair.dark = link.getAttribute( 'href' );
+			} else {
+				pair.light = link.getAttribute( 'href' );
+			}
+		} );
+		FAVICON_HREFS[ rel ] = pair;
+	} );
+
+	/** Push the chosen theme onto browser chrome (theme-color) and favicons. */
+	function syncChrome( isDark ) {
+		var color = isDark ? CHROME_COLOR.dark : CHROME_COLOR.light;
+		[].forEach.call( document.querySelectorAll( 'meta[name="theme-color"]' ), function ( meta ) {
+			meta.setAttribute( 'content', color );
+		} );
+
+		[ 'icon', 'apple-touch-icon' ].forEach( function ( rel ) {
+			var pair   = FAVICON_HREFS[ rel ];
+			var target = isDark ? pair.dark : pair.light;
+			if ( ! target ) {
+				return;
+			}
+			[].forEach.call( document.querySelectorAll( 'link[rel="' + rel + '"]' ), function ( link ) {
+				link.setAttribute( 'href', target );
+			} );
+		} );
+	}
+
 	function sync() {
 		var isDark = 'dark' === effective();
+		syncChrome( isDark );
 
 		buttons.forEach( function ( btn ) {
 			var label = btn.querySelector( '.sn-theme-toggle__label' );

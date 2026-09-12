@@ -90,8 +90,14 @@ function sn_email_markup( $user, $domain, $args = array() ) {
 	$goal = trim( preg_replace( '/[^a-z0-9]+/', '-', strtolower( $goal ) ), '-' );
 	// data-esj rides only when a subject was asked for, so the five /contact
 	// aliases keep emitting byte-identical markup to every shipped version.
+	// rawurlencode() BEFORE base64: contact-aliases.js decodes with plain
+	// atob(), which yields a JS string of raw bytes-as-code-units, not UTF-8
+	// text. Percent-encoding first keeps the payload pure ASCII, so the JS
+	// can reverse it exactly with decodeURIComponent(atob()) — otherwise any
+	// multibyte character in the title mis-encodes (mojibake) once it is
+	// re-escaped into the mailto ?subject= (#328).
 	$esj = ( '' !== $subject )
-		? sprintf( ' data-esj="%s"', esc_attr( base64_encode( $subject ) ) )
+		? sprintf( ' data-esj="%s"', esc_attr( base64_encode( rawurlencode( $subject ) ) ) )
 		: '';
 	return sprintf(
 		'<span class="sn-email" data-sn-goal="%4$s" data-eu="%1$s" data-ed="%2$s"%5$s>%3$s</span>',

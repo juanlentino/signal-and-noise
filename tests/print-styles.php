@@ -147,6 +147,30 @@ ok( strpos( $print_css, '.sn-note-share' ) !== false, 'print.css hides the share
 // strips it, so the selector must actually be in the hide list.
 ok( strpos( $print_css, '.sn-related-notes' ) !== false, 'FIX 7: print.css hides the Related Notes footer (.sn-related-notes)' );
 
+// #318 — `footer.wp-block-template-part` also matches the post-closing
+// template part (templates/single.html renders it with tagName: footer), so
+// the provenance record it holds never printed. `.sn-footer` alone still
+// hides the real site footer; the element selector must be gone.
+ok( 0 === preg_match( '/(^|[,\s])footer\.wp-block-template-part\b/m', $print_css ), '#318: print.css no longer hides every <footer>, only .sn-footer' );
+ok( strpos( $print_css, '.sn-footer' ) !== false, '#318: .sn-footer still hides the real site footer' );
+
+// #319 — `:root[data-theme="dark"]` is an ATTRIBUTE selector, not a media
+// query, so it stays active in print. critical.css sets bone (ink) to
+// #ffffff there; print only forces #000 on html/body/p/li/h1-h3/a, so a
+// bone-colored element (steps-list numerals, .sn-correction strong) prints
+// white on the forced-white page for anyone who had toggled dark mode.
+// print.css must re-assert the LIGHT token values under that same selector.
+ok(
+	(bool) preg_match( '/:root\[data-theme="dark"\]\s*\{[^}]*--wp--preset--color--bone:\s*#000000/i', $print_css ),
+	'#319: print.css re-declares --wp--preset--color--bone to the light value under :root[data-theme="dark"]'
+);
+foreach ( array( 'void', 'asphalt', 'rust', 'concrete' ) as $token ) {
+	ok(
+		(bool) preg_match( '/:root\[data-theme="dark"\]\s*\{[^}]*--wp--preset--color--' . $token . ':/i', $print_css ),
+		"#319: print.css also re-declares --wp--preset--color--$token under :root[data-theme=\"dark\"]"
+	);
+}
+
 // ── DISCOGRAPHY ENQUEUE (v9.13.0): /music-page-scoped lazy-embed JS ──
 function reset_scripts() {
 	$GLOBALS['__enqueued_scripts'] = array();
@@ -179,6 +203,13 @@ ok( strpos( $disco_js, 'open.spotify.com/embed/' ) !== false, 'discography.js bu
 ok( strpos( $disco_js, "'track' : 'album'" ) !== false, 'discography.js picks the track vs album embed path by entry type' );
 ok( strpos( $disco_js, "getAttribute( 'data-type' )" ) !== false, 'discography.js reads data-type from the trigger (render contract)' );
 ok( strpos( $disco_js, "createElement( 'iframe' )" ) !== false, 'discography.js mounts the iframe on demand (not server-rendered)' );
+
+// #325 — choosing preview B before A starts rejects A's play() promise with
+// AbortError; the unconditional `.catch( stop )` then stopped B, which was
+// legitimately playing. The catch must only stop if THIS button is still
+// the current one.
+ok( false === strpos( $disco_js, 'played.catch( function () { stop(); } )' ), '#325: play() rejection no longer stops unconditionally' );
+ok( (bool) preg_match( '/played\.catch\(\s*function\s*\(\s*\)\s*\{\s*if\s*\(\s*current === btn\s*\)\s*\{?\s*stop\(\);/', $disco_js ), '#325: play() rejection only stops if this button is still current' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

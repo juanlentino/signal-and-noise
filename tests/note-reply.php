@@ -33,6 +33,7 @@ function apply_filters( $tag, $value ) {
 }
 function shortcode_unautop( $s ) { return $s; }
 function shortcode_atts( $defaults, $atts, $tag = '' ) { return array_merge( $defaults, is_array( $atts ) ? $atts : array() ); }
+function wp_specialchars_decode( $text, $quote_style = ENT_QUOTES ) { return htmlspecialchars_decode( (string) $text, $quote_style ); }
 
 $GLOBALS['__titles'] = array();
 function get_the_title( $id ) { return $GLOBALS['__titles'][ (int) $id ] ?? ''; }
@@ -56,7 +57,7 @@ $row = sn_note_reply_markup( 7 );
 ok( '' !== $row, 'titled note renders a row' );
 ok( false !== strpos( $row, 'class="sn-note-reply"' ), 'row carries the .sn-note-reply hook' );
 ok( false !== strpos( $row, 'Reply</span>' ), 'label reads Reply' );
-ok( 'Re: Two kinds of provenance' === base64_decode( attr_of( $row, 'data-esj' ) ), 'data-esj decodes to "Re: <title>"' );
+ok( 'Re: Two kinds of provenance' === rawurldecode( (string) base64_decode( attr_of( $row, 'data-esj' ) ) ), 'data-esj decodes (base64 then rawurldecode) to "Re: <title>"' );
 ok( 'reply-note' === attr_of( $row, 'data-sn-goal' ), 'conversion goal is reply-note, not contact-research' );
 ok( 'research' === base64_decode( attr_of( $row, 'data-eu' ) ), 'data-eu decodes to the research alias' );
 ok( false !== strpos( $row, 'research [at] juanlentino [dot] com' ), 'no-JS fallback stays readable' );
@@ -69,7 +70,7 @@ ok( false === stripos( $row, 'mailto' ), 'no mailto: in served markup' );
 // ── 3. Subject with markup-significant characters survives the b64 round trip ──
 $GLOBALS['__titles'][8] = 'Signal & Noise — a "quote" <test>';
 $row8 = sn_note_reply_markup( 8 );
-ok( 'Re: Signal & Noise — a "quote" <test>' === base64_decode( attr_of( $row8, 'data-esj' ) ), 'hostile title round-trips intact through base64' );
+ok( 'Re: Signal & Noise — a "quote" <test>' === rawurldecode( (string) base64_decode( attr_of( $row8, 'data-esj' ) ) ), 'hostile title round-trips intact through base64(rawurlencode())' );
 ok( false === strpos( $row8, '<test>' ), 'raw title markup never lands unescaped in the HTML' );
 
 // ── 4. Untitled note: row still renders, subject simply absent ──

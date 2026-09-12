@@ -119,7 +119,8 @@ function snt_zoom_control_classes() {
 		}
 	}
 	foreach ( $files as $file ) {
-		if ( ! $file->isFile() || 'php' !== strtolower( (string) $file->getExtension() ) ) {
+		$ext = strtolower( (string) $file->getExtension() );
+		if ( ! $file->isFile() || ! in_array( $ext, array( 'php', 'html' ), true ) ) {
 			continue;
 		}
 		$src = (string) file_get_contents( (string) $file->getPathname() );
@@ -148,6 +149,75 @@ function snt_zoom_control_classes() {
 }
 
 /**
+ * The theme's theme.json, decoded once.
+ *
+ * @return array
+ */
+function snt_zoom_theme_json() {
+	static $cache = null;
+	if ( null === $cache ) {
+		$path  = dirname( __DIR__ ) . '/theme.json';
+		$cache = is_file( $path ) ? (array) json_decode( (string) file_get_contents( $path ), true ) : array();
+	}
+
+	return $cache;
+}
+
+/**
+ * The px a `var(--wp--preset--font-size--{slug})` actually renders on a
+ * narrow phone, re-deriving WordPress core's fluid typography formula
+ * (`wp_get_typography_font_size_value()` in
+ * wp-includes/block-supports/typography.php) since no WP runtime is
+ * bootstrapped here. Only the LOW bound matters — that is where a phone
+ * lands — so the clamp() string itself is never built.
+ *
+ * @param string $slug
+ * @return float|null
+ */
+function snt_zoom_preset_font_px( $slug ) {
+	$theme  = snt_zoom_theme_json();
+	$sizes  = $theme['settings']['typography']['fontSizes'] ?? array();
+	$preset = null;
+	foreach ( (array) $sizes as $s ) {
+		if ( isset( $s['slug'] ) && $s['slug'] === $slug ) {
+			$preset = $s;
+			break;
+		}
+	}
+	if ( null === $preset || empty( $preset['size'] ) ) {
+		return null;
+	}
+	$size = trim( (string) $preset['size'] );
+	// Already a clamp()/max()/min() — the ordinary parser handles those.
+	if ( preg_match( '/^(clamp|calc|min|max)\s*\(/i', $size ) ) {
+		return snt_zoom_font_px( 'font-size:' . $size . ';' );
+	}
+	if ( ! preg_match( '/^([0-9.]+)(px|rem|em)$/i', $size, $m ) ) {
+		return null;
+	}
+	$value_px = 'px' === strtolower( $m[2] ) ? (float) $m[1] : (float) $m[1] * 16.0;
+
+	$fluid_enabled = ! empty( $theme['settings']['typography']['fluid'] );
+	$preset_fluid  = $preset['fluid'] ?? null;
+	if ( false === $preset_fluid || ( ! $fluid_enabled && empty( $preset_fluid ) ) ) {
+		return $value_px; // fluid is off for this size — the literal value stands.
+	}
+
+	// Core's own floor: below 14px (or an explicit minFontSize) it skips the
+	// fluid calculation entirely and returns the literal size.
+	$floor_px = 14.0;
+	if ( $value_px <= $floor_px ) {
+		return $value_px;
+	}
+
+	// minFontSizeFactor = clamp( 1 - 0.075 * log2(px), 0.25, 0.75 ).
+	$factor = max( 0.25, min( 0.75, 1 - 0.075 * log( $value_px, 2 ) ) );
+	$min_px = round( $value_px * $factor, 3 );
+
+	return $min_px <= $floor_px ? $floor_px : $min_px;
+}
+
+/**
  * The smallest px a `font-size` declaration can compute to, or null.
  *
  * A plain `/font-size:\s*([0-9.]+)(px|rem|em)/` misses `max(0.9rem, 12px)`
@@ -165,6 +235,15 @@ function snt_zoom_font_px( $body ) {
 		return null;
 	}
 	$value = trim( $m[1] );
+
+	// A bare preset var(), no literal fallback, has no digit for the regex
+	// below to find at all — it reads as "no font-size" and passes silently.
+	// #317: `.sn-404-search__input { font-size: var(--wp--preset--font-size--medium) }`
+	// is exactly that, and the preset is fluid: resolve it against theme.json.
+	if ( preg_match( '/^var\(\s*--wp--preset--font-size--([a-z0-9-]+)\s*\)$/i', $value, $vm ) ) {
+		return snt_zoom_preset_font_px( $vm[1] );
+	}
+
 	if ( ! preg_match_all( '/([0-9]*\.?[0-9]+)\s*(px|rem|em)/i', $value, $vals, PREG_SET_ORDER ) ) {
 		return null;
 	}
@@ -214,7 +293,8 @@ function snt_zoom_control_tag_count() {
 			continue;
 		}
 		foreach ( new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $path, FilesystemIterator::SKIP_DOTS ) ) as $file ) {
-			if ( ! $file->isFile() || 'php' !== strtolower( (string) $file->getExtension() ) ) {
+			$ext = strtolower( (string) $file->getExtension() );
+			if ( ! $file->isFile() || ! in_array( $ext, array( 'php', 'html' ), true ) ) {
 				continue;
 			}
 			$n += (int) preg_match_all( '/<(?:input|select|textarea)\b/i', (string) file_get_contents( (string) $file->getPathname() ) );
@@ -328,11 +408,12 @@ ok( $checked >= 1, sprintf( 'VACUITY: %d sub-16px control rule(s) were actually 
 echo "\nGroup 2b: the control population is read from the markup\n";
 $ctrl_classes = snt_zoom_control_classes();
 ok( snt_zoom_control_tag_count() >= 1, sprintf( 'the markup sweep reached %d <input|select|textarea> tag(s) — a walk that opened nothing would derive an empty list and look identical to a theme with no class-styled controls', snt_zoom_control_tag_count() ) );
-// Zero derived classes is the CORRECT answer for this theme today: its single
-// control (`input[type="search"]` in the notes header) carries no class and is
-// styled through its ancestor. The tag count above is what proves the sweep
-// ran; asserting a class floor here would have been a pin on an accident.
-ok( is_array( $ctrl_classes ), sprintf( 'derived %d control class name(s) (0 is correct while every control is styled by element + ancestor)', count( $ctrl_classes ) ) );
+ok( is_array( $ctrl_classes ), sprintf( 'derived %d control class name(s)', count( $ctrl_classes ) ) );
+// #317: templates/404.html is a `.html` file. A scan keyed on the `.php`
+// extension alone never opens it, so its search input's class was invisible
+// to the guard — the population undercounted by exactly the one control that
+// actually violates it.
+ok( in_array( 'sn-404-search__input', $ctrl_classes, true ), 'the 404 search input class is derived from templates/404.html, an .html file the markup sweep must also open' );
 
 echo "\nGroup 2c: the value parser handles CSS functions\n";
 ok( 14.4 === round( (float) snt_zoom_font_px( 'font-size: max(0.9rem, 12px);' ), 1 ), 'max(0.9rem, 12px) resolves to 14.4px — a digit-anchored regex misses this shape entirely' );
@@ -342,6 +423,12 @@ ok( 17.6 === round( (float) snt_zoom_font_px( 'font-size: max(1.1rem, 12px);' ),
 ok( array() === snt_zoom_small_control_rules( '.x input { font-size: max(1.1rem, 12px); }' ), 'and that safe control is not reported as a violation' );
 ok( null === snt_zoom_font_px( 'color: red;' ), 'a block with no font-size resolves to null, not to zero' );
 ok( array() === snt_zoom_small_control_rules( '.x input::placeholder { font-size: 10px; }' ), 'a ::placeholder rule is not a control — iOS zooms on the control size' );
+// #317: a bare preset var(), no fallback, has no digit for the length regex
+// to find — it read as "no font-size" and passed. `medium` (20px, fluid) is
+// the theme's real "fontSize" preset in templates/404.html and clamps to
+// 14px at the low end; a resolver that returns null here hides the bug.
+$medium_px = snt_zoom_font_px( 'font-size: var(--wp--preset--font-size--medium);' );
+ok( null !== $medium_px && $medium_px < 16.0, sprintf( 'a bare `var(--wp--preset--font-size--medium)` resolves to %s px, re-deriving the preset from theme.json instead of reading as "no font-size"', null === $medium_px ? 'null' : round( $medium_px, 1 ) ) );
 
 echo "\nGroup 3: negative control\n";
 $broken = '.sn-x input { font-size: 12px; }';

@@ -200,11 +200,20 @@ function sn_auto_purge_on_update( $upgrader, $hook_extra ) {
 	}
 	$ours = false;
 	$type = $hook_extra['type'] ?? '';
+	// #312: bulk_upgrade() passes 'themes' / 'plugins'; a single-package
+	// upgrade() passes the singular 'theme' / 'plugin'. Fold both shapes.
 	if ( 'theme' === $type ) {
 		$themes = (array) ( $hook_extra['themes'] ?? array() );
-		$ours   = in_array( get_stylesheet(), $themes, true ) || in_array( get_template(), $themes, true );
+		if ( isset( $hook_extra['theme'] ) ) {
+			$themes[] = (string) $hook_extra['theme'];
+		}
+		$ours = in_array( get_stylesheet(), $themes, true ) || in_array( get_template(), $themes, true );
 	} elseif ( 'plugin' === $type ) {
-		foreach ( (array) ( $hook_extra['plugins'] ?? array() ) as $file ) {
+		$plugins = (array) ( $hook_extra['plugins'] ?? array() );
+		if ( isset( $hook_extra['plugin'] ) ) {
+			$plugins[] = (string) $hook_extra['plugin'];
+		}
+		foreach ( $plugins as $file ) {
 			if ( 0 === strpos( (string) $file, 'signal-and-noise-tools/' ) ) {
 				$ours = true;
 				break;

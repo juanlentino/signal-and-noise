@@ -319,15 +319,18 @@
 		position: static;
 	}
 
-	/* `main`, NOT `main.wp-block-group`. The reserve is set in two different
-	 * places and the notes index matches neither of the obvious ones:
+	/* The reserve is set in two different places and this must beat both:
 	 *   layout.css   main.wp-block-group { padding-bottom: 140px !important }
 	 *   notes css    .sn-notes-page      { padding: … 160px }
-	 * /notes renders <main class="sn-notes-page">, so the layout.css rule has
-	 * never applied there at all. Targeting the element covers both without
-	 * having to enumerate every template's class. Measured live: 160px -> 36px.
+	 * Plain `main` alone is (0,0,1) and loses the specificity fight to
+	 * layout.css's `main.wp-block-group` (0,1,1) on every block-template
+	 * page, leaving 140px of dead scroll below the static footer (#316).
+	 * `main.wp-block-group` here matches that selector's specificity and
+	 * wins on source order; plain `main` still covers /notes, whose
+	 * <main class="sn-notes-page"> carries no `.wp-block-group`.
 	 */
-	main {
+	main,
+	main.wp-block-group {
 		padding-bottom: var( --wp--preset--spacing--60, 2.25rem ) !important;
 	}
 
@@ -459,27 +462,9 @@
    TOUCH DEVICE OVERRIDES
    ============================================ */
 
-@media (hover: none) and (pointer: coarse) {
-	/* Disable hover transforms on touch devices */
-	@media (hover: hover) {
-		.wp-block-column:has(.sn-service-image):hover {
-			transform: none !important;
-
-		}
-	}
-
-	@media (hover: hover) {
-		.wp-block-button__link:hover {
-			transform: none !important;
-			box-shadow: none !important;
-
-		}
-	}
-
-	@media (hover: hover) {
-		.sn-logo-link:hover .sn-logo-img {
-			opacity: 1;
-
-		}
-	}
-}
+/* A `(hover: none) and (pointer: coarse)` block that only ever nested
+ * `@media (hover: hover)` blocks inside it used to live here. The v12.0.3
+ * mechanical hover-sweep wrapped every `:hover` rule in `(hover: hover)`,
+ * including these three, which were already inside `(hover: none)` — the
+ * two conditions are mutually exclusive, so none of the three could ever
+ * match. Removed (#326). */
