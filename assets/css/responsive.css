@@ -319,15 +319,18 @@
 		position: static;
 	}
 
-	/* `main`, NOT `main.wp-block-group`. The reserve is set in two different
-	 * places and the notes index matches neither of the obvious ones:
+	/* The reserve is set in two different places and this must beat both:
 	 *   layout.css   main.wp-block-group { padding-bottom: 140px !important }
 	 *   notes css    .sn-notes-page      { padding: … 160px }
-	 * /notes renders <main class="sn-notes-page">, so the layout.css rule has
-	 * never applied there at all. Targeting the element covers both without
-	 * having to enumerate every template's class. Measured live: 160px -> 36px.
+	 * Plain `main` alone is (0,0,1) and loses the specificity fight to
+	 * layout.css's `main.wp-block-group` (0,1,1) on every block-template
+	 * page, leaving 140px of dead scroll below the static footer (#316).
+	 * `main.wp-block-group` here matches that selector's specificity and
+	 * wins on source order; plain `main` still covers /notes, whose
+	 * <main class="sn-notes-page"> carries no `.wp-block-group`.
 	 */
-	main {
+	main,
+	main.wp-block-group {
 		padding-bottom: var( --wp--preset--spacing--60, 2.25rem ) !important;
 	}
 
