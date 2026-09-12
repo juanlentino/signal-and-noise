@@ -37,7 +37,7 @@ if ( ! defined( 'SN_AGENTS_MANIFEST_PATH' ) ) {
 if ( ! defined( 'SN_AGENTS_UPDATED' ) ) {
 	// Date the surface set was last materially affirmed. Bump when a surface is
 	// added/removed — keeps the JSON cache-stable between real changes.
-	define( 'SN_AGENTS_UPDATED', '2026-07-11' );
+	define( 'SN_AGENTS_UPDATED', '2026-08-30' );
 }
 
 /**

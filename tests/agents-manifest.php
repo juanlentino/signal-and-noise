@@ -91,6 +91,13 @@ unset( $GLOBALS['__filters']['sn_agents_surfaces'] );
 $m = sn_agents_manifest();
 ok( ( $m['site']['url'] ?? '' ) === 'https://juanlentino.com', 'manifest site.url is home' );
 ok( ( $m['updated'] ?? '' ) === SN_AGENTS_UPDATED, 'manifest carries the fixed updated date' );
+// The prior assertion pins equality with the constant, not the constant's
+// VALUE — it would pass even if the stamp were years stale. Pin the value
+// directly: it must be no earlier than the last surface actually added to
+// sn_agents_surfaces() (theme #329). v12.12.0 (2026-08-30, the signed-agent
+// handshake) is the most recent surface addition as of this writing.
+ok( '2026-08-30' === SN_AGENTS_UPDATED,
+	"SN_AGENTS_UPDATED must reflect the last surface addition (v12.12.0, 2026-08-30) — got \"" . SN_AGENTS_UPDATED . '"' );
 ok( isset( $m['structured_data']['type'] ) && 'JSON-LD' === $m['structured_data']['type'], 'manifest notes the embedded JSON-LD' );
 $body = sn_agents_json_body();
 $decoded = json_decode( $body, true );
