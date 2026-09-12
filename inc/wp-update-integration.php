@@ -419,10 +419,17 @@ function sn_gh_theme_inject_token_header( $args, $url ) {
  * WP core's WP_Upgrader::download_package() fetches the `package` URL with no
  * auth — fine for a public archive, but a private repo's API zipball needs a
  * Bearer token. This intercepts ONLY our zipball package (and only when a token
- * is set), performs an authenticated download_url() with the token scoped to
- * api.github.com, and returns the temp-file path — short-circuiting WP's
+ * is set) and returns the temp-file path — short-circuiting WP's
  * unauthenticated fetch. Any other package, or no token, returns $reply
  * unchanged so WP proceeds normally (public-repo path is untouched).
+ *
+ * The redirect is resolved here, in two requests. The API zipball answers 302
+ * to a pre-signed codeload.github.com URL, and download_url() follows a
+ * redirect with the same request args, so a header filter attached around it
+ * would be applied on the second host too. Hop 1 asks api.github.com with
+ * redirection => 0 and the token filter attached, reads the Location, and
+ * detaches the filter; hop 2 is a plain download_url() of that Location. With
+ * no redirect the package is downloaded as before, filter attached.
  *
  * @since 10.11.0
  * @param bool|WP_Error|string $reply      Default short-circuit value (false).
@@ -450,10 +457,32 @@ function sn_gh_theme_authenticated_download( $reply, $package, $upgrader = null,
 	}
 	add_filter( 'http_request_args', 'sn_gh_theme_inject_token_header', 10, 2 );
 	try {
+		$hop = wp_safe_remote_get(
+			$package,
+			array(
+				'timeout'     => 30,
+				'redirection' => 0,
+				'headers'     => array(
+					'Accept'     => 'application/vnd.github+json',
+					'User-Agent' => 'WordPress; ' . home_url(),
+				),
+			)
+		);
+	} finally {
+		// Always detach the token filter, even if the request throws — never
+		// leave it attached for subsequent requests in this process.
+		remove_filter( 'http_request_args', 'sn_gh_theme_inject_token_header', 10 );
+	}
+	$location = is_wp_error( $hop ) ? '' : wp_remote_retrieve_header( $hop, 'location' );
+	$location = is_array( $location ) ? (string) reset( $location ) : (string) $location;
+	if ( '' !== $location ) {
+		return download_url( $location );
+	}
+	// No redirect: download the package itself, header applied to this one host.
+	add_filter( 'http_request_args', 'sn_gh_theme_inject_token_header', 10, 2 );
+	try {
 		$file = download_url( $package );
 	} finally {
-		// Always detach the token filter, even if download_url() throws — never
-		// leave it attached for subsequent requests in this process.
 		remove_filter( 'http_request_args', 'sn_gh_theme_inject_token_header', 10 );
 	}
 	return $file;

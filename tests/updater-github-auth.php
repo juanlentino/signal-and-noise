@@ -30,7 +30,17 @@ define( 'MINUTE_IN_SECONDS', 60 );
 $GLOBALS['__captured_requests'] = array();
 $GLOBALS['__transients']        = array();
 
-if ( ! function_exists( 'add_filter' ) )  { function add_filter() {} }
+// Stateful hook stubs: the download step attaches the token filter around ONE
+// request, and the pins below read which requests saw it attached.
+$GLOBALS['__filters'] = array();
+if ( ! function_exists( 'add_filter' ) )  { function add_filter( $tag, $cb = null ) { $GLOBALS['__filters'][ $tag ][] = $cb; } }
+if ( ! function_exists( 'remove_filter' ) ) {
+    function remove_filter( $tag, $cb = null ) {
+        $GLOBALS['__filters'][ $tag ] = array_values( array_filter( $GLOBALS['__filters'][ $tag ] ?? array(), function ( $c ) use ( $cb ) { return $c !== $cb; } ) );
+        return true;
+    }
+}
+function token_filter_attached() { return in_array( 'sn_gh_theme_inject_token_header', $GLOBALS['__filters']['http_request_args'] ?? array(), true ); }
 if ( ! function_exists( 'add_action' ) )  { function add_action() {} }
 if ( ! function_exists( 'home_url' ) )    { function home_url( $p = '' ) { return 'https://example.test' . $p; } }
 if ( ! function_exists( 'get_site_transient' ) ) {
@@ -57,9 +67,26 @@ if ( ! function_exists( 'wp_remote_retrieve_response_code' ) ) {
 if ( ! function_exists( 'wp_remote_retrieve_body' ) ) {
     function wp_remote_retrieve_body( $r ) { return $r['body'] ?? ''; }
 }
-if ( ! function_exists( 'remove_filter' ) ) { function remove_filter() {} }
 if ( ! function_exists( 'download_url' ) ) {
-    function download_url( $url ) { $GLOBALS['__download_url'] = $url; return '/tmp/fake.zip'; }
+    function download_url( $url ) {
+        $GLOBALS['__download_url']      = $url;
+        $GLOBALS['__download_filtered'] = token_filter_attached();
+        return '/tmp/fake.zip';
+    }
+}
+// The first hop: the API zipball answers 302 to a pre-signed codeload URL.
+$GLOBALS['__zipball_location'] = 'https://codeload.github.com/juanlentino/signal-and-noise/legacy.zip/refs/tags/v9.9.9?token=presigned';
+if ( ! function_exists( 'wp_safe_remote_get' ) ) {
+    function wp_safe_remote_get( $url, $args = array() ) {
+        $GLOBALS['__hop1'] = array( 'url' => $url, 'args' => $args, 'filtered' => token_filter_attached() );
+        $loc = $GLOBALS['__zipball_location'];
+        return '' === $loc
+            ? array( 'response' => array( 'code' => 200 ), 'headers' => array(), 'body' => 'zipbytes' )
+            : array( 'response' => array( 'code' => 302 ), 'headers' => array( 'location' => $loc ), 'body' => '' );
+    }
+}
+if ( ! function_exists( 'wp_remote_retrieve_header' ) ) {
+    function wp_remote_retrieve_header( $r, $h ) { return $r['headers'][ strtolower( $h ) ] ?? ''; }
 }
 $GLOBALS['__caps'] = array(); // cap => bool, controllable
 if ( ! function_exists( 'current_user_can' ) ) {
@@ -128,6 +155,32 @@ ok( sn_gh_theme_authenticated_download( false, 'https://example.com/other.zip' )
     'pre_download: foreign package not intercepted (returns $reply)' );
 ok( sn_gh_theme_authenticated_download( false, 'https://api.github.com/repos/juanlentino/signal-and-noise/zipball/v9.9.9' ) === '/tmp/fake.zip',
     'pre_download: our zipball → authenticated download returns temp path' );
+
+// ── The download step resolves the release redirect ITSELF. download_url()
+//    follows redirects with the same request args, so a header filter attached
+//    around it is re-applied on the 302 hop to codeload. Hop 1 (api.github.com,
+//    redirection => 0) runs with the filter attached; hop 2 (the pre-signed
+//    Location) runs through download_url() with the filter detached. ──
+ok( isset( $GLOBALS['__hop1'] ) && 0 === strpos( $GLOBALS['__hop1']['url'], 'https://api.github.com/' ),
+    'download: hop 1 is a request to the api.github.com zipball' );
+ok( isset( $GLOBALS['__hop1']['args']['redirection'] ) && 0 === (int) $GLOBALS['__hop1']['args']['redirection'],
+    'download: hop 1 pins redirection => 0 (the redirect is read, not followed)' );
+ok( ! empty( $GLOBALS['__hop1']['filtered'] ),
+    'download: the token filter is attached for hop 1' );
+ok( $GLOBALS['__download_url'] === $GLOBALS['__zipball_location'],
+    'download: hop 2 fetches the Location the zipball answered with' );
+ok( empty( $GLOBALS['__download_filtered'] ),
+    'download: the token filter is DETACHED for hop 2 (the pre-signed codeload URL)' );
+ok( ! token_filter_attached(), 'download: the filter is not left attached afterwards' );
+
+// No redirect → the current path: download_url() on the package itself, filter attached.
+$GLOBALS['__zipball_location'] = '';
+unset( $GLOBALS['__download_url'], $GLOBALS['__download_filtered'] );
+ok( sn_gh_theme_authenticated_download( false, 'https://api.github.com/repos/juanlentino/signal-and-noise/zipball/v9.9.9' ) === '/tmp/fake.zip',
+    'download: no redirect → still returns the temp path' );
+ok( $GLOBALS['__download_url'] === 'https://api.github.com/repos/juanlentino/signal-and-noise/zipball/v9.9.9' && ! empty( $GLOBALS['__download_filtered'] ),
+    'download: no redirect → download_url() on the package with the filter attached (the fallback)' );
+ok( ! token_filter_attached(), 'download: the filter is not left attached after the fallback either' );
 
 // ── Case 2 (documented): when the constant is UNDEFINED, no Authorization. ──
 // Can't undefine a constant mid-process, so this is asserted structurally:
