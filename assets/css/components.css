@@ -2171,7 +2171,14 @@ img.sn-img-dim {
 		color: var(--wp--preset--color--void);
 	}
 
-	:root a:not(.wp-element-button):not(.wp-block-button__link):hover {
+	/* :where() zeroes this selector's own specificity (#321). Without it,
+	   (0,3,1) beat every component-level link color rule in the codebase
+	   (most are (0,1,1), same as `.sn-article-toc__list a`), so tapping any
+	   deliberately-colored link forced it to blood/no-underline too. Zeroed,
+	   it still wins the tie against core's own zero-specificity
+	   `:root :where(a:hover)` by loading later, but now loses to any
+	   component rule that has real specificity of its own. */
+	:where(:root a:not(.wp-element-button):not(.wp-block-button__link):hover) {
 		/* theme.json elements.link resting state. */
 		color: var(--wp--preset--color--blood);
 		text-decoration: none;
