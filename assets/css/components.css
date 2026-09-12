@@ -1034,10 +1034,14 @@
 /* Controls rail: count + role chips (sticky). */
 .sn-disco-controls {
 	position: sticky;
-	/* Stick BELOW the fixed header (108/80/65px staircase), not at top:0 where the
-	   header (z-index 10000) occluded the rail mid-scroll. z-index sits above page
-	   content but below the footer (9990). Responsive top overrides below. */
-	top: 108px;
+	/* Stick BELOW the fixed header, not at top:0 where the header (z-index
+	   10000) occluded the rail mid-scroll. z-index sits above page content
+	   but below the footer (9990). 108px was the UNSCROLLED header's height
+	   (body's own padding-top); by the time a sticky rail actually engages,
+	   the header is already shrunk to its scrolled ~61px, leaving a
+	   14-47px band of grid between them (#322). Responsive overrides below
+	   are a separate, already-correct staircase. */
+	top: 61px;
 	z-index: 9985;
 	display: flex;
 	flex-wrap: wrap;
