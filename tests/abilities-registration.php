@@ -1278,6 +1278,11 @@ ha_true( false !== strpos( $GLOBALS['__test_ai_last_prompt'], 'PRESERVE LINKS: y
 ha_true( isset( $result_pl['preserved_elements']['links_count'] ), 'preserved_elements.links_count present' );
 ha_eq( 1, $result_pl['preserved_elements']['links_count'], 'counted 1 link in source' );
 
+// #315: list markers — numbered items count too, and a lone digit is not one.
+$with_lists = "Intro.\n1. First\n2. Second\n- third\n10. ten\n* five\n+ six\n7 not a list\n";
+$result_ls  = call_user_func( $ability['execute_callback'], array( 'source_text' => $with_lists, 'preserve_lists' => true ) );
+ha_eq( 6, $result_ls['preserved_elements']['lists_count'], 'counts -, *, + and N. markers; a lone digit + space is not a marker (#315)' );
+
 // ─── Test: get-latest-theme-tag (v9.9.0) ─────────────────────────
 echo "\nTest signal-and-noise/get-latest-theme-tag\n";
 ha_reset();

@@ -636,7 +636,10 @@ function sn_theme_ability_ai_rewrite_in_brand_voice( $input ) {
 		// reflects what was present (caller can sanity-check).
 		$links_count = preg_match_all( '/https?:\/\/\S+/i', $source );
 		if ( false === $links_count ) { $links_count = 0; }
-		$lists_count = preg_match_all( '/(^|\n)\s*[\-\*\d+\.]\s+/m', $source );
+		// #315: a bullet (-, *, +) or an ordered marker (digits + dot). The
+		// previous single character class matched one character, so "1." never
+		// counted and a lone digit did.
+		$lists_count = preg_match_all( '/(^|\n)\s*(?:[-*+]|\d+\.)\s+/', $source );
 		if ( false === $lists_count ) { $lists_count = 0; }
 
 		$system = SN_THEME_BRAND_VOICE_SYSTEM
