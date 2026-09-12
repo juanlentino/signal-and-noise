@@ -157,7 +157,13 @@ if [ -n "$PREVIOUS_CUT" ]; then
   first_heading_line="$(grep -n -m1 -E '^## \[' "$ARCHIVE" | cut -d: -f1 || true)"
   [ -n "$first_heading_line" ] || die "no '## [' heading found in ${ARCHIVE}."
   archive_tmp="$(mktemp)"
-  head -n $((first_heading_line - 1)) "$ARCHIVE" > "$archive_tmp"
+  # #340: BSD head rejects `-n 0`; an archive whose first line is already a
+  # heading has no preamble to keep.
+  if [ "$first_heading_line" -gt 1 ]; then
+    head -n $((first_heading_line - 1)) "$ARCHIVE" > "$archive_tmp"
+  else
+    : > "$archive_tmp"
+  fi
   printf '%s\n\n' "$PREVIOUS_CUT" >> "$archive_tmp"
   tail -n +"$first_heading_line" "$ARCHIVE" >> "$archive_tmp"
   mv "$archive_tmp" "$ARCHIVE"

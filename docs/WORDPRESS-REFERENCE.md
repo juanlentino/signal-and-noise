@@ -449,7 +449,7 @@ The `/notes` route lives off normal FSE template resolution. [inc/page-notes-tem
 **Cache layer (theme + plugin both, since v1.11.1 / v8.5.3):**
 
 - TTL: 1 hour (was 12h until each repo's third patch).
-- Honors `WP_FORCE_UPDATE_CHECK` constant + `?force-check=1` query arg — clicking "Check Again" in wp-admin actually re-fetches.
+- Honors the `?force-check=1` query arg — clicking "Check Again" in wp-admin re-fetches once per request (#332; `WP_FORCE_UPDATE_CHECK` never existed in core and was removed).
 - `admin_init` version-change detection: compares on-disk Version against `sn_last_seen_*_version` option; on mismatch, clears both `sn_gh_latest_*` and WP's own `update_themes` / `update_plugins` site transient. Handles the "upgrade just happened, why does WP still say update available?" case for both install paths.
 
 **Theme update transient shape ≠ plugin update transient shape** — themes register via `pre_set_site_transient_update_themes` with **arrays** keyed by stylesheet; plugins use `pre_set_site_transient_update_plugins` with **stdClass objects** keyed by basename. Subtle WP core quirk; copy-adapting code between the two needs the shape conversion.
