@@ -14,6 +14,8 @@
 if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 
 define( 'SN_READING_PATH_TEST', true );
+// #336: the module now guards direct access on ABSPATH like every other inc/ file.
+define( 'ABSPATH', '/' );
 
 error_reporting( E_ALL );
 $GLOBALS['__php_errors'] = array();
