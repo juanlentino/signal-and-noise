@@ -228,5 +228,15 @@ ok( strpos( $js, 'scrollable <= 0 ? 100' ) !== false, 'short unscrollable pages 
 ok( strpos( $js, 'if (sent[100]) window.removeEventListener' ) !== false, 'scroll listener detaches after the 100 milestone (no further sc this view)' );
 ok( strpos( $js, 'sent = {};' ) !== false && strpos( $js, "if (ev.persisted) { flushed = false" ) !== false, 'sent map resets ONLY on bfcache restore (a restore re-fires pv, so it IS a new view)' );
 
+// v13.1.0: prerender gating. With speculative prerendering on (inc/speculation.php),
+// a hovered link can prerender the note in a hidden, not-yet-shown document — the
+// beacon must not fire a pageview (or bind anything) until the page is actually shown.
+ok( strpos( $js, 'document.prerendering' ) !== false, 'beacon checks document.prerendering' );
+ok( strpos( $js, 'prerenderingchange' ) !== false, 'beacon defers to the prerenderingchange event' );
+$init_pos = strpos( $js, 'function init()' );
+$first_pageview_call = strpos( $js, 'pageview();' );
+ok( $init_pos !== false, 'beacon wraps its body in an init() function' );
+ok( $first_pageview_call !== false && $init_pos !== false && $first_pageview_call > $init_pos, 'the first pageview() call site is inside init(), never at prerender time' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

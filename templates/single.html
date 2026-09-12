@@ -19,7 +19,7 @@
 	<div style="height:var(--wp--preset--spacing--30)" aria-hidden="true" class="wp-block-spacer"></div>
 	<!-- /wp:spacer -->
 
-	<!-- wp:post-content {"layout":{"type":"constrained"}} /-->
+	<!-- wp:post-content {"metadata":{"ignoredHookedBlocks":["core/template-part"]},"layout":{"type":"constrained"}} /-->
 
 	<!-- v9.2.0: post-closing template part (parts/post-closing.html).
 	     Renders tags + chronologically-next post link. Auto-applied to
@@ -38,18 +38,15 @@
 	<!-- /wp:shortcode -->
 
 	<!-- v9.10.0: Related Notes footer (inc/related-notes.php). Shared-tag
-	     heuristic with recency backfill; resolved by the [sn_related_notes]
-	     render_block bridge (core/shortcode only wpautop()s its content). -->
-	<!-- wp:shortcode -->
-	[sn_related_notes]
-	<!-- /wp:shortcode -->
+	     heuristic with recency backfill; placed as a PHP-only block since
+	     v13.1.0 (inc/blocks-php-only.php). The sn_related_notes shortcode
+	     and its render_block bridge remain, for post content only. -->
+	<!-- wp:signal-noise/related-notes /-->
 
 	<!-- v10.21.0: Cited-by footer (inc/cited-by.php). Reverse of related
 	     notes: published Notes whose body links to this one. Same shortcode
 	     + render_block bridge convention; empty renders no chrome. -->
-	<!-- wp:shortcode -->
-	[sn_cited_by]
-	<!-- /wp:shortcode -->
+	<!-- wp:signal-noise/cited-by /-->
 
 	<!-- wp:spacer {"height":"var:preset|spacing|50"} -->
 	<div style="height:var(--wp--preset--spacing--50)" aria-hidden="true" class="wp-block-spacer"></div>

@@ -50,15 +50,27 @@ branch: when `slug` is present, resolve it with `get_page_by_path( $slug, OBJECT
 and use that id; unknown slug → `''` (the paragraph renders empty, as today's
 shortcode does for a missing post). No other source change.
 
-**Why it will not fatal this time:** the v9.11.1 fatal was a mistyped core
-call. PHPStan is a required check; `tools/stub-parity.php` sweeps unguarded
-WP-shaped calls; and this arc adds `tests/block-bindings-render.php`, which
-renders `parts/post-frontmatter.html` through `do_blocks()` with the REAL
-source registered against a fixture post and asserts the reading-time text
-appears — the test that did not exist in June.
+**Why it will not fatal this time:** the standalone sweep has no WordPress
+bootstrap, so `tests/block-bindings-templates.php` pins at parse level —
+every `signal-noise/post-field` binding in templates/parts names a key the
+source implements (derived from the source file), each bound `<p>` inner is
+empty, and no migrated shortcode string survives — and the source itself is
+exercised with a stubbed `$block_instance` context in
+`tests/block-bindings.php`. The v9.11.1 fatal class (a mistyped core call)
+is owned by PHPStan, now a required check, and the stub-parity sweep.
 
 `sn_updated_date` stays a block (§2): it renders a `<time datetime>` element,
 and a paragraph binding carries text, not markup.
+
+**Narrowed during implementation (2026-09-11):** three paragraphs bind, not
+five, and the pillar is a block, not a binding. The two pillar-card eyebrows
+on `/notes` are prefix text + figure in one `<p>` ("Pillar Essay · March 2026
+· 4 min read"); a `content` binding replaces the whole paragraph, so the
+prefix would vanish — they keep the plugin's `[sn_reading_time slug="…"]`,
+and the `slug` arg this section proposed has no consumer, so it is not
+added. `[sn_post_pillar]` sat in a `wp:shortcode` block (no wrapper); as a
+bound paragraph the `<a>` would gain a `<p>` wrapper — not parity — so it
+joins §2 as the ninth PHP-only block, `signal-noise/post-pillar`.
 
 ## 2. PHP-only blocks (WordPress 7.0)
 
@@ -110,6 +122,12 @@ Shortcodes: stay registered for 13.1.x (anything typed into post content
 keeps working); a `_deprecated_function`-style notice is NOT added — they
 are silent aliases until 13.2.0 retires them.
 
+`[sn_reading_time]` is not one of the eight: it is the **plugin's**
+shortcode (`signal-and-noise-tools`, not this theme). The theme stops
+emitting it in templates — a Block Bindings source replaces it, per §1 —
+but the plugin keeps registering `[sn_reading_time]` unchanged; nothing in
+the plugin repo changes for this arc.
+
 ## 3. Block Hooks
 
 ```php
@@ -159,10 +177,33 @@ the attribute shape on the installed core (`grep -rn register_icon wp-includes`
 on the Studio copy). If the API differs from the note, this section is
 dropped from the arc and recorded, not improvised.
 
+**Verified 2026-09-11 against the installed Studio core** (`~/.studio/server-files/wordpress-versions/latest`,
+`$wp_version = '7.1'`): `wp-includes/icons.php` defines
+`wp_register_icon_collection( $slug, $args )`, `wp_register_icon( $icon_name, $args )`,
+and `wp_get_icon( $name, $args = array() )`, backed by
+`WP_Icons_Registry`/`WP_Icon_Collections_Registry`; `core/icon`'s
+`block.json` declares an `icon` attribute typed `string` with
+`"role": "content"`, and `render_block_core_icon()` in
+`wp-includes/blocks/icon.php` passes `$attributes['icon']` straight into
+`wp_get_icon()` — i.e. the attribute names an icon by slug, not inline
+markup. All three conditions in the decision rule hold. **Decision: YES —
+Task 8 runs.**
+
+**Dropped at implementation (2026-09-11):** the API is real, the fit is not.
+`render_block_core_icon()` wraps every icon in `<div class="wp-block-icon">`
+(`wp-includes/blocks/icon.php:129`), and the five footer icons sit inside
+`<a aria-label title>` links that an Icon block cannot carry — the anchor
+would still need the `wp:html` it has today, now with a wrapper div inside
+it. Nothing gained, parity lost. The footer keeps its inline SVGs.
+
 ## Tests (all standalone, in the sweep)
 
-- `tests/block-bindings-render.php` — the real source through `do_blocks()`
-  on the front-matter markup; `slug` arg resolves; unknown slug → empty.
+- `tests/block-bindings-templates.php` — parse-level pin: every
+  `signal-noise/post-field` binding in templates/parts names a key the
+  source implements, each bound `<p>` inner is empty, no migrated
+  shortcode string survives.
+- `tests/block-bindings.php` — the real source exercised with a stubbed
+  `$block_instance` context; `slug` arg resolves; unknown slug → empty.
 - `tests/blocks-php-only.php` — every block registered with `autoRegister`;
   per block, render === shortcode output on the same fixture post (the
   parity pin, eight times); context id ≠ global id uses the context;

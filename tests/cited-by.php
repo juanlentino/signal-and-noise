@@ -114,7 +114,7 @@ ok( '' === sn_cited_by_shortcode(), 'no queried post → empty string' );
 
 // ── mount + wiring contracts ──
 $tpl = file_get_contents( __DIR__ . '/../templates/single.html' );
-ok( false !== strpos( $tpl, '[sn_cited_by]' ), 'single.html mounts [sn_cited_by]' );
+ok( false !== strpos( $tpl, '<!-- wp:signal-noise/cited-by /-->' ), 'single.html mounts signal-noise/cited-by' );
 $fn = file_get_contents( __DIR__ . '/../functions.php' );
 ok( false !== strpos( $fn, 'inc/cited-by.php' ), 'functions.php requires inc/cited-by.php' );
 $css = file_get_contents( __DIR__ . '/../assets/css/components.css' );

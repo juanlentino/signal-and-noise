@@ -348,7 +348,9 @@
 	},
 	"templateParts": [
 		{ "name": "header", "title": "Header", "area": "header" },
-		{ "name": "footer", "title": "Footer", "area": "footer" }
+		{ "name": "footer", "title": "Footer", "area": "footer" },
+		{ "name": "post-frontmatter", "title": "Note front matter", "area": "article" },
+		{ "name": "post-closing", "title": "Note closing", "area": "article" }
 	],
 	"customTemplates": [
 		{ "name": "page-about", "title": "About", "postTypes": ["page"] },

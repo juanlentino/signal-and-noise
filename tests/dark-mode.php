@@ -168,9 +168,9 @@ $footer = (string) file_get_contents( $root . '/parts/footer.html' );
 // cluster right — so a third child is safe BECAUSE of that rule and only
 // because of it. Asserted together: the markup and the rule that makes it
 // legal cannot be separated without this failing.
-ok( strpos( $header, '[sn_theme_toggle placement="header"]' ) !== false,
+ok( strpos( $header, '<!-- wp:signal-noise/theme-toggle {"placement":"header"} /-->' ) !== false,
 	'the header carries the MOBILE instance' );
-ok( strpos( $footer, '[sn_theme_toggle]' ) !== false,
+ok( strpos( $footer, '<!-- wp:signal-noise/theme-toggle /-->' ) !== false,
 	'the footer utility bar carries the desktop instance' );
 
 $comp_pre = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( $root . '/assets/css/components.css' ) );
@@ -210,7 +210,7 @@ ok( strpos( $js_code, 'getElementById' ) === false,
 
 // Beside the search trigger, not inside the meta-nav: both are BUTTONS, and a
 // <nav> of links is the wrong container for a state control with aria-pressed.
-$toggle_at = strpos( $footer, '[sn_theme_toggle]' ); // footer instance (no placement attr)
+$toggle_at = strpos( $footer, '<!-- wp:signal-noise/theme-toggle /-->' ); // footer instance (no placement attr)
 $cmdk_at   = strpos( $footer, 'sn-cmdk-trigger' );
 $nav_at    = strpos( $footer, '<nav class="sn-footer__meta-nav"' );
 ok( false !== $cmdk_at && false !== $nav_at, 'the footer utility cluster is intact (search trigger + meta nav)' );
