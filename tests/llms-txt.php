@@ -141,5 +141,30 @@ ok( strpos( $body, 'does not satisfy' ) !== false, 'and says outright that signi
 // before anything that sounds like a permission.
 ok( strpos( $body, 'reserved by default' ) < strpos( $body, 'TDM-Licence' ), 'the reservation is stated BEFORE the handshake that offers terms under it' );
 
+// ── #335: sn_llms_txt_recent_notes() decodes entities in the title ──
+// get_the_title() returns entity-encoded text (WordPress stores "&" as
+// "&#038;"); this function ships titles into a text/plain file read by LLM
+// crawlers, so an undecoded title reads as literal "&#038;" there.
+// class_exists('WP_Query') gates the function — none of the tests above
+// touched it, so this is the first exercise of the actual query path.
+class WP_Query {
+	public $posts;
+	public function __construct( $args ) { $this->posts = $GLOBALS['__llms_query_posts'] ?? array(); }
+}
+function get_the_title( $p ) { return is_object( $p ) ? $p->post_title : ''; }
+function get_permalink( $p ) { return 'https://juanlentino.com/notes/' . ( is_object( $p ) ? $p->ID : $p ) . '/'; }
+function has_excerpt( $p ) { return false; }
+function get_the_excerpt( $p ) { return ''; }
+function wp_trim_words( $s, $n, $more ) { return $s; }
+function wp_strip_all_tags( $s ) { return strip_tags( (string) $s ); }
+function wp_reset_postdata() { return true; }
+
+$GLOBALS['__llms_query_posts'] = array(
+	(object) array( 'ID' => 1, 'post_title' => 'Signal &#038; Noise', 'post_content' => 'body', 'post_password' => '' ),
+);
+$recent = sn_llms_txt_recent_notes( 10 );
+ok( 'Signal & Noise' === ( $recent[0]['title'] ?? null ),
+	'recent-notes title decodes HTML entities before it reaches the text/plain body — got: ' . var_export( $recent[0]['title'] ?? null, true ) );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

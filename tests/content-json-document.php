@@ -68,6 +68,21 @@ ok( ( $dt['provenance']['note_uid'] ?? '' ) === 'deadbeef-dead-4eef-8eef-deadbee
 $GLOBALS['__meta'] = array();
 $dn = sn_content_json_document( $note );
 ok( ! isset( $dn['provenance']['note_uid'] ), 'no fabricated note_uid when the meta is absent' );
+
+// #335: get_the_title() returns entity-encoded text (WordPress stores "&" as
+// "&#038;"); this twin ships titles into a JSON document readers/agents
+// parse programmatically, so an undecoded title reads as literal "&#038;".
+$amp = sn_test_post( 2, array( 'post_type' => 'post', 'post_title' => 'Signal &#038; Noise', 'post_content' => '<p>x</p>' ) );
+$da  = sn_content_json_document( $amp );
+ok( 'Signal & Noise' === $da['title'], 'document title decodes HTML entities — got: ' . var_export( $da['title'], true ) );
+ok( 'Signal & Noise' === end( $da['breadcrumb'] )['name'], 'the self breadcrumb crumb decodes too' );
+
+$amp_page   = sn_test_post( 100, array( 'post_type' => 'page', 'post_title' => 'Q&#038;A', 'post_parent' => 101, 'post_content' => '<p>x</p>' ) );
+sn_test_post( 101, array( 'post_type' => 'page', 'post_title' => 'FAQs &#038; Help' ) );
+$dap        = sn_content_json_document( $amp_page );
+$amp_names  = array_map( function ( $c ) { return $c['name']; }, $dap['breadcrumb'] );
+ok( in_array( 'FAQs & Help', $amp_names, true ), 'an ANCESTOR breadcrumb crumb decodes entities too' );
+ok( in_array( 'Q&A', $amp_names, true ), 'the self crumb for a page decodes too' );
 // v11.5.1: this line USED TO PIN 'https://juanlentino.com/provenance/verify/' —
 // a URL that returns 404 live (confirmed 2026-08-08, redirects followed). The test
 // did not merely miss the defect, it asserted the defect was CORRECT, which is how

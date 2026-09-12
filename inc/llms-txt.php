@@ -207,7 +207,10 @@ function sn_llms_txt_recent_notes( $limit = 40 ) {
 		}
 		$summary = has_excerpt( $post ) ? get_the_excerpt( $post ) : wp_trim_words( wp_strip_all_tags( (string) $post->post_content ), 28, '…' );
 		$notes[] = array(
-			'title'   => wp_strip_all_tags( get_the_title( $post ) ),
+			// html_entity_decode() BEFORE stripping tags: get_the_title()
+			// returns entity-encoded text (WordPress stores "&" as "&#038;"),
+			// and this ships into a text/plain file read by LLM crawlers (#335).
+			'title'   => wp_strip_all_tags( html_entity_decode( get_the_title( $post ), ENT_QUOTES, 'UTF-8' ) ),
 			'url'     => get_permalink( $post ),
 			'summary' => trim( (string) preg_replace( '/\s+/', ' ', (string) $summary ) ),
 		);
