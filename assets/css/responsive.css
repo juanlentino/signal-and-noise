@@ -462,27 +462,9 @@
    TOUCH DEVICE OVERRIDES
    ============================================ */
 
-@media (hover: none) and (pointer: coarse) {
-	/* Disable hover transforms on touch devices */
-	@media (hover: hover) {
-		.wp-block-column:has(.sn-service-image):hover {
-			transform: none !important;
-
-		}
-	}
-
-	@media (hover: hover) {
-		.wp-block-button__link:hover {
-			transform: none !important;
-			box-shadow: none !important;
-
-		}
-	}
-
-	@media (hover: hover) {
-		.sn-logo-link:hover .sn-logo-img {
-			opacity: 1;
-
-		}
-	}
-}
+/* A `(hover: none) and (pointer: coarse)` block that only ever nested
+ * `@media (hover: hover)` blocks inside it used to live here. The v12.0.3
+ * mechanical hover-sweep wrapped every `:hover` rule in `(hover: hover)`,
+ * including these three, which were already inside `(hover: none)` — the
+ * two conditions are mutually exclusive, so none of the three could ever
+ * match. Removed (#326). */
