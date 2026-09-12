@@ -20,8 +20,9 @@
  * produce for the same post, and tests/blocks-php-only.php pins it per
  * block. The toggle is the one exception: it was placed in `wp:html`, never
  * autop'd, so its callback stays a bare string. The shortcodes stay
- * registered through 13.1.x for anything typed into post content; 13.2.0
- * retires them.
+ * registered indefinitely: they cost nothing, they render anything typed
+ * into post content, and both paths call the same renderer (owner decision
+ * 2026-09-12 — no retirement planned).
  *
  * Context: every renderer reads the queried/global post, exactly as its
  * shortcode did, so parity is by construction. None of these blocks is

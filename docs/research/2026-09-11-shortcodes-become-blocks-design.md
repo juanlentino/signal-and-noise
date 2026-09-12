@@ -120,7 +120,7 @@ allows two (header and footer).
 Palette: the eight names join `inc/editor-block-palette.php`'s allowlist.
 Shortcodes: stay registered for 13.1.x (anything typed into post content
 keeps working); a `_deprecated_function`-style notice is NOT added — they
-are silent aliases until 13.2.0 retires them.
+are silent aliases and stay registered (owner decision 2026-09-12: no retirement — they cost nothing and keep post-content shortcodes rendering).
 
 `[sn_reading_time]` is not one of the eight: it is the **plugin's**
 shortcode (`signal-and-noise-tools`, not this theme). The theme stops
@@ -226,7 +226,7 @@ it. Nothing gained, parity lost. The footer keeps its inline SVGs.
 `[sn_reading_path]` (plugin-owned — see below); `[current_year]`,
 `[sn_email]`, `[sn_availability]`, `[sn_build]`, `[sn_discography]`,
 `[sn_music_featured]` (page-content shortcodes, not template furniture);
-Interactivity-API rewrite of the toggle; retiring the shortcodes (13.2.0).
+Interactivity-API rewrite of the toggle. (Retiring the shortcodes was considered and dropped on 2026-09-12.)
 
 ## For the plugin — nothing required; two optional follow-ups
 

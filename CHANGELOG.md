@@ -12,6 +12,9 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Changed
+- The nine furniture shortcodes stay registered indefinitely (owner decision 2026-09-12); the 13.1.0 note that 13.2.0 would retire them is withdrawn. Comment and spec only.
+
 ### Fixed
 - `tools/cut-release.sh` no longer fails on an archive whose first line is already a release heading — BSD `head` rejects `-n 0` (#340). `docs/WORDPRESS-REFERENCE.md` stops naming a core constant that never existed (#341).
 
