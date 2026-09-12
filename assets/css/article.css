@@ -878,3 +878,17 @@ main { view-transition-name: sn-main; }
 
 /* v9.12.0: command-palette kill-switch (sn_palette_enabled=false -> body.sn-cmdk-off). */
 .sn-cmdk-off .sn-cmdk-trigger { display: none; }
+
+/* v13.1.1: editor-only. A furniture block (inc/blocks-php-only.php) whose
+   renderer has no post to read in the site editor's preview shows its name
+   instead of nothing, so it can be seen and selected on the canvas. Never
+   emitted on the front end. */
+.sn-block-placeholder {
+	padding: 0.5em 0.75em;
+	border: 1px dashed var(--wp--preset--color--rust);
+	color: var(--wp--preset--color--rust);
+	font-family: var(--wp--preset--font-family--body);
+	font-size: var(--wp--preset--font-size--eyebrow);
+	letter-spacing: var(--wp--custom--letter-spacing--wide);
+	text-transform: uppercase;
+}

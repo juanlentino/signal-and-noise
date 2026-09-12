@@ -30,7 +30,7 @@ cd "$ROOT"
 STYLE_FILE="style.css"
 README_FILE="readme.txt"
 CHANGELOG="CHANGELOG.md"
-ARCHIVE="docs/changelog/v12.md"
+ARCHIVE="docs/changelog/archive.md"
 
 die() { printf 'cut-release: %s\n' "$1" >&2; exit 1; }
 

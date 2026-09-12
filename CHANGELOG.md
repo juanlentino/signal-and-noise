@@ -12,6 +12,12 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Fixed
+- **The furniture blocks are visible on the site-editor canvas.** The eight post-dependent blocks (chip, record, related, cited-by, share, reply, updated date, pillar) render empty in the editor's preview — it has no post to read — so they existed in List View only. An empty render under a REST request now shows a labelled placeholder (`.sn-block-placeholder`, editor-only; the front end never renders through REST and is untouched).
+
+### Changed
+- `docs/changelog/v12.md` → `docs/changelog/archive.md`: it has held every past release since 13.0.0, not v12's alone. `tools/cut-release.sh` follows.
+
 ## [13.1.0] - 2026-09-12 — the template furniture is blocks
 
 ### Added

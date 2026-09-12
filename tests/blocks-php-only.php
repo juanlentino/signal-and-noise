@@ -22,6 +22,8 @@ function get_queried_object_id() { return $GLOBALS['__queried']; }
 function get_post( $id = null ) { return (object) array( 'ID' => null === $id ? $GLOBALS['__the_id'] : (int) $id ); }
 // wpautop stub — mirrors the shape of core's real wpautop() enough to prove the
 // WRAPPER is applied: empty in → empty out, otherwise wrapped in a marker tag.
+if ( ! function_exists( 'wp_is_serving_rest_request' ) ) { function wp_is_serving_rest_request() { return ! empty( $GLOBALS['__rest'] ); } }
+if ( ! function_exists( 'esc_html' ) ) { function esc_html( $s ) { return htmlspecialchars( (string) $s, ENT_QUOTES ); } }
 if ( ! function_exists( 'wpautop' ) ) {
 	function wpautop( $s ) { return '' === (string) $s ? '' : '<autop>' . $s . '</autop>'; }
 }
@@ -92,6 +94,18 @@ ok( false !== strpos( (string) file_get_contents( $root . '/templates/single.htm
 $palette = (string) file_get_contents( $root . '/inc/editor-block-palette.php' );
 $missing = array_filter( $expected, static fn( $s ) => false === strpos( $palette, "'signal-noise/$s'" ) );
 ok( array() === $missing, 'every PHP-only block is in the editor palette allowlist' . ( $missing ? ' — MISSING: ' . implode( ', ', $missing ) : '' ) );
+
+echo "\nGroup: the editor canvas (v13.1.1) — an empty render under REST shows a labelled placeholder\n";
+$GLOBALS['__rest'] = true; $GLOBALS['__empty'] = true;
+$ph = $blk( 'updated-date' );
+ok( false !== strpos( $ph, 'class="sn-block-placeholder"' ) && false !== strpos( $ph, 'Updated date' ), 'REST + empty renderer → a placeholder naming the block (the site editor otherwise shows nothing on canvas)' );
+ok( $blk( 'prov-chip' ) === wpautop( sn_prov_chip_shortcode() ), 'REST + a non-empty renderer → the real output, untouched' );
+$GLOBALS['__rest'] = false;
+ok( '' === $blk( 'updated-date' ), 'front end + empty renderer → empty, never a placeholder (control)' );
+$GLOBALS['__rest'] = true; $GLOBALS['__empty'] = false;
+ok( $blk( 'updated-date' ) === wpautop( sn_updated_date_shortcode() ), 'REST + non-empty → real output (control)' );
+$GLOBALS['__rest'] = false;
+ok( false === strpos( $blk( 'theme-toggle' ), 'sn-block-placeholder' ), 'the toggle never needs a placeholder (it renders a button everywhere)' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
