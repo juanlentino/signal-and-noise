@@ -1637,6 +1637,13 @@
 	outline-offset: 2px;
 	border-bottom-color: var(--wp--preset--color--blood);
 }
+/* `medium` is a fluid preset and clamps to 14–14.6px at phone width, under
+ * WebKit's 16px zoom threshold (issue #317). */
+@media screen and (max-width: 782px) {
+	.sn-404-search__input {
+		font-size: 16px;
+	}
+}
 .sn-404-search__submit {
 	flex: 0 0 auto;
 	padding: 0.4rem 1rem;
