@@ -16,7 +16,7 @@ A white-first, brutalist **WordPress Full Site Editing block theme** built for [
 
 ## Stack
 
-- WordPress 7.0+ FSE block theme · PHP 8.3+
+- WordPress 7.0+ FSE block theme, **tested up to and running on 7.1** (`style.css` `Tested up to`; juanlentino.com runs 7.1 in production) · PHP 8.3+
 - Vanilla CSS + JS — no build step, no framework, no jQuery
 - Inlined critical CSS + one combined, minified stylesheet the theme builds itself (`inc/asset-combine.php`, fail-open to the per-file enqueues); View Transitions for soft navigation
 - Hosted on Cloudways, edge-cached via Cloudflare
