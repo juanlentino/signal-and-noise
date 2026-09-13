@@ -12,6 +12,9 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Documentation
+- README states the WordPress version the theme is tested on and runs on: 7.1 (`style.css` and `readme.txt` already declared `Tested up to: 7.1`; the prose only said 7.0+).
+
 ### Changed
 - The nine furniture shortcodes stay registered indefinitely (owner decision 2026-09-12); the 13.1.0 note that 13.2.0 would retire them is withdrawn. Comment and spec only.
 
