@@ -39,6 +39,7 @@ Block templates for the homepage, long-form **notes**, and the standing pages �
 - **IndieWeb** — `rel=me` identity links, `humans.txt`, and a live colophon build line (`[sn_build]`: theme + plugin version, git SHA, deploy time)
 - **Analytics** — a cookieless first-party beacon (Cloudflare Worker endpoint; respects DNT/GPC)
 - **WordPress 7.0 Abilities API** — the theme registers read + generative-AI capabilities for agents
+- **Editorial conventions as data** — `inc/editorial-conventions.php` registers every house form (patterns, block styles, className conventions, dynamic blocks, markup idioms) with an exemplar, placement and reachability; `get-editorial-conventions` hands it to agents before they compose, and a parity test keeps it true against the CSS and the pattern files
 
 Every plugin-backed feature is guarded: the theme runs standalone and degrades gracefully when the companion plugin is absent.
 
