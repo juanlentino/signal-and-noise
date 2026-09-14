@@ -131,6 +131,33 @@ function sn_prov_brow_segment( $page_id, $with_separator = true ) {
 }
 
 /**
+ * Does this rendered paragraph carry one of the site's brow classes?
+ *
+ * 13.2.2: the two provenance essays open with `.sn-provenance-eyebrow`
+ * ("A short read · 5 min read"), the same DM Mono line the catalog pages call
+ * `.sn-catalog-eyebrow`. Only the catalog class was joined, so on both essays
+ * the badge fell through to the plugin's foot append: the position this file
+ * exists to leave.
+ *
+ * @param string $html
+ * @return bool
+ */
+function sn_prov_brow_is_eyebrow( $html ) {
+	return (bool) preg_match( '/class="[^"]*\bsn-(?:catalog|provenance)-eyebrow\b/', (string) $html );
+}
+
+/**
+ * Does the page's authored content carry a brow this filter set will join?
+ *
+ * @param int $page_id
+ * @return bool
+ */
+function sn_prov_brow_content_has_eyebrow( $page_id ) {
+	$post = get_post( $page_id );
+	return $post && (bool) preg_match( '/sn-(?:catalog|provenance)-eyebrow/', (string) $post->post_content );
+}
+
+/**
  * render_block_core/paragraph: join the first `.sn-catalog-eyebrow` brow.
  *
  * @param string $block_content Rendered block HTML.
@@ -141,7 +168,7 @@ function sn_prov_brow_filter( $block_content, $block = array() ) {
 	if ( sn_prov_brow_placed() ) {
 		return $block_content; // one brow per page, always the first
 	}
-	if ( false === strpos( (string) $block_content, 'sn-catalog-eyebrow' ) ) {
+	if ( ! sn_prov_brow_is_eyebrow( (string) $block_content ) ) {
 		return $block_content;
 	}
 	$page_id = sn_prov_brow_page_id();
@@ -197,9 +224,41 @@ function sn_prov_brow_title_filter( $block_content, $block = array() ) {
 	// order cannot decide which filter wins — block order does. On a page that
 	// has an authored brow, firing here would stack a second one above the
 	// title. Ask the content directly instead of racing the render.
-	$post = get_post( $page_id );
-	if ( $post && false !== strpos( (string) $post->post_content, 'sn-catalog-eyebrow' ) ) {
+	if ( sn_prov_brow_content_has_eyebrow( $page_id ) ) {
 		return $block_content; // the paragraph filter owns this page
+	}
+	$segment = sn_prov_brow_segment( $page_id, false );
+	if ( '' === $segment ) {
+		return $block_content;
+	}
+	sn_prov_brow_placed( true );
+	return '<p class="sn-catalog-eyebrow sn-prov-brow-solo">' . $segment . '</p>' . $block_content;
+}
+
+/**
+ * render_block_core/heading: CREATE the brow above an AUTHORED h1.
+ *
+ * 13.2.2, the third shape. /provenance opens with an authored
+ * `core/heading` level 1 and no eyebrow: not a post-title block (shape B),
+ * not an authored brow (shape A). It fell through to the foot append. Same
+ * rule as the post-title filter, keyed on the first level-1 heading only;
+ * an h2 never earns a brow, and an authored brow anywhere in the content
+ * hands the page to the paragraph filter.
+ *
+ * @param string $block_content
+ * @param array  $block
+ * @return string
+ */
+function sn_prov_brow_heading_filter( $block_content, $block = array() ) {
+	if ( sn_prov_brow_placed() ) {
+		return $block_content;
+	}
+	if ( 1 !== (int) ( $block['attrs']['level'] ?? 2 ) ) {
+		return $block_content;
+	}
+	$page_id = sn_prov_brow_page_id();
+	if ( ! $page_id || sn_prov_brow_content_has_eyebrow( $page_id ) ) {
+		return $block_content;
 	}
 	$segment = sn_prov_brow_segment( $page_id, false );
 	if ( '' === $segment ) {
@@ -215,6 +274,7 @@ if ( function_exists( 'add_filter' ) ) {
 	// (it renders first, so it cannot rely on the flag alone).
 	add_filter( 'render_block_core/paragraph', 'sn_prov_brow_filter', 10, 2 );
 	add_filter( 'render_block_core/post-title', 'sn_prov_brow_title_filter', 10, 2 );
+	add_filter( 'render_block_core/heading', 'sn_prov_brow_heading_filter', 10, 2 );
 
 	// Suppress the plugin's foot append ONLY when the brow actually took it.
 	// Blocks render inside the_content at priority 9; the plugin appends at 20,
