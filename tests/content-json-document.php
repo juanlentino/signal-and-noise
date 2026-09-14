@@ -9,7 +9,9 @@ define( 'SN_CONTENT_JSON_TEST', true );
 
 // --- WP stubs ---
 if ( ! function_exists( 'home_url' ) ) { function home_url( $p = '' ) { return 'https://juanlentino.com' . $p; } }
-if ( ! function_exists( 'apply_filters' ) ) { function apply_filters( $h, $v ) { return $v; } } // the_content → identity
+$GLOBALS['__filters'] = array();
+if ( ! function_exists( 'add_filter' ) ) { function add_filter( $h, $cb ) { $GLOBALS['__filters'][ $h ][] = $cb; } }
+if ( ! function_exists( 'apply_filters' ) ) { function apply_filters( $h, $v, ...$a ) { foreach ( $GLOBALS['__filters'][ $h ] ?? array() as $cb ) { $v = $cb( $v, ...$a ); } return $v; } } // the_content → identity unless a test hooks it
 if ( ! function_exists( 'wp_strip_all_tags' ) ) { function wp_strip_all_tags( $s ) { return trim( preg_replace( '/<[^>]*>/', '', (string) $s ) ); } }
 $GLOBALS['__posts'] = array();
 function sn_test_post( $id, $args ) { $p = (object) array_merge( array( 'ID' => $id, 'post_type' => 'post', 'post_status' => 'publish', 'post_content' => '', 'post_parent' => 0, 'post_title' => '', 'post_author' => 1 ), $args ); $GLOBALS['__posts'][ $id ] = $p; return $p; }
@@ -47,7 +49,23 @@ sn_test_post( 5, array( 'post_type' => 'page', 'post_title' => 'About' ) );
 $dp = sn_content_json_document( $page );
 ok( $dp['type'] === 'page', 'a page → type page' );
 ok( ( $dp['schema']['type'] ?? '' ) === 'WebPage', 'schema type WebPage for a Page' );
-ok( ! isset( $dp['provenance'] ), 'no provenance key for a Page' );
+ok( ! isset( $dp['provenance'] ), 'no provenance key for a uid-less Page (no fabricated proof claim)' );
+// A signed Page (pages opt in per subject since plugin 13.69): the twin
+// carries the same provenance reference a Note does, keyed note_uid because
+// that is the /verify docket's query parameter, whatever the subject kind.
+$GLOBALS['__meta'][99] = array( '_sn_prov_uid' => 'CAFEBABE-cafe-4abe-8abe-cafebabecafe' );
+$dsp = sn_content_json_document( $page );
+ok( ( $dsp['provenance']['note_uid'] ?? '' ) === 'cafebabe-cafe-4abe-8abe-cafebabecafe', 'a Page with a plugin uid republishes it under provenance.note_uid' );
+ok( ( $dsp['provenance']['verify_url'] ?? '' ) === 'https://juanlentino.com/verify?note=cafebabe-cafe-4abe-8abe-cafebabecafe', 'a signed Page points verify_url at its own docket' );
+ok( strpos( (string) ( $dsp['provenance']['note'] ?? '' ), 'page' ) !== false, 'the signed-Page proof note says page, not Note' );
+$GLOBALS['__meta'] = array();
+// The builder hands the finished document through sn_content_json_document
+// so the plugin can add what only it can compute (content_signed). The
+// filter sees the post and its return value IS the twin.
+add_filter( 'sn_content_json_document', function ( $doc, $p ) { $doc['content_signed'] = 'from-plugin:' . $p->ID; return $doc; } );
+$df = sn_content_json_document( $page );
+ok( ( $df['content_signed'] ?? '' ) === 'from-plugin:99', 'sn_content_json_document filter can add a field and receives the post' );
+$GLOBALS['__filters'] = array();
 $names = array_map( function( $c ) { return $c['name']; }, $dp['breadcrumb'] );
 ok( $names === array( 'Home', 'About', 'Uses' ), 'Page breadcrumb walks ancestors: Home → About → Uses' );
 

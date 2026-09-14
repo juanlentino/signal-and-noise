@@ -76,8 +76,12 @@ function sn_content_json_document( $post ) {
 		),
 	);
 
-	// Provenance applies to Notes only (Pages carry no authorship proof).
-	if ( $is_post ) {
+	// Provenance: Notes always carry the reference (their proof is the
+	// program); a Page carries it once the plugin has minted it a uid (pages
+	// opt in per subject, plugin 13.69+). A uid-less Page stays silent: no
+	// fabricated proof claim.
+	$uid = function_exists( 'sn_theme_note_uid' ) ? sn_theme_note_uid( $post->ID ) : '';
+	if ( $is_post || '' !== $uid ) {
 		$doc['provenance'] = array(
 			// v11.5.1: was '/provenance/verify/', which 404s live. This is the
 			// fallback a Note without a uid publishes in its machine-readable
@@ -86,23 +90,29 @@ function sn_content_json_document( $post ) {
 			// than pinning a literal — the old literal pin asserted the 404 was
 			// correct, which is why this survived.
 			'verify_url' => home_url( '/verify/' ),
-			'note'       => 'This Note carries a Bitcoin-anchored authorship proof.',
+			'note'       => $is_post
+				? 'This Note carries a Bitcoin-anchored authorship proof.'
+				: 'This page carries a Bitcoin-anchored authorship proof.',
 		);
-		// Republish the Note's uid via the canonical normalized read
+		// Republish the subject's uid via the canonical normalized read
 		// (inc/note-uid.php — v10.49.0: this call site previously inlined
 		// strtolower WITHOUT the trim the other readers had, so a uid stored
 		// with stray whitespace republished whitespace into the twin). It is
-		// the key the /verify docket needs to fetch this Note's credential:
-		// the verifier resolves a pasted Note URL by probing
-		// provenance.note_uid, so without it paste-a-URL can never work
-		// (caught live 2026-07-21). With a uid in hand, verify_url upgrades
-		// from the static how-to to this Note's own docket.
-		$uid = function_exists( 'sn_theme_note_uid' ) ? sn_theme_note_uid( $post->ID ) : '';
+		// the key the /verify docket needs to fetch this subject's credential:
+		// the verifier resolves a pasted URL by probing provenance.note_uid,
+		// so without it paste-a-URL can never work (caught live 2026-07-21).
+		// The key stays `note_uid` for every subject kind: it is the docket's
+		// query parameter, not a claim about the kind.
 		if ( '' !== $uid ) {
 			$doc['provenance']['note_uid']   = $uid;
 			$doc['provenance']['verify_url'] = home_url( '/verify?note=' . rawurlencode( $uid ) );
 		}
 	}
 
-	return $doc;
+	// The plugin adds what only it can compute (v13.3.0: `content_signed`,
+	// the prose exactly as the signing normalization sees it, so the
+	// integrity sweep and /verify compare like with like instead of the
+	// rendered content_text against raw-normalized prose — rendered
+	// shortcodes and dynamic blocks made every signed Page read as drifted).
+	return apply_filters( 'sn_content_json_document', $doc, $post );
 }
