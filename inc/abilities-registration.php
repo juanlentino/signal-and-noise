@@ -51,6 +51,7 @@ require_once __DIR__ . '/abilities-categories.php';
 require_once __DIR__ . '/abilities-diagnostics.php';
 require_once __DIR__ . '/abilities-content.php';
 require_once __DIR__ . '/abilities-ai-generation.php';
+require_once __DIR__ . '/editorial-conventions.php'; // v13.2.0: the house conventions as data + get-editorial-conventions
 
 /**
  * Back-compat shim — the v9.1.7 split refactored the monolithic
@@ -72,5 +73,6 @@ require_once __DIR__ . '/abilities-ai-generation.php';
 function sn_theme_register_abilities() {
 	sn_theme_register_diagnostics_abilities();
 	sn_theme_register_content_abilities();
+	sn_theme_register_editorial_conventions_ability(); // v13.2.0
 	sn_theme_register_ai_generation_abilities();
 }

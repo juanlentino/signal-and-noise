@@ -562,7 +562,7 @@ echo "\nCategory: dispatch via wp_get_ability()\n";
 // Non-existent slug returns null.
 ap_true( null === wp_get_ability( 'signal-and-noise/does-not-exist' ), 'wp_get_ability returns null for unknown slug' );
 
-// All 15 abilities are registered.
+// All 16 abilities are registered (v13.2.0 ADDED get-editorial-conventions, the house forms as data).
 $expected_abilities = array(
 	'signal-and-noise/get-design-tokens',
 	'signal-and-noise/list-block-patterns',

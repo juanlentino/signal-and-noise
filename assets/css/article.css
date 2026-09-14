@@ -648,6 +648,23 @@ main { view-transition-name: sn-main; }
 	}
 }
 
+/* --- LEAD / STANDFIRST (.sn-lead, authored in post content) --- */
+
+/* The note's claim stated whole before the first section: the whole
+   paragraph sits in <em>, first block, before any heading. Three notes
+   shipped it as a bare <em> paragraph, which nothing could style apart from
+   any other italic paragraph and nothing could detect except by heuristic;
+   the class names the convention (inc/editorial-conventions.php, `lead`).
+   Slightly larger than the measure's body size and set off from the first
+   subhead; the italic comes from the authored <em>, not from here, so a lead
+   without one still reads as a lead. Tokens only, as every prose rule here. */
+.wp-block-post-content .sn-lead {
+	font-size: 1.125em;
+	line-height: 1.55;
+	margin: 0 0 2.25rem;
+	color: var( --wp--preset--color--bone, inherit );
+}
+
 /* --- CORRECTION NOTICE (.sn-correction, authored in post content) --- */
 
 /* The corpus is permanently dated: a note keeps ONE canonical live version,

@@ -2,7 +2,7 @@
 /**
  * Standalone fixture tests for inc/abilities-registration.php (theme v9.1.0).
  *
- * Covers all 15 WP 7.0 abilities the theme registers:
+ * Covers all 16 WP 7.0 abilities the theme registers (v13.2.0: get-editorial-conventions):
  *   - 10 read abilities (design tokens, patterns, template, version,
  *     /notes pillars, reading time, design-system summary, latest-theme-tag,
  *     seo-route-meta, llms-txt)
