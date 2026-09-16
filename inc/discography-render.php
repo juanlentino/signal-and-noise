@@ -138,7 +138,7 @@ function sn_discography_shortcode() {
 	// ── Controls rail: count + role-filter chips. ──
 	$out .= '<div class="sn-disco-controls">';
 	$out .= '<p class="sn-disco-count"><strong data-disco-count>' . (int) $count . '</strong> '
-		. esc_html__( 'releases', 'signal-noise' );
+		. esc_html__( 'releases', 'signal-and-noise' );
 	if ( ! empty( $years ) ) {
 		$out .= ' <span class="sn-disco-span">&middot; ' . (int) min( $years ) . ' &rarr; ' . (int) max( $years ) . '</span>';
 	}
@@ -148,7 +148,7 @@ function sn_discography_shortcode() {
 	// (::before on .sn-disco-chip__count) so the screen-reader label stays clean.
 	$out .= '<div class="sn-disco-filters" role="group" aria-label="' . esc_attr( 'Filter by role' ) . '">';
 	$out .= '<button type="button" class="sn-disco-chip is-active" data-role="*" data-count="' . (int) $count . '" aria-pressed="true">'
-		. esc_html__( 'All', 'signal-noise' )
+		. esc_html__( 'All', 'signal-and-noise' )
 		. ' <span class="sn-disco-chip__count">' . (int) $count . '</span></button>';
 	foreach ( $roles as $role ) {
 		$role_count = sn_discography_count_for_role( $entries, $role );
@@ -177,7 +177,7 @@ function sn_discography_shortcode() {
 	}
 
 	// Hidden empty state — revealed by the filter JS when nothing matches.
-	$out .= '<p class="sn-disco-empty" hidden>' . esc_html__( 'No releases with that credit.', 'signal-noise' ) . '</p>';
+	$out .= '<p class="sn-disco-empty" hidden>' . esc_html__( 'No releases with that credit.', 'signal-and-noise' ) . '</p>';
 
 	$out .= '</div>'; // .sn-discography
 
@@ -239,7 +239,7 @@ function sn_discography_render_card( $entry ) {
 	}
 	if ( '' !== $muso_url ) {
 		$out .= '<a class="sn-disco-credits" href="' . esc_url( $muso_url ) . '" target="_blank" rel="noopener">'
-			. esc_html__( 'Credits', 'signal-noise' ) . ' &#8599;</a>';
+			. esc_html__( 'Credits', 'signal-and-noise' ) . ' &#8599;</a>';
 	}
 	$out .= '</div>'; // .sn-disco-meta
 
@@ -272,8 +272,8 @@ function sn_discography_render_liner( $entry ) {
 	$count = count( $tracks );
 	$out   = '<details class="sn-disco-liner">';
 	$out  .= '<summary class="sn-disco-liner__summary"><span class="sn-disco-liner__label">'
-		. esc_html__( 'Liner notes', 'signal-noise' ) . '</span> <span class="sn-disco-liner__count">'
-		. esc_html( sprintf( _n( '%d track', '%d tracks', $count, 'signal-noise' ), $count ) ) . '</span></summary>';
+		. esc_html__( 'Liner notes', 'signal-and-noise' ) . '</span> <span class="sn-disco-liner__count">'
+		. esc_html( sprintf( _n( '%d track', '%d tracks', $count, 'signal-and-noise' ), $count ) ) . '</span></summary>';
 	$out  .= '<ol class="sn-disco-tracklist">';
 	foreach ( $tracks as $track ) {
 		$t_title = (string) ( $track['title'] ?? '' );
@@ -285,7 +285,7 @@ function sn_discography_render_liner( $entry ) {
 		$out .= '<li class="sn-disco-track">';
 		if ( '' !== $t_prev ) {
 			$out .= '<button type="button" class="sn-disco-track__play" data-preview="' . esc_url( $t_prev )
-				. '" aria-pressed="false" aria-label="' . esc_attr( sprintf( __( 'Play a 30-second preview of %s', 'signal-noise' ), $t_title ) )
+				. '" aria-pressed="false" aria-label="' . esc_attr( sprintf( __( 'Play a 30-second preview of %s', 'signal-and-noise' ), $t_title ) )
 				. '"><span class="sn-disco-track__icon" aria-hidden="true"></span></button>';
 		} else {
 			$out .= '<span class="sn-disco-track__noplay" aria-hidden="true"></span>';

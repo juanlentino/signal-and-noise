@@ -1,0 +1,16 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "signal-noise/note-share",
+	"title": "Share this note",
+	"category": "signal-noise",
+	"icon": "share",
+	"description": "The share row for a note.",
+	"textdomain": "signal-and-noise",
+	"supports": {
+		"autoRegister": true,
+		"html": false,
+		"multiple": false
+	},
+	"render": "file:./render.php"
+}

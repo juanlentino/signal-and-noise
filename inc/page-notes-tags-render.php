@@ -75,9 +75,9 @@ echo $sn_header_html;
 			}
 			?>
 			<p class="sn-notes-meta">
-				<span><?php echo esc_html( sprintf( _n( '%d tag', '%d tags', $sn_tag_total, 'signal-noise' ), $sn_tag_total ) ); ?></span>
+				<span><?php echo esc_html( sprintf( _n( '%d tag', '%d tags', $sn_tag_total, 'signal-and-noise' ), $sn_tag_total ) ); ?></span>
 				<span class="sn-notes-meta-bullet" aria-hidden="true">&middot;</span>
-				<span><?php echo esc_html( sprintf( _n( '%d group', '%d groups', $sn_group_total, 'signal-noise' ), $sn_group_total ) ); ?></span>
+				<span><?php echo esc_html( sprintf( _n( '%d group', '%d groups', $sn_group_total, 'signal-and-noise' ), $sn_group_total ) ); ?></span>
 			</p>
 		</div>
 	</header>

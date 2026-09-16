@@ -12,7 +12,27 @@ function ok( $c, $m ) { global $pass, $fail; if ( $c ) { $pass++; echo "PASS: $m
 
 // ── WP stubs ──
 $GLOBALS['__blocks'] = array(); $GLOBALS['__init'] = array();
-function register_block_type( $name, $args = array() ) { $GLOBALS['__blocks'][ $name ] = $args; return (object) $args; }
+// Mirrors core's register_block_type_from_metadata(): a directory argument reads
+// its block.json, camelCase keys become snake_case, and a `render` file becomes
+// the render_callback (an include with $attributes, $content, $block in scope).
+function register_block_type( $name, $args = array() ) {
+	if ( is_dir( $name ) && is_readable( "$name/block.json" ) ) {
+		$meta = json_decode( (string) file_get_contents( "$name/block.json" ), true );
+		$file = "$name/" . substr( (string) ( $meta['render'] ?? '' ), strlen( 'file:./' ) );
+		$args = array_merge( array(
+			'api_version' => (int) ( $meta['apiVersion'] ?? 1 ),
+			'title'       => (string) ( $meta['title'] ?? '' ),
+			'category'    => (string) ( $meta['category'] ?? '' ),
+			'attributes'  => $meta['attributes'] ?? array(),
+			'supports'    => $meta['supports'] ?? array(),
+			'render_callback' => static function ( $attributes, $content, $block ) use ( $file ) {
+				ob_start(); include $file; return (string) ob_get_clean();
+			},
+		), $args );
+		$name = (string) $meta['name'];
+	}
+	$GLOBALS['__blocks'][ $name ] = $args; return (object) $args;
+}
 function add_action( $h, $cb, $p = 10, $a = 1 ) { if ( 'init' === $h ) { $GLOBALS['__init'][] = $cb; } return true; }
 function add_filter( $h, $cb, $p = 10, $a = 1 ) { return true; }
 function __( $s, $d = null ) { return $s; }

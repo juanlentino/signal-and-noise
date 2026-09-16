@@ -1,0 +1,16 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "signal-noise/updated-date",
+	"title": "Updated date",
+	"category": "signal-noise",
+	"icon": "clock",
+	"description": "The last-updated line, shown only when a note was amended.",
+	"textdomain": "signal-and-noise",
+	"supports": {
+		"autoRegister": true,
+		"html": false,
+		"multiple": false
+	},
+	"render": "file:./render.php"
+}

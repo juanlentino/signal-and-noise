@@ -170,11 +170,11 @@ function sn_dark_mode_toggle_markup( $atts = array() ) {
 
 	return '<button type="button" class="sn-theme-toggle sn-theme-toggle--' . esc_attr( $placement ) . '" hidden'
 		. ' aria-pressed="false"'
-		. ' aria-label="' . esc_attr__( 'Switch to dark theme', 'signal-noise' ) . '">'
+		. ' aria-label="' . esc_attr__( 'Switch to dark theme', 'signal-and-noise' ) . '">'
 		. '<span class="sn-theme-toggle__dot" aria-hidden="true"></span>'
-		. '<span class="sn-theme-toggle__label" data-label-light="' . esc_attr__( 'Light', 'signal-noise' ) . '"'
-		. ' data-label-dark="' . esc_attr__( 'Dark', 'signal-noise' ) . '">'
-		. esc_html__( 'Light', 'signal-noise' )
+		. '<span class="sn-theme-toggle__label" data-label-light="' . esc_attr__( 'Light', 'signal-and-noise' ) . '"'
+		. ' data-label-dark="' . esc_attr__( 'Dark', 'signal-and-noise' ) . '">'
+		. esc_html__( 'Light', 'signal-and-noise' )
 		. '</span>'
 		. '</button>';
 }

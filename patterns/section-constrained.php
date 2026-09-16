@@ -27,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 <div class="wp-block-group has-void-background-color has-background" style="padding-top:var(--wp--preset--spacing--40);padding-right:var(--wp--preset--spacing--40);padding-bottom:var(--wp--preset--spacing--70);padding-left:var(--wp--preset--spacing--40)">
 
 	<!-- wp:paragraph {"style":{"typography":{"fontSize":"var(--wp--preset--font-size--prose)","lineHeight":"var(--wp--custom--line-height--loose)"}},"textColor":"bone"} -->
-	<p class="has-bone-color has-text-color" style="font-size:var(--wp--preset--font-size--prose);line-height:var(--wp--custom--line-height--loose)"><?php echo esc_html__( 'Section content. Replace with columns, headings, lists, or an image+text pair as needed.', 'signal-noise' ); ?></p>
+	<p class="has-bone-color has-text-color" style="font-size:var(--wp--preset--font-size--prose);line-height:var(--wp--custom--line-height--loose)"><?php echo esc_html__( 'Section content. Replace with columns, headings, lists, or an image+text pair as needed.', 'signal-and-noise' ); ?></p>
 	<!-- /wp:paragraph -->
 
 </div>

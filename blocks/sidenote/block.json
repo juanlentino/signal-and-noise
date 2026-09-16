@@ -7,7 +7,7 @@
 	"icon": "editor-ol",
 	"description": "Tufte-style margin annotation. Floats right at >=1280px, inline hairline below at narrower.",
 	"keywords": ["sidenote", "marginalia", "footnote", "tufte"],
-	"textdomain": "signal-noise",
+	"textdomain": "signal-and-noise",
 	"attributes": {
 		"content": { "type": "string", "default": "" }
 	},

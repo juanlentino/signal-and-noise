@@ -1,0 +1,16 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "signal-noise/post-pillar",
+	"title": "Pillar link",
+	"category": "signal-noise",
+	"icon": "category",
+	"description": "The link to the pillar essay a note belongs to, when it does.",
+	"textdomain": "signal-and-noise",
+	"supports": {
+		"autoRegister": true,
+		"html": false,
+		"multiple": false
+	},
+	"render": "file:./render.php"
+}
