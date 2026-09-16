@@ -103,8 +103,23 @@
 		activePopover = null;
 	}
 
+	/**
+	 * The <sup> an event's target sits in, or null. 13.2.4: `pointerenter` and
+	 * `pointerleave` are captured on the document, so when the pointer leaves
+	 * the document itself the target IS the document, which has no closest();
+	 * a text node has none either. Measured 2026-09-16 as an uncaught
+	 * TypeError on every note whose pointer left the window.
+	 *
+	 * @param {Event} event
+	 * @return {Element|null}
+	 */
+	function supOf( event ) {
+		var target = event && event.target;
+		return target && typeof target.closest === 'function' ? target.closest( 'sup' ) : null;
+	}
+
 	function onEnter( event ) {
-		var sup = event.target.closest( 'sup' );
+		var sup = supOf( event );
 		if ( ! sup ) { return; }
 		var anchor = findFootnoteAnchor( sup );
 		if ( ! anchor ) { return; }
@@ -117,7 +132,7 @@
 	}
 
 	function onLeave( event ) {
-		var sup = event.target.closest( 'sup' );
+		var sup = supOf( event );
 		if ( ! sup ) { return; }
 		var relatedTarget = event.relatedTarget;
 		if ( activePopover && relatedTarget && activePopover.contains( relatedTarget ) ) {
@@ -132,7 +147,7 @@
 	 * for keyboard users. Audit D PA-11.
 	 */
 	function onFocusIn( event ) {
-		var sup = event.target.closest( 'sup' );
+		var sup = supOf( event );
 		if ( ! sup ) { return; }
 		var anchor = findFootnoteAnchor( sup );
 		if ( ! anchor || anchor !== event.target ) { return; }
@@ -144,7 +159,7 @@
 	}
 
 	function onFocusOut( event ) {
-		var sup = event.target.closest( 'sup' );
+		var sup = supOf( event );
 		if ( ! sup ) { return; }
 		removeActive();
 	}
