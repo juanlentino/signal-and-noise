@@ -23,19 +23,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 <div class="wp-block-group has-void-background-color has-background" style="padding-top:var(--wp--preset--spacing--60);padding-right:var(--wp--preset--spacing--40);padding-bottom:var(--wp--preset--spacing--30);padding-left:var(--wp--preset--spacing--40)">
 
 	<!-- wp:paragraph {"className":"sn-catalog-eyebrow"} -->
-	<p class="sn-catalog-eyebrow"><?php echo esc_html__( 'Dossier · Section Name', 'signal-noise' ); ?></p>
+	<p class="sn-catalog-eyebrow"><?php echo esc_html__( 'Dossier · Section Name', 'signal-and-noise' ); ?></p>
 	<!-- /wp:paragraph -->
 
 	<!-- wp:heading {"level":1,"style":{"typography":{"fontSize":"var(--wp--custom--font-size--display-xl)","lineHeight":"var(--wp--custom--line-height--flat)"}}} -->
-	<h1 class="wp-block-heading" style="font-size:var(--wp--custom--font-size--display-xl);line-height:var(--wp--custom--line-height--flat)"><?php echo esc_html__( 'PAGE TITLE', 'signal-noise' ); ?></h1>
+	<h1 class="wp-block-heading" style="font-size:var(--wp--custom--font-size--display-xl);line-height:var(--wp--custom--line-height--flat)"><?php echo esc_html__( 'PAGE TITLE', 'signal-and-noise' ); ?></h1>
 	<!-- /wp:heading -->
 
 	<!-- wp:paragraph {"style":{"typography":{"fontSize":"var(--wp--preset--font-size--prose)","lineHeight":"var(--wp--custom--line-height--loose)"}},"textColor":"rust","fontFamily":"body"} -->
-	<p class="has-rust-color has-text-color has-body-font-family" style="font-size:var(--wp--preset--font-size--prose);line-height:var(--wp--custom--line-height--loose)"><?php echo esc_html__( 'A one- or two-sentence intro that sets the scope of the page. Brutalist typography expects tight prose; resist the urge to pad.', 'signal-noise' ); ?></p>
+	<p class="has-rust-color has-text-color has-body-font-family" style="font-size:var(--wp--preset--font-size--prose);line-height:var(--wp--custom--line-height--loose)"><?php echo esc_html__( 'A one- or two-sentence intro that sets the scope of the page. Brutalist typography expects tight prose; resist the urge to pad.', 'signal-and-noise' ); ?></p>
 	<!-- /wp:paragraph -->
 
 	<!-- wp:paragraph {"className":"sn-catalog-meta"} -->
-	<p class="sn-catalog-meta"><?php echo esc_html__( 'Stat A · Stat B · Stat C', 'signal-noise' ); ?></p>
+	<p class="sn-catalog-meta"><?php echo esc_html__( 'Stat A · Stat B · Stat C', 'signal-and-noise' ); ?></p>
 	<!-- /wp:paragraph -->
 
 </div>

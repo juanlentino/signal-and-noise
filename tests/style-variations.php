@@ -109,6 +109,7 @@ $variations = array(
 
 $decoded = array();
 
+$root_schema = (string) ( json_decode( (string) file_get_contents( __DIR__ . '/../theme.json' ), true )['$schema'] ?? '' );
 foreach ( $variations as $file => $expected_title ) {
 	$path = __DIR__ . '/../styles/' . $file;
 	echo "\nTest: styles/{$file}\n";
@@ -123,10 +124,12 @@ foreach ( $variations as $file => $expected_title ) {
 	$decoded[ $file ] = $data;
 
 	// Required contract keys.
+	// 13.2.3: the schema is whichever the root theme.json declares (wp/7.1, the
+	// first that knows settings.viewport), never a literal here.
 	ha_eq(
-		'https://schemas.wp.org/wp/7.0/theme.json',
+		$root_schema,
 		$data['$schema'] ?? null,
-		'$schema is the wp/7.0 theme.json schema'
+		'$schema matches the root theme.json schema (' . $root_schema . ')'
 	);
 	ha_eq( 3, $data['version'] ?? null, 'version is 3 (matches root theme.json)' );
 	ha_eq( $expected_title, $data['title'] ?? null, "title is \"{$expected_title}\"" );

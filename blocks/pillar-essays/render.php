@@ -82,11 +82,11 @@ foreach ( $sn_pillars as $sn_p ) {
 		++$sn_n_pillars;
 	}
 }
-$sn_count_text = sprintf( _n( '%d pillar', '%d pillars', $sn_n_pillars, 'signal-noise' ), $sn_n_pillars );
+$sn_count_text = sprintf( _n( '%d pillar', '%d pillars', $sn_n_pillars, 'signal-and-noise' ), $sn_n_pillars );
 if ( $sn_n_subs > 0 ) {
 	// Only when they exist. A trailing "0 sub-pillars" would advertise an
 	// absence, and the owner's framing is that there may never be another.
-	$sn_count_text .= ' · ' . sprintf( _n( '%d sub-pillar', '%d sub-pillars', $sn_n_subs, 'signal-noise' ), $sn_n_subs );
+	$sn_count_text .= ' · ' . sprintf( _n( '%d sub-pillar', '%d sub-pillars', $sn_n_subs, 'signal-and-noise' ), $sn_n_subs );
 }
 $sn_wrapper = get_block_wrapper_attributes( array(
 	'class' => 'sn-notes-pillars-section' . ( $sn_compact ? ' is-compact' : '' ),

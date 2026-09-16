@@ -55,7 +55,7 @@ const SN_GH_THEME_STYLESHEET    = 'signal-and-noise';
  *
  * @since 12.7.0
  */
-const SN_GH_THEME_TEXT_DOMAIN   = 'signal-noise';
+const SN_GH_THEME_TEXT_DOMAIN   = 'signal-and-noise'; // 13.2.3: the text domain is the slug (Theme Handbook).
 const SN_GH_THEME_LAST_SEEN_OPT = 'sn_last_seen_theme_version';
 /**
  * Why the last tag fetch failed, in prose, for the Dashboard card. Lives beside
@@ -157,7 +157,7 @@ function sn_gh_theme_fetch_failure_reason( $response ) {
 		// number in it is the actual diagnosis.
 		return sn_gh_theme_redact_secrets( sprintf(
 			/* translators: %s: underlying HTTP error message. */
-			__( 'could not reach GitHub — %s', 'signal-noise' ),
+			__( 'could not reach GitHub — %s', 'signal-and-noise' ),
 			$response->get_error_message()
 		) );
 	}
@@ -165,17 +165,17 @@ function sn_gh_theme_fetch_failure_reason( $response ) {
 	$code = (int) wp_remote_retrieve_response_code( $response );
 	switch ( $code ) {
 		case 401:
-			return __( 'GitHub rejected the credential (401) — SNT_GITHUB_TOKEN in wp-config.php is invalid, expired, or revoked', 'signal-noise' );
+			return __( 'GitHub rejected the credential (401) — SNT_GITHUB_TOKEN in wp-config.php is invalid, expired, or revoked', 'signal-and-noise' );
 		case 403:
-			return __( 'GitHub refused the request (403) — usually a rate limit; set SNT_GITHUB_TOKEN in wp-config.php to raise 60/h to 5000/h', 'signal-noise' );
+			return __( 'GitHub refused the request (403) — usually a rate limit; set SNT_GITHUB_TOKEN in wp-config.php to raise 60/h to 5000/h', 'signal-and-noise' );
 		case 404:
-			return __( 'GitHub returned 404 — the repository was renamed, deleted, or made private', 'signal-noise' );
+			return __( 'GitHub returned 404 — the repository was renamed, deleted, or made private', 'signal-and-noise' );
 		case 200:
-			return __( 'GitHub returned 200 but the body was not a readable tag list', 'signal-noise' );
+			return __( 'GitHub returned 200 but the body was not a readable tag list', 'signal-and-noise' );
 		default:
 			return sprintf(
 				/* translators: %d: HTTP status code. */
-				__( 'GitHub returned an unexpected HTTP %d', 'signal-noise' ),
+				__( 'GitHub returned an unexpected HTTP %d', 'signal-and-noise' ),
 				$code
 			);
 	}
@@ -333,7 +333,7 @@ function sn_gh_latest_theme_tag_fetch() {
 		// it answered correctly, and the repo simply has nothing tagged vX.Y.Z.
 		// Re-asking in five minutes gets the same answer.
 		return sn_gh_theme_record_fetch_failure(
-			__( 'GitHub returned no tags matching vX.Y.Z — nothing to compare against', 'signal-noise' ),
+			__( 'GitHub returned no tags matching vX.Y.Z — nothing to compare against', 'signal-and-noise' ),
 			200
 		);
 	}

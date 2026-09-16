@@ -346,9 +346,9 @@ echo $sn_header_html;
 		</div>
 
 		<?php if ( $sn_searching ) : ?>
-			<p class="sn-notes-search-summary"><?php echo esc_html( sprintf( _n( '%d note found', '%d notes found', (int) $query->found_posts, 'signal-noise' ), (int) $query->found_posts ) ); ?></p>
+			<p class="sn-notes-search-summary"><?php echo esc_html( sprintf( _n( '%d note found', '%d notes found', (int) $query->found_posts, 'signal-and-noise' ), (int) $query->found_posts ) ); ?></p>
 		<?php elseif ( $sn_tag ) : ?>
-			<p class="sn-notes-search-summary"><?php echo esc_html( sprintf( _n( '%d note tagged', '%d notes tagged', (int) $query->found_posts, 'signal-noise' ), (int) $query->found_posts ) ); ?></p>
+			<p class="sn-notes-search-summary"><?php echo esc_html( sprintf( _n( '%d note tagged', '%d notes tagged', (int) $query->found_posts, 'signal-and-noise' ), (int) $query->found_posts ) ); ?></p>
 		<?php endif; ?>
 
 		<?php if ( $query->have_posts() || $sn_pin_on_page1 ) : ?>

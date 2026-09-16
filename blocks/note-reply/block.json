@@ -1,0 +1,16 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "signal-noise/note-reply",
+	"title": "Reply by email",
+	"category": "signal-noise",
+	"icon": "email",
+	"description": "The reply-by-email line for a note.",
+	"textdomain": "signal-and-noise",
+	"supports": {
+		"autoRegister": true,
+		"html": false,
+		"multiple": false
+	},
+	"render": "file:./render.php"
+}

@@ -162,7 +162,7 @@ echo $sn_header_html;
 		<p class="sn-index-eyebrow">Index &middot; The whole site on one page</p>
 		<h1 class="sn-index-headline">Index.</h1>
 		<p class="sn-index-dek">Everything published here &mdash; notes, pages, and the discography &mdash; collected into a single dossier.</p>
-		<p class="sn-index-meta"><?php echo esc_html( sprintf( _n( '%d entry', '%d entries', $sn_total, 'signal-noise' ), $sn_total ) ); ?></p>
+		<p class="sn-index-meta"><?php echo esc_html( sprintf( _n( '%d entry', '%d entries', $sn_total, 'signal-and-noise' ), $sn_total ) ); ?></p>
 	</header>
 
 	<?php if ( $sn_notes_n ) : ?>

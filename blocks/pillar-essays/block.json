@@ -12,7 +12,7 @@
 		"rail",
 		"provenance"
 	],
-	"textdomain": "signal-noise",
+	"textdomain": "signal-and-noise",
 	"supports": {
 		"html": false
 	},

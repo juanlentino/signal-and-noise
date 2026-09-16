@@ -100,7 +100,7 @@ function sn_note_reply_markup( $post_id ) {
 			. '<span class="sn-note-reply__label">%1$s</span>'
 			. '%2$s'
 			. '</div>',
-		esc_html__( 'Reply', 'signal-noise' ),
+		esc_html__( 'Reply', 'signal-and-noise' ),
 		$span
 	);
 }

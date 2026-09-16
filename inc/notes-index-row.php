@@ -53,7 +53,7 @@ function sn_notes_render_row( $p, $args = array() ) {
 
 	echo '<div class="sn-notes-row-spec">';
 	if ( $pinned ) {
-		echo '<span class="sn-notes-row-pin">' . esc_html__( 'Start here', 'signal-noise' ) . '</span>';
+		echo '<span class="sn-notes-row-pin">' . esc_html__( 'Start here', 'signal-and-noise' ) . '</span>';
 	}
 	echo '<time class="sn-notes-row-date" datetime="' . esc_attr( get_the_date( 'c', $p ) ) . '">'
 		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- helper returns esc_html()'d output; escaping again would double-encode.
@@ -101,7 +101,7 @@ function sn_notes_render_row( $p, $args = array() ) {
 	// the date cannot — this argument was revisited, and the revision signed.
 	if ( sn_notes_prov_version_is_notable( $version ) ) {
 		echo '<span class="sn-notes-row-sep" aria-hidden="true">&middot;</span>';
-		echo '<span class="sn-notes-row-prov" title="' . esc_attr__( 'Substantively revised and signed this many times', 'signal-noise' ) . '">'
+		echo '<span class="sn-notes-row-prov" title="' . esc_attr__( 'Substantively revised and signed this many times', 'signal-and-noise' ) . '">'
 			. esc_html( sprintf( 'v%d', (int) $version ) ) . '</span>';
 	}
 	echo '</div>';

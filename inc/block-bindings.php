@@ -77,7 +77,7 @@ function sn_register_post_field_binding() {
 	register_block_bindings_source(
 		'signal-noise/post-field',
 		array(
-			'label'              => __( 'Signal & Noise: Post Field', 'signal-noise' ),
+			'label'              => __( 'Signal & Noise: Post Field', 'signal-and-noise' ),
 			'get_value_callback' => 'sn_post_field_binding_value',
 			'uses_context'       => array( 'postId', 'postType' ),
 		)

@@ -102,8 +102,8 @@ function sn_article_toc_markup( $items ) {
 	foreach ( $items as $it ) {
 		$lis .= '<li><a href="#' . esc_attr( $it['id'] ) . '">' . esc_html( $it['label'] ) . '</a></li>';
 	}
-	return '<nav class="sn-article-toc" aria-label="' . esc_attr__( 'Table of contents', 'signal-noise' ) . '">'
-		. '<p class="sn-article-toc__label">' . esc_html__( 'Contents', 'signal-noise' ) . '</p>'
+	return '<nav class="sn-article-toc" aria-label="' . esc_attr__( 'Table of contents', 'signal-and-noise' ) . '">'
+		. '<p class="sn-article-toc__label">' . esc_html__( 'Contents', 'signal-and-noise' ) . '</p>'
 		. '<ol class="sn-article-toc__list">' . $lis . '</ol>'
 		. '</nav>';
 }

@@ -58,8 +58,8 @@ function sn_note_share_shortcode() {
 			. '</div>',
 		esc_url( $permalink ),
 		esc_attr( $title ),
-		esc_html__( 'COPY LINK', 'signal-noise' ),
-		esc_html__( 'SHARE', 'signal-noise' )
+		esc_html__( 'COPY LINK', 'signal-and-noise' ),
+		esc_html__( 'SHARE', 'signal-and-noise' )
 	);
 }
 

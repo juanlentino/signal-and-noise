@@ -32,8 +32,8 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 function sn_template_part_areas( $areas ) {
 	$areas[] = array(
 		'area'        => 'article',
-		'label'       => __( 'Article', 'signal-noise' ),
-		'description' => __( "Before and after a note's body: the front matter and the closing.", 'signal-noise' ),
+		'label'       => __( 'Article', 'signal-and-noise' ),
+		'description' => __( "Before and after a note's body: the front matter and the closing.", 'signal-and-noise' ),
 		'icon'        => 'layout',
 		'area_tag'    => 'div',
 	);

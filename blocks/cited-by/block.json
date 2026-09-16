@@ -1,0 +1,16 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "signal-noise/cited-by",
+	"title": "Cited by",
+	"category": "signal-noise",
+	"icon": "admin-links",
+	"description": "Verified webmentions that cite this note.",
+	"textdomain": "signal-and-noise",
+	"supports": {
+		"autoRegister": true,
+		"html": false,
+		"multiple": false
+	},
+	"render": "file:./render.php"
+}

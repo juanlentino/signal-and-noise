@@ -87,7 +87,9 @@ foreach ( $block_jsons as $bj_path ) {
 
 	$string_attrs = array();
 	foreach ( (array) ( $bj['attributes'] ?? array() ) as $attr_name => $def ) {
-		if ( 'string' === ( $def['type'] ?? '' ) ) {
+		// An enumerated string is a choice, not prose: it never reaches signed
+		// content as text (13.2.3: theme-toggle's placement, header|footer).
+		if ( 'string' === ( $def['type'] ?? '' ) && empty( $def['enum'] ) ) {
 			$string_attrs[ $attr_name ] = $def;
 		}
 	}

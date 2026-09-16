@@ -1,0 +1,30 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "signal-noise/theme-toggle",
+	"title": "High-contrast toggle",
+	"category": "signal-noise",
+	"icon": "visibility",
+	"description": "The high-contrast palette switch.",
+	"textdomain": "signal-and-noise",
+	"attributes": {
+		"placement": {
+			"type": "string",
+			"enum": [
+				"header",
+				"footer"
+			],
+			"default": "footer"
+		}
+	},
+	"supports": {
+		"autoRegister": true,
+		"html": false
+	},
+	"example": {
+		"attributes": {
+			"placement": "footer"
+		}
+	},
+	"render": "file:./render.php"
+}

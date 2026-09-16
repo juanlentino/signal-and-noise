@@ -127,7 +127,7 @@ function make_pkg( $base, $dir, $name, $domain ) {
 ok( function_exists( 'sn_gh_theme_source_is_ours' ), 'the source identity check exists' );
 
 if ( function_exists( 'sn_gh_theme_source_is_ours' ) ) {
-	$ours = make_pkg( $base, 'signal-and-noise-12.6.1', 'Signal & Noise', 'signal-noise' );
+	$ours = make_pkg( $base, 'signal-and-noise-12.6.1', 'Signal & Noise', 'signal-and-noise' );
 	ok( true === sn_gh_theme_source_is_ours( $ours ), 'our own unpacked upload is recognised' );
 
 	$near = make_pkg( $base, 'signal-boost', 'Signal Boost', 'signal-boost' );
@@ -145,7 +145,7 @@ ok( is_callable( $cb ), 'the source-selection filter is registered' );
 if ( is_callable( $cb ) ) {
 	// UPLOAD: hook_extra carries no 'theme' key. This is the case the old gate
 	// could never match, and the case the mu-plugin existed to cover.
-	$src = make_pkg( $base, 'signal-and-noise-12.6.1-up', 'Signal & Noise', 'signal-noise' );
+	$src = make_pkg( $base, 'signal-and-noise-12.6.1-up', 'Signal & Noise', 'signal-and-noise' );
 	$out = $cb( $src, $base . '/', null, array( 'type' => 'theme', 'action' => 'install' ) );
 	ok(
 		is_string( $out ) && basename( untrailingslashit( $out ) ) === SN_GH_THEME_STYLESHEET,
@@ -161,7 +161,7 @@ if ( is_callable( $cb ) ) {
 	ok( is_dir( $base . '/someone-elses-theme' ), 'a foreign theme is not moved' );
 
 	// REGRESSION GUARD: the update path must still work.
-	$upd = make_pkg( $base, 'signal-and-noise-12.6.2', 'Signal & Noise', 'signal-noise' );
+	$upd = make_pkg( $base, 'signal-and-noise-12.6.2', 'Signal & Noise', 'signal-and-noise' );
 	$out3 = $cb( $upd, $base . '/', null, array( 'theme' => SN_GH_THEME_STYLESHEET ) );
 	ok(
 		is_string( $out3 ) && basename( untrailingslashit( $out3 ) ) === SN_GH_THEME_STYLESHEET,

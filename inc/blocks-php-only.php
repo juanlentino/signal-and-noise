@@ -56,143 +56,24 @@ function sn_php_block_output( $html, $label ) {
 	return $html;
 }
 
-function sn_block_render_prov_chip( $attributes, $content, $block ) {
-	return sn_php_block_output( sn_prov_chip_shortcode(), __( 'Provenance chip', 'signal-noise' ) );
-}
-
-function sn_block_render_prov_panel( $attributes, $content, $block ) {
-	return sn_php_block_output( sn_prov_panel_shortcode(), __( 'Provenance record', 'signal-noise' ) );
-}
-
-function sn_block_render_related_notes( $attributes, $content, $block ) {
-	return sn_php_block_output( sn_related_notes_shortcode(), __( 'Related notes', 'signal-noise' ) );
-}
-
-function sn_block_render_cited_by( $attributes, $content, $block ) {
-	return sn_php_block_output( sn_cited_by_shortcode(), __( 'Cited by', 'signal-noise' ) );
-}
-
-function sn_block_render_note_share( $attributes, $content, $block ) {
-	return sn_php_block_output( sn_note_share_shortcode(), __( 'Share this note', 'signal-noise' ) );
-}
-
-function sn_block_render_note_reply( $attributes, $content, $block ) {
-	return sn_php_block_output( sn_note_reply_shortcode(), __( 'Reply by email', 'signal-noise' ) );
-}
-
-function sn_block_render_updated_date( $attributes, $content, $block ) {
-	return sn_php_block_output( sn_updated_date_shortcode(), __( 'Updated date', 'signal-noise' ) );
-}
-
-function sn_block_render_post_pillar( $attributes, $content, $block ) {
-	return sn_php_block_output( sn_post_pillar_shortcode(), __( 'Pillar link', 'signal-noise' ) );
-}
-
-function sn_block_render_theme_toggle( $attributes, $content, $block ) {
-	$placement = ( isset( $attributes['placement'] ) && 'header' === $attributes['placement'] ) ? 'header' : 'footer';
-	return (string) sn_dark_mode_toggle_markup( array( 'placement' => $placement ) );
-}
-
 /**
- * Register the nine blocks. api_version 3, category signal-noise (the
- * custom blocks' category, inc/blocks-register.php), autoRegister on, html
- * off. multiple => false where a second instance is meaningless; the toggle
- * is placed twice (header + footer).
+ * The nine blocks, each from its own `blocks/<slug>/block.json` (the
+ * Block Editor Handbook's canonical registration; 13.2.3, replacing the PHP
+ * argument arrays of 13.1.0). Metadata, supports and the render file live in
+ * the manifest; `supports.autoRegister` (7.0) exposes each to the editor with
+ * no JavaScript. tests/blocks-registry.php pins every manifest.
  */
+function sn_php_only_block_slugs() {
+	return array( 'prov-chip', 'prov-panel', 'related-notes', 'cited-by', 'note-share', 'note-reply', 'updated-date', 'post-pillar', 'theme-toggle' );
+}
+
 function sn_register_php_only_blocks() {
 	if ( ! function_exists( 'register_block_type' ) ) {
 		return;
 	}
-
-	$common = array(
-		'api_version' => 3,
-		'category'    => 'signal-noise',
-		'supports'    => array(
-			'autoRegister' => true,
-			'html'         => false,
-			'multiple'     => false,
-		),
-	);
-
-	$blocks = array(
-		'prov-chip'     => array(
-			'title'           => __( 'Provenance chip', 'signal-noise' ),
-			'icon'            => 'shield',
-			'description'     => __( 'The byline verification chip of a signed note.', 'signal-noise' ),
-			'render_callback' => 'sn_block_render_prov_chip',
-		),
-		'prov-panel'    => array(
-			'title'           => __( 'Provenance record', 'signal-noise' ),
-			'icon'            => 'shield-alt',
-			'description'     => __( 'The expandable provenance record of a signed note.', 'signal-noise' ),
-			'render_callback' => 'sn_block_render_prov_panel',
-		),
-		'related-notes' => array(
-			'title'           => __( 'Related notes', 'signal-noise' ),
-			'icon'            => 'networking',
-			'description'     => __( 'Notes the kernel ranks closest to this one.', 'signal-noise' ),
-			'render_callback' => 'sn_block_render_related_notes',
-		),
-		'cited-by'      => array(
-			'title'           => __( 'Cited by', 'signal-noise' ),
-			'icon'            => 'admin-links',
-			'description'     => __( 'Verified webmentions that cite this note.', 'signal-noise' ),
-			'render_callback' => 'sn_block_render_cited_by',
-		),
-		'note-share'    => array(
-			'title'           => __( 'Share this note', 'signal-noise' ),
-			'icon'            => 'share',
-			'description'     => __( 'The share row for a note.', 'signal-noise' ),
-			'render_callback' => 'sn_block_render_note_share',
-		),
-		'note-reply'    => array(
-			'title'           => __( 'Reply by email', 'signal-noise' ),
-			'icon'            => 'email',
-			'description'     => __( 'The reply-by-email line for a note.', 'signal-noise' ),
-			'render_callback' => 'sn_block_render_note_reply',
-		),
-		'updated-date'  => array(
-			'title'           => __( 'Updated date', 'signal-noise' ),
-			'icon'            => 'clock',
-			'description'     => __( 'The last-updated line, shown only when a note was amended.', 'signal-noise' ),
-			'render_callback' => 'sn_block_render_updated_date',
-		),
-		'post-pillar'   => array(
-			'title'           => __( 'Pillar link', 'signal-noise' ),
-			'icon'            => 'category',
-			'description'     => __( 'The link to the pillar essay a note belongs to, when it does.', 'signal-noise' ),
-			'render_callback' => 'sn_block_render_post_pillar',
-		),
-	);
-
-	foreach ( $blocks as $slug => $args ) {
-		register_block_type( 'signal-noise/' . $slug, array_merge( $common, $args ) );
+	foreach ( sn_php_only_block_slugs() as $slug ) {
+		register_block_type( __DIR__ . '/../blocks/' . $slug );
 	}
-
-	// The toggle: placed in both header and footer, so `multiple` stays open,
-	// and its one attribute gets an auto-generated inspector control (7.0).
-	register_block_type(
-		'signal-noise/theme-toggle',
-		array(
-			'api_version'     => 3,
-			'category'        => 'signal-noise',
-			'title'           => __( 'High-contrast toggle', 'signal-noise' ),
-			'icon'            => 'visibility',
-			'description'     => __( 'The high-contrast palette switch.', 'signal-noise' ),
-			'attributes'      => array(
-				'placement' => array(
-					'type'    => 'string',
-					'enum'    => array( 'header', 'footer' ),
-					'default' => 'footer',
-				),
-			),
-			'supports'        => array(
-				'autoRegister' => true,
-				'html'         => false,
-			),
-			'render_callback' => 'sn_block_render_theme_toggle',
-		)
-	);
 }
 
 if ( ! defined( 'SN_BLOCKS_TEST' ) || ! SN_BLOCKS_TEST ) {
