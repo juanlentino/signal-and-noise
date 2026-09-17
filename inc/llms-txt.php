@@ -62,14 +62,19 @@ function sn_llms_txt_body( $full = false, $notes = array(), $pillars = array() )
 	$lines = array(
 		'# ' . $name,
 		'',
-		'> Personal site of Juan Lentino — writer, music producer, and audio engineer. Long-form notes on craft, a discography, and professional background.',
+		// 13.2.6: the summary names the SUBJECT. It used to read "writer, music
+		// producer, and audio engineer. Long-form notes on craft" and never said
+		// the word provenance; for a generative engine this is the first, often
+		// only, paragraph read about the site. Research register, no product.
+		'> Music provenance research by Juan Lentino (ORCID 0009-0006-8151-5920): why cryptographic records of authorship made at creation, not AI detection after the fact, should anchor music rights. Forty-plus notes, two SSRN papers, a verifier that runs in the reader\'s browser. Also a producer\'s discography and background.',
 		'',
 		'Content is hand-written. Analytics are first-party and cookieless; the site sets no advertising or cross-site tracking cookies.',
 		'',
 		'## Key pages',
 		'',
+		'- [Provenance](' . $home . '/provenance/): the research hub — the argument, the papers, the verifier.',
+		'- [Notes](' . $home . '/notes/): every note, one every few days, each signed and anchored (primary writing).',
 		'- [About](' . $home . '/about/): who Juan Lentino is — background and identity.',
-		'- [Notes](' . $home . '/notes/): the full essay and notes index (primary writing).',
 		'- [Résumé](' . $home . '/resume/): professional experience and credentials.',
 		'- [Music](' . $home . '/music/): discography and featured work.',
 		'- [Uses](' . $home . '/about/uses/): tools, gear, and software.',
