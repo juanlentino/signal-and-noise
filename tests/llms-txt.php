@@ -90,6 +90,26 @@ $rows = array(
 	array( 'title' => 'A Test Note', 'url' => 'https://juanlentino.com/notes/a-test-note/', 'summary' => 'A short summary.' ),
 );
 $full = sn_llms_txt_body( true, $rows );
+// 13.2.8: the search title leads a note's row when it exists; the topics
+// section lists hub tags (three or more notes) with their descriptions.
+$rows_st = array(
+	array( 'title' => 'The pen is not the notary', 'seo_title' => 'The pen is not the notary: DAW makers and music provenance', 'url' => 'https://juanlentino.com/notes/pen/', 'summary' => 'S.' ),
+	array( 'title' => 'Bare note', 'seo_title' => '', 'url' => 'https://juanlentino.com/notes/bare/', 'summary' => '' ),
+);
+$topics_fx = array(
+	array( 'name' => 'Music Metadata', 'url' => 'https://juanlentino.com/tag/music-metadata/', 'count' => 10, 'description' => 'The codes a recording carries.' ),
+	array( 'name' => 'Writing', 'url' => 'https://juanlentino.com/tag/writing/', 'count' => 1, 'description' => 'Thin.' ),
+	array( 'name' => 'Nameless', 'url' => '', 'count' => 9, 'description' => 'x' ),
+);
+$st = sn_llms_txt_body( true, $rows_st, array(), $topics_fx );
+ok( strpos( $st, '- [The pen is not the notary: DAW makers and music provenance](https://juanlentino.com/notes/pen/): S.' ) !== false, '13.2.8: a note row leads with its search title when it has one' );
+ok( strpos( $st, '- [Bare note](https://juanlentino.com/notes/bare/)' ) !== false, 'a note without a search title keeps its aphorism' );
+ok( strpos( $st, "\n## Topics\n" ) !== false && strpos( $st, '- [Music Metadata](https://juanlentino.com/tag/music-metadata/): The codes a recording carries.' ) !== false, 'the Topics section lists a hub tag with its description' );
+ok( strpos( $st, 'tag/writing' ) === false, 'a tag under three notes is not a topic' );
+ok( strpos( $st, 'Nameless' ) === false, 'a topic without a URL is dropped' );
+ok( strpos( $st, '## Topics' ) < strpos( $st, '## Notes' ), 'Topics come before Notes: the hubs first, then the corpus' );
+ok( strpos( sn_llms_txt_body( false, array(), array(), $topics_fx ), '## Topics' ) === false, 'the basic variant carries no Topics section' );
+ok( strpos( sn_llms_txt_body( true, $rows_st, array(), array() ), '## Topics' ) === false, 'no topics, no section (honest empty)' );
 ok( strpos( $full, 'A Test Note' ) !== false, 'full body includes injected note titles' );
 ok( strpos( $full, 'https://juanlentino.com/notes/a-test-note/' ) !== false, 'full body includes injected note URLs' );
 ok( strpos( sn_llms_txt_body( false ), 'A Test Note' ) === false, 'basic body does NOT include the notes list' );

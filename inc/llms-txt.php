@@ -52,7 +52,7 @@ function sn_llms_txt_variant( $uri ) {
  *                       mirroring $notes). Empty set = section omitted entirely.
  * @return string
  */
-function sn_llms_txt_body( $full = false, $notes = array(), $pillars = array() ) {
+function sn_llms_txt_body( $full = false, $notes = array(), $pillars = array(), $topics = array() ) {
 	$name = (string) get_bloginfo( 'name' );
 	if ( '' === $name ) {
 		$name = 'Signal & Noise';
@@ -156,6 +156,30 @@ function sn_llms_txt_body( $full = false, $notes = array(), $pillars = array() )
 		'',
 	) );
 
+	// 13.2.8: the topics. Every tag carries an owner-written description, and
+	// a tag with three or more notes is a real page about its subject; those
+	// are the hubs an engine should know before the notes. Same line as the
+	// plugin's sitemap rule (SN_SITEMAP_TAG_MIN_NOTES, 15.10.0).
+	if ( $full ) {
+		$topic_lines = array();
+		foreach ( (array) $topics as $topic ) {
+			if ( empty( $topic['name'] ) || empty( $topic['url'] ) || (int) ( $topic['count'] ?? 0 ) < 3 ) {
+				continue;
+			}
+			$row = '- [' . $topic['name'] . '](' . $topic['url'] . ')';
+			if ( ! empty( $topic['description'] ) ) {
+				$row .= ': ' . $topic['description'];
+			}
+			$topic_lines[] = $row;
+		}
+		if ( array() !== $topic_lines ) {
+			$lines[] = '## Topics';
+			$lines[] = '';
+			$lines   = array_merge( $lines, $topic_lines );
+			$lines[] = '';
+		}
+	}
+
 	if ( $full && ! empty( $notes ) ) {
 		$lines[] = '## Notes';
 		$lines[] = '';
@@ -163,7 +187,10 @@ function sn_llms_txt_body( $full = false, $notes = array(), $pillars = array() )
 			if ( empty( $note['title'] ) || empty( $note['url'] ) ) {
 				continue;
 			}
-			$row = '- [' . $note['title'] . '](' . $note['url'] . ')';
+			// 13.2.8: the search title leads when it exists ("Aphorism: plain
+			// words"); the aphorism alone otherwise.
+			$label = ! empty( $note['seo_title'] ) ? $note['seo_title'] : $note['title'];
+			$row   = '- [' . $label . '](' . $note['url'] . ')';
 			if ( ! empty( $note['summary'] ) ) {
 				$row .= ': ' . $note['summary'];
 			}
@@ -211,13 +238,18 @@ function sn_llms_txt_recent_notes( $limit = 40 ) {
 			continue;
 		}
 		$summary = has_excerpt( $post ) ? get_the_excerpt( $post ) : wp_trim_words( wp_strip_all_tags( (string) $post->post_content ), 28, '…' );
+		// 13.2.8: the search title ("Aphorism: plain words", the plugin's
+		// _sn_seo_title override) rides beside the H1 when it exists, so an
+		// engine reading this index gets both names for every note.
+		$seo_title = function_exists( 'get_post_meta' ) ? (string) get_post_meta( $post->ID, '_sn_seo_title', true ) : '';
 		$notes[] = array(
 			// html_entity_decode() BEFORE stripping tags: get_the_title()
 			// returns entity-encoded text (WordPress stores "&" as "&#038;"),
 			// and this ships into a text/plain file read by LLM crawlers (#335).
-			'title'   => wp_strip_all_tags( html_entity_decode( get_the_title( $post ), ENT_QUOTES, 'UTF-8' ) ),
-			'url'     => get_permalink( $post ),
-			'summary' => trim( (string) preg_replace( '/\s+/', ' ', (string) $summary ) ),
+			'title'     => wp_strip_all_tags( html_entity_decode( get_the_title( $post ), ENT_QUOTES, 'UTF-8' ) ),
+			'seo_title' => wp_strip_all_tags( html_entity_decode( $seo_title, ENT_QUOTES, 'UTF-8' ) ),
+			'url'       => get_permalink( $post ),
+			'summary'   => trim( (string) preg_replace( '/\s+/', ' ', (string) $summary ) ),
 		);
 	}
 	wp_reset_postdata();
@@ -231,6 +263,39 @@ function sn_llms_txt_recent_notes( $limit = 40 ) {
  *
  * @param bool $full Serve the full corpus variant.
  */
+/**
+ * The tags as topics: name, archive URL, note count, owner-written description.
+ *
+ * @since 13.2.8
+ * @return array
+ */
+function sn_llms_txt_topics() {
+	if ( ! function_exists( 'get_terms' ) ) {
+		return array();
+	}
+	$terms = get_terms( array( 'taxonomy' => 'post_tag', 'hide_empty' => true, 'orderby' => 'count', 'order' => 'DESC' ) );
+	if ( ! is_array( $terms ) ) {
+		return array();
+	}
+	$topics = array();
+	foreach ( $terms as $term ) {
+		if ( ! is_object( $term ) ) {
+			continue;
+		}
+		$link = get_term_link( $term );
+		if ( ! is_string( $link ) ) {
+			continue;
+		}
+		$topics[] = array(
+			'name'        => wp_strip_all_tags( html_entity_decode( (string) $term->name, ENT_QUOTES, 'UTF-8' ) ),
+			'url'         => $link,
+			'count'       => (int) $term->count,
+			'description' => trim( (string) preg_replace( '/\s+/', ' ', wp_strip_all_tags( html_entity_decode( (string) $term->description, ENT_QUOTES, 'UTF-8' ) ) ) ),
+		);
+	}
+	return $topics;
+}
+
 function sn_llms_txt_send( $full = false ) {
 	if ( function_exists( 'status_header' ) ) {
 		status_header( 200 );
@@ -242,7 +307,8 @@ function sn_llms_txt_send( $full = false ) {
 	// call per request; degrades to array() (section omitted) standalone.
 	$pillars = function_exists( 'sn_theme_pillar_descriptors' ) ? (array) sn_theme_pillar_descriptors() : array();
 	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- plain-text markdown from home_url() + published post titles/permalinks + the curated pillar descriptors; esc_html would corrupt the "&" and markdown punctuation in a text/plain document.
-	echo sn_llms_txt_body( $full, $notes, $pillars );
+	$topics = $full ? sn_llms_txt_topics() : array();
+	echo sn_llms_txt_body( $full, $notes, $pillars, $topics );
 }
 
 /**
