@@ -38,6 +38,19 @@ if ( ! defined( 'ABSPATH' ) ) {
  * files regenerate under a new hash.
  */
 define( 'SN_CSS_COMBINE_SCHEME', 'v1' );
+/**
+ * How long a superseded sn-styles-<hash>.css survives after a rebuild.
+ *
+ * 13.2.5: the previous hash used to be unlinked the moment a new one was
+ * written, on the theory that old URLs "simply expire from edge caches".
+ * They do. A reader's browser is not an edge cache: on 2026-09-17 the
+ * owner's phone held the home page from before a rebuild, its stylesheet
+ * URL 404ed, and the page painted with the inline critical CSS alone (no
+ * rule, red footer icons, the toggle unstyled). A hash is ~12 KB; keeping
+ * the last few for a week costs nothing and lets a stale page still dress
+ * itself until the reader reloads.
+ */
+define( 'SN_CSS_COMBINE_GRACE_SECS', 7 * 24 * 3600 );
 
 /**
  * The ordered stylesheet sources, mirroring the cascade the per-file
@@ -85,8 +98,9 @@ function sn_css_minify( $css ) {
 /**
  * Content signature for the current source set: scheme + each source's
  * path and mtime. Theme updates rewrite every file (fresh mtimes), so each
- * release combines under a new hash and old URLs simply expire from edge
- * caches — no purge coordination needed.
+ * release combines under a new hash; the previous hash stays on disk for
+ * SN_CSS_COMBINE_GRACE_SECS (13.2.5) because a reader's browser can hold
+ * the old HTML longer than any edge does.
  *
  * @return string|null 12-char hash, or null when any source is unreadable.
  */
@@ -184,8 +198,11 @@ function sn_css_ensure_combined() {
 			return null;
 		}
 		foreach ( (array) glob( $dir . '/sn-styles-*.css' ) as $old ) {
-			if ( $old !== $target ) {
-				// phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink -- pruning our own previous-hash artifacts.
+			// 13.2.5: age-gated. A superseded hash stays for
+			// SN_CSS_COMBINE_GRACE_SECS so a page a reader's browser cached
+			// before the rebuild still finds its stylesheet.
+			if ( $old !== $target && filemtime( $old ) < time() - SN_CSS_COMBINE_GRACE_SECS ) {
+				// phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink -- pruning our own previous-hash artifacts past the grace window.
 				unlink( $old );
 			}
 		}

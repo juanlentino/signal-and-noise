@@ -123,14 +123,24 @@ $again = sn_css_ensure_combined();
 ac_eq( '/* sentinel */', (string) file_get_contents( $info['file'] ), 'target content untouched when it already exists' );
 ac_true( is_array( $again ) && $again['ver'] === $info['ver'], 'envelope still returned for the existing target' );
 
-// ─── Test 5: stale sibling cleanup on fresh build ─────────────────────
-echo "\nTest 5: stale sn-styles-*.css siblings removed\n";
+// ─── Test 5: sibling cleanup on fresh build is AGE-GATED (13.2.5) ─────
+// A previous hash written recently is the stylesheet a reader's cached page
+// still points at; it survives the rebuild. One past the grace window is
+// pruned. Before 13.2.5 both were deleted on the spot, and the owner's phone
+// painted the home page without its stylesheet.
+echo "\nTest 5: superseded sn-styles-*.css siblings: recent kept, old pruned\n";
 ac_reset_memo();
-$stale = dirname( $info['file'] ) . '/sn-styles-deadbeef0000.css';
-file_put_contents( $stale, 'old' );
+$recent = dirname( $info['file'] ) . '/sn-styles-deadbeef0000.css';
+$old    = dirname( $info['file'] ) . '/sn-styles-0ld0ld0ld0ld.css';
+file_put_contents( $recent, 'previous hash, written just now' );
+file_put_contents( $old, 'previous hash, written long ago' );
+touch( $old, time() - SN_CSS_COMBINE_GRACE_SECS - 60 );
 unlink( $info['file'] ); // force a rebuild
 sn_css_ensure_combined();
-ac_true( ! file_exists( $stale ), 'stale sibling deleted after rebuild' );
+ac_true( file_exists( $recent ), 'a superseded hash inside the grace window SURVIVES the rebuild (a cached page can still dress itself)' );
+ac_true( ! file_exists( $old ), 'a superseded hash past the grace window is pruned' );
+ac_true( SN_CSS_COMBINE_GRACE_SECS >= 86400, 'the grace window is at least a day' );
+unlink( $recent );
 
 // ─── Test 6: relative url() aborts the combine (fail open) ────────────
 echo "\nTest 6: relative url() guard\n";
