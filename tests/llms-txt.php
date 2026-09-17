@@ -45,6 +45,15 @@ ok( strpos( $body, '# ' ) === 0, 'basic body starts with an H1 heading' );
 ok( strpos( $body, 'https://juanlentino.com/notes/' ) !== false, 'links the Notes index' );
 ok( strpos( $body, 'https://juanlentino.com/about/' ) !== false, 'links the About page' );
 ok( strpos( $body, "\n## " ) !== false, 'has at least one H2 section' );
+// 13.2.6: the summary names the SUBJECT, and the hub is the first key page.
+// It used to say "writer, music producer, and audio engineer. Long-form notes
+// on craft" and never the word provenance: the first paragraph a generative
+// engine reads about the site described a different site.
+$sn_summary = substr( $body, 0, strpos( $body, "\n## " ) );
+ok( false !== strpos( $sn_summary, 'provenance' ) && false !== strpos( $sn_summary, 'AI detection' ), 'the summary names the subject: provenance, against AI detection' );
+ok( false !== strpos( $sn_summary, 'orcid.org/0009-0006-8151-5920' ) || false !== strpos( $sn_summary, 'ORCID 0009-0006-8151-5920' ), 'the summary carries the ORCID' );
+ok( false === strpos( $sn_summary, 'Long-form notes on craft' ), 'the old craft blurb is gone' );
+ok( strpos( $body, '- [Provenance](https://juanlentino.com/provenance/)' ) !== false && strpos( $body, '- [Provenance](' ) < strpos( $body, '- [Notes](' ), 'the Provenance hub is the FIRST key page, before Notes' );
 ok( substr( $body, -1 ) === "\n", 'body ends with a trailing newline' );
 
 // --- v10.21.0 surface-list contract: real routes only ---
