@@ -43,6 +43,10 @@ if ( ! function_exists( 'get_post' ) ) {
 		return $GLOBALS['__post'];
 	}
 }
+$GLOBALS['__meta'] = array();
+if ( ! function_exists( 'get_post_meta' ) ) {
+	function get_post_meta( $id, $key = '', $single = false ) { return $GLOBALS['__meta'][ $id ][ $key ] ?? ''; }
+}
 if ( ! function_exists( 'get_post_timestamp' ) ) {
 	function get_post_timestamp( $post = null, $field = 'date' ) {
 		if ( ! isset( $GLOBALS['__timestamps'][ $field ] ) ) {
@@ -161,6 +165,20 @@ ok( strpos( $out, 'class="sn-post-frontmatter__updated"' ) !== false, 'output ca
 // ── datetime attribute present + ISO-8601 (wp_date c) ──
 ok( preg_match( '/datetime="[^"]+"/', $out ) === 1, 'output has a non-empty datetime attribute' );
 ok( strpos( $out, 'datetime="' . gmdate( 'c', $modified ) . '"' ) !== false, 'datetime attr = ISO-8601 modified time' );
+
+// ── 13.2.7: the PROVENANCE COMMIT is the clock, post_modified the fallback ──
+// A title-tag override bumped post_modified on every note (2026-09-17) and
+// all 43 read "Updated" over unchanged prose. With a commit recorded, the
+// line follows the commit; without one, post_modified as before.
+$GLOBALS['__meta'] = array( 7 => array( '_sn_prov_last_commit_gmt' => gmdate( 'Y-m-d H:i:s', $published + ( 3 * DAY_IN_SECONDS ) ) ) );
+$GLOBALS['__timestamps'] = array( 'date' => $published, 'modified' => $published + ( 40 * DAY_IN_SECONDS ) );
+ok( sn_post_updated_display( $post ) === '', 'THE PIN: prose committed 3 days after publish, metadata saved 40 days after -> NO Updated line (the commit is the clock)' );
+$GLOBALS['__meta'] = array( 7 => array( '_sn_prov_last_commit_gmt' => gmdate( 'Y-m-d H:i:s', $published + ( 30 * DAY_IN_SECONDS ) ) ) );
+$out = sn_post_updated_display( $post );
+ok( false !== strpos( $out, gmdate( 'Y.m.d', $published + ( 30 * DAY_IN_SECONDS ) ) ), 'prose committed 30 days after publish -> Updated carries the COMMIT date, not post_modified' );
+$GLOBALS['__meta'] = array( 7 => array( '_sn_prov_last_commit_gmt' => '' ) );
+ok( false !== strpos( sn_post_updated_display( $post ), gmdate( 'Y.m.d', $published + ( 40 * DAY_IN_SECONDS ) ) ), 'an empty commit meta falls back to post_modified' );
+$GLOBALS['__meta'] = array();
 
 // ── Exact boundary: delta == threshold should render (>= threshold) ──
 $GLOBALS['__timestamps'] = array(

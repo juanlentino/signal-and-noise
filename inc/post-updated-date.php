@@ -4,8 +4,9 @@
  *
  * Surfaces a reader-visible "Updated" date on Notes that were materially
  * revised after publication. A note is "materially revised" when its
- * modified timestamp is at least $threshold_days (default 14) after its
- * publish timestamp — so tiny same-week typo fixes don't earn a badge,
+ * substantive-change timestamp (the provenance commit, 13.2.7; post_modified
+ * before that and as the fallback) is at least $threshold_days (default 14)
+ * after its publish timestamp — so tiny same-week typo fixes don't earn a badge,
  * but a real substantive update does.
  *
  * Registers [sn_updated_date], used inside parts/post-frontmatter.html
@@ -50,7 +51,7 @@ function sn_post_updated_display( $post = null, $threshold_days = 14 ) {
 	$threshold_days = (int) apply_filters( 'sn_updated_date_threshold_days', $threshold_days, $post );
 
 	$published = get_post_timestamp( $post, 'date' );
-	$modified  = get_post_timestamp( $post, 'modified' );
+	$modified  = sn_post_substantive_timestamp( $post );
 	if ( false === $published || false === $modified ) {
 		return '';
 	}
@@ -65,6 +66,32 @@ function sn_post_updated_display( $post = null, $threshold_days = 14 ) {
 		esc_attr( wp_date( 'c', $modified ) ),
 		esc_html( 'Updated ' . wp_date( 'Y.m.d', $modified ) )
 	);
+}
+
+/**
+ * When the PROSE last changed: the honest clock for "Updated".
+ *
+ * 13.2.7. `post_modified` bumps on ANY save: a title-tag override, a block
+ * migration, a bulk re-save. On 2026-09-17 every note gained a search title
+ * and all 43 read "Updated 2026.09.17" over prose that had not moved. The
+ * plugin's provenance chain commits only when the normalized prose changes
+ * and denormalizes that moment into `_sn_prov_last_commit_gmt` (MySQL
+ * datetime, GMT), the same clock its stale-posts check has used since
+ * plugin v11.11.8. Read it here; fall back to post_modified only for a post
+ * with no commit (a Page, or a note predating the chain), never to nothing.
+ *
+ * @param WP_Post $post Post object.
+ * @return int|false Unix timestamp, or false when neither clock reads.
+ */
+function sn_post_substantive_timestamp( $post ) {
+	$commit = (string) get_post_meta( $post->ID, '_sn_prov_last_commit_gmt', true );
+	if ( '' !== $commit ) {
+		$ts = strtotime( $commit . ' UTC' );
+		if ( false !== $ts && $ts > 0 ) {
+			return $ts;
+		}
+	}
+	return get_post_timestamp( $post, 'modified' );
 }
 
 /**
