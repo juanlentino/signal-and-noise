@@ -306,8 +306,8 @@ function sn_llms_txt_send( $full = false ) {
 	// hardened derivation (inc/abilities-helpers.php, v10.48.0) — safe to
 	// call per request; degrades to array() (section omitted) standalone.
 	$pillars = function_exists( 'sn_theme_pillar_descriptors' ) ? (array) sn_theme_pillar_descriptors() : array();
-	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- plain-text markdown from home_url() + published post titles/permalinks + the curated pillar descriptors; esc_html would corrupt the "&" and markdown punctuation in a text/plain document.
 	$topics = $full ? sn_llms_txt_topics() : array();
+	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- plain-text markdown from home_url() + published post titles/permalinks + the curated pillar descriptors + the tag descriptions; esc_html would corrupt the "&" and markdown punctuation in a text/plain document.
 	echo sn_llms_txt_body( $full, $notes, $pillars, $topics );
 }
 
