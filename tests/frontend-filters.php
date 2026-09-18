@@ -41,6 +41,7 @@ function __return_empty_string() { return ''; }
 
 // Deliberately NOT defining SN_FRONTEND_FILTERS_TEST: the wiring must run
 // against the stub registries so the registrations themselves are pinned.
+function sn_emit_header( $h ) { $GLOBALS['__hdr'][] = $h; } // 13.3.1: the header seam, recorded not sent
 require __DIR__ . '/../inc/frontend-filters.php';
 
 $pass = 0; $fail = 0;
@@ -62,6 +63,18 @@ ok( false === stripos( $html_out, 'name="generator"' ), 'IN: generator metas (an
 ok( false !== strpos( $html_out, '<meta name="viewport" content="width=device-width">' ), 'IN: non-generator meta survives byte-identical' );
 $clean = "<head><meta name=\"viewport\" content=\"width=device-width\"></head>";
 ok( $clean === sn_strip_generator_meta( $clean ), 'OUT: generator-free markup passes through unchanged' );
+
+// 13.3.1: a body that is not a page is marked no-store; a page is not.
+$GLOBALS['__hdr'] = array();
+$big = str_repeat( '<p>page</p>', 600 ) . '<meta name="generator" content="x">';
+$out = sn_strip_generator_meta( $big );
+ok( is_string( $out ) && false === strpos( $out, 'generator' ) && array() === $GLOBALS['__hdr'], 'a full page comes back as a string with the tag gone, and no cache header is touched' );
+$out = sn_strip_generator_meta( '' );
+ok( '' === $out && in_array( 'Cache-Control: no-store, max-age=0', $GLOBALS['__hdr'], true ), 'THE PIN: an EMPTY body (the 358-byte 200 Cloudflare cached for /provenance/ twice) leaves the origin as no-store, so the edge cannot keep it' );
+$GLOBALS['__hdr'] = array();
+sn_strip_generator_meta( str_repeat( 'x', 4095 ) );
+ok( 1 === count( $GLOBALS['__hdr'] ), 'one byte under the floor is still not a page' );
+ok( 4096 === SN_PAGE_BODY_FLOOR_BYTES, 'the floor is 4096 bytes: no page this theme paints is smaller' );
 // The template_redirect handler installs the callback on a fresh buffer.
 $level = ob_get_level();
 sn_generator_meta_buffer_start();

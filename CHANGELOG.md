@@ -12,6 +12,9 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Fixed
+- **An empty body never leaves the origin cacheable.** Twice on 2026-09-17 and 18 Cloudflare cached a 358-byte 200 for `/provenance/` (the object-cache footnote and nothing else) and served it for about ninety minutes, until a purge; Bing's second scan read the page as missing its H1 and description because that is what it got. The page-wide output buffer's callback now returns the original page when `preg_replace()` fails (it returns NULL on a PCRE error, and a NULL from a buffer callback is an empty body), and any body under 4 KB leaves with `Cache-Control: no-store`, so whatever produces an empty render cannot be kept by the edge. The cause of the empty render itself is not established; this closes the caching of it. Pinned through a header seam.
+
 ## [13.3.0] - 2026-09-17 — the index knows both names
 
 ### Added

@@ -92,9 +92,33 @@ function sn_social_link_relative_url( $parsed_block ) {
  * @return string
  */
 function sn_strip_generator_meta( $html ) {
-	$html = preg_replace( '/<meta name="generator"[^>]*>\n?/i', '', $html );
-	return $html;
+	// 13.3.1: preg_replace() returns NULL on a PCRE error (backtrack or JIT
+	// stack limit on a large page under load), and an output-buffer callback
+	// that returns NULL sends an EMPTY body with a 200. Cloudflare cached
+	// exactly that for /provenance/ twice (358 bytes, the object-cache
+	// footnote and nothing else) and served it for 90 minutes each time. A
+	// failed rewrite keeps the page; a body that is not a page is not
+	// cacheable.
+	$out = preg_replace( '/<meta name="generator"[^>]*>\n?/i', '', (string) $html );
+	if ( null === $out ) {
+		$out = (string) $html;
+	}
+	// (Under the CLI harness headers_sent() is true once anything printed; the CLI never serves a page.)
+	if ( strlen( $out ) < SN_PAGE_BODY_FLOOR_BYTES && ( 'cli' === PHP_SAPI || ! headers_sent() ) ) {
+		sn_emit_header( 'Cache-Control: no-store, max-age=0' );
+	}
+	return $out;
 }
+
+if ( ! function_exists( 'sn_emit_header' ) ) {
+	/** The one seam a CLI test can replace; header() itself is a built-in that cannot be. */
+	function sn_emit_header( $line ) {
+		header( $line );
+	}
+}
+
+/** 13.3.1: no page this theme paints is smaller; below it the body is a fault, not a page. */
+const SN_PAGE_BODY_FLOOR_BYTES = 4096;
 
 /**
  * template_redirect handler: install the generator-strip rewrite on a
