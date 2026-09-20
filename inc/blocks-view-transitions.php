@@ -94,35 +94,23 @@ function sn_view_transition_post_title( $block_content, $block, $instance ) {
 
 	$style = 'view-transition-name: ' . $name . ';';
 
-	// Find the first outer h1-h6 or anchor tag in the rendered block
+	// The first outer h1-h6 or anchor tag in the rendered block
 	// (core/post-title renders as a heading; with isLink set, the
-	// heading wraps an anchor — either way the outer element is what
-	// we want to attach the transition-name to).
-	if ( ! preg_match( '/<(h[1-6]|a)\b[^>]*>/i', $block_content, $m, PREG_OFFSET_CAPTURE ) ) {
-		return $block_content;
+	// heading wraps an anchor; either way the outer element is what
+	// we want to attach the transition-name to). #383: found and written
+	// through WP_HTML_Tag_Processor, core's own HTML API, where a regex with
+	// an offset capture and a substr_replace used to do it. A new style
+	// attribute lands right after the tag name, exactly where the regex put
+	// it; an existing one is extended the same way ('; ' between).
+	$tags = new WP_HTML_Tag_Processor( (string) $block_content );
+	while ( $tags->next_tag() ) {
+		if ( ! in_array( $tags->get_tag(), array( 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'A' ), true ) ) {
+			continue;
+		}
+		$existing = $tags->get_attribute( 'style' );
+		$tags->set_attribute( 'style', is_string( $existing ) ? $existing . '; ' . $style : $style );
+		return $tags->get_updated_html();
 	}
-
-	$tag        = $m[0][0];
-	$tag_offset = $m[0][1];
-
-	if ( false !== strpos( $tag, 'style=' ) ) {
-		// Append to existing style attribute (preserve other styles).
-		$new_tag = preg_replace(
-			'/style\s*=\s*"([^"]*)"/i',
-			'style="$1; ' . $style . '"',
-			$tag,
-			1
-		);
-	} else {
-		// Insert a new style attribute right after the tag name.
-		$new_tag = preg_replace(
-			'/^<(h[1-6]|a)/i',
-			'<$1 style="' . $style . '"',
-			$tag,
-			1
-		);
-	}
-
-	return substr_replace( $block_content, $new_tag, $tag_offset, strlen( $tag ) );
+	return $block_content;
 }
 add_filter( 'render_block_core/post-title', 'sn_view_transition_post_title', 10, 3 );
