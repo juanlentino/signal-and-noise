@@ -115,6 +115,7 @@ require_once __DIR__ . '/inc/notes-reading-time.php'; // v10.42.2: reading-time 
 require_once __DIR__ . '/inc/notes-index-helpers.php'; // v10.49.0: the /notes index pure helpers, extracted from page-notes-render.php (which is render-path only now; the SN_NOTES_RENDER_TEST hack is retired). Must load BEFORE the template router below.
 require_once __DIR__ . '/inc/notes-index-row.php'; // v11.10.0: /notes index row + year-spine rendering, extracted from page-notes-render.php (needs the helpers above).
 require_once __DIR__ . '/inc/notes-tags-data.php';
+require_once __DIR__ . '/inc/notes-tags-group-meta.php'; // 13.4.0: the Group field on Posts › Tags; the page files by term meta first.
 require_once __DIR__ . '/inc/page-notes-template.php';
 require_once __DIR__ . '/inc/page-index-template.php'; // C3 (v10.7.0): /index whole-site dossier virtual route (loads inc/page-index-render.php)
 require_once __DIR__ . '/inc/cms-page-styles.php'; // v10.36.0: per-Page bespoke stylesheets (now.css on /now, uses.css on /about/uses, accessibility.css on /accessibility)
