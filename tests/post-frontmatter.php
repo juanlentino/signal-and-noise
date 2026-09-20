@@ -133,17 +133,10 @@ $rendered = do_shortcode( $raw );
 pf_eq( false, strpos( $rendered, '[sn_post_pillar]' ) !== false, 'Test 7.3: non-pillar post → token removed, no leak' );
 pf_eq( false, strpos( $rendered, 'sn-post-frontmatter__pillar' ) !== false, 'Test 7.4: non-pillar post → no pillar link emitted' );
 
-// ─── Test 8: render_block bridge (belt-and-suspenders; redundant on front end, kept for parity — added 2026-06-07) ─
-echo "\nTest 8: render_block bridge resolves the token in block content\n";
-pf_eq( true, function_exists( 'sn_post_pillar_render_block' ), 'Test 8.1: bridge function exists' );
-pf_eq( true, in_array( 'sn_post_pillar_render_block', (array) ( $GLOBALS['__test_filters']['render_block'] ?? array() ), true ), 'Test 8.2: bridge registered on render_block hook' );
-if ( function_exists( 'sn_post_pillar_render_block' ) ) {
-	_pf_post( 801, array( 'provenance' ) );
-	$out = sn_post_pillar_render_block( '<p>[sn_post_pillar]</p>', array() );
-	pf_contains( $out, 'sn-post-frontmatter__pillar', 'Test 8.3: token in block content → bridge runs do_shortcode → pillar link' );
-	pf_eq( false, strpos( $out, '[sn_post_pillar]' ) !== false, 'Test 8.4: token does not survive the bridge' );
-	pf_eq( '<p>x</p>', sn_post_pillar_render_block( '<p>x</p>', array() ), 'Test 8.5: no token → content unchanged (strpos guard)' );
-}
+// ─── Test 8: the belt-and-suspenders render_block bridge is gone (#389) ─
+echo "\nTest 8: no global render_block bridge (core do_shortcodes the part's raw markup first)\n";
+pf_eq( false, function_exists( 'sn_post_pillar_render_block' ), 'Test 8.1: bridge function is gone' );
+pf_eq( false, isset( $GLOBALS['__test_filters']['render_block'] ), 'Test 8.2: nothing registered on render_block' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

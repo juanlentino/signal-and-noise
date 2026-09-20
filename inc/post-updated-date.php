@@ -9,12 +9,10 @@
  * after its publish timestamp — so tiny same-week typo fixes don't earn a badge,
  * but a real substantive update does.
  *
- * Registers [sn_updated_date], used inside parts/post-frontmatter.html
- * after the published date. Shortcodes do NOT auto-resolve in FSE
- * template parts (core/shortcode only wpautop()s — verified vs WP trunk
- * wp-includes/blocks/shortcode.php), so a token-specific render_block
- * bridge resolves it, mirroring the [current_year] bridge in
- * inc/setup.php:62-67 and the plugin's [sn_reading_time] bridge.
+ * Registers [sn_updated_date]. Placed in parts/post-frontmatter.html by the
+ * signal-noise/updated-date PHP-only block since 13.1.0; the shortcode stays
+ * registered for post content. The global render_block bridge that once
+ * re-resolved the token went in #389.
  *
  * @package SignalNoise
  * @since 9.10.0
@@ -103,32 +101,11 @@ function sn_updated_date_shortcode() {
 	return sn_post_updated_display( get_post() );
 }
 
-/**
- * Resolve [sn_updated_date] inside block template parts.
- *
- * core/shortcode only wpautop()s its content — it never runs do_shortcode
- * on block-template output. Token-specific strpos (not a prefix-match) so
- * lookalikes can't false-positive. Mirrors inc/setup.php:62-67.
- *
- * @param string $block_content Rendered block HTML.
- * @param array  $block         Parsed block (unused).
- * @return string
- */
-function sn_updated_date_render_block_bridge( $block_content, $block ) {
-	if ( false !== strpos( $block_content, '[sn_updated_date]' ) ) {
-		// core/shortcode wpautop()'d the bare token first (verified vs WP
-		// trunk). shortcode_unautop() strips the <p> around the registered
-		// token before we resolve it, so an EMPTY render (note below the
-		// material-revision threshold) collapses to '' instead of leaving an
-		// empty <p></p>, and a non-empty <time> isn't left <p>-wrapped.
-		$block_content = do_shortcode( shortcode_unautop( $block_content ) );
-	}
-	return $block_content;
-}
-
-// Skip WP registration under the standalone test harness (add_shortcode /
-// add_filter aren't stubbed there; the helpers are exercised directly).
+// Placed by the signal-noise/updated-date PHP-only block since 13.1.0; the
+// shortcode stays registered for post content. The global render_block
+// bridge went in #389 (no template carries the token).
+// Skip WP registration under the standalone test harness (add_shortcode
+// isn't stubbed there; the helpers are exercised directly).
 if ( ! defined( 'SN_POST_UPDATED_DATE_TEST' ) || ! SN_POST_UPDATED_DATE_TEST ) {
 	add_shortcode( 'sn_updated_date', 'sn_updated_date_shortcode' );
-	add_filter( 'render_block', 'sn_updated_date_render_block_bridge', 10, 2 );
 }
