@@ -94,9 +94,10 @@
 	// ZERO uses of any of these four.
 	//
 	// This table is the JS half of a parity contract —
-	// tests/editor-variations-parity.php asserts it is SET-EQUAL to what
-	// inc/block-styles.php registers. Adding a style there without a row here
-	// fails the build, and vice versa. Keep each row on ONE line, block first
+	// tests/editor-variations-parity.php checks it against the block style
+	// partials in styles/blocks/*.json (blockTypes x slug). A row naming a
+	// partial that does not exist fails the build, and so does a partial
+	// without a row unless the test lists it. Keep each row on ONE line, block first
 	// and style second — the test parses this table, so prose must never imitate
 	// a row's shape (an earlier draft of this comment did, and parsed as a fifth).
 	var SN_STYLE_VARIATIONS = [
