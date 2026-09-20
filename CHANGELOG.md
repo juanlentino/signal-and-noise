@@ -12,6 +12,9 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Fixed
+- **`fair-use` is filed under "Why it isn't built".** The tag was minted on 2026-09-19 for the two notes on the Justice Department's fair-use brief (plugin 17.0.0's tag-fit pass read their rights tags as attached for reach); `/notes/tags` showed it under the fallback heading "Not yet filed", which is the page doing its job. It now sits beside Music Rights, Music Royalties and AI Training.
+
 ## [13.3.2] - 2026-09-19 — the file is named, not read
 
 ### Fixed

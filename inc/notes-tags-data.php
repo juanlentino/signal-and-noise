@@ -62,6 +62,7 @@ function sn_notes_tag_groups() {
 				'music-royalties',
 				'black-box-royalties',
 				'ai-training',
+				'fair-use', // 13.3.3: the defense the training cases turn on, beside the rights and the money.
 				'legacy-catalog',
 			),
 		),
