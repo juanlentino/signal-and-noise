@@ -23,11 +23,18 @@ defined( 'ABSPATH' ) || exit;
  * The four editorial groups, in render order.
  *
  * @since 12.15.0
- * @return array<int, array{title:string, dek:string, slugs:array<int,string>}>
+ * 13.4.0: each group carries an `id`, the value a tag's `sn_tag_group` term
+ * meta names. The slug lists below are now the SEED: a tag with meta files
+ * where the meta says, a tag without meta files where the list says, and a
+ * tag in neither falls through to "Not yet filed". Filing a new tag is one
+ * edit on Posts › Tags (inc/notes-tags-group-meta.php), no release.
+ *
+ * @return array<int, array{id:string, title:string, dek:string, slugs:array<int,string>}>
  */
 function sn_notes_tag_groups() {
 	return array(
 		array(
+			'id'    => 'record',
 			'title' => 'The record',
 			'dek'   => 'The pieces a record is built from, and the standards that let anyone read it.',
 			'slugs' => array(
@@ -40,6 +47,7 @@ function sn_notes_tag_groups() {
 			),
 		),
 		array(
+			'id'    => 'settles',
 			'title' => 'What it settles',
 			'dek'   => 'Who made a thing, how anyone would know, and where each answer runs out.',
 			'slugs' => array(
@@ -51,6 +59,7 @@ function sn_notes_tag_groups() {
 			),
 		),
 		array(
+			'id'    => 'built',
 			'title' => 'Why it isn&rsquo;t built',
 			'dek'   => 'Money, incentives, and the institutions that would have to move first.',
 			'slugs' => array(
@@ -67,6 +76,7 @@ function sn_notes_tag_groups() {
 			),
 		),
 		array(
+			'id'    => 'work',
 			'title' => 'The work',
 			'dek'   => 'Where the argument comes from: the studio, the business, the writing.',
 			'slugs' => array(
@@ -117,10 +127,18 @@ function sn_notes_tag_groups_resolved() {
 
 	$out    = array();
 	$placed = array();
+	// 13.4.0: the term's own meta files it first; the seed list second.
+	$filed = array();
+	foreach ( $all as $term ) {
+		$gid = sn_notes_tag_group_of( $term );
+		if ( '' !== $gid ) {
+			$filed[ $gid ][] = $term->slug;
+		}
+	}
 	foreach ( sn_notes_tag_groups() as $group ) {
 		$terms = array();
-		foreach ( $group['slugs'] as $slug ) {
-			if ( isset( $by_slug[ $slug ] ) ) {
+		foreach ( array_unique( array_merge( $filed[ $group['id'] ] ?? array(), $group['slugs'] ) ) as $slug ) {
+			if ( isset( $by_slug[ $slug ] ) && ! isset( $placed[ $slug ] ) ) {
 				$terms[]        = $by_slug[ $slug ];
 				$placed[ $slug ] = true;
 			}
@@ -149,4 +167,52 @@ function sn_notes_tag_groups_resolved() {
 	}
 
 	return $out;
+}
+
+/** The term meta that files a tag: one of the group ids, or '' for unfiled. */
+const SN_TAG_GROUP_META = 'sn_tag_group';
+
+/**
+ * The group ids, in render order.
+ *
+ * @since 13.4.0
+ * @return string[]
+ */
+function sn_notes_tag_group_ids() {
+	return array_column( sn_notes_tag_groups(), 'id' );
+}
+
+/**
+ * The group a term's meta names, or '' when unset or not a known id. The
+ * meta is the owner's filing; the seed list in sn_notes_tag_groups() is only
+ * consulted when this is ''.
+ *
+ * @since 13.4.0
+ * @param WP_Term|object $term
+ * @return string
+ */
+function sn_notes_tag_group_of( $term ) {
+	$gid = function_exists( 'get_term_meta' ) ? (string) get_term_meta( (int) $term->term_id, SN_TAG_GROUP_META, true ) : '';
+	return in_array( $gid, sn_notes_tag_group_ids(), true ) ? $gid : '';
+}
+
+/**
+ * The group a term renders under today, meta or seed, '' for "Not yet filed".
+ * What the tag screen's select shows as selected.
+ *
+ * @since 13.4.0
+ * @param WP_Term|object $term
+ * @return string
+ */
+function sn_notes_tag_group_effective( $term ) {
+	$gid = sn_notes_tag_group_of( $term );
+	if ( '' !== $gid ) {
+		return $gid;
+	}
+	foreach ( sn_notes_tag_groups() as $group ) {
+		if ( in_array( $term->slug, $group['slugs'], true ) ) {
+			return $group['id'];
+		}
+	}
+	return '';
 }

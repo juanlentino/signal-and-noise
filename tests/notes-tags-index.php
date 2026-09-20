@@ -37,6 +37,10 @@ if ( ! function_exists( 'get_terms' ) ) {
 		return $GLOBALS['TERMS'];
 	}
 }
+$GLOBALS['TERM_META'] = array();
+if ( ! function_exists( 'get_term_meta' ) ) {
+	function get_term_meta( $id, $key = '', $single = false ) { return $GLOBALS['TERM_META'][ (int) $id ][ $key ] ?? ''; }
+}
 if ( ! function_exists( 'is_wp_error' ) ) {
 	function is_wp_error( $t ) {
 		return false;
@@ -114,6 +118,24 @@ ok( 1 === count( $resolved ), 'groups with no resolvable terms are omitted entir
 foreach ( $resolved as $g ) {
 	ok( array() !== $g['terms'], 'no rendered group is empty' );
 }
+
+// ── 13.4.0: term meta files a tag; the seed list is the fallback ─────
+$GLOBALS['TERMS'] = array(); $GLOBALS['TERM_META'] = array();
+$fair = mk_term( 'fair-use', 'Fair Use' );          // in no seed list
+$c2pa = mk_term( 'c2pa', 'C2PA' );                  // seeded under record
+$rights = mk_term( 'music-rights', 'Music Rights' ); // seeded under built
+$GLOBALS['TERM_META'][ $fair->term_id ]   = array( SN_TAG_GROUP_META => 'built' );
+$GLOBALS['TERM_META'][ $rights->term_id ] = array( SN_TAG_GROUP_META => 'record' ); // meta wins over the seed
+$GLOBALS['TERM_META'][ $c2pa->term_id ]   = array( SN_TAG_GROUP_META => 'nonsense' ); // unknown id: falls to the seed
+$resolved = sn_notes_tag_groups_resolved();
+$by_title = array();
+foreach ( $resolved as $g ) { $by_title[ $g['title'] ] = array_map( static fn( $t ) => $t->slug, $g['terms'] ); }
+ok( array( 'music-rights', 'c2pa' ) === ( $by_title['The record'] ?? null ), 'meta files music-rights under The record ahead of its seed; c2pa with unknown meta files by its seed' );
+ok( array( 'fair-use' ) === ( $by_title['Why it isn&rsquo;t built'] ?? null ), 'a tag in no seed list files where its meta says' );
+ok( ! isset( $by_title['Not yet filed'] ), 'nothing falls through when every tag is filed' );
+ok( 'built' === sn_notes_tag_group_of( $fair ) && '' === sn_notes_tag_group_of( $c2pa ) && 'record' === sn_notes_tag_group_effective( $c2pa ) && '' === sn_notes_tag_group_effective( mk_term( 'orphan', 'Orphan' ) ), 'group_of reads meta only; effective falls back to the seed, then to unfiled' );
+ok( array( 'record', 'settles', 'built', 'work' ) === sn_notes_tag_group_ids(), 'the four group ids, in render order' );
+$GLOBALS['TERM_META'] = array();
 
 // ── No terms at all: empty, not a crash ──────────────────────────────
 $GLOBALS['TERMS'] = array();
