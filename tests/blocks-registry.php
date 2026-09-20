@@ -74,6 +74,13 @@ ok( strpos( $pq2, 'sn-pull-quote__attribution' ) === false, 'pull-quote omits th
 $article_css = file_get_contents( __DIR__ . '/../assets/css/article.css' );
 ok( preg_match( '/\.sn-pull-quote\s*[,{]/', $article_css ) === 1, 'article.css has a .sn-pull-quote box selector (block gets the brutalist frame)' );
 
+// #391: the sidenote's rules ship with the block. block.json `style` is the
+// documented field; the move itself is pinned in tests/sidenote-scope.php.
+$sidenote_json = json_decode( file_get_contents( "$blocks_dir/sidenote/block.json" ), true );
+ok( 'file:./style.css' === ( $sidenote_json['style'] ?? '' ), 'sidenote block.json declares its own style.css' );
+ok( is_file( "$blocks_dir/sidenote/style.css" ), 'blocks/sidenote/style.css exists' );
+ok( preg_match( '/\.sn-sidenote\s*[,{]/', $article_css ) === 0, 'article.css no longer carries a .sn-sidenote rule (the combined sheet drops it)' );
+
 // Registration wiring.
 require __DIR__ . '/../inc/blocks-register.php';
 signal_noise_register_block_editor_script();

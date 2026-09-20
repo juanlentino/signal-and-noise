@@ -31,10 +31,12 @@ function signal_noise_after_setup_theme() {
 		'assets/css/components.css',
 		'assets/css/critical.css',
 		'assets/css/responsive.css',
-		// v10.49.0: the sidenote + pull-quote block styling (and the rest of
-		// the article back half) moved from critical.css to article.css;
-		// without it the custom blocks render unstyled in the editor canvas.
-		// Last, matching its combined-cascade position.
+		// v10.49.0: the article back half moved from critical.css to
+		// article.css. The pull-quote block's frame is still in it, so without
+		// it that block renders unstyled in the editor canvas; the sidenote's
+		// rules ship with the block since #391 (block.json `style`, which
+		// core enqueues in the canvas on enqueue_block_assets). Last, matching
+		// its combined-cascade position.
 		'assets/css/article.css',
 	) );
 

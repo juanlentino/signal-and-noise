@@ -46,7 +46,9 @@ ok( false !== strpos( $js, "'-link'" ), 'the popover clone skips core-format bac
 ok( false !== strpos( $js, '#footnote-ref-' ), 'and still skips hand-authored back-links' );
 
 // ── the sidenote escape carries its !important (fix B, same release) ──
-ok( 1 === preg_match( '/margin-right:\s*-200px\s*!important/', $css ), 'sidenote margin-right:-200px carries !important — without it core\'s auto !important zeroes the escape' );
+// #391: the rule lives in the block's own sheet, not article.css.
+$sidenote_css = (string) file_get_contents( __DIR__ . '/../blocks/sidenote/style.css' );
+ok( 1 === preg_match( '/margin-right:\s*-200px\s*!important/', $sidenote_css ), 'sidenote margin-right:-200px carries !important; without it core\'s auto !important zeroes the escape' );
 
 // ── #323: the popover sits FLUSH against the sup, no gap ──
 // A 4px gap meant `pointerleave` fired on the sup while crossing it

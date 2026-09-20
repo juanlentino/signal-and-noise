@@ -14,23 +14,32 @@
  * scope the pull-quote already used, which is exactly why THAT block worked
  * everywhere and this one did not.
  *
+ * #391: the two rules live in blocks/sidenote/style.css, declared by the
+ * block's manifest, not in article.css. The scope pins below read the block
+ * sheet; the second half of this file pins the move itself: the combined
+ * sheet's sources carry no sidenote rule, and the block sheet minifies to the
+ * exact bytes article.css put in the combined sheet before the move.
+ *
  * Run: php tests/sidenote-scope.php
  *
  * @since theme v12.20.4
  */
 
 if ( PHP_SAPI !== 'cli' && ! defined( 'WP_CLI' ) ) { http_response_code( 404 ); exit; }
+if ( ! defined( 'ABSPATH' ) ) { define( 'ABSPATH', '/' ); }
 
 $pass = 0; $fail = 0;
 function ok( $c, $m ) { global $pass, $fail; if ( $c ) { $pass++; echo "PASS: $m\n"; } else { $fail++; echo "FAIL: $m\n"; } }
 
-$raw = (string) file_get_contents( __DIR__ . '/../assets/css/article.css' );
+$sheet = __DIR__ . '/../blocks/sidenote/style.css';
+ok( is_file( $sheet ), 'blocks/sidenote/style.css exists (the block ships its own rules, #391)' );
+$raw = (string) file_get_contents( $sheet );
 // COMMENT-STRIPPED: the block comment above these rules EXPLAINS the old
 // `.single-post` scope and therefore contains it. A raw scan reports the bug as
 // still present in the fixed file — three instances of that shape on
 // 2026-09-09 alone.
 $css = (string) preg_replace( '#/\*.*?\*/#s', '', $raw );
-ok( $css !== $raw, 'VACUITY: article.css carries comments, so stripping them is doing work' );
+ok( $css !== $raw, 'VACUITY: the block sheet carries comments, so stripping them is doing work' );
 
 // Every rule that styles a sidenote.
 preg_match_all( '/([^{}]*\.sn-sidenote[^{}]*)\{([^}]*)\}/s', $css, $m, PREG_SET_ORDER );
@@ -73,6 +82,45 @@ ok(
 foreach ( $selectors as $sel ) {
 	ok( 2 === substr_count( $sel, '.' ), "selector keeps two-class specificity to outrank core's layout rule — got: $sel" );
 }
+
+
+/* ── THE MOVE (#391) ───────────────────────────────────────────────────────
+ * block.json's `style` field is the documented way for a block to carry its
+ * own sheet: core registers it, enqueues it where the block renders, inlines
+ * it in the head, and enqueues it in the editor canvas. Three pins:
+ *   1. the manifest declares the sheet;
+ *   2. no source of the combined sheet carries a sidenote rule any more, so
+ *      the 71 pages without a sidenote stop serving it;
+ *   3. the block sheet minifies to the EXACT bytes article.css contributed to
+ *      the combined sheet on origin/main before the move (captured 2026-09-20
+ *      with sn_css_minify() over article.css:612-649), so the three pages
+ *      with a sidenote get the same rules, just from a different file.
+ * Pin 3 is the identical-output proof: a rule edited in passing, a dropped
+ * !important, a re-scoped selector, all break it.
+ */
+$manifest = json_decode( (string) file_get_contents( __DIR__ . '/../blocks/sidenote/block.json' ), true );
+ok( 'file:./style.css' === ( $manifest['style'] ?? '' ), 'block.json declares "style": "file:./style.css" (the shape pillar-essays already uses)' );
+
+require_once __DIR__ . '/../inc/asset-combine.php';
+$combined = '';
+foreach ( sn_css_combine_sources() as $rel ) {
+	$combined .= sn_css_minify( (string) file_get_contents( __DIR__ . '/../' . $rel ) );
+}
+ok( '' !== $combined, 'VACUITY: the combined sources were read' );
+ok( false === strpos( $combined, '.sn-sidenote' ), 'no source of the combined sheet carries a .sn-sidenote rule (it rode article.css into every page until #391)' );
+
+$main_bytes = "@media (min-width: 1280px){.wp-block-post-content .sn-sidenote{float: right;clear: right;width: 180px;margin-right: -200px !important;margin-top: 0;margin-bottom: 1rem;padding-left: 1rem;font-family: 'DM Mono', 'Courier New', monospace;font-size: max(0.75rem, 11px);line-height: 1.45;color: var(--wp--preset--color--rust);text-align: left}}@media (max-width: 1279.98px){.wp-block-post-content .sn-sidenote{float: none;width: auto;margin-top: 0.75rem;margin-bottom: 1.5rem;padding-top: 0.5rem;padding-left: 0;border-top: 1px solid var(--wp--preset--color--concrete);font-family: 'DM Mono', 'Courier New', monospace;font-size: 0.85rem;line-height: 1.5;color: var(--wp--preset--color--rust)}}";
+ok( sn_css_minify( $raw ) === $main_bytes, 'the block sheet minifies to the exact bytes article.css put in the combined sheet before the move (identical rules)' );
+
+// The pattern inserts the block, never a bare paragraph: a paragraph carrying
+// the class would style on no page now that the sheet loads only where the
+// block renders.
+$pattern = (string) file_get_contents( __DIR__ . '/../patterns/sidenote.php' );
+ok( 1 === preg_match( '/<!-- wp:signal-noise\/sidenote \{"content":"[^"]+"\} \/-->/', $pattern ), 'patterns/sidenote.php inserts the signal-noise/sidenote block' );
+ok( false === strpos( $pattern, 'wp:paragraph' ), 'and no longer a bare paragraph carrying the class' );
+
+// Steps live in article.css; the scan below reads that file.
+$css = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( __DIR__ . '/../assets/css/article.css' ) );
 
 
 /* ── THE UNORDERED STEPS VARIANT (v12.20.5) ────────────────────────────────

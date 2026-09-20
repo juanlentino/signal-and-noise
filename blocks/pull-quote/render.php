@@ -2,8 +2,9 @@
 /**
  * Dynamic render for signal-noise/pull-quote.
  *
- * Emits the .sn-pull-quote aside (the class assets/css/critical.css targets —
- * NOT the pattern's .sn-pattern-pull-quote). Each slot is omitted when empty so
+ * Emits the .sn-pull-quote aside (the class assets/css/article.css targets,
+ * NOT the pattern's .sn-pattern-pull-quote; it moves to ./style.css once the
+ * pattern retires, #391). Each slot is omitted when empty so
  * an unattributed quote renders no empty attribution line. Both slots wp_kses_post'd.
  *
  * @package SignalNoise
