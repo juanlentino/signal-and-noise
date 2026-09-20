@@ -53,6 +53,17 @@ $wrapped = "<p>[sn_reading_path]</p>";
 ok( '' === sn_reading_path_render_block_bridge( $wrapped, array() ),
 	'PLUGIN ABSENT: the slot renders EMPTY — a reader never sees the literal token as prose' );
 
+// Plugin absent, PARENT block: render_block fires for the core/group that
+// wraps the slot too (the <main> of single.html), with the token still in its
+// content because inner blocks render first. Blanking that dropped the whole
+// <main>; the fix strips the token and keeps the markup (measured WP 7.1).
+$parent = '<main class="sn-note-single"><h1>Title</h1><p>prose</p>' . "\n<p>[sn_reading_path]</p>\n" . '<footer>closing</footer></main>';
+$kept   = sn_reading_path_render_block_bridge( $parent, array( 'blockName' => 'core/group' ) );
+ok( false !== strpos( $kept, '<main class="sn-note-single">' ) && false !== strpos( $kept, '<footer>closing</footer></main>' ),
+	'PLUGIN ABSENT, parent core/group: the surrounding markup survives: the bridge blanks the slot, never the <main>' );
+ok( false === strpos( $kept, 'sn_reading_path' ) && false === strpos( $kept, '<p></p>' ),
+	'PLUGIN ABSENT, parent core/group: the token goes, and no empty <p> is left where it sat' );
+
 // Plugin present: the token resolves through unautop + do_shortcode.
 $GLOBALS['shortcode_tags']['sn_reading_path'] = function () { return '<nav class="sn-reading-path">chain</nav>'; };
 $out = sn_reading_path_render_block_bridge( $wrapped, array() );
