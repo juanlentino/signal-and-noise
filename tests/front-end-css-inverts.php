@@ -26,10 +26,10 @@
  *    Deriving it means a new print stylesheet is exempt automatically and a
  *    screen stylesheet can never be exempted by being named.
  *
- *    NOT to be confused with the media='print' onload="this.media='all'" trick
- *    in the same file: that is an async-LOADING hack applied to
- *    `wp-block-library` and `trp-language-switcher` via style_loader_tag, not
- *    an enqueue argument, and it must never grant an exemption. Asserted below.
+ *    NOT to be confused with the media='print' onload="this.media='all'"
+ *    trick: an async-LOADING hack the theme once applied to `wp-block-library`
+ *    via style_loader_tag (removed in #385), not an enqueue argument, and it
+ *    must never grant an exemption. Kept below as a negative control.
  *
  * WHAT THIS CANNOT SEE: it reads stylesheets, not rendered pages. A token used
  * in the wrong ROLE — an ink token used as a surface — passes cleanly. That is

@@ -13,10 +13,12 @@
  * is exempt automatically and a screen stylesheet can never be exempted by being
  * named in a test.
  *
- * NOT the `media='print' onload="this.media='all'"` trick in the same file:
- * that is an async-LOADING hack applied to `wp-block-library` and
- * `trp-language-switcher` through style_loader_tag, not an enqueue argument,
- * and it names no assets/css/ path. Both suites assert it grants no exemption.
+ * NOT the `media='print' onload="this.media='all'"` trick: that is an
+ * async-LOADING hack the theme once applied to `wp-block-library` through
+ * style_loader_tag (removed in #385; core inlines that sheet on a block theme
+ * and never reached the filter), not an enqueue argument, and it names no
+ * assets/css/ path. Both suites keep it as a negative control that grants no
+ * exemption.
  *
  * @since 2026-08-20
  */
