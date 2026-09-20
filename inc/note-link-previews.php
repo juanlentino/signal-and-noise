@@ -65,9 +65,29 @@ function sn_link_preview_target( $slug ) {
 }
 
 /**
+ * Plain text for a stamp. Titles and excerpts reach this filter carrying
+ * character references (wptexturize's &#8217;, a kses'd &amp;), and
+ * WP_HTML_Tag_Processor::set_attribute() encodes whatever it is handed, so
+ * the value is decoded ONCE here and encoded once there; a reader sees the
+ * same characters esc_attr() used to leave in place (#383).
+ *
+ * @param string $text
+ * @return string
+ */
+function sn_link_preview_text( $text ) {
+	return WP_HTML_Decoder::decode_text_node( (string) $text );
+}
+
+/**
  * the_content filter: stamp qualifying internal note anchors with
  * data-sn-preview-* attributes. Render-time only; stored content is never
  * modified.
+ *
+ * #383: the anchors are read and stamped through WP_HTML_Tag_Processor, core's
+ * own HTML API, where a regex over every `<a` open tag used to do both. The
+ * same host and slug checks run on the decoded href value; the stamp lands
+ * through set_attribute(), which places a new attribute right after the tag
+ * name and does its own escaping.
  *
  * @param string $content Rendered post content.
  * @return string
@@ -84,40 +104,37 @@ function sn_note_link_previews_filter( $content ) {
 	$current_id = (int) get_queried_object_id();
 	$home_host  = (string) wp_parse_url( home_url(), PHP_URL_HOST );
 
-	return preg_replace_callback(
-		// An anchor OPEN tag whose href is /notes/<slug>/ — optionally absolute
-		// (scheme + host captured for the same-site check), optionally carrying
-		// a fragment or query after the slug.
-		'#<a\s([^>]*?)href="(?:(https?://([^/"]+))?/notes/([a-z0-9\-]+)/?(?:[?\#][^"]*)?)"([^>]*)>#i',
-		static function ( $m ) use ( $current_id, $home_host ) {
-			list( $whole, $pre, , $host, $slug, $post_attrs ) = $m;
-			// Foreign host, or already stamped → untouched.
-			if ( '' !== $host && strtolower( $host ) !== strtolower( $home_host ) ) {
-				return $whole;
-			}
-			if ( false !== strpos( $whole, 'data-sn-preview' ) ) {
-				return $whole;
-			}
-			$target = sn_link_preview_target( $slug );
-			if ( null === $target || (int) $target->ID === $current_id ) {
-				return $whole;
-			}
-			$title = trim( (string) $target->post_title );
-			if ( '' === $title ) {
-				return $whole;
-			}
-			$meta  = sn_notes_render_date( $target ) . ' · ' . sn_notes_render_reading_time( (int) $target->ID );
-			$stamp = sprintf(
-				' data-sn-preview-title="%s" data-sn-preview-summary="%s" data-sn-preview-meta="%s"',
-				esc_attr( $title ),
-				esc_attr( sn_link_preview_summary( $target ) ),
-				esc_attr( $meta )
-			);
-			// Re-emit the open tag with the stamp appended before '>'.
-			return substr( $whole, 0, -1 ) . $stamp . '>';
-		},
-		$content
-	);
+	$tags = new WP_HTML_Tag_Processor( $content );
+	while ( $tags->next_tag( 'A' ) ) {
+		$href = $tags->get_attribute( 'href' );
+		// A /notes/<slug>/ href, optionally absolute (scheme + host captured
+		// for the same-site check), optionally carrying a fragment or query
+		// after the slug.
+		if ( ! is_string( $href ) || 1 !== preg_match( '#^(?:https?://([^/]+))?/notes/([a-z0-9\-]+)/?(?:[?\#].*)?$#i', $href, $m ) ) {
+			continue;
+		}
+		list( , $host, $slug ) = $m;
+		// Foreign host, or already stamped → untouched.
+		if ( '' !== $host && strtolower( $host ) !== strtolower( $home_host ) ) {
+			continue;
+		}
+		if ( null !== $tags->get_attribute( 'data-sn-preview-title' ) ) {
+			continue;
+		}
+		$target = sn_link_preview_target( $slug );
+		if ( null === $target || (int) $target->ID === $current_id ) {
+			continue;
+		}
+		$title = trim( (string) $target->post_title );
+		if ( '' === $title ) {
+			continue;
+		}
+		$meta = sn_notes_render_date( $target ) . ' · ' . sn_notes_render_reading_time( (int) $target->ID );
+		$tags->set_attribute( 'data-sn-preview-title', sn_link_preview_text( $title ) );
+		$tags->set_attribute( 'data-sn-preview-summary', sn_link_preview_text( sn_link_preview_summary( $target ) ) );
+		$tags->set_attribute( 'data-sn-preview-meta', $meta );
+	}
+	return $tags->get_updated_html();
 }
 
 /**

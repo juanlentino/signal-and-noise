@@ -17,6 +17,10 @@ function get_post_field( $field, $id ) { return $GLOBALS['__slugs'][ (int) $id ]
 if ( ! function_exists( 'add_filter' ) ) { function add_filter() { return true; } }
 if ( ! function_exists( 'esc_attr' ) ) { function esc_attr( $s ) { return htmlspecialchars( (string) $s, ENT_QUOTES ); } }
 
+// #383: the filter writes through WP_HTML_Tag_Processor, core's HTML API;
+// tests/lib/wp-html-api.php is where a standalone suite gets it from.
+require_once __DIR__ . '/lib/wp-html-api.php';
+snt_require_wp_html_api();
 require __DIR__ . '/../inc/blocks-view-transitions.php';
 
 $pass = 0; $fail = 0;

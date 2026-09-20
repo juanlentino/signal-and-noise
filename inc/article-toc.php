@@ -10,9 +10,10 @@
  * notes get neither. Everything except the bar is server-rendered.
  *
  * Pure helpers (sn_article_toc_apply/markup) take HTML in and return HTML out
- * with no WP query state, so tests exercise them without a WordPress load.
- * Hook registration is skipped under SN_ARTICLE_TOC_TEST (mirrors
- * inc/post-share.php's SN_POST_SHARE_TEST).
+ * with no WP query state, so tests exercise them without a WordPress load:
+ * they need only core's HTML API (tests/lib/wp-html-api.php loads it) and
+ * stub the rest. Hook registration is skipped under SN_ARTICLE_TOC_TEST
+ * (mirrors inc/post-share.php's SN_POST_SHARE_TEST).
  */
 
 if ( ! defined( 'ABSPATH' ) && ! defined( 'SN_ARTICLE_TOC_TEST' ) ) {
@@ -28,6 +29,12 @@ if ( ! defined( 'SN_ARTICLE_TOC_MIN_HEADINGS' ) ) {
  * Returns $html unchanged when fewer than SN_ARTICLE_TOC_MIN_HEADINGS H2s
  * (with non-empty text) are present.
  *
+ * #383: the headings are read and written through WP_HTML_Tag_Processor,
+ * core's own HTML API, where a regex over the rendered markup used to do
+ * both. The processor never returns null and never re-parses a tag by hand;
+ * a heading that needs an id gets it through set_attribute(), which places
+ * a new attribute right after the tag name (`<h2 id="intro" class="...">`).
+ *
  * @param string $html Rendered post content.
  * @return string
  */
@@ -36,59 +43,78 @@ function sn_article_toc_apply( $html ) {
 		return $html;
 	}
 
-	// Cheap pre-gate: bail before the callback work if there clearly aren't
-	// enough H2s. (Final gate is on non-empty headings, below.)
-	if ( ! preg_match_all( '/<h2\b[^>]*>.*?<\/h2>/is', $html, $probe )
-		|| count( $probe[0] ) < SN_ARTICLE_TOC_MIN_HEADINGS ) {
-		return $html;
-	}
-
 	$items    = array(); // [ ['id'=>, 'label'=>], ... ] in document order.
 	$used_ids = array(); // EVERY id emitted so far (author-set or generated) => true.
 
-	$new_html = preg_replace_callback(
-		'/<h2\b([^>]*)>(.*?)<\/h2>/is',
-		function ( $m ) use ( &$items, &$used_ids ) {
-			$attrs = $m[1];
-			$label = trim( wp_strip_all_tags( $m[2] ) );
-			if ( '' === $label ) {
-				return $m[0]; // skip empty headings entirely.
-			}
+	$tags = new WP_HTML_Tag_Processor( $html );
+	while ( $tags->next_tag( 'H2' ) ) {
+		// The label lives in the tokens AFTER the opener, so the opener is
+		// bookmarked, the text walked to the closer, and the processor sought
+		// back to the opener when it needs an id. seek() is the API's own
+		// answer to "read ahead, then modify an earlier tag".
+		$tags->set_bookmark( 'h2' );
+		$author_id = $tags->get_attribute( 'id' );
+		$label     = sn_article_toc_heading_text( $tags );
+		if ( '' === $label ) {
+			continue; // skip empty headings entirely.
+		}
 
-			// Respect an author-set id; otherwise slug from the label. Either
-			// way the id is recorded in the SAME shared map, so a later
-			// generated heading can never silently reuse an earlier
-			// author-set id (#330) — it bumps its own suffix instead.
-			if ( preg_match( '/\bid\s*=\s*([\'"])(.*?)\1/i', $attrs, $idm ) ) {
-				$id                = $idm[2];
-				$used_ids[ $id ]   = true;
-				$tag               = $m[0]; // already anchored — leave the tag untouched.
-			} else {
-				$base = sanitize_title( $label );
-				if ( '' === $base ) {
-					$base = 'section';
-				}
-				$id = $base;
-				$n  = 2;
-				while ( isset( $used_ids[ $id ] ) ) {
-					$id = $base . '-' . $n;
-					$n++;
-				}
-				$used_ids[ $id ] = true;
-				$tag             = '<h2' . $attrs . ' id="' . esc_attr( $id ) . '">' . $m[2] . '</h2>';
+		// Respect an author-set id; otherwise slug from the label. Either
+		// way the id is recorded in the SAME shared map, so a later
+		// generated heading can never silently reuse an earlier
+		// author-set id (#330): it bumps its own suffix instead.
+		if ( is_string( $author_id ) && '' !== $author_id ) {
+			$id = $author_id; // already anchored: the tag is left untouched.
+		} else {
+			// The label is decoded text (get_modifiable_text()), so a heading
+			// that spells out markup, "The <meta> tag", would lose its word to
+			// the strip_tags() inside sanitize_title_with_dashes() and slug to
+			// #the-tag. Re-escaped, it reaches sanitize_title() in the form the
+			// raw markup used to (&lt;meta&gt;), and core's `&.+?;` kill keeps
+			// the id origin/main gave it, #the-meta-tag.
+			$base = sanitize_title( esc_html( $label ) );
+			if ( '' === $base ) {
+				$base = 'section';
 			}
+			$id = $base;
+			$n  = 2;
+			while ( isset( $used_ids[ $id ] ) ) {
+				$id = $base . '-' . $n;
+				$n++;
+			}
+			$tags->seek( 'h2' );
+			$tags->set_attribute( 'id', $id );
+		}
+		$used_ids[ $id ] = true;
 
-			$items[] = array( 'id' => $id, 'label' => $label );
-			return $tag;
-		},
-		$html
-	);
+		$items[] = array( 'id' => $id, 'label' => $label );
+	}
 
 	if ( count( $items ) < SN_ARTICLE_TOC_MIN_HEADINGS ) {
 		return $html; // e.g. enough <h2> tags, but too many were empty.
 	}
 
-	return sn_article_toc_markup( $items ) . $new_html;
+	return sn_article_toc_markup( $items ) . $tags->get_updated_html();
+}
+
+/**
+ * The text of the H2 the processor sits on: inline tags dropped, character
+ * references decoded, trimmed. Walks the tokens to the heading's closer and
+ * leaves the processor there.
+ *
+ * @param WP_HTML_Tag_Processor $tags Positioned on an H2 opener.
+ * @return string
+ */
+function sn_article_toc_heading_text( WP_HTML_Tag_Processor $tags ) {
+	$text = '';
+	while ( $tags->next_token() ) {
+		if ( '#text' === $tags->get_token_type() ) {
+			$text .= $tags->get_modifiable_text();
+		} elseif ( 'H2' === $tags->get_tag() && $tags->is_tag_closer() ) {
+			break;
+		}
+	}
+	return trim( $text );
 }
 
 /**

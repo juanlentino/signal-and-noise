@@ -54,6 +54,10 @@ if ( ! function_exists( 'get_the_ID' ) ) {
 }
 
 // --- Load the SUT -------------------------------------------------------
+// #383: the filter writes through WP_HTML_Tag_Processor; the API is core, and
+// tests/lib/wp-html-api.php is where a standalone suite gets it from.
+require_once __DIR__ . '/lib/wp-html-api.php';
+snt_require_wp_html_api();
 require_once __DIR__ . '/../inc/blocks-view-transitions.php';
 
 // --- Harness -----------------------------------------------------------
@@ -145,6 +149,26 @@ echo "\nTest: missing post context → filter no-ops\n";
 $sample4 = '<h1>No post context</h1>';
 $out4 = sn_view_transition_post_title( $sample4, array(), new SN_Test_Block_Instance( array() ) );
 ha_eq( $sample4, $out4, 'unchanged when no postId in context and get_the_ID returns 0' );
+
+// --- Test 5b: #383, byte-identical to the regex it replaced ----------------
+// Each expected string is the byte-for-byte output of origin/main's
+// preg_match + preg_replace + substr_replace (captured 2026-09-20) for the
+// same fixture. This port keeps the bytes: a new style attribute lands right
+// after the tag name, where the regex put it, and an existing one is extended
+// with '; ' between, doubled semicolon included.
+echo "\nTest: #383 the HTML API port is byte-identical to the regex rewrite\n";
+foreach ( array(
+	'h1'     => array( 42, $sample, '<h1 style="view-transition-name: sn-note-detection-scales-the-wrong-way;" class="wp-block-post-title">Detection scales the wrong way</h1>' ),
+	'style'  => array( 44, $sample3, '<h1 style="color: red;; view-transition-name: sn-note-with-style;">Has existing style</h1>' ),
+	'islink' => array( 42, "\n<h1 class=\"wp-block-post-title\"><a href=\"https://x.test/notes/detection-scales-the-wrong-way/\" target=\"_self\" >Detection scales the wrong way</a></h1>\n", "\n<h1 style=\"view-transition-name: sn-note-detection-scales-the-wrong-way;\" class=\"wp-block-post-title\"><a href=\"https://x.test/notes/detection-scales-the-wrong-way/\" target=\"_self\" >Detection scales the wrong way</a></h1>\n" ),
+) as $label => $case ) {
+	ha_eq( $case[2], sn_view_transition_post_title( $case[1], array(), new SN_Test_Block_Instance( array( 'postId' => $case[0] ) ) ), "#383 $label: same bytes as origin/main's regex" );
+}
+// The module writes through the HTML API and nothing else: the one preg_*
+// left is the slug sanitiser on a post_name, not a rewrite of markup.
+$vt_src = (string) file_get_contents( __DIR__ . '/../inc/blocks-view-transitions.php' );
+ha_true( 0 === preg_match( '/preg_replace\s*\(\s*[\'"][^\'"]*(?:style|<)|substr_replace\s*\(|PREG_OFFSET_CAPTURE/', $vt_src ), '#383: inc/blocks-view-transitions.php carries no offset capture, no substr_replace and no preg_replace over markup' );
+ha_true( false !== strpos( $vt_src, 'new WP_HTML_Tag_Processor(' ) && false !== strpos( $vt_src, "set_attribute( 'style'" ), '#383: the style lands through set_attribute() on the processor' );
 
 // --- Test 6: reduced-motion guard intact in article.css -----------------
 // (v10.49.0: the @view-transition block moved verbatim from critical.css's

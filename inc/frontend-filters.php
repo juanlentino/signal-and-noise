@@ -4,13 +4,19 @@
  *
  * - Skip-to-content link (a11y)
  * - oEmbed filter forcing dark theme + square corners on Spotify embeds
- * - Strip WordPress + plugin generator meta tags (fingerprinting reduction)
+ *   (through WP_HTML_Tag_Processor since #383)
+ * - Strip WordPress's generator meta tag (fingerprinting reduction): the
+ *   documented way, remove_action + the_generator, and nothing else. The
+ *   page-wide output buffer that used to regex the rendered page for a
+ *   second copy went with #383: it stripped nothing (no active plugin emits
+ *   one, and /notes/ routes never ran it), and an output-buffer callback is
+ *   the one shape that can send an empty 200 when its rewrite fails, which
+ *   /provenance/ suffered twice (13.3.1). No such callback exists now.
  * - core/social-link path-relative URL shim (upstream core bug workaround)
  *
- * v10.49.0: every hook callback here is a NAMED function (they were five
- * anonymous closures) so the two behavior-bearing seams — the site-wide
- * output-buffer rewrite and the social-link URL shim — are testable.
- * Behavior is unchanged byte-for-byte; pinned in tests/frontend-filters.php.
+ * v10.49.0: every hook callback here is a NAMED function (they were
+ * anonymous closures) so the behavior-bearing seams are testable; pinned in
+ * tests/frontend-filters.php.
  *
  * @package SignalNoise
  */
@@ -29,22 +35,37 @@ function sn_skip_link() {
 /**
  * Force Spotify embeds to use dark theme and remove border-radius.
  *
+ * #383: the iframe is read and written through WP_HTML_Tag_Processor, core's
+ * own HTML API, where a regex on the src and a str_replace over the whole
+ * markup used to do it. set_attribute() runs a URI attribute through
+ * esc_url(), so the src serialises with `&#038;theme=0`; a browser reads it
+ * as `&theme=0`, the same request as before.
+ *
  * @param string $html oEmbed markup.
  * @param string $url  The embedded URL.
  * @return string
  */
 function sn_spotify_embed_dark( $html, $url ) {
-	if ( strpos( $url, 'spotify.com' ) !== false ) {
-		// Add theme=0 (dark) to iframe src
-		$html = preg_replace(
-			'/src="([^"]*spotify[^"]*)"/',
-			'src="$1&theme=0"',
-			$html
-		);
-		// Strip inline border-radius
-		$html = str_replace( 'border-radius: 12px', 'border-radius: 0', $html );
+	if ( strpos( (string) $url, 'spotify.com' ) === false ) {
+		return $html;
 	}
-	return $html;
+	$tags = new WP_HTML_Tag_Processor( (string) $html );
+	while ( $tags->next_tag( 'IFRAME' ) ) {
+		// Add theme=0 (dark) to the iframe src.
+		$src = $tags->get_attribute( 'src' );
+		if ( is_string( $src ) && false !== strpos( $src, 'spotify' ) ) {
+			$tags->set_attribute( 'src', $src . '&theme=0' );
+		}
+		// Square the inline border-radius.
+		$style = $tags->get_attribute( 'style' );
+		if ( is_string( $style ) ) {
+			$squared = str_replace( 'border-radius: 12px', 'border-radius: 0', $style );
+			if ( $squared !== $style ) {
+				$tags->set_attribute( 'style', $squared );
+			}
+		}
+	}
+	return $tags->get_updated_html();
 }
 
 /**
@@ -83,65 +104,15 @@ function sn_social_link_relative_url( $parsed_block ) {
 	return $parsed_block;
 }
 
-/**
- * Output-buffer callback: strip remaining generator meta tags from plugins
- * that emit raw <meta name="generator"> inline rather than via
- * the_generator(). Pure string → string, so it is directly testable.
- *
- * @param string $html Buffered page markup.
- * @return string
- */
-function sn_strip_generator_meta( $html ) {
-	// 13.3.1: preg_replace() returns NULL on a PCRE error (backtrack or JIT
-	// stack limit on a large page under load), and an output-buffer callback
-	// that returns NULL sends an EMPTY body with a 200. Cloudflare cached
-	// exactly that for /provenance/ twice (358 bytes, the object-cache
-	// footnote and nothing else) and served it for 90 minutes each time. A
-	// failed rewrite keeps the page; a body that is not a page is not
-	// cacheable.
-	$out = preg_replace( '/<meta name="generator"[^>]*>\n?/i', '', (string) $html );
-	if ( null === $out ) {
-		$out = (string) $html;
-	}
-	// (Under the CLI harness headers_sent() is true once anything printed; the CLI never serves a page.)
-	if ( strlen( $out ) < SN_PAGE_BODY_FLOOR_BYTES && ( 'cli' === PHP_SAPI || ! headers_sent() ) ) {
-		sn_emit_header( 'Cache-Control: no-store, max-age=0' );
-	}
-	return $out;
-}
-
-if ( ! function_exists( 'sn_emit_header' ) ) {
-	/** The one seam a CLI test can replace; header() itself is a built-in that cannot be. */
-	function sn_emit_header( $line ) {
-		header( $line );
-	}
-}
-
-/** 13.3.1: no page this theme paints is smaller; below it the body is a fault, not a page. */
-const SN_PAGE_BODY_FLOOR_BYTES = 4096;
-
-/**
- * template_redirect handler: install the generator-strip rewrite on a
- * page-wide output buffer.
- *
- * Caveat: inc/page-notes-template.php registers a template_redirect at
- * priority 0 that `include + exit`s, bypassing every later template_redirect
- * hook — including this ob_start — so this buffer does not run on /notes/
- * routes. The wp_head generator strip below (remove_action + the_generator
- * filter) is unconditional and covers those routes regardless.
- */
-function sn_generator_meta_buffer_start() {
-	ob_start( 'sn_strip_generator_meta' );
-}
-
 if ( ! defined( 'SN_FRONTEND_FILTERS_TEST' ) || ! SN_FRONTEND_FILTERS_TEST ) {
 	add_action( 'wp_body_open', 'sn_skip_link' );
 	add_filter( 'embed_oembed_html', 'sn_spotify_embed_dark', 10, 2 );
 	add_filter( 'render_block_data', 'sn_social_link_relative_url' );
-	add_action( 'template_redirect', 'sn_generator_meta_buffer_start' );
 
 	/**
-	 * Security: Strip WordPress and plugin generator meta tags.
+	 * Security: strip WordPress's generator meta tag, the documented way.
+	 * Unconditional, so it covers the /notes/ routes too (their
+	 * template_redirect include-and-exit runs before any later hook).
 	 */
 	remove_action( 'wp_head', 'wp_generator' );
 	add_filter( 'the_generator', '__return_empty_string' );
