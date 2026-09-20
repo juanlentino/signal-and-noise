@@ -16,6 +16,11 @@ nothing here is edited by hand again.
 
 All notable changes to Signal & Noise are documented here.
 
+## [13.3.2] - 2026-09-19 — the file is named, not read
+
+### Fixed
+- **The header logo pointed at a file that no longer exists.** `parts/header.html` hardcodes the logo path (deliberately: no DB read on the LCP element), and the February PNGs it named were replaced on 2026-09-19 by WebP uploads under `uploads/2026/09/`; every page rendered a broken image. The path is now the 150 and 300 WebP. The trap stays: the file is named, not read; if the logo is ever replaced again, this line moves with it.
+
 ## [13.3.1] - 2026-09-18 — a body that is not a page is not cached
 
 ### Fixed
