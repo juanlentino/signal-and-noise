@@ -94,7 +94,7 @@ foreach ( $dirs as $dir ) {
 $module = (string) file_get_contents( "$root/inc/blocks-php-only.php" );
 ok( false === strpos( $module, "register_block_type( 'signal-noise/" ), 'no block is registered from a PHP argument array any more' );
 preg_match( '/function sn_php_only_block_slugs\(\)\s*\{\s*return array\((.*?)\);/s', $module, $mm );
-preg_match_all( "/'([a-z-]+)'/", $mm[1] ?? '', $ll );
+preg_match_all( "/'([a-z][a-z0-9-]*)'/", $mm[1] ?? '', $ll );
 $listed = $ll[1]; sort( $listed ); sort( $php_only );
 ok( $listed === $php_only, 'the PHP-only registry lists exactly the autoRegister manifests' . ( $listed !== $php_only ? ' — listed: ' . implode( ',', $listed ) . ' / manifests: ' . implode( ',', $php_only ) : '' ) );
 

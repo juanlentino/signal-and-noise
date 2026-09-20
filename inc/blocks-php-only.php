@@ -2,11 +2,12 @@
 /**
  * Signal & Noise — the template furniture as PHP-only blocks (WordPress 7.0).
  *
- * Nine renderers that were [shortcodes] inside block templates become real
- * blocks: listed by name in the site editor's List View and movable — with
- * NO JavaScript build (the canvas shows nothing for a post-dependent block
- * outside a post context). WordPress 7.0's `supports.autoRegister` exposes a
- * server-rendered block to the editor from its PHP registration alone.
+ * Ten renderers that were [shortcodes] inside block templates become real
+ * blocks (nine in 13.1.0, the 404 suggestions list with #386): listed by name
+ * in the site editor's List View and movable, with NO JavaScript build (the
+ * canvas shows nothing for a post-dependent block outside a post context).
+ * WordPress 7.0's `supports.autoRegister` exposes a server-rendered block to
+ * the editor from its PHP registration alone.
  *
  * THE CONTRACT IS PARITY WITH `wpautop( shortcode )`, not the bare shortcode
  * string. Each `[sn_x]` used to sit in a `core/shortcode` block, whose own
@@ -14,7 +15,7 @@
  * always `wpautop( shortcode_output )`: a `<p>` wrapper around inline markup
  * (the chip's two `<a>`s), `<br />` for embedded newlines (the panel), a
  * trailing `\n` after block-level tags. `.sn-post-frontmatter`'s flex row is
- * styled against that `<p>` wrapper, so the eight ex-`wp:shortcode` blocks
+ * styled against that `<p>` wrapper, so the nine ex-`wp:shortcode` blocks
  * below each return `wpautop( (string) sn_x_shortcode() )` — every
  * render_callback returns the SAME string the `core/shortcode` block used to
  * produce for the same post, and tests/blocks-php-only.php pins it per
@@ -36,7 +37,7 @@
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 /**
- * The eight furniture blocks: wpautop( shortcode ), exactly what the
+ * The nine furniture blocks: wpautop( shortcode ), exactly what the
  * core/shortcode block produced — and, when the render is empty under a REST
  * request (the site editor's block-renderer preview, which has no post), a
  * labelled placeholder instead of nothing, so the block is visible and
@@ -57,14 +58,14 @@ function sn_php_block_output( $html, $label ) {
 }
 
 /**
- * The nine blocks, each from its own `blocks/<slug>/block.json` (the
+ * The ten blocks, each from its own `blocks/<slug>/block.json` (the
  * Block Editor Handbook's canonical registration; 13.2.3, replacing the PHP
  * argument arrays of 13.1.0). Metadata, supports and the render file live in
  * the manifest; `supports.autoRegister` (7.0) exposes each to the editor with
  * no JavaScript. tests/blocks-registry.php pins every manifest.
  */
 function sn_php_only_block_slugs() {
-	return array( 'prov-chip', 'prov-panel', 'related-notes', 'cited-by', 'note-share', 'note-reply', 'updated-date', 'post-pillar', 'theme-toggle' );
+	return array( 'prov-chip', 'prov-panel', 'related-notes', 'cited-by', 'note-share', 'note-reply', 'updated-date', 'post-pillar', 'theme-toggle', 'suggestions-404' );
 }
 
 function sn_register_php_only_blocks() {

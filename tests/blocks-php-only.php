@@ -1,6 +1,6 @@
 <?php
 /**
- * Tests: the nine PHP-only blocks (WordPress 7.0 supports.autoRegister) —
+ * Tests: the ten PHP-only blocks (WordPress 7.0 supports.autoRegister):
  * registered as declared, each render === its shortcode's output on the same
  * post (THE PARITY PIN), a differing block-context id is honoured.
  * @since theme v13.1.0
@@ -57,18 +57,19 @@ function sn_note_reply_shortcode()     { return '<reply:' . get_queried_object_i
 function sn_updated_date_shortcode()   { return ! empty( $GLOBALS['__empty'] ) ? '' : '<updated:' . get_post()->ID . '>'; }
 function sn_post_pillar_shortcode()    { return '<pillar:' . get_the_ID() . '>'; }
 function sn_dark_mode_toggle_markup( $atts = array() ) { return '<toggle:' . ( $atts['placement'] ?? 'footer' ) . '>'; }
+function sn_404_suggestions_shortcode() { return '<nav:404>'; } // reads no post at all: the 404 has none (#386).
 
 require_once __DIR__ . '/../inc/blocks-php-only.php';
 foreach ( $GLOBALS['__init'] as $cb ) { $cb(); }
 
-$expected = array( 'prov-chip', 'prov-panel', 'related-notes', 'cited-by', 'note-share', 'note-reply', 'updated-date', 'post-pillar', 'theme-toggle' );
+$expected = array( 'prov-chip', 'prov-panel', 'related-notes', 'cited-by', 'note-share', 'note-reply', 'updated-date', 'post-pillar', 'theme-toggle', 'suggestions-404' );
 echo "Group: registration\n";
 foreach ( $expected as $slug ) {
 	$b = $GLOBALS['__blocks'][ 'signal-noise/' . $slug ] ?? null;
 	ok( is_array( $b ) && true === ( $b['supports']['autoRegister'] ?? null ) && is_callable( $b['render_callback'] ?? null ) && 3 === ( $b['api_version'] ?? 0 ) && 'signal-noise' === ( $b['category'] ?? '' ), "signal-noise/$slug registered PHP-only (autoRegister, render_callback, api_version 3, category signal-noise)" );
 }
-ok( 9 === count( array_filter( array_keys( $GLOBALS['__blocks'] ), static fn( $n ) => str_starts_with( $n, 'signal-noise/' ) ) ), 'exactly nine blocks registered by this module' );
-foreach ( array( 'prov-chip', 'prov-panel', 'related-notes', 'cited-by', 'note-share', 'note-reply', 'updated-date', 'post-pillar' ) as $slug ) {
+ok( 10 === count( array_filter( array_keys( $GLOBALS['__blocks'] ), static fn( $n ) => str_starts_with( $n, 'signal-noise/' ) ) ), 'exactly ten blocks registered by this module' );
+foreach ( array( 'prov-chip', 'prov-panel', 'related-notes', 'cited-by', 'note-share', 'note-reply', 'updated-date', 'post-pillar', 'suggestions-404' ) as $slug ) {
 	ok( false === ( $GLOBALS['__blocks'][ 'signal-noise/' . $slug ]['supports']['multiple'] ?? true ), "$slug is single-instance" );
 }
 ok( ! isset( $GLOBALS['__blocks']['signal-noise/theme-toggle']['supports']['multiple'] ), 'theme-toggle allows two instances (header and footer)' );
@@ -76,8 +77,8 @@ ok( array( 'placement' ) === array_keys( $GLOBALS['__blocks']['signal-noise/them
 foreach ( $expected as $slug ) { ok( false === ( $GLOBALS['__blocks'][ 'signal-noise/' . $slug ]['supports']['html'] ?? true ), "$slug: html editing off" ); }
 
 echo "\nGroup: THE PARITY PIN — block output === wpautop( shortcode output ) on the same post\n";
-$blk = static function ( $slug, $ctx = array(), $attrs = array() ) { return ( $GLOBALS['__blocks'][ 'signal-noise/' . $slug ]['render_callback'] )( $attrs, '', (object) array( 'context' => $ctx ) ); };
-$pairs = array( 'prov-chip' => 'sn_prov_chip_shortcode', 'prov-panel' => 'sn_prov_panel_shortcode', 'related-notes' => 'sn_related_notes_shortcode', 'cited-by' => 'sn_cited_by_shortcode', 'note-share' => 'sn_note_share_shortcode', 'note-reply' => 'sn_note_reply_shortcode', 'updated-date' => 'sn_updated_date_shortcode', 'post-pillar' => 'sn_post_pillar_shortcode' );
+$blk = static function ( $slug, $ctx = array(), $attrs = array() ) { $cb = $GLOBALS['__blocks'][ 'signal-noise/' . $slug ]['render_callback'] ?? null; return $cb ? $cb( $attrs, '', (object) array( 'context' => $ctx ) ) : null; }; // null for an unregistered block, so a missing block is a FAIL, not a fatal.
+$pairs = array( 'prov-chip' => 'sn_prov_chip_shortcode', 'prov-panel' => 'sn_prov_panel_shortcode', 'related-notes' => 'sn_related_notes_shortcode', 'cited-by' => 'sn_cited_by_shortcode', 'note-share' => 'sn_note_share_shortcode', 'note-reply' => 'sn_note_reply_shortcode', 'updated-date' => 'sn_updated_date_shortcode', 'post-pillar' => 'sn_post_pillar_shortcode', 'suggestions-404' => 'sn_404_suggestions_shortcode' );
 foreach ( $pairs as $slug => $fn ) {
 	ok( $blk( $slug, array( 'postId' => 7 ) ) === wpautop( $fn() ), "$slug === wpautop( {$fn}() ) when context is the queried post" );
 	ok( $blk( $slug ) === wpautop( $fn() ), "$slug === wpautop( {$fn}() ) with no context at all (a template outside any loop)" );
@@ -96,20 +97,21 @@ unset( $GLOBALS['__empty'] );
 echo "\nGroup: the templates place the blocks, not the shortcodes\n";
 $root  = dirname( __DIR__ );
 $files = array_merge( glob( $root . '/templates/*.html' ), glob( $root . '/parts/*.html' ) );
-$migrated = array( 'sn_prov_chip', 'sn_prov_panel', 'sn_related_notes', 'sn_cited_by', 'sn_note_share', 'sn_note_reply', 'sn_updated_date', 'sn_post_pillar', 'sn_theme_toggle' );
+$migrated = array( 'sn_prov_chip', 'sn_prov_panel', 'sn_related_notes', 'sn_cited_by', 'sn_note_share', 'sn_note_reply', 'sn_updated_date', 'sn_post_pillar', 'sn_theme_toggle', 'sn_404_suggestions' );
 $left = array(); $placed = array();
 foreach ( $files as $f ) {
 	$h = (string) file_get_contents( $f ); $rel = str_replace( $root . '/', '', $f );
 	foreach ( $migrated as $s ) { if ( false !== strpos( $h, '[' . $s ) ) { $left[] = "$rel [$s"; } }
-	if ( preg_match_all( '/<!-- wp:signal-noise\/([a-z-]+)( \{[^}]*\})? \/-->/', $h, $m ) ) { foreach ( $m[1] as $n ) { $placed[ $n ] = ( $placed[ $n ] ?? 0 ) + 1; } }
+	if ( preg_match_all( '/<!-- wp:signal-noise\/([a-z][a-z0-9-]*)( \{[^}]*\})? \/-->/', $h, $m ) ) { foreach ( $m[1] as $n ) { $placed[ $n ] = ( $placed[ $n ] ?? 0 ) + 1; } }
 }
 ok( array() === $left, 'no template or part emits a migrated shortcode' . ( $left ? ' — LEFT: ' . implode( ', ', $left ) : '' ) );
-$want = array( 'prov-chip' => 1, 'prov-panel' => 1, 'related-notes' => 1, 'cited-by' => 1, 'note-share' => 1, 'note-reply' => 1, 'updated-date' => 1, 'post-pillar' => 1, 'theme-toggle' => 2 );
+$want = array( 'prov-chip' => 1, 'prov-panel' => 1, 'related-notes' => 1, 'cited-by' => 1, 'note-share' => 1, 'note-reply' => 1, 'updated-date' => 1, 'post-pillar' => 1, 'theme-toggle' => 2, 'suggestions-404' => 1 );
 ksort( $want ); ksort( $placed );
 ok( $want === $placed, 'each block is placed exactly where its shortcode was (toggle twice): ' . json_encode( $placed ) );
 ok( false !== strpos( (string) file_get_contents( $root . '/parts/header.html' ), '<!-- wp:signal-noise/theme-toggle {"placement":"header"} /-->' ), 'the header toggle carries placement:header' );
 ok( false !== strpos( (string) file_get_contents( $root . '/parts/footer.html' ), '<!-- wp:signal-noise/theme-toggle /-->' ), 'the footer toggle carries no attribute (default footer)' );
 ok( false !== strpos( (string) file_get_contents( $root . '/templates/single.html' ), '[sn_reading_path]' ), 'the PLUGIN\'s [sn_reading_path] stays a shortcode — not this arc\'s' );
+ok( false === strpos( (string) file_get_contents( $root . '/templates/404.html' ), 'wp:shortcode' ), 'the 404 template carries no core/shortcode block at all (#386: the suggestions slot was the last theme-owned one; the plugin\'s [sn_reading_path] in single.html is not this theme\'s)' );
 // Palette: every block this module registers is in the editor allowlist.
 $palette = (string) file_get_contents( $root . '/inc/editor-block-palette.php' );
 $missing = array_filter( $expected, static fn( $s ) => false === strpos( $palette, "'signal-noise/$s'" ) );

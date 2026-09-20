@@ -190,6 +190,7 @@ function sn_theme_allowed_blocks( $allowed, $context ) {
 		'signal-noise/updated-date',
 		'signal-noise/post-pillar',
 		'signal-noise/theme-toggle',
+		'signal-noise/suggestions-404',
 	);
 
 	return array_values( array_unique( array_merge( $used, $authoring, $contact, $companion, $theme_blocks ) ) );
