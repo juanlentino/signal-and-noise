@@ -140,16 +140,10 @@ $dequeued_handles = array_map( function( $d ) { return $d[1]; }, $GLOBALS['__deq
 ok( ! in_array( 'contact-form-7', $dequeued_handles, true ), 'no callback dequeues the contact-form-7 handle' );
 ok( ! in_array( 'wpcf7-recaptcha', $dequeued_handles, true ), 'no callback dequeues the wpcf7-recaptcha handle' );
 
-// ── 3. style_loader_tag defer list dropped contact-form-7 but kept wp-block-library ──
-$run_defer = function( $handle ) {
-	$html = "<link rel='stylesheet' id='" . $handle . "-css' href='x.css' media='all' />";
-	foreach ( $GLOBALS['__filters']['style_loader_tag'] ?? array() as $cb ) {
-		$html = call_user_func( $cb, $html, $handle );
-	}
-	return $html;
-};
-ok( strpos( $run_defer( 'contact-form-7' ), "media='print'" ) === false, 'contact-form-7 CSS is no longer deferred (dropped from defer list)' );
-ok( strpos( $run_defer( 'wp-block-library' ), "media='print'" ) !== false, 'wp-block-library CSS is still deferred (regression guard for the kept entry)' );
+// ── 3. No style_loader_tag defer list exists for a CF7 handle to creep back into ──
+//      (#385 removed the list itself: core inlines wp-block-library on a block
+//      theme and never reached the filter for it.)
+ok( empty( $GLOBALS['__filters']['style_loader_tag'] ), 'no style_loader_tag filter is registered (the defer list is gone, so no handle is deferred)' );
 
 // ── 4. Editor-style list no longer references the deleted forms.css ──
 $setup_src = (string) file_get_contents( $theme_root . '/inc/setup.php' );

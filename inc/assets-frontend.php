@@ -14,8 +14,9 @@
  *     fallback (the custom.css this header once described was retired long
  *     ago — the combined sn-styles file is the deferred-payload successor)
  *   - Bebas Neue @font-face inlined and preloaded; browser uses it immediately
- *   - wp-block-library + translatepress CSS converted to media="print"
- *     onload swap so they don't render-block
+ *   - core's per-block CSS inlined by core itself, with the budget raised to
+ *     64 KB (styles_inline_size_limit) so the navigation sheet lands in the
+ *     same inline block instead of a separate render-blocking request
  *   - Script modules from @wordpress/* tagged fetchpriority="low"
  *
  * @package SignalNoise
@@ -163,21 +164,20 @@ add_action( 'wp_head', function() {
 }, 2 );
 
 /**
- * Performance: Defer render-blocking WordPress core CSS.
- * Converts wp-block-library from render-blocking to non-blocking using
- * the media='print' onload pattern. Saves ~300ms on mobile.
+ * Performance: inline the navigation block's stylesheet with the rest of
+ * core's block CSS.
+ *
+ * On a block theme core inlines each block's stylesheet, smallest first, up
+ * to the byte budget `styles_inline_size_limit` exposes (40,000 since 6.9;
+ * wp_maybe_inline_styles() in wp-includes/script-loader.php). The navigation
+ * sheet is 20,776 bytes and the base set measured 23,363 on the home page and
+ * 21,580 on a Note (2026-09-20), so it was the one sheet that overflowed the
+ * budget and fell out to a render-blocking <link>, the request 10.38.1 saw
+ * poisoned at the edge and papered over with a copy of core's rules in
+ * critical.css. At 64 KB every measured page inlines it; there is no nav
+ * request left to drop, and the copy is gone.
  */
-add_filter( 'style_loader_tag', function( $html, $handle ) {
-	$defer_handles = array( 'wp-block-library', 'trp-language-switcher' );
-	if ( in_array( $handle, $defer_handles, true ) ) {
-		$html = str_replace(
-			" media='all'",
-			" media='print' onload=\"this.media='all'\"",
-			$html
-		);
-	}
-	return $html;
-}, 10, 2 );
+add_filter( 'styles_inline_size_limit', static fn() => 65536 );
 
 /**
  * Performance: Add fetchpriority=low to Interactivity API script modules.
