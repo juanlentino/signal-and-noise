@@ -18,7 +18,10 @@ function delete_term_meta( $id, $key ) { unset( $GLOBALS['K']['meta'][ (int) $id
 function get_term( $id, $tax = '' ) { return $GLOBALS['K']['terms'][ (int) $id ] ?? null; }
 function get_terms( $a = array() ) { return array_values( $GLOBALS['K']['terms'] ); }
 function is_wp_error( $t ) { return false; }
-function current_user_can( $c ) { return true; }
+$GLOBALS['K']['can'] = true; $GLOBALS['K']['nonce_ok'] = true;
+function current_user_can( $c, $id = 0 ) { $GLOBALS['K']['cap_asked'] = array( $c, $id ); return $GLOBALS['K']['can']; }
+function wp_verify_nonce( $n, $a ) { $GLOBALS['K']['nonce_asked'][] = $a; return $GLOBALS['K']['nonce_ok'] && 'ok' === $n; }
+function sanitize_text_field( $s ) { return is_string( $s ) ? trim( $s ) : ''; }
 function esc_attr( $s ) { return htmlspecialchars( (string) $s, ENT_QUOTES ); }
 function esc_html( $s ) { return htmlspecialchars( (string) $s, ENT_QUOTES ); }
 function esc_html__( $s, $d = null ) { return esc_html( $s ); }
@@ -51,9 +54,22 @@ ok( str_contains( $h, 'value="" selected="selected"' ), 'C3 an unfiled tag shows
 ok( str_contains( $h, 'Why it’t built' ) === false && str_contains( $h, 'built' ), 'C4 the group title is decoded from its entity, not printed raw' );
 
 // D: save.
+$_POST['_wpnonce'] = 'ok';
 $_POST[ SN_TAG_GROUP_META ] = 'built';
 sn_tag_group_save( 7 );
 ok( 'built' === ( $GLOBALS['K']['meta'][7][ SN_TAG_GROUP_META ] ?? null ), 'D1 the posted group is stored' );
+ok( array( 'edit_term', 7 ) === $GLOBALS['K']['cap_asked'] && in_array( 'update-tag_7', $GLOBALS['K']['nonce_asked'], true ), 'D1b the handler asks edit_term on the tag and verifies the tag form nonce itself' );
+// The review's case: a Contributor minting a tag through REST or tax_input with their $_POST in scope.
+$GLOBALS['K']['can'] = false; $_POST[ SN_TAG_GROUP_META ] = 'record';
+sn_tag_group_save( 7 );
+ok( 'built' === ( $GLOBALS['K']['meta'][7][ SN_TAG_GROUP_META ] ?? null ), 'D1c without edit_term nothing is written' );
+$GLOBALS['K']['can'] = true; $_POST['_wpnonce'] = 'forged';
+sn_tag_group_save( 7 );
+ok( 'built' === ( $GLOBALS['K']['meta'][7][ SN_TAG_GROUP_META ] ?? null ), 'D1d without the tag form nonce nothing is written' );
+unset( $_POST['_wpnonce'] ); $_POST['_wpnonce_add-tag'] = 'ok';
+sn_tag_group_save( 7 );
+ok( 'record' === ( $GLOBALS['K']['meta'][7][ SN_TAG_GROUP_META ] ?? null ) && in_array( 'add-tag', $GLOBALS['K']['nonce_asked'], true ), 'D1e the add form nonce is accepted too' );
+unset( $_POST['_wpnonce_add-tag'] ); $_POST['_wpnonce'] = 'ok';
 $_POST[ SN_TAG_GROUP_META ] = 'nonsense';
 sn_tag_group_save( 7 );
 ok( ! isset( $GLOBALS['K']['meta'][7][ SN_TAG_GROUP_META ] ), 'D2 an unknown value deletes the meta (unfiled), never stores junk' );

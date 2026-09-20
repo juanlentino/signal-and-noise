@@ -88,22 +88,34 @@ function sn_tag_group_edit_field( $term ) {
 }
 
 /**
- * Save on the core hooks: core has verified the form's nonce and the
- * capability before either fires. Absent from the request (a REST or
- * programmatic term write) leaves the meta alone.
+ * Save on the core hooks, with the gate the meta declares checked HERE.
+ *
+ * created_post_tag fires from wp_insert_term() on every path that mints a
+ * tag, not only the tag form: a Contributor creating a tag through
+ * POST /wp/v2/tags with a form-encoded body, or through tax_input on a post
+ * save, runs with their $_POST in scope. So the handler verifies the tag
+ * form's own nonce (add-tag on create, update-tag_<id> on edit) and the
+ * edit_term capability (manage_categories for post_tag) before writing, and
+ * leaves the meta alone on any other path. The REST `meta` field has its own
+ * gate (edit_term_meta plus the auth_callback above).
  *
  * @param int $term_id
  */
 function sn_tag_group_save( $term_id ) {
-	if ( ! isset( $_POST[ SN_TAG_GROUP_META ] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing -- core verified the term form's nonce before this hook.
+	$term_id = (int) $term_id;
+	if ( ! isset( $_POST[ SN_TAG_GROUP_META ] ) || ! current_user_can( 'edit_term', $term_id ) ) {
 		return;
 	}
-	$gid = sn_tag_group_sanitize( sanitize_key( wp_unslash( $_POST[ SN_TAG_GROUP_META ] ) ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+	$nonce = sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ?? ( $_POST['_wpnonce_add-tag'] ?? '' ) ) );
+	if ( ! wp_verify_nonce( $nonce, 'update-tag_' . $term_id ) && ! wp_verify_nonce( $nonce, 'add-tag' ) ) {
+		return;
+	}
+	$gid = sn_tag_group_sanitize( sanitize_key( wp_unslash( $_POST[ SN_TAG_GROUP_META ] ) ) );
 	if ( '' === $gid ) {
-		delete_term_meta( (int) $term_id, SN_TAG_GROUP_META );
+		delete_term_meta( $term_id, SN_TAG_GROUP_META );
 		return;
 	}
-	update_term_meta( (int) $term_id, SN_TAG_GROUP_META, $gid );
+	update_term_meta( $term_id, SN_TAG_GROUP_META, $gid );
 }
 
 /**
