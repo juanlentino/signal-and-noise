@@ -29,9 +29,10 @@ $colophon = array_values( array_filter( $ct, fn( $t ) => ( $t['name'] ?? '' ) ==
 ok( count( $colophon ) === 0, 'theme.json customTemplates has no page-colophon entry' );
 ok( is_array( $ct ) && count( $ct ) > 0, 'other customTemplates entries survive the removal' );
 
-// The route itself still exists site-side: the footer keeps linking /colophon.
-$footer = file_get_contents( "$root/parts/footer.html" );
-ok( strpos( $footer, '/colophon' ) !== false, 'footer links to /colophon (the CMS-owned page)' );
+// The route itself still exists site-side: the footer keeps linking /colophon
+// (#388: the meta-nav is the signal-noise/meta-nav block; its markup lives in render.php).
+$footer_nav = file_get_contents( "$root/blocks/meta-nav/render.php" );
+ok( strpos( $footer_nav, 'href="/colophon/"' ) !== false, 'footer meta-nav links to /colophon (the CMS-owned page)' );
 
 // No stray wp:pattern reference to the removed slug anywhere in templates/parts.
 $stray = false;

@@ -62,10 +62,12 @@ function sn_php_block_output( $html, $label ) {
  * Block Editor Handbook's canonical registration; 13.2.3, replacing the PHP
  * argument arrays of 13.1.0). Metadata, supports and the render file live in
  * the manifest; `supports.autoRegister` (7.0) exposes each to the editor with
- * no JavaScript. tests/blocks-registry.php pins every manifest.
+ * no JavaScript. tests/blocks-registry.php pins every manifest. The tenth,
+ * meta-nav, was never a shortcode: it is the footer's wp:html icon nav as a
+ * named block, byte-identical, never autop'd (#388).
  */
 function sn_php_only_block_slugs() {
-	return array( 'prov-chip', 'prov-panel', 'related-notes', 'cited-by', 'note-share', 'note-reply', 'updated-date', 'post-pillar', 'theme-toggle', 'suggestions-404' );
+	return array( 'prov-chip', 'prov-panel', 'related-notes', 'cited-by', 'note-share', 'note-reply', 'updated-date', 'post-pillar', 'theme-toggle', 'suggestions-404', 'meta-nav' );
 }
 
 function sn_register_php_only_blocks() {

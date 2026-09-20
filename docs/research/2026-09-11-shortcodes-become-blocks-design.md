@@ -196,6 +196,24 @@ Task 8 runs.**
 would still need the `wp:html` it has today, now with a wrapper div inside
 it. Nothing gained, parity lost. The footer keeps its inline SVGs.
 
+**Superseded in part (2026-09-20, #388).** The drop above stands for the
+Icon-block half: the Icon block still carries no link (Gutenberg #79057,
+open). The registry half was never blocked by the wrapper, and the nav
+itself did not need it: the footer nav is now the `signal-noise/meta-nav`
+PHP-only block (`blocks/meta-nav/`, the tenth slug in
+`inc/blocks-php-only.php`), rendering the `wp:html` block's inner content
+byte for byte, with the five glyphs still literals in its `render.php`.
+Registering them is gated on two things read against the installed 7.1
+(`~/.wp-now/wordpress-versions/7.1`): `WP_Icons_Registry::sanitize_icon_content()`
+runs a fixed `wp_kses` allowlist (`svg`, `path`, `polygon`; no stroke
+attribute anywhere, no `circle`), so the five stroked marks registered as
+they are come back as unfilled paths with the clock face and the figure's
+head gone; and `wp_get_icon()` is a fatal at the theme's `Requires at
+least: 7.0` (the function is `@since 7.1.0`). The redraw as filled paths with a pixel acceptance, and the
+floor (7.1) or a `function_exists` guard, are the owner's call. When they
+land, each `<svg>` in `render.php` becomes one `wp_get_icon()` call and
+nothing else moves.
+
 ## Tests (all standalone, in the sweep)
 
 - `tests/block-bindings-templates.php` — parse-level pin: every
