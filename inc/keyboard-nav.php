@@ -37,7 +37,7 @@ function sn_keyboard_nav_enabled() {
  * Singular-post-only: j/k traverse the post-closing prev/next links, which
  * only exist on single notes. The script self-gates further (the cheat-sheet
  * only builds on demand). Named (not a closure) so the conditional wiring is
- * testable — mirrors sn_enqueue_note_share / sn_enqueue_article_toc.
+ * testable; mirrors sn_enqueue_discography / sn_enqueue_article_toc.
  */
 function sn_keyboard_nav_enqueue() {
 	if ( ! sn_keyboard_nav_enabled() ) {

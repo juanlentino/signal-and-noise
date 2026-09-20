@@ -134,21 +134,27 @@ function sn_note_reply_render_block_bridge( $block_content, $block ) {
 }
 
 /**
- * Enqueue the alias-assembly script on single notes. Same handle as the
- * /contact enqueue (inc/contact-email.php) so the two gates can never
- * double-load it; footer + deferred, and without JS the [at]/[dot] fallback
- * stays readable — just not clickable.
+ * Register the alias-assembly script; blocks/note-reply/block.json names the
+ * handle as its `viewScript` (#384). Core enqueues a block's view script
+ * when the block renders (wp-includes/class-wp-block.php, render()), so the
+ * script loads wherever templates/single.html serves parts/post-closing.html:
+ * notes, and any singular with no template of its own (attachment pages
+ * today), where sn_note_reply_shortcode() returns '' and the script no-ops
+ * without its row. The `is_singular( 'post' )` gate that used to sit here
+ * repeated that shortcode's own test.
+ * Same handle as the /contact enqueue (inc/contact-email.php), which stays
+ * (that page is not a block), so the two can never double-load it; footer +
+ * deferred, and without JS the [at]/[dot] fallback stays readable, just not
+ * clickable. tests/block-view-scripts.php pins the handle and its arguments.
  */
-function sn_note_reply_enqueue() {
-	if ( is_singular( 'post' ) ) {
-		wp_enqueue_script(
-			'sn-contact-aliases',
-			get_theme_file_uri( 'assets/js/contact-aliases.js' ),
-			array(),
-			sn_asset_ver( 'assets/js/contact-aliases.js' ),
-			array( 'in_footer' => true, 'strategy' => 'defer' )
-		);
-	}
+function sn_note_reply_register_script() {
+	wp_register_script(
+		'sn-contact-aliases',
+		get_theme_file_uri( 'assets/js/contact-aliases.js' ),
+		array(),
+		sn_asset_ver( 'assets/js/contact-aliases.js' ),
+		array( 'in_footer' => true, 'strategy' => 'defer' )
+	);
 }
 
 // Skip WP registration under the standalone test harness (the helpers are
@@ -156,5 +162,5 @@ function sn_note_reply_enqueue() {
 if ( ! defined( 'SN_NOTE_REPLY_TEST' ) || ! SN_NOTE_REPLY_TEST ) {
 	add_shortcode( 'sn_note_reply', 'sn_note_reply_shortcode' );
 	add_filter( 'render_block', 'sn_note_reply_render_block_bridge', 10, 2 );
-	add_action( 'wp_enqueue_scripts', 'sn_note_reply_enqueue', 30 );
+	add_action( 'init', 'sn_note_reply_register_script' );
 }
