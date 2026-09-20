@@ -27,6 +27,9 @@ function ok( $c, $m ) { global $pass, $fail; if ( $c ) { ++$pass; echo "PASS: $m
 $root = dirname( __DIR__ );
 $css  = '';
 foreach ( glob( $root . '/assets/css/*.css' ) as $f ) { $css .= file_get_contents( $f ); }
+// A block's own sheet (block.json `style`) is theme CSS too: the sidenote's
+// rules moved there in #391 and paint on every page that renders the block.
+foreach ( glob( $root . '/blocks/*/style.css' ) as $f ) { $css .= file_get_contents( $f ); }
 $css .= file_get_contents( $root . '/style.css' );
 // Comments stripped BEFORE scanning: a selector named in a comment is not a
 // selector that paints, and the lead's own comment names `.sn-lead`.

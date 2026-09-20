@@ -7,18 +7,17 @@
  * Keywords: sidenote, marginalia, footnote, tufte, annotation
  * Viewport Width: 1400
  *
- * Added in theme v9.3.0 — part of the long-form post layout minor.
- * The CSS in assets/css/critical.css handles the float-right at wide /
- * inline-below at narrow split.
+ * Added in theme v9.3.0 as part of the long-form post layout minor.
  *
- * Superseded by the signal-noise/sidenote BLOCK as of v9.11.0; retained as a
- * no-block fallback / scaffold.
+ * Superseded by the signal-noise/sidenote BLOCK as of v9.11.0. Since #391 the
+ * pattern inserts that block: the float and its narrow fallback live in
+ * blocks/sidenote/style.css and load only where the block renders, so a bare
+ * paragraph carrying the class would style on no page. No live page used the
+ * paragraph form when the pattern was re-pointed.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 ?>
-<!-- wp:paragraph {"className":"sn-sidenote"} -->
-<p class="sn-sidenote">A brief author commentary that runs alongside the relevant paragraph at wide viewports, or inline below at narrower viewports.</p>
-<!-- /wp:paragraph -->
+<!-- wp:signal-noise/sidenote {"content":"A brief author commentary that runs alongside the relevant paragraph at wide viewports, or inline below at narrower viewports."} /-->
