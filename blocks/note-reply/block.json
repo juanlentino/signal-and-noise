@@ -12,5 +12,6 @@
 		"html": false,
 		"multiple": false
 	},
+	"viewScript": "sn-contact-aliases",
 	"render": "file:./render.php"
 }

@@ -12,5 +12,6 @@
 		"html": false,
 		"multiple": false
 	},
+	"viewScript": "sn-note-share",
 	"render": "file:./render.php"
 }

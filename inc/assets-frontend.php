@@ -247,27 +247,35 @@ add_action( 'wp_enqueue_scripts', 'sn_enqueue_print_styles', 30 );
 /**
  * v9.10.0: copy-permalink + native Web Share progressive enhancement.
  *
- * Only loads on single notes where the [sn_note_share] row is rendered
- * (parts/post-closing.html). The share buttons are server-rendered and
- * inert without this JS — the script wires clipboard copy and reveals the
- * native SHARE button when navigator.share exists. Footer + defer so it
- * never blocks first paint. Mirrors the footnotes-popover conditional
- * enqueue above.
+ * REGISTERED, not enqueued (#384). blocks/note-share/block.json names this
+ * handle as its `viewScript`, and core enqueues a block's view script when
+ * the block renders (wp-includes/class-wp-block.php, render()), so the
+ * script loads wherever the block sits in a template: parts/post-closing.html,
+ * which templates/single.html carries for every singular it serves. That
+ * is notes, and any singular with no template of its own (attachment pages
+ * today); there the block's render callback (inc/post-share.php) returns ''
+ * and core still enqueues the handle, and the script no-ops without its
+ * row. The `is_singular( 'post' )` gate that used to live here repeated
+ * the renderer's predicate; the manifest is the one place the dependency
+ * is declared now.
+ * The share buttons are server-rendered and inert without this JS: the
+ * script wires clipboard copy and reveals the native SHARE button when
+ * navigator.share exists. Footer so it never blocks first paint.
  *
- * Named (not an anonymous closure) so the conditional wiring is testable.
+ * Named (not an anonymous closure) so the wiring is testable
+ * (tests/block-view-scripts.php pins the handle, its arguments and the
+ * absence of any page gate).
  */
-function sn_enqueue_note_share() {
-	if ( is_singular( 'post' ) ) {
-		wp_enqueue_script(
-			'sn-note-share',
-			get_theme_file_uri( 'assets/js/note-share.js' ),
-			array(),
-			sn_asset_ver( 'assets/js/note-share.js' ),
-			true
-		);
-	}
+function sn_register_note_share() {
+	wp_register_script(
+		'sn-note-share',
+		get_theme_file_uri( 'assets/js/note-share.js' ),
+		array(),
+		sn_asset_ver( 'assets/js/note-share.js' ),
+		true
+	);
 }
-add_action( 'wp_enqueue_scripts', 'sn_enqueue_note_share', 30 );
+add_action( 'init', 'sn_register_note_share' );
 
 /**
  * v9.13.0: discography click-to-play lazy Spotify embed (/music only).
@@ -280,7 +288,7 @@ add_action( 'wp_enqueue_scripts', 'sn_enqueue_note_share', 30 );
  * + the page's Muso CTA still work) — pure progressive enhancement.
  *
  * Named (not an anonymous closure) so the conditional wiring is testable —
- * mirrors sn_enqueue_note_share above.
+ * mirrors sn_enqueue_print_styles above.
  */
 function sn_enqueue_discography() {
 	if ( is_page( 'music' ) ) {
@@ -303,7 +311,7 @@ add_action( 'wp_enqueue_scripts', 'sn_enqueue_discography', 30 );
  * <nav class="sn-article-toc"> (inc/article-toc.php) — short notes that get
  * no TOC also get no bar. Pure progressive enhancement: the TOC and its anchor
  * links work with this script absent. Named (not a closure) and mirrors
- * sn_enqueue_note_share above.
+ * sn_enqueue_discography above.
  */
 function sn_enqueue_article_toc() {
 	if ( is_singular( 'post' ) ) {

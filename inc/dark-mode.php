@@ -182,25 +182,30 @@ function sn_dark_mode_toggle_markup( $atts = array() ) {
 add_shortcode( 'sn_theme_toggle', 'sn_dark_mode_toggle_markup' );
 
 /**
- * Enqueue the toggle behaviour.
+ * Register the toggle behaviour; blocks/theme-toggle/block.json names the
+ * handle as its `viewScript` (#384).
  *
- * Deferred and footer-loaded: unlike the head snippet above, nothing here is
- * needed before paint. The button is hidden until this runs, so a slow or
- * failed load degrades to "no toggle", never to a dead control.
+ * Registered, not enqueued: core enqueues a block's view script when the
+ * block renders (wp-includes/class-wp-block.php, render()), and the toggle
+ * block sits in parts/header.html and parts/footer.html, so the script still
+ * reaches every page. What moved is where that is declared: the manifest,
+ * not an unconditional enqueue here. Deferred and footer-loaded: unlike the
+ * head snippet above, nothing here is needed before paint. The button is
+ * hidden until this runs, so a slow or failed load degrades to "no toggle",
+ * never to a dead control. tests/block-view-scripts.php pins the handle and
+ * its arguments.
  */
-add_action(
-	'wp_enqueue_scripts',
-	function () {
-		wp_enqueue_script(
-			'sn-dark-mode-toggle',
-			get_theme_file_uri( 'assets/js/dark-mode-toggle.js' ),
-			array(),
-			sn_asset_ver( 'assets/js/dark-mode-toggle.js' ),
-			array(
-				'in_footer' => true,
-				'strategy'  => 'defer',
-			)
-		);
-	}
-);
+function sn_dark_mode_register_toggle_script() {
+	wp_register_script(
+		'sn-dark-mode-toggle',
+		get_theme_file_uri( 'assets/js/dark-mode-toggle.js' ),
+		array(),
+		sn_asset_ver( 'assets/js/dark-mode-toggle.js' ),
+		array(
+			'in_footer' => true,
+			'strategy'  => 'defer',
+		)
+	);
+}
+add_action( 'init', 'sn_dark_mode_register_toggle_script' );
 

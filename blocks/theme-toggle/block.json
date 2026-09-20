@@ -26,5 +26,6 @@
 			"placement": "footer"
 		}
 	},
+	"viewScript": "sn-dark-mode-toggle",
 	"render": "file:./render.php"
 }
