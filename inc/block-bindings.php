@@ -1,11 +1,14 @@
 <?php
 /**
- * Signal & Noise — Block Bindings source: signal-noise/post-field.
+ * Signal & Noise: the Block Bindings sources signal-noise/post-field and
+ * signal-noise/site-field.
  *
- * Read-only source resolving reading_time|pillar|canonical|og_title for the
- * current post. PHP-only registration → read-only in the editor (acceptable).
- * All plugin reads function_exists-guarded; returns null to keep the block's
- * fallback markup when a value is genuinely absent.
+ * post-field is a read-only source resolving reading_time|pillar|canonical|
+ * og_title for the current post. site-field resolves site-level lines with no
+ * post in them (today one key, `copyright`, the footer line; it replaced the
+ * inline [current_year] token, #389). PHP-only registration → read-only in the
+ * editor (acceptable). All plugin reads function_exists-guarded; returns null
+ * to keep the block's fallback markup when a value is genuinely absent.
  *
  * @package SignalNoise
  * @since 9.11.0
@@ -71,7 +74,31 @@ function sn_post_field_binding_value( $source_args, $block_instance = null, $att
 }
 
 /**
- * Register the signal-noise/post-field block bindings source on init.
+ * get_value_callback for the signal-noise/site-field source.
+ *
+ * `copyright` is the whole footer line, not the year: a paragraph binding
+ * replaces the block's entire `content`, so the key has to carry the text the
+ * `<p>` used to hold around the token. The year comes from the same helper
+ * the [current_year] shortcode uses (inc/setup.php), so the two never drift.
+ *
+ * @since 13.5.0 (#389)
+ * @param array      $source_args    Binding args; expects ['key' => ...].
+ * @param mixed|null $block_instance The block instance (unused).
+ * @param string     $attribute_name The bound attribute name (unused).
+ * @return string|null Resolved value, or null to keep the block fallback.
+ */
+function sn_site_field_binding_value( $source_args, $block_instance = null, $attribute_name = '' ) {
+	$key = isset( $source_args['key'] ) ? (string) $source_args['key'] : '';
+	switch ( $key ) {
+		case 'copyright':
+			return '© Juan Lentino ' . signal_noise_current_year();
+	}
+	return null;
+}
+
+/**
+ * Register the signal-noise/post-field and signal-noise/site-field block
+ * bindings sources on init.
  */
 function sn_register_post_field_binding() {
 	register_block_bindings_source(
@@ -80,6 +107,13 @@ function sn_register_post_field_binding() {
 			'label'              => __( 'Signal & Noise: Post Field', 'signal-and-noise' ),
 			'get_value_callback' => 'sn_post_field_binding_value',
 			'uses_context'       => array( 'postId', 'postType' ),
+		)
+	);
+	register_block_bindings_source(
+		'signal-noise/site-field',
+		array(
+			'label'              => __( 'Signal & Noise: Site Field', 'signal-and-noise' ),
+			'get_value_callback' => 'sn_site_field_binding_value',
 		)
 	);
 }

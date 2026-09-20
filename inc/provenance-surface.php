@@ -19,12 +19,10 @@
  * plugin helpers themselves return '' for non-Notes / Notes without a chain,
  * so the shortcodes stay inert off a provenance-bearing Note.
  *
- * `core/shortcode` only wpautop()s its content — it does NOT run do_shortcode
- * on block-template output (verified vs WP trunk wp-includes/blocks/shortcode.php).
- * The render_block bridge below resolves the tokens inside the block template
- * parts, mirroring sn_related_notes_render_block_bridge (inc/related-notes.php):
- * the shortcode_unautop() strips the invalid <p> that wpautop() wraps around
- * the (block-level) panel token before we resolve it.
+ * Placed by the signal-noise/prov-chip and prov-panel PHP-only blocks since
+ * 13.1.0 (inc/blocks-php-only.php); the shortcodes stay registered for post
+ * content. The global render_block bridge that once re-resolved the tokens
+ * went in #389 (no template carries either token).
  *
  * @package SignalNoise
  * @since 10.30.0
@@ -63,30 +61,9 @@ function sn_prov_panel_shortcode() {
 		: '';
 }
 
-/**
- * Resolve [sn_prov_chip] / [sn_prov_panel] inside block template parts.
- *
- * core/shortcode only wpautop()s its content — it never runs do_shortcode on
- * block-template output. Mirrors sn_related_notes_render_block_bridge
- * (inc/related-notes.php): shortcode_unautop() strips the <p> that wpautop()
- * wraps around the block-level panel token before we resolve it.
- *
- * @param string $block_content Rendered block HTML.
- * @param array  $block         Parsed block (unused).
- * @return string
- */
-function sn_provenance_surface_render_block_bridge( $block_content, $block ) {
-	if ( false !== strpos( $block_content, '[sn_prov_chip' )
-		|| false !== strpos( $block_content, '[sn_prov_panel' ) ) {
-		$block_content = do_shortcode( shortcode_unautop( $block_content ) );
-	}
-	return $block_content;
-}
-
-// Skip WP registration under the standalone test harness (add_shortcode /
-// add_filter aren't stubbed there; the helpers are exercised directly).
+// Skip WP registration under the standalone test harness (add_shortcode
+// isn't stubbed there; the helpers are exercised directly).
 if ( ! defined( 'SN_PROVENANCE_SURFACE_TEST' ) || ! SN_PROVENANCE_SURFACE_TEST ) {
 	add_shortcode( 'sn_prov_chip', 'sn_prov_chip_shortcode' );
 	add_shortcode( 'sn_prov_panel', 'sn_prov_panel_shortcode' );
-	add_filter( 'render_block', 'sn_provenance_surface_render_block_bridge', 10, 2 );
 }

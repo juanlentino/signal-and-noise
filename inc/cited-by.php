@@ -4,8 +4,8 @@
  *
  * Registers [sn_cited_by] — the REVERSE of related-notes: up to N published
  * Notes whose post_content links to the current Note at /notes/<post_name>
- * (absolute or site-relative href). Rendered in the single.html footer
- * beside [sn_related_notes], same render_block bridge convention.
+ * (absolute or site-relative href). Placed in the single.html footer beside
+ * related-notes by the signal-noise/cited-by PHP-only block (13.1.0).
  *
  * WordPress pingbacks would be the native answer but are deliberately dead
  * here (the plugin's security-headers module kills XML-RPC + pings_open;
@@ -119,25 +119,11 @@ function sn_cited_by_shortcode() {
 		. '</footer>';
 }
 
-/**
- * Resolve [sn_cited_by] inside block templates. core/shortcode only
- * wpautop()s its content — it never runs do_shortcode on block-template
- * output. Mirrors sn_related_notes_render_block_bridge (inc/related-notes.php).
- *
- * @param string $block_content Rendered block HTML.
- * @param array  $block         Parsed block (unused).
- * @return string
- */
-function sn_cited_by_render_block_bridge( $block_content, $block ) {
-	if ( false !== strpos( $block_content, '[sn_cited_by' ) ) {
-		$block_content = do_shortcode( shortcode_unautop( $block_content ) );
-	}
-	return $block_content;
-}
-
-// Skip WP registration under the standalone test harness (add_shortcode /
-// add_filter aren't stubbed there; the helpers are exercised directly).
+// Placed by the signal-noise/cited-by PHP-only block since 13.1.0; the
+// shortcode stays registered for post content. The global render_block
+// bridge went in #389 (no template carries the token).
+// Skip WP registration under the standalone test harness (add_shortcode
+// isn't stubbed there; the helpers are exercised directly).
 if ( ! defined( 'SN_CITED_BY_TEST' ) || ! SN_CITED_BY_TEST ) {
 	add_shortcode( 'sn_cited_by', 'sn_cited_by_shortcode' );
-	add_filter( 'render_block', 'sn_cited_by_render_block_bridge', 10, 2 );
 }

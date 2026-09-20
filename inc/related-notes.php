@@ -7,10 +7,11 @@
  * with the current Note (recency-ranked), backfilling with the most
  * recent published Notes when shared-tag matches fall short.
  *
- * `core/shortcode` only runs wpautop() on its content — it does NOT call
- * do_shortcode (verified vs WP trunk wp-includes/blocks/shortcode.php).
- * The render_block bridge below (mirroring inc/setup.php:62-67) is what
- * actually resolves [sn_related_notes] inside the block template.
+ * Placed by the signal-noise/related-notes PHP-only block since 13.1.0
+ * (inc/blocks-php-only.php); the shortcode stays registered for post content.
+ * The global render_block bridge that once re-resolved the token in
+ * core/shortcode output went in #389: no template carries the token, and core
+ * runs do_shortcode() on template markup before do_blocks() anyway.
  *
  * Reading time is plugin-owned (sn_get_reading_time): guarded with
  * function_exists() so the row degrades gracefully when the plugin is
@@ -218,31 +219,8 @@ function sn_related_notes_shortcode() {
 		. '</footer>';
 }
 
-/**
- * Resolve [sn_related_notes] inside block template parts.
- *
- * core/shortcode only wpautop()s its content — it never runs do_shortcode
- * on block-template output. Mirrors the [current_year] bridge in
- * inc/setup.php:62-67.
- *
- * @param string $block_content Rendered block HTML.
- * @param array  $block         Parsed block (unused).
- * @return string
- */
-function sn_related_notes_render_block_bridge( $block_content, $block ) {
-	if ( false !== strpos( $block_content, '[sn_related_notes' ) ) {
-		// core/shortcode wpautop()'d the bare token first (verified vs WP
-		// trunk), so a block-level shortcode output (this <footer>) would end
-		// up wrapped in an invalid <p>. shortcode_unautop() strips the <p>
-		// around the registered token before we resolve it.
-		$block_content = do_shortcode( shortcode_unautop( $block_content ) );
-	}
-	return $block_content;
-}
-
-// Skip WP registration under the standalone test harness (add_shortcode /
-// add_filter aren't stubbed there; the helpers are exercised directly).
+// Skip WP registration under the standalone test harness (add_shortcode
+// isn't stubbed there; the helpers are exercised directly).
 if ( ! defined( 'SN_RELATED_NOTES_TEST' ) || ! SN_RELATED_NOTES_TEST ) {
 	add_shortcode( 'sn_related_notes', 'sn_related_notes_shortcode' );
-	add_filter( 'render_block', 'sn_related_notes_render_block_bridge', 10, 2 );
 }

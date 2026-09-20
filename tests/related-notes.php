@@ -120,68 +120,6 @@ if ( ! function_exists( 'esc_attr' ) ) {
 		return htmlspecialchars( (string) $s, ENT_QUOTES );
 	}
 }
-if ( ! function_exists( 'do_shortcode' ) ) {
-	// Faithful enough to catch FIX 2: resolves the registered token by calling
-	// the real shortcode callback (so block-level <footer> output is what gets
-	// substituted), exactly where the literal token sits in $content. A naive
-	// str_replace of [token]→RENDERED could never expose the <p>-wrap bug.
-	function do_shortcode( $content ) {
-		$GLOBALS['__do_shortcode_ran'] = true;
-		if ( false !== strpos( $content, '[sn_related_notes]' ) ) {
-			$content = str_replace( '[sn_related_notes]', sn_related_notes_shortcode(), $content );
-		}
-		return $content;
-	}
-}
-if ( ! function_exists( 'wp_spaces_regexp' ) ) {
-	function wp_spaces_regexp() {
-		return '[\r\n\t ]|\xC2\xA0|&nbsp;';
-	}
-}
-// Real shortcode_unautop from WP trunk wp-includes/formatting.php — strips a
-// <p> wrapper around a registered shortcode token. Reads $shortcode_tags, so
-// the test populates that global below.
-if ( ! function_exists( 'shortcode_unautop' ) ) {
-	function shortcode_unautop( $text ) {
-		global $shortcode_tags;
-		if ( empty( $shortcode_tags ) || ! is_array( $shortcode_tags ) ) {
-			return $text;
-		}
-		$tagregexp = implode( '|', array_map( 'preg_quote', array_keys( $shortcode_tags ) ) );
-		$spaces    = wp_spaces_regexp();
-		$pattern   =
-			'/'
-			. '<p>'
-			. '(?:' . $spaces . ')*+'
-			. '('
-			.     '\\['
-			.     "($tagregexp)"
-			.     '(?![\\w-])'
-			.     '[^\\]\\/]*'
-			.     '(?:'
-			.         '\\/(?!\\])'
-			.         '[^\\]\\/]*'
-			.     ')*?'
-			.     '(?:'
-			.         '\\/\\]'
-			.     '|'
-			.         '\\]'
-			.         '(?:'
-			.             '[^\\[]*+'
-			.             '(?:'
-			.                 '\\[(?!\\/\\2\\])'
-			.                 '[^\\[]*+'
-			.             ')*+'
-			.             '\\[\\/\\2\\]'
-			.         ')?'
-			.     ')'
-			. ')'
-			. '(?:' . $spaces . ')*+'
-			. '<\\/p>'
-			. '/';
-		return preg_replace( $pattern, '$1', $text );
-	}
-}
 
 /**
  * Stub WP_Query. Filters $POSTS by the args the helper passes:
@@ -242,11 +180,6 @@ if ( ! class_exists( 'WP_Query' ) ) {
 define( 'SN_RELATED_NOTES_TEST', true );
 require __DIR__ . '/../inc/related-notes.php';
 
-// shortcode_unautop() recognises only REGISTERED shortcodes (it reads
-// $shortcode_tags). The require above is test-guarded, so register the token
-// here exactly as the runtime does.
-$GLOBALS['shortcode_tags']['sn_related_notes'] = 'sn_related_notes_shortcode';
-
 $pass = 0; $fail = 0;
 function ok( $cond, $label ) {
 	global $pass, $fail;
@@ -303,29 +236,10 @@ ok( strpos( $html, 'https://x/notes/2/' ) !== false, 'render: sibling permalink 
 ok( strpos( $html, 'Sibling &lt;b&gt;note&lt;/b&gt;' ) !== false, 'render: title is esc_html escaped (no raw <b>)' );
 ok( strpos( $html, '<b>note</b>' ) === false, 'render: no unescaped HTML leaks into title' );
 
-// ── BRIDGE: feed a wpautop-shaped input through the REAL bridge ───────
-// core/shortcode runs wpautop() on the bare token first, yielding
-// "<p>[sn_related_notes]</p>". The bridge must shortcode_unautop() BEFORE
-// do_shortcode (FIX 2), otherwise the block-level <footer> is emitted
-// wrapped in an invalid <p>. This setup mirrors the real render pipeline.
-$GLOBALS['POSTS'] = array();
-mk_post( 1, array( 10 ), 5000, 'Current', 'https://x/notes/1/' );
-mk_post( 2, array( 10 ), 4000, 'Sibling note', 'https://x/notes/2/' );
-$GLOBALS['__queried_id']       = 1;
-$GLOBALS['__do_shortcode_ran'] = false;
-
-$out = sn_related_notes_render_block_bridge( '<p>[sn_related_notes]</p>', array() );
-ok( ! empty( $GLOBALS['__do_shortcode_ran'] ), 'bridge: do_shortcode runs when token present' );
-ok( strpos( $out, '<footer class="sn-related-notes"' ) !== false, 'bridge: token resolved to the real <footer> output' );
-ok( strpos( $out, '[sn_related_notes]' ) === false, 'bridge: raw token gone after resolution' );
-// FIX 2 — the <footer> must NOT be directly wrapped in a <p>.
-ok( strpos( $out, '<p><footer' ) === false, 'FIX 2: <footer> not directly wrapped in <p>' );
-ok( strpos( $out, '<p>' ) === false, 'FIX 2: no leftover <p> wrapping the block-level output at all' );
-
-$GLOBALS['__do_shortcode_ran'] = false;
-$untouched = sn_related_notes_render_block_bridge( '<p>no token here</p>', array() );
-ok( empty( $GLOBALS['__do_shortcode_ran'] ), 'bridge: do_shortcode NOT run when token absent' );
-ok( $untouched === '<p>no token here</p>', 'bridge: content returned unchanged when token absent' );
+// The render_block bridge cases went with the bridge (#389): the block places
+// the renderer (tests/blocks-php-only.php pins wpautop parity) and no template
+// carries the token. tests/render-block-bridges.php pins the survivors.
+ok( ! function_exists( 'sn_related_notes_render_block_bridge' ), 'the global render_block bridge is gone (#389)' );
 
 // ── v9.12.0: the shortcode must honor sn_related_count, not a dead literal 3 ──
 $GLOBALS['POSTS'] = array();

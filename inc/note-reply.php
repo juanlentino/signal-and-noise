@@ -118,21 +118,6 @@ function sn_note_reply_shortcode() {
 }
 
 /**
- * Resolve [sn_note_reply] inside block template parts. Same
- * shortcode_unautop + do_shortcode bridge as [sn_note_share] (core/shortcode
- * wpautop()s the bare token and never resolves it in block-template output).
- *
- * @param string $block_content Rendered block HTML.
- * @param array  $block         Parsed block (unused).
- * @return string
- */
-function sn_note_reply_render_block_bridge( $block_content, $block ) {
-	if ( false !== strpos( $block_content, '[sn_note_reply' ) ) {
-		$block_content = do_shortcode( shortcode_unautop( $block_content ) );
-	}
-	return $block_content;
-}
-
 /**
  * Register the alias-assembly script; blocks/note-reply/block.json names the
  * handle as its `viewScript` (#384). Core enqueues a block's view script
@@ -161,6 +146,5 @@ function sn_note_reply_register_script() {
 // exercised directly; add_* aren't the WP ones there).
 if ( ! defined( 'SN_NOTE_REPLY_TEST' ) || ! SN_NOTE_REPLY_TEST ) {
 	add_shortcode( 'sn_note_reply', 'sn_note_reply_shortcode' );
-	add_filter( 'render_block', 'sn_note_reply_render_block_bridge', 10, 2 );
 	add_action( 'init', 'sn_note_reply_register_script' );
 }

@@ -26,10 +26,11 @@
  * string is never present in any source surface, while the no-JS fallback stays
  * readable and accessible.
  *
- * Resolution: FSE block templates resolve shortcodes (core runs do_shortcode
- * before do_blocks), but [sn_email] sits INLINE inside paragraph copy, so a
- * render_block bridge guarantees it (mirrors inc/related-notes.php). Registered
- * as a shortcode so it also works anywhere shortcodes run.
+ * Resolution: [sn_email] sits inline in the /contact page's post content,
+ * which core/post-content runs through the_content, where do_shortcode()
+ * sits at priority 11 (do_blocks at 9). The global render_block bridge
+ * that went in #389 resolved it two filters earlier with the same bytes. Registered as a shortcode so it also works anywhere
+ * shortcodes run.
  *
  * @package SignalNoise
  * @since 10.16.0
@@ -130,25 +131,6 @@ function sn_email_shortcode( $atts ) {
 }
 
 /**
- * Resolve [sn_email] inline inside block content.
- *
- * Core runs do_shortcode on a block template before do_blocks, but [sn_email]
- * is embedded mid-sentence in a core/paragraph, so this render_block bridge
- * guarantees resolution regardless of render path. strpos-guarded → a no-op
- * for the vast majority of blocks. Mirrors inc/related-notes.php.
- *
- * @param string $block_content Rendered block HTML.
- * @param array  $block         Parsed block (unused).
- * @return string
- */
-function sn_email_render_block_bridge( $block_content, $block ) {
-	if ( false !== strpos( $block_content, '[sn_email' ) ) {
-		$block_content = do_shortcode( $block_content );
-	}
-	return $block_content;
-}
-
-/**
  * Enqueue the alias-assembly script on the /contact page only. Footer +
  * deferred so it never blocks first paint; the aliases stay readable (in
  * [at]/[dot] form) without it. Mirrors sn_enqueue_discography — is_page-gated,
@@ -170,6 +152,5 @@ function sn_enqueue_contact_aliases() {
 // exercised directly; add_* aren't the WP ones there).
 if ( ! defined( 'SN_CONTACT_EMAIL_TEST' ) || ! SN_CONTACT_EMAIL_TEST ) {
 	add_shortcode( 'sn_email', 'sn_email_shortcode' );
-	add_filter( 'render_block', 'sn_email_render_block_bridge', 10, 2 );
 	add_action( 'wp_enqueue_scripts', 'sn_enqueue_contact_aliases', 30 );
 }

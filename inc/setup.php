@@ -2,8 +2,16 @@
 /**
  * Signal & Noise — Theme setup.
  *
- * Editor styles, shortcodes, and the render_block filter that lets shortcodes
- * resolve inside block template parts.
+ * Editor styles and the [current_year] shortcode. The global render_block
+ * filter that once re-resolved [current_year] and [sn_build] is gone (#389):
+ * core runs do_shortcode() on a template part's raw markup before do_blocks()
+ * (wp-includes/blocks.php, _wp_apply_block_content_filters), so the filter
+ * never found [current_year] on the front end. In post content do_blocks sits
+ * at the_content priority 9 and do_shortcode at 11, so the filter resolved
+ * [sn_build] two filters before do_shortcode would have, with the same bytes.
+ * The footer line is a signal-noise/site-field binding now
+ * (inc/block-bindings.php); [sn_build] resolves through the_content on the
+ * CMS-owned /colophon page.
  *
  * @package SignalNoise
  */
@@ -62,21 +70,3 @@ function signal_noise_current_year() {
 	return wp_date( 'Y' );
 }
 add_shortcode( 'current_year', 'signal_noise_current_year' );
-
-/**
- * Process shortcodes inside block template parts + patterns.
- *
- * Gated on a literal-token check so do_shortcode() only runs on blocks that
- * actually carry one of our tokens (avoids paying do_shortcode on every block).
- * Add new theme tokens here when introducing them:
- *   [current_year] — footer copyright (parts/footer.html)
- *   [sn_build]     — live colophon build line (C2; available to CMS-owned content — the /colophon template is a Site Editor override since plugin v10.13.0)
- */
-add_filter( 'render_block', function( $block_content, $block ) {
-	if ( strpos( $block_content, '[current_year]' ) !== false
-		|| strpos( $block_content, '[sn_build]' ) !== false
-	) {
-		$block_content = do_shortcode( $block_content );
-	}
-	return $block_content;
-}, 10, 2 );

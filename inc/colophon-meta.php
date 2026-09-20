@@ -4,8 +4,9 @@
  *
  * Surfaces the real build provenance on the /colophon page: theme version,
  * companion-plugin version, git short SHA, and deploy time — exposed through a
- * [sn_build] shortcode resolved in the colophon pattern via the render_block
- * bridge in inc/setup.php.
+ * [sn_build] shortcode, resolved in the CMS-owned /colophon body by
+ * the_content (do_shortcode at priority 11; the render_block bridge that
+ * went in #389 resolved it at priority 9 with the same bytes).
  *
  * NO SHELL-OUT. Process-spawn functions are absent/disabled on Cloudways, so
  * the git short SHA is read straight off the filesystem: .git/HEAD plus the

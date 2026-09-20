@@ -30,8 +30,6 @@ function shortcode_atts( $defaults, $atts, $shortcode = '' ) {
 	}
 	return $out;
 }
-$GLOBALS['__do_shortcode_calls'] = 0;
-function do_shortcode( $content ) { $GLOBALS['__do_shortcode_calls']++; return '[RESOLVED]' . $content; }
 function add_shortcode( $tag, $cb ) { return true; }
 function add_filter( $h, $cb, $p = 10, $a = 1 ) { return true; }
 function add_action( $h, $cb, $p = 10, $a = 1 ) { return true; }
@@ -102,15 +100,9 @@ ok( strpos( $s, 'press@juanlentino.com' ) === false, 'shortcode LEAK GUARD: no c
 $s2 = sn_email_shortcode( array( 'user' => 'a', 'domain' => 'b.org' ) );
 ok( strpos( $s2, 'data-ed="' . base64_encode( 'b.org' ) . '"' ) !== false, 'shortcode honors an explicit domain' );
 
-// ── render_block bridge: resolves [sn_email] inside block content ─────
-ok( function_exists( 'sn_email_render_block_bridge' ), 'sn_email_render_block_bridge() is defined' );
-$GLOBALS['__do_shortcode_calls'] = 0;
-$out = sn_email_render_block_bridge( '<p>email [sn_email user="research"] with the team</p>', array() );
-ok( $GLOBALS['__do_shortcode_calls'] === 1, 'bridge runs do_shortcode when the token is present' );
-$GLOBALS['__do_shortcode_calls'] = 0;
-$pass_through = sn_email_render_block_bridge( '<p>no token here</p>', array() );
-ok( $GLOBALS['__do_shortcode_calls'] === 0, 'bridge is a no-op (strpos-guarded) when the token is absent' );
-ok( $pass_through === '<p>no token here</p>', 'bridge returns untouched content when no token' );
+// ── the render_block bridge is gone (#389): [sn_email] sits in the /contact
+// page's post content, which the_content resolves at priority 11 ──────
+ok( ! function_exists( 'sn_email_render_block_bridge' ), 'the global render_block bridge is gone (#389)' );
 
 // ── enqueue gating (mirrors sn_enqueue_discography) ───────────────────
 ok( function_exists( 'sn_enqueue_contact_aliases' ), 'sn_enqueue_contact_aliases() is defined' );

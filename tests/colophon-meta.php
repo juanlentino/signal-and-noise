@@ -5,8 +5,8 @@
  * inc/colophon-meta.php reads the theme's .git directly (no shell-out — exec is
  * disabled on Cloudways; .git is preserved on-server by
  * inc/wp-update-git-preservation.php) plus the theme/plugin versions, and
- * exposes the assembled build line through a [sn_build] shortcode resolved in
- * the /colophon pattern via the render_block bridge.
+ * exposes the assembled build line through a [sn_build] shortcode, resolved in
+ * the CMS-owned /colophon body by the_content.
  *
  * The local checkout's own .git is a worktree FILE, so the git reader is tested
  * against synthesized real-dir fixtures (the production case): symbolic HEAD →
@@ -129,12 +129,16 @@ ok( ( $wt['sha'] ?? '' ) === substr( $SHA_B, 0, 7 ), 'worktree: SHA resolved for
 ok( ( $wt['branch'] ?? '' ) === 'feature', 'worktree: reports the checked-out branch, not the common HEAD (Finding 2)' );
 
 // --- Integration guards: the [sn_build] token must be wired end-to-end ---
+// /colophon is CMS-owned since plugin v10.13.0 (the theme's colophon pattern
+// went in v11.1.11), so the token sits in post content and the_content's
+// do_shortcode (priority 11) resolves it. The render_block bridge in
+// inc/setup.php that resolved it at priority 9 (do_blocks), the same bytes
+// two filters early, went in #389; the shortcode stays.
 $root      = realpath( __DIR__ . '/..' );
 $setup_src = (string) file_get_contents( $root . '/inc/setup.php' );
-ok( strpos( $setup_src, '[sn_build]' ) !== false, 'render_block bridge (setup.php) resolves the [sn_build] token (not just [current_year])' );
-// NB: the theme's colophon pattern (the token's original emitter) was removed in
-// v11.1.11 — /colophon is CMS-owned since plugin v10.13.0. The [sn_build]
-// shortcode + bridge stay available for CMS-owned content.
+$self_src  = (string) file_get_contents( $root . '/inc/colophon-meta.php' );
+ok( strpos( $self_src, "add_shortcode( 'sn_build', 'sn_colophon_build_shortcode' );" ) !== false, '[sn_build] stays registered for the CMS-owned /colophon body' );
+ok( ! preg_match( "/add_filter\(\s*'render_block'/", $setup_src ), 'inc/setup.php carries no render_block bridge for [sn_build] any more (#389)' );
 
 // --- Path-traversal hardening: a tampered HEAD ref must not escape refs_dir ---
 // Plant a 40-hex file reachable from .git/refs/heads ONLY via "..". Pre-guard,
