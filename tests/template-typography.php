@@ -144,10 +144,26 @@ foreach ( array_keys( $sizes ) as $slug ) {
 //    3055 assertions, 0 failed). The population is therefore DERIVED from the
 //    directory and reconciled against the map, and every file is checked
 //    generically whether or not it is listed.
+//
+//    Since #390 the map also carries the four styles inc/block-styles.php used
+//    to register (Hairline, Signal, Epigraph, References), ported as partials.
+//    Their typography is the one-off set the PHP strings carried: 11px-floored
+//    max() sizes, a 0.08em tracking, weights. No token names those values and
+//    minting tokens is a vocabulary change the port does not make, so each
+//    literal is GOVERNED HERE instead: listed per file under `literals`, and
+//    the generic check below accepts a literal only when this map names it.
+//    tests/block-styles.php pins the values themselves against the PHP output.
 $variations = array(
-	'eyebrow'    => array( 'title' => 'Eyebrow',         'fontSize' => 'var:preset|font-size|eyebrow' ),
-	'eyebrow-lg' => array( 'title' => 'Eyebrow (Large)', 'fontSize' => 'var:preset|font-size|eyebrow-lg' ),
-	'caption'    => array( 'title' => 'Caption',         'fontSize' => 'var:preset|font-size|caption' ),
+	'eyebrow'    => array( 'title' => 'Eyebrow',         'block' => 'core/paragraph', 'fontSize' => 'var:preset|font-size|eyebrow' ),
+	'eyebrow-lg' => array( 'title' => 'Eyebrow (Large)', 'block' => 'core/paragraph', 'fontSize' => 'var:preset|font-size|eyebrow-lg' ),
+	'caption'    => array( 'title' => 'Caption',         'block' => 'core/paragraph', 'fontSize' => 'var:preset|font-size|caption' ),
+	'hairline'   => array( 'title' => 'Hairline',        'block' => 'core/separator' ),
+	'signal'     => array( 'title' => 'Signal',          'block' => 'core/quote',
+		'literals' => array( 'fontWeight' => '600', 'elements.cite.fontWeight' => '400', 'elements.cite.fontSize' => 'max(0.75rem,11px)', 'elements.cite.letterSpacing' => '0.08em' ) ),
+	'epigraph'   => array( 'title' => 'Epigraph',        'block' => 'core/quote',
+		'literals' => array( 'fontSize' => 'max(0.95rem,14px)', 'elements.cite.fontSize' => 'max(0.7rem,11px)', 'elements.cite.letterSpacing' => '0.08em' ) ),
+	'references' => array( 'title' => 'References',      'block' => 'core/list',
+		'literals' => array( 'fontSize' => 'max(0.85rem,12px)' ) ),
 );
 
 $variation_files = (array) glob( "$theme_root/styles/blocks/*.json" );
@@ -169,6 +185,7 @@ ok( $on_disk === $listed,
 $known_font_sizes = array();
 foreach ( $theme['settings']['typography']['fontSizes'] ?? array() as $fs ) { $known_font_sizes[] = $fs['slug']; }
 $known_letter_spacing = array_keys( $theme['settings']['custom']['letterSpacing'] ?? array() );
+$known_line_height    = array_keys( $theme['settings']['custom']['lineHeight'] ?? array() );
 ok( count( $known_font_sizes ) > 5 && count( $known_letter_spacing ) > 1,
 	'the reference vocabularies resolved from theme.json (' . count( $known_font_sizes ) . ' font sizes, '
 	. count( $known_letter_spacing ) . ' letter-spacings) - empty ones would make every check below vacuous' );
@@ -178,7 +195,7 @@ ok( count( $known_font_sizes ) > 5 && count( $known_letter_spacing ) > 1,
  * name something that exists? Returns true for a non-reference (a keyword
  * value like `uppercase` is checked elsewhere).
  */
-$resolves = static function ( $val ) use ( $known_font_sizes, $known_letter_spacing ) {
+$resolves = static function ( $val ) use ( $known_font_sizes, $known_letter_spacing, $known_line_height ) {
 	if ( 0 !== strpos( (string) $val, 'var:' ) ) { return true; }
 	if ( preg_match( '#^var:preset\|font-size\|(.+)$#', (string) $val, $m ) ) {
 		return in_array( $m[1], $known_font_sizes, true );
@@ -186,26 +203,49 @@ $resolves = static function ( $val ) use ( $known_font_sizes, $known_letter_spac
 	if ( preg_match( '#^var:custom\|letter-spacing\|(.+)$#', (string) $val, $m ) ) {
 		return in_array( $m[1], $known_letter_spacing, true );
 	}
+	if ( preg_match( '#^var:custom\|line-height\|(.+)$#', (string) $val, $m ) ) {
+		return in_array( $m[1], $known_line_height, true );
+	}
 	return true; // a reference shape this suite does not model yet
 };
 
-// EVERY file on disk, listed or not.
+// EVERY file on disk, listed or not. The block's own typography and any
+// element's (a variation may style `elements.cite` etc.) are both checked.
 foreach ( $variation_files as $path ) {
 	$name = basename( $path, '.json' );
 	$v    = json_decode( (string) file_get_contents( $path ), true );
 	ok( is_array( $v ), "$name.json parses" );
 	if ( ! is_array( $v ) ) { continue; }
 	ok( ( $v['slug'] ?? '' ) === $name, "$name slug === $name" );
-	$typo = $v['styles']['typography'] ?? array();
+	$governed = $variations[ $name ]['literals'] ?? array();
+	$typo_sets = array( '' => $v['styles']['typography'] ?? array() );
+	foreach ( $v['styles']['elements'] ?? array() as $el => $node ) {
+		$typo_sets[ "elements.$el." ] = $node['typography'] ?? array();
+	}
 
-	foreach ( $typo as $prop => $val ) {
-		// Keyword properties are exempt because 'uppercase' and 'italic' ARE
-		// the value; there is no token form of them.
-		if ( in_array( $prop, array( 'textTransform', 'fontStyle' ), true ) ) { continue; }
-		ok( strpos( (string) $val, 'var:' ) === 0,
-			"$name.$prop is a token reference, not a literal (got: $val)" );
-		ok( $resolves( $val ),
-			"$name.$prop RESOLVES to something theme.json defines (got: $val) - a phantom slug paints nothing and errors nowhere" );
+	foreach ( $typo_sets as $prefix => $typo ) {
+		foreach ( $typo as $prop => $val ) {
+			// Keyword properties are exempt because 'uppercase' and 'italic' ARE
+			// the value; there is no token form of them.
+			if ( in_array( $prop, array( 'textTransform', 'fontStyle' ), true ) ) { continue; }
+			$key = $prefix . $prop;
+			if ( array_key_exists( $key, $governed ) ) {
+				ok( $governed[ $key ] === (string) $val,
+					"$name.$key is the literal the map governs (got: $val)" );
+				continue;
+			}
+			ok( strpos( (string) $val, 'var:' ) === 0,
+				"$name.$key is a token reference, not a literal (got: $val)" );
+			ok( $resolves( $val ),
+				"$name.$key RESOLVES to something theme.json defines (got: $val) - a phantom slug paints nothing and errors nowhere" );
+		}
+	}
+	// A governed literal that the file no longer carries is a stale entry.
+	foreach ( $governed as $key => $lit ) {
+		$parts = explode( '.', $key );
+		$node  = 'elements' === $parts[0] ? ( $v['styles']['elements'][ $parts[1] ]['typography'] ?? array() ) : ( $v['styles']['typography'] ?? array() );
+		$prop  = end( $parts );
+		ok( isset( $node[ $prop ] ), "$name.$key: the governed literal is still in the file (a stale entry hides finished work)" );
 	}
 }
 
@@ -216,8 +256,10 @@ foreach ( $variations as $name => $expect ) {
 	if ( ! file_exists( $path ) ) { continue; }
 	$v = json_decode( (string) file_get_contents( $path ), true );
 	ok( ( $v['title'] ?? '' ) === $expect['title'], "$name title === {$expect['title']}" );
-	ok( in_array( 'core/paragraph', $v['blockTypes'] ?? array(), true ), "$name applies to core/paragraph" );
-	ok( ( $v['styles']['typography']['fontSize'] ?? '' ) === $expect['fontSize'], "$name fontSize is a preset reference" );
+	ok( in_array( $expect['block'], $v['blockTypes'] ?? array(), true ), "$name applies to {$expect['block']}" );
+	if ( isset( $expect['fontSize'] ) ) {
+		ok( ( $v['styles']['typography']['fontSize'] ?? '' ) === $expect['fontSize'], "$name fontSize is a preset reference" );
+	}
 }
 
 // 9. The eyebrow pair carries the shared letter-spacing token and uppercase.
@@ -231,15 +273,17 @@ foreach ( array( 'eyebrow', 'eyebrow-lg' ) as $name ) {
 	ok( ( $typo['textTransform'] ?? '' ) === 'uppercase', "$name is uppercase" );
 }
 
-// 10. The four PHP-registered block styles are untouched. JSON provably cannot
-//     express them: hairline needs border-top-color !important against an
-//     !important base rule, and signal styles a descendant `cite` selector.
-//     Regex, not strpos on an aligned literal — the source pads => with spaces,
-//     and a reformat would break a whitespace-exact pin on intact code.
-$bs = file_get_contents( "$theme_root/inc/block-styles.php" );
-foreach ( array( 'hairline', 'signal', 'epigraph', 'references' ) as $name ) {
-	ok( preg_match( "/'name'\\s*=>\\s*'" . preg_quote( $name, '/' ) . "'/", $bs ) === 1,
-		"PHP-registered block style '$name' still registered" );
+// 10. The four block styles the PHP module registered are partials now (#390).
+//     The 12.6.0 claim that JSON could not express them was wrong on both
+//     counts: a variation's `css` takes `!important` as written and a `& cite`
+//     nesting, and `cite` is a theme.json element a variation may carry
+//     (schemas.wp.org/wp/7.1, stylesVariationProperties). Inverted, not deleted:
+//     the PHP file must stay gone, and each partial must name its block.
+ok( ! file_exists( "$theme_root/inc/block-styles.php" ), 'inc/block-styles.php is gone; nothing registers a block style from PHP' );
+foreach ( array( 'hairline' => 'core/separator', 'signal' => 'core/quote', 'epigraph' => 'core/quote', 'references' => 'core/list' ) as $name => $block ) {
+	$v = json_decode( (string) file_get_contents( "$theme_root/styles/blocks/$name.json" ), true );
+	ok( is_array( $v ) && in_array( $block, $v['blockTypes'] ?? array(), true ) && ! empty( $v['styles'] ),
+		"block style '$name' is a partial for $block" );
 }
 
 // 11. NO UNGOVERNED LITERAL in migrated files.

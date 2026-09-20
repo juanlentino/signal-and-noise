@@ -1,0 +1,56 @@
+{
+	"$schema": "https://schemas.wp.org/wp/7.1/theme.json",
+	"version": 3,
+	"title": "Signal",
+	"slug": "signal",
+	"blockTypes": ["core/quote"],
+	"styles": {
+		"border": {
+			"left": {
+				"width": "4px",
+				"style": "solid",
+				"color": "var(--wp--preset--color--blood)"
+			}
+		},
+		"color": {
+			"background": "var(--wp--preset--color--asphalt)",
+			"text": "var(--wp--preset--color--bone)"
+		},
+		"spacing": {
+			"padding": {
+				"top": "1rem",
+				"right": "1.25rem",
+				"bottom": "1rem",
+				"left": "1.25rem"
+			},
+			"margin": {
+				"top": "1.5rem",
+				"bottom": "1.5rem"
+			}
+		},
+		"typography": {
+			"fontStyle": "normal",
+			"fontWeight": "600"
+		},
+		"elements": {
+			"cite": {
+				"color": {
+					"text": "var(--wp--preset--color--rust)"
+				},
+				"spacing": {
+					"margin": {
+						"top": "0.5rem"
+					}
+				},
+				"typography": {
+					"fontStyle": "normal",
+					"fontWeight": "400",
+					"fontSize": "max(0.75rem,11px)",
+					"textTransform": "uppercase",
+					"letterSpacing": "0.08em"
+				},
+				"css": "display:block"
+			}
+		}
+	}
+}

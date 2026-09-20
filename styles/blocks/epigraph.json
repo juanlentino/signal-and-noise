@@ -1,0 +1,59 @@
+{
+	"$schema": "https://schemas.wp.org/wp/7.1/theme.json",
+	"version": 3,
+	"title": "Epigraph",
+	"slug": "epigraph",
+	"blockTypes": ["core/quote"],
+	"styles": {
+		"border": {
+			"width": "0",
+			"style": "none",
+			"color": "currentcolor",
+			"left": {
+				"width": "1px",
+				"style": "solid",
+				"color": "var(--wp--preset--color--concrete)"
+			}
+		},
+		"color": {
+			"text": "var(--wp--preset--color--rust)"
+		},
+		"spacing": {
+			"margin": {
+				"top": "clamp(1.5rem,3vw,2.5rem)",
+				"bottom": "clamp(1.5rem,3vw,2.5rem)"
+			},
+			"padding": {
+				"top": "0.1rem",
+				"right": "0",
+				"bottom": "0.1rem",
+				"left": "1.25rem"
+			}
+		},
+		"typography": {
+			"fontStyle": "italic",
+			"fontSize": "max(0.95rem,14px)",
+			"lineHeight": "var:custom|line-height|snug"
+		},
+		"css": "margin-left:0 !important;max-width:46ch",
+		"elements": {
+			"cite": {
+				"color": {
+					"text": "var(--wp--preset--color--rust)"
+				},
+				"spacing": {
+					"margin": {
+						"top": "0.6rem"
+					}
+				},
+				"typography": {
+					"fontStyle": "normal",
+					"fontSize": "max(0.7rem,11px)",
+					"textTransform": "uppercase",
+					"letterSpacing": "0.08em"
+				},
+				"css": "display:block"
+			}
+		}
+	}
+}

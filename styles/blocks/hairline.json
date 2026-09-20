@@ -1,0 +1,29 @@
+{
+	"$schema": "https://schemas.wp.org/wp/7.1/theme.json",
+	"version": 3,
+	"title": "Hairline",
+	"slug": "hairline",
+	"blockTypes": ["core/separator"],
+	"styles": {
+		"border": {
+			"width": "0",
+			"style": "none",
+			"color": "currentcolor",
+			"top": {
+				"width": "1px",
+				"style": "solid",
+				"color": "var(--wp--preset--color--concrete)"
+			}
+		},
+		"dimensions": {
+			"height": "0"
+		},
+		"spacing": {
+			"margin": {
+				"top": "1.5rem",
+				"bottom": "1.5rem"
+			}
+		},
+		"css": "opacity:1;max-width:none"
+	}
+}

@@ -305,8 +305,10 @@
 					"text": "var(--wp--preset--color--concrete)"
 				},
 				"border": {
-					"width": "1px"
-				}
+					"width": "1px",
+					"color": "var(--wp--preset--color--concrete)"
+				},
+				"css": "opacity:0.6"
 			},
 			"core/quote": {
 				"border": {

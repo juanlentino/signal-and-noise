@@ -114,6 +114,23 @@ a {
 	content: "";
 }
 
+/* ── The References list (styles/blocks/references.json) on paper: each entry
+   stays whole, and every link spells its target after the text, smaller and in
+   rust, so a printed bibliography is self-contained. Lives here, not in the
+   partial: core's variation `css` drops any part with nested braces, so an
+   at-rule inside it emits nothing (class-wp-theme-json.php,
+   process_blocks_custom_css). ── */
+.wp-block-list.is-style-references li {
+	break-inside: avoid;
+}
+
+.wp-block-list.is-style-references li a[href]::after {
+	content: " (" attr(href) ")";
+	font-size: 0.85em;
+	color: var(--wp--preset--color--rust);
+	word-break: break-all;
+}
+
 /* ── Don't orphan images / blockquotes across a page break. ── */
 img,
 figure,

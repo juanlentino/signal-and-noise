@@ -31,7 +31,13 @@ $css .= file_get_contents( $root . '/style.css' );
 // Comments stripped BEFORE scanning: a selector named in a comment is not a
 // selector that paints, and the lead's own comment names `.sn-lead`.
 $css = preg_replace( '~/\*.*?\*/~s', '', $css );
-$styles_src   = file_get_contents( $root . '/inc/block-styles.php' );
+// The block styles are theme.json partials (styles/blocks/<slug>.json, #390):
+// a convention's is-style- selector must name a partial whose slug matches.
+$block_style_slugs = array();
+foreach ( glob( $root . '/styles/blocks/*.json' ) as $f ) {
+	$v = json_decode( (string) file_get_contents( $f ), true );
+	if ( is_array( $v ) && ! empty( $v['blockTypes'] ) ) { $block_style_slugs[] = (string) ( $v['slug'] ?? basename( $f, '.json' ) ); }
+}
 $pattern_src  = '';
 $pattern_slugs = array();
 foreach ( glob( $root . '/patterns/*.php' ) as $f ) {
@@ -55,7 +61,7 @@ foreach ( $rows as $r ) {
 	if ( '' === $sel ) { continue; }
 	if ( 0 === strpos( $sel, 'is-style-' ) ) {
 		$name = substr( $sel, 9 );
-		ok( false !== strpos( $styles_src, "'name'         => '" . $name . "'" ) || false !== strpos( $styles_src, "'name' => '" . $name . "'" ), $r['id'] . ': block style "' . $name . '" is registered by inc/block-styles.php' );
+		ok( in_array( $name, $block_style_slugs, true ), $r['id'] . ': block style "' . $name . '" is a partial in styles/blocks/' );
 	} elseif ( 0 === strpos( $sel, 'sn-' ) ) {
 		ok( 1 === preg_match( '/\.' . preg_quote( $sel, '/' ) . '(?![\w-])/', $css ), $r['id'] . ': class .' . $sel . ' is styled by the theme CSS (whole token, not a prefix)' );
 	} else {

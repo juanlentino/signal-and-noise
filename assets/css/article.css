@@ -295,10 +295,9 @@ main { view-transition-name: sn-main; }
 	border-top: 1px solid var(--wp--preset--color--bone);
 	margin: 0 0 1.5rem 0;
 	background: none;
-	/* .wp-block-separator (components.css) sets border-color + opacity with
-	   !important; an !important declaration beats a plain one regardless of
-	   specificity, so this has to fight it back the same way (#320). */
-	border-top-color: var(--wp--preset--color--bone) !important;
+	/* The base separator rule (theme.json styles.blocks.core/separator, printed
+	   in global-styles at 0,1,0) sets concrete at 0.6; this sheet prints after
+	   it at the same specificity, so bone at 1 wins on source order (#320, #390). */
 	opacity: 1;
 }
 
