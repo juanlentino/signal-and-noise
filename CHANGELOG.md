@@ -12,6 +12,9 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Fixed
+- **The theme's own Copilot tool-schema normalizer was a hand-rolled twin of OpenStation's `openstation_ai_normalize_tool_schema()`, registered on a hook name OpenStation dropped at v1.0.0.** `inc/desktop-mode-copilot-schema.php` hooked `desktop_mode_ai_tools` alone, so on every release the site has run since August it never fired, while its docblock and the `functions.php` require line promised a guard the theme did not provide. Read: OpenStation's `docs/hooks-reference.md` names `openstation_ai_tools` as the Stable tool-list filter, and `includes/ai-copilot/search.php` at v1.1.10 normalizes every tool schema itself after that filter (the union top-level `type`, top-level `anyOf`/`oneOf`/`allOf`, empty `properties`, idempotent, since v1.1.6), which is the converter the module's docblock said should own this. The module, its require line, its file-map row and `tests/desktop-mode-copilot-schema.php` are deleted; the three shapes the theme declares are untouched and stay pinned in `tests/abilities-registration.php`. Nothing on screen changes: the module filtered an admin request the Copilot builds, never public output, and on the live site (OpenStation 1.1.10, companion plugin active) it was not running at all. Pinned by derivation in `tests/openstation-hook-names.php` (6): every hook name the theme registers or fires is read off the source and none may start with `desktop_mode_`, and every `require_once` in `functions.php` must resolve; red against 13.4.0 both ways. #382.
+
 ## [13.4.0] - 2026-09-20 — a tag files itself
 
 ### Added
