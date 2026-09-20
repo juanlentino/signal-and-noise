@@ -2,15 +2,25 @@
 /**
  * Signal & Noise — Helpful 404 recovery.
  *
- * Registers [sn_404_suggestions] — a recent-notes list rendered inside
- * templates/404.html so a visitor who hit a stale link can recover. Uses its
- * OWN recent-notes WP_Query: the related-notes helper (sn_related_notes_query)
- * deliberately returns [] for post_id < 1, which is the 404 case.
+ * A recent-notes list rendered inside templates/404.html so a visitor who hit
+ * a stale link can recover. Uses its OWN recent-notes WP_Query: the
+ * related-notes helper (sn_related_notes_query) deliberately returns [] for
+ * post_id < 1, which is the 404 case.
  *
- * The render_block bridge mirrors inc/related-notes.php — shortcodes in .html
- * FSE templates resolve via core's template-level do_shortcode, but the bridge
- * is belt-and-suspenders and strips the invalid <p> that wpautop() would wrap
- * around this block-level <nav> token.
+ * The template slot is the signal-noise/suggestions-404 PHP-only block
+ * (blocks/suggestions-404, registered by inc/blocks-php-only.php; #386), whose
+ * render file calls sn_404_suggestions_shortcode() through the same
+ * wpautop() wrapper the core/shortcode block applied, so the page is
+ * byte-identical (tests/404-recovery.php pins the bytes). The
+ * [sn_404_suggestions] shortcode stays registered for anything typed into
+ * post content, as the nine sibling shortcodes do (owner decision 2026-09-12,
+ * inc/blocks-php-only.php); no template names it any more.
+ *
+ * The render_block bridge that used to sit here went with the swap: core
+ * resolves shortcodes on the raw template markup before do_blocks() (WP 7.1
+ * wp-includes/block-template.php, get_the_block_template_html()), so the
+ * token never reached render_block unresolved, and nav is in wpautop()'s
+ * block list, so it never got the <p> the bridge claimed to strip.
  *
  * Reading time is plugin-owned (sn_get_reading_time via
  * sn_related_notes_reading_time): function_exists-guarded so the row degrades
@@ -46,7 +56,9 @@ function sn_404_recent_notes( $limit ) {
 }
 
 /**
- * [sn_404_suggestions] — a "Recent notes" list reusing the .sn-notes-row idiom.
+ * The "Recent notes" list, reusing the .sn-notes-row idiom. The renderer
+ * behind both the signal-noise/suggestions-404 block (the template's slot)
+ * and the [sn_404_suggestions] shortcode (post content only).
  *
  * @return string Nav HTML, or '' when there are no notes.
  */
@@ -80,23 +92,7 @@ function sn_404_suggestions_shortcode() {
 		. '</nav>';
 }
 
-/**
- * Resolve [sn_404_suggestions] inside the block template.
- * Mirrors sn_related_notes_render_block_bridge (inc/related-notes.php).
- *
- * @param string $block_content Rendered block HTML.
- * @param array  $block         Parsed block (unused).
- * @return string
- */
-function sn_404_suggestions_render_block_bridge( $block_content, $block ) {
-	if ( false !== strpos( $block_content, '[sn_404_suggestions' ) ) {
-		$block_content = do_shortcode( shortcode_unautop( $block_content ) );
-	}
-	return $block_content;
-}
-
 // Skip WP registration under the standalone test harness.
 if ( ! defined( 'SN_404_RECOVERY_TEST' ) || ! SN_404_RECOVERY_TEST ) {
 	add_shortcode( 'sn_404_suggestions', 'sn_404_suggestions_shortcode' );
-	add_filter( 'render_block', 'sn_404_suggestions_render_block_bridge', 10, 2 );
 }

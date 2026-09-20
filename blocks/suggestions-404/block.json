@@ -1,0 +1,16 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "signal-noise/suggestions-404",
+	"title": "404 suggestions",
+	"category": "signal-noise",
+	"icon": "warning",
+	"description": "The most recent notes, so a visitor who hit a stale link can recover.",
+	"textdomain": "signal-and-noise",
+	"supports": {
+		"autoRegister": true,
+		"html": false,
+		"multiple": false
+	},
+	"render": "file:./render.php"
+}

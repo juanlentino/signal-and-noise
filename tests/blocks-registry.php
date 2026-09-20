@@ -132,6 +132,11 @@ ok( ! empty( array_filter( $cats, fn( $c ) => ( $c['slug'] ?? '' ) === 'signal-n
 $editor_js = (string) file_get_contents( __DIR__ . '/../blocks/editor.js' );
 $manifests = glob( __DIR__ . '/../blocks/*/block.json' );
 ok( count( $manifests ) >= 3, 'block manifests were found (guard: the glob still matches)' );
+// Core's block-delimiter parser (wp-includes/class-wp-block-parser.php, name group [a-z][a-z0-9_-]*) and the JS registerBlockType rule (/^[a-z][a-z0-9-]*\/[a-z][a-z0-9-]*$/) both refuse a name that starts with a digit; the PHP registry alone accepts it, so a digit-leading name registers cleanly and then renders as a literal comment on the public page (#386's first cut shipped signal-noise/404-suggestions). Pin every manifest against the strictest of the three.
+foreach ( $manifests as $manifest ) {
+	$mname = (string) ( json_decode( (string) file_get_contents( $manifest ), true )['name'] ?? '' );
+	ok( 1 === preg_match( '#^[a-z][a-z0-9-]*/[a-z][a-z0-9-]*$#', $mname ), basename( dirname( $manifest ) ) . ": block name '$mname' is parseable by core (namespace and slug each start with a letter)" );
+}
 
 foreach ( $manifests as $manifest ) {
 	$json  = json_decode( file_get_contents( $manifest ), true );

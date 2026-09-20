@@ -22,10 +22,9 @@
  * `core/shortcode` only wpautop()s its content — it does NOT run do_shortcode
  * on block-template output (verified vs WP trunk wp-includes/blocks/shortcode.php).
  * The render_block bridge below resolves the tokens inside the block template
- * parts, mirroring sn_related_notes_render_block_bridge (inc/related-notes.php)
- * and sn_404_suggestions_render_block_bridge (inc/404-recovery.php): the
- * shortcode_unautop() strips the invalid <p> that wpautop() wraps around the
- * (block-level) panel token before we resolve it.
+ * parts, mirroring sn_related_notes_render_block_bridge (inc/related-notes.php):
+ * the shortcode_unautop() strips the invalid <p> that wpautop() wraps around
+ * the (block-level) panel token before we resolve it.
  *
  * @package SignalNoise
  * @since 10.30.0
@@ -69,8 +68,7 @@ function sn_prov_panel_shortcode() {
  *
  * core/shortcode only wpautop()s its content — it never runs do_shortcode on
  * block-template output. Mirrors sn_related_notes_render_block_bridge
- * (inc/related-notes.php) and sn_404_suggestions_render_block_bridge
- * (inc/404-recovery.php): shortcode_unautop() strips the <p> that wpautop()
+ * (inc/related-notes.php): shortcode_unautop() strips the <p> that wpautop()
  * wraps around the block-level panel token before we resolve it.
  *
  * @param string $block_content Rendered block HTML.
