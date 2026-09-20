@@ -2,7 +2,9 @@
 /**
  * Tests: the ten PHP-only blocks (WordPress 7.0 supports.autoRegister):
  * registered as declared, each render === its shortcode's output on the same
- * post (THE PARITY PIN), a differing block-context id is honoured.
+ * post (THE PARITY PIN), a differing block-context id is honoured. The tenth
+ * (#388), meta-nav, was the footer's wp:html icon nav: its parity pin is the
+ * captured inner content of that block, byte for byte.
  * @since theme v13.1.0
  */
 if ( PHP_SAPI !== 'cli' && ! defined( 'WP_CLI' ) ) { http_response_code( 404 ); exit; }
@@ -62,14 +64,14 @@ function sn_404_suggestions_shortcode() { return '<nav:404>'; } // reads no post
 require_once __DIR__ . '/../inc/blocks-php-only.php';
 foreach ( $GLOBALS['__init'] as $cb ) { $cb(); }
 
-$expected = array( 'prov-chip', 'prov-panel', 'related-notes', 'cited-by', 'note-share', 'note-reply', 'updated-date', 'post-pillar', 'theme-toggle', 'suggestions-404' );
+$expected = array( 'prov-chip', 'prov-panel', 'related-notes', 'cited-by', 'note-share', 'note-reply', 'updated-date', 'post-pillar', 'theme-toggle', 'suggestions-404', 'meta-nav' );
 echo "Group: registration\n";
 foreach ( $expected as $slug ) {
 	$b = $GLOBALS['__blocks'][ 'signal-noise/' . $slug ] ?? null;
 	ok( is_array( $b ) && true === ( $b['supports']['autoRegister'] ?? null ) && is_callable( $b['render_callback'] ?? null ) && 3 === ( $b['api_version'] ?? 0 ) && 'signal-noise' === ( $b['category'] ?? '' ), "signal-noise/$slug registered PHP-only (autoRegister, render_callback, api_version 3, category signal-noise)" );
 }
-ok( 10 === count( array_filter( array_keys( $GLOBALS['__blocks'] ), static fn( $n ) => str_starts_with( $n, 'signal-noise/' ) ) ), 'exactly ten blocks registered by this module' );
-foreach ( array( 'prov-chip', 'prov-panel', 'related-notes', 'cited-by', 'note-share', 'note-reply', 'updated-date', 'post-pillar', 'suggestions-404' ) as $slug ) {
+ok( 11 === count( array_filter( array_keys( $GLOBALS['__blocks'] ), static fn( $n ) => str_starts_with( $n, 'signal-noise/' ) ) ), 'exactly eleven blocks registered by this module' );
+foreach ( array( 'prov-chip', 'prov-panel', 'related-notes', 'cited-by', 'note-share', 'note-reply', 'updated-date', 'post-pillar', 'suggestions-404', 'meta-nav' ) as $slug ) {
 	ok( false === ( $GLOBALS['__blocks'][ 'signal-noise/' . $slug ]['supports']['multiple'] ?? true ), "$slug is single-instance" );
 }
 ok( ! isset( $GLOBALS['__blocks']['signal-noise/theme-toggle']['supports']['multiple'] ), 'theme-toggle allows two instances (header and footer)' );
@@ -77,6 +79,7 @@ ok( array( 'placement' ) === array_keys( $GLOBALS['__blocks']['signal-noise/them
 foreach ( $expected as $slug ) { ok( false === ( $GLOBALS['__blocks'][ 'signal-noise/' . $slug ]['supports']['html'] ?? true ), "$slug: html editing off" ); }
 
 echo "\nGroup: THE PARITY PIN — block output === wpautop( shortcode output ) on the same post\n";
+// An unregistered slug renders '' so every pin on it goes RED instead of the suite dying at the first call.
 $blk = static function ( $slug, $ctx = array(), $attrs = array() ) { $cb = $GLOBALS['__blocks'][ 'signal-noise/' . $slug ]['render_callback'] ?? null; return $cb ? $cb( $attrs, '', (object) array( 'context' => $ctx ) ) : null; }; // null for an unregistered block, so a missing block is a FAIL, not a fatal.
 $pairs = array( 'prov-chip' => 'sn_prov_chip_shortcode', 'prov-panel' => 'sn_prov_panel_shortcode', 'related-notes' => 'sn_related_notes_shortcode', 'cited-by' => 'sn_cited_by_shortcode', 'note-share' => 'sn_note_share_shortcode', 'note-reply' => 'sn_note_reply_shortcode', 'updated-date' => 'sn_updated_date_shortcode', 'post-pillar' => 'sn_post_pillar_shortcode', 'suggestions-404' => 'sn_404_suggestions_shortcode' );
 foreach ( $pairs as $slug => $fn ) {
@@ -89,6 +92,13 @@ ok( $blk( 'theme-toggle', array(), array( 'placement' => 'header' ) ) === sn_dar
 ok( $blk( 'theme-toggle' ) === sn_dark_mode_toggle_markup(), 'theme-toggle with no attribute renders the footer form' );
 ok( $blk( 'theme-toggle', array(), array( 'placement' => 'sidebar' ) ) === sn_dark_mode_toggle_markup(), 'an unknown placement falls back to footer, never passes through' );
 ok( false === strpos( $blk( 'theme-toggle' ), '<autop>' ), 'theme-toggle render carries no <autop> wrapper' );
+// #388: the meta-nav was a wp:html block. Its parity is with that block's inner
+// content, captured from 13.4.0's parts/footer.html through WP_Block_Parser
+// (tests/fixtures/footer-meta-nav.html): the same bytes, so do_blocks() paints
+// the footer exactly as before. Never autop'd, like the toggle.
+$meta_nav_fixture = (string) file_get_contents( __DIR__ . '/fixtures/footer-meta-nav.html' );
+ok( '' !== $meta_nav_fixture && $blk( 'meta-nav' ) === $meta_nav_fixture, 'meta-nav === the captured wp:html inner content, byte for byte (' . strlen( $meta_nav_fixture ) . ' bytes)' );
+ok( false === strpos( $blk( 'meta-nav' ), '<autop>' ), 'meta-nav render carries no <autop> wrapper (it was wp:html, never autop\'d)' );
 // An empty renderer output must stay empty after wpautop, not become a stray wrapper.
 $GLOBALS['__empty'] = true;
 ok( '' === $blk( 'updated-date' ), 'an empty renderer output (updated-date with nothing to show) stays empty through wpautop' );
@@ -105,7 +115,7 @@ foreach ( $files as $f ) {
 	if ( preg_match_all( '/<!-- wp:signal-noise\/([a-z][a-z0-9-]*)( \{[^}]*\})? \/-->/', $h, $m ) ) { foreach ( $m[1] as $n ) { $placed[ $n ] = ( $placed[ $n ] ?? 0 ) + 1; } }
 }
 ok( array() === $left, 'no template or part emits a migrated shortcode' . ( $left ? ' — LEFT: ' . implode( ', ', $left ) : '' ) );
-$want = array( 'prov-chip' => 1, 'prov-panel' => 1, 'related-notes' => 1, 'cited-by' => 1, 'note-share' => 1, 'note-reply' => 1, 'updated-date' => 1, 'post-pillar' => 1, 'theme-toggle' => 2, 'suggestions-404' => 1 );
+$want = array( 'prov-chip' => 1, 'prov-panel' => 1, 'related-notes' => 1, 'cited-by' => 1, 'note-share' => 1, 'note-reply' => 1, 'updated-date' => 1, 'post-pillar' => 1, 'theme-toggle' => 2, 'suggestions-404' => 1, 'meta-nav' => 1 );
 ksort( $want ); ksort( $placed );
 ok( $want === $placed, 'each block is placed exactly where its shortcode was (toggle twice): ' . json_encode( $placed ) );
 ok( false !== strpos( (string) file_get_contents( $root . '/parts/header.html' ), '<!-- wp:signal-noise/theme-toggle {"placement":"header"} /-->' ), 'the header toggle carries placement:header' );
@@ -128,6 +138,9 @@ $GLOBALS['__rest'] = true; $GLOBALS['__empty'] = false;
 ok( $blk( 'updated-date' ) === wpautop( sn_updated_date_shortcode() ), 'REST + non-empty → real output (control)' );
 $GLOBALS['__rest'] = false;
 ok( false === strpos( $blk( 'theme-toggle' ), 'sn-block-placeholder' ), 'the toggle never needs a placeholder (it renders a button everywhere)' );
+$GLOBALS['__rest'] = true;
+ok( $blk( 'meta-nav' ) === $meta_nav_fixture, 'the meta-nav never needs a placeholder (it renders the nav everywhere, REST included)' );
+$GLOBALS['__rest'] = false;
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

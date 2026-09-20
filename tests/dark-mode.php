@@ -212,7 +212,7 @@ ok( strpos( $js_code, 'getElementById' ) === false,
 // <nav> of links is the wrong container for a state control with aria-pressed.
 $toggle_at = strpos( $footer, '<!-- wp:signal-noise/theme-toggle /-->' ); // footer instance (no placement attr)
 $cmdk_at   = strpos( $footer, 'sn-cmdk-trigger' );
-$nav_at    = strpos( $footer, '<nav class="sn-footer__meta-nav"' );
+$nav_at    = strpos( $footer, '<!-- wp:signal-noise/meta-nav /-->' ); // #388: the nav is a block; the part places it
 ok( false !== $cmdk_at && false !== $nav_at, 'the footer utility cluster is intact (search trigger + meta nav)' );
 ok( $toggle_at > $cmdk_at && $toggle_at < $nav_at,
 	'it sits BETWEEN the search button and the meta-nav — grouped with the other button, outside the nav of links' );

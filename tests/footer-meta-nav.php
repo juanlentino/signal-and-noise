@@ -5,14 +5,23 @@
  * v10.21.1 folded Now/Accessibility/Colophon into one quiet rust line and
  * purged the phantom `steel` slug. v10.21.2 (owner request): the three text
  * labels become mono stroke ICONS (clock / accessibility figure / pilcrow),
- * middot separators kept. v10.41.0 (owner request): a fourth icon — a shield
- * (Privacy policy, /privacy-policy) — joins the line. Icon-only links MUST
- * each carry an aria-label (and a title tooltip) — none of these have a
+ * middot separators kept. v10.41.0 (owner request): a fourth icon, a shield
+ * (Privacy policy, /privacy-policy), joins the line. Icon-only links MUST
+ * each carry an aria-label (and a title tooltip): none of these have a
  * universal glyph, so the accessible name is the only discoverable label.
+ *
+ * #388: the nav is the signal-noise/meta-nav PHP-only block, no longer a
+ * wp:html block in parts/footer.html. The contract pins below read the
+ * block's RENDERED output; the part is pinned to place the block and to
+ * carry no inline svg. The parity pin: the render is the wp:html block's
+ * inner content byte for byte, captured from 13.4.0's parts/footer.html
+ * through WP_Block_Parser into tests/fixtures/footer-meta-nav.html, so
+ * do_blocks() paints the footer exactly as before the port.
  *
  * @since theme v10.21.1
  */
 if ( PHP_SAPI !== 'cli' && ! defined( 'WP_CLI' ) ) { http_response_code( 404 ); exit; }
+if ( ! defined( 'ABSPATH' ) ) { define( 'ABSPATH', '/' ); }
 
 $pass = 0; $fail = 0;
 function ok( $c, $m ) { global $pass, $fail; if ( $c ) { $pass++; echo "PASS: $m\n"; } else { $fail++; echo "FAIL: $m\n"; } }
@@ -20,11 +29,25 @@ function ok( $c, $m ) { global $pass, $fail; if ( $c ) { $pass++; echo "PASS: $m
 $footer = file_get_contents( __DIR__ . '/../parts/footer.html' );
 ok( is_string( $footer ) && '' !== $footer, 'parts/footer.html readable' );
 
+// ── the part places the block; the markup lives in the block ──
+ok( 1 === substr_count( $footer, '<!-- wp:signal-noise/meta-nav /-->' ), 'parts/footer.html places the meta-nav block exactly once' );
+ok( false === strpos( $footer, '<svg' ) && false === strpos( $footer, '<nav class="sn-footer__meta-nav"' ), 'parts/footer.html carries no inline svg and no hand-inlined nav (the block owns the markup)' );
+
+$render_file = __DIR__ . '/../blocks/meta-nav/render.php';
+ok( is_readable( $render_file ), 'blocks/meta-nav/render.php exists' );
+$attributes = array(); $content = ''; $block = null;
+ob_start(); include $render_file; $rendered = (string) ob_get_clean();
+
+// ── THE PARITY PIN: the block renders the captured wp:html inner content, byte for byte ──
+$fixture = (string) file_get_contents( __DIR__ . '/fixtures/footer-meta-nav.html' );
+ok( '1abe1bc83921d6dba050022121d51479d1fe0fc6774e6d54281dfaab44f64098' === hash( 'sha256', $fixture ), 'the fixture is the 13.4.0 capture (sha256 pinned; a deliberate change to the nav changes both, in one PR)' );
+ok( $rendered === $fixture, 'the block renders the wp:html block\'s inner content byte for byte (' . strlen( $fixture ) . ' bytes, newline and indentation included)' );
+
 // ── ONE meta-nav <nav> carries all three icon links, middot-separated ──
-$nav_start = strpos( $footer, '<nav class="sn-footer__meta-nav"' );
+$nav_start = strpos( $rendered, '<nav class="sn-footer__meta-nav"' );
 ok( false !== $nav_start, 'meta-nav is a real <nav> element' );
-$nav_end = false !== $nav_start ? strpos( $footer, '</nav>', $nav_start ) : false;
-$nav     = ( false !== $nav_start && false !== $nav_end ) ? substr( $footer, $nav_start, $nav_end - $nav_start ) : '';
+$nav_end = false !== $nav_start ? strpos( $rendered, '</nav>', $nav_start ) : false;
+$nav     = ( false !== $nav_start && false !== $nav_end ) ? substr( $rendered, $nav_start, $nav_end - $nav_start ) : '';
 ok( false !== strpos( $nav, 'aria-label="Site meta"' ), 'nav landmark is labelled' );
 ok( false !== strpos( $nav, 'href="/now"' ), 'meta-nav links /now' );
 ok( false !== strpos( $nav, 'href="/accessibility"' ), 'meta-nav links /accessibility' );
@@ -64,8 +87,8 @@ foreach ( $sn_labels[1] as $sn_label ) {
 }
 
 // ── the v10.21.1 text-label paragraph form is gone ──
-ok( false === strpos( $footer, '>Now</a>' ) && false === strpos( $footer, '>Colophon</a>' ), 'text labels replaced by icons' );
-ok( false === strpos( $footer, '<p class="sn-footer__meta-nav' ), 'old paragraph wrapper gone (now a nav element)' );
+ok( false === strpos( $rendered, '>Now</a>' ) && false === strpos( $rendered, '>Colophon</a>' ), 'text labels replaced by icons' );
+ok( false === strpos( $rendered, '<p class="sn-footer__meta-nav' ), 'old paragraph wrapper gone (now a nav element)' );
 
 // ── phantom `steel` slug stays purged: only REAL palette slugs in the footer ──
 ok( false === strpos( $footer, 'has-steel-color' ) && false === strpos( $footer, '"textColor":"steel"' ), 'phantom steel slug still gone from footer markup' );
