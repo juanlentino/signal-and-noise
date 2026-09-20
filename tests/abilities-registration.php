@@ -1330,5 +1330,21 @@ $nullinput = call_user_func( $ability['execute_callback'], null );
 ha_eq( true,     $nullinput['ok'],  'ok=true with null input' );
 ha_eq( 'v9.9.0', $nullinput['tag'], 'tag returned with null input' );
 
+// ─── Test: the three schema shapes the Copilot provider rejects stay declared ──
+// #382 deleted the theme's tool-schema normalizer because OpenStation projects
+// the model-facing copy itself, after its openstation_ai_tools filter (since
+// v0.9.6, upstream #366). The theme keeps declaring the three shapes that
+// projection exists for; they are legal JSON Schema and the Abilities API
+// validates against them as written. This pins the declarations so a later
+// "fix" does not flatten them in the belief that the deleted module was the
+// only thing making them safe.
+echo "\nTest: the three Copilot-sensitive schema shapes stay declared\n";
+ha_reset();
+sn_theme_register_abilities();
+$reg = $GLOBALS['__test_registered_abilities'];
+ha_true( isset( $reg['signal-and-noise/get-active-template-structure']['input_schema']['anyOf'] ) && 2 === count( $reg['signal-and-noise/get-active-template-structure']['input_schema']['anyOf'] ), 'get-active-template-structure declares a top-level anyOf (post_id or slug)' );
+ha_true( array( 'object', 'null' ) === $reg['signal-and-noise/get-latest-theme-tag']['input_schema']['type'] && array( 'object', 'null' ) === $reg['signal-and-noise/get-seo-route-meta']['input_schema']['type'] && array( 'object', 'null' ) === $reg['signal-and-noise/get-llms-txt']['input_schema']['type'], 'get-latest-theme-tag, get-seo-route-meta and get-llms-txt declare the union type object|null' );
+ha_true( array() === $reg['signal-and-noise/get-theme-version']['input_schema']['properties'] && array() === $reg['signal-and-noise/get-design-tokens']['input_schema']['properties'] && array() === $reg['signal-and-noise/get-page-notes-pillars']['input_schema']['properties'], 'get-theme-version, get-design-tokens and get-page-notes-pillars declare an empty properties array' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
