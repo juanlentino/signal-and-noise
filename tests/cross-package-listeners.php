@@ -442,8 +442,9 @@ if ( ! function_exists( 'sn_notes_is_index_request' ) ) {
 	function sn_notes_is_index_request() { return ! empty( $GLOBALS['__is_notes_index'] ); }
 }
 $GLOBALS['__is_notes_index'] = false;
-$og = apply_filters( 'sn_og_image_url', 'https://example.com/site-default.png' );
-cpl_true( is_string( $og ) && false !== strpos( $og, 'assets/brand/og-image.png' ), 'Test 7.2: non-index request gets the brand card in place of the plugin\'s site-default seed' );
+cpl_eq( 'https://example.com/site-default.png', apply_filters( 'sn_og_image_url', 'https://example.com/site-default.png' ), 'Test 7.2: non-index request passes a SET wp-admin default through unchanged (the setting wins)' );
+$og = apply_filters( 'sn_og_image_url', '' );
+cpl_true( is_string( $og ) && false !== strpos( $og, 'assets/brand/og-image.png' ), 'Test 7.2b: with the setting EMPTY the brand card is the theme default' );
 // Force the index branch: the bespoke card wins.
 $GLOBALS['__is_notes_index'] = true;
 $og = apply_filters( 'sn_og_image_url', 'https://example.com/site-default.png' );

@@ -61,19 +61,22 @@ function sn_notes_og_card_image( $url ) {
 }
 
 /**
- * The SITE-DEFAULT og:image is the brand card.
+ * The theme's DEFAULT og:image is the brand card (v13.5.0, fixed v13.5.1).
  *
  * The plugin seeds `sn_og_image_url` with the wp-admin "Default OG image URL"
- * setting, which pointed at a small square logo. Priority 5 replaces that seed
- * before the plugin's own per-post resolution (10) and the /notes card (20)
- * run, so singular views keep their generated cards and every other view
- * (home, archives, search) previews with the 1200x630 JL card instead.
+ * setting. Priority 5 runs before the plugin's own per-post resolution (10)
+ * and the /notes card (20). v13.5.0 replaced the seed unconditionally, which
+ * made the setting a dead field; now the brand card fills in ONLY when the
+ * field is empty, so what the owner types there wins, and clearing it gives
+ * the theme default. Singular views keep their generated cards either way.
  *
- * @param string $url The setting's value.
+ * @param string $url The setting's value ('' when unset).
  * @return string
  */
 function sn_brand_og_image_default( $url ) {
-	unset( $url );
+	if ( '' !== trim( (string) $url ) ) {
+		return $url;
+	}
 	return get_theme_file_uri( 'assets/brand/og-image.png' );
 }
 
