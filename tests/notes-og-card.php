@@ -66,8 +66,12 @@ ok( is_array( $size ) && defined( 'IMAGETYPE_PNG' ) && IMAGETYPE_PNG === $size[2
 //    archive / search link previews with.
 $brand = 'https://example.test/theme/assets/brand/og-image.png';
 ok( $has && function_exists( 'sn_brand_og_image_default' ), 'the brand site-default filter body exists' );
-ok( $has && function_exists( 'sn_brand_og_image_default' ) && sn_brand_og_image_default( $default ) === $brand,
-	'the site default is repointed at assets/brand/og-image.png regardless of the setting' );
+ok( $has && function_exists( 'sn_brand_og_image_default' ) && sn_brand_og_image_default( '' ) === $brand,
+	'an EMPTY setting gets the brand card (the theme default)' );
+ok( $has && function_exists( 'sn_brand_og_image_default' ) && sn_brand_og_image_default( $default ) === $default,
+	'a URL set in wp-admin (Identity & SEO: Default OG image URL) WINS — v13.5.0 overrode it and made the field dead' );
+ok( $has && function_exists( 'sn_brand_og_image_default' ) && sn_brand_og_image_default( '  ' ) === $brand,
+	'whitespace counts as empty' );
 $brand_asset = __DIR__ . '/../assets/brand/og-image.png';
 $bsize = file_exists( $brand_asset ) ? @getimagesize( $brand_asset ) : false;
 ok( is_array( $bsize ) && 1200 === $bsize[0] && 630 === $bsize[1] && IMAGETYPE_PNG === $bsize[2], 'the brand card is a 1200x630 PNG' );
