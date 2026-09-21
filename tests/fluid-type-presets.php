@@ -188,68 +188,64 @@ ok( 16.49088 === snt_px_at( $live['medium'], 768 ) && 14.0 === snt_px_at( $live[
 ok( null === snt_px_at( 'clamp(3rem, calc(1vw + 1rem), 6rem)', 1000 ) && null === snt_px_at( '2rem', 1000 ),
 	'evaluator: an unreadable middle term or a bare length is null, never a false match' );
 
-// 2. THE FIVE. Each is the literal clamp() the site serves, carries no
-//    `fluid` key (the three `"fluid": false` were inert and are gone), and
-//    core's alternative under the theme's effective pair is pinned as the
-//    exact string core would emit, with what it renders at 320, 768, 1024
-//    and 1440 beside the hand-written line. Floor and cap agree (320 and
-//    1440); the middle does not (768 and 1024), which is why the literal
-//    stands. A red on one "differs" line is a crossing at that width, not a
-//    match (two lines meet at a point, and a shared floor matches at 768
-//    without matching at 1024). The port signal is the "every tested width"
-//    line per preset: red there means the port renders the same px at 320,
-//    768, 1024 and 1440, so do it and re-pin here.
-echo "\n2. The five hand-written presets against core's fluid { min, max } under the effective pair\n";
+// 2. THE FIVE, PORTED (#387, owner decision 2026-09-21: the DEFAULT pair).
+//    Each is now a bare `size` (the cap) plus `fluid: { min, max }` holding
+//    the old hand line's floor and cap, and core computes the clamp() under
+//    the default pair (320px to layout.wideSize, 1400px). The pair stayed the
+//    default on purpose: the tuned pair the issue floated (680px/1370px) keeps
+//    the headings within ~4px of the old lines but re-scales the SEVEN BARE
+//    presets too, and `medium` is the global body size (styles.typography),
+//    `x-large` is h3 and `large` is h4, so it would have shrunk body copy by
+//    ~1.7px and h3/h4 by 4-5px at every tablet width, on every page. Under
+//    the default pair section 1 stays byte-identical, which is the guard
+//    that nothing outside the five moved. What DID move is pinned here as a
+//    table, not a tolerance: the exact string core emits and the px at each
+//    tested width, next to the old hand line for the record. Floor and cap
+//    are identical to the old line; the middle is larger between ~640 and
+//    ~1300px (post h1 77 -> 97px at 768).
+echo "\n2. The five ported presets under the effective pair\n";
 $five = array(
-	'xx-large'   => array( 'clamp(3rem, 7vw, 6rem)', '3rem', '6rem', 'clamp(3rem, 3rem + ((1vw - 0.2rem) * 4.444), 6rem)' ),
-	'xxx-large'  => array( 'clamp(4rem, 10vw, 9rem)', '4rem', '9rem', 'clamp(4rem, 4rem + ((1vw - 0.2rem) * 7.407), 9rem)' ),
-	'display-sm' => array( 'clamp(1.8rem, 3vw, 2.5rem)', '1.8rem', '2.5rem', 'clamp(1.8rem, 1.8rem + ((1vw - 0.2rem) * 1.037), 2.5rem)' ),
-	'display-md' => array( 'clamp(2rem, 4vw, 2.8rem)', '2rem', '2.8rem', 'clamp(2rem, 2rem + ((1vw - 0.2rem) * 1.185), 2.8rem)' ),
-	'display-lg' => array( 'clamp(2.5rem, 6vw, 5rem)', '2.5rem', '5rem', 'clamp(2.5rem, 2.5rem + ((1vw - 0.2rem) * 3.704), 5rem)' ),
+	// slug => old hand line, min, max, what core emits under 320px/1400px, px at 320/768/1024/1440
+	'xx-large'   => array( 'clamp(3rem, 7vw, 6rem)', '3rem', '6rem', 'clamp(3rem, 3rem + ((1vw - 0.2rem) * 4.444), 6rem)', array( 48.0, 67.909, 79.286, 96.0 ) ),
+	'xxx-large'  => array( 'clamp(4rem, 10vw, 9rem)', '4rem', '9rem', 'clamp(4rem, 4rem + ((1vw - 0.2rem) * 7.407), 9rem)', array( 64.0, 97.183, 116.145, 144.0 ) ),
+	'display-sm' => array( 'clamp(1.8rem, 3vw, 2.5rem)', '1.8rem', '2.5rem', 'clamp(1.8rem, 1.8rem + ((1vw - 0.2rem) * 1.037), 2.5rem)', array( 28.8, 33.446, 36.1, 40.0 ) ),
+	'display-md' => array( 'clamp(2rem, 4vw, 2.8rem)', '2rem', '2.8rem', 'clamp(2rem, 2rem + ((1vw - 0.2rem) * 1.185), 2.8rem)', array( 32.0, 37.309, 40.342, 44.8 ) ),
+	'display-lg' => array( 'clamp(2.5rem, 6vw, 5rem)', '2.5rem', '5rem', 'clamp(2.5rem, 2.5rem + ((1vw - 0.2rem) * 3.704), 5rem)', array( 40.0, 56.594, 66.076, 80.0 ) ),
 );
 $fluid_setting = $theme['settings']['typography']['fluid'] ?? false;
 $pair_min      = is_array( $fluid_setting ) && isset( $fluid_setting['minViewportWidth'] ) ? $fluid_setting['minViewportWidth'] : '320px';
 $pair_max      = is_array( $fluid_setting ) && isset( $fluid_setting['maxViewportWidth'] ) ? $fluid_setting['maxViewportWidth'] : ( $theme['settings']['layout']['wideSize'] ?? '1600px' );
-ok( ! empty( $fluid_setting ), 'settings.typography.fluid is on' );
+ok( true === $fluid_setting, 'settings.typography.fluid is the bare `true` (the default pair; a pair object here re-scales body, h3 and h4 too)' );
+ok( '320px' === $pair_min && '1400px' === $pair_max, "effective pair is 320px/1400px (got $pair_min/$pair_max)" );
 echo "   effective pair: $pair_min to $pair_max (widths " . implode( ' / ', $widths ) . ")\n";
 
-/** Core's output for a preset ported to fluid { min, max }. */
-$ported = static function ( $slug, $min, $max ) {
-	return wp_get_typography_font_size_value( array( 'slug' => $slug, 'size' => $max, 'fluid' => array( 'min' => $min, 'max' => $max ) ) );
-};
-
 snt_with_pair( $fluid_setting, $theme );
-foreach ( $five as $slug => list( $hand, $min, $max, $core_expected ) ) {
+foreach ( $five as $slug => list( $hand, $min, $max, $core_expected, $px ) ) {
 	$fs = $sizes[ $slug ] ?? array();
-	ok( ( $fs['size'] ?? '' ) === $hand, "preset '$slug' is the literal $hand" );
-	ok( ! array_key_exists( 'fluid', $fs ), "preset '$slug' carries no fluid key (a false beside a clamp() is inert)" );
-	ok( wp_get_typography_font_size_value( $fs ) === $hand, "preset '$slug' is served verbatim by core" );
-
-	$core = $ported( $slug, $min, $max );
-	ok( $core === $core_expected, "core's fluid { $min, $max } for '$slug' under $pair_min/$pair_max is $core_expected" . ( $core === $core_expected ? '' : " (got $core)" ) );
-	echo "   $slug  hand: " . $row( $hand ) . "  core: " . $row( $core ) . "\n";
+	ok( ( $fs['size'] ?? '' ) === $max, "preset '$slug' size is the bare cap $max (no clamp() literal)" );
+	ok( ( $fs['fluid'] ?? null ) === array( 'min' => $min, 'max' => $max ), "preset '$slug' carries fluid { $min, $max }, the old line's floor and cap" );
+	$core = wp_get_typography_font_size_value( $fs );
+	ok( $core === $core_expected, "core emits $core_expected for '$slug'" . ( $core === $core_expected ? '' : " (got $core)" ) );
+	echo "   $slug  was: " . $row( $hand ) . "  now: " . $row( $core ) . "\n";
 	foreach ( array( 320, 1440 ) as $w ) {
-		ok( snt_px_at( $hand, $w ) === snt_px_at( $core, $w ), "'$slug' at {$w}px: floor or cap, identical (" . snt_px_at( $hand, $w ) . 'px)' );
+		ok( snt_px_at( $hand, $w ) === snt_px_at( $core, $w ), "'$slug' at {$w}px: floor or cap, identical to the old line (" . snt_px_at( $hand, $w ) . 'px)' );
 	}
-	foreach ( array( 768, 1024 ) as $w ) {
-		$h = snt_px_at( $hand, $w );
-		$c = snt_px_at( $core, $w );
-		ok( null !== $h && null !== $c && $h !== $c, "'$slug' at {$w}px: hand {$h}px vs core {$c}px, differs at this width" );
+	foreach ( $widths as $i => $w ) {
+		ok( round( (float) snt_px_at( $core, $w ), 3 ) === $px[ $i ], "'$slug' renders {$px[$i]}px at {$w}px" );
 	}
-	ok( ! $same_everywhere( $hand, $core ), "'$slug' under $pair_min/$pair_max: not the same px at every tested width, so the literal stands (red here means: port it, #387)" );
 }
 
-// 3. ONE PAIR REPRODUCES AT MOST ONE PRESET, AND MOVES THE BARE ONES. The
-//    two crossings that are exact in rem are run: each makes its own preset
-//    identical at every tested width and leaves the other four different,
-//    and each rewrites `medium`, which the live site serves today under
-//    320px/1400px. This is the fact that blocks a same-px port of any of
-//    the five under one pair and hands the pair to the owner.
+// 3. WHY THE PAIR STAYED DEFAULT. One pair reproduces at most one of the
+//    old hand lines, and any pair other than the default rewrites `medium`
+//    (the body size) and the other six bare presets. The two crossings that
+//    are exact in rem are run against the OLD lines as the record: each
+//    makes its own preset identical at every tested width, leaves the other
+//    four different, and moves `medium`.
 echo "\n3. A preset's own crossing as the global pair\n";
 foreach ( array( 'xxx-large' => array( '640px', '1440px' ), 'display-md' => array( '800px', '1120px' ) ) as $own => list( $a, $b ) ) {
 	snt_with_pair( array( 'minViewportWidth' => $a, 'maxViewportWidth' => $b ), $theme );
 	foreach ( $five as $slug => list( $hand, $min, $max ) ) {
-		$core = $ported( $slug, $min, $max );
+		$core = wp_get_typography_font_size_value( array( 'slug' => $slug, 'size' => $max, 'fluid' => array( 'min' => $min, 'max' => $max ) ) );
 		$same = $same_everywhere( $hand, $core );
 		ok( $same === ( $slug === $own ), "pair $a/$b: '$slug' " . ( $slug === $own ? 'identical at every width' : 'differs' ) . ' (core: ' . $row( $core ) . ')' );
 	}

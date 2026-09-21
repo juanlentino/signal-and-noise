@@ -88,12 +88,21 @@ foreach ( $theme['settings']['typography']['fontSizes'] ?? array() as $fs ) {
 foreach ( array(
 	'eyebrow' => '0.75rem', 'prose' => '1rem', 'eyebrow-lg' => '0.85rem',
 	'caption' => '0.9rem', 'nav' => '1.125rem', 'prose-lg' => '1.15rem',
-	'display-lg' => 'clamp(2.5rem, 6vw, 5rem)',
-	'display-md' => 'clamp(2rem, 4vw, 2.8rem)',
-	'display-sm' => 'clamp(1.8rem, 3vw, 2.5rem)',
 ) as $slug => $size ) {
 	ok( isset( $sizes[ $slug ] ), "preset '$slug' exists" );
 	ok( ( $sizes[ $slug ]['size'] ?? '' ) === $size, "preset '$slug' size === $size" );
+}
+// The three display presets are core fluid { min, max } since #387 (the old
+// hand-written clamp() literals are the floor and cap here; the computed
+// strings and their px are pinned in tests/fluid-type-presets.php).
+foreach ( array(
+	'display-lg' => array( '2.5rem', '5rem' ),
+	'display-md' => array( '2rem', '2.8rem' ),
+	'display-sm' => array( '1.8rem', '2.5rem' ),
+) as $slug => list( $min, $max ) ) {
+	ok( isset( $sizes[ $slug ] ), "preset '$slug' exists" );
+	ok( ( $sizes[ $slug ]['size'] ?? '' ) === $max && ( $sizes[ $slug ]['fluid'] ?? null ) === array( 'min' => $min, 'max' => $max ),
+		"preset '$slug' is size $max with fluid { $min, $max }" );
 }
 
 // THE FLUID FLOOR RULE — v12.6.1, and the reason it exists.
