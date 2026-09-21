@@ -142,6 +142,21 @@ function snt_require_wp_interactivity_api() {
 		echo "\nResult: 0 passed, 1 failed.\n";
 		exit( 1 );
 	}
+	// Core 7.1 calls PHP 8.5's array_first()/array_last() and ships them in
+	// wp-includes/compat.php, which nothing here loads. Core's own bodies,
+	// guarded: on 8.5 the natives win. (Caught by the PHP 8.4 production-parity
+	// job; a local 8.5 masks it.)
+	if ( ! function_exists( 'array_first' ) ) {
+		function array_first( array $array ) { // phpcs:ignore Universal.NamingConventions.NoReservedKeywordParameterNames.arrayFound
+			foreach ( $array as $value ) { return $value; }
+			return null;
+		}
+	}
+	if ( ! function_exists( 'array_last' ) ) {
+		function array_last( array $array ) { // phpcs:ignore Universal.NamingConventions.NoReservedKeywordParameterNames.arrayFound
+			return empty( $array ) ? null : $array[ array_key_last( $array ) ];
+		}
+	}
 	// The directives processor calls one static of the full HTML Processor,
 	// is_void(), which sits in a 6,500-line class with its own dependency
 	// tree. This is that one method, its list verbatim from core 7.1
