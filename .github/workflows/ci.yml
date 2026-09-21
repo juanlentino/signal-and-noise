@@ -159,6 +159,12 @@ jobs:
             curl -sSfL "$base/html-api/$f" -o "$dest/html-api/$f"
           done
           curl -sSfL "$base/class-wp-token-map.php" -o "$dest/class-wp-token-map.php"
+          # #384: the theme toggle's directives are pinned with core's own
+          # server-side processor (tests/theme-toggle-directives.php).
+          mkdir -p "$dest/interactivity-api"
+          for f in class-wp-interactivity-api.php class-wp-interactivity-api-directives-processor.php interactivity-api.php; do
+            curl -sSfL "$base/interactivity-api/$f" -o "$dest/interactivity-api/$f"
+          done
           echo "SNT_WP_HTML_API=$dest/html-api" >> "$GITHUB_ENV"
       # Standalone fixture tests — each stubs its own WP functions, no WP/DB needed.
       - name: Run standalone test sweep
@@ -237,6 +243,12 @@ jobs:
             curl -sSfL "$base/html-api/$f" -o "$dest/html-api/$f"
           done
           curl -sSfL "$base/class-wp-token-map.php" -o "$dest/class-wp-token-map.php"
+          # #384: the theme toggle's directives are pinned with core's own
+          # server-side processor (tests/theme-toggle-directives.php).
+          mkdir -p "$dest/interactivity-api"
+          for f in class-wp-interactivity-api.php class-wp-interactivity-api-directives-processor.php interactivity-api.php; do
+            curl -sSfL "$base/interactivity-api/$f" -o "$dest/interactivity-api/$f"
+          done
           echo "SNT_WP_HTML_API=$dest/html-api" >> "$GITHUB_ENV"
       - name: Lint all .php files
         continue-on-error: ${{ matrix.experimental }}

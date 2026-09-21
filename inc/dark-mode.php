@@ -145,12 +145,45 @@ function sn_dark_mode_toggle_markup( $atts = array() ) {
 	$atts      = shortcode_atts( array( 'placement' => 'footer' ), (array) $atts, 'sn_theme_toggle' );
 	$placement = ( 'header' === $atts['placement'] ) ? 'header' : 'footer';
 
+	// Interactivity API (#384): the DOM binding is declared here, the state
+	// lives in assets/js/dark-mode-toggle.js under the same namespace. The
+	// server state below is what the server-side directive processor reads,
+	// so the bytes it renders are the button's resting shape: pressed false,
+	// "Light", "Switch to dark theme", hidden. The strings ride the state so
+	// translation stays in PHP; the module derives `label` and `ariaLabel`
+	// from them. Directive values must not be null server-side: a null
+	// `data-wp-text` blanks the element and a null bind drops the attribute.
+	if ( function_exists( 'wp_interactivity_state' ) ) {
+		wp_interactivity_state(
+			'signal-noise/theme-toggle',
+			array(
+				'isDark'    => false,
+				'ready'     => false,
+				'label'     => __( 'Light', 'signal-and-noise' ),
+				'ariaLabel' => __( 'Switch to dark theme', 'signal-and-noise' ),
+				'labels'    => array(
+					'light' => __( 'Light', 'signal-and-noise' ),
+					'dark'  => __( 'Dark', 'signal-and-noise' ),
+				),
+				'names'     => array(
+					'toDark'  => __( 'Switch to dark theme', 'signal-and-noise' ),
+					'toLight' => __( 'Switch to light theme', 'signal-and-noise' ),
+				),
+			)
+		);
+	}
+
 	return '<button type="button" class="sn-theme-toggle sn-theme-toggle--' . esc_attr( $placement ) . '" hidden'
+		. ' data-wp-interactive="signal-noise/theme-toggle"'
+		. ' data-wp-init="callbacks.init"'
+		. ' data-wp-on--click="actions.toggle"'
+		. ' data-wp-bind--hidden="!state.ready"'
+		. ' data-wp-bind--aria-pressed="state.isDark"'
+		. ' data-wp-bind--aria-label="state.ariaLabel"'
 		. ' aria-pressed="false"'
 		. ' aria-label="' . esc_attr__( 'Switch to dark theme', 'signal-and-noise' ) . '">'
 		. '<span class="sn-theme-toggle__dot" aria-hidden="true"></span>'
-		. '<span class="sn-theme-toggle__label" data-label-light="' . esc_attr__( 'Light', 'signal-and-noise' ) . '"'
-		. ' data-label-dark="' . esc_attr__( 'Dark', 'signal-and-noise' ) . '">'
+		. '<span class="sn-theme-toggle__label" data-wp-text="state.label">'
 		. esc_html__( 'Light', 'signal-and-noise' )
 		. '</span>'
 		. '</button>';
@@ -159,30 +192,26 @@ function sn_dark_mode_toggle_markup( $atts = array() ) {
 add_shortcode( 'sn_theme_toggle', 'sn_dark_mode_toggle_markup' );
 
 /**
- * Register the toggle behaviour; blocks/theme-toggle/block.json names the
- * handle as its `viewScript` (#384).
+ * Register the toggle module; blocks/theme-toggle/block.json names the id as
+ * its `viewScriptModule` (#384).
  *
- * Registered, not enqueued: core enqueues a block's view script when the
+ * Registered, not enqueued: core enqueues a block's view module when the
  * block renders (wp-includes/class-wp-block.php, render()), and the toggle
- * block sits in parts/header.html and parts/footer.html, so the script still
- * reaches every page. What moved is where that is declared: the manifest,
- * not an unconditional enqueue here. Deferred and footer-loaded: unlike the
- * head snippet above, nothing here is needed before paint. The button is
- * hidden until this runs, so a slow or failed load degrades to "no toggle",
- * never to a dead control. tests/block-view-scripts.php pins the handle and
- * its arguments.
+ * block sits in parts/header.html and parts/footer.html, so the module still
+ * reaches every page. A plain ES module importing `@wordpress/interactivity`,
+ * which core serves through its import map (the navigation block already
+ * loads it on every page); no bundler, the no-build invariant holds. With
+ * `supports.interactivity` the manifest gives it footer placement and
+ * fetchpriority=low on its own. The button is hidden until the store's init
+ * runs, so a slow or failed load degrades to "no toggle", never to a dead
+ * control. tests/block-view-scripts.php pins the id and its arguments.
  */
 function sn_dark_mode_register_toggle_script() {
-	wp_register_script(
+	wp_register_script_module(
 		'sn-dark-mode-toggle',
 		get_theme_file_uri( 'assets/js/dark-mode-toggle.js' ),
-		array(),
-		sn_asset_ver( 'assets/js/dark-mode-toggle.js' ),
-		array(
-			'in_footer' => true,
-			'strategy'  => 'defer',
-		)
+		array( '@wordpress/interactivity' ),
+		sn_asset_ver( 'assets/js/dark-mode-toggle.js' )
 	);
 }
 add_action( 'init', 'sn_dark_mode_register_toggle_script' );
-

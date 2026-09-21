@@ -1,9 +1,14 @@
 /**
- * Signal & Noise — dark-mode toggle.
+ * Signal & Noise — dark-mode toggle, an Interactivity API store (#384).
  *
  * The palette lives in CSS and the pre-paint stamp lives in an inline snippet
- * (inc/dark-mode.php). This file owns only the button: revealing it, keeping
- * its label and pressed-state honest, and persisting the reader's choice.
+ * (inc/dark-mode.php). This module owns only the button's STATE: what the
+ * reader is looking at, what the label and the accessible name should say,
+ * and persisting the reader's choice. The DOM binding is declared on the
+ * markup (`data-wp-bind--aria-pressed`, `data-wp-text`, `data-wp-on--click`
+ * in sn_dark_mode_toggle_markup()), so the two instances (header and footer)
+ * share one store and are never out of step; there is nothing to query and
+ * nothing to re-sync.
  *
  * THREE STATES, NOT TWO. The stored value is 'dark', 'light', or absent, and
  * absent is meaningfully different from either — it means "follow the OS", so
@@ -11,139 +16,128 @@
  * through the day. Collapsing that to a boolean would pin every visitor to
  * whatever the page happened to be on their first visit.
  *
- * @since theme v11.13.0
+ * Server state (wp_interactivity_state, same namespace) supplies the
+ * translated strings and the initial `isDark: false` / `ready: false`, so the
+ * server-side directive processor renders the same bytes the button always
+ * had; `callbacks.init` reads the real preference and flips `ready`.
+ *
+ * @since theme v11.13.0 (classic IIFE); ES module since #384 step two.
  */
-( function () {
-	'use strict';
+import { store } from '@wordpress/interactivity';
 
-	var KEY = 'sn-theme'; // Mirrors SN_THEME_STORAGE_KEY in inc/dark-mode.php.
-	var root = document.documentElement;
-	// Keep the page choice even when storage is blocked or full.
-	var preference = read();
+const KEY = 'sn-theme'; // Mirrors SN_THEME_STORAGE_KEY in inc/dark-mode.php.
 
-	// TWO INSTANCES, ONE STATE. The toggle renders in both the footer bar and
-	// the header, and CSS shows exactly one depending on which bar is
-	// persistent at that width (see inc/dark-mode.php). Binding by class rather
-	// than by id is not a style choice — two elements sharing an id is invalid
-	// and getElementById would silently pick one. Every instance is wired and
-	// every instance is re-synced, so the hidden one is already correct if a
-	// resize or an orientation change reveals it.
-	var buttons = [].slice.call( document.querySelectorAll( '.sn-theme-toggle' ) );
+// Mirrors the two literals in inc/dark-mode.php's theme-color metas. Both
+// metas are media-gated on the OS scheme, not on data-theme — a reader who
+// toggles against their OS scheme would otherwise get browser chrome that
+// still followed the OS (#333). Updating BOTH metas' values to the chosen
+// theme (rather than adding a third, un-media'd meta) keeps the two-meta
+// shape tests/head-sweep.php pins exactly as it is. The favicon is not
+// touched: it is one SVG that inverts on the OS scheme by itself.
+const CHROME_COLOR = { dark: '#0a0a0a', light: '#ffffff' };
 
-	if ( ! buttons.length ) {
-		return;
+/** Storage can throw (Safari private mode, disabled cookies). Never fatal. */
+function read() {
+	try {
+		const v = localStorage.getItem( KEY );
+		return ( 'dark' === v || 'light' === v ) ? v : null;
+	} catch ( e ) {
+		return null;
 	}
+}
 
-	var mq = window.matchMedia ? window.matchMedia( '( prefers-color-scheme: dark )' ) : null;
-
-	/** Storage can throw (Safari private mode, disabled cookies). Never fatal. */
-	function read() {
-		try {
-			var v = localStorage.getItem( KEY );
-			return ( 'dark' === v || 'light' === v ) ? v : null;
-		} catch ( e ) {
-			return null;
-		}
-	}
-
-	function write( v ) {
-		try {
-			if ( null === v ) {
-				localStorage.removeItem( KEY );
-			} else {
-				localStorage.setItem( KEY, v );
-			}
-		} catch ( e ) {
-			/* A choice that cannot be stored still applies to this page. */
-		}
-	}
-
-	/** What the reader is looking at right now, chosen or inherited. */
-	function effective() {
-		if ( preference ) {
-			return preference;
-		}
-		return ( mq && mq.matches ) ? 'dark' : 'light';
-	}
-
-	// Mirrors the two literals in inc/dark-mode.php's theme-color metas. Both
-	// metas are media-gated on the OS scheme, not on data-theme — a reader who
-	// toggles against their OS scheme would otherwise get browser chrome that
-	// still followed the OS (#333). Updating BOTH metas' values to the chosen
-	// theme (rather than adding a third, un-media'd meta) keeps the two-meta
-	// shape tests/head-sweep.php pins exactly as it is.
-	//
-	// The favicon is NOT touched: it is one SVG that inverts on the
-	// OS scheme by itself, and writing hrefs across every rel="icon" link would
-	// overwrite the SVG's href with the .ico fallback's.
-	var CHROME_COLOR = { dark: '#0a0a0a', light: '#ffffff' };
-
-	/** Push the chosen theme onto browser chrome (theme-color). */
-	function syncChrome( isDark ) {
-		var color = isDark ? CHROME_COLOR.dark : CHROME_COLOR.light;
-		[].forEach.call( document.querySelectorAll( 'meta[name="theme-color"]' ), function ( meta ) {
-			meta.setAttribute( 'content', color );
-		} );
-	}
-
-	function sync() {
-		var isDark = 'dark' === effective();
-		syncChrome( isDark );
-
-		buttons.forEach( function ( btn ) {
-			var label = btn.querySelector( '.sn-theme-toggle__label' );
-
-			btn.setAttribute( 'aria-pressed', isDark ? 'true' : 'false' );
-			// The accessible name states the ACTION; the visible label states
-			// the STATE. A button reading only "Dark" cannot tell you which it
-			// means.
-			btn.setAttribute( 'aria-label', isDark ? 'Switch to light theme' : 'Switch to dark theme' );
-			if ( label ) {
-				label.textContent = isDark
-					? ( label.getAttribute( 'data-label-dark' ) || 'Dark' )
-					: ( label.getAttribute( 'data-label-light' ) || 'Light' );
-			}
-		} );
-	}
-
-	buttons.forEach( function ( btn ) {
-	btn.addEventListener( 'click', function () {
-		var next = 'dark' === effective() ? 'light' : 'dark';
-
-		// View Transitions are already the theme's navigation idiom, so the
-		// palette swap borrows the same mechanism — a cross-fade rather than a
-		// hard cut, which at this contrast is the difference between a
-		// transition and a camera flash. Gated on both support and the
-		// reader's motion preference; without either it simply swaps.
-		var apply = function () {
-			preference = next;
-			root.setAttribute( 'data-theme', next );
-			write( next );
-			sync();
-		};
-
-		var reduced = window.matchMedia
-			&& window.matchMedia( '( prefers-reduced-motion: reduce )' ).matches;
-
-		if ( document.startViewTransition && ! reduced ) {
-			document.startViewTransition( apply );
+function write( v ) {
+	try {
+		if ( null === v ) {
+			localStorage.removeItem( KEY );
 		} else {
-			apply();
+			localStorage.setItem( KEY, v );
 		}
-	} );
-	} );
-
-	// Follow the OS while the reader has expressed no preference of their own.
-	if ( mq && mq.addEventListener ) {
-		mq.addEventListener( 'change', function () {
-			if ( ! preference ) {
-				sync();
-			}
-		} );
+	} catch ( e ) {
+		/* A choice that cannot be stored still applies to this page. */
 	}
+}
 
-	sync();
-	buttons.forEach( function ( btn ) {
-		btn.hidden = false;
+const mq = window.matchMedia ? window.matchMedia( '( prefers-color-scheme: dark )' ) : null;
+
+// Kept in module scope, not in state: absent is a real value here, and the
+// page choice must survive blocked storage.
+let preference = null;
+
+/** What the reader is looking at right now, chosen or inherited. */
+function effective() {
+	if ( preference ) {
+		return preference;
+	}
+	return ( mq && mq.matches ) ? 'dark' : 'light';
+}
+
+/** Push the chosen theme onto browser chrome (theme-color). */
+function syncChrome( isDark ) {
+	const color = isDark ? CHROME_COLOR.dark : CHROME_COLOR.light;
+	document.querySelectorAll( 'meta[name="theme-color"]' ).forEach( ( meta ) => {
+		meta.setAttribute( 'content', color );
 	} );
-}() );
+}
+
+const { state } = store( 'signal-noise/theme-toggle', {
+	state: {
+		// The visible label states the STATE; the accessible name states the
+		// ACTION. A button reading only "Dark" cannot tell you which it means.
+		get label() {
+			return state.isDark ? state.labels.dark : state.labels.light;
+		},
+		get ariaLabel() {
+			return state.isDark ? state.names.toLight : state.names.toDark;
+		},
+	},
+	actions: {
+		toggle() {
+			const next = 'dark' === effective() ? 'light' : 'dark';
+
+			// View Transitions are already the theme's navigation idiom, so the
+			// palette swap borrows the same mechanism — a cross-fade rather than
+			// a hard cut, which at this contrast is the difference between a
+			// transition and a camera flash. Gated on both support and the
+			// reader's motion preference; without either it simply swaps.
+			const apply = () => {
+				preference = next;
+				document.documentElement.setAttribute( 'data-theme', next );
+				write( next );
+				state.isDark = 'dark' === next;
+				syncChrome( state.isDark );
+			};
+
+			const reduced = window.matchMedia
+				&& window.matchMedia( '( prefers-reduced-motion: reduce )' ).matches;
+
+			if ( document.startViewTransition && ! reduced ) {
+				document.startViewTransition( apply );
+			} else {
+				apply();
+			}
+		},
+	},
+	callbacks: {
+		// Runs once per instance; the work is idempotent and the OS listener
+		// is bound once, so two instances cost nothing extra.
+		init() {
+			preference = read();
+			state.isDark = 'dark' === effective();
+			syncChrome( state.isDark );
+
+			if ( ! state.ready && mq && mq.addEventListener ) {
+				// Follow the OS while the reader has expressed no preference.
+				mq.addEventListener( 'change', () => {
+					if ( ! preference ) {
+						state.isDark = 'dark' === effective();
+						syncChrome( state.isDark );
+					}
+				} );
+			}
+			// The button is hidden until this runs, so a slow or failed load
+			// degrades to "no toggle", never to a dead control.
+			state.ready = true;
+		},
+	},
+} );

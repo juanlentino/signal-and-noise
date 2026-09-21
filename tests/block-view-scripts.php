@@ -64,6 +64,10 @@ function add_shortcode( $tag, $cb ) {}
 function wp_register_script( $handle, $src = '', $deps = array(), $ver = false, $args = array() ) {
 	$GLOBALS['__reg_js'][ $handle ] = array( 'src' => $src, 'deps' => $deps, 'ver' => $ver, 'args' => $args );
 }
+$GLOBALS['__reg_mod'] = array();  // wp_register_script_module: id => args
+function wp_register_script_module( $id, $src = '', $deps = array(), $ver = false ) {
+	$GLOBALS['__reg_mod'][ $id ] = array( 'src' => $src, 'deps' => $deps, 'ver' => $ver );
+}
 function wp_enqueue_script( $handle, $src = '', $deps = array(), $ver = false, $args = array() ) {
 	$GLOBALS['__enq_js'][ $handle ] = array( 'src' => $src, 'deps' => $deps, 'ver' => $ver, 'args' => $args );
 }
@@ -99,8 +103,10 @@ function fire( $hook ) {
 $expected = array(
 	'sn-note-share'       => array( 'note-share',   'assets/js/note-share.js',       true ),
 	'sn-contact-aliases'  => array( 'note-reply',   'assets/js/contact-aliases.js',  array( 'in_footer' => true, 'strategy' => 'defer' ) ),
-	'sn-dark-mode-toggle' => array( 'theme-toggle', 'assets/js/dark-mode-toggle.js', array( 'in_footer' => true, 'strategy' => 'defer' ) ),
 );
+// #384 step two: the toggle is an ES module (an Interactivity API store), named
+// by `viewScriptModule` and registered with wp_register_script_module().
+$module = array( 'sn-dark-mode-toggle' => array( 'theme-toggle', 'assets/js/dark-mode-toggle.js', array( '@wordpress/interactivity' ) ) );
 
 echo "Group 1: the manifests declare the script\n";
 foreach ( $expected as $handle => list( $slug ) ) {
@@ -108,6 +114,12 @@ foreach ( $expected as $handle => list( $slug ) ) {
 	ok( is_array( $json ) && ( $json['viewScript'] ?? null ) === $handle, "$slug/block.json viewScript is the handle $handle" );
 	ok( is_string( $json['viewScript'] ?? null ) && ! str_starts_with( $json['viewScript'], 'file:' ), "$slug viewScript is a registered handle, not a file: path (no .asset.php sidecar in a no-build theme; the sidenote editorScript shape)" );
 	ok( ! isset( $json['viewScriptModule'] ), "$slug names viewScript, not viewScriptModule (the file is a classic IIFE, not an ES module)" );
+}
+foreach ( $module as $id => list( $slug ) ) {
+	$json = json_decode( (string) file_get_contents( "$theme_root/blocks/$slug/block.json" ), true );
+	ok( is_array( $json ) && ( $json['viewScriptModule'] ?? null ) === $id, "$slug/block.json viewScriptModule is the id $id" );
+	ok( ! isset( $json['viewScript'] ), "$slug names viewScriptModule, not viewScript (the file is an ES module importing @wordpress/interactivity)" );
+	ok( true === ( $json['supports']['interactivity'] ?? null ), "$slug declares supports.interactivity (core then processes its directives server-side and defers the module with fetchpriority=low)" );
 }
 
 echo "\nGroup 2: each handle is registered at init with origin/main's enqueue arguments (the fixture)\n";
@@ -120,6 +132,15 @@ foreach ( $expected as $handle => list( $slug, $path, $args ) ) {
 	ok( array() === ( $reg['deps'] ?? null ), "$handle has no dependencies" );
 	ok( ( $reg['ver'] ?? null ) === sn_asset_ver( $path ), "$handle ver is sn_asset_ver( $path ), the same cache-bust token as before" );
 	ok( ( $reg['args'] ?? null ) === $args, "$handle footer/strategy args match origin/main's enqueue: " . json_encode( $args ) );
+}
+foreach ( $module as $id => list( $slug, $path, $deps ) ) {
+	$reg = $GLOBALS['__reg_mod'][ $id ] ?? null;
+	ok( is_array( $reg ), "$id is registered as a script module after init" );
+	ok( ( $reg['src'] ?? '' ) === get_theme_file_uri( $path ), "$id src is $path" );
+	ok( file_exists( "$theme_root/$path" ) && str_contains( (string) file_get_contents( "$theme_root/$path" ), "from '@wordpress/interactivity'" ), "$path exists and imports @wordpress/interactivity" );
+	ok( $deps === ( $reg['deps'] ?? null ), "$id depends on @wordpress/interactivity (served by core's import map; the navigation block already loads it)" );
+	ok( ( $reg['ver'] ?? null ) === sn_asset_ver( $path ), "$id ver is sn_asset_ver( $path )" );
+	ok( ! isset( $GLOBALS['__reg_js'][ $id ] ), "$id is no longer registered as a classic script" );
 }
 ok( array() === $GLOBALS['__enq_js'], 'init registers, it enqueues nothing (control: registration is not an enqueue in disguise)' );
 
