@@ -124,3 +124,36 @@ function snt_html_shape( $html ) {
 	}
 	return $shape;
 }
+
+/**
+ * Load core's Interactivity API server-side processor on top of the HTML
+ * API, or end the suite RED. Lives beside the html-api directory in a
+ * WordPress checkout and in the CI fetch (`interactivity-api/`).
+ */
+function snt_require_wp_interactivity_api() {
+	if ( class_exists( 'WP_Interactivity_API', false ) ) {
+		return;
+	}
+	snt_require_wp_html_api();
+	$dir = dirname( snt_wp_html_api_dir() ) . '/interactivity-api';
+	if ( ! is_file( $dir . '/class-wp-interactivity-api.php' ) ) {
+		echo "FAIL: WordPress's wp-includes/interactivity-api is not beside the html-api on this machine, so the directive pins below would assert nothing.\n";
+		echo "      Fetch its three files next to html-api; .github/workflows/ci.yml ('Fetch WordPress's HTML API') lists them.\n";
+		echo "\nResult: 0 passed, 1 failed.\n";
+		exit( 1 );
+	}
+	// The directives processor calls one static of the full HTML Processor,
+	// is_void(), which sits in a 6,500-line class with its own dependency
+	// tree. This is that one method, its list verbatim from core 7.1
+	// (class-wp-html-processor.php), guarded so a real checkout wins.
+	if ( ! class_exists( 'WP_HTML_Processor', false ) ) {
+		class WP_HTML_Processor {
+			public static function is_void( $tag_name ): bool {
+				return in_array( strtoupper( (string) $tag_name ), array( 'AREA', 'BASE', 'BASEFONT', 'BGSOUND', 'BR', 'COL', 'EMBED', 'FRAME', 'HR', 'IMG', 'INPUT', 'KEYGEN', 'LINK', 'META', 'PARAM', 'SOURCE', 'TRACK', 'WBR' ), true );
+			}
+		}
+	}
+	require_once $dir . '/class-wp-interactivity-api-directives-processor.php';
+	require_once $dir . '/class-wp-interactivity-api.php';
+	require_once $dir . '/interactivity-api.php';
+}

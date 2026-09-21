@@ -201,13 +201,14 @@ $mod = (string) file_get_contents( $root . '/inc/dark-mode.php' );
 ok( strpos( $mod, "id=\"sn-theme-toggle\"" ) === false && strpos( $mod, "id='sn-theme-toggle'" ) === false,
 	'NO id on the button — two instances would duplicate it and getElementById would pick one arbitrarily' );
 $js = (string) file_get_contents( $root . '/assets/js/dark-mode-toggle.js' );
-ok( strpos( $js, "querySelectorAll( '.sn-theme-toggle' )" ) !== false,
-	'the script binds EVERY instance by class' );
-// Comments stripped first. The module explains WHY getElementById is wrong
-// here, in prose, right above the line that avoids it — and a substring search
-// that cannot tell code from commentary reads the warning as the violation.
-// This is the third time this session a comment has tripped its own guard;
-// strip before matching, always.
+// #384 step two: one Interactivity API store, bound by the directives on the
+// markup. Two instances share the store's state by construction, so there is
+// nothing to query and nothing to re-sync.
+ok( strpos( $js, "store( 'signal-noise/theme-toggle'" ) !== false && strpos( $mod, 'data-wp-interactive="signal-noise/theme-toggle"' ) !== false,
+	'the module and the markup share ONE store namespace, so every instance reads the same state' );
+// Comments stripped first: the module explains WHY getElementById is wrong in
+// prose, and a substring search that cannot tell code from commentary reads
+// the warning as the violation. Strip before matching, always.
 $js_code = (string) preg_replace( '#//[^\n]*|/\*.*?\*/#s', '', $js );
 ok( strpos( $js_code, 'getElementById' ) === false,
 	'and no longer reaches for a single id' );

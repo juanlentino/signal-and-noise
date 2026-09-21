@@ -19,13 +19,14 @@
 	},
 	"supports": {
 		"autoRegister": true,
-		"html": false
+		"html": false,
+		"interactivity": true
 	},
 	"example": {
 		"attributes": {
 			"placement": "footer"
 		}
 	},
-	"viewScript": "sn-dark-mode-toggle",
+	"viewScriptModule": "sn-dark-mode-toggle",
 	"render": "file:./render.php"
 }
