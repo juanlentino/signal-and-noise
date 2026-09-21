@@ -24,7 +24,7 @@ html {
 	   padding-top for the fixed header at desktop sizes; the extra 16px
 	   gives the heading breathing room. Per-breakpoint overrides for
 	   tablet (80px header) and mobile (65px header) live in responsive.css. */
-	scroll-padding-top: 124px;
+	scroll-padding-top: 116px;
 	scrollbar-width: thin;
 	scrollbar-color: var(--wp--preset--color--concrete) var(--wp--preset--color--void);
 	overflow-x: hidden;

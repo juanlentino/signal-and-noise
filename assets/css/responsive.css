@@ -36,11 +36,11 @@
 
 	/* Logo */
 	.jl-mark {
-		height: 56px;
+		height: 48px;
 	}
 
 	.sn-header.is-scrolled .jl-mark {
-		height: 38px;
+		height: 32px;
 	}
 
 	/* Body offset for fixed header */
@@ -195,11 +195,11 @@
 
 	/* Smaller logo */
 	.jl-mark {
-		height: 44px;
+		height: 36px;
 	}
 
 	.sn-header.is-scrolled .jl-mark {
-		height: 34px;
+		height: 28px;
 	}
 
 	/* Body offset for fixed header */

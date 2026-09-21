@@ -192,6 +192,7 @@ function sn_theme_allowed_blocks( $allowed, $context ) {
 		'signal-noise/theme-toggle',
 		'signal-noise/suggestions-404',
 		'signal-noise/meta-nav',
+		'signal-noise/footer-signature',
 	);
 
 	return array_values( array_unique( array_merge( $used, $authoring, $contact, $companion, $theme_blocks ) ) );

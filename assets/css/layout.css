@@ -13,12 +13,16 @@
 	align-items: center;
 	text-decoration: none;
 	flex-shrink: 0;
+	/* Clear space: one stroke width on every side (docs/BRAND.md). At 64px
+	   the stroke is 10px; the header's 0.44rem block padding gives 7, this
+	   gives the rest. Left is the header's 1rem. */
+	padding-block: 0.25rem;
 }
 
 .jl-mark {
 	display: block;
 	width: auto;
-	height: 80px;
+	height: 64px;
 	color: var(--wp--preset--color--bone);
 	transition: opacity 0.3s ease, height 0.3s ease;
 }
@@ -55,12 +59,12 @@
 }
 
 .sn-header.is-scrolled .jl-mark {
-	height: 48px;
+	height: 40px;
 }
 
 /* Push page content below fixed header */
 body {
-	padding-top: 108px;
+	padding-top: 100px;
 }
 
 /* Navigation links — desktop underline effect */
@@ -365,6 +369,68 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
 	.sn-footer__meta-nav a {
+		transition: none;
+	}
+}
+
+/* The signature (blocks/footer-signature): stamp + wordmark + descriptor in
+   the footer's quiet rust, blood on hover like the meta-nav. 28px stamp:
+   one stroke width of clear space (docs/BRAND.md) is 2.8px, the flex gap
+   and the bar's own padding cover it. The two text lines set to the stamp's
+   height; the descriptor drops on the narrowest phones. */
+.sn-signature {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.6rem;
+	color: var(--wp--preset--color--rust);
+	text-decoration: none;
+	transition: color 0.3s ease;
+}
+
+@media (hover: hover) {
+	.sn-signature:hover {
+		color: var(--wp--preset--color--blood);
+	}
+}
+
+.sn-signature__stamp {
+	display: block;
+	width: 28px;
+	height: 28px;
+	flex-shrink: 0;
+}
+
+.sn-signature__text {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	line-height: 1.15;
+}
+
+.sn-signature__name {
+	font-family: var(--wp--preset--font-family--heading);
+	font-size: 0.95rem;
+	letter-spacing: var(--wp--custom--letter-spacing--wide);
+	text-transform: uppercase;
+}
+
+.sn-signature__role {
+	font-family: var(--wp--preset--font-family--body);
+	font-weight: 500;
+	font-size: var(--wp--custom--font-size--micro);
+	letter-spacing: var(--wp--custom--letter-spacing--ultra);
+	text-transform: uppercase;
+	white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+	.sn-signature__role {
+		display: none;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.sn-signature {
 		transition: none;
 	}
 }

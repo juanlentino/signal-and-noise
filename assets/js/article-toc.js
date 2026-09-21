@@ -33,9 +33,9 @@
   var article = document.querySelector('article') || document.querySelector('.entry-content');
 
   // The bar is pinned under the fixed header, and the header SHRINKS on scroll
-  // (.is-scrolled cuts its padding and the logo from 64px to 48px). A hardcoded
+  // (.is-scrolled cuts its padding and the mark from 64px to 40px). A hardcoded
   // `top` in CSS was therefore wrong in both states and drifted further open
-  // exactly when the bar matters: measured 108px against a 94px header, a 14px
+  // exactly when the bar matters: measured 100px against an 86px header, a 14px
   // gap of content showing through. Re-read each frame so it tracks the shrink.
   var header = document.querySelector('.sn-header');
 
