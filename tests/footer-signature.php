@@ -35,9 +35,9 @@ ok( 1 === substr_count( $html, '<svg' ), 'exactly one SVG' );
 
 $css = (string) file_get_contents( $root . '/assets/css/layout.css' );
 ok( 1 === preg_match( '/\.sn-signature__name\s*\{[^}]*font-family:\s*var\(--wp--preset--font-family--heading\)[^}]*letter-spacing:\s*var\(--wp--custom--letter-spacing--wide\)/s', $css ), 'wordmark: Bebas (heading) at letter-spacing wide, per BRAND.md' );
-ok( 1 === preg_match( '/\.sn-signature__role\s*\{[^}]*font-family:\s*var\(--wp--preset--font-family--body\)[^}]*font-weight:\s*500[^}]*letter-spacing:\s*var\(--wp--custom--letter-spacing--ultra\)/s', $css ), 'descriptor: DM Mono (body) 500 at letter-spacing ultra, per BRAND.md' );
+ok( 1 === preg_match( '/\.sn-signature__role\s*\{[^}]*font-family:\s*var\(--wp--preset--font-family--body\)[^}]*font-weight:\s*500[^}]*letter-spacing:\s*var\(--wp--custom--letter-spacing--wide\)/s', $css ), 'descriptor: DM Mono (body) 500 at letter-spacing wide (ultra over-tracked at 11px: the descriptor came out 1.8x the wordmark; owner, 2026-09-21)' );
 ok( 1 === preg_match( '/\.sn-signature\s*\{[^}]*color:\s*var\(--wp--preset--color--rust\)/s', $css ), 'the signature is rust, the footer\'s quiet colour (the mark is never drawn in an accent)' );
-ok( 1 === preg_match( '/\.sn-signature__stamp\s*\{[^}]*width:\s*28px;\s*height:\s*28px/s', $css ), 'the stamp is 28px square (both axes, never one alone)' );
+ok( 1 === preg_match( '/\.sn-signature__stamp\s*\{[^}]*width:\s*32px;\s*height:\s*32px/s', $css ), 'the stamp is 32px square (both axes, never one alone), taller than the two text lines so it anchors the lockup' );
 
 echo "\nGroup 2: placed once, in the footer, before the social links\n";
 $footer = (string) file_get_contents( $root . '/parts/footer.html' );

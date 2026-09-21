@@ -62,6 +62,9 @@ if ( ! function_exists( 'get_theme_file_uri' ) ) {
 		return 'https://example.test/wp-content/themes/signal-and-noise/' . ltrim( $path, '/' );
 	}
 }
+if ( ! function_exists( 'add_query_arg' ) ) {
+	function add_query_arg( $k, $v, $url ) { return $url . ( str_contains( $url, '?' ) ? '&' : '?' ) . $k . '=' . rawurlencode( (string) $v ); }
+}
 if ( ! function_exists( 'get_theme_file_path' ) ) {
 	function get_theme_file_path( $path = '' ) {
 		return realpath( __DIR__ . '/..' ) . '/' . ltrim( $path, '/' );
@@ -162,6 +165,7 @@ ok( strpos( $head1, 'favicon-32' ) === false && strpos( $head1, 'app-icon-180' )
 // The SVG link comes FIRST: browsers that understand SVG icons take the first
 // usable candidate, and the .ico must not shadow it.
 ok( strpos( $head1, 'favicon.svg' ) < strpos( $head1, 'favicon.ico' ), 'A4: the SVG icon is listed before the .ico fallback' );
+ok( 3 === preg_match_all( '/assets\/brand\/(?:favicon\.svg|favicon\.ico|apple-touch-icon\.png)\?ver=[^"]+/', $head1 ), 'A4: all three icon URLs carry ?ver= (a favicon cache is keyed on the URL and outlives page purges)' );
 
 // ── 3. Drift guard: each meta MUST equal the GROUND of its own palette ──
 // Pinned to the RELATIONSHIP, not to a literal. A hardcoded '#0a0a0a' here

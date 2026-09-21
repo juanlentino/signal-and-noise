@@ -374,10 +374,13 @@ body {
 }
 
 /* The signature (blocks/footer-signature): stamp + wordmark + descriptor in
-   the footer's quiet rust, blood on hover like the meta-nav. 28px stamp:
-   one stroke width of clear space (docs/BRAND.md) is 2.8px, the flex gap
-   and the bar's own padding cover it. The two text lines set to the stamp's
-   height; the descriptor drops on the narrowest phones. */
+   the footer's quiet rust, blood on hover like the meta-nav. 32px stamp so
+   the mark anchors the lockup rather than sitting beside a taller text
+   block; clear space (one stroke, 3.2px) is covered by the flex gap and the
+   bar's padding. The descriptor tracks `wide`, not BRAND.md's `ultra`:
+   ultra was set for the OG card at 16px across 1200px, and at 11px in a
+   58px bar it made the subordinate line 1.8x the wordmark's width. It
+   drops on the narrowest phones. */
 .sn-signature {
 	display: inline-flex;
 	align-items: center;
@@ -395,8 +398,8 @@ body {
 
 .sn-signature__stamp {
 	display: block;
-	width: 28px;
-	height: 28px;
+	width: 32px;
+	height: 32px;
 	flex-shrink: 0;
 }
 
@@ -418,7 +421,7 @@ body {
 	font-family: var(--wp--preset--font-family--body);
 	font-weight: 500;
 	font-size: var(--wp--custom--font-size--micro);
-	letter-spacing: var(--wp--custom--letter-spacing--ultra);
+	letter-spacing: var(--wp--custom--letter-spacing--wide);
 	text-transform: uppercase;
 	white-space: nowrap;
 }
