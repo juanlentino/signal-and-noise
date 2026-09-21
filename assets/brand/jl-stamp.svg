@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" role="img" aria-label="Juan Lentino">
+  <rect x="6" y="6" width="188" height="188" stroke="currentColor" stroke-width="12"/>
+  <g transform="translate(45 51.8) scale(0.753)" stroke="currentColor" stroke-width="20">
+    <path d="M54 10V96A22 22 0 0 1 10 96"/>
+    <path d="M94 10V118H136"/>
+  </g>
+</svg>

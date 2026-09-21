@@ -423,10 +423,11 @@ $feat_html = sn_music_featured_shortcode();
 cpl_true( strpos( $feat_html, 'embed/album/c6AlbumId' ) !== false, 'Test 6.3: theme reads filter — featured embed URL flows to the player' );
 
 // ═════════════════════════════════════════════════════════════════════
-// CONTRACT 7: sn_og_image_url  (v10.39.0, theme listener at priority 20)
+// CONTRACT 7: sn_og_image_url  (v10.39.0, theme listeners at priority 5 + 20)
 // Producer (plugin): apply_filters('sn_og_image_url', $resolved_url)
-// Consumer (theme): inc/notes-og-card.php swaps in the bespoke /notes
-//   card ONLY on the notes-index request; everything else passes through.
+// Consumer (theme): inc/notes-og-card.php REPLACES the plugin's site-default
+//   seed with the brand card (priority 5) and swaps in the bespoke
+//   /notes card ONLY on the notes-index request (priority 20).
 // ═════════════════════════════════════════════════════════════════════
 
 echo "\nContract 7: sn_og_image_url\n";
@@ -441,7 +442,8 @@ if ( ! function_exists( 'sn_notes_is_index_request' ) ) {
 	function sn_notes_is_index_request() { return ! empty( $GLOBALS['__is_notes_index'] ); }
 }
 $GLOBALS['__is_notes_index'] = false;
-cpl_eq( 'https://example.com/site-default.png', apply_filters( 'sn_og_image_url', 'https://example.com/site-default.png' ), 'Test 7.2: non-index request passes the plugin URL through unchanged' );
+$og = apply_filters( 'sn_og_image_url', 'https://example.com/site-default.png' );
+cpl_true( is_string( $og ) && false !== strpos( $og, 'assets/brand/og-image.png' ), 'Test 7.2: non-index request gets the brand card in place of the plugin\'s site-default seed' );
 // Force the index branch: the bespoke card wins.
 $GLOBALS['__is_notes_index'] = true;
 $og = apply_filters( 'sn_og_image_url', 'https://example.com/site-default.png' );

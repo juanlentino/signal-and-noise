@@ -60,7 +60,25 @@ function sn_notes_og_card_image( $url ) {
 	return $url;
 }
 
+/**
+ * The SITE-DEFAULT og:image is the brand card.
+ *
+ * The plugin seeds `sn_og_image_url` with the wp-admin "Default OG image URL"
+ * setting, which pointed at a small square logo. Priority 5 replaces that seed
+ * before the plugin's own per-post resolution (10) and the /notes card (20)
+ * run, so singular views keep their generated cards and every other view
+ * (home, archives, search) previews with the 1200x630 JL card instead.
+ *
+ * @param string $url The setting's value.
+ * @return string
+ */
+function sn_brand_og_image_default( $url ) {
+	unset( $url );
+	return get_theme_file_uri( 'assets/brand/og-image.png' );
+}
+
 if ( ! defined( 'SN_NOTES_OG_CARD_TEST' ) || ! SN_NOTES_OG_CARD_TEST ) {
+	add_filter( 'sn_og_image_url', 'sn_brand_og_image_default', 5 );
 	// Priority 20: run after the plugin's own sn_og_image_url filter (10) so the
 	// notes-index card overrides the site default it returns.
 	add_filter( 'sn_og_image_url', 'sn_notes_og_card_image', 20 );
