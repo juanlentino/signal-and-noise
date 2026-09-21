@@ -57,7 +57,13 @@ foreach ( $expect as $name => $want ) {
 echo "\nGroup 2: the control — the tab icon is the SVG tile, not a raster with alpha\n";
 $svg = (string) @file_get_contents( $root . '/assets/brand/favicon.svg' );
 ok( false !== strpos( $svg, 'prefers-color-scheme: dark' ), 'favicon.svg carries its own dark rule — that is why no PNG pair is needed' );
-ok( false !== strpos( $svg, '<rect width="200" height="200"' ), 'favicon.svg is the full-bleed TILE (opaque ground), not the bare mark' );
+ok( 1 === preg_match( '/<rect class="bg" width="200" height="200"/', $svg ), 'favicon.svg is the full-bleed TILE (opaque ground), not the bare mark' );
+// Chrome's favicon renderer does not resolve var() in presentation attributes:
+// the first cut coloured the strokes with `stroke="var(--fg)"` and the tab
+// showed a solid black square (owner, 2026-09-21). Colours live in class
+// rules inside <style>; no custom properties anywhere in the file.
+ok( false === strpos( $svg, 'var(' ) && false === strpos( $svg, '--' ), 'favicon.svg uses no CSS custom properties (Chrome paints a favicon with var() strokes as a blank tile)' );
+ok( 1 === preg_match( '/\.fg\s*\{\s*stroke:\s*#ffffff/', $svg ) && 1 === preg_match( '/prefers-color-scheme: dark\)\s*\{.*?\.fg\s*\{\s*stroke:\s*#000000/s', $svg ), 'the mark is white on black by default and black on white under a dark scheme, via class rules' );
 
 echo "\nGroup 3: ours is the one iOS will take\n";
 $dm = (string) file_get_contents( $root . '/inc/dark-mode.php' );
