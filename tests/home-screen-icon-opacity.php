@@ -65,6 +65,25 @@ ok( 1 === preg_match( '/<rect class="bg" width="200" height="200"/', $svg ), 'fa
 ok( false === strpos( $svg, 'var(' ) && false === strpos( $svg, '--' ), 'favicon.svg uses no CSS custom properties (Chrome paints a favicon with var() strokes as a blank tile)' );
 ok( 1 === preg_match( '/\.fg\s*\{\s*stroke:\s*#ffffff/', $svg ) && 1 === preg_match( '/prefers-color-scheme: dark\)\s*\{.*?\.fg\s*\{\s*stroke:\s*#000000/s', $svg ), 'the mark is white on black by default and black on white under a dark scheme, via class rules' );
 
+// The .ico is what Chrome shows in the tab (it prefers the sizes="any" entry
+// over the SVG). The 13.5.0 file was a SOLID BLACK square at 48, 32 and 16
+// (rasterised from the var() SVG), and it stayed one after the SVG was
+// fixed. Read the pixels: each frame must hold more than one colour.
+$ico = (string) file_get_contents( $root . '/assets/brand/favicon.ico' );
+$count = strlen( $ico ) >= 6 ? unpack( 'v', substr( $ico, 4, 2 ) )[1] : 0;
+ok( 3 === $count, "favicon.ico carries three frames (got $count)" );
+for ( $i = 0; $i < $count; $i++ ) {
+	$e = unpack( 'Cw/Ch/Ccc/Cr/vpl/vbpp/Vsz/Voff', substr( $ico, 6 + 16 * $i, 16 ) );
+	$img = substr( $ico, $e['off'], $e['sz'] );
+	$hdr = unpack( 'V', substr( $img, 0, 4 ) )[1];
+	$w = $e['w'] ?: 256; $h = $e['h'] ?: 256;
+	$px = substr( $img, $hdr, $w * $h * 4 );
+	$colours = count( array_unique( str_split( $px, 4 ) ) );
+	ok( 32 === $e['bpp'] && $colours > 1, "favicon.ico {$w}x{$h}: 32bpp with $colours distinct pixels (a single colour is the black tile)" );
+}
+$dm_src = (string) file_get_contents( $root . '/inc/dark-mode.php' );
+ok( str_contains( $dm_src, "add_query_arg( 'ver', sn_asset_ver( \$path )" ), 'the icon links are versioned: a favicon cache is keyed on the URL and outlives every page purge' );
+
 echo "\nGroup 3: ours is the one iOS will take\n";
 $dm = (string) file_get_contents( $root . '/inc/dark-mode.php' );
 $code = '';

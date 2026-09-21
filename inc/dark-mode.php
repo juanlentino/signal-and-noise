@@ -81,18 +81,22 @@ add_action(
 		echo '<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">' . "\n";
 		echo '<meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)">' . "\n";
 
-		printf(
-			'<link rel="icon" href="%s" type="image/svg+xml">' . "\n",
-			esc_url( get_theme_file_uri( 'assets/brand/favicon.svg' ) )
-		);
-		printf(
-			'<link rel="icon" href="%s" sizes="any">' . "\n",
-			esc_url( get_theme_file_uri( 'assets/brand/favicon.ico' ) )
-		);
-		printf(
-			'<link rel="apple-touch-icon" href="%s">' . "\n",
-			esc_url( get_theme_file_uri( 'assets/brand/apple-touch-icon.png' ) )
-		);
+		// Versioned: a browser's favicon cache is keyed on the URL and outlives
+		// every page cache, so a changed icon at the same URL never shows (the
+		// 13.5.0 .ico was a black tile and stayed one after it was fixed).
+		foreach ( array(
+			array( 'icon', 'assets/brand/favicon.svg', ' type="image/svg+xml"' ),
+			array( 'icon', 'assets/brand/favicon.ico', ' sizes="any"' ),
+			array( 'apple-touch-icon', 'assets/brand/apple-touch-icon.png', '' ),
+		) as $icon ) {
+			list( $rel, $path, $extra ) = $icon;
+			printf(
+				'<link rel="%1$s" href="%2$s"%3$s>' . "\n",
+				esc_attr( $rel ),
+				esc_url( add_query_arg( 'ver', sn_asset_ver( $path ), get_theme_file_uri( $path ) ) ),
+				$extra // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- literal attribute strings from the array above.
+			);
+		}
 	},
 	1
 );
