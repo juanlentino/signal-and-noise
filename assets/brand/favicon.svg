@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Juan Lentino">
+  <style>
+    :root { --bg: #000000; --fg: #ffffff; }
+    @media (prefers-color-scheme: dark) { :root { --bg: #ffffff; --fg: #000000; } }
+  </style>
+  <rect width="200" height="200" fill="var(--bg)"/>
+  <g transform="translate(38 45.6) scale(0.85)" fill="none" stroke="var(--fg)" stroke-width="20">
+    <path d="M54 10V96A22 22 0 0 1 10 96"/>
+    <path d="M94 10V118H136"/>
+  </g>
+</svg>

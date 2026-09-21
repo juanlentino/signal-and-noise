@@ -148,20 +148,20 @@ ok( substr_count( $head1, 'name="theme-color"' ) === 2, 'A4: TWO theme-color met
 ok( strpos( $head1, 'media="(prefers-color-scheme: light)"' ) !== false, 'A4: the light variant is scheme-scoped' );
 ok( strpos( $head1, 'media="(prefers-color-scheme: dark)"' ) !== false, 'A4: the dark variant is scheme-scoped' );
 
-// The favicon links moved with it and got the same treatment: a #171718 mark
-// disappears into a dark tab strip exactly as it would into a dark page.
-ok( strpos( $head1, 'favicon-32-dark.png' ) !== false, 'A4: a dark favicon variant is offered' );
-// v12.18.6: asserted by ROLE, not by filename. This pinned the literal
-// `favicon-180-dark.png`, and when the apple-touch-icon moved to an OPAQUE file
-// (iOS renders home-screen transparency as black — that file is 69% transparent
-// pixels) the pin went red on a change that preserved exactly the property it
-// was written to protect. A dark variant is still offered; it is a different
-// file, and the pin should not have cared which.
-ok( (bool) preg_match( '/rel="apple-touch-icon"[^>]*media="\(prefers-color-scheme: dark\)"/', $head1 )
-	|| (bool) preg_match( '/media="\(prefers-color-scheme: dark\)"[^>]*rel="apple-touch-icon"/', $head1 ),
-	'A4: a dark apple-touch-icon variant is offered' );
-ok( strpos( $head1, 'app-icon-180-dark.png' ) !== false,
-	'A4: and it is the OPAQUE one — a transparent home-screen icon renders as a black tile on iOS' );
+// ONE icon set, from assets/brand/. The SVG favicon inverts on the
+// OS scheme by itself (its own prefers-color-scheme rule), so there is no
+// light/dark pair to offer and the pins below assert the single-set shape
+// — exactly one SVG icon, one .ico fallback, one opaque apple-touch-icon.
+ok( 1 === preg_match_all( '/<link rel="icon"[^>]*type="image\/svg\+xml"/', $head1 ), 'A4: exactly one SVG favicon link' );
+ok( strpos( $head1, 'assets/brand/favicon.svg' ) !== false, 'A4: it is the brand tile' );
+ok( 1 === preg_match_all( '/<link rel="icon"[^>]*sizes="any"/', $head1 ), 'A4: exactly one .ico fallback' );
+ok( 1 === substr_count( $head1, 'rel="apple-touch-icon"' ), 'A4: exactly one apple-touch-icon' );
+ok( strpos( $head1, 'assets/brand/apple-touch-icon.png' ) !== false, 'A4: and it is the opaque brand PNG' );
+ok( strpos( $head1, 'favicon-32' ) === false && strpos( $head1, 'app-icon-180' ) === false,
+	'A4: the old light/dark PNG pairs are no longer emitted (a second set would compete)' );
+// The SVG link comes FIRST: browsers that understand SVG icons take the first
+// usable candidate, and the .ico must not shadow it.
+ok( strpos( $head1, 'favicon.svg' ) < strpos( $head1, 'favicon.ico' ), 'A4: the SVG icon is listed before the .ico fallback' );
 
 // ── 3. Drift guard: each meta MUST equal the GROUND of its own palette ──
 // Pinned to the RELATIONSHIP, not to a literal. A hardcoded '#0a0a0a' here

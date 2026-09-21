@@ -15,16 +15,16 @@
 	flex-shrink: 0;
 }
 
-.sn-logo-img {
+.jl-mark {
 	display: block;
-	width: 80px;
+	width: auto;
 	height: 80px;
-	object-fit: contain;
-	transition: opacity 0.3s ease, width 0.3s ease, height 0.3s ease;
+	color: var(--wp--preset--color--bone);
+	transition: opacity 0.3s ease, height 0.3s ease;
 }
 
 @media (hover: hover) {
-	.sn-logo-link:hover .sn-logo-img {
+	.sn-logo-link:hover .jl-mark {
 		opacity: 0.7;
 	}
 }
@@ -54,8 +54,7 @@
 	box-shadow: 0 1px 8px var(--sn-header-shadow);
 }
 
-.sn-header.is-scrolled .sn-logo-img {
-	width: 48px;
+.sn-header.is-scrolled .jl-mark {
 	height: 48px;
 }
 
@@ -294,7 +293,7 @@ body {
    layout-triggering ones for reduce users; opacity is not motion, so it
    stays. The .is-scrolled state still applies — just instantly. */
 @media (prefers-reduced-motion: reduce) {
-	.sn-logo-img                  { transition: opacity 0.3s ease; }
+	.jl-mark                     { transition: opacity 0.3s ease; }
 	.sn-header                    { transition: none; }
 	.wp-block-navigation a::after { transition: none; }
 }

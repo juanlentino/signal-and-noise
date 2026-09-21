@@ -35,13 +35,11 @@
 	}
 
 	/* Logo */
-	.sn-logo-img {
-		width: 56px;
+	.jl-mark {
 		height: 56px;
 	}
 
-	.sn-header.is-scrolled .sn-logo-img {
-		width: 38px;
+	.sn-header.is-scrolled .jl-mark {
 		height: 38px;
 	}
 
@@ -196,13 +194,11 @@
 	}
 
 	/* Smaller logo */
-	.sn-logo-img {
-		width: 44px;
+	.jl-mark {
 		height: 44px;
 	}
 
-	.sn-header.is-scrolled .sn-logo-img {
-		width: 34px;
+	.sn-header.is-scrolled .jl-mark {
 		height: 34px;
 	}
 

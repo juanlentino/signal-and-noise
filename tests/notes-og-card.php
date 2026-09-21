@@ -59,5 +59,21 @@ $size = file_exists( $asset ) ? @getimagesize( $asset ) : false;
 ok( is_array( $size ) && 1200 === $size[0] && 630 === $size[1], 'the card asset is 1200x630' );
 ok( is_array( $size ) && defined( 'IMAGETYPE_PNG' ) && IMAGETYPE_PNG === $size[2], 'the card asset is a PNG' );
 
+// 5) the SITE-DEFAULT og:image is the brand card in assets/brand/,
+//    supplied at priority 5 — before the plugin's per-post resolution (10)
+//    and the /notes card (20) — so the wp-admin "Default OG image URL"
+//    setting (a small square logo) no longer decides what a shared home /
+//    archive / search link previews with.
+$brand = 'https://example.test/theme/assets/brand/og-image.png';
+ok( $has && function_exists( 'sn_brand_og_image_default' ), 'the brand site-default filter body exists' );
+ok( $has && function_exists( 'sn_brand_og_image_default' ) && sn_brand_og_image_default( $default ) === $brand,
+	'the site default is repointed at assets/brand/og-image.png regardless of the setting' );
+$brand_asset = __DIR__ . '/../assets/brand/og-image.png';
+$bsize = file_exists( $brand_asset ) ? @getimagesize( $brand_asset ) : false;
+ok( is_array( $bsize ) && 1200 === $bsize[0] && 630 === $bsize[1] && IMAGETYPE_PNG === $bsize[2], 'the brand card is a 1200x630 PNG' );
+$src = (string) file_get_contents( __DIR__ . '/../inc/notes-og-card.php' );
+ok( 1 === preg_match( "/add_filter\(\s*'sn_og_image_url',\s*'sn_brand_og_image_default',\s*5\s*\)/", $src ),
+	'it is registered at priority 5 — a later priority would clobber the per-post cards' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

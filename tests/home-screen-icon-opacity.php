@@ -38,24 +38,26 @@ function hsi_png_info( $path ) {
 }
 
 $root = dirname( __DIR__ );
-echo "home-screen-icon-opacity — theme v12.18.6\n\nGroup 1: the icons exist and are opaque\n";
+echo "home-screen-icon-opacity — the JL mark\n\nGroup 1: the brand PNGs exist and are opaque\n";
 
-$expect = array( 180 => 'app-icon-180.png', 180.1 => 'app-icon-180-dark.png', 192 => 'app-icon-192.png', 512 => 'app-icon-512.png' );
-foreach ( $expect as $size => $name ) {
-	$info = hsi_png_info( $root . '/assets/images/' . $name );
+// the icons moved to assets/brand/ and the light/dark PNG pairs went
+// with the raster logo. What must still hold is the property this file was
+// written for: anything a home screen can take is OPAQUE.
+$expect = array( 'apple-touch-icon.png' => 180, 'icon-512.png' => 512 );
+foreach ( $expect as $name => $want ) {
+	$info = hsi_png_info( $root . '/assets/brand/' . $name );
 	ok( null !== $info, "$name exists and is a PNG" );
 	if ( null === $info ) { continue; }
-	$want = (int) $size;
 	ok( $info['w'] === $want && $info['h'] === $want,
-		"$name is actually {$want}x{$want} — the manifest that will declare it must not lie about its size" );
+		"$name is actually {$want}x{$want} — the surface that will declare it must not lie about its size" );
 	ok( 2 === $info['colour'],
 		"$name has NO alpha channel (colour type {$info['colour']}, want 2) — iOS renders home-screen transparency as black" );
 }
 
-echo "\nGroup 2: the control — tab icons keep their transparency\n";
-$fav = hsi_png_info( $root . '/assets/images/favicon-180.png' );
-ok( null !== $fav && 6 === $fav['colour'],
-	'favicon-180.png still HAS alpha — a blanket "no transparency" rule would have been the wrong fix, and this asserts we did not apply one' );
+echo "\nGroup 2: the control — the tab icon is the SVG tile, not a raster with alpha\n";
+$svg = (string) @file_get_contents( $root . '/assets/brand/favicon.svg' );
+ok( false !== strpos( $svg, 'prefers-color-scheme: dark' ), 'favicon.svg carries its own dark rule — that is why no PNG pair is needed' );
+ok( false !== strpos( $svg, '<rect width="200" height="200"' ), 'favicon.svg is the full-bleed TILE (opaque ground), not the bare mark' );
 
 echo "\nGroup 3: ours is the one iOS will take\n";
 $dm = (string) file_get_contents( $root . '/inc/dark-mode.php' );
@@ -64,17 +66,11 @@ foreach ( token_get_all( $dm ) as $t ) {
 	if ( is_array( $t ) && in_array( $t[0], array( T_COMMENT, T_DOC_COMMENT ), true ) ) { $code .= "\n"; continue; }
 	$code .= is_array( $t ) ? $t[1] : $t;
 }
-ok( false !== strpos( $code, 'app-icon-180.png' ), 'the opaque icon is emitted' );
-ok( false === strpos( $code, "'apple-touch-icon', '180x180', 'favicon-180.png'" ),
-	'the transparent pair is no longer emitted as an apple-touch-icon' );
-ok( false !== strpos( $code, 'site_icon_meta_tags' ),
-	"core's own apple-touch-icon is filtered out — it runs at wp_head:99, AFTER this theme's :1, so without this it is the link iOS takes and an opaque icon shipped earlier changes nothing" );
-// The light/dark PAIR stays: an existing pin (head-sweep A4) asks for the dark
-// variant, and deleting a feature to fix a transparency bug would trade one
-// defect for a regression. What must hold is that every one of them is opaque
-// and that core's transparent one is gone.
-ok( false !== strpos( $code, 'app-icon-180-dark.png' ),
-	'the DARK home-screen variant is still offered — the fix is opacity, not removing the pair' );
+ok( false !== strpos( $code, 'assets/brand/apple-touch-icon.png' ), 'the opaque brand icon is emitted' );
+ok( 1 === substr_count( $code, "'apple-touch-icon'" ) || 1 === substr_count( $code, 'rel="apple-touch-icon"' ),
+	'exactly ONE apple-touch-icon is emitted' );
+ok( 1 === preg_match( "/add_filter\\(\\s*'site_icon_meta_tags',\\s*'__return_empty_array'\\s*\\)/", $code ),
+	"core's Site Icon tags are removed wholesale — wp_site_icon() runs at wp_head:99, AFTER this theme's :1, so its apple-touch-icon would be the link iOS takes and its icon pair a second, competing favicon set" );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

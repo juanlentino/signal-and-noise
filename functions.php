@@ -13,7 +13,7 @@
  *   inc/assets-frontend.php      — frontend CSS/JS/fonts/favicons + defer filters (critical.css inline; article.css rides the combined cascade since v10.49.0)
  *   inc/frontend-filters.php     — skip link, Spotify oEmbed, generator-tag stripping (named callbacks v10.49.0), social-link URL shim
  *   inc/og-fonts.php             — registers sn_og_font_paths filter (theme brand fonts → plugin's OG generator)
- *   inc/notes-og-card.php        — bespoke 1200x630 /notes-index share card via the plugin's sn_og_image_url seam (v10.39.0, plugin-guarded)
+ *   inc/notes-og-card.php        — bespoke 1200x630 /notes-index share card + the brand site-default og:image via the plugin's sn_og_image_url seam (v10.39.0, plugin-guarded)
  *   inc/wp-update-integration.php       — registers theme with WP's update transient (version visibility in wp-admin)
  *   inc/wp-update-git-preservation.php  — backs up/restores .git through WP UI installs (v8.5.2+)
  *   inc/template-maintenance.php — FSE template-override purge + sn_purge_all_caches_result/sn_clear_template_overrides_result filter listeners
@@ -164,4 +164,4 @@ require_once __DIR__ . '/inc/contact-email.php'; // v10.16.0: [sn_email] scraper
 require_once __DIR__ . '/inc/feed-websub.php'; // D4 (v10.9.0): WebSub <atom:link rel="hub"> advertisement in the RSS2 + Atom feeds
 require_once __DIR__ . '/inc/reading-path-slot.php'; // v11.9.0: [sn_reading_path] block bridge — the plugin's reading-chain nav resolves on single Notes (empty slot when the plugin is absent)
 require_once __DIR__ . '/inc/palettes.php'; // v12.0.0: every palette the site can present (root + variations + dark), read from the files that define them
-require_once __DIR__ . '/inc/dark-mode.php'; // v11.13.0: dark palette plumbing — pre-paint data-theme stamp, per-scheme theme-color + favicon, [sn_theme_toggle]
+require_once __DIR__ . '/inc/dark-mode.php'; // v11.13.0: dark palette plumbing — pre-paint data-theme stamp, per-scheme theme-color, the brand icon set (assets/brand/), [sn_theme_toggle]

@@ -89,11 +89,6 @@
 	   only texture it has. Dark flips it to `screen`, which lightens. */
 	--sn-grain-blend: multiply;
 
-	/* The logo is a near-black mark (#171718) on transparency, and the
-	   header markup hardcodes its uploads URL, so there is no second
-	   asset to swap in. Inverting the one file is exact for a
-	   monochrome mark and costs no extra request. */
-	--sn-mark-invert: 0;
 }
 
 :root[data-theme="dark"] {
@@ -118,7 +113,6 @@
 	--sn-hero-veil-to: rgba(10, 10, 10, 0.95);
 	--sn-header-shadow: rgba(0, 0, 0, 0.5);
 	--sn-grain-blend: screen;
-	--sn-mark-invert: 1;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -144,8 +138,7 @@
 		--sn-hero-veil-to: rgba(10, 10, 10, 0.95);
 		--sn-header-shadow: rgba(0, 0, 0, 0.5);
 		--sn-grain-blend: screen;
-		--sn-mark-invert: 1;
-	}
+		}
 }
 
 /* ============================================
@@ -314,21 +307,22 @@ body::after {
 	flex-shrink: 0;
 }
 
-.sn-logo-img {
+/* Inline SVG in currentColor: `bone` is the ink token and already
+   flips in the dark layer above, so one declaration covers both schemes —
+   no second asset, no request, no filter. It keeps the 80px cap height the
+   logo image had, so the header's height — and everything keyed to it (body
+   padding-top, scroll-padding, article-toc offsets) — does not move. Width
+   follows the 146:128 viewBox; never size one axis alone. Floor is 16px. */
+.jl-mark {
 	display: block;
-	width: 80px;
+	width: auto;
 	height: 80px;
-	object-fit: contain;
-	transition: opacity 0.3s ease, width 0.3s ease, height 0.3s ease;
-	/* The mark is #171718 on transparency — invisible on a dark ground.
-	   `invert()` on a monochrome mark is exact (it lands on #e8e8e7) and
-	   needs no second asset, which matters because parts/header.html
-	   hardcodes the uploads URL and has no dark src to point at. */
-	filter: invert(var(--sn-mark-invert, 0));
+	color: var(--wp--preset--color--bone);
+	transition: opacity 0.3s ease, height 0.3s ease;
 }
 
 @media (hover: hover) {
-	.sn-logo-link:hover .sn-logo-img {
+	.sn-logo-link:hover .jl-mark {
 		opacity: 0.7;
 	}
 }
@@ -361,8 +355,7 @@ body::after {
 	box-shadow: 0 1px 8px var(--sn-header-shadow);
 }
 
-.sn-header.is-scrolled .sn-logo-img {
-	width: 48px;
+.sn-header.is-scrolled .jl-mark {
 	height: 48px;
 }
 
@@ -499,8 +492,7 @@ body {
 	body::after {
 		display: none;
 	}
-	.sn-logo-img {
-		width: 56px;
+	.jl-mark {
 		height: 56px;
 	}
 	body {
@@ -544,8 +536,7 @@ body {
 		padding-top: 0.75rem !important;
 		padding-bottom: 0.75rem !important;
 	}
-	.sn-logo-img {
-		width: 44px;
+	.jl-mark {
 		height: 44px;
 	}
 	body {
