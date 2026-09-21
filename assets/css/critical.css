@@ -305,18 +305,24 @@ body::after {
 	align-items: center;
 	text-decoration: none;
 	flex-shrink: 0;
+	/* Clear space: one stroke width on every side (docs/BRAND.md). At 64px
+	   the stroke is 10px; the header's 0.44rem block padding gives 7, this
+	   gives the rest. Left is the header's 1rem. */
+	padding-block: 0.25rem;
 }
 
 /* Inline SVG in currentColor: `bone` is the ink token and already
    flips in the dark layer above, so one declaration covers both schemes —
-   no second asset, no request, no filter. It keeps the 80px cap height the
-   logo image had, so the header's height — and everything keyed to it (body
-   padding-top, scroll-padding, article-toc offsets) — does not move. Width
+   no second asset, no request, no filter. 64px is the glyph height the old
+   80px raster BOX showed once its padding is discounted; with the link's
+   clear space the header is 7 + 4 + 64 + 4 + 7 = 86px and body padding-top
+   100 keeps the 14px gap. The two lower breakpoints (48, 36) land on their
+   previous header heights exactly, so their offsets do not move. Width
    follows the 146:128 viewBox; never size one axis alone. Floor is 16px. */
 .jl-mark {
 	display: block;
 	width: auto;
-	height: 80px;
+	height: 64px;
 	color: var(--wp--preset--color--bone);
 	transition: opacity 0.3s ease, height 0.3s ease;
 }
@@ -356,12 +362,12 @@ body::after {
 }
 
 .sn-header.is-scrolled .jl-mark {
-	height: 48px;
+	height: 40px;
 }
 
 /* Push page content below fixed header */
 body {
-	padding-top: 108px;
+	padding-top: 100px;
 }
 
 /* Navigation links — desktop underline effect */
@@ -493,7 +499,7 @@ body {
 		display: none;
 	}
 	.jl-mark {
-		height: 56px;
+		height: 48px;
 	}
 	body {
 		padding-top: 80px;
@@ -537,7 +543,7 @@ body {
 		padding-bottom: 0.75rem !important;
 	}
 	.jl-mark {
-		height: 44px;
+		height: 36px;
 	}
 	body {
 		padding-top: 65px;
