@@ -68,7 +68,7 @@ echo "\nthe hand-rolls are gone\n";
 ok( empty( $GLOBALS['__filters']['style_loader_tag'] ), 'no style_loader_tag deferral is registered (core never reached it for wp-block-library)' );
 
 $css = (string) file_get_contents( __DIR__ . '/../assets/css/critical.css' );
-// 13.10.0 adds a DIFFERENT rule with the same selector: the header shows the
+// 14.0.0 adds a DIFFERENT rule with the same selector: the header shows the
 // toggle from 600 to 781px (the theme's breakpoint), scoped to .sn-header and
 // bounded above. The copy this guards against HID the toggle from 600px up,
 // unbounded. Pin that shape, not the selector string.

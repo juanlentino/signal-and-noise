@@ -522,7 +522,7 @@ body {
 /* The hamburger up to 781px, the theme's own mobile breakpoint, not core's
    600. Between them the full nav shared a row with the header brand, which
    wrapped the header to two rows at 600px even with the monogram; with the
-   wordmark it wrapped from 601 to 780. Measured on the live site, 13.10.0:
+   wordmark it wrapped from 601 to 780. Measured on the live site, 14.0.0:
    one 70px row at every width from 599 to 781. The open overlay is the
    theme's own (.is-menu-open, below) and is not width-dependent. */
 @media (min-width: 600px) and (max-width: 781px) {
