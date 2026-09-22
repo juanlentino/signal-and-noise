@@ -12,6 +12,9 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Fixed
+- **The home hero sits on the shared page frame.** 14.1.0 put every page on one frame but left `.sn-hero-inner` at its own 1100px, so the home headline started 110px further in than every other page at 1440 (170px against 60px) and 250px at 2000 (450 against 200); going from Home to About, the left edge jumped. It now uses `custom.pageTrack`, both copies (critical and deferred). Type, the 640px dek and the buttons are unchanged; at 1024px and on phones nothing moves. Previewed on the live home page at 1440: headline at 60px, the same edge as About. `1100px` leaves the max-width sweep's allowed list, since nothing uses it now, and `tests/layout-width-system.php` pins the hero on the frame in both files.
+
 ## [14.1.1] - 2026-09-22 — /resume uses the frame
 
 ### Fixed

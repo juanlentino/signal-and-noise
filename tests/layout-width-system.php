@@ -91,7 +91,7 @@ foreach ( array( 'page-contact' ) as $page ) {
 // on its line. @media conditions are skipped: `(max-width: 781px)` is a
 // breakpoint, not a width.
 echo "\nmax-width sweep over assets/css (blocks/ included)\n";
-$mw_allowed = array( 'var(--wp--custom--page-track)', '1600px', '760px', '1100px', '80ch', '72ch', '60ch', '46ch', '100%', 'none' );
+$mw_allowed = array( 'var(--wp--custom--page-track)', '1600px', '760px', '80ch', '72ch', '60ch', '46ch', '100%', 'none' );
 $mw_files   = glob( "$root/assets/css/{,blocks/}*.css", GLOB_BRACE );
 ok( count( $mw_files ) > 10, 'scanned ' . count( $mw_files ) . ' stylesheets (guard: an empty glob asserts nothing)' );
 $mw_seen = 0;
@@ -190,6 +190,14 @@ echo "\n/resume uses the frame\n";
 $rcss = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( "$root/assets/css/resume.css" ) );
 ok( 1 === preg_match( '/\.wp-block-columns\.sn-resume-hero-split\s*\{[^}]*column-gap:\s*var\(--wp--custom--air--[a-z]+\)/', $rcss ), 'the resume hero has an air-step gutter between summary and credentials' );
 ok( 1 === preg_match( '/@media\s*\(min-width:\s*1440px\)\s*\{\s*\.sn-resume-list\s*\{[^}]*columns:\s*2;[^}]*\}\s*\.sn-resume-list li\s*\{[^}]*max-width:\s*none;[^}]*break-inside:\s*avoid;/s', $rcss ), 'from 1440px each entry\'s bullets set in two columns, items never split' );
+
+// 14.1.2: the home hero sits on the shared page frame, so its headline starts on
+// the same edge as every other page (it had its own 1100px: 110px further in at
+// 1440, 250px at 2000). Both copies, critical and deferred.
+foreach ( array( 'critical.css', 'layout.css' ) as $f ) {
+	$css = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( "$root/assets/css/$f" ) );
+	ok( 1 === preg_match( '/\.sn-hero-inner\s*\{[^}]*max-width:\s*var\(--wp--custom--page-track\)\s*;/', $css ), "$f: the home hero is on the shared page frame" );
+}
 
 echo "Result: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
