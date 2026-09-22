@@ -77,11 +77,8 @@
 	   backdrop, the hero fade). These were rgba(255,255,255,…) literals,
 	   which are white BY VALUE and therefore ignore any palette — they
 	   would paint a white band across the top of a black page. */
-	--sn-veil: rgba(255, 255, 255, 0.72);
-	--sn-veil-strong: rgba(255, 255, 255, 0.85);
 	--sn-hero-veil-from: rgba(255, 255, 255, 0.2);
 	--sn-hero-veil-to: rgba(255, 255, 255, 0.95);
-	--sn-header-shadow: rgba(0, 0, 0, 0.06);
 
 	/* The film grain darkens the page it sits on. `multiply` is a no-op
 	   against black, so on a dark ground the theme silently loses the
@@ -105,11 +102,8 @@
 	--wp--preset--color--bone: #ffffff;
 	--wp--preset--color--blood: #ff4c47;
 	--wp--preset--color--signal: #ff6b66;
-	--sn-veil: rgba(10, 10, 10, 0.72);
-	--sn-veil-strong: rgba(10, 10, 10, 0.85);
 	--sn-hero-veil-from: rgba(10, 10, 10, 0.2);
 	--sn-hero-veil-to: rgba(10, 10, 10, 0.95);
-	--sn-header-shadow: rgba(0, 0, 0, 0.5);
 	--sn-grain-blend: screen;
 }
 
@@ -129,11 +123,8 @@
 		--wp--preset--color--bone: #ffffff;
 		--wp--preset--color--blood: #ff4c47;
 		--wp--preset--color--signal: #ff6b66;
-		--sn-veil: rgba(10, 10, 10, 0.72);
-		--sn-veil-strong: rgba(10, 10, 10, 0.85);
 		--sn-hero-veil-from: rgba(10, 10, 10, 0.2);
 		--sn-hero-veil-to: rgba(10, 10, 10, 0.95);
-		--sn-header-shadow: rgba(0, 0, 0, 0.5);
 		--sn-grain-blend: screen;
 		}
 }
@@ -321,7 +312,8 @@ body::after {
 	width: auto;
 	height: 64px;
 	color: var(--wp--preset--color--bone);
-	transition: opacity 0.3s ease, height 0.3s ease;
+	/* Opacity only: the mark is one height now that the header does not shrink. */
+	transition: opacity 0.3s ease;
 }
 
 @media (hover: hover) {
@@ -339,27 +331,19 @@ body::after {
 	left: 0;
 	right: 0;
 	z-index: 10000;
-	transition: padding 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
-	border-bottom: none !important;
-	background-color: var(--sn-veil) !important;
-	-webkit-backdrop-filter: blur(12px) saturate(1.2);
-	backdrop-filter: blur(12px) saturate(1.2);
+	/* Solid, one height, no transition. This was a 72%-alpha veil with
+	   `backdrop-filter: blur(12px) saturate(1.2)` that gained a soft shadow
+	   and eased its own padding on scroll, which is glassmorphism and the
+	   least brutalist surface on the site. The footer bar was already opaque
+	   (`backgroundColor: void` on the block), so the two fixed bars now
+	   match. The hairline under it is the theme's own device: a 1px
+	   `concrete` rule, the same one every other edge in the theme uses. */
+	background-color: var(--wp--preset--color--void) !important;
+	border-bottom: 1px solid var(--wp--preset--color--concrete) !important;
 }
 
 .sn-footer {
 	border-top: none;
-}
-
-/* Shrunk state on scroll */
-.sn-header.is-scrolled {
-	padding-top: 0.4rem !important;
-	padding-bottom: 0.4rem !important;
-	background-color: var(--sn-veil-strong) !important;
-	box-shadow: 0 1px 8px var(--sn-header-shadow);
-}
-
-.sn-header.is-scrolled .jl-mark {
-	height: 40px;
 }
 
 /* Push page content below fixed header */

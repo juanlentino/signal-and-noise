@@ -204,10 +204,10 @@ $expected_shared = array(
 	'layout.css' => array(
 		// The fixed header shell and the mark inside it: the first thing painted.
 		'.sn-header',
-		'.sn-header.is-scrolled',
+		// No `.is-scrolled` pair: the header is one height and the class is gone
+		// with assets/js/sticky-header.js that used to set it.
 		'.sn-logo-link',
 		'.jl-mark',
-		'.sn-header.is-scrolled .jl-mark',
 		// The hero: everything above the fold on a landing view.
 		'.sn-hero',
 		'.sn-hero::before',

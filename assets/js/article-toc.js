@@ -5,7 +5,7 @@
  * no TOC (short note), this does nothing. Mounts a fixed progress bar driven
  * by scroll position (RAF-throttled, passive) and smooth-scrolls TOC clicks
  * (instant under prefers-reduced-motion). Pure progressive enhancement —
- * the TOC links work without it. Mirrors sticky-header.js / footnotes-popover.js.
+ * the TOC links work without it. Mirrors footnotes-popover.js.
  */
 (function () {
   'use strict';
@@ -32,11 +32,11 @@
   // bar's travel was spent on things that are not the article.
   var article = document.querySelector('article') || document.querySelector('.entry-content');
 
-  // The bar is pinned under the fixed header, and the header SHRINKS on scroll
-  // (.is-scrolled cuts its padding and the mark from 64px to 40px). A hardcoded
-  // `top` in CSS was therefore wrong in both states and drifted further open
-  // exactly when the bar matters: measured 100px against an 86px header, a 14px
-  // gap of content showing through. Re-read each frame so it tracks the shrink.
+  // The bar is pinned under the fixed header. The header is one height now
+  // (it used to shrink on scroll, so a hardcoded `top` was wrong in one of the
+  // two states), but it is still MEASURED rather than hardcoded: the height
+  // changes at two breakpoints and with the reader's font size, and a literal
+  // here would drift from the CSS the moment either moves.
   var header = document.querySelector('.sn-header');
 
   var ticking = false;
@@ -71,12 +71,9 @@
   }
   window.addEventListener('scroll', onScroll, { passive: true });
   window.addEventListener('resize', onScroll, { passive: true });
-  // The header shrinks over a 300ms transition after `.is-scrolled` toggles;
-  // `bar.style.top` was only re-read on scroll/resize, so a single wheel
-  // notch across the toggle left the bar lagging the header's final height
-  // by up to ~33px until the next scroll event fired. Re-read once the
-  // header's own transition settles (#322).
-  if (header) { header.addEventListener('transitionend', onScroll); }
+  // The `transitionend` listener that used to live here (#322) is gone with
+  // the scroll-shrink it waited on: the header no longer transitions, so the
+  // event could never fire again.
   update();
 
   // ── Smooth-scroll on TOC click (reduced-motion aware) ───────────────
