@@ -73,12 +73,16 @@
 	   have gone had its blend mode not flipped. */
 	--sn-scanline: rgba(0, 0, 0, 0.04);
 
-	/* Veils: translucent white-over-content washes (the fixed header
-	   backdrop, the hero fade). These were rgba(255,255,255,…) literals,
-	   which are white BY VALUE and therefore ignore any palette — they
-	   would paint a white band across the top of a black page. */
-	--sn-hero-veil-from: rgba(255, 255, 255, 0.2);
-	--sn-hero-veil-to: rgba(255, 255, 255, 0.95);
+	/* Page chrome: the fixed header's footprint (--sn-chrome-top, the body
+	   offset: header plus a gap) and the fixed utility bar's (--sn-chrome-
+	   bottom). Written ONCE here and overridden at the two breakpoints below;
+	   body padding, the hero's min-height (vh and dvh) and scroll-padding all
+	   read them. Before 13.8.0 the same numbers were typed in 21 places across
+	   four files, which is how 13.7.0's hero fix reached the vh line and not
+	   the dvh one. tests/critical-deferred-parity.php Group 2 pins that every
+	   consumer reads the variable. */
+	--sn-chrome-top: 118px;
+	--sn-chrome-bottom: 90px;
 
 	/* The film grain darkens the page it sits on. `multiply` is a no-op
 	   against black, so on a dark ground the theme silently loses the
@@ -102,8 +106,6 @@
 	--wp--preset--color--bone: #ffffff;
 	--wp--preset--color--blood: #ff4c47;
 	--wp--preset--color--signal: #ff6b66;
-	--sn-hero-veil-from: rgba(10, 10, 10, 0.2);
-	--sn-hero-veil-to: rgba(10, 10, 10, 0.95);
 	--sn-grain-blend: screen;
 }
 
@@ -123,8 +125,6 @@
 		--wp--preset--color--bone: #ffffff;
 		--wp--preset--color--blood: #ff4c47;
 		--wp--preset--color--signal: #ff6b66;
-		--sn-hero-veil-from: rgba(10, 10, 10, 0.2);
-		--sn-hero-veil-to: rgba(10, 10, 10, 0.95);
 		--sn-grain-blend: screen;
 		}
 }
@@ -350,7 +350,7 @@ body::after {
 
 /* Push page content below fixed header */
 body {
-	padding-top: 118px;
+	padding-top: var(--sn-chrome-top);
 }
 
 /* Navigation links — desktop underline effect */
@@ -405,27 +405,10 @@ body {
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
-	min-height: calc(100vh - 118px - 90px) !important;
-	min-height: calc(100dvh - 118px - 90px) !important;
+	min-height: calc(100vh - var(--sn-chrome-top) - var(--sn-chrome-bottom)) !important;
+	min-height: calc(100dvh - var(--sn-chrome-top) - var(--sn-chrome-bottom)) !important;
 }
 
-.sn-hero::before {
-	content: "";
-	position: absolute;
-	inset: 0;
-	background: linear-gradient(
-		180deg,
-		var(--sn-hero-veil-from) 0%,
-		var(--sn-hero-veil-to) 100%
-	);
-	z-index: 1;
-	pointer-events: none;
-}
-
-.sn-hero > * {
-	position: relative;
-	z-index: 2;
-}
 
 .sn-hero .sn-hero-subtitle {
 	max-width: 640px;
@@ -491,8 +474,8 @@ body {
 	.jl-mark {
 		height: 48px;
 	}
-	body {
-		padding-top: 80px;
+	:root {
+		--sn-chrome-top: 80px;
 	}
 	/* See responsive.css: a bare `.sn-header` (0,1,0) loses to
 	   `.wp-block-group.has-background` (0,2,0), so this never applied. */
@@ -507,8 +490,6 @@ body {
 		padding-bottom: 0.44rem !important;
 	}
 	.sn-hero {
-		min-height: calc(100vh - 80px - 90px) !important;
-		min-height: calc(100dvh - 80px - 90px) !important;
 		padding-top: 4rem !important;
 		padding-bottom: 4rem !important;
 		padding-left: 1.5rem !important;
@@ -540,12 +521,11 @@ body {
 	.jl-mark {
 		height: 36px;
 	}
-	body {
-		padding-top: 78px;
+	:root {
+		--sn-chrome-top: 78px;
+		--sn-chrome-bottom: 70px;
 	}
 	.sn-hero {
-		min-height: calc(100vh - 78px - 70px) !important;
-		min-height: calc(100dvh - 78px - 70px) !important;
 		padding-top: 3rem !important;
 		padding-bottom: 3rem !important;
 		padding-left: 1.25rem !important;
@@ -645,7 +625,7 @@ body {
 	color: var(--wp--preset--color--bone) !important;
 	text-decoration: none !important;
 	display: block !important;
-	line-height: 1.1 !important;
+	line-height: var(--wp--custom--line-height--tight) !important;
 	text-align: center !important;
 	transition: color 0.2s ease !important;
 }

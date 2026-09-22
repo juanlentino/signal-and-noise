@@ -13,7 +13,8 @@
 .sn-index-page {
 	max-width: 60rem;
 	margin: 0 auto;
-	padding: clamp(2.5rem, 6vw, 5rem) clamp(1.25rem, 4vw, 3rem) clamp(4rem, 8vw, 7rem);
+	/* One page frame for the four text pages: theme.json settings.custom.padPage. */
+	padding: var(--wp--custom--pad-page);
 }
 
 /* ── Hero ─────────────────────────────────────────────────────────────── */
@@ -28,14 +29,14 @@
 .sn-index-headline {
 	font-family: 'Bebas Neue', Impact, sans-serif;
 	font-weight: 400;
-	font-size: clamp(3rem, 8vw, 7rem);
+	font-size: var(--wp--custom--font-size--page-headline);
 	line-height: 0.95;
 	letter-spacing: -0.01em;
 	color: var(--wp--preset--color--bone);
 	margin: 0;
 }
 .sn-index-dek {
-	font-size: clamp(1rem, 1.4vw, 1.15rem);
+	font-size: var(--wp--custom--font-size--page-dek);
 	line-height: 1.55;
 	color: var(--wp--preset--color--rust);
 	max-width: 46ch;
@@ -52,7 +53,7 @@
 
 /* ── Section heads ────────────────────────────────────────────────────── */
 .sn-index-section {
-	margin-top: clamp(2.5rem, 5vw, 4rem);
+	margin-top: var(--wp--custom--air--xl);
 }
 .sn-index-section-head {
 	display: flex;
@@ -66,7 +67,7 @@
 .sn-index-section-label {
 	font-family: 'Bebas Neue', Impact, sans-serif;
 	font-weight: 400;
-	font-size: clamp(1.4rem, 3vw, 2rem);
+	font-size: var(--wp--custom--font-size--page-section-label);
 	letter-spacing: 0.02em;
 	text-transform: uppercase;
 	color: var(--wp--preset--color--bone);
@@ -89,7 +90,7 @@
 	display: grid;
 	grid-template-columns: 1fr;
 	gap: 0.35rem;
-	padding: clamp(0.85rem, 1.6vw, 1.2rem) 0;
+	padding: clamp(0.85rem, 1.6vw, 1.2rem) 0; /* not a step: clamp(0.85rem, 1.6vw, 1.2rem) is its own value; the nearest air step, air--xxs, would move it 1px */
 	border-bottom: 1px solid var(--wp--preset--color--concrete);
 	transition: padding 0.2s ease;
 }
@@ -121,7 +122,7 @@
 .sn-index-row-title {
 	font-family: 'Bebas Neue', Impact, sans-serif;
 	font-weight: 400;
-	font-size: clamp(1.35rem, 2.2vw, 1.75rem);
+	font-size: clamp(1.35rem, 2.2vw, 1.75rem); /* not a step: clamp(1.35rem, 2.2vw, 1.75rem) is its own value; the nearest type token, font-size--page-section-label, would move it 8px */
 	line-height: 1.05;
 	letter-spacing: -0.005em;
 	margin: 0;

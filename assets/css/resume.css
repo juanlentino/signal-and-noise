@@ -90,12 +90,12 @@ body div.wp-block-group:not(:has(h1)) > .sn-catalog-eyebrow {
 .sn-resume-stats {
 	border-top: 2px solid var(--wp--preset--color--bone);
 	border-bottom: 1px solid var(--wp--preset--color--concrete);
-	padding: clamp(1.25rem, 3vw, 2rem) 0;
+	padding: clamp(1.25rem, 3vw, 2rem) 0; /* not a step: clamp(1.25rem, 3vw, 2rem) is its own value; the nearest air step, air--sm, would move it 4px */
 }
 .sn-resume-stat-n {
 	font-family: 'Bebas Neue', Impact, sans-serif;
 	font-weight: 400;
-	font-size: clamp(2.75rem, 6vw, 4.5rem);
+	font-size: clamp(2.75rem, 6vw, 4.5rem); /* not a step: clamp(2.75rem, 6vw, 4.5rem) is its own value; the nearest type token, font-size--page-section-label, would move it 40px */
 	line-height: 0.9;
 	font-variant-numeric: tabular-nums;
 	color: var(--wp--preset--color--bone);
@@ -131,7 +131,7 @@ body div.wp-block-group:not(:has(h1)) > .sn-catalog-eyebrow {
 .sn-resume-role {
 	font-family: 'Bebas Neue', Impact, sans-serif;
 	font-weight: 400;
-	font-size: clamp(1.5rem, 3vw, 2rem);
+	font-size: clamp(1.5rem, 3vw, 2rem); /* not a step: clamp(1.5rem, 3vw, 2rem) is its own value; the nearest type token, font-size--page-section-label, would move it 2px */
 	letter-spacing: 0.02em;
 	line-height: 1;
 	color: var(--wp--preset--color--bone);
@@ -171,7 +171,7 @@ body div.wp-block-group:not(:has(h1)) > .sn-catalog-eyebrow {
 	border-top: 2px solid var(--wp--preset--color--bone);
 	border-bottom: 2px solid var(--wp--preset--color--bone);
 	padding: 0;
-	margin-top: clamp(1.5rem, 3vw, 2.5rem);
+	margin-top: var(--wp--custom--air--md);
 }
 .sn-resume-fold summary {
 	list-style: none;
@@ -180,7 +180,7 @@ body div.wp-block-group:not(:has(h1)) > .sn-catalog-eyebrow {
 	justify-content: space-between;
 	align-items: baseline;
 	gap: 1rem;
-	padding: clamp(0.85rem, 1.6vw, 1.15rem) 0;
+	padding: var(--wp--custom--air--xxs) 0;
 	font-family: 'DM Mono', 'Courier New', monospace;
 	font-size: max(0.7rem, 11px);
 	letter-spacing: 0.18em;
@@ -204,7 +204,7 @@ body div.wp-block-group:not(:has(h1)) > .sn-catalog-eyebrow {
 	}
 }
 .sn-resume-fold > :last-child {
-	margin-bottom: clamp(1rem, 2vw, 1.5rem);
+	margin-bottom: var(--wp--custom--air--xs);
 }
 .sn-resume-fold-co {
 	font-family: 'Bebas Neue', Impact, sans-serif;
@@ -218,7 +218,7 @@ body div.wp-block-group:not(:has(h1)) > .sn-catalog-eyebrow {
 /* ── Publication cards ────────────────────────────────────────────────── */
 .sn-resume-pub {
 	border: 1px solid var(--wp--preset--color--concrete);
-	padding: clamp(1.1rem, 2.5vw, 1.6rem) clamp(1.1rem, 2.5vw, 1.75rem);
+	padding: clamp(1.1rem, 2.5vw, 1.6rem) clamp(1.1rem, 2.5vw, 1.75rem); /* not a step: clamp(1.1rem, 2.5vw, 1.6rem) is its own value; the nearest air step, air--xs, would move it 5px; clamp(1.1rem, 2.5vw, 1.75rem) is its own value; the nearest air step, air--xs, would move it 5px */
 	margin-top: 1rem;
 	transition: border-color 0.15s ease;
 }
@@ -290,7 +290,7 @@ body div.wp-block-group:not(:has(h1)) > .sn-catalog-eyebrow {
 	color: var(--wp--preset--color--rust);
 	white-space: nowrap;
 	width: 15rem;
-	padding-right: clamp(1.5rem, 4vw, 3rem);
+	padding-right: clamp(1.5rem, 4vw, 3rem); /* not a step: clamp(1.5rem, 4vw, 3rem) is its own value; the nearest air step, air--lg, would move it 8px */
 }
 .sn-resume-skills td:last-child {
 	font-size: 0.9rem;

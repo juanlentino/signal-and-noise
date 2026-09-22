@@ -25,8 +25,8 @@
    grouped selectors, one source of truth for the row idiom. */
 .sn-related-notes,
 .sn-cited-by {
-	margin-top: clamp(2rem, 4vw, 3rem);
-	padding-top: clamp(1.5rem, 3vw, 2rem);
+	margin-top: var(--wp--custom--air--lg);
+	padding-top: clamp(1.5rem, 3vw, 2rem); /* not a step: clamp(1.5rem, 3vw, 2rem) is its own value; the nearest air step, air--sm, would move it 4px */
 	border-top: 1px solid var(--wp--preset--color--concrete);
 }
 .sn-related-notes__label,
@@ -37,7 +37,7 @@
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
 	color: var(--wp--preset--color--rust);
-	margin: 0 0 clamp(1rem, 2vw, 1.5rem);
+	margin: 0 0 var(--wp--custom--air--xs);
 }
 .sn-related-notes__list,
 .sn-cited-by__list {
@@ -57,7 +57,7 @@
 	display: grid;
 	grid-template-columns: 1fr;
 	gap: 0.5rem;
-	padding: clamp(0.85rem, 1.6vw, 1.25rem) 0;
+	padding: clamp(0.85rem, 1.6vw, 1.25rem) 0; /* not a step: clamp(0.85rem, 1.6vw, 1.25rem) is its own value; the nearest air step, air--xxs, would move it 2px */
 	border-bottom: 1px solid var(--wp--preset--color--concrete);
 	transition: padding 0.2s ease;
 }
@@ -122,7 +122,7 @@
 .sn-cited-by .sn-notes-row-title {
 	font-family: 'Bebas Neue', Impact, sans-serif;
 	font-weight: 400;
-	font-size: clamp(1.35rem, 2vw, 1.75rem);
+	font-size: clamp(1.35rem, 2vw, 1.75rem); /* not a step: clamp(1.35rem, 2vw, 1.75rem) is its own value; the nearest type token, font-size--page-section-label, would move it 9px */
 	line-height: 1.05;
 	letter-spacing: -0.005em;
 	margin: 0;

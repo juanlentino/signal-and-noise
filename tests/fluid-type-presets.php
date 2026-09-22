@@ -162,9 +162,13 @@ $same_everywhere = static function ( $hand, $core ) use ( $widths ) {
 //    pair, or a bare preset moves, which is the point.
 echo "\n1. Harness reproduces the live site's bare presets\n";
 $live = array(
-	'medium'   => 'clamp(14px, 0.875rem + ((1vw - 3.2px) * 0.556), 20px)',
-	'large'    => 'clamp(22.041px, 1.378rem + ((1vw - 3.2px) * 1.293), 36px)',
-	'x-large'  => 'clamp(25.014px, 1.563rem + ((1vw - 3.2px) * 1.573), 42px)',
+	// 13.8.0 moved these three from px to rem (13px/20px/36px/42px to
+	// 0.8125/1.25/2.25/2.625rem) so they follow a reader's font setting. Core
+	// now emits rem strings; the px the site emitted on 2026-09-20 is kept
+	// below as $live_px and checked to render the same, within 0.01px.
+	'medium'   => 'clamp(0.875rem, 0.875rem + ((1vw - 0.2rem) * 0.556), 1.25rem)',
+	'large'    => 'clamp(1.378rem, 1.378rem + ((1vw - 0.2rem) * 1.292), 2.25rem)',
+	'x-large'  => 'clamp(1.563rem, 1.563rem + ((1vw - 0.2rem) * 1.573), 2.625rem)',
 	'prose'    => 'clamp(0.875rem, 0.875rem + ((1vw - 0.2rem) * 0.185), 1rem)',
 	'caption'  => 'clamp(0.875rem, 0.875rem + ((1vw - 0.2rem) * 0.037), 0.9rem)',
 	'nav'      => 'clamp(0.875rem, 0.875rem + ((1vw - 0.2rem) * 0.37), 1.125rem)',
@@ -176,6 +180,24 @@ foreach ( $live as $slug => $expected ) {
 	ok( $got === $expected, "live twin: $slug => $expected" . ( $got === $expected ? '' : " (got $got)" ) );
 }
 ok( wp_get_typography_font_size_value( array( 'size' => '0.75rem', 'fluid' => false ) ) === '0.75rem', 'a preset with fluid:false comes back verbatim' );
+// The px strings the live site served on 2026-09-20, before the rem move. Core
+// rounds the rem form to three decimals, so the new line drifts from the old by
+// at most 0.007px (large at 1024). A drift of a full pixel would be a real change.
+$live_px = array(
+	'medium'  => 'clamp(14px, 0.875rem + ((1vw - 3.2px) * 0.556), 20px)',
+	'large'   => 'clamp(22.041px, 1.378rem + ((1vw - 3.2px) * 1.293), 36px)',
+	'x-large' => 'clamp(25.014px, 1.563rem + ((1vw - 3.2px) * 1.573), 42px)',
+);
+foreach ( $live_px as $slug => $was ) {
+	$drift = 0.0;
+	foreach ( array( 320, 768, 1024, 1440 ) as $w ) {
+		$a = snt_px_at( $was, $w );
+		$b = snt_px_at( $live[ $slug ], $w );
+		$drift = ( null === $a || null === $b ) ? INF : max( $drift, abs( $a - $b ) );
+	}
+	ok( $drift < 0.01, sprintf( "px to rem: '%s' renders the same as the pre-13.8 px string at every tested width (max drift %.3fpx)", $slug, $drift ) );
+}
+
 ok( wp_get_typography_font_size_value( array( 'size' => 'clamp(2rem, 4vw, 2.8rem)' ) ) === 'clamp(2rem, 4vw, 2.8rem)'
 	&& wp_get_typography_font_size_value( array( 'size' => 'clamp(2rem, 4vw, 2.8rem)', 'fluid' => false ) ) === 'clamp(2rem, 4vw, 2.8rem)',
 	'a clamp() size comes back verbatim with or without fluid:false, so the flag beside a clamp() is inert' );

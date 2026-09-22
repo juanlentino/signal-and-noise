@@ -10,7 +10,8 @@
 .sn-a11y-page {
 	max-width: 60rem;
 	margin: 0 auto;
-	padding: clamp(2.5rem, 6vw, 5rem) clamp(1.25rem, 4vw, 3rem) clamp(4rem, 8vw, 7rem);
+	/* One page frame for the four text pages: theme.json settings.custom.padPage. */
+	padding: var(--wp--custom--pad-page);
 }
 
 /* ── Hero ─────────────────────────────────────────────────────────────── */
@@ -25,14 +26,14 @@
 .sn-a11y-headline {
 	font-family: 'Bebas Neue', Impact, sans-serif;
 	font-weight: 400;
-	font-size: clamp(3rem, 8vw, 7rem);
+	font-size: var(--wp--custom--font-size--page-headline);
 	line-height: 0.95;
 	letter-spacing: -0.01em;
 	color: var(--wp--preset--color--bone);
 	margin: 0;
 }
 .sn-a11y-dek {
-	font-size: clamp(1rem, 1.4vw, 1.15rem);
+	font-size: var(--wp--custom--font-size--page-dek);
 	line-height: 1.55;
 	color: var(--wp--preset--color--rust);
 	max-width: 52ch;
@@ -41,13 +42,13 @@
 
 /* ── Statement sections ───────────────────────────────────────────────── */
 .sn-a11y-section {
-	margin-top: clamp(2rem, 4vw, 3rem);
+	margin-top: var(--wp--custom--air--lg);
 	max-width: 62ch;
 }
 .sn-a11y-section-label {
 	font-family: 'Bebas Neue', Impact, sans-serif;
 	font-weight: 400;
-	font-size: clamp(1.4rem, 3vw, 2rem);
+	font-size: var(--wp--custom--font-size--page-section-label);
 	letter-spacing: 0.02em;
 	text-transform: uppercase;
 	color: var(--wp--preset--color--bone);

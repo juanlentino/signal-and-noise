@@ -210,8 +210,8 @@ $expected_shared = array(
 		'.jl-mark',
 		// The hero: everything above the fold on a landing view.
 		'.sn-hero',
-		'.sn-hero::before',
-		'.sn-hero > *',
+		// No `.sn-hero::before` / `.sn-hero > *` pair: the hero veil painted void over
+		// the void hero in both schemes and never rendered; deleted in 13.8.0.
 		'.sn-hero-inner',
 		'.sn-hero-title',
 		'.sn-hero .sn-hero-subtitle',
@@ -279,70 +279,75 @@ foreach ( $expected_shared as $rel => $want ) {
 	);
 }
 
-echo "\nGroup 2: the hero reserves exactly the header the body pads for\n";
+echo "\nGroup 2: every header-height consumer reads the chrome variables\n";
 
-/**
- * Pull `body { padding-top }` and the hero's min-height subtrahend per media
- * context, from one file, as pairs. Relationship, not literal: the numbers may
- * move, they may not disagree.
- *
- * @param string $css Stylesheet source.
- * @return array<string, array{pad?:int, hero?:int}>
+/*
+ * Up to 13.7.1 this group compared two NUMBERS: body padding-top and the hero's
+ * min-height subtrahend, per breakpoint. That caught 13.7.0's stale 108px, but
+ * only after it shipped, and it missed the dvh line entirely. 13.8.0 replaced
+ * the 21 hand-typed header heights with two variables, --sn-chrome-top and
+ * --sn-chrome-bottom, defined once in critical.css and overridden at the two
+ * breakpoints. The relationship now holds by construction, so the pin moves to
+ * the construction: the variables are defined where the breakpoints need them,
+ * every consumer reads them, and no consumer types a number instead.
  */
-function cdp_header_pairs( $css ) {
-	$css = (string) preg_replace( '#/\*.*?\*/#s', '', $css );
-	$out = array();
-	// Split into contexts: base plus each @media block.
-	$contexts = array( 'base' => $css );
-	if ( preg_match_all( '/@media([^{]+)\{/', $css, $m, PREG_OFFSET_CAPTURE ) ) {
-		foreach ( $m[0] as $k => $hit ) {
-			$start = $hit[1] + strlen( $hit[0] );
-			$depth = 1;
-			for ( $i = $start; $i < strlen( $css ) && $depth > 0; $i++ ) {
-				if ( '{' === $css[ $i ] ) {
-					++$depth;
-				} elseif ( '}' === $css[ $i ] ) {
-					--$depth;
-				}
-			}
-			$contexts[ trim( preg_replace( '/\s+/', ' ', $m[1][ $k ][0] ) ) ] = substr( $css, $start, $i - $start );
+$crit_nc = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( $root . '/assets/css/critical.css' ) );
+$ctxs    = array( 'base' => (string) preg_replace( '/@media[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/s', '', $crit_nc ) );
+if ( preg_match_all( '/@media\s*\(max-width:\s*(\d+)px\)\s*\{/', $crit_nc, $mq, PREG_OFFSET_CAPTURE ) ) {
+	foreach ( $mq[0] as $k => $hit ) {
+		$st = $hit[1] + strlen( $hit[0] );
+		for ( $i = $st, $d = 1; $i < strlen( $crit_nc ) && $d > 0; $i++ ) {
+			$d += ( '{' === $crit_nc[ $i ] ) - ( '}' === $crit_nc[ $i ] );
 		}
+		$ctxs[ $mq[1][ $k ][0] ] = ( $ctxs[ $mq[1][ $k ][0] ] ?? '' ) . substr( $crit_nc, $st, $i - $st );
 	}
-	foreach ( $contexts as $name => $chunk ) {
-		if ( 'base' === $name ) {
-			// The base context is the whole file; drop every @media block so a
-			// breakpoint's value is never read as the base one.
-			$chunk = (string) preg_replace( '/@media[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/s', '', $chunk );
-		}
-		if ( preg_match( '/body\s*\{[^}]*padding-top:\s*(\d+)px/s', $chunk, $p ) ) {
-			$out[ $name ]['pad'] = (int) $p[1];
-		}
-		// Every viewport unit the hero uses: `100vh` is the fallback and `100dvh` the
-		// line modern browsers actually apply, so a stale dvh value is the one that
-		// ships. The first version matched only `100vh` and missed exactly that.
-		if ( preg_match_all( '/min-height:\s*calc\(100d?vh\s*-\s*(\d+)px/s', $chunk, $h ) ) {
-			$vals = array_unique( array_map( 'intval', $h[1] ) );
-			$out[ $name ]['hero'] = 1 === count( $vals ) ? (int) reset( $vals ) : -1; // -1: vh and dvh disagree
-		}
+}
+$want_def = array(
+	'base' => array( '--sn-chrome-top', '--sn-chrome-bottom' ), // desktop: 118 / 90
+	'781'  => array( '--sn-chrome-top' ),                        // tablet top: 80 (bottom stays 90)
+	'480'  => array( '--sn-chrome-top', '--sn-chrome-bottom' ),  // phone: 78 / 70
+);
+foreach ( $want_def as $bp => $vars ) {
+	foreach ( $vars as $v ) {
+		ok( 1 === preg_match( '/:root\s*\{[^}]*' . preg_quote( $v, '/' ) . ':\s*\d+px/s', $ctxs[ $bp ] ?? '' ), "critical.css [$bp] defines $v on :root" );
 	}
-	return $out;
 }
 
-$found = 0;
-foreach ( array( 'critical.css', 'layout.css', 'responsive.css' ) as $rel ) {
-	foreach ( cdp_header_pairs( (string) file_get_contents( $root . '/assets/css/' . $rel ) ) as $ctx => $pair ) {
-		if ( ! isset( $pair['pad'], $pair['hero'] ) ) {
-			continue; // A context that carries only one of the two proves nothing on its own.
+$consumers = array(
+	'assets/css/critical.css' => array( 'body', 'hero' ),
+	'assets/css/layout.css'   => array( 'body', 'hero' ),
+	'assets/css/base.css'     => array( 'scroll' ),
+);
+foreach ( $consumers as $rel => $kinds ) {
+	$css = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( $root . '/' . $rel ) );
+	if ( in_array( 'body', $kinds, true ) ) {
+		ok( 1 === preg_match( '/(?<![\w-])body\s*\{[^}]*padding-top:\s*var\(--sn-chrome-top\)/s', $css ), "$rel: body pads var(--sn-chrome-top)" );
+	}
+	if ( in_array( 'hero', $kinds, true ) ) {
+		foreach ( array( 'vh', 'dvh' ) as $u ) {
+			ok( 1 === preg_match( '/min-height:\s*calc\(100' . $u . '\s*-\s*var\(--sn-chrome-top\)\s*-\s*var\(--sn-chrome-bottom\)\)/', $css ), "$rel: the hero's 100$u line reserves both chrome variables" );
 		}
-		++$found;
-		ok(
-			$pair['pad'] === $pair['hero'],
-			"$rel [$ctx]: body pads {$pair['pad']}px and the hero subtracts {$pair['hero']}px"
-			. ( $pair['pad'] === $pair['hero'] ? '' : ' -- the hero is reserving a header height the body no longer uses' )
-		);
+	}
+	if ( in_array( 'scroll', $kinds, true ) ) {
+		ok( 1 === preg_match( '/scroll-padding-top:\s*calc\(var\(--sn-chrome-top\)\s*\+\s*16px\)/', $css ), "$rel: scroll-padding is the chrome offset plus 16px" );
 	}
 }
-ok( $found >= 3, "found $found breakpoint contexts declaring both numbers (guard: zero pairs would pass vacuously)" );
+
+// No consumer anywhere types a number in place of the variable. This is the
+// assertion that would have caught 13.7.0's stale dvh line before it shipped.
+$typed = array();
+foreach ( glob( $root . '/assets/css/{,blocks/}*.css', GLOB_BRACE ) as $file ) {
+	$css = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( $file ) );
+	if ( preg_match_all( '/(min-height:\s*calc\(100d?vh\s*-\s*\d+px|(?<![\w-])body\s*\{[^}]*?padding-top:\s*\d+px|scroll-padding-top:\s*\d+px)/s', $css, $hits ) ) {
+		foreach ( $hits[0] as $h ) {
+			$typed[] = basename( $file ) . ': ' . trim( preg_replace( '/\s+/', ' ', substr( $h, 0, 60 ) ) );
+		}
+	}
+}
+foreach ( $typed as $t ) {
+	echo "   -> $t\n";
+}
+ok( empty( $typed ), 'no stylesheet hand-types a header height where a chrome variable belongs' . ( $typed ? ' (' . count( $typed ) . ')' : '' ) );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

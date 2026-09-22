@@ -106,7 +106,12 @@ ok( false !== $p_start_here && $p_start_here < $p_side,
 
 // v11.4.1: the headline joined the site-wide uniform title scale. Pinned so a
 // future hero edit cannot silently reintroduce the 176px outlier.
-ok( false !== strpos( $css, 'font-size: clamp(3rem, 8vw, 7rem)' ), 'headline DECLARES the uniform title scale clamp(3rem, 8vw, 7rem)' );
+// 13.8.0 named that scale: theme.json settings.custom.fontSize.pageHeadline, the
+// value all five text-page headlines share. The pin is the RELATIONSHIP: the
+// headline reads the token, and the token is still the uniform scale.
+$sn_tj_fs = json_decode( (string) file_get_contents( dirname( __DIR__ ) . '/theme.json' ), true )['settings']['custom']['fontSize'] ?? array();
+ok( false !== strpos( $css, 'font-size: var(--wp--custom--font-size--page-headline)' ) && 'clamp(3rem, 8vw, 7rem)' === ( $sn_tj_fs['pageHeadline'] ?? '' ),
+	'headline reads the page-headline token, and that token is the uniform title scale clamp(3rem, 8vw, 7rem)' );
 // Declaration form only — inc/page-notes-render.php:188 keeps the superseded
 // value in a prose comment as history, which must not trip this guard.
 ok( false === strpos( $src, 'font-size: clamp(4rem' ), 'the pre-v11.4.1 176px outlier is not a live declaration' );

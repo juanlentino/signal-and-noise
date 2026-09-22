@@ -401,7 +401,7 @@
    ============================================ */
 
 .sn-notes-index .sn-notes-heading {
-	letter-spacing: -0.02em;
+	letter-spacing: var(--wp--custom--letter-spacing--tight);
 }
 
 /* Pillar essay card — promoted from a one-liner link to a featured
@@ -504,7 +504,7 @@
 }
 
 .sn-provenance-title {
-	letter-spacing: -0.02em;
+	letter-spacing: var(--wp--custom--letter-spacing--tight);
 }
 
 .sn-provenance-section h2 {
@@ -714,7 +714,7 @@
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
 	color: var(--wp--preset--color--rust);
-	margin-top: clamp(1rem, 2vw, 1.5rem);
+	margin-top: var(--wp--custom--air--xs);
 	margin-bottom: 0;
 }
 .sn-catalog-meta-bullet {
@@ -727,7 +727,7 @@
 	grid-template-columns: 1fr auto;
 	align-items: end;
 	gap: 1rem;
-	margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+	margin-bottom: var(--wp--custom--air--md);
 	padding-bottom: 0.5rem;
 	border-bottom: 1px solid var(--wp--preset--color--concrete);
 }
@@ -764,7 +764,7 @@
 	flex-wrap: wrap;
 	align-items: center;
 	gap: 0.75rem;
-	margin-top: clamp(1.5rem, 3vw, 2.25rem);
+	margin-top: var(--wp--custom--air--sm);
 }
 .sn-note-share__label {
 	font-family: 'DM Mono', 'Courier New', monospace;
@@ -832,7 +832,7 @@
 	flex-wrap: wrap;
 	align-items: center;
 	gap: 0.75rem;
-	margin-top: clamp(0.75rem, 1.5vw, 1.25rem);
+	margin-top: clamp(0.75rem, 1.5vw, 1.25rem); /* not a step: clamp(0.75rem, 1.5vw, 1.25rem) is its own value; the nearest air step, air--xxs, would move it 2px */
 }
 .sn-note-reply__label {
 	font-family: 'DM Mono', 'Courier New', monospace;
@@ -881,7 +881,7 @@
    trigger that assets/js/discography.js swaps for the embed on demand; role
    filtering is client-side over data-roles. */
 .sn-discography {
-	margin-top: clamp(1.5rem, 3vw, 2.5rem);
+	margin-top: var(--wp--custom--air--md);
 }
 
 /* Controls rail: count + role chips (sticky). */
@@ -972,7 +972,7 @@
 
 /* Year sections. */
 .sn-disco-year {
-	margin: clamp(2rem, 4vw, 3.25rem) 0;
+	margin: clamp(2rem, 4vw, 3.25rem) 0; /* not a step: clamp(2rem, 4vw, 3.25rem) is its own value; the nearest air step, air--lg, would move it 4px */
 }
 .sn-disco-year__label {
 	display: flex;
@@ -980,10 +980,10 @@
 	justify-content: space-between;
 	font-family: 'DM Mono', 'Courier New', monospace;
 	font-weight: 500;
-	font-size: clamp(1.1rem, 2vw, 1.4rem);
+	font-size: clamp(1.1rem, 2vw, 1.4rem); /* not a step: clamp(1.1rem, 2vw, 1.4rem) is its own value; the nearest type token, font-size--page-dek, would move it 4px */
 	letter-spacing: 0.1em;
 	color: var(--wp--preset--color--blood);
-	margin: 0 0 clamp(1rem, 2vw, 1.5rem);
+	margin: 0 0 var(--wp--custom--air--xs);
 	padding-bottom: 0.5rem;
 	border-bottom: 1px solid var(--wp--preset--color--concrete);
 }
@@ -998,7 +998,7 @@
 .sn-disco-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(min(100%, 232px), 1fr));
-	gap: clamp(1.1rem, 2.6vw, 2rem);
+	gap: clamp(1.1rem, 2.6vw, 2rem); /* not a step: clamp(1.1rem, 2.6vw, 2rem) is its own value; the nearest air step, air--sm, would move it 6px */
 }
 .sn-disco-card {
 	display: flex;
@@ -1097,7 +1097,7 @@
 .sn-disco-title {
 	font-family: 'Bebas Neue', Impact, sans-serif;
 	font-weight: 400;
-	font-size: clamp(1.45rem, 2.4vw, 1.9rem);
+	font-size: clamp(1.45rem, 2.4vw, 1.9rem); /* not a step: clamp(1.45rem, 2.4vw, 1.9rem) is its own value; the nearest type token, font-size--page-section-label, would move it 6px */
 	line-height: 1.0;
 	letter-spacing: -0.005em;
 	color: var(--wp--preset--color--bone);
@@ -1331,10 +1331,10 @@
    Spotify embed at the top of /music — the ONE eager iframe on the page; the
    cover grid below stays click-to-play. */
 .sn-music-featured {
-	margin: clamp(1.5rem, 4vw, 2.75rem) 0;
+	margin: clamp(1.5rem, 4vw, 2.75rem) 0; /* not a step: clamp(1.5rem, 4vw, 2.75rem) is its own value; the nearest air step, air--lg, would move it 8px */
 	border: 1px solid var(--wp--preset--color--bone);
 	background: var(--wp--preset--color--asphalt);
-	padding: clamp(1rem, 2.5vw, 1.6rem);
+	padding: clamp(1rem, 2.5vw, 1.6rem); /* not a step: clamp(1rem, 2.5vw, 1.6rem) is its own value; the nearest air step, air--xs, would move it 5px */
 }
 .sn-music-featured__label {
 	display: flex;
@@ -1581,7 +1581,7 @@
 	font-family: var(--wp--preset--font-family--heading), sans-serif;
 	font-weight: 400;
 	font-size: 1.2rem;
-	line-height: 1.1;
+	line-height: var(--wp--custom--line-height--tight);
 	letter-spacing: 0.01em;
 }
 .sn-404-suggestions .sn-notes-row-title a {
