@@ -57,9 +57,14 @@
 	.wp-block-group.sn-header.has-background {
 		padding-left: 1.25rem !important;
 		padding-right: 1.25rem !important;
+		/* The part pads 16px top and bottom for desktop air (13.7.1); tablets
+		   keep the tighter 0.44rem they had, so the header stays 70px under
+		   the 80px body offset. Pinned by tests/brand-mark.php Group 7. */
+		padding-top: 0.44rem !important;
+		padding-bottom: 0.44rem !important;
 	}
 
-	/* Anchor-jump offset matches the tablet header height (80px) + 16px
+	/* Anchor-jump offset matches the tablet body offset (80px) + 16px
 	   buffer. Keeps in-page links landing below the header, not behind it. */
 	html {
 		scroll-padding-top: 96px;
@@ -198,18 +203,19 @@
 
 	/* Body offset for fixed header */
 	body {
-		padding-top: 65px;
+		padding-top: 78px;
 	}
 
-	/* Anchor-jump offset matches the mobile header height (65px) + 16px buffer. */
+	/* Anchor-jump offset matches the mobile body offset (78px, for a 68px
+	   header) + 16px buffer. */
 	html {
-		scroll-padding-top: 81px;
+		scroll-padding-top: 94px;
 	}
 
 	/* Hero */
 	.sn-hero {
-		min-height: calc(100vh - 65px - 70px) !important;
-		min-height: calc(100dvh - 65px - 70px) !important;
+		min-height: calc(100vh - 78px - 70px) !important;
+		min-height: calc(100dvh - 78px - 70px) !important;
 		padding-top: 3rem !important;
 		padding-bottom: 3rem !important;
 		padding-left: 1.25rem !important;

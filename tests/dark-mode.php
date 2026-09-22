@@ -142,8 +142,8 @@ foreach ( array( 'assets/css/critical.css', 'assets/css/layout.css' ) as $rel ) 
 // every page in whichever scheme it was written for.
 ok( preg_match( '/\.sn-header\s*\{[^}]*background-color:\s*var\(--wp--preset--color--void\)/s', $crit ) === 1,
 	'the fixed header ground is a palette token (it spans the full width at the top of every page)' );
-ok( preg_match( '/\.sn-header\s*\{[^}]*border-bottom:\s*1px solid var\(--wp--preset--color--concrete\)/s', $crit ) === 1,
-	'and its hairline is the theme\'s own `concrete` rule, so it flips with the palette' );
+ok( preg_match( '/\.sn-header\s*\{[^}]*border-bottom:\s*none\s*!important/s', $crit ) === 1,
+	'and it carries no rule underneath: a solid bar on a ground of the same colour needs no edge (owner, 2026-09-22; 13.7.0 had a 1px `concrete` hairline)' );
 // the mark is an inline SVG in currentColor, inked with `bone` —
 // the token this layer already flips — so nothing is inverted and no second
 // asset exists. Pin the RELATIONSHIP: the mark's colour is the ink token.
