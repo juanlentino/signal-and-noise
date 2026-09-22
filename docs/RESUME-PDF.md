@@ -6,7 +6,7 @@ The goal: the resume PDF can never go stale again, because it is produced from t
 | Phase | Where | Status |
 |---|---|---|
 | 1. Print stylesheet: `Cmd+P` on `/resume` gives a two-page Letter document | theme, `assets/css/print.css` | shipped |
-| 2. Server-side generator: "Generate PDF" in S&N → Content writes the file behind the Download link | plugin (`signal-and-noise-tools`) | [juanlentino/signal-and-noise-tools#1665](https://github.com/juanlentino/signal-and-noise-tools/pull/1665); operational detail in that repo's `docs/RESUME-PDF.md` |
+| 2. Server-side generator: "Generate PDF" in S&N → Content writes the file behind the Download link | plugin (`signal-and-noise-tools`) | shipped in 17.7.0, fixes through 17.7.2; operational detail in that repo's `docs/RESUME-PDF.md` |
 
 ## Where the data lives
 
@@ -75,10 +75,19 @@ Decided with the owner, 2026-09-22:
 - **Renderer: Dompdf**, committed in the plugin's `lib/pdf/vendor` (the self-updater installs the
   tag archive). Pure PHP, no binary, real selectable text.
 - **Font:** Lato, embedded in the PDF only.
-- **New fields** under a top-level `pdf` key: headline, tagline, location, phone, email,
-  competencies, toolkit. Certifications needed no field: they already live in "Affiliations &
-  Certifications". The sync engine never reads `pdf`, so /resume is unchanged; the only change on
-  the page is the Download link's URL once a PDF exists (stable path plus `?v=<hash prefix>`).
+- **New fields** under a top-level `pdf` key: headline, tagline, location, phone, email, website,
+  competencies, toolkit, and the checkbox **Include the phone in the public PDF**. Certifications
+  needed no field: they already live in "Affiliations & Certifications". The sync engine never
+  reads `pdf`, so /resume is unchanged; the only change on the page is the Download link's URL once
+  a PDF exists (stable path plus `?v=<hash prefix>`).
+- **The contact line reuses what the resume knows** (plugin 17.7.1): location from the PDF field,
+  else the web contact line ("Orlando, FL"); the Website field, else the site's home URL.
+- **The phone is the owner's choice and off the public PDF by default** (17.7.0, 17.7.2): the web
+  page never shows it; Generate PDF includes it only when the checkbox is on; **Download private
+  copy (with phone)** streams the same PDF to the requesting admin and never stores it. The control
+  is a checkbox, never an `os-switch`: os-form reads only checkboxes as booleans, so a switch posts
+  `1` in both positions and would publish the phone on every save (fixed in 17.7.2).
+- **Times are the site's**: the generated time is stored in UTC and shown in the site timezone.
 - **Browser print vs the PDF:** they share the DATA, not the markup. The brief asked for one partial
   rendering both; rendering the PDF partial inside /resume would add markup to the page, which the
   owner ruled out ("There shouldn't be a change of how the resume is displayed in the page"). So

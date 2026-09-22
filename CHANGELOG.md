@@ -12,6 +12,9 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Docs
+- **`docs/RESUME-PDF.md` describes the resume PDF as shipped** (plugin 17.7.0 through 17.7.2): the Website field, the location fallback to the web contact line, the phone checkbox off by default with a private copy that is never stored, why that control must be a checkbox and not an `os-switch`, and times shown in the site timezone.
+
 ## [14.2.0] - 2026-09-22 — the resume prints
 
 ### Changed
