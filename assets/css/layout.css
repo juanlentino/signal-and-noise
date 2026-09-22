@@ -49,15 +49,17 @@
 	   and eased its own padding on scroll, which is glassmorphism and the
 	   least brutalist surface on the site. The footer bar was already opaque
 	   (`backgroundColor: void` on the block), so the two fixed bars now
-	   match. The hairline under it is the theme's own device: a 1px
-	   `concrete` rule, the same one every other edge in the theme uses. */
+	   match. No rule underneath (13.7.0 drew a 1px `concrete` hairline; the
+	   owner found it added nothing): a solid bar on a ground of the same
+	   colour has an edge already, and the separation comes from AIR, the
+	   16px block padding and 36px gutters on the header part itself. */
 	background-color: var(--wp--preset--color--void) !important;
-	border-bottom: 1px solid var(--wp--preset--color--concrete) !important;
+	border-bottom: none !important;
 }
 
 /* Push page content below fixed header */
 body {
-	padding-top: 100px;
+	padding-top: 118px;
 }
 
 /* Navigation links — desktop underline effect */
@@ -225,8 +227,8 @@ body {
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
-	min-height: calc(100vh - 100px - 90px) !important;
-	min-height: calc(100dvh - 108px - 90px) !important;
+	min-height: calc(100vh - 118px - 90px) !important;
+	min-height: calc(100dvh - 118px - 90px) !important;
 }
 
 .sn-hero::before {

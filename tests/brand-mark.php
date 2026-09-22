@@ -62,22 +62,70 @@ ok( '0' === (string) ( $tj['styles']['elements']['button']['border']['radius'] ?
 echo "\nGroup 5: the header mark's heights and the offsets keyed to them\n";
 $crit = (string) file_get_contents( $root . '/assets/css/critical.css' );
 $rem  = 16;
-// header = 2 * (0.44rem block padding) + 2 * (link clear space) + mark; body offset keeps a 14px gap.
+// header = 2 * (the part's block padding) + 2 * (link clear space) + mark; body offset keeps a 14px gap.
+// The block padding is READ from parts/header.html and resolved through theme.json's
+// spacing scale, never written here as a number: 13.7.1 changed it (0.44rem to 1rem)
+// and a literal would have pinned the old header as correct.
+$tj_sp  = array();
+foreach ( (array) ( json_decode( (string) file_get_contents( $root . '/theme.json' ), true )['settings']['spacing']['spacingSizes'] ?? array() ) as $sz ) {
+	$tj_sp[ (string) $sz['slug'] ] = (float) $sz['size'];
+}
+$hdr_part = (string) file_get_contents( $root . '/parts/header.html' );
+preg_match( '/"padding":\{"top":"var:preset\|spacing\|(\d+)"/', $hdr_part, $vp );
+$vpad = isset( $vp[1], $tj_sp[ $vp[1] ] ) ? $tj_sp[ $vp[1] ] * $rem : 0;
+ok( $vpad > 0, sprintf( 'the header part\'s vertical padding resolves through theme.json (spacing-%s = %.1fpx)', $vp[1] ?? '?', $vpad ) );
 preg_match( '/\.sn-logo-link\s*\{[^}]*padding-block:\s*([0-9.]+)rem/s', $crit, $pb );
 ok( isset( $pb[1] ), 'the home link carries clear-space padding' );
 $clear = isset( $pb[1] ) ? (float) $pb[1] * $rem : 0;
 preg_match( '/\.jl-mark\s*\{[^}]*height:\s*(\d+)px/s', $crit, $mh );
 $mark = (int) ( $mh[1] ?? 0 );
 ok( 64 === $mark, "desktop mark is 64px (got {$mark})" );
-ok( $clear + 0.44 * $rem >= $mark * 20 / 128, sprintf( 'clear space above the mark (%.1fpx) is at least one stroke width (%.1fpx)', $clear + 0.44 * $rem, $mark * 20 / 128 ) );
-$header_h = 2 * 0.44 * $rem + 2 * $clear + $mark;
+ok( $clear + $vpad >= $mark * 20 / 128, sprintf( 'clear space above the mark (%.1fpx) is at least one stroke width (%.1fpx)', $clear + $vpad, $mark * 20 / 128 ) );
+$header_h = 2 * $vpad + 2 * $clear + $mark;
 preg_match( '/body\s*\{[^}]*padding-top:\s*(\d+)px/s', $crit, $bp );
 ok( isset( $bp[1] ) && (int) $bp[1] === (int) round( $header_h + 14 ), sprintf( 'body padding-top (%s) = header %.0f + 14px gap', $bp[1] ?? '?', $header_h ) );
 $base = (string) file_get_contents( $root . '/assets/css/base.css' );
 ok( 1 === preg_match( '/scroll-padding-top:\s*' . (int) ( $bp[1] ?? 0 ) + 16 . 'px/', $base ), 'scroll-padding-top stays 16px past the body offset' );
 preg_match_all( '/\.jl-mark\s*\{[^}]*height:\s*(\d+)px/s', $crit . (string) file_get_contents( $root . '/assets/css/responsive.css' ), $all );
 ok( min( array_map( 'intval', $all[1] ) ) >= 16, 'no state or breakpoint takes the mark under 16px (smallest: ' . min( array_map( 'intval', $all[1] ) ) . 'px)' );
-ok( str_contains( $crit, 'height: 48px;' ) && str_contains( $crit, 'height: 36px;' ), 'the two lower breakpoints are 48 and 36: with the clear space they equal the previous 56 and 44 header heights, so their body offsets (80, 65) are unchanged' );
+
+echo "\nGroup 7: at every breakpoint the body pads for the WHOLE header\n";
+// Found live on 2026-09-22: at 375px the header was 69px tall and the body padded 65, so
+// the header covered the top of every page on phones. Group 5 only checks desktop; this
+// walks each context. Header = 2 * vertical padding (the breakpoint's override, else the
+// part's) + 2 * clear space + that breakpoint's mark height.
+function bm_contexts( $css ) {
+	$css = (string) preg_replace( '#/\*.*?\*/#s', '', $css );
+	$out = array( 'base' => $css );
+	if ( preg_match_all( '/@media\s*\(max-width:\s*(\d+)px\)\s*\{/', $css, $m, PREG_OFFSET_CAPTURE ) ) {
+		foreach ( $m[0] as $k => $hit ) {
+			$start = $hit[1] + strlen( $hit[0] );
+			for ( $i = $start, $d = 1; $i < strlen( $css ) && $d > 0; $i++ ) {
+				$d += ( '{' === $css[ $i ] ) - ( '}' === $css[ $i ] );
+			}
+			$out[ $m[1][ $k ][0] ] = ( $out[ $m[1][ $k ][0] ] ?? '' ) . substr( $css, $start, $i - $start );
+		}
+	}
+	return $out;
+}
+$ctx     = bm_contexts( $crit );
+$checked = 0;
+foreach ( array( 'base', '781', '480' ) as $bp ) {
+	$chunk = $ctx[ $bp ] ?? '';
+	if ( 'base' === $bp ) {
+		$chunk = (string) preg_replace( '/@media[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/s', '', $chunk );
+	}
+	$bmark = preg_match( '/\.jl-mark\s*\{[^}]*height:\s*(\d+)px/s', $chunk, $mm ) ? (int) $mm[1] : null;
+	$bpad  = preg_match( '/(?<![\w-])body\s*\{[^}]*padding-top:\s*(\d+)px/s', $chunk, $pp ) ? (int) $pp[1] : null;
+	$bv    = preg_match( '/\.sn-header[^{]*\{[^}]*padding-top:\s*([0-9.]+)rem\s*!important/s', $chunk, $vv ) ? (float) $vv[1] * $rem : $vpad;
+	if ( null === $bmark || null === $bpad ) {
+		continue;
+	}
+	++$checked;
+	$hh = 2 * $bv + 2 * $clear + $bmark;
+	ok( $bpad >= $hh, sprintf( '[%s] body pads %dpx for a %.0fpx header (%.1f padding x2 + %.0f clear + %dpx mark)%s', $bp, $bpad, $hh, $bv, 2 * $clear, $bmark, $bpad >= $hh ? '' : ' -- the header covers the top of the page' ) );
+}
+ok( 3 === $checked, "all three breakpoints were measured (got {$checked}; fewer would pass vacuously)" );
 
 echo "\nGroup 6: the brand appears once, top-left\n";
 // Owner, 2026-09-22: the mark top-left already signs the page, and a second

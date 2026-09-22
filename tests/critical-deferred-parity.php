@@ -309,11 +309,20 @@ function cdp_header_pairs( $css ) {
 		}
 	}
 	foreach ( $contexts as $name => $chunk ) {
+		if ( 'base' === $name ) {
+			// The base context is the whole file; drop every @media block so a
+			// breakpoint's value is never read as the base one.
+			$chunk = (string) preg_replace( '/@media[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/s', '', $chunk );
+		}
 		if ( preg_match( '/body\s*\{[^}]*padding-top:\s*(\d+)px/s', $chunk, $p ) ) {
 			$out[ $name ]['pad'] = (int) $p[1];
 		}
-		if ( preg_match( '/min-height:\s*calc\(100vh\s*-\s*(\d+)px/s', $chunk, $h ) ) {
-			$out[ $name ]['hero'] = (int) $h[1];
+		// Every viewport unit the hero uses: `100vh` is the fallback and `100dvh` the
+		// line modern browsers actually apply, so a stale dvh value is the one that
+		// ships. The first version matched only `100vh` and missed exactly that.
+		if ( preg_match_all( '/min-height:\s*calc\(100d?vh\s*-\s*(\d+)px/s', $chunk, $h ) ) {
+			$vals = array_unique( array_map( 'intval', $h[1] ) );
+			$out[ $name ]['hero'] = 1 === count( $vals ) ? (int) reset( $vals ) : -1; // -1: vh and dvh disagree
 		}
 	}
 	return $out;
