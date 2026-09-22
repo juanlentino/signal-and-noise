@@ -1,13 +1,13 @@
 <?php
 /**
- * Standalone test: the JL mark ships inline, sized by height, from the theme.
+ * Standalone test: the header's brand.
  *
- * This cut replaced the header's broken uploads-hosted logo (a `cropped-*`
- * attachment thumbnail that no theme file can repair) with the JL mark
- * inlined as SVG in currentColor. These pins hold the properties that made
- * that the fix: no request, no uploads dependency, one ink token, never
- * below the 16px screen floor, and a home link with exactly one accessible
- * name.
+ * 13.5.0 replaced a broken uploads-hosted logo with the JL mark inlined as
+ * SVG. 13.10.0 (owner, 2026-09-22): the page carries the WORDMARK, the name
+ * as live text in Bebas, and the JL monogram stays the favicon and OG image.
+ * These pins hold: no image and no uploads dependency, one ink token, a
+ * box with the old mark's heights so the header offsets hold, a home link
+ * with one accessible name, and the brand once per page.
  *
  * Run: php tests/brand-mark.php
  * @since Unreleased
@@ -20,13 +20,15 @@ function ok( $c, $m ) { global $pass, $fail; if ( $c ) { $pass++; echo "PASS: $m
 $root   = dirname( __DIR__ );
 $header = (string) file_get_contents( $root . '/parts/header.html' );
 
-echo "brand-mark — the JL mark\n\nGroup 1: the header mark is inline SVG, not an image\n";
-ok( 1 === preg_match( '/<a href="\/" class="sn-logo-link" aria-label="[^"]+"[^>]*>\s*<svg class="jl-mark"/', $header ),
-	'the home link wraps an inline <svg class="jl-mark"> and carries an aria-label' );
-ok( false !== strpos( $header, 'stroke="currentColor"' ), 'the mark is drawn in currentColor (dark mode needs no second asset)' );
-ok( 1 === preg_match( '/<svg class="jl-mark"[^>]*aria-hidden="true"/', $header ), 'the SVG is aria-hidden — the link already has the name' );
-ok( false !== strpos( $header, 'viewBox="0 0 146 128"' ) && false !== strpos( $header, 'stroke-width="20"' ), 'geometry is the canonical mark (146x128, stroke 20)' );
+echo "brand-mark — the header wordmark\n\nGroup 1: the header carries the wordmark as live text\n";
+ok( 1 === preg_match( '/<a href="\/" class="sn-logo-link" aria-label="Juan Lentino[^"]*"[^>]*>\s*<span class="sn-wordmark">Juan Lentino<\/span>\s*<\/a>/', $header ),
+	'the home link wraps <span class="sn-wordmark">Juan Lentino</span>, and its aria-label starts with the same name' );
+ok( false === strpos( $header, '<svg' ) && false === strpos( $header, 'jl-mark' ), 'the header carries no SVG and no monogram: the page brand is the wordmark' );
 ok( false === strpos( $header, '<img' ) && false === strpos( $header, 'wp-content/uploads' ), 'no <img> and no uploads URL remain in the header' );
+// The monogram lives on off the page: favicon, touch icon, OG image.
+foreach ( array( 'favicon.svg', 'favicon.ico', 'apple-touch-icon.png', 'og-image.png', 'jl-mark.svg' ) as $f ) {
+	ok( is_file( $root . "/assets/brand/$f" ), "assets/brand/$f still ships (the JL monogram stays the icon and OG image)" );
+}
 
 echo "\nGroup 2: nothing in the theme references the dead attachment\n";
 $hits = array();
@@ -38,22 +40,26 @@ foreach ( array( 'parts', 'templates', 'patterns', 'blocks', 'inc', 'assets/css'
 }
 ok( empty( $hits ), 'zero references to cropped-jl_logo-min-150x150.webp' . ( $hits ? ': ' . implode( ', ', $hits ) : '' ) );
 
-echo "\nGroup 3: sized by height only, never below the 16px floor\n";
+echo "\nGroup 3: the wordmark's face, size and ink\n";
 $heights = array(); $widths = array();
 foreach ( array( 'critical', 'layout', 'responsive' ) as $css ) {
 	$src = (string) file_get_contents( $root . "/assets/css/$css.css" );
-	preg_match_all( '/\.jl-mark\s*\{([^}]*)\}/s', $src, $m );
+	preg_match_all( '/\.sn-wordmark\s*\{([^}]*)\}/s', $src, $m );
 	foreach ( $m[1] as $body ) {
 		if ( preg_match( '/height:\s*(\d+)px/', $body, $h ) ) { $heights[] = (int) $h[1]; }
 		if ( preg_match( '/\bwidth:\s*(\d+)px/', $body ) ) { $widths[] = $css; }
 	}
 }
-ok( count( $heights ) >= 6, 'the mark has explicit heights across the header states/breakpoints (' . count( $heights ) . ' found)' );
-ok( ! empty( $heights ) && min( $heights ) >= 16, 'the smallest is ' . ( $heights ? min( $heights ) : 'n/a' ) . 'px — the 16px floor holds' );
-ok( empty( $widths ), 'no fixed pixel width anywhere — one axis is never sized alone' );
+ok( count( $heights ) >= 6, 'the wordmark box has explicit heights at every breakpoint, in critical and deferred (' . count( $heights ) . ' found)' );
+ok( empty( $widths ), 'no fixed pixel width: the name sets its own width' );
 $crit = (string) file_get_contents( $root . '/assets/css/critical.css' );
-ok( 1 === preg_match( '/\.jl-mark\s*\{[^}]*color:\s*var\(--wp--preset--color--bone\)/s', $crit ), 'the ink is the bone token (flipped by the dark layer)' );
-ok( false === strpos( $crit, 'data-theme="dark"] .jl-mark' ), 'no second dark-mode rule for the mark — the token layer already does it' );
+$wm   = preg_match( '/\.sn-wordmark\s*\{([^}]*)\}/s', $crit, $wb ) ? $wb[1] : '';
+ok( str_contains( $wm, 'font-family: var(--wp--preset--font-family--heading)' ), 'the wordmark is set in the heading face, Bebas Neue (docs/BRAND.md: never substitute)' );
+ok( 1 === preg_match( '/text-transform:\s*uppercase/', $wm ) && 1 === preg_match( '/white-space:\s*nowrap/', $wm ), 'uppercase, on one line' );
+$fs = preg_match( '/font-size:\s*clamp\(\s*([0-9.]+)rem\s*,\s*[0-9.]+vw\s*,\s*([0-9.]+)rem\s*\)/', $wm, $fz ) ? array( (float) $fz[1] * 16, (float) $fz[2] * 16 ) : null;
+ok( null !== $fs && $fs[0] >= 32 && $fs[1] <= 2.5 * $fs[0], 'the size is one clamp() with a 32px floor that keeps max within 2.5x min (zoom, WCAG 1.4.4): ' . ( $fs ? "{$fs[0]}-{$fs[1]}px" : 'none' ) );
+ok( 1 === preg_match( '/color:\s*var\(--wp--preset--color--bone\)/', $wm ), 'the ink is the bone token (flipped by the dark layer)' );
+ok( false === strpos( $crit, 'data-theme="dark"] .sn-wordmark' ), 'no second dark-mode rule for the wordmark: the token layer already does it' );
 
 echo "\nGroup 4: no rounded corners\n";
 $tj = json_decode( (string) file_get_contents( $root . '/theme.json' ), true );
@@ -77,24 +83,22 @@ ok( $vpad > 0, sprintf( 'the header part\'s vertical padding resolves through th
 preg_match( '/\.sn-logo-link\s*\{[^}]*padding-block:\s*([0-9.]+)rem/s', $crit, $pb );
 ok( isset( $pb[1] ), 'the home link carries clear-space padding' );
 $clear = isset( $pb[1] ) ? (float) $pb[1] * $rem : 0;
-preg_match( '/\.jl-mark\s*\{[^}]*height:\s*(\d+)px/s', $crit, $mh );
+preg_match( '/\.sn-wordmark\s*\{[^}]*height:\s*(\d+)px/s', $crit, $mh );
 $mark = (int) ( $mh[1] ?? 0 );
-ok( 64 === $mark, "desktop mark is 64px (got {$mark})" );
-ok( $clear + $vpad >= $mark * 20 / 128, sprintf( 'clear space above the mark (%.1fpx) is at least one stroke width (%.1fpx)', $clear + $vpad, $mark * 20 / 128 ) );
+ok( 64 === $mark, "desktop wordmark box is 64px, the old mark's height, so the header does not move (got {$mark})" );
 $header_h = 2 * $vpad + 2 * $clear + $mark;
 // 13.8.0: the body offset is --sn-chrome-top; its first definition is the base :root.
 preg_match( '/--sn-chrome-top:\s*(\d+)px/', $crit, $bp );
 ok( isset( $bp[1] ) && (int) $bp[1] === (int) round( $header_h + 14 ), sprintf( 'the desktop body offset --sn-chrome-top (%s) = header %.0f + 14px gap', $bp[1] ?? '?', $header_h ) );
 $base = (string) file_get_contents( $root . '/assets/css/base.css' );
 ok( 1 === preg_match( '/scroll-padding-top:\s*calc\(var\(--sn-chrome-top\)\s*\+\s*16px\)/', $base ), 'scroll-padding-top stays 16px past the body offset (it reads the variable)' );
-preg_match_all( '/\.jl-mark\s*\{[^}]*height:\s*(\d+)px/s', $crit . (string) file_get_contents( $root . '/assets/css/responsive.css' ), $all );
-ok( min( array_map( 'intval', $all[1] ) ) >= 16, 'no state or breakpoint takes the mark under 16px (smallest: ' . min( array_map( 'intval', $all[1] ) ) . 'px)' );
+
 
 echo "\nGroup 7: at every breakpoint the body pads for the WHOLE header\n";
 // Found live on 2026-09-22: at 375px the header was 69px tall and the body padded 65, so
 // the header covered the top of every page on phones. Group 5 only checks desktop; this
 // walks each context. Header = 2 * vertical padding (the breakpoint's override, else the
-// part's) + 2 * clear space + that breakpoint's mark height.
+// part's) + 2 * clear space + that breakpoint's wordmark box height.
 function bm_contexts( $css ) {
 	$css = (string) preg_replace( '#/\*.*?\*/#s', '', $css );
 	$out = array( 'base' => $css );
@@ -116,7 +120,7 @@ foreach ( array( 'base', '781', '480' ) as $bp ) {
 	if ( 'base' === $bp ) {
 		$chunk = (string) preg_replace( '/@media[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/s', '', $chunk );
 	}
-	$bmark = preg_match( '/\.jl-mark\s*\{[^}]*height:\s*(\d+)px/s', $chunk, $mm ) ? (int) $mm[1] : null;
+	$bmark = preg_match( '/\.sn-wordmark\s*\{[^}]*height:\s*(\d+)px/s', $chunk, $mm ) ? (int) $mm[1] : null;
 	$bpad  = preg_match( '/:root\s*\{[^}]*--sn-chrome-top:\s*(\d+)px/s', $chunk, $pp ) ? (int) $pp[1] : null;
 	$bv    = preg_match( '/\.sn-header[^{]*\{[^}]*padding-top:\s*([0-9.]+)rem\s*!important/s', $chunk, $vv ) ? (float) $vv[1] * $rem : $vpad;
 	if ( null === $bmark || null === $bpad ) {
@@ -124,12 +128,12 @@ foreach ( array( 'base', '781', '480' ) as $bp ) {
 	}
 	++$checked;
 	$hh = 2 * $bv + 2 * $clear + $bmark;
-	ok( $bpad >= $hh, sprintf( '[%s] body pads %dpx for a %.0fpx header (%.1f padding x2 + %.0f clear + %dpx mark)%s', $bp, $bpad, $hh, $bv, 2 * $clear, $bmark, $bpad >= $hh ? '' : ' -- the header covers the top of the page' ) );
+	ok( $bpad >= $hh, sprintf( '[%s] body pads %dpx for a %.0fpx header (%.1f padding x2 + %.0f clear + %dpx box)%s', $bp, $bpad, $hh, $bv, 2 * $clear, $bmark, $bpad >= $hh ? '' : ' -- the header covers the top of the page' ) );
 }
 ok( 3 === $checked, "all three breakpoints were measured (got {$checked}; fewer would pass vacuously)" );
 
 echo "\nGroup 6: the brand appears once, top-left\n";
-// Owner, 2026-09-22: the mark top-left already signs the page, and a second
+// Owner, 2026-09-22: the brand top-left already signs the page, and a second
 // version of it bottom-left (13.6.0's stamp + wordmark + descriptor lockup) read
 // as repetition, not as a signature. The footer carries no brand mark; its
 // left edge belongs to the social links again, as it did before 13.6.0.
@@ -138,8 +142,13 @@ ok( ! str_contains( $footer, 'footer-signature' ) && ! str_contains( $footer, 'j
 $first_block = preg_match( '/<div class="wp-block-group sn-footer[^>]*>\s*(?:<!--(?! wp:).*?-->\s*)*<!-- wp:([a-z0-9\/-]+)/s', $footer, $fb ) ? $fb[1] : '';
 ok( 'social-links' === $first_block, "the social links are the footer's first block, so they sit at its left edge (got: {$first_block})" );
 ok( ! is_dir( $root . '/blocks/footer-signature' ), 'the signature block is deleted, not just unplaced (a registered, unused block still shows in the inserter)' );
-$mark_count = substr_count( (string) file_get_contents( $root . '/parts/header.html' ), 'class="jl-mark"' );
-ok( 1 === $mark_count, "the header places the mark exactly once (got {$mark_count})" );
+$mark_count = substr_count( (string) file_get_contents( $root . '/parts/header.html' ), 'class="sn-wordmark"' );
+ok( 1 === $mark_count, "the header places the wordmark exactly once (got {$mark_count})" );
+ok( ! str_contains( $footer, 'sn-wordmark' ), 'the footer carries no wordmark' );
+// The wordmark is ~160px wider than the monogram. Core shows the full nav from
+// 600px; beside it the header wrapped to two rows from 601 to 780. The
+// hamburger runs to the theme's own 781px breakpoint instead.
+ok( 1 === preg_match( '/@media\s*\(min-width:\s*600px\)\s*and\s*\(max-width:\s*781px\)\s*\{\s*\.sn-header \.wp-block-navigation__responsive-container-open[^{]*\{\s*display:\s*flex;\s*\}\s*\.sn-header \.wp-block-navigation__responsive-container:not\(\.hidden-by-default\):not\(\.is-menu-open\)\s*\{\s*display:\s*none;/s', $crit ), 'critical.css shows the hamburger and hides the inline nav from 600 to 781px, so the header stays one row beside the wordmark' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

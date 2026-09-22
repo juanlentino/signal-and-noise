@@ -60,10 +60,11 @@ foreach ( array(
 //    missing selector but missing geometry.
 // 13.9.0: the value is the wide track, read from theme.json rather than typed
 // here, so the next track change cannot leave this pin guarding a stale number.
-$sn_wide = json_decode( (string) file_get_contents( dirname( __DIR__ ) . '/theme.json' ), true )['settings']['layout']['wideSize'] ?? '';
-ok( '' !== $sn_wide && 1 === preg_match( '/\.sn-notes-page\s*\{[^}]*max-width:\s*' . preg_quote( $sn_wide, '/' ) . '/s', $css ), "the container keeps its max-width, on the wide track ($sn_wide)" );
-// 13.9.1: margin 0, not 0 auto. The page sits at the left under the mark like
-// the four text pages (owner, 2026-09-22); layout-width-system.php pins why.
+// 13.10.0: full width, gutter to gutter, the same edges as the header.
+ok( 1 === preg_match( '/\.sn-notes-page\s*\{[^}]*max-width:\s*none\s*;/s', $css ), 'the container keeps its max-width declaration: none, gutter to gutter like the header' );
+// 13.10.0: margin 0 with max-width none. 13.9.1 pinned a 1400px grid left and
+// left an empty band on a wide screen; the owner's condition for left alignment
+// was that the page reach the right edge too.
 ok( 1 === preg_match( '/\.sn-notes-page\s*\{[^}]*margin:\s*0\s*;/s', $css ), 'the container keeps its margin, at the left (margin: 0)' );
 ok( 1 === preg_match( '/\.sn-notes-page\s*\{[^}]*160px/s', $css ), 'the container keeps the 160px fixed-footer clearance' );
 

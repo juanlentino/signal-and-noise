@@ -127,7 +127,7 @@ ok( empty( $mw_bad ), 'every max-width is a track, a measure tier, or says why i
 // The five page containers the brief moved, by the rule that a page earns the
 // wide track only with a real multi-track grid on its own content.
 $mw_pages = array(
-	'notes.css'         => array( '.sn-notes-page', '1400px' ),
+	'notes.css'         => array( '.sn-notes-page', 'none' ),
 	'uses.css'          => array( '.sn-uses-page', '760px' ),
 	'now.css'           => array( '.sn-now-page', '760px' ),
 	'index.css'         => array( '.sn-index-page', '760px' ),
@@ -137,7 +137,7 @@ foreach ( $mw_pages as $f => $pair ) {
 	list( $sel, $want ) = $pair;
 	$css = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( "$root/assets/css/$f" ) );
 	$got = preg_match( '/' . preg_quote( $sel, '/' ) . '\s*\{[^}]*max-width:\s*([^;\s]+)/s', $css, $pm ) ? $pm[1] : '(none)';
-	ok( $got === $want, "$sel sits on the " . ( '1400px' === $want ? 'wide' : 'reading' ) . " track ($want; got $got)" );
+	ok( $got === $want, "$sel sits on the " . ( 'none' === $want ? 'full width, gutter to gutter' : ( '1400px' === $want ? 'wide' : 'reading' ) . ' track' ) . " ($want; got $got)" );
 }
 
 // ── The text pages start under the mark (owner, 2026-09-22) ──
@@ -168,7 +168,8 @@ $gpad = json_decode( (string) file_get_contents( "$root/theme.json" ), true )['s
 ok( str_contains( $gpad, 'var(--sn-gutter' ), "theme.json padPage takes its sides from --sn-gutter ($gpad)" );
 foreach ( array( 'uses.css' => '.sn-uses-page', 'now.css' => '.sn-now-page', 'index.css' => '.sn-index-page', 'accessibility.css' => '.sn-a11y-page', 'notes.css' => '.sn-notes-page' ) as $f => $sel ) {
 	$css = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( "$root/assets/css/$f" ) );
-	ok( 1 === preg_match( '/' . preg_quote( $sel, '/' ) . '\s*\{[^}]*margin:\s*0\s*;/s', $css ), "$sel sits at the left (margin: 0), not centred" );
+	$want = '0';
+	ok( 1 === preg_match( '/' . preg_quote( $sel, '/' ) . '\s*\{[^}]*margin:\s*' . preg_quote( $want, '/' ) . '\s*;/s', $css ), "$sel has margin: 0 (at the left, under the brand)" );
 	ok( 1 === preg_match( '/' . preg_quote( $sel, '/' ) . '\s*\{[^}]*padding:\s*(?:var\(--wp--custom--pad-page\)|(?:clamp\([^)]*\)|\S+)\s+var\(--sn-gutter)/s', $css ), "$sel pads its sides with --sn-gutter (directly or through padPage), so its text starts under the mark" );
 }
 

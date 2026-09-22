@@ -144,11 +144,11 @@ ok( preg_match( '/\.sn-header\s*\{[^}]*background-color:\s*var\(--wp--preset--co
 	'the fixed header ground is a palette token (it spans the full width at the top of every page)' );
 ok( preg_match( '/\.sn-header\s*\{[^}]*border-bottom:\s*none\s*!important/s', $crit ) === 1,
 	'and it carries no rule underneath: a solid bar on a ground of the same colour needs no edge (owner, 2026-09-22; 13.7.0 had a 1px `concrete` hairline)' );
-// the mark is an inline SVG in currentColor, inked with `bone` —
+// 13.10.0: the header carries the wordmark, live text inked with `bone` —
 // the token this layer already flips — so nothing is inverted and no second
-// asset exists. Pin the RELATIONSHIP: the mark's colour is the ink token.
-ok( preg_match( '/\.jl-mark\s*\{[^}]*color:\s*var\(--wp--preset--color--bone\)/s', $crit ) === 1,
-	'the header mark is inked with the bone token, which the dark layer flips (no invert filter, no second asset)' );
+// asset exists. Pin the RELATIONSHIP: the wordmark's colour is the ink token.
+ok( preg_match( '/\.sn-wordmark\s*\{[^}]*color:\s*var\(--wp--preset--color--bone\)/s', $crit ) === 1,
+	'the header wordmark is inked with the bone token, which the dark layer flips (no invert filter, no second asset)' );
 ok( strpos( $crit, '--sn-mark-invert' ) === false, 'the invert token is gone with the raster logo it existed for' );
 
 // ── PLACEMENT IS PART OF THE CONTROL (v12.0.1) ─────────────────────────────

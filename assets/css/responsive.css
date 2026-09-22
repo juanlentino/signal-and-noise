@@ -34,8 +34,8 @@
 		display: none;
 	}
 
-	/* Logo */
-	.jl-mark {
+	/* Wordmark box */
+	.sn-wordmark {
 		height: 48px;
 	}
 
@@ -182,8 +182,8 @@
 		padding-bottom: 0.75rem !important;
 	}
 
-	/* Smaller logo */
-	.jl-mark {
+	/* Smaller wordmark box (the text is sized by its own clamp) */
+	.sn-wordmark {
 		height: 36px;
 	}
 

@@ -301,31 +301,32 @@ body::after {
 	align-items: center;
 	text-decoration: none;
 	flex-shrink: 0;
-	/* Clear space: one stroke width on every side (docs/BRAND.md). At 64px
-	   the stroke is 10px; the header's 0.44rem block padding gives 7, this
-	   gives the rest. Left is the header's 1rem. */
+	/* Breathing room above and below the wordmark box; with the box heights
+	   it sets the header height that --sn-chrome-top is keyed to. */
 	padding-block: 0.25rem;
 }
 
-/* Inline SVG in currentColor: `bone` is the ink token and already
-   flips in the dark layer above, so one declaration covers both schemes —
-   no second asset, no request, no filter. 64px is the glyph height the old
-   80px raster BOX showed once its padding is discounted; with the link's
-   clear space the header is 7 + 4 + 64 + 4 + 7 = 86px and body padding-top
-   100 keeps the 14px gap. The two lower breakpoints (48, 36) land on their
-   previous header heights exactly, so their offsets do not move. Width
-   follows the 146:128 viewBox; never size one axis alone. Floor is 16px. */
-.jl-mark {
-	display: block;
-	width: auto;
+.sn-wordmark {
+	display: flex;
+	align-items: center;
+	/* The box keeps the old mark's heights (64, 48, 36), so the header and
+	   every offset keyed to it (--sn-chrome-top) are unchanged. The text is
+	   sized on its own and centred in the box. */
 	height: 64px;
+	font-family: var(--wp--preset--font-family--heading);
+	font-size: clamp(2rem, 10vw, 2.875rem); /* not a step: the wordmark's own size, 32px at 320 to 46px from 460 up; no air or page token is near it, pageHeadline is 48-112px */
+	line-height: 1;
+	/* 0.04em, not the lockup's `wide` 0.15em: at wide the name cannot hold one
+	   header row on a phone at any readable size (docs/BRAND.md). */
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	white-space: nowrap;
 	color: var(--wp--preset--color--bone);
-	/* Opacity only: the mark is one height now that the header does not shrink. */
 	transition: opacity 0.3s ease;
 }
 
 @media (hover: hover) {
-	.sn-logo-link:hover .jl-mark {
+	.sn-logo-link:hover .sn-wordmark {
 		opacity: 0.7;
 	}
 }
@@ -479,7 +480,7 @@ body {
 	body::after {
 		display: none;
 	}
-	.jl-mark {
+	.sn-wordmark {
 		height: 48px;
 	}
 	:root {
@@ -518,6 +519,21 @@ body {
 }
 
 /* Critical responsive — Mobile */
+/* The hamburger up to 781px, the theme's own mobile breakpoint, not core's
+   600. Between them the full nav shared a row with the header brand, which
+   wrapped the header to two rows at 600px even with the monogram; with the
+   wordmark it wrapped from 601 to 780. Measured on the live site, 13.10.0:
+   one 70px row at every width from 599 to 781. The open overlay is the
+   theme's own (.is-menu-open, below) and is not width-dependent. */
+@media (min-width: 600px) and (max-width: 781px) {
+	.sn-header .wp-block-navigation__responsive-container-open:not(.always-shown) {
+		display: flex;
+	}
+	.sn-header .wp-block-navigation__responsive-container:not(.hidden-by-default):not(.is-menu-open) {
+		display: none;
+	}
+}
+
 @media (max-width: 480px) {
 	/* See responsive.css: left/right lost to the generic background-group rule. */
 	.sn-header,
@@ -527,7 +543,7 @@ body {
 		padding-top: 0.75rem !important;
 		padding-bottom: 0.75rem !important;
 	}
-	.jl-mark {
+	.sn-wordmark {
 		height: 36px;
 	}
 	:root {

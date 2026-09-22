@@ -68,9 +68,13 @@ echo "\nthe hand-rolls are gone\n";
 ok( empty( $GLOBALS['__filters']['style_loader_tag'] ), 'no style_loader_tag deferral is registered (core never reached it for wp-block-library)' );
 
 $css = (string) file_get_contents( __DIR__ . '/../assets/css/critical.css' );
-ok( ! str_contains( $css, '.wp-block-navigation__responsive-container-open:not(.always-shown)' ), 'critical.css no longer copies core\'s desktop toggle rule' );
+// 13.10.0 adds a DIFFERENT rule with the same selector: the header shows the
+// toggle from 600 to 781px (the theme's breakpoint), scoped to .sn-header and
+// bounded above. The copy this guards against HID the toggle from 600px up,
+// unbounded. Pin that shape, not the selector string.
+ok( ! preg_match( '/\.wp-block-navigation__responsive-container-open:not\(\.always-shown\)\s*\{[^}]*display:\s*none/', $css ), 'critical.css no longer copies core\'s desktop toggle rule (the toggle is never hidden here)' );
 ok( ! str_contains( $css, '.wp-block-navigation__responsive-dialog' ), 'critical.css no longer copies core\'s gap: inherit chain' );
-ok( ! preg_match( '/@media\s*\(\s*min-width:\s*600px\s*\)/', $css ), 'critical.css carries no copy of core\'s 600px nav breakpoint' );
+ok( ! preg_match( '/@media\s*\(\s*min-width:\s*600px\s*\)\s*\{/', $css ), 'critical.css carries no copy of core\'s 600px nav breakpoint (an unbounded min-width: 600px query)' );
 
 echo "\nwhat stays\n";
 ok( preg_match( '/\.wp-block-navigation a\s*\{[^}]*color:\s*inherit/s', $css ) === 1, 'the one-line color: inherit on nav links (10.38.2) stays' );

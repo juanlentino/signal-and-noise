@@ -32,7 +32,8 @@ caps/joins   butt / miter
 
 ## Containers
 
-- **Mark** — default. Header, letterhead, credits.
+- **Mark** — default off the page: favicon, OG image, letterhead, credits.
+  The site header carries the wordmark instead (see Wordmark).
 - **Stamp** — `rect x=6 y=6 w=188 h=188` stroke 12, mark inside at
   `translate(45 51.8) scale(0.753)`. Attribution, rights notices, credits.
 - **Tile** — full-bleed 200×200 rect, mark inside at
@@ -49,15 +50,26 @@ flips both (`void` #0a0a0a, `bone` #ffffff). So the mark is always drawn in
 second dark-mode rule for it. `blood` (#e00404) and `signal` (#ff4c47) are
 accents for rules and labels; the mark is never drawn in either.
 
-In the theme: `parts/header.html` inlines the mark (`.jl-mark`,
-`stroke="currentColor"`), `assets/brand/` holds every file below, and
-`tests/brand-mark.php` pins the geometry, the ink token and the 16px floor.
+In the theme: `assets/brand/` holds every file below (favicon, touch icon,
+OG image, the mark in each ink). The page itself carries the wordmark, not
+the mark; `tests/brand-mark.php` pins both.
 
 ## Typography
 
-Wordmark: Bebas Neue, letterSpacing `wide` (0.15em).
-Descriptor: DM Mono 500, letterSpacing `ultra` (0.3em).
-Both already exist in `theme.json`. Never substitute.
+Wordmark: Bebas Neue, uppercase, one line. Set beside the mark in a lockup
+it tracks `wide` (0.15em).
+
+**The site header carries the wordmark alone** (owner, 2026-09-22, 13.10.0):
+the name is the brand on the page and the monogram stays the favicon and OG
+image, so the brand still appears once per page. Header wordmark:
+`.sn-wordmark` in `parts/header.html`, live text in `bone`, tracking 0.04em,
+size `clamp(2rem, 10vw, 2.875rem)` (32px at 320 to 46px). The tighter
+tracking is deliberate: at 0.15em the name cannot hold one header row on a
+phone at any readable size. It sits in a box with the old mark's heights
+(64 / 48 / 36px), so the header height and `--sn-chrome-top` did not move.
+
+Descriptor: DM Mono 500, widely tracked. Off the page only (the `ultra`
+token it used was removed in 13.8.0). Never substitute either face.
 
 ## Don't
 
