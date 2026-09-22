@@ -242,7 +242,7 @@ body {
 
 
 .sn-hero .sn-hero-subtitle {
-	max-width: 640px; /* not a track: the hero dek line length inside the 1100px hero frame, which positions rather than constrains */
+	max-width: 640px; /* not a track: the hero dek line length inside the hero frame, which positions rather than constrains */
 }
 
 /* Reset UA default margin-block. See critical.css for rationale. */
@@ -262,7 +262,7 @@ body {
 	width: 120px;
 	height: 3px;
 	background-color: var(--wp--preset--color--blood);
-	margin: var(--wp--preset--spacing--30) 0;
+	margin: var(--wp--custom--air--sm) 0; /* the hero rhythm lives in critical.css; this matches it */
 }
 
 /* Hero + header entrance — staggered cascade. Single gate behind
@@ -291,7 +291,7 @@ body {
 /* Hero centring via inner markup wrapper. See critical.css for rationale. */
 .sn-hero-inner {
 	width: 100%;
-	max-width: 1100px;
+	max-width: var(--wp--custom--page-track); /* the shared page frame, like every page (14.1.2); was its own 1100px */
 	margin-left: auto;
 	margin-right: auto;
 }
