@@ -9,7 +9,7 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 == Description ==
 
-Signal & Noise is a white-first, brutalist WordPress block theme for juanlentino.com, inspired by nin.com. Black text on white, generous whitespace, blood-red accents, Bebas Neue display + DM Mono editorial pairing.
+Signal & Noise is a white-first, clinical-industrial WordPress block theme for juanlentino.com, inspired by nin.com. Brutalist typography, hard-edged surfaces. Black text on white, generous whitespace, blood-red accents, Bebas Neue display + DM Mono editorial pairing.
 
 Since v12.0.0 it also ships a dark palette. It is an inversion, not a softening: a near-black ground, hairlines that stay hairlines, no elevation ramp, and the same red re-pointed so it clears AA against black. Dark follows the reader's OS by default and a toggle on the utility bar overrides it.
 

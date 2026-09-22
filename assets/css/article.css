@@ -545,7 +545,12 @@ main { view-transition-name: sn-main; }
 	font-size: 0.8rem;
 	line-height: 1.5;
 	color: var(--wp--preset--color--bone);
-	box-shadow: 0 4px 12px var(--sn-shadow-soft);
+	/* Hard offset, no blur: the theme's own raised-surface device (the command
+	   palette and the keyboard modal use 8px 8px 0). Drawn in `concrete`, the
+	   same token as this card's own hairline, so it flips with the palette and
+	   reads as a printed offset rather than a soft drop shadow. 4px, not 8:
+	   this is a 340px glance card, not a 36rem panel. */
+	box-shadow: 4px 4px 0 var(--wp--preset--color--concrete);
 	pointer-events: auto;
 }
 .sn-footnote-popover a {
@@ -567,7 +572,12 @@ main { view-transition-name: sn-main; }
 	font-family: 'DM Mono', 'Courier New', monospace;
 	line-height: 1.5;
 	color: var(--wp--preset--color--bone);
-	box-shadow: 0 4px 12px var(--sn-shadow-soft);
+	/* Hard offset, no blur: the theme's own raised-surface device (the command
+	   palette and the keyboard modal use 8px 8px 0). Drawn in `concrete`, the
+	   same token as this card's own hairline, so it flips with the palette and
+	   reads as a printed offset rather than a soft drop shadow. 4px, not 8:
+	   this is a 340px glance card, not a 36rem panel. */
+	box-shadow: 4px 4px 0 var(--wp--preset--color--concrete);
 	pointer-events: none;
 }
 .sn-link-preview__title {

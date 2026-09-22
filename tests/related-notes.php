@@ -380,8 +380,9 @@ foreach ( array( 'null' => null, 'WP_Error' => new WP_Error(), 'empty' => array(
 // may be ~640px wide, and at no point did the breakpoint describe the box it
 // was styling. The container query asks the list.
 echo "\nGroup: related / cited-by rows switch on their own inline size\n";
-$comp = (string) file_get_contents( __DIR__ . '/../assets/css/components.css' );
-ok( '' !== $comp, 'components.css is readable' );
+require_once __DIR__ . '/lib/component-css.php';
+$comp = snt_component_css();
+ok( '' !== $comp, 'the component layer is readable' );
 
 // ONE container name, not two: the related list and the cited-by list are
 // styled by a single shared selector list, so giving them separate names would

@@ -57,10 +57,11 @@ ok(
 	strpos( $tpl, '<!-- wp:signal-noise/related-notes /-->' ) > $pc && strpos( $tpl, '<!-- wp:signal-noise/cited-by /-->' ) > $pc,
 	'related-notes + cited-by blocks are siblings AFTER post-content, not inside it'
 );
-$components = (string) file_get_contents( $root . '/assets/css/components.css' );
+require_once __DIR__ . '/lib/component-css.php';
+$components = snt_component_css();
 ok(
 	strpos( $components, '.sn-related-notes__label' ) !== false && strpos( $components, '.sn-cited-by__label' ) !== false,
-	'section labels keep their dedicated styling in components.css'
+	'section labels keep their dedicated styling in the component layer'
 );
 
 // 4. The H1 note-title override is untouched (the scale the H2 sits under).

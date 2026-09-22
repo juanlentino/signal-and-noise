@@ -117,8 +117,9 @@ $tpl = file_get_contents( __DIR__ . '/../templates/single.html' );
 ok( false !== strpos( $tpl, '<!-- wp:signal-noise/cited-by /-->' ), 'single.html mounts signal-noise/cited-by' );
 $fn = file_get_contents( __DIR__ . '/../functions.php' );
 ok( false !== strpos( $fn, 'inc/cited-by.php' ), 'functions.php requires inc/cited-by.php' );
-$css = file_get_contents( __DIR__ . '/../assets/css/components.css' );
-ok( false !== strpos( $css, '.sn-cited-by' ), 'components.css styles .sn-cited-by' );
+require_once __DIR__ . '/lib/component-css.php';
+$css = snt_component_css();
+ok( false !== strpos( $css, '.sn-cited-by' ), 'the component layer styles .sn-cited-by (now assets/css/blocks/related-notes.css, a block stylesheet)' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

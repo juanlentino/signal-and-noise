@@ -1,6 +1,6 @@
 # Signal & Noise
 
-A white-first, brutalist **WordPress Full Site Editing block theme** built for [juanlentino.com](https://juanlentino.com), inspired by [nin.com](https://nin.com). Black text on white, generous whitespace, blood-red accents, and a Bebas Neue + DM Mono pairing, with a full dark inversion since v12.0.0. Buildless by design: vanilla CSS and JS, self-hosted fonts, zero npm/webpack.
+A white-first, clinical-industrial **WordPress Full Site Editing block theme** with brutalist typography built for [juanlentino.com](https://juanlentino.com), inspired by [nin.com](https://nin.com). Black text on white, generous whitespace, blood-red accents, and a Bebas Neue + DM Mono pairing, with a full dark inversion since v12.0.0. Buildless by design: vanilla CSS and JS, self-hosted fonts, zero npm/webpack.
 
 ![Signal & Noise](screenshot.png)
 
@@ -11,7 +11,7 @@ A white-first, brutalist **WordPress Full Site Editing block theme** built for [
 - **Dark** — a token layer, not a second stylesheet. `:root[data-theme="dark"]` and a `prefers-color-scheme` block redefine the same `--wp--preset--color--*` properties every component already consumes, so nothing can be half-converted. Ground #0a0a0a, `bone` inverts to white, the film grain flips `multiply` to `screen` so the texture survives, and the header mark is an inline SVG inked with `bone`, so it flips with the token. It writes nothing to the database
 - **Semantic tokens beyond the palette** — `--sn-panel*` for surfaces that deliberately contrast with the page (the command palette, the keyboard modal, the skip link: a *raised dark* surface in dark, never a white card), and `--sn-embed-backdrop` for third-party chrome, identical in both schemes because it matches somebody else's card
 - **Type** — Bebas Neue (display) + DM Mono (editorial), self-hosted woff2, no Google Fonts
-- **Aesthetic** — high-contrast industrial minimalism: film-grain overlay, grayscale image filters, no rounded corners, no gradients. Dark is an inversion rather than a softening: no elevation ramp, no gray "surfaces", hairlines stay hairlines
+- **Aesthetic** — high-contrast industrial minimalism with brutalist typography: film-grain overlay, grayscale image filters, no rounded corners (the four non-zero radii are three true circles and Spotify's own embed). Raised surfaces use a hard offset shadow with no blur, the command palette's `8px 8px 0` and the note cards' `4px 4px 0` in `concrete`; the only blurred shadows in the theme are two deliberate `blood` glows, on button hover and the discography play badge. One gradient is decorative, the hero veil; the rest are the grain, the link underline and an embed mask. Dark is an inversion rather than a softening: no elevation ramp, no gray "surfaces", hairlines stay hairlines
 - **Long-form** — frontmatter spec card, drop caps, footnotes, sidenotes, justified text with hyphenation and hanging punctuation
 
 ## Stack

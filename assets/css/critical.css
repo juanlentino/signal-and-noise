@@ -72,7 +72,6 @@
 	   the second of the theme's two textures — the same way the grain would
 	   have gone had its blend mode not flipped. */
 	--sn-scanline: rgba(0, 0, 0, 0.04);
-	--sn-shadow-soft: rgba(0, 0, 0, 0.08);
 
 	/* Veils: translucent white-over-content washes (the fixed header
 	   backdrop, the hero fade). These were rgba(255,255,255,…) literals,
@@ -94,7 +93,6 @@
 :root[data-theme="dark"] {
 	color-scheme: dark;
 	--sn-scanline: rgba(255, 255, 255, 0.05);
-	--sn-shadow-soft: rgba(0, 0, 0, 0.55);
 	--sn-panel: #161616;
 	--sn-panel-ink: #ffffff;
 	--sn-panel-ink-dim: #a3a3a3;
@@ -119,7 +117,6 @@
 	:root:not([data-theme="light"]) {
 		color-scheme: dark;
 		--sn-scanline: rgba(255, 255, 255, 0.05);
-		--sn-shadow-soft: rgba(0, 0, 0, 0.55);
 		--sn-panel: #161616;
 		--sn-panel-ink: #ffffff;
 		--sn-panel-ink-dim: #a3a3a3;
@@ -373,6 +370,13 @@ body {
 /* Navigation links — desktop underline effect */
 .wp-block-navigation a {
 	position: relative;
+	/* Mirrors layout.css. theme.json sets elements.link :hover to
+	   text-decoration: underline, and core's nav reset is `:where(a)`, which
+	   has zero specificity and loses to it. Without this line a desktop nav
+	   link hovered before the combined sheet arrives gets that underline on
+	   top of the ::after blood rule below. Pinned by
+	   tests/critical-deferred-parity.php. */
+	text-decoration: none !important;
 	/* v10.38.2: own the link color instead of relying on core's separate
 	   nav stylesheet. Core's `:where(...nav a){color:inherit}` (its file) is
 	   the ONLY thing that made these inherit the header's ink; when that file
@@ -415,7 +419,7 @@ body {
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
-	min-height: calc(100vh - 108px - 90px) !important;
+	min-height: calc(100vh - 100px - 90px) !important;
 	min-height: calc(100dvh - 108px - 90px) !important;
 }
 

@@ -232,7 +232,7 @@ body {
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
-	min-height: calc(100vh - 108px - 90px) !important;
+	min-height: calc(100vh - 100px - 90px) !important;
 	min-height: calc(100dvh - 108px - 90px) !important;
 }
 
