@@ -15,7 +15,7 @@
 .sn-notes-page {
 	padding: clamp(2rem, 5vw, 4.5rem) var(--sn-gutter, var(--wp--preset--spacing--60)) 160px; /* not a step: clamp(2rem, 5vw, 4.5rem) is its own value; the nearest air step, air--xl, would move it 8px */
 	max-width: 1400px; /* the wide track: /notes runs two multi-track grids (1.15fr / 1fr pillars, 108px / 1fr / auto rows) */
-	margin: 0; /* left, under the mark, like the four text pages: auto would centre the 1400px track on wider screens */
+	margin: 0 auto; /* centred: a 1400px grid pinned left on a wide screen leaves an empty band on the right (owner, 2026-09-22, rejecting 13.9.1's margin: 0). Up to 1400px the gutter padding still starts the title under the header brand. */
 }
 
 /* HERO ────────────────────────────────────────────────────────

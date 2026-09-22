@@ -168,7 +168,9 @@ $gpad = json_decode( (string) file_get_contents( "$root/theme.json" ), true )['s
 ok( str_contains( $gpad, 'var(--sn-gutter' ), "theme.json padPage takes its sides from --sn-gutter ($gpad)" );
 foreach ( array( 'uses.css' => '.sn-uses-page', 'now.css' => '.sn-now-page', 'index.css' => '.sn-index-page', 'accessibility.css' => '.sn-a11y-page', 'notes.css' => '.sn-notes-page' ) as $f => $sel ) {
 	$css = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( "$root/assets/css/$f" ) );
-	ok( 1 === preg_match( '/' . preg_quote( $sel, '/' ) . '\s*\{[^}]*margin:\s*0\s*;/s', $css ), "$sel sits at the left (margin: 0), not centred" );
+	// /notes is the exception: its 1400px grid centres (owner rejected it pinned left on a wide screen).
+	$want = '.sn-notes-page' === $sel ? '0 auto' : '0';
+	ok( 1 === preg_match( '/' . preg_quote( $sel, '/' ) . '\s*\{[^}]*margin:\s*' . preg_quote( $want, '/' ) . '\s*;/s', $css ), "$sel has margin: $want" . ( '0' === $want ? ' (at the left, under the brand)' : ' (the wide grid centres; its gutter still starts it under the brand up to 1400px)' ) );
 	ok( 1 === preg_match( '/' . preg_quote( $sel, '/' ) . '\s*\{[^}]*padding:\s*(?:var\(--wp--custom--pad-page\)|(?:clamp\([^)]*\)|\S+)\s+var\(--sn-gutter)/s', $css ), "$sel pads its sides with --sn-gutter (directly or through padPage), so its text starts under the mark" );
 }
 

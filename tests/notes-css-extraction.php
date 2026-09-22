@@ -62,9 +62,9 @@ foreach ( array(
 // here, so the next track change cannot leave this pin guarding a stale number.
 $sn_wide = json_decode( (string) file_get_contents( dirname( __DIR__ ) . '/theme.json' ), true )['settings']['layout']['wideSize'] ?? '';
 ok( '' !== $sn_wide && 1 === preg_match( '/\.sn-notes-page\s*\{[^}]*max-width:\s*' . preg_quote( $sn_wide, '/' ) . '/s', $css ), "the container keeps its max-width, on the wide track ($sn_wide)" );
-// 13.9.1: margin 0, not 0 auto. The page sits at the left under the mark like
-// the four text pages (owner, 2026-09-22); layout-width-system.php pins why.
-ok( 1 === preg_match( '/\.sn-notes-page\s*\{[^}]*margin:\s*0\s*;/s', $css ), 'the container keeps its margin, at the left (margin: 0)' );
+// 13.10.0: back to 0 auto. 13.9.1 pinned the 1400px grid left; on a wide
+// screen that left an empty band on the right and the owner rejected it.
+ok( 1 === preg_match( '/\.sn-notes-page\s*\{[^}]*margin:\s*0 auto\s*;/s', $css ), 'the container keeps margin: 0 auto (the wide grid centres)' );
 ok( 1 === preg_match( '/\.sn-notes-page\s*\{[^}]*160px/s', $css ), 'the container keeps the 160px fixed-footer clearance' );
 
 
