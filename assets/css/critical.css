@@ -72,7 +72,6 @@
 	   the second of the theme's two textures — the same way the grain would
 	   have gone had its blend mode not flipped. */
 	--sn-scanline: rgba(0, 0, 0, 0.04);
-	--sn-shadow-soft: rgba(0, 0, 0, 0.08);
 
 	/* Veils: translucent white-over-content washes (the fixed header
 	   backdrop, the hero fade). These were rgba(255,255,255,…) literals,
@@ -94,7 +93,6 @@
 :root[data-theme="dark"] {
 	color-scheme: dark;
 	--sn-scanline: rgba(255, 255, 255, 0.05);
-	--sn-shadow-soft: rgba(0, 0, 0, 0.55);
 	--sn-panel: #161616;
 	--sn-panel-ink: #ffffff;
 	--sn-panel-ink-dim: #a3a3a3;
@@ -119,7 +117,6 @@
 	:root:not([data-theme="light"]) {
 		color-scheme: dark;
 		--sn-scanline: rgba(255, 255, 255, 0.05);
-		--sn-shadow-soft: rgba(0, 0, 0, 0.55);
 		--sn-panel: #161616;
 		--sn-panel-ink: #ffffff;
 		--sn-panel-ink-dim: #a3a3a3;
