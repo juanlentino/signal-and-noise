@@ -84,6 +84,14 @@
 	--sn-chrome-top: 118px;
 	--sn-chrome-bottom: 90px;
 
+	/* The page gutter: where the header's mark starts, and so where every
+	   left-aligned text page starts under it (owner, 2026-09-22: the text
+	   pages stay under the mark, not centred). Desktop is the same preset the
+	   header part pads with (spacing-60); the breakpoints below override it.
+	   The header's breakpoint rules and theme.json custom.padPage both read
+	   it. tests/layout-width-system.php pins the relationship. */
+	--sn-gutter: var(--wp--preset--spacing--60);
+
 	/* The film grain darkens the page it sits on. `multiply` is a no-op
 	   against black, so on a dark ground the theme silently loses the
 	   only texture it has. Dark flips it to `screen`, which lightens. */
@@ -476,13 +484,14 @@ body {
 	}
 	:root {
 		--sn-chrome-top: 80px;
+		--sn-gutter: 1.25rem;
 	}
 	/* See responsive.css: a bare `.sn-header` (0,1,0) loses to
 	   `.wp-block-group.has-background` (0,2,0), so this never applied. */
 	.sn-header,
 	.wp-block-group.sn-header.has-background {
-		padding-left: 1.25rem !important;
-		padding-right: 1.25rem !important;
+		padding-left: var(--sn-gutter) !important;
+		padding-right: var(--sn-gutter) !important;
 		/* The part pads 16px top and bottom for desktop air (13.7.1); tablets
 		   keep the tighter 0.44rem they had, so the header stays 70px under
 		   the 80px body offset. Pinned by tests/brand-mark.php Group 7. */
@@ -513,8 +522,8 @@ body {
 	/* See responsive.css: left/right lost to the generic background-group rule. */
 	.sn-header,
 	.wp-block-group.sn-header.has-background {
-		padding-left: 1rem !important;
-		padding-right: 1rem !important;
+		padding-left: var(--sn-gutter) !important;
+		padding-right: var(--sn-gutter) !important;
 		padding-top: 0.75rem !important;
 		padding-bottom: 0.75rem !important;
 	}
@@ -524,6 +533,7 @@ body {
 	:root {
 		--sn-chrome-top: 78px;
 		--sn-chrome-bottom: 70px;
+		--sn-gutter: 1rem;
 	}
 	.sn-hero {
 		padding-top: 3rem !important;

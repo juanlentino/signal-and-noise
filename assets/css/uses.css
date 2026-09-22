@@ -12,7 +12,7 @@
 
 .sn-uses-page {
 	max-width: 760px; /* the reading track: one column of text; a label and a value is a list, not a grid */
-	margin: 0 auto;
+	margin: 0; /* left-aligned under the mark, not centred; the side gutter comes from padPage */
 	/* One page frame for the four text pages: theme.json settings.custom.padPage. */
 	padding: var(--wp--custom--pad-page);
 }

@@ -140,5 +140,33 @@ foreach ( $mw_pages as $f => $pair ) {
 	ok( $got === $want, "$sel sits on the " . ( '1400px' === $want ? 'wide' : 'reading' ) . " track ($want; got $got)" );
 }
 
+// ── The text pages start under the mark (owner, 2026-09-22) ──
+//
+// On a wide screen a 760px column centres unless told otherwise, which moved the
+// four text pages' left edge from under the JL mark to ~292px. They stay left:
+// margin 0, and their side padding is --sn-gutter, the same variable the header
+// pads with. Measured on the live /uses with these rules: text and mark both at
+// 36px (1440, 1024, 800), 20px (700), 16px (375).
+echo "\ngutter: the text pages start under the mark\n";
+$gcrit = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( "$root/assets/css/critical.css" ) );
+$hdr   = (string) file_get_contents( "$root/parts/header.html" );
+$hslug = preg_match( '/"padding":\{[^}]*"left":"var:preset\|spacing\|(\d+)"/', $hdr, $hs ) ? $hs[1] : '';
+ok( '' !== $hslug && 1 === preg_match( '/--sn-gutter:\s*var\(--wp--preset--spacing--' . $hslug . '\)/', $gcrit ), "desktop --sn-gutter is the header part's own side padding (spacing-$hslug), not a copy of its value" );
+foreach ( array( '781' => '1.25rem', '480' => '1rem' ) as $bp => $v ) {
+	ok( 1 === preg_match( '/@media\s*\(max-width:\s*' . $bp . 'px\)\s*\{(?:[^{}]*\{[^{}]*\})*?[^{}]*:root\s*\{[^}]*--sn-gutter:\s*' . preg_quote( $v, '/' ) . '/s', $gcrit ), "critical.css overrides --sn-gutter to $v at $bp" . 'px' );
+}
+foreach ( array( 'critical.css', 'responsive.css' ) as $f ) {
+	$css = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( "$root/assets/css/$f" ) );
+	preg_match_all( '/\.wp-block-group\.sn-header\.has-background\s*\{([^}]*)\}/', $css, $hr );
+	$typed = array_filter( $hr[1], static fn( $b ) => preg_match( '/padding-(left|right):\s*[0-9.]+(rem|px)/', $b ) );
+	ok( count( $hr[1] ) >= 2 && empty( $typed ), "$f: every header breakpoint rule pads its sides with var(--sn-gutter), none types a number (" . count( $hr[1] ) . ' rules)' );
+}
+$gpad = json_decode( (string) file_get_contents( "$root/theme.json" ), true )['settings']['custom']['padPage'] ?? '';
+ok( str_contains( $gpad, 'var(--sn-gutter' ), "theme.json padPage takes its sides from --sn-gutter ($gpad)" );
+foreach ( array( 'uses.css' => '.sn-uses-page', 'now.css' => '.sn-now-page', 'index.css' => '.sn-index-page', 'accessibility.css' => '.sn-a11y-page' ) as $f => $sel ) {
+	$css = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( "$root/assets/css/$f" ) );
+	ok( 1 === preg_match( '/' . preg_quote( $sel, '/' ) . '\s*\{[^}]*margin:\s*0\s*;/s', $css ), "$sel sits at the left (margin: 0), not centred" );
+}
+
 echo "Result: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
