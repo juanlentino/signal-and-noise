@@ -50,8 +50,8 @@
 	   (0,3,0) settles it without depending on order. */
 	.sn-header,
 	.wp-block-group.sn-header.has-background {
-		padding-left: 1.25rem !important;
-		padding-right: 1.25rem !important;
+		padding-left: var(--sn-gutter) !important;
+		padding-right: var(--sn-gutter) !important;
 		/* The part pads 16px top and bottom for desktop air (13.7.1); tablets
 		   keep the tighter 0.44rem they had, so the header stays 70px under
 		   the 80px body offset. Pinned by tests/brand-mark.php Group 7. */
@@ -176,8 +176,8 @@
 	   padding-bottom here were always fine, only left/right were overridden. */
 	.sn-header,
 	.wp-block-group.sn-header.has-background {
-		padding-left: 1rem !important;
-		padding-right: 1rem !important;
+		padding-left: var(--sn-gutter) !important;
+		padding-right: var(--sn-gutter) !important;
 		padding-top: 0.75rem !important;
 		padding-bottom: 0.75rem !important;
 	}

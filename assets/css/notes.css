@@ -14,7 +14,7 @@
    viewport. */
 .sn-notes-page {
 	padding: clamp(2rem, 5vw, 4.5rem) clamp(1.25rem, 3vw, 3rem) 160px; /* not a step: clamp(2rem, 5vw, 4.5rem) is its own value; the nearest air step, air--xl, would move it 8px; clamp(1.25rem, 3vw, 3rem) is its own value; the nearest air step, air--md, would move it 8px */
-	max-width: 1320px;
+	max-width: 1400px; /* the wide track: /notes runs two multi-track grids (1.15fr / 1fr pillars, 108px / 1fr / auto rows) */
 	margin: 0 auto;
 }
 
@@ -111,7 +111,7 @@
 .sn-notes-dek {
 	font-size: var(--wp--custom--font-size--page-dek);
 	line-height: 1.55;
-	max-width: 48ch;
+	max-width: 46ch;
 	color: var(--wp--preset--color--rust);
 	margin: 0 0 1.5rem;
 }
@@ -445,6 +445,14 @@
 	line-height: 1.55;
 	color: var(--wp--preset--color--rust);
 	margin: 0;
+	/* not a track: at this 0.9rem size 80ch is 691px (measured on the live
+	   /notes, 2026-09-22); the 72ch prose tier would be 622px, narrower than
+	   the row's title. An earlier 65ch did that and WordPress' constrained-
+	   layout rule (`.is-layout-constrained > * { margin-left: auto
+	   !important; margin-right: auto !important }`) centred the shorter box,
+	   which read as a left indent. (Moved here in 13.9.0 from components.css,
+	   where it said the track was 720px and that no max-width was set; both
+	   were out of date.) */
 	max-width: 80ch;
 	/* Three lines is a scent, not the note. Clamping bounds how far the rows
 	   below can be displaced by a reveal — an unclamped 5-line excerpt shoves
@@ -953,7 +961,7 @@ details.sn-notes-year > summary:focus-visible .sn-notes-year-band {
 	font-size: max(0.75rem, 12px);
 	line-height: 1.6;
 	color: var(--wp--preset--color--rust);
-	max-width: 62ch;
+	max-width: 60ch;
 }
 .sn-tags-list {
 	margin: 0;

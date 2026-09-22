@@ -34,7 +34,7 @@
 .sn-kbdn-panel {
 	position: relative;
 	width: 100%;
-	max-width: 24rem;
+	max-width: 24rem; /* not a track: an overlay panel over the page, not a page track */
 	padding: 1.5rem 1.6rem 1.7rem;
 	background: var(--sn-panel);
 	border: 2px solid var(--sn-panel-edge);
