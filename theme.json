@@ -158,13 +158,26 @@
 				"snug": "-0.01em",
 				"displayTight": "-0.03em"
 			},
-			"padPage": "clamp(2.5rem, 6vw, 5rem) clamp(1.25rem, 4vw, 3rem) clamp(4rem, 8vw, 7rem)",
+			"air": {
+				"xxs": "clamp(0.85rem, 1.6vw, 1.15rem)",
+				"xs": "clamp(1rem, 2vw, 1.5rem)",
+				"sm": "clamp(1.5rem, 3vw, 2.25rem)",
+				"md": "clamp(1.5rem, 3vw, 2.5rem)",
+				"lg": "clamp(2rem, 4vw, 3rem)",
+				"xl": "clamp(2.5rem, 5vw, 4rem)",
+				"xxl": "clamp(2.5rem, 6vw, 5rem)"
+			},
+			"padPage": "var(--wp--custom--air--xxl) clamp(1.25rem, 4vw, 3rem) clamp(4rem, 8vw, 7rem)",
 			"fontSize": {
 				"micro": "0.7rem",
 				"displayXs": "clamp(1.5rem, 3vw, 2.5rem)",
 				"displayXl": "clamp(3rem, 7vw, 5.5rem)",
 				"displayXxl": "clamp(3rem, 9vw, 7rem)",
-				"displayHero": "clamp(5rem, 15vw, 12rem)"
+				"displayHero": "clamp(5rem, 15vw, 12rem)",
+				"pageItem": "clamp(0.95rem, 1.4vw, 1.05rem)",
+				"pageDek": "clamp(1rem, 1.4vw, 1.15rem)",
+				"pageSectionLabel": "clamp(1.4rem, 3vw, 2rem)",
+				"pageHeadline": "clamp(3rem, 8vw, 7rem)"
 			}
 		}
 	},

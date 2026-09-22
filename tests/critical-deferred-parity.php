@@ -210,8 +210,8 @@ $expected_shared = array(
 		'.jl-mark',
 		// The hero: everything above the fold on a landing view.
 		'.sn-hero',
-		'.sn-hero::before',
-		'.sn-hero > *',
+		// No `.sn-hero::before` / `.sn-hero > *` pair: the hero veil painted void over
+		// the void hero in both schemes and never rendered; deleted in 13.8.0.
 		'.sn-hero-inner',
 		'.sn-hero-title',
 		'.sn-hero .sn-hero-subtitle',

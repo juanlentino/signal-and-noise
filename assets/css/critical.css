@@ -84,13 +84,6 @@
 	--sn-chrome-top: 118px;
 	--sn-chrome-bottom: 90px;
 
-	/* Veils: translucent white-over-content washes (the fixed header
-	   backdrop, the hero fade). These were rgba(255,255,255,…) literals,
-	   which are white BY VALUE and therefore ignore any palette — they
-	   would paint a white band across the top of a black page. */
-	--sn-hero-veil-from: rgba(255, 255, 255, 0.2);
-	--sn-hero-veil-to: rgba(255, 255, 255, 0.95);
-
 	/* The film grain darkens the page it sits on. `multiply` is a no-op
 	   against black, so on a dark ground the theme silently loses the
 	   only texture it has. Dark flips it to `screen`, which lightens. */
@@ -113,8 +106,6 @@
 	--wp--preset--color--bone: #ffffff;
 	--wp--preset--color--blood: #ff4c47;
 	--wp--preset--color--signal: #ff6b66;
-	--sn-hero-veil-from: rgba(10, 10, 10, 0.2);
-	--sn-hero-veil-to: rgba(10, 10, 10, 0.95);
 	--sn-grain-blend: screen;
 }
 
@@ -134,8 +125,6 @@
 		--wp--preset--color--bone: #ffffff;
 		--wp--preset--color--blood: #ff4c47;
 		--wp--preset--color--signal: #ff6b66;
-		--sn-hero-veil-from: rgba(10, 10, 10, 0.2);
-		--sn-hero-veil-to: rgba(10, 10, 10, 0.95);
 		--sn-grain-blend: screen;
 		}
 }
@@ -420,23 +409,6 @@ body {
 	min-height: calc(100dvh - var(--sn-chrome-top) - var(--sn-chrome-bottom)) !important;
 }
 
-.sn-hero::before {
-	content: "";
-	position: absolute;
-	inset: 0;
-	background: linear-gradient(
-		180deg,
-		var(--sn-hero-veil-from) 0%,
-		var(--sn-hero-veil-to) 100%
-	);
-	z-index: 1;
-	pointer-events: none;
-}
-
-.sn-hero > * {
-	position: relative;
-	z-index: 2;
-}
 
 .sn-hero .sn-hero-subtitle {
 	max-width: 640px;

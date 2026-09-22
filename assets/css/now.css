@@ -28,14 +28,14 @@
 .sn-now-headline {
 	font-family: 'Bebas Neue', Impact, sans-serif;
 	font-weight: 400;
-	font-size: clamp(3rem, 8vw, 7rem);
+	font-size: var(--wp--custom--font-size--page-headline);
 	line-height: 0.95;
 	letter-spacing: -0.01em;
 	color: var(--wp--preset--color--bone);
 	margin: 0;
 }
 .sn-now-dek {
-	font-size: clamp(1rem, 1.4vw, 1.15rem);
+	font-size: var(--wp--custom--font-size--page-dek);
 	line-height: 1.55;
 	color: var(--wp--preset--color--rust);
 	max-width: 52ch;
@@ -52,7 +52,7 @@
 
 /* ── Section heads ────────────────────────────────────────────────────── */
 .sn-now-section {
-	margin-top: clamp(2.5rem, 5vw, 4rem);
+	margin-top: var(--wp--custom--air--xl);
 }
 .sn-now-section-head {
 	display: flex;
@@ -66,7 +66,7 @@
 .sn-now-section-label {
 	font-family: 'Bebas Neue', Impact, sans-serif;
 	font-weight: 400;
-	font-size: clamp(1.4rem, 3vw, 2rem);
+	font-size: var(--wp--custom--font-size--page-section-label);
 	letter-spacing: 0.02em;
 	text-transform: uppercase;
 	color: var(--wp--preset--color--bone);
@@ -86,7 +86,7 @@
 	padding: 0;
 }
 .sn-now-item {
-	padding: clamp(0.85rem, 1.6vw, 1.15rem) 0;
+	padding: var(--wp--custom--air--xxs) 0;
 	border-bottom: 1px solid var(--wp--preset--color--concrete);
 	transition: padding 0.2s ease;
 }
@@ -100,7 +100,7 @@
 }
 .sn-now-item-text {
 	font-family: 'DM Mono', 'Courier New', monospace;
-	font-size: clamp(0.95rem, 1.4vw, 1.05rem);
+	font-size: var(--wp--custom--font-size--page-item);
 	line-height: 1.5;
 	color: var(--wp--preset--color--bone);
 }

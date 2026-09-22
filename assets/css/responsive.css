@@ -216,7 +216,7 @@
 	   37.5px at 375px while class-styled titles held 48px. Never match a value
 	   the design system has standardized on. */
 	.sn-hero-title {
-		font-size: clamp(2.2rem, 10vw, 3rem) !important;
+		font-size: clamp(2.2rem, 10vw, 3rem) !important; /* not a step: clamp(2.2rem, 10vw, 3rem) is its own value; the nearest type token, font-size--page-section-label, would move it 25px */
 	}
 
 	/* Credibility strip — left align on phone */

@@ -55,8 +55,16 @@ $sheet   = (string) @file_get_contents( $sheet_path );
 ok( '' !== $fixture, 'the fixture slice is committed (guard: an empty fixture would compare equal to anything)' );
 ok( strlen( $fixture ) > 3000, 'the fixture is the full slice, ' . strlen( $fixture ) . ' bytes' );
 
-/** Declarations only, whitespace and comments normalized away. */
+/**
+ * Declarations only, whitespace and comments normalized away, and 13.8.0's air
+ * tokens resolved back to their theme.json values. The move was byte-identical;
+ * since then two of these rules read `var(--wp--custom--air--*)` instead of the
+ * clamp they carried. The invariant is that the sheet RENDERS what the slice
+ * did, so a token must resolve to the slice's literal, not be spelled like it.
+ */
 function bsrn_decls( $css ) {
+	$air = json_decode( (string) file_get_contents( dirname( __DIR__ ) . '/theme.json' ), true )['settings']['custom']['air'] ?? array();
+	$css = (string) preg_replace_callback( '/var\(--wp--custom--air--([a-z]+)\)/', static fn( $m ) => $air[ $m[1] ] ?? $m[0], $css );
 	$css = (string) preg_replace( '#/\*.*?\*/#s', '', $css );
 	$css = (string) preg_replace( '/\s+/', ' ', $css );
 	return trim( $css );

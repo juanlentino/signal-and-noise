@@ -231,23 +231,6 @@ body {
 	min-height: calc(100dvh - var(--sn-chrome-top) - var(--sn-chrome-bottom)) !important;
 }
 
-.sn-hero::before {
-	content: "";
-	position: absolute;
-	inset: 0;
-	background: linear-gradient(
-		180deg,
-		var(--sn-hero-veil-from) 0%,
-		var(--sn-hero-veil-to) 100%
-	);
-	z-index: 1;
-	pointer-events: none;
-}
-
-.sn-hero > * {
-	position: relative;
-	z-index: 2;
-}
 
 .sn-hero .sn-hero-subtitle {
 	max-width: 640px;
