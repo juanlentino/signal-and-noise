@@ -183,5 +183,13 @@ foreach ( array( 1024 => 1320, 1440 => 1320, 1720 => 1320, 1800 => 1400, 2000 =>
 	ok( $want === (int) $track_at( $vw ), "page track at a {$vw}px screen is {$want}px (got " . var_export( $track_at( $vw ), true ) . ')' );
 }
 
+// 14.1.1: /resume uses the frame. The summary and the credentials box get a
+// real gutter (core's was 10.7px), and from 1440px each entry's bullets set in
+// two columns instead of one 80ch column that left a third of the row empty.
+echo "\n/resume uses the frame\n";
+$rcss = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( "$root/assets/css/resume.css" ) );
+ok( 1 === preg_match( '/\.wp-block-columns\.sn-resume-hero-split\s*\{[^}]*column-gap:\s*var\(--wp--custom--air--[a-z]+\)/', $rcss ), 'the resume hero has an air-step gutter between summary and credentials' );
+ok( 1 === preg_match( '/@media\s*\(min-width:\s*1440px\)\s*\{\s*\.sn-resume-list\s*\{[^}]*columns:\s*2;[^}]*\}\s*\.sn-resume-list li\s*\{[^}]*max-width:\s*none;[^}]*break-inside:\s*avoid;/s', $rcss ), 'from 1440px each entry\'s bullets set in two columns, items never split' );
+
 echo "Result: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

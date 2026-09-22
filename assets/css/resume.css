@@ -35,6 +35,13 @@
    rule, so /resume is brought to it here rather than /notes being moved down.
    .sn-resume-hero-split is emitted by the plugin (inc/resume-sync-engine.php)
    purely as a styling hook. */
+/* A real gutter between the summary and the credentials box. Core's columns
+   gap was 10.7px, so the summary ran into the box (owner, 2026-09-22: "too
+   crammed"). The existing air--xl step: 40px at 800, 64px from 1280 up. */
+.wp-block-columns.sn-resume-hero-split {
+	column-gap: var(--wp--custom--air--xl) !important;
+}
+
 @media (max-width: 899.98px) {
 	.sn-resume-hero-split {
 		flex-wrap: wrap;
@@ -159,6 +166,21 @@ body div.wp-block-group:not(:has(h1)) > .sn-catalog-eyebrow {
 	max-width: 80ch; /* not a track: at 0.95rem this is 730px, inside the 760px reading track; the 72ch prose tier would narrow these lines for no reason */
 	color: var(--wp--preset--color--bone);
 }
+/* Once the frame is wide, each entry's bullets set in two columns: the
+   entry fills the frame instead of stopping at 80ch with a third of the row
+   empty, and every line stays at about 55-65 characters (1440: 510px each;
+   2000: 650px each). An item never splits across the two. */
+@media (min-width: 1440px) {
+	.sn-resume-list {
+		columns: 2;
+		column-gap: var(--wp--custom--air--lg);
+	}
+	.sn-resume-list li {
+		max-width: none;
+		break-inside: avoid;
+	}
+}
+
 .sn-resume-list li::before {
 	content: "–";
 	position: absolute;
