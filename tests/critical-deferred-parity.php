@@ -207,7 +207,7 @@ $expected_shared = array(
 		// No `.is-scrolled` pair: the header is one height and the class is gone
 		// with assets/js/sticky-header.js that used to set it.
 		'.sn-logo-link',
-		'.jl-mark',
+		'.sn-wordmark',
 		// The hero: everything above the fold on a landing view.
 		'.sn-hero',
 		// No `.sn-hero::before` / `.sn-hero > *` pair: the hero veil painted void over
