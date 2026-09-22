@@ -12,6 +12,8 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+## [14.0.0] - 2026-09-22 — the wordmark
+
 ### Fixed
 - **Version references in this release say 14.0.0, not 13.10.0.** The theme uses the WordPress version shape (`docs/VERSIONING.md`): after 13.9 the next release is 14.0, and 14 is not a breaking flag. Seven comments in `critical.css`, `docs/BRAND.md` and four test files had been written ahead of the cut as 13.10.0.
 
@@ -23,9 +25,4 @@ adds a bullet below. A release is a separate, deliberate act:
 ### Tests
 - **`tests/brand-mark.php` pins the wordmark (32).** Live text in the home link with a matching `aria-label`, no SVG or monogram in the header, the five `assets/brand` files that keep the monogram as icon and OG image, the heading face, the 32px floor and zoom bound, the `bone` ink with no second dark rule, the box heights the header offsets are keyed to, once in the header and never in the footer, and the 600-781px hamburger. Each rule falsified. `tests/dark-mode.php` and the parity set (`.jl-mark` becomes `.sn-wordmark`) follow the rename.
 - **`tests/styles-inline-size-limit.php` pins the shape of core's old nav copy, not its selector string.** It forbade the toggle selector anywhere in `critical.css`, which also caught the new 600-781px rule that SHOWS the toggle. It now fails on what the copy did: hide the toggle, or open an unbounded `min-width: 600px` query. Re-adding core's copy still turns both checks red.
-
-## [13.9.1] - 2026-09-22 — /notes starts under the mark
-
-### Fixed
-- **`/notes` starts under the mark, like the four text pages.** Measured live on 13.9.0: its title sat at 43px against the mark's 36px at 1440 (20px against 16px on phones), from its own side padding `clamp(1.25rem, 3vw, 3rem)`, and its 1400px track was `margin: 0 auto`, so on screens wider than 1400px it centred and its left edge moved further off the mark. Both predate 13.9.0, which widened `/notes` but left its alignment alone. The sides now read `--sn-gutter` and the container sits at `margin: 0`. Previewed on the live page before release: title and mark at 36px (1920 and 1440) and 16px (375), no horizontal scroll. `tests/layout-width-system.php` now pins all five pages' gutter (directly or through `padPage`) as well as their margin, red on the old rule both ways; `tests/notes-css-extraction.php`'s geometry pin moves from `0 auto` to `0`.
 
