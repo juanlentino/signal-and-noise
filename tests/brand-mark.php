@@ -3,7 +3,7 @@
  * Standalone test: the header's brand.
  *
  * 13.5.0 replaced a broken uploads-hosted logo with the JL mark inlined as
- * SVG. 13.10.0 (owner, 2026-09-22): the page carries the WORDMARK, the name
+ * SVG. 14.0.0 (owner, 2026-09-22): the page carries the WORDMARK, the name
  * as live text in Bebas, and the JL monogram stays the favicon and OG image.
  * These pins hold: no image and no uploads dependency, one ink token, a
  * box with the old mark's heights so the header offsets hold, a home link

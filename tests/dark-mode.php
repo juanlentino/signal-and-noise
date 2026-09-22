@@ -144,7 +144,7 @@ ok( preg_match( '/\.sn-header\s*\{[^}]*background-color:\s*var\(--wp--preset--co
 	'the fixed header ground is a palette token (it spans the full width at the top of every page)' );
 ok( preg_match( '/\.sn-header\s*\{[^}]*border-bottom:\s*none\s*!important/s', $crit ) === 1,
 	'and it carries no rule underneath: a solid bar on a ground of the same colour needs no edge (owner, 2026-09-22; 13.7.0 had a 1px `concrete` hairline)' );
-// 13.10.0: the header carries the wordmark, live text inked with `bone` —
+// 14.0.0: the header carries the wordmark, live text inked with `bone` —
 // the token this layer already flips — so nothing is inverted and no second
 // asset exists. Pin the RELATIONSHIP: the wordmark's colour is the ink token.
 ok( preg_match( '/\.sn-wordmark\s*\{[^}]*color:\s*var\(--wp--preset--color--bone\)/s', $crit ) === 1,

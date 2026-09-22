@@ -59,7 +59,7 @@ the mark; `tests/brand-mark.php` pins both.
 Wordmark: Bebas Neue, uppercase, one line. Set beside the mark in a lockup
 it tracks `wide` (0.15em).
 
-**The site header carries the wordmark alone** (owner, 2026-09-22, 13.10.0):
+**The site header carries the wordmark alone** (owner, 2026-09-22, 14.0.0):
 the name is the brand on the page and the monogram stays the favicon and OG
 image, so the brand still appears once per page. Header wordmark:
 `.sn-wordmark` in `parts/header.html`, live text in `bone`, tracking 0.04em,
