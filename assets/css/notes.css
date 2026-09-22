@@ -13,9 +13,9 @@
    feed footer breathing room above the fixed bar on every
    viewport. */
 .sn-notes-page {
-	padding: clamp(2rem, 5vw, 4.5rem) var(--sn-gutter, var(--wp--preset--spacing--60)) 160px; /* not a step: clamp(2rem, 5vw, 4.5rem) is its own value; the nearest air step, air--xl, would move it 8px */
-	max-width: none; /* gutter to gutter: the page spans the same edges as the header, brand at the left, nav at the right (owner, 2026-09-22) */
-	margin: 0; /* 13.9.1 pinned a 1400px grid left, which left an empty band on the right of a wide screen; full width is the owner's condition for left alignment */
+	padding: clamp(2rem, 5vw, 4.5rem) clamp(1.25rem, 3vw, 3rem) 160px; /* not a step: clamp(2rem, 5vw, 4.5rem) is its own value; the nearest air step, air--xl, would move it 8px; clamp(1.25rem, 3vw, 3rem) is its own value; the nearest air step, air--md, would move it 8px */
+	max-width: var(--wp--custom--page-track); /* the shared page track (theme.json custom.pageTrack): 1320px as before, growing to wideSize (1600px) only on screens wider than 1720px */
+	margin: 0 auto;
 }
 
 /* HERO ────────────────────────────────────────────────────────

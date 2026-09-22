@@ -49,7 +49,7 @@
 			]
 		},
 		"typography": {
-			"fluid": true,
+			"fluid": { "minViewportWidth": "320px", "maxViewportWidth": "1400px" },
 			"defaultFontSizes": false,
 			"textIndent": true,
 			"fontFamilies": [
@@ -141,7 +141,7 @@
 		},
 		"layout": {
 			"contentSize": "760px",
-			"wideSize": "1400px"
+			"wideSize": "1600px"
 		},
 		"custom": {
 			"lineHeight": {
@@ -167,7 +167,8 @@
 				"xl": "clamp(2.5rem, 5vw, 4rem)",
 				"xxl": "clamp(2.5rem, 6vw, 5rem)"
 			},
-			"padPage": "var(--wp--custom--air--xxl) var(--sn-gutter, var(--wp--preset--spacing--60)) clamp(4rem, 8vw, 7rem)",
+			"padPage": "var(--wp--custom--air--xxl) clamp(1.25rem, 4vw, 3rem) clamp(4rem, 8vw, 7rem)",
+			"pageTrack": "max(1320px, min(var(--wp--style--global--wide-size), 100vw - 400px))",
 			"fontSize": {
 				"micro": "0.7rem",
 				"displayXs": "clamp(1.5rem, 3vw, 2.5rem)",

@@ -405,6 +405,19 @@ body {
 }
 
 /* ============================================
+   PAGE TRACK
+   ============================================ */
+
+/* The pages built in the editor (About, Services, Music, Resume, Contact)
+   carry their own contentSize, 1320px, in the page content. This lifts them
+   to the shared page track (theme.json custom.pageTrack: 1320px as before, growing to 1600px only past 1720px), centred as before, so every
+   page shares one frame. Scoped to `body.page`: a Note's body keeps its own
+   measure. */
+body.page main .entry-content > .is-layout-constrained > :where(:not(.alignleft):not(.alignright):not(.alignfull)) {
+	max-width: var(--wp--custom--page-track) !important;
+}
+
+/* ============================================
    HERO SECTION
    ============================================ */
 
