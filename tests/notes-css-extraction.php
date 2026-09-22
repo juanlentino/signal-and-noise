@@ -58,7 +58,10 @@ foreach ( array(
 
 // 4. The container still carries all three declarations. The bug was not a
 //    missing selector but missing geometry.
-ok( 1 === preg_match( '/\.sn-notes-page\s*\{[^}]*max-width:\s*1320px/s', $css ), 'the container keeps max-width: 1320px' );
+// 13.9.0: the value is the wide track, read from theme.json rather than typed
+// here, so the next track change cannot leave this pin guarding a stale number.
+$sn_wide = json_decode( (string) file_get_contents( dirname( __DIR__ ) . '/theme.json' ), true )['settings']['layout']['wideSize'] ?? '';
+ok( '' !== $sn_wide && 1 === preg_match( '/\.sn-notes-page\s*\{[^}]*max-width:\s*' . preg_quote( $sn_wide, '/' ) . '/s', $css ), "the container keeps its max-width, on the wide track ($sn_wide)" );
 ok( 1 === preg_match( '/\.sn-notes-page\s*\{[^}]*margin:\s*0 auto/s', $css ), 'the container keeps margin: 0 auto' );
 ok( 1 === preg_match( '/\.sn-notes-page\s*\{[^}]*160px/s', $css ), 'the container keeps the 160px fixed-footer clearance' );
 

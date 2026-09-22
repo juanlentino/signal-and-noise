@@ -11,7 +11,7 @@
  */
 
 .sn-uses-page {
-	max-width: 1320px;
+	max-width: 760px; /* the reading track: one column of text; a label and a value is a list, not a grid */
 	margin: 0 auto;
 	/* One page frame for the four text pages: theme.json settings.custom.padPage. */
 	padding: var(--wp--custom--pad-page);
@@ -40,7 +40,7 @@
 	font-size: var(--wp--custom--font-size--page-dek);
 	line-height: 1.55;
 	color: var(--wp--preset--color--rust);
-	max-width: 52ch;
+	max-width: 46ch;
 	margin: 1rem 0 0.5rem;
 }
 .sn-uses-meta {

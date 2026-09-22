@@ -532,7 +532,7 @@ main { view-transition-name: sn-main; }
 .sn-footnote-popover {
 	position: absolute;
 	z-index: 1000;
-	max-width: 360px;
+	max-width: 360px; /* not a track: a footnote popover, sized to its content, not a page track */
 	padding: 0.75rem 1rem;
 	/* void, not asphalt: the popover's links are blood, which clears AA on
 	   void (5.01:1) but fails it on asphalt (3.80:1). The 2px blood top rule,
@@ -564,7 +564,7 @@ main { view-transition-name: sn-main; }
 .sn-link-preview {
 	position: absolute;
 	z-index: 1000;
-	max-width: 340px;
+	max-width: 340px; /* not a track: a link-preview glance card, not a page track */
 	padding: 0.75rem 1rem;
 	background: var(--wp--preset--color--void);
 	border: 1px solid var(--wp--preset--color--concrete);

@@ -233,7 +233,7 @@ body {
 
 
 .sn-hero .sn-hero-subtitle {
-	max-width: 640px;
+	max-width: 640px; /* not a track: the hero dek line length inside the 1100px hero frame, which positions rather than constrains */
 }
 
 /* Reset UA default margin-block. See critical.css for rationale. */

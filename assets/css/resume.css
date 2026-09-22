@@ -156,7 +156,7 @@ body div.wp-block-group:not(:has(h1)) > .sn-catalog-eyebrow {
 	padding: 0.45rem 0 0.45rem 1.4rem;
 	font-size: 0.95rem;
 	line-height: 1.6;
-	max-width: 80ch;
+	max-width: 80ch; /* not a track: at 0.95rem this is 730px, inside the 760px reading track; the 72ch prose tier would narrow these lines for no reason */
 	color: var(--wp--preset--color--bone);
 }
 .sn-resume-list li::before {
@@ -242,7 +242,7 @@ body div.wp-block-group:not(:has(h1)) > .sn-catalog-eyebrow {
 	line-height: 1.5;
 	letter-spacing: 0;
 	text-transform: none;
-	max-width: 80ch;
+	max-width: 80ch; /* not a track: at 1rem this is 768px, the 760px reading track; the 72ch prose tier would narrow these lines for no reason */
 	margin: 0;
 }
 .sn-resume-pub-title a {

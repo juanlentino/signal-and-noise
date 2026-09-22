@@ -11,7 +11,7 @@
  */
 
 .sn-index-page {
-	max-width: 60rem;
+	max-width: 760px; /* the reading track: one column of text */
 	margin: 0 auto;
 	/* One page frame for the four text pages: theme.json settings.custom.padPage. */
 	padding: var(--wp--custom--pad-page);
