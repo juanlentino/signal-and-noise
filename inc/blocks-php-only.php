@@ -67,7 +67,7 @@ function sn_php_block_output( $html, $label ) {
  * named block, byte-identical, never autop'd (#388).
  */
 function sn_php_only_block_slugs() {
-	return array( 'prov-chip', 'prov-panel', 'related-notes', 'cited-by', 'note-share', 'note-reply', 'updated-date', 'post-pillar', 'theme-toggle', 'suggestions-404', 'meta-nav', 'footer-signature' );
+	return array( 'prov-chip', 'prov-panel', 'related-notes', 'cited-by', 'note-share', 'note-reply', 'updated-date', 'post-pillar', 'theme-toggle', 'suggestions-404', 'meta-nav' );
 }
 
 function sn_register_php_only_blocks() {

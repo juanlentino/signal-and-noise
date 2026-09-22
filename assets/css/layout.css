@@ -24,7 +24,8 @@
 	width: auto;
 	height: 64px;
 	color: var(--wp--preset--color--bone);
-	transition: opacity 0.3s ease, height 0.3s ease;
+	/* Opacity only: the mark is one height now that the header does not shrink. */
+	transition: opacity 0.3s ease;
 }
 
 @media (hover: hover) {
@@ -43,23 +44,15 @@
 	left: 0;
 	right: 0;
 	z-index: 10000;
-	transition: padding 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
-	border-bottom: none !important;
-	background-color: var(--sn-veil) !important;
-	-webkit-backdrop-filter: blur(12px) saturate(1.2);
-	backdrop-filter: blur(12px) saturate(1.2);
-}
-
-/* Shrunk state on scroll */
-.sn-header.is-scrolled {
-	padding-top: 0.4rem !important;
-	padding-bottom: 0.4rem !important;
-	background-color: var(--sn-veil-strong) !important;
-	box-shadow: 0 1px 8px var(--sn-header-shadow);
-}
-
-.sn-header.is-scrolled .jl-mark {
-	height: 40px;
+	/* Solid, one height, no transition. This was a 72%-alpha veil with
+	   `backdrop-filter: blur(12px) saturate(1.2)` that gained a soft shadow
+	   and eased its own padding on scroll, which is glassmorphism and the
+	   least brutalist surface on the site. The footer bar was already opaque
+	   (`backgroundColor: void` on the block), so the two fixed bars now
+	   match. The hairline under it is the theme's own device: a 1px
+	   `concrete` rule, the same one every other edge in the theme uses. */
+	background-color: var(--wp--preset--color--void) !important;
+	border-bottom: 1px solid var(--wp--preset--color--concrete) !important;
 }
 
 /* Push page content below fixed header */
@@ -292,13 +285,12 @@ body {
 }
 
 /* Reduced-motion: the entrance animations above are already gated behind
-   no-preference, but the scroll-shrink transitions (logo width/height,
-   header padding, nav-underline width) fire unconditionally. Suppress the
-   layout-triggering ones for reduce users; opacity is not motion, so it
-   stays. The .is-scrolled state still applies — just instantly. */
+   no-preference. The scroll-shrink transitions this block used to suppress
+   (mark height, header padding) no longer exist: the header is one height and
+   does not transition. What is left is the nav underline, which animates its
+   width on hover. The mark's opacity fade stays, because opacity is not
+   motion and it was never the thing reduce users needed protecting from. */
 @media (prefers-reduced-motion: reduce) {
-	.jl-mark                     { transition: opacity 0.3s ease; }
-	.sn-header                    { transition: none; }
 	.wp-block-navigation a::after { transition: none; }
 }
 
@@ -369,71 +361,6 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
 	.sn-footer__meta-nav a {
-		transition: none;
-	}
-}
-
-/* The signature (blocks/footer-signature): stamp + wordmark + descriptor in
-   the footer's quiet rust, blood on hover like the meta-nav. 32px stamp so
-   the mark anchors the lockup rather than sitting beside a taller text
-   block; clear space (one stroke, 3.2px) is covered by the flex gap and the
-   bar's padding. The descriptor tracks `wide`, not BRAND.md's `ultra`:
-   ultra was set for the OG card at 16px across 1200px, and at 11px in a
-   58px bar it made the subordinate line 1.8x the wordmark's width. It
-   drops on the narrowest phones. */
-.sn-signature {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.6rem;
-	color: var(--wp--preset--color--rust);
-	text-decoration: none;
-	transition: color 0.3s ease;
-}
-
-@media (hover: hover) {
-	.sn-signature:hover {
-		color: var(--wp--preset--color--blood);
-	}
-}
-
-.sn-signature__stamp {
-	display: block;
-	width: 32px;
-	height: 32px;
-	flex-shrink: 0;
-}
-
-.sn-signature__text {
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	line-height: 1.15;
-}
-
-.sn-signature__name {
-	font-family: var(--wp--preset--font-family--heading);
-	font-size: 0.95rem;
-	letter-spacing: var(--wp--custom--letter-spacing--wide);
-	text-transform: uppercase;
-}
-
-.sn-signature__role {
-	font-family: var(--wp--preset--font-family--body);
-	font-weight: 500;
-	font-size: var(--wp--custom--font-size--micro);
-	letter-spacing: var(--wp--custom--letter-spacing--wide);
-	text-transform: uppercase;
-	white-space: nowrap;
-}
-
-@media (max-width: 480px) {
-	.sn-signature__role {
-		display: none;
-	}
-}
-
-@media (prefers-reduced-motion: reduce) {
-	.sn-signature {
 		transition: none;
 	}
 }

@@ -187,15 +187,18 @@ $toc_src = (string) file_get_contents( __DIR__ . '/../inc/article-toc.php' );
 ok( 0 === preg_match( '/preg_(?:replace|replace_callback|match|match_all)\s*\(|substr_replace\s*\(/', $toc_src ), '#383: inc/article-toc.php carries no preg_* call and no substr_replace; the H2s are read and written through WP_HTML_Tag_Processor' );
 ok( false !== strpos( $toc_src, 'new WP_HTML_Tag_Processor(' ) && false !== strpos( $toc_src, "set_attribute( 'id'" ), '#383: the id lands through set_attribute() on the processor' );
 
-// ── JS SOURCE: the progress bar re-reads the header's shrunk height (#322) ──
-// `bar.style.top` was only re-read on scroll/resize while `.sn-header`
-// transitions for 300ms after `.is-scrolled` toggles — one wheel notch
-// across scrollY 50 left ~33px of content showing between the bar and the
-// header. A `transitionend` listener re-runs the same update once the
-// header's own transition settles.
+// ── JS SOURCE: the progress bar MEASURES the header, it does not assume it ──
+// #322 added a `transitionend` listener here because the header shrank on
+// scroll over 300ms and `bar.style.top` was only re-read on scroll/resize, so
+// one wheel notch left ~33px of content showing under the bar. The header is
+// one height now and does not transition, so that event can never fire and the
+// listener is gone. What must survive is the reason it was needed: the top is
+// read from the live element every frame, never hardcoded, because the header
+// still changes height at two breakpoints and with the reader's font size.
 $toc_js = (string) @file_get_contents( realpath( __DIR__ . '/..' ) . '/assets/js/article-toc.js' );
 ok( '' !== $toc_js, 'article-toc.js is readable' );
-ok( strpos( $toc_js, "addEventListener('transitionend'" ) !== false, '#322: article-toc.js listens for the header\'s transitionend to re-read its shrunk height' );
+ok( strpos( $toc_js, "addEventListener('transitionend'" ) === false, 'the transitionend listener is gone with the scroll-shrink it waited on' );
+ok( strpos( $toc_js, "header.getBoundingClientRect().bottom" ) !== false, '#322 still holds: the bar reads the header\'s live bottom edge rather than a literal' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

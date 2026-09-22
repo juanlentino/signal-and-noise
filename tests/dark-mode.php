@@ -134,11 +134,16 @@ foreach ( array( 'assets/css/critical.css', 'assets/css/layout.css' ) as $rel ) 
 	}
 	ok( empty( $whites ),
 		"$rel has no white literal at a use site" . ( $whites ? ': ' . implode( ' | ', $whites ) : '' ) );
-	ok( strpos( $css, 'var(--sn-veil' ) !== false, "$rel draws its veils from tokens" );
 }
-// And the specific surfaces that would be most visibly wrong.
-ok( preg_match( '/\.sn-header\s*\{[^}]*background-color:\s*var\(--sn-veil\)/s', $crit ) === 1,
-	'the fixed header backdrop is a token (it spans the full width at the top of every page)' );
+// And the specific surface that would be most visibly wrong. The header used to
+// be a translucent `--sn-veil` over a backdrop-filter blur; it is a solid
+// palette ground with a `concrete` hairline now, so the assertion moved with it.
+// Still a token either way: a literal here paints a band across the top of
+// every page in whichever scheme it was written for.
+ok( preg_match( '/\.sn-header\s*\{[^}]*background-color:\s*var\(--wp--preset--color--void\)/s', $crit ) === 1,
+	'the fixed header ground is a palette token (it spans the full width at the top of every page)' );
+ok( preg_match( '/\.sn-header\s*\{[^}]*border-bottom:\s*1px solid var\(--wp--preset--color--concrete\)/s', $crit ) === 1,
+	'and its hairline is the theme\'s own `concrete` rule, so it flips with the palette' );
 // the mark is an inline SVG in currentColor, inked with `bone` —
 // the token this layer already flips — so nothing is inverted and no second
 // asset exists. Pin the RELATIONSHIP: the mark's colour is the ink token.

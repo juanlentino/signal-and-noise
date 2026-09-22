@@ -52,22 +52,16 @@ function sn_asset_ver( $relative_path ) {
 	return wp_get_theme()->get( 'Version' );
 }
 
-/**
- * Enqueue custom front-end assets.
- *
- * Only the JS file is enqueued here (loaded in footer). Stylesheets ship via
- * the combined enqueue below + the inlined critical.css.
+/*
+ * assets/js/sticky-header.js and its enqueue are gone. It existed to add
+ * `.is-scrolled` to the header so CSS could shrink its padding and the mark,
+ * swap the veil for a stronger one and fade in a soft shadow. The header is
+ * now one height with a solid ground and a 1px rule, so there is no second
+ * state to toggle: the scroll listener, the rAF throttle and the class all
+ * had nothing left to drive. Every other front-end script this theme ships
+ * is registered by the block that needs it (block.json viewScript, #384), so
+ * no general-purpose enqueue callback remains here.
  */
-function signal_noise_enqueue_styles() {
-	wp_enqueue_script(
-		'signal-noise-sticky-header',
-		get_theme_file_uri( 'assets/js/sticky-header.js' ),
-		array(),
-		sn_asset_ver( 'assets/js/sticky-header.js' ),
-		true
-	);
-}
-add_action( 'wp_enqueue_scripts', 'signal_noise_enqueue_styles' );
 
 /**
  * Performance: Inline only critical above-the-fold + interaction-timing CSS.

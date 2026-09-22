@@ -39,9 +39,6 @@
 		height: 48px;
 	}
 
-	.sn-header.is-scrolled .jl-mark {
-		height: 32px;
-	}
 
 	/* Body offset for fixed header */
 	body {
@@ -198,9 +195,6 @@
 		height: 36px;
 	}
 
-	.sn-header.is-scrolled .jl-mark {
-		height: 28px;
-	}
 
 	/* Body offset for fixed header */
 	body {
