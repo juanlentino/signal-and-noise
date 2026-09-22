@@ -12,6 +12,9 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Documentation
+- **ADR-0001 takes a first-party WordPress amendment,** the same text the plugin repo carries: skills published by the WordPress organisation are in scope as reference material, everything else stays extract-not-install. Four were read against this theme and the plugin before installing (documentation only, no network calls, no credential handling); `wp-block-themes`, `wp-interactivity-api` and `wp-patterns` are the three that touch this repository.
+
 ### Changed
 - **`docs/adr/adr-0001-third-party-agent-skills.md` no longer names private product repos.** The ADR's scope line, stack sentence and extraction note now say "private product repos"; the zero-tolerance rule stands as "private product repos are zero-tolerance: Anthropic first-party skills only", one sentence removed. Docs only; no version bump; history not rewritten.
 
