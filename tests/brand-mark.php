@@ -82,10 +82,11 @@ $mark = (int) ( $mh[1] ?? 0 );
 ok( 64 === $mark, "desktop mark is 64px (got {$mark})" );
 ok( $clear + $vpad >= $mark * 20 / 128, sprintf( 'clear space above the mark (%.1fpx) is at least one stroke width (%.1fpx)', $clear + $vpad, $mark * 20 / 128 ) );
 $header_h = 2 * $vpad + 2 * $clear + $mark;
-preg_match( '/body\s*\{[^}]*padding-top:\s*(\d+)px/s', $crit, $bp );
-ok( isset( $bp[1] ) && (int) $bp[1] === (int) round( $header_h + 14 ), sprintf( 'body padding-top (%s) = header %.0f + 14px gap', $bp[1] ?? '?', $header_h ) );
+// 13.8.0: the body offset is --sn-chrome-top; its first definition is the base :root.
+preg_match( '/--sn-chrome-top:\s*(\d+)px/', $crit, $bp );
+ok( isset( $bp[1] ) && (int) $bp[1] === (int) round( $header_h + 14 ), sprintf( 'the desktop body offset --sn-chrome-top (%s) = header %.0f + 14px gap', $bp[1] ?? '?', $header_h ) );
 $base = (string) file_get_contents( $root . '/assets/css/base.css' );
-ok( 1 === preg_match( '/scroll-padding-top:\s*' . (int) ( $bp[1] ?? 0 ) + 16 . 'px/', $base ), 'scroll-padding-top stays 16px past the body offset' );
+ok( 1 === preg_match( '/scroll-padding-top:\s*calc\(var\(--sn-chrome-top\)\s*\+\s*16px\)/', $base ), 'scroll-padding-top stays 16px past the body offset (it reads the variable)' );
 preg_match_all( '/\.jl-mark\s*\{[^}]*height:\s*(\d+)px/s', $crit . (string) file_get_contents( $root . '/assets/css/responsive.css' ), $all );
 ok( min( array_map( 'intval', $all[1] ) ) >= 16, 'no state or breakpoint takes the mark under 16px (smallest: ' . min( array_map( 'intval', $all[1] ) ) . 'px)' );
 
@@ -116,7 +117,7 @@ foreach ( array( 'base', '781', '480' ) as $bp ) {
 		$chunk = (string) preg_replace( '/@media[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/s', '', $chunk );
 	}
 	$bmark = preg_match( '/\.jl-mark\s*\{[^}]*height:\s*(\d+)px/s', $chunk, $mm ) ? (int) $mm[1] : null;
-	$bpad  = preg_match( '/(?<![\w-])body\s*\{[^}]*padding-top:\s*(\d+)px/s', $chunk, $pp ) ? (int) $pp[1] : null;
+	$bpad  = preg_match( '/:root\s*\{[^}]*--sn-chrome-top:\s*(\d+)px/s', $chunk, $pp ) ? (int) $pp[1] : null;
 	$bv    = preg_match( '/\.sn-header[^{]*\{[^}]*padding-top:\s*([0-9.]+)rem\s*!important/s', $chunk, $vv ) ? (float) $vv[1] * $rem : $vpad;
 	if ( null === $bmark || null === $bpad ) {
 		continue;

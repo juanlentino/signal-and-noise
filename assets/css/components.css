@@ -401,7 +401,7 @@
    ============================================ */
 
 .sn-notes-index .sn-notes-heading {
-	letter-spacing: -0.02em;
+	letter-spacing: var(--wp--custom--letter-spacing--tight);
 }
 
 /* Pillar essay card — promoted from a one-liner link to a featured
@@ -504,7 +504,7 @@
 }
 
 .sn-provenance-title {
-	letter-spacing: -0.02em;
+	letter-spacing: var(--wp--custom--letter-spacing--tight);
 }
 
 .sn-provenance-section h2 {
@@ -1581,7 +1581,7 @@
 	font-family: var(--wp--preset--font-family--heading), sans-serif;
 	font-weight: 400;
 	font-size: 1.2rem;
-	line-height: 1.1;
+	line-height: var(--wp--custom--line-height--tight);
 	letter-spacing: 0.01em;
 }
 .sn-404-suggestions .sn-notes-row-title a {

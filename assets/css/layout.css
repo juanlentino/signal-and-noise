@@ -59,7 +59,7 @@
 
 /* Push page content below fixed header */
 body {
-	padding-top: 118px;
+	padding-top: var(--sn-chrome-top);
 }
 
 /* Navigation links — desktop underline effect */
@@ -196,7 +196,7 @@ body {
 	color: var(--wp--preset--color--bone) !important;
 	text-decoration: none !important;
 	display: block !important;
-	line-height: 1.1 !important;
+	line-height: var(--wp--custom--line-height--tight) !important;
 	text-align: center !important;
 	transition: color 0.2s ease !important;
 }
@@ -227,8 +227,8 @@ body {
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
-	min-height: calc(100vh - 118px - 90px) !important;
-	min-height: calc(100dvh - 118px - 90px) !important;
+	min-height: calc(100vh - var(--sn-chrome-top) - var(--sn-chrome-bottom)) !important;
+	min-height: calc(100dvh - var(--sn-chrome-top) - var(--sn-chrome-bottom)) !important;
 }
 
 .sn-hero::before {

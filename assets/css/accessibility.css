@@ -10,7 +10,8 @@
 .sn-a11y-page {
 	max-width: 60rem;
 	margin: 0 auto;
-	padding: clamp(2.5rem, 6vw, 5rem) clamp(1.25rem, 4vw, 3rem) clamp(4rem, 8vw, 7rem);
+	/* One page frame for the four text pages: theme.json settings.custom.padPage. */
+	padding: var(--wp--custom--pad-page);
 }
 
 /* ── Hero ─────────────────────────────────────────────────────────────── */
