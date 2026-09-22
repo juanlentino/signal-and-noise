@@ -9,8 +9,8 @@
  */
 
 .sn-now-page {
-	max-width: 760px; /* the reading track: one column of text; a label and a value is a list, not a grid */
-	margin: 0; /* left-aligned under the mark, not centred; the side gutter comes from padPage */
+	max-width: var(--wp--custom--page-track); /* the shared page track (theme.json custom.pageTrack): 1320px as before, growing to wideSize (1600px) only on screens wider than 1720px */
+	margin: 0 auto;
 	/* One page frame for the four text pages: theme.json settings.custom.padPage. */
 	padding: var(--wp--custom--pad-page);
 }

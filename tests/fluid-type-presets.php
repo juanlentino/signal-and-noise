@@ -237,7 +237,12 @@ $five = array(
 $fluid_setting = $theme['settings']['typography']['fluid'] ?? false;
 $pair_min      = is_array( $fluid_setting ) && isset( $fluid_setting['minViewportWidth'] ) ? $fluid_setting['minViewportWidth'] : '320px';
 $pair_max      = is_array( $fluid_setting ) && isset( $fluid_setting['maxViewportWidth'] ) ? $fluid_setting['maxViewportWidth'] : ( $theme['settings']['layout']['wideSize'] ?? '1600px' );
-ok( true === $fluid_setting, 'settings.typography.fluid is the bare `true` (the default pair; a pair object here re-scales body, h3 and h4 too)' );
+// 14.1.0: wideSize moved to 1600px for the page track, and core's default max
+// viewport IS wideSize, so the bare `true` would have re-scaled every fluid size.
+// The pair is now pinned to the SAME 320px/1400px it always was; section 1 staying
+// byte-identical is the proof nothing moved. The 680px/1370px pair the note above
+// rejected would still fail the next assertion.
+ok( is_array( $fluid_setting ) && ( $theme['settings']['layout']['wideSize'] ?? '' ) !== $pair_max, 'settings.typography.fluid pins its own viewport pair, so the type does not follow the page track (wideSize ' . ( $theme['settings']['layout']['wideSize'] ?? '?' ) . ')' );
 ok( '320px' === $pair_min && '1400px' === $pair_max, "effective pair is 320px/1400px (got $pair_min/$pair_max)" );
 echo "   effective pair: $pair_min to $pair_max (widths " . implode( ' / ', $widths ) . ")\n";
 

@@ -60,12 +60,10 @@ foreach ( array(
 //    missing selector but missing geometry.
 // 13.9.0: the value is the wide track, read from theme.json rather than typed
 // here, so the next track change cannot leave this pin guarding a stale number.
-// 14.0.0: full width, gutter to gutter, the same edges as the header.
-ok( 1 === preg_match( '/\.sn-notes-page\s*\{[^}]*max-width:\s*none\s*;/s', $css ), 'the container keeps its max-width declaration: none, gutter to gutter like the header' );
-// 14.0.0: margin 0 with max-width none. 13.9.1 pinned a 1400px grid left and
-// left an empty band on a wide screen; the owner's condition for left alignment
-// was that the page reach the right edge too.
-ok( 1 === preg_match( '/\.sn-notes-page\s*\{[^}]*margin:\s*0\s*;/s', $css ), 'the container keeps its margin, at the left (margin: 0)' );
+// 14.1.0: the shared page track, read from theme.json so a track change cannot leave this pin guarding a stale number.
+ok( 1 === preg_match( '/\.sn-notes-page\s*\{[^}]*max-width:\s*var\(--wp--custom--page-track\)\s*;/s', $css ), 'the container keeps its max-width, on the shared page track (wideSize)' );
+// 14.1.0: centred again (owner, 2026-09-22), like every page.
+ok( 1 === preg_match( '/\.sn-notes-page\s*\{[^}]*margin:\s*0 auto\s*;/s', $css ), 'the container keeps margin: 0 auto (centred)' );
 ok( 1 === preg_match( '/\.sn-notes-page\s*\{[^}]*160px/s', $css ), 'the container keeps the 160px fixed-footer clearance' );
 
 

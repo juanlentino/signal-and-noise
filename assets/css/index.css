@@ -11,8 +11,8 @@
  */
 
 .sn-index-page {
-	max-width: 760px; /* the reading track: one column of text */
-	margin: 0; /* left-aligned under the mark, not centred; the side gutter comes from padPage */
+	max-width: 60rem; /* not a track: a reading page, as before 13.9.0 */
+	margin: 0 auto;
 	/* One page frame for the four text pages: theme.json settings.custom.padPage. */
 	padding: var(--wp--custom--pad-page);
 }

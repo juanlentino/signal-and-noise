@@ -36,7 +36,7 @@ function ok( $c, $m ) {
 
 $root         = __DIR__ . '/..';
 $reading      = '760px';
-$wide         = '1400px';
+$wide         = '1600px'; // 14.1.0: one wider shared page track (owner, 2026-09-22)
 $allowed      = array( $reading, $wide );
 
 // ── theme.json declares the two tracks ───────────────────────────────
@@ -91,7 +91,7 @@ foreach ( array( 'page-contact' ) as $page ) {
 // on its line. @media conditions are skipped: `(max-width: 781px)` is a
 // breakpoint, not a width.
 echo "\nmax-width sweep over assets/css (blocks/ included)\n";
-$mw_allowed = array( '1400px', '760px', '1100px', '80ch', '72ch', '60ch', '46ch', '100%', 'none' );
+$mw_allowed = array( 'var(--wp--custom--page-track)', '1600px', '760px', '1100px', '80ch', '72ch', '60ch', '46ch', '100%', 'none' );
 $mw_files   = glob( "$root/assets/css/{,blocks/}*.css", GLOB_BRACE );
 ok( count( $mw_files ) > 10, 'scanned ' . count( $mw_files ) . ' stylesheets (guard: an empty glob asserts nothing)' );
 $mw_seen = 0;
@@ -127,30 +127,27 @@ ok( empty( $mw_bad ), 'every max-width is a track, a measure tier, or says why i
 // The five page containers the brief moved, by the rule that a page earns the
 // wide track only with a real multi-track grid on its own content.
 $mw_pages = array(
-	'notes.css'         => array( '.sn-notes-page', 'none' ),
-	'uses.css'          => array( '.sn-uses-page', '760px' ),
-	'now.css'           => array( '.sn-now-page', '760px' ),
-	'index.css'         => array( '.sn-index-page', '760px' ),
-	'accessibility.css' => array( '.sn-a11y-page', '760px' ),
+	'notes.css'         => array( '.sn-notes-page', 'var(--wp--custom--page-track)' ),
+	'uses.css'          => array( '.sn-uses-page', 'var(--wp--custom--page-track)' ),
+	'now.css'           => array( '.sn-now-page', 'var(--wp--custom--page-track)' ),
+	'index.css'         => array( '.sn-index-page', '60rem' ),
+	'accessibility.css' => array( '.sn-a11y-page', '60rem' ),
 );
 foreach ( $mw_pages as $f => $pair ) {
 	list( $sel, $want ) = $pair;
 	$css = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( "$root/assets/css/$f" ) );
 	$got = preg_match( '/' . preg_quote( $sel, '/' ) . '\s*\{[^}]*max-width:\s*([^;\s]+)/s', $css, $pm ) ? $pm[1] : '(none)';
-	ok( $got === $want, "$sel sits on the " . ( 'none' === $want ? 'full width, gutter to gutter' : ( '1400px' === $want ? 'wide' : 'reading' ) . ' track' ) . " ($want; got $got)" );
+	ok( $got === $want, "$sel sits on " . ( '60rem' === $want ? 'its 60rem reading width' : 'the shared page track' ) . " ($want; got $got)" );
 }
 
-// ── The text pages start under the mark (owner, 2026-09-22) ──
+// ── Every page is centred on one frame (owner, 2026-09-22) ──
 //
-// On a wide screen a 760px column centres unless told otherwise, which moved the
-// four text pages' left edge from under the JL mark to ~292px. They stay left:
-// margin 0, and their side padding is --sn-gutter, the same variable the header
-// pads with. Measured on the live /uses with these rules: text and mark both at
-// 36px (1440, 1024, 800), 20px (700), 16px (375). 13.9.1 puts /notes on the same
-// rule: live on 13.9.0 its text sat at 43px (20px on phones) against the mark's
-// 36px (16px), from its own clamp(1.25rem, 3vw, 3rem), and its 1400px track
-// centred on screens wider than 1400px.
-echo "\ngutter: the text pages start under the mark\n";
+// 13.9.0 moved the four text pages to the left under the mark and 13.9.1/14.0.0
+// did the same to /notes; on a wide screen that left an empty band on one side,
+// and holding both edges meant stretching or cropping content. The owner's call:
+// everything as it was, centred, with a wider shared track (1600px) so big
+// screens carry less empty space. --sn-gutter stays, for the header only.
+echo "\ngutter: the header's side padding\n";
 $gcrit = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( "$root/assets/css/critical.css" ) );
 $hdr   = (string) file_get_contents( "$root/parts/header.html" );
 $hslug = preg_match( '/"padding":\{[^}]*"left":"var:preset\|spacing\|(\d+)"/', $hdr, $hs ) ? $hs[1] : '';
@@ -164,13 +161,26 @@ foreach ( array( 'critical.css', 'responsive.css' ) as $f ) {
 	$typed = array_filter( $hr[1], static fn( $b ) => preg_match( '/padding-(left|right):\s*[0-9.]+(rem|px)/', $b ) );
 	ok( count( $hr[1] ) >= 2 && empty( $typed ), "$f: every header breakpoint rule pads its sides with var(--sn-gutter), none types a number (" . count( $hr[1] ) . ' rules)' );
 }
-$gpad = json_decode( (string) file_get_contents( "$root/theme.json" ), true )['settings']['custom']['padPage'] ?? '';
-ok( str_contains( $gpad, 'var(--sn-gutter' ), "theme.json padPage takes its sides from --sn-gutter ($gpad)" );
 foreach ( array( 'uses.css' => '.sn-uses-page', 'now.css' => '.sn-now-page', 'index.css' => '.sn-index-page', 'accessibility.css' => '.sn-a11y-page', 'notes.css' => '.sn-notes-page' ) as $f => $sel ) {
 	$css = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( "$root/assets/css/$f" ) );
-	$want = '0';
-	ok( 1 === preg_match( '/' . preg_quote( $sel, '/' ) . '\s*\{[^}]*margin:\s*' . preg_quote( $want, '/' ) . '\s*;/s', $css ), "$sel has margin: 0 (at the left, under the brand)" );
-	ok( 1 === preg_match( '/' . preg_quote( $sel, '/' ) . '\s*\{[^}]*padding:\s*(?:var\(--wp--custom--pad-page\)|(?:clamp\([^)]*\)|\S+)\s+var\(--sn-gutter)/s', $css ), "$sel pads its sides with --sn-gutter (directly or through padPage), so its text starts under the mark" );
+	ok( 1 === preg_match( '/' . preg_quote( $sel, '/' ) . '\s*\{[^}]*margin:\s*0 auto\s*;/s', $css ), "$sel is centred (margin: 0 auto)" );
+}
+$gpad = json_decode( (string) file_get_contents( "$root/theme.json" ), true )['settings']['custom']['padPage'] ?? '';
+ok( ! str_contains( $gpad, '--sn-gutter' ), "theme.json padPage has its own sides again, not the header gutter ($gpad)" );
+$pcrit = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( "$root/assets/css/critical.css" ) );
+ok( 1 === preg_match( '/body\.page main \.entry-content > \.is-layout-constrained > :where\(:not\(\.alignleft\):not\(\.alignright\):not\(\.alignfull\)\)\s*\{\s*max-width:\s*var\(--wp--custom--page-track\)\s*!important;/', $pcrit ), 'critical.css lifts the editor-built pages\' own 1320px to the shared track, scoped to body.page' );
+ok( ! preg_match( '/body\.page[^{]*\{[^}]*margin-(left|right):\s*0/', $pcrit ), 'and never pins them left: core keeps centring them' );
+// custom.pageTrack widens the frame only where the screen can afford it: exactly the
+// old 1320px up to a 1720px screen (so every laptop keeps its margins), then growing
+// to wideSize. Evaluated here at real widths, not trusted as a string.
+$ptrack = (string) ( json_decode( (string) file_get_contents( "$root/theme.json" ), true )['settings']['custom']['pageTrack'] ?? '' );
+$pwide  = (float) $wide;
+$track_at = static function ( $vw ) use ( $ptrack, $pwide ) {
+	return preg_match( '/^max\((\d+)px, min\(var\(--wp--style--global--wide-size\), 100vw - (\d+)px\)\)$/', $ptrack, $m ) ? max( (float) $m[1], min( $pwide, $vw - (float) $m[2] ) ) : null;
+};
+ok( null !== $track_at( 1440 ), "custom.pageTrack has the expected shape ($ptrack)" );
+foreach ( array( 1024 => 1320, 1440 => 1320, 1720 => 1320, 1800 => 1400, 2000 => 1600, 2560 => 1600 ) as $vw => $want ) {
+	ok( $want === (int) $track_at( $vw ), "page track at a {$vw}px screen is {$want}px (got " . var_export( $track_at( $vw ), true ) . ')' );
 }
 
 echo "Result: $pass passed, $fail failed.\n";
