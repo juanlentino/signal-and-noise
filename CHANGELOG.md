@@ -12,6 +12,8 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+## [13.7.0] - 2026-09-22 — the solid header
+
 ### New
 - **`tests/critical-deferred-parity.php` (10) guards the inline-critical / deferred-sheet split.** That design ships two copies of 19 rules on purpose, and its one failure mode is an edit landing in one copy only, which nothing catches because both files stay individually valid CSS. Group 1 asserts that where both copies declare the same property they agree; a property in only one copy is the critical-subset design (`.sn-footer { position: fixed }` belongs to `layout.css` alone) and is counted, never failed. Asserting identical declaration *sets* was the first version and it reported eleven divergences of which two were real, which is the shape of a check people learn to ignore. Group 2 pins the shared constant as a relationship rather than a literal: whatever `body` pads at a breakpoint, the hero subtracts the same number.
 
@@ -31,12 +33,4 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ### Documentation
 - **ADR-0001 takes a first-party WordPress amendment,** the same text the plugin repo carries: skills published by the WordPress organisation are in scope as reference material, everything else stays extract-not-install. Four were read against this theme and the plugin before installing (documentation only, no network calls, no credential handling); `wp-block-themes`, `wp-interactivity-api` and `wp-patterns` are the three that touch this repository.
-
-## [13.6.1] - 2026-09-21 — the tab icon
-
-### Fixed
-- **The tab icon draws the mark: `favicon.ico` was a solid black square, and the icon URLs are versioned.** Chrome takes the `sizes="any"` `.ico` over the SVG, and the shipped `.ico` was one colour (`#000000`) at 48, 32 and 16, rasterised from the `var()` SVG that 13.6.0 fixed; fixing the SVG could not change what the tab showed. The `.ico` is re-rendered from the corrected tile with headless Chrome (three 32bpp frames, 39/36/26 distinct pixels). The three icon `<link>`s now carry `?ver=` from `sn_asset_ver()`: a browser's favicon cache is keyed on the URL and outlives every page purge, which is why the fixed SVG did not show either. `tests/home-screen-icon-opacity.php` (+5) reads the `.ico` frames and fails on a single-colour one (3 red on the shipped file) and pins the versioned links; `tests/head-sweep.php` pins `?ver=` on all three. Reported by the owner after installing 13.6.0.
-
-### Changed
-- **Footer signature: the stamp is 32px and the descriptor tracks `wide`.** At 28px the stamp sat beside a taller text block instead of anchoring it; at `ultra` (0.3em) the 11px descriptor came out 1.8x the wordmark's width, so the subordinate line led the lockup. `ultra` is right for the OG card at 16px across 1200px; in a 58px bar it over-tracks. `tests/footer-signature.php` re-pinned.
 
