@@ -146,7 +146,10 @@ foreach ( $mw_pages as $f => $pair ) {
 // four text pages' left edge from under the JL mark to ~292px. They stay left:
 // margin 0, and their side padding is --sn-gutter, the same variable the header
 // pads with. Measured on the live /uses with these rules: text and mark both at
-// 36px (1440, 1024, 800), 20px (700), 16px (375).
+// 36px (1440, 1024, 800), 20px (700), 16px (375). 13.9.1 puts /notes on the same
+// rule: live on 13.9.0 its text sat at 43px (20px on phones) against the mark's
+// 36px (16px), from its own clamp(1.25rem, 3vw, 3rem), and its 1400px track
+// centred on screens wider than 1400px.
 echo "\ngutter: the text pages start under the mark\n";
 $gcrit = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( "$root/assets/css/critical.css" ) );
 $hdr   = (string) file_get_contents( "$root/parts/header.html" );
@@ -163,9 +166,10 @@ foreach ( array( 'critical.css', 'responsive.css' ) as $f ) {
 }
 $gpad = json_decode( (string) file_get_contents( "$root/theme.json" ), true )['settings']['custom']['padPage'] ?? '';
 ok( str_contains( $gpad, 'var(--sn-gutter' ), "theme.json padPage takes its sides from --sn-gutter ($gpad)" );
-foreach ( array( 'uses.css' => '.sn-uses-page', 'now.css' => '.sn-now-page', 'index.css' => '.sn-index-page', 'accessibility.css' => '.sn-a11y-page' ) as $f => $sel ) {
+foreach ( array( 'uses.css' => '.sn-uses-page', 'now.css' => '.sn-now-page', 'index.css' => '.sn-index-page', 'accessibility.css' => '.sn-a11y-page', 'notes.css' => '.sn-notes-page' ) as $f => $sel ) {
 	$css = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( "$root/assets/css/$f" ) );
 	ok( 1 === preg_match( '/' . preg_quote( $sel, '/' ) . '\s*\{[^}]*margin:\s*0\s*;/s', $css ), "$sel sits at the left (margin: 0), not centred" );
+	ok( 1 === preg_match( '/' . preg_quote( $sel, '/' ) . '\s*\{[^}]*padding:\s*(?:var\(--wp--custom--pad-page\)|(?:clamp\([^)]*\)|\S+)\s+var\(--sn-gutter)/s', $css ), "$sel pads its sides with --sn-gutter (directly or through padPage), so its text starts under the mark" );
 }
 
 echo "Result: $pass passed, $fail failed.\n";

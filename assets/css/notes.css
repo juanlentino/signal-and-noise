@@ -13,9 +13,9 @@
    feed footer breathing room above the fixed bar on every
    viewport. */
 .sn-notes-page {
-	padding: clamp(2rem, 5vw, 4.5rem) clamp(1.25rem, 3vw, 3rem) 160px; /* not a step: clamp(2rem, 5vw, 4.5rem) is its own value; the nearest air step, air--xl, would move it 8px; clamp(1.25rem, 3vw, 3rem) is its own value; the nearest air step, air--md, would move it 8px */
+	padding: clamp(2rem, 5vw, 4.5rem) var(--sn-gutter, var(--wp--preset--spacing--60)) 160px; /* not a step: clamp(2rem, 5vw, 4.5rem) is its own value; the nearest air step, air--xl, would move it 8px */
 	max-width: 1400px; /* the wide track: /notes runs two multi-track grids (1.15fr / 1fr pillars, 108px / 1fr / auto rows) */
-	margin: 0 auto;
+	margin: 0; /* left, under the mark, like the four text pages: auto would centre the 1400px track on wider screens */
 }
 
 /* HERO ────────────────────────────────────────────────────────
