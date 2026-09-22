@@ -467,6 +467,23 @@ body.page main .entry-content > .is-layout-constrained > :where(:not(.alignleft)
 	margin-right: auto;
 }
 
+/* The hero's vertical rhythm, from the air scale (owner, 2026-09-22: more space
+   between the text, the line and the buttons). Measured with the entrance
+   animation off (it translates the line 30px mid-flight): 11 / 19 / 11px became
+   24 / 36 / 36 at 1440 and 16 / 24 / 24 on phones. Here, not in layout.css, so
+   the first paint is already right. !important beats the template's inline
+   margin-top on the subtitle. */
+.sn-hero-inner > .sn-hero-subtitle {
+	margin-top: var(--wp--custom--air--xs) !important;
+	margin-bottom: 0 !important;
+}
+.sn-hero-inner > .sn-hero-accent {
+	margin: var(--wp--custom--air--sm) 0 !important;
+}
+.sn-hero-inner > .sn-hero-cta {
+	margin-top: 0 !important;
+}
+
 /* v8.5.6 critical.css pruning: .wp-block-button__link resting + hover
    + outline-style variants lived here. Button hover is not first-paint
    critical; full definitions in assets/css/components.css (deferred).

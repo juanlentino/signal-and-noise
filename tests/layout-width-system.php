@@ -199,5 +199,10 @@ foreach ( array( 'critical.css', 'layout.css' ) as $f ) {
 	ok( 1 === preg_match( '/\.sn-hero-inner\s*\{[^}]*max-width:\s*var\(--wp--custom--page-track\)\s*;/', $css ), "$f: the home hero is on the shared page frame" );
 }
 
+// 14.1.2: the hero's vertical rhythm comes from the air scale, in critical.css.
+$hc = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( "$root/assets/css/critical.css" ) );
+ok( 1 === preg_match( '/\.sn-hero-inner > \.sn-hero-subtitle\s*\{[^}]*margin-top:\s*var\(--wp--custom--air--xs\)\s*!important/', $hc ), 'hero: headline to subtitle is air--xs' );
+ok( 1 === preg_match( '/\.sn-hero-inner > \.sn-hero-accent\s*\{[^}]*margin:\s*var\(--wp--custom--air--sm\) 0\s*!important/', $hc ), 'hero: the line has air--sm above and below' );
+
 echo "Result: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

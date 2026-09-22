@@ -262,7 +262,7 @@ body {
 	width: 120px;
 	height: 3px;
 	background-color: var(--wp--preset--color--blood);
-	margin: var(--wp--preset--spacing--30) 0;
+	margin: var(--wp--custom--air--sm) 0; /* the hero rhythm lives in critical.css; this matches it */
 }
 
 /* Hero + header entrance — staggered cascade. Single gate behind
