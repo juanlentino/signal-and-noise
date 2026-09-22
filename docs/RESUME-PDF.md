@@ -6,7 +6,7 @@ The goal: the resume PDF can never go stale again, because it is produced from t
 | Phase | Where | Status |
 |---|---|---|
 | 1. Print stylesheet: `Cmd+P` on `/resume` gives a two-page Letter document | theme, `assets/css/print.css` | shipped |
-| 2. Server-side generator: "Generate PDF" in S&N → Content writes the file behind the Download link | plugin (`signal-and-noise-tools`) | planned |
+| 2. Server-side generator: "Generate PDF" in S&N → Content writes the file behind the Download link | plugin (`signal-and-noise-tools`) | [juanlentino/signal-and-noise-tools#1665](https://github.com/juanlentino/signal-and-noise-tools/pull/1665); operational detail in that repo's `docs/RESUME-PDF.md` |
 
 ## Where the data lives
 
@@ -65,26 +65,25 @@ To check a change: print `/resume` with headless Chrome and count pages.
 "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --no-pdf-header-footer --print-to-pdf=/tmp/resume.pdf https://juanlentino.com/resume/
 ```
 
-## Phase 2: the generator (planned, plugin)
+## Phase 2: the generator (plugin)
 
+Built in the plugin; its own `docs/RESUME-PDF.md` has the regeneration steps, data map and tests.
 Decided with the owner, 2026-09-22:
 
-- **Design:** the navy and gold rebrand (headline, tagline, contact line with phone, stats band,
-  core competencies, experience, research, education, affiliations and certifications, technical
-  toolkit). Colors live in the PDF template only; the browser print stays black on white and no
-  color enters the theme palette.
-- **Renderer: Dompdf.** Pure PHP, runs on Cloudways PHP 8.4 with no binary, real selectable text
-  for ATS. Headless Chrome is not guaranteed on the host and would be new infrastructure. Dompdf is
-  the plugin's first runtime dependency, so the release zip ships `vendor/`.
+- **Design:** the navy and gold rebrand. Colors live in the PDF template only; the browser print
+  stays black on white and no color enters the theme palette.
+- **Renderer: Dompdf**, committed in the plugin's `lib/pdf/vendor` (the self-updater installs the
+  tag archive). Pure PHP, no binary, real selectable text.
 - **Font:** Lato, embedded in the PDF only.
-- **New fields** in S&N → Content → Resume, never hard-coded: `hero.headline`, `hero.tagline`,
-  `hero.phone`, `hero.email`, `hero.location`, `competencies[]`, `certifications[]`, and a toolkit
-  line. The phone appears in the public PDF (owner's design includes it) and not on the web page.
-- **One template** renders both the generated PDF and, once it exists, the browser print view, so
-  the two cannot diverge.
-- The Download link will read a stable path, `uploads/resume/JuanLentino_Resume.pdf`, plus
-  `?v=<hash prefix>`, replacing the hand-set `hero.pdf_url` (today the seed still points at a
-  `2026/07` file and the live value at a `2026/09` one).
+- **New fields** under a top-level `pdf` key: headline, tagline, location, phone, email,
+  competencies, toolkit. Certifications needed no field: they already live in "Affiliations &
+  Certifications". The sync engine never reads `pdf`, so /resume is unchanged; the only change on
+  the page is the Download link's URL once a PDF exists (stable path plus `?v=<hash prefix>`).
+- **Browser print vs the PDF:** they share the DATA, not the markup. The brief asked for one partial
+  rendering both; rendering the PDF partial inside /resume would add markup to the page, which the
+  owner ruled out ("There shouldn't be a change of how the resume is displayed in the page"). So
+  `Cmd+P` prints the page (black on white, this repo) and the Download link serves the generated
+  PDF (the design). The Download link is the canonical file.
 
 ## Known limits
 
