@@ -31,6 +31,10 @@
  * file and it reported eleven divergences of which two were real, which is the
  * shape of a check people learn to ignore.
  *
+ * GROUP 3 pins the SET of duplicated selectors as an explicit list, so that
+ * duplicating a new rule is a conscious act rather than a side effect. Group 1
+ * cannot catch that: a newly duplicated rule agrees with itself.
+ *
  * GROUP 2 pins the shared CONSTANT, which is the deeper invariant and the one
  * that broke: the hero reserves the viewport minus the header minus the footer,
  * so whatever `body { padding-top }` is at a given breakpoint, the hero's
@@ -176,6 +180,104 @@ foreach ( array_slice( $mismatch, 0, 12 ) as $m ) {
 	echo "   -> $m\n";
 }
 ok( empty( $mismatch ), 'where both copies declare the same property, they agree' . ( $mismatch ? ' (' . count( $mismatch ) . ' divergences)' : '' ) );
+
+echo "\nGroup 3: the duplicated set is DECLARED, not accidental\n";
+
+/*
+ * Why a literal list. critical.css and the deferred sheets share rules on
+ * purpose: the inline copy has to paint alone, and the deferred copy has to
+ * stand alone when the combined URL 404s (inc/asset-combine.php:48). Group 1
+ * checks that the copies AGREE. It cannot tell you whether a rule should have
+ * been duplicated at all, because a newly duplicated rule agrees with itself.
+ *
+ * So the set itself is the contract. Adding a rule to critical.css that already
+ * exists in a deferred sheet now fails here until someone adds it below, which
+ * is the conscious decision the duplication deserves. Removing one fails too,
+ * so a rule critical.css needs cannot be quietly dropped.
+ *
+ * An audit of critical.css against its documented contract (above-the-fold,
+ * interaction-timing, and defending surfaces core might not style: see
+ * inc/assets-frontend.php:73 and the v8.5.6 pruning notes left in the file)
+ * found nothing removable, so this list is the state to hold, not a backlog.
+ */
+$expected_shared = array(
+	'layout.css' => array(
+		// The fixed header shell and the mark inside it: the first thing painted.
+		'.sn-header',
+		'.sn-header.is-scrolled',
+		'.sn-logo-link',
+		'.jl-mark',
+		'.sn-header.is-scrolled .jl-mark',
+		// The hero: everything above the fold on a landing view.
+		'.sn-hero',
+		'.sn-hero::before',
+		'.sn-hero > *',
+		'.sn-hero-inner',
+		'.sn-hero-title',
+		'.sn-hero .sn-hero-subtitle',
+		// Desktop nav links and their blood underline.
+		'.wp-block-navigation a',
+		'.wp-block-navigation a::after',
+		// The mobile overlay. Not above the fold, but interaction-timing: it
+		// opens on tap and the contract covers that explicitly.
+		'.wp-block-navigation__responsive-container.is-menu-open',
+		'.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation__responsive-container-close',
+		'.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation__responsive-container-content',
+		'.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation__responsive-container-content::before',
+		'.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation__container',
+		'.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation__container.is-content-justification-right',
+		// Legacy core justification class. Still emitted by WordPress 7.1 on the
+		// live site, verified 2026-09-22, so it is a live fallback not dead code.
+		'.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation__container.items-justified-right',
+		'.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation-item',
+		'.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation-item a',
+		'.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation-item a:active',
+		'.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation-item a::after',
+		// The page box, and the fixed footer bar (visible at first paint on desktop).
+		'body',
+		'.sn-footer',
+	),
+	'base.css'       => array(
+		'html',
+		'body',
+		'body::before',   // film grain
+		'body::after',    // scanline
+		'::selection',
+		'::-moz-selection',
+		'.sn-skip-link',  // first tab stop: must be styled before any script runs
+		'.sn-skip-link:focus',
+	),
+	// Breakpoint overrides live in media queries, which Group 1 does not compare,
+	// so the base-context overlap here is empty and must stay empty.
+	'responsive.css' => array(),
+);
+
+foreach ( $expected_shared as $rel => $want ) {
+	$other  = cdp_base_rules( (string) file_get_contents( $root . '/assets/css/' . $rel ) );
+	$actual = array_values( array_intersect( array_keys( $critical ), array_keys( $other ) ) );
+	sort( $actual );
+	$want_sorted = $want;
+	sort( $want_sorted );
+
+	$added   = array_diff( $actual, $want_sorted );
+	$dropped = array_diff( $want_sorted, $actual );
+
+	foreach ( $added as $sel ) {
+		echo "   -> NEWLY duplicated, not in the declared set: `$sel`\n";
+	}
+	foreach ( $dropped as $sel ) {
+		echo "   -> declared but NO LONGER duplicated: `$sel`\n";
+	}
+	ok(
+		$actual === $want_sorted,
+		sprintf(
+			'%s shares exactly the %d declared selectors with critical.css%s',
+			$rel,
+			count( $want_sorted ),
+			$actual === $want_sorted ? '' : ' (' . count( $added ) . ' new, ' . count( $dropped ) . ' gone)'
+		)
+	);
+}
 
 echo "\nGroup 2: the hero reserves exactly the header the body pads for\n";
 
