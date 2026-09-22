@@ -26,6 +26,7 @@
  *   inc/cms-page-styles.php      — per-Page bespoke stylesheets: now/uses/accessibility (v10.36.0)
  *   inc/patterns.php             — Block Pattern category registration
  *   inc/blocks-register.php      — custom sidenote + pull-quote + pillar-essays dynamic blocks (v9.11.0, pillar-essays v10.47.0)
+ *   inc/block-styles-enqueue.php  — block-scoped stylesheets registered with wp_enqueue_block_style(); loaded only where the block renders, inlined via `path`
  *   inc/blocks-php-only.php      — the nine template-furniture shortcodes as PHP-only blocks (v13.1.0)
  *   inc/block-hooks.php          — Block Hooks API: chip + closing part hooked into single by rule (v13.1.0)
  *   inc/template-part-areas.php  — declares the "article" template part area for post-frontmatter/post-closing (v13.1.0)
@@ -120,6 +121,7 @@ require_once __DIR__ . '/inc/cms-page-styles.php'; // v10.36.0: per-Page bespoke
 require_once __DIR__ . '/inc/patterns.php';
 require_once __DIR__ . '/inc/blocks-register.php';
 require_once __DIR__ . '/inc/blocks-php-only.php'; // v13.1.0: the template furniture as PHP-only blocks (WP 7.0 autoRegister)
+require_once __DIR__ . '/inc/block-styles-enqueue.php'; // block-scoped stylesheets via core's wp_enqueue_block_style (on-demand + inlined); the components.css split lands here
 require_once __DIR__ . '/inc/block-hooks.php'; // v13.1.0: chip + closing part by rule on single (Block Hooks)
 require_once __DIR__ . '/inc/template-part-areas.php'; // v13.1.0: declares the "article" template part area (post-frontmatter, post-closing)
 require_once __DIR__ . '/inc/speculation.php'; // v13.1.0: speculative loading raised to prerender/moderate; core's query-string exclusion already covers search + pagination
