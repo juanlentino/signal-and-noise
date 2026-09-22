@@ -12,6 +12,8 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+## [14.2.0] - 2026-09-22 — the resume prints
+
 ### Changed
 - **`/resume` prints as a two-page Letter document.** Phase 1 of `docs/RESUME-PDF.md`: the hand-made PDF behind the Download link has drifted from the page, so the page itself must print well. A `/resume on paper` block in `assets/css/print.css`, scoped to `body:has(.sn-resume-hero-split)` (the hook the plugin emits only on /resume), makes it one column, black on white, the header wordmark as the name, nav, footer, stats band, Download button and duplicate credential chips hidden, URLs printed in full. Measured with headless Chrome print-to-PDF on the live page: 7 pages before, 2 after; a Note printed identical text with and without the block.
 
@@ -24,10 +26,4 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ### Docs
 - **`docs/RESUME-PDF.md`**: the data-source map, Phase 1's rules and why, how to check a change, the Phase 2 decisions (Dompdf, navy and gold in the PDF only, Lato embedded, the new Content fields) and known limits.
-
-## [14.1.2] - 2026-09-22 — the home hero on the page frame, with more air
-
-### Fixed
-- **More air in the home hero.** Headline to subtitle, subtitle to the red line and line to the buttons were 11 / 19 / 11px at 1440 (11 / 14 / 11 on phones); they are now the air scale, `air--xs` then `air--sm` twice: 24 / 36 / 36 at 1440, 20 / 31 / 31 at 1024, 16 / 24 / 24 at 375 (owner, 2026-09-22). In `critical.css`, so the first paint is right; the deferred accent margin matches. Measured with the entrance animation off: mid-flight it moves the line 30px, which first read as the buttons overlapping it on phones.
-- **The home hero sits on the shared page frame.** 14.1.0 put every page on one frame but left `.sn-hero-inner` at its own 1100px, so the home headline started 110px further in than every other page at 1440 (170px against 60px) and 250px at 2000 (450 against 200); going from Home to About, the left edge jumped. It now uses `custom.pageTrack`, both copies (critical and deferred). Type, the 640px dek and the buttons are unchanged; at 1024px and on phones nothing moves. Previewed on the live home page at 1440: headline at 60px, the same edge as About. `1100px` leaves the max-width sweep's allowed list, since nothing uses it now, and `tests/layout-width-system.php` pins the hero on the frame in both files.
 
