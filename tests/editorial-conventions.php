@@ -44,7 +44,10 @@ foreach ( glob( $root . '/styles/blocks/*.json' ) as $f ) {
 $pattern_src  = '';
 $pattern_slugs = array();
 foreach ( glob( $root . '/patterns/*.php' ) as $f ) {
-	$src = file_get_contents( $f ); $pattern_src .= $src;
+	$src = file_get_contents( $f );
+	// An `Inserter: no` pattern is not author-facing (14.3.0: the home hero, the
+	// front page's empty-Page fallback), so its classes are not conventions.
+	if ( ! preg_match( '/^\s*\*\s*Inserter:\s*no\b/mi', $src ) ) { $pattern_src .= $src; }
 	if ( preg_match( '/Slug:\s*([a-z0-9\/-]+)/', $src, $m ) ) { $pattern_slugs[] = $m[1]; }
 }
 $rows = sn_theme_editorial_conventions();

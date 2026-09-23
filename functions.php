@@ -102,6 +102,7 @@ require_once __DIR__ . '/inc/editor-block-palette.php';
 require_once __DIR__ . '/inc/asset-combine.php'; // v10.21.6: combined+minified stylesheet delivery (fail-open to per-file enqueues)
 require_once __DIR__ . '/inc/assets-frontend.php';
 require_once __DIR__ . '/inc/frontend-filters.php';
+require_once __DIR__ . '/inc/front-page-fallback.php';
 require_once __DIR__ . '/inc/og-fonts.php';
 require_once __DIR__ . '/inc/notes-og-card.php'; // v10.39.0: bespoke 1200x630 /notes-index share card via the plugin's sn_og_image_url seam (plugin-guarded)
 require_once __DIR__ . '/inc/wp-update-integration.php';

@@ -66,10 +66,10 @@ ok( empty( $offenders ), 'every template contentSize is on a track' . ( $offende
 // page-about/services/music/resume are excluded here: their wide track (1400px)
 // now lives in the Page post_content (moved by the pages-to-CMS flip), not in the
 // template file, so the bare frame carries no contentSize override to check.
-foreach ( array( 'front-page' ) as $page ) {
-	$html = (string) file_get_contents( "$root/templates/$page.html" );
-	ok( strpos( $html, '"contentSize":"' . $wide . '"' ) !== false, "$page carries the wide track ($wide)" );
-}
+// front-page moved the same way (14.3.0): its hero is the front-page Page's
+// content, and patterns/home-hero.php (the empty-Page fallback) carries the track.
+$html = (string) file_get_contents( "$root/patterns/home-hero.php" );
+ok( strpos( $html, '"contentSize":"' . $wide . '"' ) !== false, "the home hero carries the wide track ($wide)" );
 
 // ── Prose pages keep a readable measure (no width wider than the wide
 //    track, and the text-forward pages never exceed the reading track) ─
