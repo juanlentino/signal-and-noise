@@ -1,5 +1,5 @@
 === Signal & Noise ===
-Contributors: Juan Lentino
+Contributors: juanml
 Requires at least: 7.0
 Tested up to: 7.1
 Requires PHP: 8.3
@@ -43,6 +43,25 @@ All design tokens live in theme.json — a white-first palette (`void`/`bone` wi
 * **Signal & Noise Tools** (companion plugin) — owns SEO emission, login hardening, admin tooling, analytics, and AI-health surfaces. Recommended for the full feature set; the theme is standalone-safe and degrades gracefully without it.
 
 Note: Contact Form 7 was removed in v10.12.0 in favor of a plain-text routing directory on `/contact` — it is no longer used or recommended (see `tests/cf7-removal.php`, a regression guard against its reintroduction).
+
+== Copyright ==
+
+Signal & Noise WordPress Theme, (C) Juan Lentino.
+Signal & Noise is distributed under the terms of the GNU GPL v2 or later.
+
+This theme bundles the following third-party resources:
+
+Bebas Neue
+Copyright 2019 The Bebas Neue Project Authors (https://github.com/dharmatype/Bebas-Neue)
+License: SIL Open Font License, Version 1.1, https://openfontlicense.org
+Source: https://github.com/dharmatype/Bebas-Neue
+Files: assets/fonts/bebas-neue-*.woff2, assets/fonts/og/BebasNeue-Regular.ttf
+
+DM Mono
+Copyright 2020 The DM Mono Project Authors (https://github.com/googlefonts/dm-mono)
+License: SIL Open Font License, Version 1.1, https://openfontlicense.org
+Source: https://github.com/googlefonts/dm-mono
+Files: assets/fonts/dm-mono-*.woff2, assets/fonts/og/DMMono-Light.ttf
 
 == Changelog ==
 
