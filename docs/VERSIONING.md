@@ -141,6 +141,21 @@ A release is a deliberate, separate act: `tools/cut-release.sh`.
 - Refuses a dirty worktree, and refuses an empty `Unreleased` — nothing to cut
   is not a release.
 
+Once the cut PR is squash-merged, tagging and the draft release are one
+dispatch (since 2026-09-24, ported from the plugin):
+
+```bash
+gh workflow run release.yml -f version=X.Y.Z
+```
+
+`.github/workflows/release.yml` refuses unless main's `style.css` `Version:`
+and `readme.txt` `Stable tag:` both equal the input and the tag does not exist
+yet. It tags the commit that set the version (the squash commit, never main's
+head) and drafts the release from that version's CHANGELOG section. It exists
+so a session that can dispatch a workflow but cannot push a tag can still
+finish a release. Checked against v14.1.1 through v14.3.0: each resolves to
+the commit its tag already points at.
+
 ### Choosing the digit, once, at the cut
 
 | Argument | Means |
