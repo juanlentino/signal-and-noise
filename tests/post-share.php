@@ -110,7 +110,8 @@ ok( strpos( $html, 'sn-note-share__native' ) !== false, 'SHARE button class pres
 ok( substr_count( $html, 'type="button"' ) === 2, 'both buttons are type=button (no form submit)' );
 
 // data-attrs carry the permalink + title for the JS layer.
-ok( strpos( $html, 'data-sn-share-url="https://x/notes/provenance/"' ) !== false, 'copy button carries data-sn-share-url permalink' );
+ok( preg_match( '/sn-note-share__copy" data-sn-goal="share_copy" data-sn-share-url="https:\/\/x\/notes\/provenance\/\?utm_source=share&(amp;|#038;)?utm_medium=copy"/', $html ) === 1, 'Copy link hands out the permalink tagged utm_source=share, utm_medium=copy' );
+ok( preg_match( '/sn-note-share__native" data-sn-goal="share_native" data-sn-share-url="https:\/\/x\/notes\/provenance\/\?utm_source=share&(amp;|#038;)?utm_medium=native"/', $html ) === 1, 'the share sheet hands out the permalink tagged utm_medium=native' );
 ok( strpos( $html, 'data-sn-share-title="Provenance &amp; Noise"' ) !== false, 'copy button carries esc_attr title (ampersand encoded)' );
 
 // SHARE button starts hidden (revealed only when navigator.share exists).

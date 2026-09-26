@@ -164,7 +164,11 @@ function sn_feed_json_build_item( $post ) {
 	}
 	$item = array(
 		'id'           => (string) get_permalink( $post ),
-		'url'          => get_permalink( $post ),
+		// The link a reader clicks carries utm_source=jsonfeed&utm_medium=feed, so
+		// a click-through from a feed reader lands as a campaign visit (the
+		// plugin tags RSS and Atom the same way). The id stays the bare
+		// permalink: readers key read state on it.
+		'url'          => (string) get_permalink( $post ) . ( false === strpos( (string) get_permalink( $post ), '?' ) ? '?' : '&' ) . 'utm_source=jsonfeed&utm_medium=feed',
 		'title'        => get_the_title( $post ),
 		'content_html' => (string) apply_filters( 'the_content', $post->post_content ),
 	);
