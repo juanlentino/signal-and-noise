@@ -51,13 +51,15 @@ function sn_note_share_shortcode() {
 	// A shared link pasted into a chat app arrives with no referrer, so each
 	// button hands out the permalink tagged with where it was shared from:
 	// utm_source=share, utm_medium=copy (Copy link) or native (the phone's
-	// share sheet). The edge worker records it as a campaign visit.
+	// share sheet). The edge worker records it as a campaign visit. The tap
+	// itself fires a named goal (data-sn-goal, sn-beacon.js) so shares are
+	// counted even when nobody clicks the shared link.
 	$sep = false === strpos( (string) $permalink, '?' ) ? '?' : '&';
 	return sprintf(
 		'<div class="sn-note-share">'
 			. '<span class="sn-note-share__label">Share</span>'
-			. '<button type="button" class="sn-note-share__copy" data-sn-share-url="%1$s" data-sn-share-title="%2$s">%3$s</button>'
-			. '<button type="button" class="sn-note-share__native" data-sn-share-url="%5$s" data-sn-share-title="%2$s" hidden>%4$s</button>'
+			. '<button type="button" class="sn-note-share__copy" data-sn-goal="share_copy" data-sn-share-url="%1$s" data-sn-share-title="%2$s">%3$s</button>'
+			. '<button type="button" class="sn-note-share__native" data-sn-goal="share_native" data-sn-share-url="%5$s" data-sn-share-title="%2$s" hidden>%4$s</button>'
 			. '</div>',
 		esc_url( $permalink . $sep . 'utm_source=share&utm_medium=copy' ),
 		esc_attr( $title ),
