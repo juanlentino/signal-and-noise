@@ -12,6 +12,9 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Added
+- **JSON Feed click-throughs show up as visits.** Each item's `url` carries `utm_source=jsonfeed&utm_medium=feed`, so a reader who clicks through from a feed reader lands as a campaign visit the edge worker records. The `id` stays the bare permalink, so readers keep their read state. The plugin tags RSS and Atom the same way (`utm_source=rss`), and its north star counts every `utm_medium=feed` visit.
+
 ## [14.3.0] - 2026-09-23 — Home, like every page
 
 ### Changed

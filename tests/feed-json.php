@@ -43,6 +43,8 @@ require __DIR__ . '/../inc/feed-json.php';
 $post = (object) array( 'ID' => 7, 'post_content' => '<p>Body & stuff</p>' );
 $item = sn_feed_json_build_item( $post );
 ok( is_string( $item['id'] ) && $item['id'] !== '', 'item id is a non-empty string (stable permalink)' );
+ok( 'https://x.test/notes/n-7/' === $item['id'], 'the id stays the bare permalink: readers key read state on it' );
+ok( 'https://x.test/notes/n-7/?utm_source=jsonfeed&utm_medium=feed' === $item['url'], 'the url a reader clicks carries the feed UTM, so a click-through lands as a campaign visit' );
 ok( isset( $item['content_html'] ) && $item['content_html'] !== '', 'content_html present + non-empty (required field)' );
 ok( preg_match( '/^\d{4}-\d{2}-\d{2}T/', $item['date_published'] ) === 1, 'date_published is RFC 3339 shape' );
 ok( in_array( 'analysis', $item['tags'], true ), 'tags carries category names' );
