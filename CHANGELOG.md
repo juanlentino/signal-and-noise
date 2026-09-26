@@ -12,12 +12,9 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+## [14.4.0] - 2026-09-26 — feed and share click-throughs show up as visits
+
 ### Added
 - **Shared notes are counted, and their links say where they came from.** The share row's Copy link hands out the permalink tagged `utm_source=share&utm_medium=copy`, the phone's share sheet `utm_medium=native`, so a link pasted into a chat app (which sends no referrer) lands as a campaign visit instead of "direct". Each tap also fires a named goal (`share_copy` / `share_native`, `data-sn-goal`), so a share counts even if nobody clicks it; the plugin's north star sums them as "Notes shared".
 - **JSON Feed click-throughs show up as visits.** Each item's `url` carries `utm_source=jsonfeed&utm_medium=feed`, so a reader who clicks through from a feed reader lands as a campaign visit the edge worker records. The `id` stays the bare permalink, so readers keep their read state. The plugin tags RSS and Atom the same way (`utm_source=rss`), and its north star counts every `utm_medium=feed` visit.
-
-## [14.3.0] - 2026-09-23 — Home, like every page
-
-### Changed
-- **Home is edited like every other page.** `templates/front-page.html` now renders the front-page Page's content (Settings → Reading → Homepage), the way About and Services do, instead of hardcoding the hero. A hero edit made in the Site Editor was a template override, and `inc/template-maintenance.php` deletes those on every activation and every Purge All Caches, so the owner's line kept disappearing (2026-09-23); Page content is never touched by updates or purges. The companion plugin seeds the Page once (install plugin 17.8.0 first). `inc/front-page-fallback.php` renders the new `patterns/home-hero.php` (not in the inserter) whenever that Page is empty, so the home page can never render blank. The hero's raw-HTML wrapper became a Group block so the editor can hold it; measured in headless Chrome at 1440 and 375px, the hero rendered from Page content is pixel-identical to today's (0 differing rows; a 4px control shift shows 257). `tests/front-page-cms.php` (9) pins the template, the pattern and the fallback (dropping the front-page check fails it); `tests/layout-width-system.php` now finds the wide track in the pattern.
 
