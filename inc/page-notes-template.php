@@ -356,8 +356,12 @@ add_action( 'wp_footer', function() {
  * sn_notes_current_page) so it has no load-order dependency on that file.
  */
 function sn_notes_index_title() {
-	$site  = get_bloginfo( 'name' );
-	$title = $site ? 'Notes — ' . $site : 'Notes';
+	// The owner's Settings › Identity & SEO › "/notes title" wins when set.
+	// Before 14.4.2 it reached only og:title: this return short-circuits the
+	// plugin's title filter, so the field never touched the <title> it names.
+	$custom = function_exists( 'sn_setting' ) ? trim( (string) sn_setting( 'seo_copy.notes_title', '' ) ) : '';
+	$site   = get_bloginfo( 'name' );
+	$title  = '' !== $custom ? $custom : ( $site ? 'Notes — ' . $site : 'Notes' );
 	$paged = (int) get_query_var( 'paged' );
 	if ( $paged < 1 && isset( $_GET['paged'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only pagination index, no state change.
 		$paged = (int) $_GET['paged']; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
