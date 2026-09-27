@@ -136,6 +136,10 @@ This is what actually turns on HTML caching at the edge.
    and not (starts_with(http.request.uri.path, "/?"))
    ```
 
+   Note: the `/wp-json/` line does not describe what the live edge does.
+   Measured 2026-09-27, public `/wp-json/` GETs are edge-cached (HIT) and
+   origin cache headers decide; see "What still hits origin" below.
+
    **Then...**
    - **Cache eligibility**: `Eligible for cache`
    - **Edge TTL**:
@@ -202,7 +206,14 @@ hit origin PHP:
 - All `/wp-admin/` URLs
 - `/wp-login.php`
 - `/wp-cron.php`
-- `/wp-json/` (REST API)
+- `/wp-json/` is NOT on this list. Measured 2026-09-27: public
+  `/wp-json/` GET responses are cached at the edge (`cf-cache-status: HIT`,
+  `age` of 35 s and up), whatever the expression above says. The edge
+  honours origin cache headers, so a REST endpoint that must never be cached
+  opts out with its own headers. Example: the feed-open pixel
+  (`/wp-json/signal-noise/v1/feed-open`) sends `Cache-Control: no-store` and
+  reads `cf-cache-status: BYPASS`. A public REST response without such
+  headers should be assumed cacheable at the edge.
 - `/feed/` and `/notes/feed/` (RSS — caching feeds is risky for
   syndication)
 - Any request with a `wordpress_logged_in_*`, `wp-postpass_*`, or

@@ -12,6 +12,8 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+- docs/CACHING.md no longer says /wp-json/ is kept out of Cloudflare caching. Measured 2026-09-27, public /wp-json/ GET responses are cached at the edge and the edge honours origin cache headers; the feed-open pixel is named as the example of an endpoint that opts out with its own no-store header.
+
 ## [14.5.0] - 2026-09-27 — your own devices stop counting
 
 
