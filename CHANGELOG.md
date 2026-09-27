@@ -12,6 +12,9 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Changed
+- **Release cuts skip the security scan; nothing else does.** Same contract as the plugin repo (#1751): `.github/scripts/scan-scope.sh` skips only when every file is docs/Markdown, `style.css` whose only changed line is `Version:`, or `readme.txt` whose only changed line is `Stable tag:`. A code file or any other edit riding a cut is scanned; any doubt scans. The script runs from the base commit, so a PR cannot rewrite it to waive its own scan. Pinned by `tests/ci-scan-scope.php`.
+
 ## [14.4.2] - 2026-09-27 — the /notes title setting sets the title
 
 ### Fixed
