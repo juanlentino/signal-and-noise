@@ -262,7 +262,9 @@ add_action( 'wp_enqueue_scripts', 'sn_notes_enqueue', 30 );
 function sn_notes_retired_tags() {
 	return array(
 		// v12.14.0: split into three narrower tags, so no single successor.
-		'provenance'          => '/notes/',
+		// The /provenance/ hub is not a tag: it covers all three, so a
+		// provenance reader lands on the track instead of the whole index.
+		'provenance'          => '/provenance/',
 		// v12.17.0: leftovers from the 83 -> 23 vocabulary migration. Found via
 		// Search Console, NOT by reading the code: both were still EARNING
 		// IMPRESSIONS while answering 404. A retired tag stops existing in the

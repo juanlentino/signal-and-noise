@@ -98,7 +98,7 @@ ok( 1 === preg_match( '/wp_safe_redirect\( \$target, 301 \)/', $sn_tpl ), '301, 
 // most-crawled on the site, so the URL cannot simply stop existing — and it
 // cannot point at one successor without lying about the other two, which is why
 // the target is the index.
-ok( '/notes/' === sn_notes_retired_tag_target( 'provenance' ), 'the retired tag redirects to the index, not to a nominated heir' );
+ok( '/provenance/' === sn_notes_retired_tag_target( 'provenance' ), 'the retired tag redirects to the /provenance/ hub, not to one of its three heirs' );
 ok( '' === sn_notes_retired_tag_target( 'verification-limits' ), 'a LIVE successor is not redirected — that would erase the split it was made for' );
 ok( '' === sn_notes_retired_tag_target( 'creation-time-capture' ), 'nor the second' );
 ok( '' === sn_notes_retired_tag_target( 'provenance-adoption' ), 'nor the third' );
@@ -151,7 +151,7 @@ ok( array() === $sn_bad, 'every target is a rooted path, not an absolute URL' );
 // the next retirement must be a line in the array, never a second function.
 $sn_tpl = (string) file_get_contents( __DIR__ . '/../inc/page-notes-template.php' );
 ok( 1 === preg_match( '/function sn_notes_retired_tags\(\)/', $sn_tpl ), 'retirements live in a map' );
-ok( 1 === preg_match( "/'provenance'\s*=>\s*'\/notes\/'/", $sn_tpl ), 'and provenance is a row in it' );
+ok( 1 === preg_match( "/'provenance'\s*=>\s*'\/provenance\/'/", $sn_tpl ), 'and provenance is a row in it' );
 
 // Matched on the REQUEST PATH, not a queried object: once the term is deleted
 // WordPress resolves nothing and would 404 before any is_tag() branch fires.
