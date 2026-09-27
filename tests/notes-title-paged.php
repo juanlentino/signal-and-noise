@@ -16,6 +16,7 @@ if ( PHP_SAPI !== 'cli' && ! defined( 'WP_CLI' ) ) {
 define( 'ABSPATH', '/' );
 
 $GLOBALS['__qv'] = array();
+$GLOBALS['__setting'] = ''; // sn_setting() below is hoisted; the early cases read a blank setting.
 function get_query_var( $k, $d = '' ) { return $GLOBALS['__qv'][ $k ] ?? $d; }
 function get_bloginfo( $w ) { return 'name' === $w ? 'Juan Lentino' : ''; }
 function add_action() {}
@@ -44,6 +45,16 @@ unset( $_GET['paged'] );
 // Starts with "Notes".
 $GLOBALS['__qv'] = array();
 ok( strpos( sn_notes_index_title(), 'Notes' ) === 0, 'title: starts with "Notes"' );
+
+// 14.4.2: the owner's "/notes title" setting wins, and keeps the page suffix.
+$GLOBALS['__setting'] = 'Music provenance, AI and rights: notes by Juan Lentino';
+function sn_setting( $k, $d = '' ) { return 'seo_copy.notes_title' === $k ? $GLOBALS['__setting'] : $d; }
+$GLOBALS['__qv'] = array();
+ok( 'Music provenance, AI and rights: notes by Juan Lentino' === sn_notes_index_title(), 'title: the /notes title setting is the <title>' );
+$GLOBALS['__qv']['paged'] = 2;
+ok( 'Music provenance, AI and rights: notes by Juan Lentino — Page 2' === sn_notes_index_title(), 'title: the setting keeps the page suffix' );
+$GLOBALS['__qv'] = array(); $GLOBALS['__setting'] = '  ';
+ok( 'Notes — Juan Lentino' === sn_notes_index_title(), 'title: a blank setting falls back to the default' );
 
 echo "Result: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
