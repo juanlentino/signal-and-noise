@@ -1,6 +1,6 @@
 /**
  * Signal & Noise — first-party edge analytics beacon.
- * Cookieless. No-ops entirely under DNT/GPC. Posts same-origin to the
+ * Cookieless (sets none; reads only the owner-device sn_owner flag). No-ops entirely under DNT/GPC. Posts same-origin to the
  * Cloudflare Worker route (window.SN_BEACON.endpoint). See P1 plan + spec
  * docs/superpowers/specs/2026-06-11-first-party-edge-analytics-design.md.
  * v10.4.0: adds window.SN_BEACON.event(name, props) for named custom events
@@ -29,6 +29,11 @@
     // Privacy gate — bail completely (no listeners, no beacon) when opted out.
     var dnt = navigator.doNotTrack === '1' || window.doNotTrack === '1' || navigator.msDoNotTrack === '1';
     if (dnt || navigator.globalPrivacyControl === true) return;
+
+    // Owner-device gate: the plugin sets sn_owner=1 on the owner's browsers at
+    // login and never clears it on logout, so logged-out (edge-cached) visits on
+    // those devices are not counted. Exact cookie name match; fail open on error.
+    if (isOwnerDevice()) return;
 
     function send(payload) {
       var json = JSON.stringify(Object.assign({ k: cfg.k }, payload));
@@ -213,6 +218,11 @@
         }
       }
     });
+  }
+  function isOwnerDevice() {
+    try {
+      return document.cookie.split(';').some(function (c) { return c.trim() === 'sn_owner=1'; });
+    } catch (e) { return false; }
   }
   if (document.prerendering) {
     document.addEventListener('prerenderingchange', init, { once: true });

@@ -12,6 +12,8 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+- The analytics beacon now sends nothing on a browser that carries the `sn_owner=1` cookie, which the plugin sets when the site owner logs in. The owner's own devices stop counting as readers even when logged out and the page comes from cache. The cookie name must match exactly, and a failed cookie read still counts the visit.
+
 ## [14.4.3] - 2026-09-27 — the notes index has one page
 
 ### Fixed
