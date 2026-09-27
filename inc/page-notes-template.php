@@ -268,9 +268,46 @@ function sn_notes_paged_tag_target( $is_tag, $term, $paged, $term_link ) {
 	return is_string( $term_link ) && '' !== $term_link ? $term_link : '';
 }
 
+/**
+ * PURE: where a paginated /notes index URL should go, or '' to leave it.
+ *
+ * 14.4.3: browse mode returns the whole corpus in one page (v11.10.0), so the
+ * index has no page 2. /notes/?paged=2 served the full list again under its
+ * own canonical and a "Page 2" title, and /notes/page/2/ served an empty 200.
+ * Both are one page. A search still paginates, so a term leaves it alone.
+ *
+ * @param string $path  Request path (no query string).
+ * @param string $term  The active search term ('' when not searching).
+ * @param int    $paged The ?paged= page number.
+ * @return string '/notes/' or ''.
+ */
+function sn_notes_paged_index_target( $path, $term, $paged ) {
+	if ( '' !== (string) $term ) {
+		return '';
+	}
+	$path = '/' . trim( (string) $path, '/' );
+	if ( 1 === preg_match( '#^/notes/page/[0-9]+$#', $path ) ) {
+		return '/notes/';
+	}
+	return ( '/notes' === $path && (int) $paged >= 2 ) ? '/notes/' : '';
+}
+
 add_action( 'template_redirect', function() {
 	if ( is_admin() || is_feed() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
 		return;
+	}
+	if ( isset( $_SERVER['REQUEST_URI'] ) ) {
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- path-compared against a fixed pattern, never echoed.
+		$sn_path = (string) wp_parse_url( wp_unslash( $_SERVER['REQUEST_URI'] ), PHP_URL_PATH );
+		$sn_idx  = sn_notes_paged_index_target(
+			$sn_path,
+			function_exists( 'sn_notes_search_term' ) ? sn_notes_search_term() : '',
+			isset( $_GET['paged'] ) ? (int) $_GET['paged'] : (int) get_query_var( 'paged' ) // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only.
+		);
+		if ( '' !== $sn_idx ) {
+			wp_safe_redirect( home_url( $sn_idx ), 301 );
+			exit;
+		}
 	}
 	// Retired tags are redirected by the plugin's one map
 	// (signal-and-noise-tools inc/tag-retired-map.php, priority 9).

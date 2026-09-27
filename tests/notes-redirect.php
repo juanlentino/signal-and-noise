@@ -97,5 +97,12 @@ ok( 1 === preg_match( '/wp_safe_redirect\( \$target, 301 \)/', $sn_tpl ), '301, 
 $sn_tpl = (string) file_get_contents( __DIR__ . '/../inc/page-notes-template.php' );
 ok( 0 === preg_match( '/function sn_notes_retired_tags?\(|wp_safe_redirect\( home_url\( \$sn_gone/', $sn_tpl ), 'the theme keeps no retired-tag map of its own' );
 
+// 14.4.3: the index is one page; its page-2 URLs are the same page.
+ok( '/notes/' === sn_notes_paged_index_target( '/notes/', '', 2 ), '/notes/?paged=2 goes to /notes/' );
+ok( '/notes/' === sn_notes_paged_index_target( '/notes/page/2/', '', 0 ) && '/notes/' === sn_notes_paged_index_target( '/notes/page/7', '', 0 ), '/notes/page/N/ goes to /notes/, slash or not' );
+ok( '' === sn_notes_paged_index_target( '/notes/', 'c2pa', 2 ), 'a search keeps its pages' );
+ok( '' === sn_notes_paged_index_target( '/notes/', '', 0 ) && '' === sn_notes_paged_index_target( '/notes/', '', 1 ), 'page 1 is served' );
+ok( '' === sn_notes_paged_index_target( '/notes/page-two/', '', 2 ) && '' === sn_notes_paged_index_target( '/notes/some-note/', '', 2 ) && '' === sn_notes_paged_index_target( '/tag/c2pa/', '', 2 ), 'a note, a lookalike and a tag are left alone' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
