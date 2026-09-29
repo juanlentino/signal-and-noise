@@ -16,6 +16,11 @@ nothing here is edited by hand again.
 
 All notable changes to Signal & Noise are documented here.
 
+## [14.5.0] - 2026-09-27 — your own devices stop counting
+
+
+- The analytics beacon now sends nothing on a browser that carries the `sn_owner=1` cookie, which the plugin sets when the site owner logs in. The owner's own devices stop counting as readers even when logged out and the page comes from cache. The cookie name must match exactly, and a failed cookie read still counts the visit.
+
 ## [14.4.3] - 2026-09-27 — the notes index has one page
 
 ### Fixed
