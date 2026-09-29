@@ -35,8 +35,19 @@
     // those devices are not counted. Exact cookie name match; fail open on error.
     if (isOwnerDevice()) return;
 
+    // 0) Bot signals (observe-only, theme 14.6): four booleans and the raw UTC
+    // offset ride on EVERY event as `sg`; the worker packs them into one number.
+    // No identifier, coordinate or timing leaves the browser. `ni` turns on when
+    // a scroll milestone (from a real scroll event) or a time flush fires before
+    // any wheel/touch/key/pointer input on this page. Never throws.
+    var hadInput = false, noInput = false, sig = staticSignals();
+    ['wheel', 'touchstart', 'keydown', 'pointerdown', 'pointermove'].forEach(function (t) {
+      window.addEventListener(t, function () { hadInput = true; }, { capture: true, passive: true });
+    });
+    function engagedNow() { if (!hadInput) noInput = true; }
+
     function send(payload) {
-      var json = JSON.stringify(Object.assign({ k: cfg.k }, payload));
+      var json = JSON.stringify(Object.assign({ k: cfg.k, sg: { wd: sig.wd, ni: noInput, um: sig.um, hl: sig.hl, tz: sig.tz } }, payload));
       if (navigator.sendBeacon) {
         var ok = navigator.sendBeacon(cfg.endpoint, new Blob([json], { type: 'application/json' }));
         if (ok) return;
@@ -81,17 +92,17 @@
 
     // 2) Scroll milestones 25/50/75/100, each once, passive + rAF-throttled.
     var sent = {}, ticking = false;
-    function checkScroll() {
+    function checkScroll(fromScroll) {
       ticking = false;
       var doc = document.documentElement;
       var scrollable = doc.scrollHeight - window.innerHeight;
       var pct = scrollable <= 0 ? 100 : Math.min(100, Math.round((window.scrollY / scrollable) * 100));
       [25, 50, 75, 100].forEach(function (m) {
-        if (pct >= m && !sent[m]) { sent[m] = 1; send({ e: 'sc', u: location.pathname, d: m }); }
+        if (pct >= m && !sent[m]) { sent[m] = 1; if (fromScroll === true) engagedNow(); send({ e: 'sc', u: location.pathname, d: m }); }
       });
       if (sent[100]) window.removeEventListener('scroll', onScroll);
     }
-    function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(checkScroll); } }
+    function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(function () { checkScroll(true); }); } }
     window.addEventListener('scroll', onScroll, { passive: true });
     checkScroll();
 
@@ -117,6 +128,7 @@
       if (delta <= 0) return; // nothing newly engaged — never send a zero/negative delta
       flushed = true;
       visibleMs = 0; // the next flush reports only time engaged after this one
+      engagedNow();
       send({ e: 'tm', u: location.pathname, ms: delta });
     }
     window.addEventListener('pagehide', flush);
@@ -218,6 +230,26 @@
         }
       }
     });
+  }
+  // The page-constant signals. A Chromium UA (iOS Chrome/Edge/Firefox are WebKit
+  // and excluded) must carry userAgentData whose brands, platform and mobile
+  // flag agree with it; headless tells are the weakest bit.
+  function staticSignals() {
+    var out = { wd: false, um: false, hl: false, tz: null };
+    try {
+      var nav = navigator, ua = String(nav.userAgent || ''), d = nav.userAgentData;
+      var chromium = /(Chrome|Chromium)\/\d/.test(ua) && !/CriOS|EdgiOS|FxiOS/.test(ua);
+      var brands = (d && d.brands ? d.brands : []).map(function (b) { return String(b && b.brand); }).join(' ');
+      out.wd = nav.webdriver === true;
+      if (chromium) {
+        var plat = /Android/.test(ua) ? 'Android' : /CrOS/.test(ua) ? 'Chrome OS' : /Windows/.test(ua) ? 'Windows' : /Mac OS X|Macintosh/.test(ua) ? 'macOS' : /Linux/.test(ua) ? 'Linux' : '';
+        out.um = !d || !/Chromium/.test(brands) || d.mobile !== /Mobile/.test(ua) || (!!plat && !!d.platform && d.platform !== plat);
+      }
+      out.hl = /HeadlessChrome/.test(ua + ' ' + brands) || window.outerWidth === 0 || (chromium && !window.chrome);
+      var tz = new Date().getTimezoneOffset();
+      out.tz = isFinite(tz) ? tz : null;
+    } catch (e) { /* a signal that cannot be read stays false */ }
+    return out;
   }
   function isOwnerDevice() {
     try {
