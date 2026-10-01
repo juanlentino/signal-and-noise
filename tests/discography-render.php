@@ -220,6 +220,20 @@ $GLOBALS['__test_filters']['sn_discography_entries'] = array( function () {
 	) ) );
 } );
 ok( strpos( sn_discography_shortcode(), 'sn-disco-liner' ) !== false, 'shortcode: an entry with tracks renders the liner panel' );
+// The /music bridge line: verbatim, static (the same with 1 release as with 10), below the sticky rail.
+$bridge = 'A selection. Since 2022 alone, roughly 110 tracks have passed through my hands.';
+$one    = sn_discography_shortcode();
+ok( 1 === substr_count( $one, $bridge ) && strpos( $one, 'class="sn-catalog-meta sn-disco-bridge"' ) !== false, 'bridge line renders once, verbatim, with the catalog meta class' );
+ok( strpos( $one, '</div></div><p class="sn-catalog-meta sn-disco-bridge">' ) !== false, 'bridge line sits right after the controls rail closes, not inside the sticky rail' );
+$GLOBALS['__test_filters']['sn_discography_entries'] = array( function () {
+	$e = array();
+	for ( $i = 0; $i < 10; $i++ ) { $e[] = array( 'id' => 'e' . $i, 'title' => 'T' . $i, 'year' => 2007 + $i, 'type' => 'single', 'spotify_id' => '' ); }
+	return $e;
+} );
+$ten = sn_discography_shortcode();
+preg_match( '#<p class="sn-catalog-meta sn-disco-bridge">.*?</p>#', $one, $b1 );
+preg_match( '#<p class="sn-catalog-meta sn-disco-bridge">.*?</p>#', $ten, $b10 );
+ok( strpos( $ten, '<strong data-disco-count>10</strong>' ) !== false && ! empty( $b1 ) && $b1 === $b10, 'bridge line is static: the same paragraph with 1 release and with 10' );
 
 // JS contract: the player is wired (cookieless native Audio, one-at-a-time).
 $djs2 = file_get_contents( __DIR__ . '/../assets/js/discography.js' );
