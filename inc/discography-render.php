@@ -158,6 +158,10 @@ function sn_discography_shortcode() {
 	}
 	$out .= '</div>'; // .sn-disco-filters
 	$out .= '</div>'; // .sn-disco-controls
+	// The bridge to /resume's "~110 tracks since 2022": static copy, never
+	// computed from the discography count. Below the sticky rail, not in it,
+	// so it scrolls with the page instead of riding the rail.
+	$out .= '<p class="sn-catalog-meta sn-disco-bridge">' . esc_html__( 'A selection. Since 2022 alone, roughly 110 tracks have passed through my hands.', 'signal-and-noise' ) . '</p>';
 
 	// ── Year-grouped cover grid. ──
 	foreach ( $by_year as $year => $year_entries ) {
