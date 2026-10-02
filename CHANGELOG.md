@@ -12,6 +12,8 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+- **/music's closing line moves to the end of the page.** 14.8.0 printed it from the discography block, so it sat between the catalog and the Verified Credits section, mid-page. /music is a CMS page; its ending now lives in the page content's last band (same approved words, same beacon goals), and the discography no longer prints it. The `.sn-page-next` style stays. Pinned in `tests/discography-render.php`.
+
 ## [14.8.0] - 2026-10-02 — every page hands you to the next
 
 
