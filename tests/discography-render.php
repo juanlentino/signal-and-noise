@@ -241,11 +241,21 @@ $djs2 = file_get_contents( __DIR__ . '/../assets/js/discography.js' );
 ok( strpos( $djs2, 'sn-disco-track__play' ) !== false && strpos( $djs2, 'new Audio' ) !== false, 'discography.js wires a native Audio() for previews (no embed/cookie)' );
 ok( strpos( $djs2, "addEventListener( 'error'" ) !== false, 'discography.js retires a dead preview on the audio error event' );
 
-// 14.8.0: /music no longer ends on the last cover: the owner-approved line
-// hands a catalog reader to /resume and /contact, after the grid, inside the root.
-preg_match( '#<p class="sn-page-next">(.*?)</p></div>$#s', $ten, $nx );
-ok( ! empty( $nx ) && 'Beyond the catalog: the record · get in touch' === html_entity_decode( trim( preg_replace( '/\s+/', ' ', strip_tags( $nx[1] ) ) ), ENT_QUOTES, 'UTF-8' ), 'music ends with the approved line, verbatim, as the last thing inside .sn-discography' );
-ok( ! empty( $nx ) && false !== strpos( $nx[1], 'href="https://example.test/resume" data-sn-goal="next_record"' ) && false !== strpos( $nx[1], 'href="https://example.test/contact" data-sn-goal="next_contact"' ), 'the record links /resume, get in touch links /contact, each a beacon goal' );
+// 14.8.1: the closing line left the shortcode. In 14.8.0 it sat between the
+// discography and the Verified Credits section, mid-page; /music is a CMS page,
+// so its ending now lives in the page content's last band (owner, 2026-10-02).
+ok( false === strpos( $ten, 'sn-page-next' ), 'the discography no longer prints the closing line' );
+// The ending lives in the TEMPLATES, after the post content: the content is
+// signed into the provenance ledger, a navigation line is not authored text.
+$closing = static function ( $file ) {
+	$tpl = (string) file_get_contents( __DIR__ . '/../templates/' . $file );
+	return preg_match( '#wp:post-content.*?<p class="sn-page-next">(.*?)</p>.*?</main>#s', $tpl, $m ) ? $m[1] : '';
+};
+$plain = static fn( $h ) => html_entity_decode( trim( preg_replace( '/\s+/', ' ', strip_tags( $h ) ) ), ENT_QUOTES, 'UTF-8' );
+$mu    = $closing( 'page-music.html' );
+ok( 'Beyond the catalog: the record · get in touch' === $plain( $mu ) && false !== strpos( $mu, '<a href="/resume" data-sn-goal="next_record">' ) && false !== strpos( $mu, '<a href="/contact" data-sn-goal="next_contact">' ), 'the music template ends with the approved line and its goals, after the content' );
+$pv = $closing( 'page-provenance.html' );
+ok( 'Beyond the research: the record · the notes' === $plain( $pv ) && false !== strpos( $pv, '<a href="/resume" data-sn-goal="next_record">' ) && false !== strpos( $pv, '<a href="/notes" data-sn-goal="next_notes">' ), 'the provenance template ends with the approved line and its goals, after the content' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
