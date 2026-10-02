@@ -12,7 +12,7 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
-- **/music's closing line moves to the end of the page.** 14.8.0 printed it from the discography block, so it sat between the catalog and the Verified Credits section, mid-page. /music is a CMS page; its ending now lives in the page content's last band (same approved words, same beacon goals), and the discography no longer prints it. The `.sn-page-next` style stays. Pinned in `tests/discography-render.php`.
+- **/music and /provenance end with a next step, in their templates.** 14.8.0 printed /music's line from the discography block, so it sat between the catalog and the Verified Credits section, mid-page. Both lines now sit in the page templates after the post content, not in the content: the content is signed into the provenance ledger, and a navigation line is not authored text, so it must not mint a new signed version. /music: "Beyond the catalog: the record · get in touch" in a 1320px band matching the content's bands (one documented exception in `tests/layout-width-system.php`). /provenance (new, owner-approved): "Beyond the research: the record · the notes" (/resume, /notes; goals `next_record`, `next_notes`) at the page's reading width. Pinned in `tests/discography-render.php`.
 
 ## [14.8.0] - 2026-10-02 — every page hands you to the next
 
