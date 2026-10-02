@@ -12,6 +12,8 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+- **The page-ending lines are removed** from /music and /provenance (and /resume, plugin 20.6.0), with their `.sn-page-next` style and the 1320px template exception. The header stays on screen while scrolling, so the lines repeated links the reader could already see (owner, 2026-10-02). The header order from 14.8.0 stays.
+
 - **CI: the scheduled-workflow liveness check reads GitHub's run list three times and keeps the newest stamp**, as the plugin repo has since #1808. On 2026-10-02 it failed a PR saying the hourly smoke test was 690 hours stale while it had run 40 minutes earlier; a re-run passed. One stale API answer can no longer red the check; a truly stopped cron still does.
 
 ## [14.8.1] - 2026-10-02 — the page endings live in the templates

@@ -1,5 +1,7 @@
 # A second page: design (2026-10-02)
 
+**Status: partly superseded the same day.** The header order (1) stands. The three page-ending lines (2 to 4, and /provenance's, added later) were removed in theme 14.8.2 and plugin 20.6.0: the header stays on screen while scrolling, so the lines repeated links already visible. The question of how to get a second page is open again.
+
 ## The problem
 
 Over the last 30 days (Sep 3 to Oct 2, human traffic) the site averaged 1.03 pages per
