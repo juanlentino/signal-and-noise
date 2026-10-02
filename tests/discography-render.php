@@ -40,6 +40,7 @@ if ( ! function_exists( 'apply_filters' ) ) {
 if ( ! function_exists( 'add_shortcode' ) ) {
 	function add_shortcode( $tag, $cb ) { $GLOBALS['shortcode_tags'][ $tag ] = $cb; return true; }
 }
+if ( ! function_exists( 'home_url' ) ) { function home_url( $p = '' ) { return 'https://example.test' . $p; } }
 if ( ! function_exists( 'esc_url' ) ) {
 	function esc_url( $u ) { $u = (string) $u; $u = str_replace( array( '"', "'", '<', '>', ' ' ), '', $u ); return str_replace( '&', '&amp;', $u ); }
 }
@@ -239,6 +240,12 @@ ok( strpos( $ten, '<strong data-disco-count>10</strong>' ) !== false && ! empty(
 $djs2 = file_get_contents( __DIR__ . '/../assets/js/discography.js' );
 ok( strpos( $djs2, 'sn-disco-track__play' ) !== false && strpos( $djs2, 'new Audio' ) !== false, 'discography.js wires a native Audio() for previews (no embed/cookie)' );
 ok( strpos( $djs2, "addEventListener( 'error'" ) !== false, 'discography.js retires a dead preview on the audio error event' );
+
+// 14.8.0: /music no longer ends on the last cover: the owner-approved line
+// hands a catalog reader to /resume and /contact, after the grid, inside the root.
+preg_match( '#<p class="sn-page-next">(.*?)</p></div>$#s', $ten, $nx );
+ok( ! empty( $nx ) && 'Beyond the catalog: the record · get in touch' === html_entity_decode( trim( preg_replace( '/\s+/', ' ', strip_tags( $nx[1] ) ) ), ENT_QUOTES, 'UTF-8' ), 'music ends with the approved line, verbatim, as the last thing inside .sn-discography' );
+ok( ! empty( $nx ) && false !== strpos( $nx[1], 'href="https://example.test/resume" data-sn-goal="next_record"' ) && false !== strpos( $nx[1], 'href="https://example.test/contact" data-sn-goal="next_contact"' ), 'the record links /resume, get in touch links /contact, each a beacon goal' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

@@ -183,6 +183,16 @@ function sn_discography_shortcode() {
 	// Hidden empty state — revealed by the filter JS when nothing matches.
 	$out .= '<p class="sn-disco-empty" hidden>' . esc_html__( 'No releases with that credit.', 'signal-and-noise' ) . '</p>';
 
+	// 14.8.0: the page ended on the last cover. A reader who came for the
+	// catalog gets the proof behind it and the way to reach out (owner-approved
+	// copy, 2026-10-02). Shared .sn-page-next style; /resume ends the same way.
+	// Each link is a beacon goal (next_<target>; the event carries the page), so
+	// analytics_events counts which handoff readers take.
+	$out .= '<p class="sn-page-next">' . esc_html__( 'Beyond the catalog:', 'signal-and-noise' )
+		. ' <a href="' . esc_url( home_url( '/resume' ) ) . '" data-sn-goal="next_record">' . esc_html__( 'the record', 'signal-and-noise' ) . '</a>'
+		. ' <span class="sn-catalog-meta-bullet" aria-hidden="true">&middot;</span> '
+		. '<a href="' . esc_url( home_url( '/contact' ) ) . '" data-sn-goal="next_contact">' . esc_html__( 'get in touch', 'signal-and-noise' ) . '</a></p>';
+
 	$out .= '</div>'; // .sn-discography
 
 	return $out;
