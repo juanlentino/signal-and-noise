@@ -136,6 +136,11 @@ This is what actually turns on HTML caching at the edge.
    and not (starts_with(http.request.uri.path, "/?"))
    ```
 
+   Note: the `/feed/` line is stale too. Measured 2026-10-03, `/feed/` and
+   `/notes/feed/` answer `cf-cache-status: REVALIDATED`, so the live rule
+   lets feeds through. A rule that still carries the line must drop it, or
+   the listed feeds (below) never reach the edge cache.
+
    Note: the `/wp-json/` line does not describe what the live edge does.
    Measured 2026-09-27, public `/wp-json/` GETs are edge-cached (HIT) and
    origin cache headers decide; see "What still hits origin" below.
@@ -223,6 +228,12 @@ feed as rss2, rss, rdf, atom and json under `/feed/` and `/notes/feed/`, plus
 `/?feed=json`. The plugin purges exactly that list on a save. Any other feed
 (comments, a tag, another query form) keeps Breeze's `no-cache`, because it
 could not be purged by name.
+
+**Two routes exit before the hook.** `/notes` (and its tag views) renders at
+`template_redirect` priority 0 and exits, so its handler calls the policy
+itself. `/index` and `/notes/tags` are postless: WordPress has already sent
+its 404 no-cache headers by then, the policy sees a `Cache-Control` it did not
+write, and both stay uncached at the edge as before.
 
 What the headers depend on, none of it in this repo:
 

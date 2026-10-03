@@ -99,6 +99,9 @@ ok( ! sn_edge_cache_is_listed_feed( '/comments/feed/', $paths ) && ! sn_edge_cac
 
 echo "Group: wiring\n";
 ok( array( array( 'template_redirect', 'sn_edge_cache_template_redirect', 100 ) ) === $GLOBALS['__actions'], 'one hook: template_redirect at 100, after the redirect handlers and the virtual routes' );
+$notes_src = (string) file_get_contents( __DIR__ . '/../inc/page-notes-template.php' );
+$notes_at  = strpos( $notes_src, 'sn_edge_cache_template_redirect();' );
+ok( false !== $notes_at && $notes_at < strrpos( $notes_src, 'include $render;' ), '/notes renders at priority 0 and exits, so its handler runs the policy before the include' );
 foreach ( array( 'llms-txt.php' => 'sn_llms_txt_send', 'agents-manifest.php' => 'sn_agents_send', 'opensearch.php' => 'sn_opensearch_send' ) as $file => $fn ) {
 	$src  = (string) file_get_contents( __DIR__ . '/../inc/' . $file );
 	$body = (string) substr( $src, (int) strpos( $src, 'function ' . $fn . '(' ) );
