@@ -182,37 +182,59 @@ If you keep seeing `MISS` or `DYNAMIC`, check:
   TTL bypasses this.
 - Is the route in the rule's URL exclusions (`/wp-admin/` etc.)?
 
-## What the origin sends (Cache-Control)
+## What the origin sends (two headers)
 
-`inc/cache-headers.php` sends one header on anonymous GET/HEAD responses, and
-nothing on anything else (a session, post-password or commenter cookie, a
-POST, a 404, search results, a preview, a password form, or a response that
-already set its own `Cache-Control`):
+`inc/cache-headers.php` (lifetimes, feed list), `inc/cache-headers-rules.php`
+(who gets them) and `inc/cache-headers-hooks.php` (sending) put two headers on
+anonymous GET/HEAD responses, and nothing on anything else (a session,
+post-password or commenter cookie, a POST, a 404, search results, a preview, a
+password form, or a response that already set its own `Cache-Control`):
 
-| Response | Header |
-|---|---|
-| Public HTML pages | `public, max-age=0, s-maxage=86400, stale-while-revalidate=86400, stale-if-error=604800` |
-| `/llms.txt`, `/llms-full.txt`, `/.well-known/agents.json`, `/opensearch.xml`, RSS/Atom/JSON feeds | `public, max-age=0, s-maxage=300, stale-while-revalidate=3600, stale-if-error=86400` |
+| Response | `Cache-Control` | `Cloudflare-CDN-Cache-Control` |
+|---|---|---|
+| Public HTML pages | `public, max-age=0` | `max-age=86400, stale-while-revalidate=86400, stale-if-error=604800` |
+| `/llms.txt`, `/llms-full.txt`, `/.well-known/agents.json`, `/opensearch.xml`, the listed feeds | `public, max-age=0` | `max-age=300, stale-while-revalidate=3600, stale-if-error=86400` |
 
-`max-age=0` makes a browser revalidate every time; `s-maxage` is the shared
-caches' lifetime (one day for HTML, which is what the Cache Rule's fallback
-already did); the two `stale-*` directives let the edge answer from the copy it
-holds while it refreshes in the background, and when the origin errors. The
-seconds are constants in that file, filterable through `sn_edge_cache_lifetimes`.
+`Cache-Control` is what browsers and Varnish read: revalidate every time,
+store nothing. It never carries `s-maxage`: Varnish would start holding HTML
+that no post save purges, and Cloudflare documents `s-maxage` as switching
+stale serving off (it implies `proxy-revalidate`).
+`Cloudflare-CDN-Cache-Control` is read by Cloudflare alone, in place of
+`Cache-Control`, and is not passed downstream. The edge keeps the copy (one
+day for HTML, which is what the Cache Rule's fallback already did), refreshes
+it in the background, and serves it when the origin answers 5xx. The seconds
+are constants, filterable through `sn_edge_cache_lifetimes`.
 
-Three things the header depends on, none of them in this repo:
+Because Cloudflare reads the edge header INSTEAD of `Cache-Control`, a
+`nocache_headers()` call later in a template would be ignored at the edge. A
+`header_register_callback` recheck removes the edge header whenever the
+`Cache-Control` is no longer the one this module wrote, or the status is no
+longer 200.
 
-- **The Cache Rule's Edge TTL must use the origin's header** ("Use
-  cache-control header if present", as in Step 4). An "Ignore cache-control
-  header and use this TTL" rule throws the header away.
+**The listed feeds** are a closed set (`sn_edge_cache_feed_paths()`): the posts
+feed as rss2, rss, rdf, atom and json under `/feed/` and `/notes/feed/`, plus
+`/?feed=json`. The plugin purges exactly that list on a save. Any other feed
+(comments, a tag, another query form) keeps Breeze's `no-cache`, because it
+could not be purged by name.
+
+What the headers depend on, none of it in this repo:
+
+- **The Cache Rule's Edge TTL must not override the origin.** Cloudflare's
+  docs: the Edge Cache TTL rule "overrides directives in
+  `Cloudflare-CDN-Cache-Control/CDN-Cache-Control` which manage how long an
+  asset is cached on the edge". The rule should use the origin's header when
+  present (Step 4). Whether that mode counts `Cloudflare-CDN-Cache-Control` as
+  "present" is not stated in the docs: check `cf-cache-status` and `age` after
+  deploy.
 - **Always Online must be off.** With it on, Cloudflare ignores
   `stale-while-revalidate` and `stale-if-error`. The plugin's edge posture
   read reports the setting.
-- **A Breeze page-cache hit does not carry the header.** Breeze replays only
-  its own header allow-list on a hit, so that response reaches the edge with no
-  `Cache-Control` and the Cache Rule's one-day fallback applies, with no stale
-  serving. The copies the edge stores after a purge are fresh renders, which
-  carry it.
+- **A Breeze page-cache hit carries neither header.** Breeze answers a hit
+  before WordPress loads, and its `breeze_custom_headers_allow` list cannot
+  replay them (it snapshots header values once, from a HEAD of the home page
+  through the edge, where Cloudflare has already dropped the edge header).
+  Stale serving applies to origin misses only; a purge empties Breeze too, so
+  the copy the edge stores after one is a fresh render.
 
 ## How auto-purge works
 
@@ -246,10 +268,10 @@ hit origin PHP:
   (`/wp-json/signal-noise/v1/feed-open`) sends `Cache-Control: no-store` and
   reads `cf-cache-status: BYPASS`. A public REST response without such
   headers should be assumed cacheable at the edge.
-- `/feed/` and `/notes/feed/` are NOT on this list either: the live edge
-  stores them (measured 2026-10-03, `cf-cache-status: REVALIDATED` under
-  Breeze's `no-cache`), and they now carry the five-minute shared lifetime
-  above. A post save purges them.
+- The listed posts feeds are NOT on this list either: the live edge stores
+  feeds (measured 2026-10-03, `cf-cache-status: REVALIDATED` under Breeze's
+  `no-cache`), and the listed ones now get five minutes at the edge. A post
+  save purges them. Comment, tag and other feeds keep `no-cache`.
 - Any request with a `wordpress_logged_in_*`, `wp-postpass_*`, or
   `comment_author_*` cookie (you, while logged in)
 
