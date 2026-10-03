@@ -127,7 +127,10 @@ class Breeze_MinificationCache { public static function clear_minification( $b =
 class Breeze_PurgeCache { public static function breeze_cache_flush( $f = true, $o = true, $all = false ) { $GLOBALS['__breeze_files']++; $GLOBALS['__breeze_args'] = array( $f, $o, $all ); } }
 function wp_using_ext_object_cache() { return true; }
 function wp_cache_supports( $f ) { return 'flush_group' === $f; }
-function wp_cache_flush_group( $g ) { $GLOBALS['__flush_groups'][] = $g; return true; }
+function wp_cache_flush_group( $g ) { $GLOBALS['__flush_groups'][] = $g; unset( $GLOBALS['__tr']['doing_cron'] ); return true; }
+$GLOBALS['__tr'] = array();
+function get_transient( $k ) { return $GLOBALS['__tr'][ $k ] ?? false; }
+function set_transient( $k, $v ) { $GLOBALS['__tr'][ $k ] = $v; return true; }
 
 require $theme_root . '/inc/template-maintenance.php';
 
@@ -271,6 +274,17 @@ $c = purge_counts();
 ok( 1 === $c['cf'], 'auto purge uses the fast non-blocking CF fn' );
 ok( 0 === $c['cf_verified'], 'auto purge does NOT block on CF' );
 ok( 1 === count( array_keys( $GLOBALS['__fired_actions'], 'sn_before_cache_flush', true ) ), 'the before seam fires on auto purges too' );
+
+// ── 9. Core's cron lock survives the flushes (15.0.1, Codex on #470) ──
+echo "\nScenario 9: an update inside WP-Cron keeps the doing_cron lock\n";
+reset_counters();
+$GLOBALS['__tr'] = array( 'doing_cron' => '1790990000.1234' );
+fire_upgrader( array( 'type' => 'plugin', 'action' => 'update', 'plugin' => 'akismet/akismet.php' ) );
+ok( array( 'transient' ) === $GLOBALS['__flush_groups'] && '1790990000.1234' === ( $GLOBALS['__tr']['doing_cron'] ?? null ), 'the transient group is flushed and the cron lock is put back' );
+reset_counters();
+$GLOBALS['__tr'] = array();
+fire_upgrader( array( 'type' => 'plugin', 'action' => 'update', 'plugin' => 'akismet/akismet.php' ) );
+ok( ! isset( $GLOBALS['__tr']['doing_cron'] ), 'control: no lock held, none invented' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

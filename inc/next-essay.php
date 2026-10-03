@@ -17,9 +17,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * The pillar after the one at $slug, or null.
+ * The pillar after the one at $uri, or null. 15.0.1 (Codex on #468): the
+ * full page path, so two pages sharing a last segment cannot be confused.
  *
- * @param string $slug The current page's post_name.
+ * @param string $slug The current page's path (get_page_uri), e.g. provenance/as-substrate.
  * @return array|null Descriptor (slug, title, ...).
  */
 function sn_next_essay_target( $slug ) {
@@ -28,7 +29,7 @@ function sn_next_essay_target( $slug ) {
 	}
 	$pillars = array_values( sn_theme_pillar_sort( sn_theme_pillar_descriptors() ) );
 	foreach ( $pillars as $i => $d ) {
-		if ( $d['last_path'] === $slug ) {
+		if ( $d['slug'] === $slug ) {
 			return $pillars[ $i + 1 ] ?? null;
 		}
 	}
@@ -45,7 +46,7 @@ function sn_next_essay_html() {
 	if ( ! $page || 'page' !== ( $page->post_type ?? '' ) ) {
 		return '';
 	}
-	$next = sn_next_essay_target( (string) $page->post_name );
+	$next = sn_next_essay_target( (string) get_page_uri( $page ) );
 	if ( null === $next || '' === $next['title'] ) {
 		return '';
 	}

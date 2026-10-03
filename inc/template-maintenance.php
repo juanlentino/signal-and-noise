@@ -85,8 +85,20 @@ function sn_purge_all_caches( $args = array() ) {
 	// serving N (the differential the dashboard dot compares).
 	do_action( 'sn_before_cache_flush', $args );
 
+	// 15.0.1 (Codex on #470): both flushes below delete Core's doing_cron
+	// transient, the lock that keeps two cron runs from overlapping. An
+	// automatic update or the rollover runs INSIDE cron, so put it back.
+	$cron_lock = function_exists( 'get_transient' ) ? get_transient( 'doing_cron' ) : false;
+
+	$restore_cron_lock = static function () use ( $cron_lock ) {
+		if ( false !== $cron_lock && function_exists( 'set_transient' ) ) {
+			set_transient( 'doing_cron', $cron_lock ); // Core sets it with no expiry too.
+		}
+	};
+
 	if ( $args['object_cache'] ) {
 		wp_cache_flush();
+		$restore_cron_lock(); // Right away: a request in between would see no lock.
 	}
 
 	if ( $args['package_caches'] ) {
@@ -105,6 +117,7 @@ function sn_purge_all_caches( $args = array() ) {
 		if ( function_exists( 'wp_using_ext_object_cache' ) && wp_using_ext_object_cache()
 			&& function_exists( 'wp_cache_supports' ) && wp_cache_supports( 'flush_group' ) ) {
 			wp_cache_flush_group( 'transient' );
+			$restore_cron_lock();
 		}
 		global $wpdb;
 		if ( $wpdb ) {

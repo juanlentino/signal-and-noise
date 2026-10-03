@@ -45,10 +45,29 @@ function sn_cited_by_link_pattern( $post_name ) {
  * @return int[]
  */
 function sn_cited_by_query( $post_id, $limit = 5 ) {
-	global $wpdb;
 	$post_id = (int) $post_id;
 	$limit   = max( 1, (int) $limit );
-	$post    = get_post( $post_id );
+	// 15.0.1 (Codex on #468): related notes (14.9.0) asks the same question
+	// on the same render, and this is a leading-wildcard LIKE scan. Once per
+	// request per post and limit. A global so the tests can clear it.
+	$key = $post_id . '|' . $limit;
+	if ( isset( $GLOBALS['sn_cited_by_memo'][ $key ] ) ) {
+		return $GLOBALS['sn_cited_by_memo'][ $key ];
+	}
+	$GLOBALS['sn_cited_by_memo'][ $key ] = sn_cited_by_query_uncached( $post_id, $limit );
+	return $GLOBALS['sn_cited_by_memo'][ $key ];
+}
+
+/**
+ * The uncached scan behind sn_cited_by_query().
+ *
+ * @param int $post_id The cited note.
+ * @param int $limit   Max citers.
+ * @return int[]
+ */
+function sn_cited_by_query_uncached( $post_id, $limit ) {
+	global $wpdb;
+	$post = get_post( $post_id );
 	if ( ! $post || '' === (string) $post->post_name ) {
 		return array();
 	}
