@@ -50,6 +50,34 @@ function sn_edge_cache_emit( $kind ) {
 	header( 'Cloudflare-CDN-Cache-Control: ' . $cdn );
 	header( 'Cache-Tag: ' . SN_EDGE_CACHE_TAG );
 	header_register_callback( 'sn_edge_cache_recheck' );
+	if ( 'html' === $kind ) {
+		ob_start( 'sn_edge_cache_floor' ); // the whole page, so its size is known before a header leaves.
+	}
+}
+
+/**
+ * Output callback over a cacheable HTML page. It changes nothing in the
+ * page; a body under the floor leaves as no-store instead of cacheable.
+ *
+ * @param string $html The finished page.
+ * @return string The same page.
+ */
+function sn_edge_cache_floor( $html ) {
+	if ( ! sn_edge_cache_body_ok( strlen( (string) $html ) ) && ! headers_sent() ) {
+		sn_edge_cache_refuse();
+	}
+	return $html;
+}
+
+/**
+ * Say no-store, and take back anything that said cacheable.
+ *
+ * @return void
+ */
+function sn_edge_cache_refuse() {
+	header( 'Cache-Control: no-store' );
+	header_remove( 'Cloudflare-CDN-Cache-Control' );
+	header_remove( 'Cache-Tag' );
 }
 
 /**
@@ -101,9 +129,13 @@ function sn_edge_cache_template_redirect() {
 			'not_found' => is_404(),
 			'password'  => is_singular() && post_password_required(),
 			'non_html'  => is_robots() || is_favicon() || is_trackback(),
+			// The companion plugin defines SNT_VERSION when it loads.
+			'companion_missing' => ! defined( 'SNT_VERSION' ) && (bool) apply_filters( 'sn_edge_cache_requires_companion', true ),
 		)
 	);
-	if ( '' !== $kind ) {
+	if ( 'refuse' === $kind ) {
+		sn_edge_cache_refuse();
+	} elseif ( '' !== $kind ) {
 		sn_edge_cache_emit( $kind );
 	}
 }

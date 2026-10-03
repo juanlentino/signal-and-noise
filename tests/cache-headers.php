@@ -98,6 +98,14 @@ ok( 13 === count( $paths ) && array() === array_diff( array( '/feed/', '/feed/rs
 ok( sn_edge_cache_is_listed_feed( '/feed/', $paths ) && sn_edge_cache_is_listed_feed( '/notes/feed/atom', $paths ) && sn_edge_cache_is_listed_feed( '/?feed=json', $paths ), 'listed, with or without the trailing slash' );
 ok( ! sn_edge_cache_is_listed_feed( '/comments/feed/', $paths ) && ! sn_edge_cache_is_listed_feed( '/tag/c2pa/feed/', $paths ) && ! sn_edge_cache_is_listed_feed( '/?feed=rdf', $paths ) && ! sn_edge_cache_is_listed_feed( '/feed/?utm_source=x', $paths ), 'comment and tag feeds, other query forms and a tracked URL are not' );
 
+echo "Group: never store a broken render (15.2.1)\n";
+$ok_ctx = array( 'anonymous' => true, 'status' => 200, 'existing' => '' );
+ok( 'html' === sn_edge_cache_kind_for( $ok_ctx ) && 'refuse' === sn_edge_cache_kind_for( $ok_ctx + array( 'companion_missing' => true ) ), 'a page rendered while the companion plugin is not loaded gets an explicit no-store, not silence' );
+ok( '' === sn_edge_cache_kind_for( array( 'existing' => 'no-cache', 'companion_missing' => true ) + $ok_ctx ) && '' === sn_edge_cache_kind_for( array( 'anonymous' => false, 'companion_missing' => true ) + $ok_ctx ), 'a response that already said something, or a logged-in one, is left as it is' );
+ok( 4096 === SN_EDGE_BODY_FLOOR_BYTES && ! sn_edge_cache_body_ok( 0 ) && ! sn_edge_cache_body_ok( 359 ) && ! sn_edge_cache_body_ok( 4095 ) && sn_edge_cache_body_ok( 4096 ), 'an HTML body under 4 KB is not a page: the 359-byte /provenance/ of 2026-10-03 fails, a real page passes' );
+ok( false !== strpos( $hooks_src, "ob_start( 'sn_edge_cache_floor' )" ) && false !== strpos( $hooks_src, "if ( 'html' === \$kind ) {" ) && false !== strpos( $hooks_src, "header( 'Cache-Control: no-store' );" ) && 2 === substr_count( $hooks_src, "header_remove( 'Cache-Tag' );" ), 'only HTML is measured (a machine file is small by nature); a refusal says no-store and takes the edge lifetime and the tag back' );
+ok( false !== strpos( $hooks_src, "'companion_missing' => ! defined( 'SNT_VERSION' )" ) && false !== strpos( $hooks_src, "if ( 'refuse' === \$kind ) {" ), 'the hook reads the plugin\'s own constant and refuses' );
+
 echo "Group: wiring\n";
 ok( array( array( 'template_redirect', 'sn_edge_cache_template_redirect', 100 ) ) === $GLOBALS['__actions'], 'one hook: template_redirect at 100, after the redirect handlers and the virtual routes' );
 $notes_src = (string) file_get_contents( __DIR__ . '/../inc/page-notes-template.php' );

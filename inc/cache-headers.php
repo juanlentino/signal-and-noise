@@ -43,6 +43,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 const SN_EDGE_CACHE_TAG = 'sn-render';
 
+/**
+ * 15.2.1: an HTML body under this is not a page and is never stored. The guard
+ * theme 13.3.1 had lived in an output buffer that #400 removed; the empty
+ * /provenance/ of 2026-10-03 was cached for 21 minutes without it.
+ */
+const SN_EDGE_BODY_FLOOR_BYTES = 4096;
+
 /** The Cache-Control every cached kind sends: browsers revalidate, Varnish stores nothing. */
 const SN_EDGE_BROWSER_CACHE_CONTROL = 'public, max-age=0';
 

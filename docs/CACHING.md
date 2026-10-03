@@ -223,6 +223,12 @@ Because Cloudflare reads the edge header INSTEAD of `Cache-Control`, a
 `Cache-Control` is no longer the one this module wrote, or the status is no
 longer 200.
 
+**Two refusals.** An HTML body under 4 KB (`SN_EDGE_BODY_FLOOR_BYTES`) and a page
+rendered while the companion plugin is not loaded both leave as
+`Cache-Control: no-store`, with the edge lifetime and the tag taken back. An
+empty 200 has reached the edge three times after a full purge, and a plugin
+update leaves a gap in which pages render without it.
+
 **One cache tag.** Every response that gets the edge lifetime also carries
 `Cache-Tag: sn-render` (15.2.0). The plugin purges that tag on a save, one
 call, and Cloudflare strips the header before the visitor sees it. This only
