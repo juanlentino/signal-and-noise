@@ -37,7 +37,7 @@
 
     // 0) Bot signals (observe-only, theme 14.6): four booleans and the raw UTC
     // offset ride on EVERY event as `sg`; the worker packs them into one number.
-    // No identifier, coordinate or timing leaves the browser. `ni` turns on when
+    // The signals carry no identifier, coordinate or timing. `ni` turns on when
     // a scroll milestone (from a real scroll event) or a time flush fires before
     // any wheel/touch/key/pointer input on this page. Never throws.
     var hadInput = false, noInput = false, sig = staticSignals();
@@ -46,8 +46,16 @@
     });
     function engagedNow() { if (!hadInput) noInput = true; }
 
+    // Pageview ID (theme 15.3): one random integer per page view, sent on every
+    // event so the collector can tie a view's scroll, time and vitals rows to
+    // its pageview row. Held in memory only, redrawn on each pageview (a
+    // bfcache restore is a new view), never stored and never reused, so it
+    // cannot link two page views or two visits.
+    var pid = 0;
+    function newPid() { pid = Math.floor(Math.random() * 9007199254740991) + 1; }
+
     function send(payload) {
-      var json = JSON.stringify(Object.assign({ k: cfg.k, sg: { wd: sig.wd, ni: noInput, um: sig.um, hl: sig.hl, tz: sig.tz } }, payload));
+      var json = JSON.stringify(Object.assign({ k: cfg.k, pid: pid, sg: { wd: sig.wd, ni: noInput, um: sig.um, hl: sig.hl, tz: sig.tz } }, payload));
       if (navigator.sendBeacon) {
         var ok = navigator.sendBeacon(cfg.endpoint, new Blob([json], { type: 'application/json' }));
         if (ok) return;
@@ -77,6 +85,7 @@
     }
 
     function pageview() {
+      newPid();
       var pv = { e: 'pv', u: location.pathname, r: document.referrer || '' };
       if (!utmSent) { // first pageview only; a bfcache restore never re-attributes
         utmSent = true;
