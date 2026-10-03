@@ -85,6 +85,9 @@ test('the payload shape is pinned in the shared fixture', () => {
   p.scrollTo(2000);
   const sample = p.sent.find((e) => e.e === 'sc');
   sample.sg.tz = 240; // the host clock's zone is not the fixture's
+  assert.ok(Number.isSafeInteger(sample.pid) && sample.pid > 0, 'pid is a positive safe integer');
+  assert.equal(sample.pid, p.sent.find((e) => e.e === 'pv').pid, 'a scroll event carries its pageview\'s pid');
+  sample.pid = 1; // random per page view; the fixture pins the field, not the draw
   if (process.env.SN_WRITE_FIXTURE === '1') fs.writeFileSync(FIXTURE, JSON.stringify(sample, null, 2) + '\n');
   assert.deepEqual(JSON.parse(fs.readFileSync(FIXTURE, 'utf8')), sample);
 });

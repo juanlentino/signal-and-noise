@@ -184,6 +184,11 @@ ok( strpos( $js, 'utmSent' ) !== false, 'guards UTM capture with an in-memory on
 ok( strpos( $js, 'if (!utmSent)' ) !== false || strpos( $js, 'if(!utmSent)' ) !== false, 'UTM is captured on the FIRST pageview only' );
 // Storageless invariant: the once flag is a plain variable, never web storage.
 ok( strpos( $js, 'sessionStorage' ) === false && strpos( $js, 'localStorage' ) === false, 'UTM once flag uses no web storage (storageless)' );
+// 15.3.0: the pageview ID rides every event, is redrawn per pageview, and is never stored.
+ok( strpos( $js, '{ k: cfg.k, pid: pid, sg:' ) !== false, 'pid rides every event through send()' );
+ok( (bool) preg_match( '/function pageview\(\) \{\s+newPid\(\);/', $js ), 'each pageview (bfcache restore included) draws a new pid' );
+ok( 1 === substr_count( $js, 'newPid();' ), 'the pid is drawn in pageview() only' );
+ok( strpos( $js, 'document.cookie =' ) === false && strpos( $js, 'indexedDB' ) === false, 'the beacon writes no cookie and no database (the pid stays in memory)' );
 // No raw-query leak: the pv path stays location.pathname; the query is consumed only
 // through URLSearchParams to extract the named params, never sent wholesale.
 ok( strpos( $js, 'u: location.pathname' ) !== false, 'pv path is still location.pathname (raw query never sent as u)' );
