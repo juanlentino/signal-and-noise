@@ -37,7 +37,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  *      don't repopulate from stale state.
  *   2. Transients: the transient group in Redis when a persistent object
  *      cache is in use (14.10.0), plus the old targeted sn_* SQL DELETE.
- *   3. Origin HTML caches (Breeze + Varnish) via plugin action hooks.
+ *   3. Origin HTML caches: Breeze's page files and minified assets called
+ *      directly (14.10.0; its clear-all action flushed Redis), then the
+ *      breeze_clear_varnish action.
  *      Plugin no-op if not installed; safe to call unconditionally.
  *   4. CDN cache (Cloudflare) via our own purge module — gated on
  *      having a configured token.
