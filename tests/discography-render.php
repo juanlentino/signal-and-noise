@@ -245,17 +245,11 @@ ok( strpos( $djs2, "addEventListener( 'error'" ) !== false, 'discography.js reti
 // discography and the Verified Credits section, mid-page; /music is a CMS page,
 // so its ending now lives in the page content's last band (owner, 2026-10-02).
 ok( false === strpos( $ten, 'sn-page-next' ), 'the discography no longer prints the closing line' );
-// The ending lives in the TEMPLATES, after the post content: the content is
-// signed into the provenance ledger, a navigation line is not authored text.
-$closing = static function ( $file ) {
-	$tpl = (string) file_get_contents( __DIR__ . '/../templates/' . $file );
-	return preg_match( '#wp:post-content.*?<p class="sn-page-next">(.*?)</p>.*?</main>#s', $tpl, $m ) ? $m[1] : '';
-};
-$plain = static fn( $h ) => html_entity_decode( trim( preg_replace( '/\s+/', ' ', strip_tags( $h ) ) ), ENT_QUOTES, 'UTF-8' );
-$mu    = $closing( 'page-music.html' );
-ok( 'Beyond the catalog: the record · get in touch' === $plain( $mu ) && false !== strpos( $mu, '<a href="/resume" data-sn-goal="next_record">' ) && false !== strpos( $mu, '<a href="/contact" data-sn-goal="next_contact">' ), 'the music template ends with the approved line and its goals, after the content' );
-$pv = $closing( 'page-provenance.html' );
-ok( 'Beyond the research: the record · the notes' === $plain( $pv ) && false !== strpos( $pv, '<a href="/resume" data-sn-goal="next_record">' ) && false !== strpos( $pv, '<a href="/notes" data-sn-goal="next_notes">' ), 'the provenance template ends with the approved line and its goals, after the content' );
+// 14.9.0 (owner, 2026-10-02): the page-ending lines are gone everywhere. The
+// header stays on screen, so they repeated the nav. The templates carry none.
+foreach ( array( 'page-music.html', 'page-provenance.html' ) as $tf ) {
+	ok( false === strpos( (string) file_get_contents( __DIR__ . '/../templates/' . $tf ), 'sn-page-next' ), "$tf carries no page-ending line" );
+}
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

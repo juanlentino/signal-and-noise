@@ -473,6 +473,39 @@
 	}
 }
 
+/* 14.9.0: the next pillar, after an essay's signed content. */
+.sn-next-essay {
+	margin-top: var(--wp--preset--spacing--60);
+	padding-top: var(--wp--preset--spacing--30);
+	border-top: 1px solid var(--wp--preset--color--concrete);
+	font-family: var(--wp--preset--font-family--heading);
+}
+
+.sn-next-essay__link {
+	display: inline-flex;
+	flex-direction: column;
+	gap: var(--wp--preset--spacing--10);
+	text-decoration: none;
+}
+
+.sn-next-essay__dir {
+	font-size: var(--wp--preset--font-size--eyebrow-lg);
+	letter-spacing: var(--wp--custom--letter-spacing--wide);
+	text-transform: uppercase;
+}
+
+.sn-next-essay__title {
+	font-size: var(--wp--preset--font-size--medium);
+	border-bottom: 1px solid transparent;
+	transition: border-color 0.2s ease;
+}
+
+@media (hover: hover) {
+	.sn-next-essay__link:hover .sn-next-essay__title {
+		border-bottom-color: currentColor;
+	}
+}
+
 /* Ensure prose body text inside a Note never falls below the 11px floor. */
 .sn-note-single .wp-block-post-content p,
 .sn-note-single .wp-block-post-content li {
@@ -708,32 +741,6 @@
 .sn-catalog-meta-bullet {
 	color: var(--wp--preset--color--blood);
 	margin: 0 0.5em;
-}
-
-/* 14.8.0: the closing line on a page that used to be a dead end (/music,
-   /resume): the catalog-meta voice, a hairline above, links in blood. */
-.sn-page-next {
-	font-family: var(--wp--preset--font-family--body);
-	font-size: max(0.7rem, 11px);
-	letter-spacing: 0.18em;
-	text-transform: uppercase;
-	color: var(--wp--preset--color--rust);
-	border-top: 1px solid currentColor;
-	padding-top: var(--wp--custom--air--xs);
-	margin-top: var(--wp--custom--air--md);
-}
-.sn-page-next a {
-	color: var(--wp--preset--color--blood);
-	text-decoration-thickness: 1px;
-	text-underline-offset: 0.25em;
-}
-.sn-page-next a:focus-visible {
-	text-decoration-thickness: 2px;
-}
-@media (hover: hover) {
-	.sn-page-next a:hover {
-		text-decoration-thickness: 2px;
-	}
 }
 
 .sn-catalog-section {

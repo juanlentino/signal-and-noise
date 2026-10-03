@@ -177,6 +177,19 @@ if ( ! class_exists( 'WP_Query' ) ) {
 	}
 }
 
+if ( ! defined( 'OBJECT' ) ) { define( 'OBJECT', 'OBJECT' ); }
+// Slug lookup for the 14.9.0 exclusion: a fixture's slug is its link's last segment.
+function get_page_by_path( $slug, $output = OBJECT, $type = 'page' ) {
+	foreach ( $GLOBALS['POSTS'] as $p ) {
+		if ( ( $p->__type ?? 'post' ) === $type && basename( rtrim( (string) $p->__link, '/' ) ) === $slug ) {
+			return $p;
+		}
+	}
+	return null;
+}
+$GLOBALS['__cited'] = array();
+function sn_cited_by_query( $post_id, $limit = 5 ) { return array_slice( $GLOBALS['__cited'], 0, $limit ); }
+
 define( 'SN_RELATED_NOTES_TEST', true );
 require __DIR__ . '/../inc/related-notes.php';
 
@@ -404,6 +417,24 @@ ok( preg_match( '/\.sn-related-notes__list,\s*\.sn-cited-by__list\s*\{[^}]*conta
 ok( strpos( $comp, '@media (min-width: 720px)' ) === false
 	|| preg_match( '/@media \(min-width: 720px\) \{\s*\.sn-related-notes/', $comp ) !== 1,
 	'no viewport breakpoint is left describing these rows' );
+
+echo "\nGroup: a note reachable from the page is not 'more on this' (14.9.0)\n";
+$GLOBALS['POSTS'] = array();
+unset( $GLOBALS['__filters']['sn_related_count'] );
+mk_post( 1, array( 10 ), 5000, 'Current', 'https://x/notes/current/' );
+mk_post( 2, array( 10 ), 4000, 'Linked in text', 'https://x/notes/linked/' );
+mk_post( 3, array( 10 ), 3900, 'Cites this one', 'https://x/notes/citer/' );
+mk_post( 4, array( 10 ), 3800, 'Shares a tag', 'https://x/notes/tagged/' );
+mk_post( 5, array( 99 ), 3700, 'Backfill A', 'https://x/notes/back-a/' );
+mk_post( 6, array( 99 ), 3600, 'Backfill B', 'https://x/notes/back-b/' );
+$GLOBALS['POSTS'][1]->post_content = '<p>As <a href="https://x/notes/linked/">argued before</a>, and see /notes/no-such-note/.</p>';
+$GLOBALS['__cited'] = array( 3 );
+$ids = array_map( fn( $p ) => (int) $p->ID, sn_related_notes_query( 1, 3 ) );
+ok( array( 4, 5, 6 ) === $ids, 'the linked note and the citing note are skipped; the list still fills to 3 (' . implode( ',', $ids ) . ')' );
+ok( array( 2, 3 ) === sn_related_notes_excluded_ids( 1 ), 'excluded: the linked note, then Cited by; an unknown slug resolves to nothing' );
+$GLOBALS['__cited'] = array();
+$GLOBALS['POSTS'][1]->post_content = '';
+ok( array( 2, 3, 4 ) === array_map( fn( $p ) => (int) $p->ID, sn_related_notes_query( 1, 3 ) ), 'control: with nothing linked, the tag matches lead as before' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

@@ -46,24 +46,18 @@ ok( ( $layout['contentSize'] ?? '' ) === $reading, "theme.json contentSize is th
 ok( ( $layout['wideSize'] ?? '' ) === $wide, "theme.json wideSize is the wide track ($wide)" );
 
 // ── Every template contentSize override is on a track ────────────────
-// ONE documented exception (14.8.1, owner 2026-10-02): /music's closing line
-// sits after the CMS content, whose bands are 1320px (the split-hero width the
-// page content uses), so its template band matches them rather than a track.
-// It lives in the template, not the content, so it stays out of the signed page.
-$exceptions = array( 'page-music.html' => array( '1320px' ) );
-$offenders  = array();
+$offenders = array();
 foreach ( glob( "$root/templates/*.html" ) as $t ) {
 	$html = (string) file_get_contents( $t );
 	if ( preg_match_all( '/"contentSize":"([^"]+)"/', $html, $m ) ) {
 		foreach ( $m[1] as $w ) {
-			if ( ! in_array( $w, $allowed, true ) && ! in_array( $w, $exceptions[ basename( $t ) ] ?? array(), true ) ) {
+			if ( ! in_array( $w, $allowed, true ) ) {
 				$offenders[] = basename( $t ) . ' → ' . $w;
 			}
 		}
 	}
 }
 ok( empty( $offenders ), 'every template contentSize is on a track' . ( $offenders ? ' (offenders: ' . implode( ', ', $offenders ) . ')' : '' ) );
-ok( 1 === substr_count( (string) file_get_contents( "$root/templates/page-music.html" ), '"contentSize":"1320px"' ), 'the music exception covers exactly one band' );
 
 // ── The wide-content pages actually carry the wide track ─────────────
 // page-about is excluded here: its body now lives in the About Page's

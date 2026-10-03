@@ -52,12 +52,16 @@ function sn_related_notes_query( $post_id, $limit = 3 ) {
 		return array();
 	}
 
+	// 14.9.0: a note the reader can already reach from this page (linked in
+	// the text, or listed under Cited by) is not "more on this".
+	$skip = sn_related_notes_excluded_ids( $post_id );
+
 	// KERNEL — deterministic ML ranking from the companion plugin, when built.
 	$selected = array();
 	if ( function_exists( 'snt_ml_related_for_post' ) ) {
-		$rows = snt_ml_related_for_post( $post_id, $limit );
+		$rows = snt_ml_related_for_post( $post_id, $limit + count( $skip ) );
 		if ( is_array( $rows ) ) { // null (unbuilt) and WP_Error alike fall through.
-			$seen = array();
+			$seen = array_fill_keys( $skip, true );
 			foreach ( $rows as $row ) {
 				if ( ! is_array( $row ) || ! isset( $row['post_id'] ) ) {
 					continue; // Malformed row: skip, never fabricate.
@@ -97,7 +101,7 @@ function sn_related_notes_query( $post_id, $limit = 3 ) {
 	// Exclusion list for the heuristic passes: self + any kernel picks. With
 	// the kernel absent/empty this is exactly array( $post_id ) — byte-identical
 	// to the pre-11.2.0 PRIMARY query.
-	$primary_exclude = array( $post_id );
+	$primary_exclude = array_merge( array( $post_id ), $skip );
 	foreach ( $selected as $p ) {
 		$primary_exclude[] = (int) $p->ID;
 	}
@@ -131,7 +135,7 @@ function sn_related_notes_query( $post_id, $limit = 3 ) {
 	// BACKFILL — top up to $limit with most-recent Notes, excluding self
 	// and anything already selected.
 	if ( count( $selected ) < $limit ) {
-		$exclude = array( $post_id );
+		$exclude = array_merge( array( $post_id ), $skip );
 		foreach ( $selected as $p ) {
 			$exclude[] = (int) $p->ID;
 		}
@@ -154,6 +158,30 @@ function sn_related_notes_query( $post_id, $limit = 3 ) {
 	}
 
 	return array_slice( $selected, 0, $limit );
+}
+
+/**
+ * Notes the reader can already reach from $post_id: the ones its text links
+ * to (/notes/<slug>) and the ones the Cited-by footer lists. 14.9.0.
+ *
+ * @param int $post_id Current note ID.
+ * @return int[]
+ */
+function sn_related_notes_excluded_ids( $post_id ) {
+	$ids  = array();
+	$post = get_post( $post_id );
+	if ( $post && preg_match_all( '#/notes/([a-z0-9-]+)#i', (string) ( $post->post_content ?? '' ), $m ) ) {
+		foreach ( array_unique( $m[1] ) as $slug ) {
+			$linked = get_page_by_path( $slug, OBJECT, 'post' );
+			if ( $linked ) {
+				$ids[] = (int) $linked->ID;
+			}
+		}
+	}
+	if ( function_exists( 'sn_cited_by_query' ) ) {
+		$ids = array_merge( $ids, sn_cited_by_query( $post_id, (int) apply_filters( 'sn_cited_by_count', 5 ) ) );
+	}
+	return array_values( array_diff( array_unique( $ids ), array( (int) $post_id ) ) );
 }
 
 /**
