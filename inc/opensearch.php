@@ -86,6 +86,11 @@ function sn_opensearch_send() {
 		status_header( 200 );
 	}
 	header( 'Content-Type: application/opensearchdescription+xml; charset=' . get_option( 'blog_charset', 'UTF-8' ) );
+	// The shared-cache lifetime replaces the 404 nocache headers WordPress
+	// committed for this postless path (inc/cache-headers.php); anonymous only.
+	if ( function_exists( 'sn_edge_cache_send_machine' ) ) {
+		sn_edge_cache_send_machine();
+	}
 	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- XML document; node/attr values are esc_html/esc_url'd in sn_opensearch_body() and the {searchTerms} token must stay literal.
 	echo sn_opensearch_body();
 }
