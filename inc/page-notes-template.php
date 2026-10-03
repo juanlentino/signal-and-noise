@@ -351,6 +351,11 @@ add_action( 'template_redirect', function() {
 		}
 		status_header( 200 );
 	}
+	// This handler exits before priority 100, where the edge cache headers
+	// hook; run the same policy here or /notes never carries them.
+	if ( function_exists( 'sn_edge_cache_template_redirect' ) ) {
+		sn_edge_cache_template_redirect();
+	}
 	include $render;
 	exit;
 }, 0 );

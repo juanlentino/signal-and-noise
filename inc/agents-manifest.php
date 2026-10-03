@@ -166,6 +166,11 @@ function sn_agents_send() {
 		status_header( 200 );
 	}
 	header( 'Content-Type: application/json; charset=utf-8' );
+	// The shared-cache lifetime replaces the 404 nocache headers WordPress
+	// committed for this postless path (inc/cache-headers.php); anonymous only.
+	if ( function_exists( 'sn_edge_cache_send_machine' ) ) {
+		sn_edge_cache_send_machine();
+	}
 	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- application/json document from wp_json_encode; HTML escaping would corrupt the JSON.
 	echo sn_agents_json_body();
 }

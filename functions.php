@@ -57,6 +57,9 @@
  *   inc/identity-rels.php        — <link rel="me"> head links from sn_settings social.same_as (A4, v10.5.0)
  *   inc/humans-txt.php           — /humans.txt virtual route + rel=author autodiscovery + maker's-mark comment (C4, v10.5.0)
  *   inc/security-txt.php         — /.well-known/security.txt virtual route (RFC 9116, v10.13.0)
+ *   inc/cache-headers.php        edge cache lifetimes + the feed list (Cache-Control: public, max-age=0 and Cloudflare-CDN-Cache-Control)
+ *   inc/cache-headers-rules.php  pure rules: who gets them (anonymous, 200, listed feeds, nothing already set)
+ *   inc/cache-headers-hooks.php  sends them for HTML, feeds, machine files (anonymous GET/HEAD only)
  *   inc/llms-txt.php             — /llms.txt + /llms-full.txt AEO discoverability virtual routes (v10.19.0; pillar section v10.49.0)
  *   inc/gpc-json.php             — /.well-known/gpc.json Global Privacy Control declaration (v10.19.0)
  *   inc/opensearch.php           — /opensearch.xml OSDD + rel=search autodiscovery over /notes/?s= (v10.19.0)
@@ -154,6 +157,9 @@ require_once __DIR__ . '/inc/beacon.php'; // P1: first-party edge analytics beac
 require_once __DIR__ . '/inc/identity-rels.php'; // A4 (v10.5.0): <link rel="me"> head links from sn_settings social.same_as
 require_once __DIR__ . '/inc/humans-txt.php'; // C4 (v10.5.0): /humans.txt virtual route + rel=author autodiscovery + maker's-mark comment
 require_once __DIR__ . '/inc/security-txt.php'; // v10.13.0: /.well-known/security.txt (RFC 9116) virtual route
+require_once __DIR__ . '/inc/cache-headers.php'; // edge cache lifetimes and the feed list behind `Cache-Control: public, max-age=0` plus Cloudflare-CDN-Cache-Control (stale-while-revalidate, stale-if-error)
+require_once __DIR__ . '/inc/cache-headers-rules.php'; // the pure rules: anonymous reads only, listed feeds only, never over a Cache-Control already set
+require_once __DIR__ . '/inc/cache-headers-hooks.php'; // sends them: public HTML and feeds at template_redirect 100, the machine files from their send functions; anonymous reads only
 require_once __DIR__ . '/inc/llms-txt.php'; // v10.19.0: /llms.txt + /llms-full.txt virtual routes (llmstxt.org AEO discoverability)
 require_once __DIR__ . '/inc/gpc-json.php'; // v10.19.0: /.well-known/gpc.json virtual route (Global Privacy Control declaration)
 require_once __DIR__ . '/inc/opensearch.php'; // v10.19.0: /opensearch.xml virtual route + rel=search autodiscovery (search provider over /notes/?s=)

@@ -136,6 +136,11 @@ This is what actually turns on HTML caching at the edge.
    and not (starts_with(http.request.uri.path, "/?"))
    ```
 
+   Note: the `/feed/` line is stale too. Measured 2026-10-03, `/feed/` and
+   `/notes/feed/` answer `cf-cache-status: REVALIDATED`, so the live rule
+   lets feeds through. A rule that still carries the line must drop it, or
+   the listed feeds (below) never reach the edge cache.
+
    Note: the `/wp-json/` line does not describe what the live edge does.
    Measured 2026-09-27, public `/wp-json/` GETs are edge-cached (HIT) and
    origin cache headers decide; see "What still hits origin" below.
@@ -144,14 +149,21 @@ This is what actually turns on HTML caching at the edge.
    - **Cache eligibility**: `Eligible for cache`
    - **Edge TTL**:
      - Use cache-control header if present: ON
-     - Otherwise use: `Override origin` → `1 day`
+     - Otherwise use: Cloudflare's default TTL
+
+   Observed 2026-10-03: the live rule ("JL Cache") reads "Use cache-control
+   header if present, cache with Cloudflare's default TTL if not". Earlier
+   versions of this doc said "Override origin, 1 day"; that is not what is
+   deployed. Cloudflare's documented default for a 200 with no cache header is
+   120 minutes
+   (developers.cloudflare.com/cache/how-to/configure-cache-status-code/).
    - **Browser TTL**:
      - Override origin: `Respect existing headers` (or `5 minutes` for fresher local cache)
 
 4. **Deploy**.
 
 Once deployed, anonymous HTML responses are cached at the edge for
-1 day, with auto-purge handled by the theme module on every post
+2 hours, with auto-purge handled by the theme module on every post
 save and theme update.
 
 #### Step 5 — Verify
@@ -181,6 +193,68 @@ If you keep seeing `MISS` or `DYNAMIC`, check:
   `no-cache`? Some WP plugins do this. The rule's "Override origin"
   TTL bypasses this.
 - Is the route in the rule's URL exclusions (`/wp-admin/` etc.)?
+
+## What the origin sends (two headers)
+
+`inc/cache-headers.php` (lifetimes, feed list), `inc/cache-headers-rules.php`
+(who gets them) and `inc/cache-headers-hooks.php` (sending) put two headers on
+anonymous GET/HEAD responses, and nothing on anything else (a session,
+post-password or commenter cookie, a POST, a 404, search results, a preview, a
+password form, or a response that already set its own `Cache-Control`):
+
+| Response | `Cache-Control` | `Cloudflare-CDN-Cache-Control` |
+|---|---|---|
+| Public HTML pages | `public, max-age=0` | `max-age=7200, stale-while-revalidate=86400, stale-if-error=604800` |
+| `/llms.txt`, `/llms-full.txt`, `/.well-known/agents.json`, `/opensearch.xml`, the listed feeds | `public, max-age=0` | `max-age=300, stale-while-revalidate=3600, stale-if-error=86400` |
+
+`Cache-Control` is what browsers and Varnish read: revalidate every time,
+store nothing. It never carries `s-maxage`: Varnish would start holding HTML
+that no post save purges, and Cloudflare documents `s-maxage` as switching
+stale serving off (it implies `proxy-revalidate`).
+`Cloudflare-CDN-Cache-Control` is read by Cloudflare alone, in place of
+`Cache-Control`, and is not passed downstream. The edge keeps the copy (two
+hours for HTML, which is what Cloudflare's default TTL already did), refreshes
+it in the background, and serves it when the origin answers 5xx. The seconds
+are constants, filterable through `sn_edge_cache_lifetimes`.
+
+Because Cloudflare reads the edge header INSTEAD of `Cache-Control`, a
+`nocache_headers()` call later in a template would be ignored at the edge. A
+`header_register_callback` recheck removes the edge header whenever the
+`Cache-Control` is no longer the one this module wrote, or the status is no
+longer 200.
+
+**The listed feeds** are a closed set (`sn_edge_cache_feed_paths()`): the posts
+feed as rss2, rss, rdf, atom and json under `/feed/` and `/notes/feed/`, plus
+`/?feed=json`. The plugin purges exactly that list on a save. Any other feed
+(comments, a tag, another query form) keeps Breeze's `no-cache`, because it
+could not be purged by name.
+
+**Two routes exit before the hook.** `/notes` (and its tag views) renders at
+`template_redirect` priority 0 and exits, so its handler calls the policy
+itself. `/index` and `/notes/tags` are postless: WordPress has already sent
+its 404 no-cache headers by then, the policy sees a `Cache-Control` it did not
+write, and both stay uncached at the edge as before.
+
+What the headers depend on, none of it in this repo:
+
+- **The Cache Rule's Edge TTL must not override the origin.** Cloudflare's
+  docs: the Edge Cache TTL rule "overrides directives in
+  `Cloudflare-CDN-Cache-Control/CDN-Cache-Control` which manage how long an
+  asset is cached on the edge". The rule should use the origin's header when
+  present (Step 4). Whether that mode counts `Cloudflare-CDN-Cache-Control` as
+  "present" is not stated in the docs: check `cf-cache-status` and `age` after
+  deploy.
+- **Always Online decides whether the stale directives do anything.** With
+  it on, Cloudflare ignores `stale-while-revalidate` and `stale-if-error`;
+  the edge lifetime still applies. It is on in the live zone and stays on by
+  the owner's choice (2026-10-03), so stale serving is dormant until that
+  changes. The plugin's edge posture read shows the setting.
+- **A Breeze page-cache hit carries neither header.** Breeze answers a hit
+  before WordPress loads, and its `breeze_custom_headers_allow` list cannot
+  replay them (it snapshots header values once, from a HEAD of the home page
+  through the edge, where Cloudflare has already dropped the edge header).
+  Stale serving applies to origin misses only; a purge empties Breeze too, so
+  the copy the edge stores after one is a fresh render.
 
 ## How auto-purge works
 
@@ -214,8 +288,10 @@ hit origin PHP:
   (`/wp-json/signal-noise/v1/feed-open`) sends `Cache-Control: no-store` and
   reads `cf-cache-status: BYPASS`. A public REST response without such
   headers should be assumed cacheable at the edge.
-- `/feed/` and `/notes/feed/` (RSS — caching feeds is risky for
-  syndication)
+- The listed posts feeds are NOT on this list either: the live edge stores
+  feeds (measured 2026-10-03, `cf-cache-status: REVALIDATED` under Breeze's
+  `no-cache`), and the listed ones now get five minutes at the edge. A post
+  save purges them. Comment, tag and other feeds keep `no-cache`.
 - Any request with a `wordpress_logged_in_*`, `wp-postpass_*`, or
   `comment_author_*` cookie (you, while logged in)
 

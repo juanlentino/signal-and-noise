@@ -301,6 +301,11 @@ function sn_llms_txt_send( $full = false ) {
 		status_header( 200 );
 	}
 	header( 'Content-Type: text/plain; charset=' . get_option( 'blog_charset', 'UTF-8' ) );
+	// The shared-cache lifetime replaces the 404 nocache headers WordPress
+	// committed for this postless path (inc/cache-headers.php); anonymous only.
+	if ( function_exists( 'sn_edge_cache_send_machine' ) ) {
+		sn_edge_cache_send_machine();
+	}
 	$notes = $full ? sn_llms_txt_recent_notes() : array();
 	// v10.49.0: the curated pillar essays ride both variants. Memoized +
 	// hardened derivation (inc/abilities-helpers.php, v10.48.0) — safe to
