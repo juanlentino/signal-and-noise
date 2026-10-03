@@ -32,7 +32,7 @@ function sn_edge_cache_request_is_anonymous() {
 }
 
 /**
- * Send both headers for a kind, replacing what is there. Expires and Pragma
+ * Send both headers and the cache tag for a kind, replacing what is there. Expires and Pragma
  * go with them: WordPress commits both for a postless path, and a 1984
  * Expires beside a public Cache-Control is a contradiction to an HTTP/1.0 cache.
  *
@@ -48,6 +48,7 @@ function sn_edge_cache_emit( $kind ) {
 	header_remove( 'Pragma' );
 	header( 'Cache-Control: ' . SN_EDGE_BROWSER_CACHE_CONTROL );
 	header( 'Cloudflare-CDN-Cache-Control: ' . $cdn );
+	header( 'Cache-Tag: ' . SN_EDGE_CACHE_TAG );
 	header_register_callback( 'sn_edge_cache_recheck' );
 }
 
@@ -60,6 +61,7 @@ function sn_edge_cache_recheck() {
 	$code = http_response_code();
 	if ( ! sn_edge_cache_still_ours( sn_edge_cache_existing( headers_list() ), is_int( $code ) ? $code : 200 ) ) {
 		header_remove( 'Cloudflare-CDN-Cache-Control' );
+		header_remove( 'Cache-Tag' );
 	}
 }
 

@@ -223,6 +223,12 @@ Because Cloudflare reads the edge header INSTEAD of `Cache-Control`, a
 `Cache-Control` is no longer the one this module wrote, or the status is no
 longer 200.
 
+**One cache tag.** Every response that gets the edge lifetime also carries
+`Cache-Tag: sn-render` (15.2.0). The plugin purges that tag on a save, one
+call, and Cloudflare strips the header before the visitor sees it. This only
+works with Breeze's "Cache Full Page HTML" off: a Breeze file hit skips
+WordPress and so carries neither the lifetime nor the tag.
+
 **The listed feeds** are a closed set (`sn_edge_cache_feed_paths()`): the posts
 feed as rss2, rss, rdf, atom and json under `/feed/` and `/notes/feed/`, plus
 `/?feed=json`. The plugin purges exactly that list on a save. Any other feed
