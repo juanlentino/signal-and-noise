@@ -34,6 +34,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+/**
+ * 15.2.0: the one tag every cached response carries (pages, the listed feeds,
+ * the machine files). The plugin purges it on a save with a single call, in
+ * place of a URL list that had to name every address a change could touch.
+ * One tag, not one per post: every page embeds the site-wide notes index, so
+ * a save changes them all. Cloudflare strips the header before the visitor.
+ */
+const SN_EDGE_CACHE_TAG = 'sn-render';
+
 /** The Cache-Control every cached kind sends: browsers revalidate, Varnish stores nothing. */
 const SN_EDGE_BROWSER_CACHE_CONTROL = 'public, max-age=0';
 

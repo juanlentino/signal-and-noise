@@ -54,6 +54,7 @@ foreach ( array( 'Cache-Control' => SN_EDGE_BROWSER_CACHE_CONTROL, 'the HTML edg
 $hooks_src = (string) file_get_contents( __DIR__ . '/../inc/cache-headers-hooks.php' );
 ok( 1 === substr_count( $hooks_src, "header( 'Cache-Control: '" ) && false !== strpos( $hooks_src, "header( 'Cache-Control: ' . SN_EDGE_BROWSER_CACHE_CONTROL );" ), 'the one Cache-Control this module writes is that constant, never a built value' );
 ok( false !== strpos( $hooks_src, "header( 'Cloudflare-CDN-Cache-Control: ' . \$cdn );" ) && false === strpos( $hooks_src, "header( 'CDN-Cache-Control" ), 'the edge lifetime goes in Cloudflare-CDN-Cache-Control (not passed downstream), not CDN-Cache-Control' );
+ok( 'sn-render' === SN_EDGE_CACHE_TAG && false !== strpos( $hooks_src, "header( 'Cache-Tag: ' . SN_EDGE_CACHE_TAG );" ) && strpos( $hooks_src, "header( 'Cloudflare-CDN-Cache-Control: '" ) < strpos( $hooks_src, "header( 'Cache-Tag: '" ) && false !== strpos( $hooks_src, "header_remove( 'Cache-Tag' );" ), 'every response that gets the edge lifetime carries the one cache tag, and loses it with the lifetime' );
 
 echo "Group: taking the edge header back\n";
 ok( true === sn_edge_cache_still_ours( 'public, max-age=0', 200 ), 'untouched and 200: the edge header stays' );
