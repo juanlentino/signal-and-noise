@@ -1,6 +1,6 @@
 <?php
 /**
- * Signal & Noise — the next essay, at the end of each pillar.
+ * Signal & Noise: the next essay, at the end of each pillar.
  *
  * The pillars read in order (sn_theme_pillar_sort over the descriptors the
  * plugin's _sn_pillar flags derive). On a pillar Page this names the next

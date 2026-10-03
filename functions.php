@@ -40,7 +40,7 @@
  *   inc/provenance-surface.php   — [sn_prov_chip] byline pill + [sn_prov_panel] record, plugin-guarded (v10.30.0)
  *   inc/related-notes.php        — related-notes footer block on single notes
  *   inc/cited-by.php             — [sn_cited_by] reverse-link footer (v10.21.0)
- *   inc/next-essay.php           — the next pillar after each essay (14.9.0)
+ *   inc/next-essay.php           : the next pillar after each essay (14.9.0)
  *   inc/404-recovery.php         — helpful 404: search + recent-notes suggestions ([sn_404_suggestions])
  *   inc/post-share.php           — [sn_note_share] copy-permalink + native share row
  *   inc/note-reply.php           — [sn_note_reply] reply-by-email row, contact-alias machinery (v12.9.0)
