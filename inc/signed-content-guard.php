@@ -12,7 +12,8 @@
  * run for a singular page but is still registered at `wp_footer`, it prints
  * its overlay forms (slide-in, pop-up, fixed bar) in the footer. Those are
  * position: fixed, so where they sit in the document does not change what a
- * reader sees. So on a signed singular the callback is taken off before the
+ * reader sees. So on a signed singular (every note; a page only when it
+ * carries a provenance UID) the callback is taken off before the
  * page renders and put back just before MailPoet's footer hook asks for it.
  *
  * A "below the post" form is not an overlay and is not printed by that footer
@@ -57,13 +58,27 @@ function sn_signed_content_find_appenders( array $callbacks, array $known ) {
 }
 
 /**
- * On a signed singular (a note or a page), take the appenders off `the_content`.
+ * Is this request a signed singular? Every note is. A page is only when it
+ * opted into signing and carries a provenance UID (inc/content-json-document.php);
+ * an ordinary page keeps whatever a plugin appends to it.
+ *
+ * @return bool
+ */
+function sn_signed_content_is_signed() {
+	if ( is_singular( 'post' ) ) {
+		return true;
+	}
+	return is_singular( 'page' ) && '' !== (string) get_post_meta( (int) get_queried_object_id(), '_sn_prov_uid', true );
+}
+
+/**
+ * On a signed singular (a note, or a page that is signed), take the appenders off `the_content`.
  *
  * @return void
  */
 function sn_signed_content_detach() {
 	global $wp_filter;
-	if ( ! is_singular( array( 'post', 'page' ) ) || empty( $wp_filter['the_content']->callbacks ) ) {
+	if ( ! sn_signed_content_is_signed() || empty( $wp_filter['the_content']->callbacks ) ) {
 		return;
 	}
 	$known = (array) apply_filters( 'sn_signed_content_appenders', SN_SIGNED_CONTENT_APPENDERS );

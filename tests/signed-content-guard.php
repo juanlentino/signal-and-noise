@@ -22,7 +22,10 @@ namespace {
 	$GLOBALS['__actions'] = array(); $GLOBALS['__singular'] = true;
 	function add_action( $h, $cb, $p = 10, $a = 1 ) { $GLOBALS['__actions'][] = array( $h, $cb, $p ); }
 	function apply_filters( $h, $v ) { return $v; }
-	function is_singular( $types = '' ) { $GLOBALS['__singular_asked'] = $types; return $GLOBALS['__singular']; }
+	$GLOBALS['__type'] = 'post'; $GLOBALS['__uid'] = '';
+	function is_singular( $types = '' ) { return $GLOBALS['__singular'] && $types === $GLOBALS['__type']; }
+	function get_queried_object_id() { return 7; }
+	function get_post_meta( $id, $key, $single = false ) { return '_sn_prov_uid' === $key ? $GLOBALS['__uid'] : ''; }
 	function remove_filter( $h, $fn, $p = 10 ) {
 		foreach ( $GLOBALS['wp_filter'][ $h ]->callbacks[ $p ] ?? array() as $id => $e ) {
 			if ( $e['function'] === $fn ) { unset( $GLOBALS['wp_filter'][ $h ]->callbacks[ $p ][ $id ] ); return true; }
@@ -55,7 +58,7 @@ namespace {
 	$GLOBALS['wp_filter'] = array( 'the_content' => $filled() );
 	sn_signed_content_detach();
 	$left = array_column( $GLOBALS['wp_filter']['the_content']->callbacks[10], 'function' );
-	ok( array( 'post', 'page' ) === $GLOBALS['__singular_asked'] && ! in_array( array( $mp, 'contentDisplay' ), $left, true ) && in_array( 'wpautop', $left, true ) && 3 === count( $left ), 'before the page renders the appender is off the_content and nothing else is touched' );
+	ok( ! in_array( array( $mp, 'contentDisplay' ), $left, true ) && in_array( 'wpautop', $left, true ) && 3 === count( $left ), 'before the page renders the appender is off the_content and nothing else is touched' );
 	sn_signed_content_reattach();
 	$back = array_column( $GLOBALS['wp_filter']['the_content']->callbacks[10], 'function' );
 	ok( in_array( array( $mp, 'contentDisplay' ), $back, true ) && array() === $GLOBALS['sn_signed_content_detached'], 'before the footer hooks run it is registered again, which is what MailPoet\'s own footer path checks for' );
@@ -64,6 +67,14 @@ namespace {
 	$GLOBALS['__singular'] = false; $GLOBALS['wp_filter'] = array( 'the_content' => $filled() );
 	sn_signed_content_detach();
 	ok( in_array( array( $mp, 'contentDisplay' ), array_column( $GLOBALS['wp_filter']['the_content']->callbacks[10], 'function' ), true ), 'an archive or the home page is not signed content: left alone' );
+
+	$GLOBALS['__singular'] = true; $GLOBALS['__type'] = 'page'; $GLOBALS['__uid'] = ''; $GLOBALS['wp_filter'] = array( 'the_content' => $filled() );
+	sn_signed_content_detach();
+	ok( in_array( array( $mp, 'contentDisplay' ), array_column( $GLOBALS['wp_filter']['the_content']->callbacks[10], 'function' ), true ), 'an ordinary page carries no provenance UID: a below-the-page form keeps showing there' );
+	$GLOBALS['__uid'] = '9d49e140-10a2-4c62-943e-e98270fe09d2'; $GLOBALS['wp_filter'] = array( 'the_content' => $filled() );
+	sn_signed_content_detach();
+	ok( ! in_array( array( $mp, 'contentDisplay' ), array_column( $GLOBALS['wp_filter']['the_content']->callbacks[10], 'function' ), true ), 'a page that opted into signing is protected like a note' );
+	sn_signed_content_reattach();
 
 	echo "\nWiring\n";
 	ok( in_array( array( 'template_redirect', 'sn_signed_content_detach', 1 ), $GLOBALS['__actions'], true ) && in_array( array( 'wp_footer', 'sn_signed_content_reattach', 1 ), $GLOBALS['__actions'], true ), 'off at template_redirect (the block template renders after it), back at wp_footer priority 1 (MailPoet\'s footer hook is at 10)' );
