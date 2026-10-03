@@ -64,7 +64,8 @@ function sn_edge_cache_is_listed_feed( $request_uri, array $paths ) {
 }
 
 /**
- * Which header a front-end response gets: 'html', 'machine' (a feed) or ''.
+ * Which header a front-end response gets: 'html', 'machine' (a feed),
+ * 'refuse' (an explicit no-store) or ''.
  * PURE over the context sn_edge_cache_template_redirect() builds
  * (inc/cache-headers-hooks.php).
  *
@@ -93,7 +94,25 @@ function sn_edge_cache_kind_for( array $ctx ) {
 			return '';
 		}
 	}
-	return '' === $existing ? 'html' : '';
+	if ( '' !== $existing ) {
+		return '';
+	}
+	// 15.2.1: a render made while the companion plugin is not loaded (the gap
+	// in the middle of its own update) is missing routes and styles. It must
+	// not be stored, and saying nothing would leave it to the edge's default.
+	return empty( $ctx['companion_missing'] ) ? 'html' : 'refuse';
+}
+
+/**
+ * Is a finished HTML body big enough to be a page? PURE. An empty render (a
+ * 200 with nothing in it) has reached the edge three times, each after a full
+ * purge; the smallest real page here is over 100 KB.
+ *
+ * @param int $bytes Body length.
+ * @return bool
+ */
+function sn_edge_cache_body_ok( $bytes ) {
+	return (int) $bytes >= SN_EDGE_BODY_FLOOR_BYTES;
 }
 
 /**
