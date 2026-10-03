@@ -68,7 +68,8 @@ function sn_signed_content_is_signed() {
 	if ( is_singular( 'post' ) ) {
 		return true;
 	}
-	return is_singular( 'page' ) && '' !== (string) get_post_meta( (int) get_queried_object_id(), '_sn_prov_uid', true );
+	// The theme's own reader: it trims, so whitespace-only meta is not a UID.
+	return is_singular( 'page' ) && function_exists( 'sn_theme_note_uid' ) && '' !== sn_theme_note_uid( (int) get_queried_object_id() );
 }
 
 /**

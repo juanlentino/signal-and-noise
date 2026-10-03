@@ -26,6 +26,7 @@ namespace {
 	function is_singular( $types = '' ) { return $GLOBALS['__singular'] && $types === $GLOBALS['__type']; }
 	function get_queried_object_id() { return 7; }
 	function get_post_meta( $id, $key, $single = false ) { return '_sn_prov_uid' === $key ? $GLOBALS['__uid'] : ''; }
+	require __DIR__ . '/../inc/note-uid.php';
 	function remove_filter( $h, $fn, $p = 10 ) {
 		foreach ( $GLOBALS['wp_filter'][ $h ]->callbacks[ $p ] ?? array() as $id => $e ) {
 			if ( $e['function'] === $fn ) { unset( $GLOBALS['wp_filter'][ $h ]->callbacks[ $p ][ $id ] ); return true; }
@@ -71,6 +72,9 @@ namespace {
 	$GLOBALS['__singular'] = true; $GLOBALS['__type'] = 'page'; $GLOBALS['__uid'] = ''; $GLOBALS['wp_filter'] = array( 'the_content' => $filled() );
 	sn_signed_content_detach();
 	ok( in_array( array( $mp, 'contentDisplay' ), array_column( $GLOBALS['wp_filter']['the_content']->callbacks[10], 'function' ), true ), 'an ordinary page carries no provenance UID: a below-the-page form keeps showing there' );
+	$GLOBALS['__uid'] = "  \n"; $GLOBALS['wp_filter'] = array( 'the_content' => $filled() );
+	sn_signed_content_detach();
+	ok( in_array( array( $mp, 'contentDisplay' ), array_column( $GLOBALS['wp_filter']['the_content']->callbacks[10], 'function' ), true ), 'whitespace in the UID meta is not a UID: the page is unsigned, as the theme\'s own reader says' );
 	$GLOBALS['__uid'] = '9d49e140-10a2-4c62-943e-e98270fe09d2'; $GLOBALS['wp_filter'] = array( 'the_content' => $filled() );
 	sn_signed_content_detach();
 	ok( ! in_array( array( $mp, 'contentDisplay' ), array_column( $GLOBALS['wp_filter']['the_content']->callbacks[10], 'function' ), true ), 'a page that opted into signing is protected like a note' );
