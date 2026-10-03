@@ -57,6 +57,7 @@
  *   inc/identity-rels.php        — <link rel="me"> head links from sn_settings social.same_as (A4, v10.5.0)
  *   inc/humans-txt.php           — /humans.txt virtual route + rel=author autodiscovery + maker's-mark comment (C4, v10.5.0)
  *   inc/security-txt.php         — /.well-known/security.txt virtual route (RFC 9116, v10.13.0)
+ *   inc/signed-content-guard.php nothing foreign inside signed post content: a known the_content appender (MailPoet) is detached for the render and restored for its own footer path
  *   inc/cache-headers.php        edge cache lifetimes + the feed list (Cache-Control: public, max-age=0 and Cloudflare-CDN-Cache-Control)
  *   inc/cache-headers-rules.php  pure rules: who gets them (anonymous, 200, listed feeds, nothing already set)
  *   inc/cache-headers-hooks.php  sends them for HTML, feeds, machine files (anonymous GET/HEAD only)
@@ -157,6 +158,7 @@ require_once __DIR__ . '/inc/beacon.php'; // P1: first-party edge analytics beac
 require_once __DIR__ . '/inc/identity-rels.php'; // A4 (v10.5.0): <link rel="me"> head links from sn_settings social.same_as
 require_once __DIR__ . '/inc/humans-txt.php'; // C4 (v10.5.0): /humans.txt virtual route + rel=author autodiscovery + maker's-mark comment
 require_once __DIR__ . '/inc/security-txt.php'; // v10.13.0: /.well-known/security.txt (RFC 9116) virtual route
+require_once __DIR__ . '/inc/signed-content-guard.php'; // nothing foreign inside the signed post content: MailPoet's the_content append moves to its own footer path
 require_once __DIR__ . '/inc/cache-headers.php'; // edge cache lifetimes and the feed list behind `Cache-Control: public, max-age=0` plus Cloudflare-CDN-Cache-Control (stale-while-revalidate, stale-if-error)
 require_once __DIR__ . '/inc/cache-headers-rules.php'; // the pure rules: anonymous reads only, listed feeds only, never over a Cache-Control already set
 require_once __DIR__ . '/inc/cache-headers-hooks.php'; // sends them: public HTML and feeds at template_redirect 100, the machine files from their send functions; anonymous reads only
