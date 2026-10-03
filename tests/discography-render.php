@@ -245,7 +245,7 @@ ok( strpos( $djs2, "addEventListener( 'error'" ) !== false, 'discography.js reti
 // discography and the Verified Credits section, mid-page; /music is a CMS page,
 // so its ending now lives in the page content's last band (owner, 2026-10-02).
 ok( false === strpos( $ten, 'sn-page-next' ), 'the discography no longer prints the closing line' );
-// 14.8.2 (owner, 2026-10-02): the page-ending lines are gone everywhere. The
+// 14.9.0 (owner, 2026-10-02): the page-ending lines are gone everywhere. The
 // header stays on screen, so they repeated the nav. The templates carry none.
 foreach ( array( 'page-music.html', 'page-provenance.html' ) as $tf ) {
 	ok( false === strpos( (string) file_get_contents( __DIR__ . '/../templates/' . $tf ), 'sn-page-next' ), "$tf carries no page-ending line" );
