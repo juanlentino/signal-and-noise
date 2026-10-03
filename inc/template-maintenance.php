@@ -35,8 +35,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  *   1. WP object cache + theme metadata cache + update_themes — these
  *      are in-process and need to be cleared first so subsequent calls
  *      don't repopulate from stale state.
- *   2. Our own sn_* transients — pruned with a targeted SQL DELETE so
- *      we don't disturb plugin transients.
+ *   2. Transients: the transient group in Redis when a persistent object
+ *      cache is in use (14.10.0), plus the old targeted sn_* SQL DELETE.
  *   3. Origin HTML caches (Breeze + Varnish) via plugin action hooks.
  *      Plugin no-op if not installed; safe to call unconditionally.
  *   4. CDN cache (Cloudflare) via our own purge module — gated on
@@ -48,12 +48,16 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @param array $args {
  *     Optional flags. All default true.
- *     @type bool $object_cache       Flush WP object cache + theme caches.
+ *     @type bool $object_cache       Flush the whole object cache (all of Redis).
  *     @type bool $sn_transients      Prune sn_* transients.
  *     @type bool $origin_html        Trigger Breeze / Varnish purges.
  *     @type bool $cloudflare         Trigger Cloudflare zone purge.
  *     @type bool $template_overrides Delete wp_template DB overrides.
  *     @type bool $repopulate         Re-run update_themes.
+ *     @type bool $package_caches     update_themes/update_plugins and the
+ *                                    plugin/theme metadata caches (14.10.0).
+ *     @type string $trigger          Who asked: manual, update, styles (read
+ *                                    by the companion plugin's purge ledger).
  * }
  * @return int Count of template overrides cleared (matches the legacy
  *             return signature of sn_clear_template_overrides()).
@@ -67,6 +71,10 @@ function sn_purge_all_caches( $args = array() ) {
 		'template_overrides' => true,
 		'repopulate'         => true,
 		'verified'           => false,
+		// 14.10.0: the update-scoped caches (update_themes, update_plugins and
+		// the plugin/theme metadata), separate from the whole-Redis flush.
+		'package_caches'     => true,
+		'trigger'            => 'manual',
 	) );
 
 	// v10.23.0: symmetric with sn_after_full_cache_flush. inc/purge-verify.php
@@ -77,6 +85,9 @@ function sn_purge_all_caches( $args = array() ) {
 
 	if ( $args['object_cache'] ) {
 		wp_cache_flush();
+	}
+
+	if ( $args['package_caches'] ) {
 		delete_site_transient( 'update_themes' );
 		delete_site_transient( 'update_plugins' );   // v9.1.5: symmetric with themes
 		wp_clean_themes_cache();
@@ -84,6 +95,15 @@ function sn_purge_all_caches( $args = array() ) {
 	}
 
 	if ( $args['sn_transients'] ) {
+		// 14.10.0: with a persistent object cache (Object Cache Pro here) the
+		// transients live in Redis, so the DB delete below found nothing and
+		// only the whole-Redis flush cleared them. Clear the transient group
+		// instead: every plugin's transients go (disposable by contract), the
+		// site-transient group (update_core, update_plugins) stays.
+		if ( function_exists( 'wp_using_ext_object_cache' ) && wp_using_ext_object_cache()
+			&& function_exists( 'wp_cache_supports' ) && wp_cache_supports( 'flush_group' ) ) {
+			wp_cache_flush_group( 'transient' );
+		}
 		global $wpdb;
 		if ( $wpdb ) {
 			$wpdb->query(
@@ -102,8 +122,17 @@ function sn_purge_all_caches( $args = array() ) {
 	// stale reference to a retired module to reduce confusion.
 
 	if ( $args['origin_html'] ) {
-		// Plugin action hooks — no-op if Breeze isn't installed.
-		do_action( 'breeze_clear_all_cache' );
+		// 14.10.0: Breeze's page files and minified assets, called directly.
+		// The breeze_clear_all_cache action this replaced ends in
+		// wp_cache_flush() (Breeze 2.6.0 __flush_object_cache), so every page
+		// purge emptied all of Redis. breeze_cache_flush( false, false, true ):
+		// no post-scoped object-cache work, remove the whole HTML folder.
+		if ( class_exists( 'Breeze_MinificationCache' ) ) {
+			Breeze_MinificationCache::clear_minification();
+		}
+		if ( class_exists( 'Breeze_PurgeCache' ) ) {
+			Breeze_PurgeCache::breeze_cache_flush( false, false, true );
+		}
 		do_action( 'breeze_clear_varnish' );
 	}
 
@@ -198,42 +227,28 @@ function sn_auto_purge_on_update( $upgrader, $hook_extra ) {
 	if ( ! is_array( $hook_extra ) || 'update' !== ( $hook_extra['action'] ?? '' ) ) {
 		return;
 	}
-	$ours = false;
+	// 14.10.0: ANY plugin or theme update, not only ours. The plugin now
+	// removes Breeze's own update purge (owner, 2026-10-03), which emptied
+	// all of Redis after every plugin update; this is its replacement.
+	// Translations and core are not page changes (core flushes by itself).
 	$type = $hook_extra['type'] ?? '';
-	// #312: bulk_upgrade() passes 'themes' / 'plugins'; a single-package
-	// upgrade() passes the singular 'theme' / 'plugin'. Fold both shapes.
-	if ( 'theme' === $type ) {
-		$themes = (array) ( $hook_extra['themes'] ?? array() );
-		if ( isset( $hook_extra['theme'] ) ) {
-			$themes[] = (string) $hook_extra['theme'];
-		}
-		$ours = in_array( get_stylesheet(), $themes, true ) || in_array( get_template(), $themes, true );
-	} elseif ( 'plugin' === $type ) {
-		$plugins = (array) ( $hook_extra['plugins'] ?? array() );
-		if ( isset( $hook_extra['plugin'] ) ) {
-			$plugins[] = (string) $hook_extra['plugin'];
-		}
-		foreach ( $plugins as $file ) {
-			if ( 0 === strpos( (string) $file, 'signal-and-noise-tools/' ) ) {
-				$ours = true;
-				break;
-			}
-		}
-	}
-	if ( ! $ours ) {
+	if ( 'theme' !== $type && 'plugin' !== $type ) {
 		return;
 	}
-	// Once per request: a batch update (theme + plugin together) fires
-	// upgrader_process_complete per package. A global, not a static, so
-	// the standalone tests can reset it between scenarios (the
-	// sn_css_combined_memo convention).
+	// Once per request: a batch update fires upgrader_process_complete per
+	// package. A global, not a static, so the standalone tests can reset it.
 	if ( ! empty( $GLOBALS['sn_auto_purge_done'] ) ) {
 		return;
 	}
 	$GLOBALS['sn_auto_purge_done'] = true;
-	// template_overrides=false — an update must never nuke Site Editor
-	// edits as a side effect (matches the dashboard button semantics).
-	sn_purge_all_caches( array( 'template_overrides' => false ) );
+	// Page caches and the update-scoped caches; never the whole object cache
+	// (Core's update check and every stored reading lived there), never
+	// Site Editor template overrides.
+	sn_purge_all_caches( array(
+		'object_cache'       => false,
+		'template_overrides' => false,
+		'trigger'            => 'update',
+	) );
 }
 add_action( 'upgrader_process_complete', 'sn_auto_purge_on_update', 10, 2 );
 
@@ -256,6 +271,8 @@ function sn_auto_purge_on_styles_save( $post_id, $post ) {
 		'sn_transients'      => false,
 		'template_overrides' => false,
 		'repopulate'         => false,
+		'package_caches'     => false,
+		'trigger'            => 'styles',
 	) );
 }
 add_action( 'save_post_wp_global_styles', 'sn_auto_purge_on_styles_save', 10, 2 );

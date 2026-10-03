@@ -120,6 +120,15 @@ if ( ! function_exists( 'get_template' ) ) {
 	}
 }
 
+// 14.10.0: Breeze's own classes, called directly (the action they replace
+// ended in wp_cache_flush()). Record the arguments the chain passes.
+$GLOBALS['__breeze_files'] = 0; $GLOBALS['__breeze_args'] = null; $GLOBALS['__flush_groups'] = array();
+class Breeze_MinificationCache { public static function clear_minification( $b = null ) {} }
+class Breeze_PurgeCache { public static function breeze_cache_flush( $f = true, $o = true, $all = false ) { $GLOBALS['__breeze_files']++; $GLOBALS['__breeze_args'] = array( $f, $o, $all ); } }
+function wp_using_ext_object_cache() { return true; }
+function wp_cache_supports( $f ) { return 'flush_group' === $f; }
+function wp_cache_flush_group( $g ) { $GLOBALS['__flush_groups'][] = $g; return true; }
+
 require $theme_root . '/inc/template-maintenance.php';
 
 $pass = 0; $fail = 0;
@@ -130,7 +139,8 @@ function ok( $cond, $label ) {
 }
 function purge_counts() {
 	return array(
-		'breeze'  => count( array_keys( $GLOBALS['__fired_actions'], 'breeze_clear_all_cache', true ) ),
+		'breeze'  => $GLOBALS['__breeze_files'],
+		'breeze_action' => count( array_keys( $GLOBALS['__fired_actions'], 'breeze_clear_all_cache', true ) ),
 		'varnish' => count( array_keys( $GLOBALS['__fired_actions'], 'breeze_clear_varnish', true ) ),
 		'cf'      => $GLOBALS['__cf_purges'],
 		'cf_verified' => $GLOBALS['__cf_verified'],
@@ -146,6 +156,8 @@ function reset_counters() {
 	$GLOBALS['__cf_verified']   = 0;
 	$GLOBALS['__theme_updates'] = 0;
 	$GLOBALS['__posts_deleted'] = 0;
+	$GLOBALS['__breeze_files']  = 0;
+	$GLOBALS['__flush_groups']  = array();
 	unset( $GLOBALS['sn_auto_purge_done'] );
 	unset( $GLOBALS['sn_cf_verified_result'] );
 }
@@ -166,14 +178,17 @@ ok( ! empty( $GLOBALS['__actions']['upgrader_process_complete'] ), 'upgrader_pro
 ok( ! empty( $GLOBALS['__actions']['save_post_wp_global_styles'] ), 'save_post_wp_global_styles trigger registered' );
 
 // ── 2. Our THEME update → full chain, overrides untouched ──
-echo "\nScenario 2: our theme update purges the full chain\n";
+echo "\nScenario 2: a theme update clears the page caches, never all of Redis (14.10.0)\n";
 reset_counters();
 fire_upgrader( array( 'type' => 'theme', 'action' => 'update', 'themes' => array( 'signal-and-noise' ) ) );
 $c = purge_counts();
 ok( 1 === $c['breeze'], 'Breeze file cache purge fired' );
+ok( array( false, false, true ) === $GLOBALS['__breeze_args'], 'Breeze is asked for its HTML folder only, with no object-cache work' );
+ok( 0 === $c['breeze_action'], 'breeze_clear_all_cache is never fired (it ends in wp_cache_flush)' );
 ok( 1 === $c['varnish'], 'Varnish purge fired' );
 ok( 1 === $c['cf'], 'Cloudflare zone purge fired' );
-ok( 1 === $c['flush'], 'object cache flushed' );
+ok( 0 === $c['flush'], 'the object cache is NOT flushed (Core and the readings live there)' );
+ok( array( 'transient' ) === $GLOBALS['__flush_groups'], 'transients clear as a group; site transients (update_core) stay' );
 ok( 1 === $c['repop'], 'update_themes repopulated' );
 ok( 0 === $c['deleted'], 'Site Editor template overrides NOT touched by an update purge' );
 
@@ -183,11 +198,12 @@ fire_upgrader( array( 'type' => 'plugin', 'action' => 'update', 'plugins' => arr
 $c = purge_counts();
 ok( 1 === $c['cf'], 'second qualifying update in the same request does not re-purge' );
 
-// ── 4. Unrelated packages / non-update actions → no purge ──
-echo "\nScenario 4: negatives\n";
+// ── 4. Non-update actions → no purge; any plugin or theme update → one ──
+echo "\nScenario 4: negatives, and other packages now purge (Breeze's own update purge is removed)\n";
 reset_counters();
-fire_upgrader( array( 'type' => 'theme', 'action' => 'update', 'themes' => array( 'twentytwentyfive' ) ) );
 fire_upgrader( array( 'type' => 'plugin', 'action' => 'update', 'plugins' => array( 'akismet/akismet.php' ) ) );
+ok( 1 === purge_counts()['cf'] && 0 === purge_counts()['flush'], 'another plugin\'s update clears the page caches once, without a Redis flush' );
+reset_counters();
 fire_upgrader( array( 'type' => 'theme', 'action' => 'install', 'themes' => array( 'signal-and-noise' ) ) );
 fire_upgrader( array( 'type' => 'translation', 'action' => 'update' ) );
 fire_upgrader( 'not-an-array' );
@@ -214,10 +230,9 @@ fire_upgrader( array( 'type' => 'plugin', 'action' => 'update', 'plugin' => 'sig
 $c = purge_counts();
 ok( 1 === $c['cf'], 'single plugin upgrade (singular plugin key) purges' );
 reset_counters();
-fire_upgrader( array( 'type' => 'theme', 'action' => 'update', 'theme' => 'twentytwentyfive' ) );
 fire_upgrader( array( 'type' => 'plugin', 'action' => 'update', 'plugin' => 'akismet/akismet.php' ) );
 $c = purge_counts();
-ok( 0 === $c['cf'], 'singular keys naming other packages never purge' );
+ok( 1 === $c['cf'], 'a singular key naming another package purges too (14.10.0)' );
 
 // ── 6. Global-styles save → focused origin+CDN purge ──
 echo "\nScenario 6: Styles save (incl. Additional CSS) purges origin + CDN only\n";
@@ -228,6 +243,7 @@ ok( 1 === $c['breeze'], 'Breeze purge fired on styles save' );
 ok( 1 === $c['varnish'], 'Varnish purge fired on styles save' );
 ok( 1 === $c['cf'], 'Cloudflare purge fired on styles save' );
 ok( 0 === $c['flush'], 'styles save does not flush the object cache' );
+ok( array() === $GLOBALS['__flush_groups'], 'styles save leaves transients alone' );
 ok( 0 === $c['repop'], 'styles save does not re-run update_themes' );
 ok( 0 === $c['deleted'], 'styles save never touches template overrides' );
 
@@ -242,6 +258,7 @@ ok( is_int( $ret ), 'sn_purge_all_caches still returns an int (contract preserve
 ok( 1 === $before_fired, 'sn_before_cache_flush seam fired once' );
 ok( 1 === $after_fired, 'sn_after_full_cache_flush seam fired once' );
 ok( 1 === $c['cf_verified'], 'verified purge calls the blocking CF variant' );
+ok( 1 === $c['flush'], 'the manual purge still empties the whole object cache (its explicit ask)' );
 ok( 0 === $c['cf'], 'verified purge does NOT call the non-blocking CF fn' );
 ok( isset( $GLOBALS['sn_cf_verified_result'] ) && ! empty( $GLOBALS['sn_cf_verified_result']['cf_success'] ),
 	'the blocking CF result is stashed for the report writer' );
