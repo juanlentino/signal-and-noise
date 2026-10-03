@@ -3,7 +3,7 @@
  * Signal & Noise: cache lifetimes for the edge, and who gets them.
  *
  * Until now public HTML sent no Cache-Control at all, so the edge kept it for
- * the Cache Rule's fallback day and had nothing that let it answer from a stale
+ * Cloudflare's default two hours and had nothing that let it answer from a stale
  * copy: when the origin returned 503, readers got the 503. The machine files
  * (/llms.txt, /llms-full.txt, /.well-known/agents.json, /opensearch.xml) left
  * with the nocache headers WordPress commits for a postless path, so every
@@ -37,11 +37,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 /** The Cache-Control every cached kind sends: browsers revalidate, Varnish stores nothing. */
 const SN_EDGE_BROWSER_CACHE_CONTROL = 'public, max-age=0';
 
-// HTML at the edge. One day because that is what the edge does today (the
-// Cache Rule's "otherwise 1 day"): the header must not shorten it. A day of
+// HTML at the edge. Two hours because that is what the edge does today: the
+// live Cache Rule uses the origin's header when present and Cloudflare's
+// default TTL when not, pages sent no header, and the documented default for
+// a 200 is 120 minutes. The header must not change that. A day of
 // background refresh covers a quiet page between purges; seven days of
 // stale-if-error outlasts any origin outage this site has had.
-const SN_EDGE_HTML_MAX_AGE = 86400;
+const SN_EDGE_HTML_MAX_AGE = 7200;
 const SN_EDGE_HTML_SWR     = 86400;
 const SN_EDGE_HTML_SIE     = 604800;
 

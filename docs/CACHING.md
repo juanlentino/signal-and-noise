@@ -144,14 +144,21 @@ This is what actually turns on HTML caching at the edge.
    - **Cache eligibility**: `Eligible for cache`
    - **Edge TTL**:
      - Use cache-control header if present: ON
-     - Otherwise use: `Override origin` → `1 day`
+     - Otherwise use: Cloudflare's default TTL
+
+   Observed 2026-10-03: the live rule ("JL Cache") reads "Use cache-control
+   header if present, cache with Cloudflare's default TTL if not". Earlier
+   versions of this doc said "Override origin, 1 day"; that is not what is
+   deployed. Cloudflare's documented default for a 200 with no cache header is
+   120 minutes
+   (developers.cloudflare.com/cache/how-to/configure-cache-status-code/).
    - **Browser TTL**:
      - Override origin: `Respect existing headers` (or `5 minutes` for fresher local cache)
 
 4. **Deploy**.
 
 Once deployed, anonymous HTML responses are cached at the edge for
-1 day, with auto-purge handled by the theme module on every post
+2 hours, with auto-purge handled by the theme module on every post
 save and theme update.
 
 #### Step 5 — Verify
@@ -192,7 +199,7 @@ password form, or a response that already set its own `Cache-Control`):
 
 | Response | `Cache-Control` | `Cloudflare-CDN-Cache-Control` |
 |---|---|---|
-| Public HTML pages | `public, max-age=0` | `max-age=86400, stale-while-revalidate=86400, stale-if-error=604800` |
+| Public HTML pages | `public, max-age=0` | `max-age=7200, stale-while-revalidate=86400, stale-if-error=604800` |
 | `/llms.txt`, `/llms-full.txt`, `/.well-known/agents.json`, `/opensearch.xml`, the listed feeds | `public, max-age=0` | `max-age=300, stale-while-revalidate=3600, stale-if-error=86400` |
 
 `Cache-Control` is what browsers and Varnish read: revalidate every time,
@@ -200,8 +207,8 @@ store nothing. It never carries `s-maxage`: Varnish would start holding HTML
 that no post save purges, and Cloudflare documents `s-maxage` as switching
 stale serving off (it implies `proxy-revalidate`).
 `Cloudflare-CDN-Cache-Control` is read by Cloudflare alone, in place of
-`Cache-Control`, and is not passed downstream. The edge keeps the copy (one
-day for HTML, which is what the Cache Rule's fallback already did), refreshes
+`Cache-Control`, and is not passed downstream. The edge keeps the copy (two
+hours for HTML, which is what Cloudflare's default TTL already did), refreshes
 it in the background, and serves it when the origin answers 5xx. The seconds
 are constants, filterable through `sn_edge_cache_lifetimes`.
 
@@ -226,9 +233,11 @@ What the headers depend on, none of it in this repo:
   present (Step 4). Whether that mode counts `Cloudflare-CDN-Cache-Control` as
   "present" is not stated in the docs: check `cf-cache-status` and `age` after
   deploy.
-- **Always Online must be off.** With it on, Cloudflare ignores
-  `stale-while-revalidate` and `stale-if-error`. The plugin's edge posture
-  read reports the setting.
+- **Always Online decides whether the stale directives do anything.** With
+  it on, Cloudflare ignores `stale-while-revalidate` and `stale-if-error`;
+  the edge lifetime still applies. It is on in the live zone and stays on by
+  the owner's choice (2026-10-03), so stale serving is dormant until that
+  changes. The plugin's edge posture read shows the setting.
 - **A Breeze page-cache hit carries neither header.** Breeze answers a hit
   before WordPress loads, and its `breeze_custom_headers_allow` list cannot
   replay them (it snapshots header values once, from a HEAD of the home page

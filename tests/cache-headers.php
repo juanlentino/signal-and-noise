@@ -35,7 +35,7 @@ require __DIR__ . '/../inc/cache-headers-hooks.php';
 
 echo "Group: the values\n";
 ok( 'public, max-age=0' === SN_EDGE_BROWSER_CACHE_CONTROL, 'Cache-Control is public, max-age=0: browsers revalidate, Varnish stores nothing' );
-ok( 'max-age=86400, stale-while-revalidate=86400, stale-if-error=604800' === sn_edge_cdn_cache_control( 'html' ), 'HTML at the edge: a day (what the Cache Rule does today), a day of background refresh, seven days on an origin error' );
+ok( 'max-age=7200, stale-while-revalidate=86400, stale-if-error=604800' === sn_edge_cdn_cache_control( 'html' ) && 7200 === SN_EDGE_HTML_MAX_AGE, 'HTML at the edge: two hours (Cloudflare\'s default for a 200, which is what the edge does today), a day of background refresh, seven days on an origin error' );
 ok( 'max-age=300, stale-while-revalidate=3600, stale-if-error=86400' === sn_edge_cdn_cache_control( 'machine' ), 'machine files and feeds at the edge: five minutes, an hour, a day' );
 $GLOBALS['__lifetimes'] = static function ( $t, $kind ) { return 'html' === $kind ? array( 'max_age' => 600, 'swr' => 60, 'sie' => 120, 's_maxage' => 999 ) : array(); };
 ok( 'max-age=600, stale-while-revalidate=60, stale-if-error=120' === sn_edge_cdn_cache_control( 'html' ), 'the filter changes the seconds, per kind' );
