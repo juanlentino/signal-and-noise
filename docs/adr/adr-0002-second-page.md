@@ -1,6 +1,6 @@
 # A second page: design (2026-10-02)
 
-**Status: partly superseded the same day.** The header order (1) stands. The three page-ending lines (2 to 4, and /provenance's, added later) were removed in theme 14.8.2 and plugin 20.6.0: the header stays on screen while scrolling, so the lines repeated links already visible. The question of how to get a second page is open again.
+**Status: partly superseded the same day.** The header order (1) stands. The three page-ending lines (2 to 4, and /provenance's, added later) were removed in theme 14.9.0 and plugin 20.6.0: the header stays on screen while scrolling, so the lines repeated links already visible. The direction taken instead (theme 14.9.0): links where the reader already is. Each pillar essay names the next one, a note's pillar link goes to the first essay, and "More on this" skips notes the page already offers. Each link carries a goal (`next_essay`, `note_pillar`) so the re-read around 2026-10-30 can measure it.
 
 ## The problem
 
