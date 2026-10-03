@@ -17,6 +17,7 @@ function esc_html( $s ) { return htmlspecialchars( (string) $s, ENT_QUOTES ); }
 function esc_url( $u ) { return $u; }
 function home_url( $p ) { return 'https://x' . $p; }
 function get_queried_object() { return $GLOBALS['__q']; }
+function get_page_uri( $p ) { return $p->uri; }
 // Deliberately out of order: the sort, not the input, decides.
 function sn_theme_pillar_descriptors() {
 	return array(
@@ -29,7 +30,7 @@ function sn_theme_pillar_designation_parts( $d ) { return preg_match( '/^(\d+)\.
 eval( '?>' . preg_replace( '/^.*?(function sn_theme_pillar_sort.*?\n}\n).*$/s', '<?php $1', (string) file_get_contents( __DIR__ . '/../inc/abilities-helpers.php' ) ) );
 require __DIR__ . '/../inc/next-essay.php';
 
-$page = static fn( $name, $type = 'page' ) => (object) array( 'post_name' => $name, 'post_type' => $type );
+$page = static fn( $name, $type = 'page', $parent = 'provenance' ) => (object) array( 'post_name' => $name, 'post_type' => $type, 'uri' => '' === $parent ? $name : $parent . '/' . $name );
 
 $GLOBALS['__q'] = $page( 'over-detection' );
 $h = sn_next_essay_html();
@@ -39,10 +40,12 @@ $GLOBALS['__q'] = $page( 'as-substrate' );
 ok( false !== strpos( sn_next_essay_html(), 'Provenance Without Institutions' ), 'pillar 2 names pillar 3' );
 $GLOBALS['__q'] = $page( 'without-institutions' );
 ok( '' === sn_next_essay_html(), 'the last pillar renders nothing' );
-$GLOBALS['__q'] = $page( 'provenance' );
+$GLOBALS['__q'] = $page( 'provenance', 'page', '' );
 ok( '' === sn_next_essay_html(), 'the hub renders nothing' );
 $GLOBALS['__q'] = $page( 'over-detection', 'post' );
 ok( '' === sn_next_essay_html(), 'a post that shares a pillar slug renders nothing' );
+$GLOBALS['__q'] = $page( 'over-detection', 'page', 'drafts' );
+ok( '' === sn_next_essay_html(), '15.0.1: a page elsewhere that shares a pillar\'s last segment renders nothing (full path, not post_name)' );
 $GLOBALS['__q'] = null;
 ok( '' === sn_next_essay_html(), 'no queried object renders nothing' );
 

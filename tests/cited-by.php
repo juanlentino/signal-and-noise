@@ -42,6 +42,7 @@ $GLOBALS['__queried_id'] = 0;
 function get_queried_object_id() { return $GLOBALS['__queried_id']; }
 
 // wpdb stub: captures the prepared SQL, returns configured rows.
+unset( $GLOBALS['sn_cited_by_memo'] ); // A new fixture is a new request.
 $GLOBALS['__rows'] = array();
 $GLOBALS['__last_sql'] = '';
 class SnCitedByWpdb {
@@ -73,6 +74,7 @@ ok( 0 === preg_match( sn_cited_by_link_pattern( 'craft' ), '<a href="/notes/craf
 
 // ── query: SQL shape + PHP boundary filter + cap ──
 mk_post( 10, 'Target note', 'craft', '<p>me</p>' );
+unset( $GLOBALS['sn_cited_by_memo'] ); // A new fixture is a new request.
 $GLOBALS['__rows'] = array(
 	array( 'ID' => 1, 'post_content' => '<a href="/notes/craft/">real citer</a>' ),
 	array( 'ID' => 2, 'post_content' => '<a href="/notes/craft-two/">collision, not a citer</a>' ),
@@ -85,9 +87,15 @@ ok( false !== strpos( $GLOBALS['__last_sql'], 'ID != 10' ), 'SQL excludes self' 
 ok( false !== strpos( $GLOBALS['__last_sql'], '/notes/craft' ), 'SQL LIKE carries the esc_like needle' );
 
 // cap honored.
+unset( $GLOBALS['sn_cited_by_memo'] ); // A new fixture is a new request.
 $GLOBALS['__rows'] = array();
 for ( $i = 1; $i <= 8; $i++ ) { $GLOBALS['__rows'][] = array( 'ID' => $i, 'post_content' => '<a href="/notes/craft/">x</a>' ); }
 ok( 5 === count( sn_cited_by_query( 10, 5 ) ), 'cap of 5 honored' );
+
+// 15.0.1: once per request. Related notes and Cited by ask the same question.
+$GLOBALS['__rows'] = array( array( 'ID' => 1, 'post_content' => '<a href="/notes/craft/">x</a>' ) );
+$GLOBALS['__last_sql'] = '';
+ok( 5 === count( sn_cited_by_query( 10, 5 ) ) && '' === $GLOBALS['__last_sql'], 'the same post and limit in one request reuses the answer, no second LIKE scan' );
 
 // missing post / empty slug → [].
 ok( array() === sn_cited_by_query( 999, 5 ), 'unknown post → empty' );
@@ -96,6 +104,7 @@ ok( array() === sn_cited_by_query( 999, 5 ), 'unknown post → empty' );
 $GLOBALS['__queried_id'] = 10;
 mk_post( 1, 'A citing <note>', 'citer-one', '' );
 mk_post( 3, 'Another & citer', 'citer-three', '' );
+unset( $GLOBALS['sn_cited_by_memo'] ); // A new fixture is a new request.
 $GLOBALS['__rows'] = array(
 	array( 'ID' => 1, 'post_content' => '<a href="/notes/craft/">x</a>' ),
 	array( 'ID' => 3, 'post_content' => '<a href="/notes/craft/">x</a>' ),
@@ -107,6 +116,7 @@ ok( false !== strpos( $html, 'A citing &lt;note&gt;' ), 'title escaped at the si
 ok( false !== strpos( $html, 'https://x.test/notes/citer-one/' ), 'row links the citer permalink' );
 
 // empty renders '' — no chrome.
+unset( $GLOBALS['sn_cited_by_memo'] ); // A new fixture is a new request.
 $GLOBALS['__rows'] = array();
 ok( '' === sn_cited_by_shortcode(), 'zero citers → empty string' );
 $GLOBALS['__queried_id'] = 0;

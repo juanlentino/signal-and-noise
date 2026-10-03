@@ -85,6 +85,11 @@ function sn_purge_all_caches( $args = array() ) {
 	// serving N (the differential the dashboard dot compares).
 	do_action( 'sn_before_cache_flush', $args );
 
+	// 15.0.1 (Codex on #470): both flushes below delete Core's doing_cron
+	// transient, the lock that keeps two cron runs from overlapping. An
+	// automatic update or the rollover runs INSIDE cron, so put it back.
+	$cron_lock = function_exists( 'get_transient' ) ? get_transient( 'doing_cron' ) : false;
+
 	if ( $args['object_cache'] ) {
 		wp_cache_flush();
 	}
@@ -114,6 +119,10 @@ function sn_purge_all_caches( $args = array() ) {
 				    OR option_name LIKE '\\_transient\\_timeout\\_sn\\_%'"
 			);
 		}
+	}
+
+	if ( false !== $cron_lock && function_exists( 'set_transient' ) ) {
+		set_transient( 'doing_cron', $cron_lock ); // Core sets it with no expiry too.
 	}
 
 	// v9.1.6 (X-07): removed the `self_heal_state` branch. Constants
