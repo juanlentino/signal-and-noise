@@ -40,6 +40,7 @@
  *   inc/provenance-surface.php   — [sn_prov_chip] byline pill + [sn_prov_panel] record, plugin-guarded (v10.30.0)
  *   inc/related-notes.php        — related-notes footer block on single notes
  *   inc/cited-by.php             — [sn_cited_by] reverse-link footer (v10.21.0)
+ *   inc/next-essay.php           — the next pillar after each essay (14.9.0)
  *   inc/404-recovery.php         — helpful 404: search + recent-notes suggestions ([sn_404_suggestions])
  *   inc/post-share.php           — [sn_note_share] copy-permalink + native share row
  *   inc/note-reply.php           — [sn_note_reply] reply-by-email row, contact-alias machinery (v12.9.0)
@@ -136,6 +137,7 @@ require_once __DIR__ . '/inc/post-updated-date.php';
 require_once __DIR__ . '/inc/provenance-surface.php'; // v10.30.0: [sn_prov_chip] byline pill + [sn_prov_panel] record — theme-side placement for the plugin's public provenance rendering (plugin-guarded)
 require_once __DIR__ . '/inc/related-notes.php';
 require_once __DIR__ . '/inc/cited-by.php'; // v10.21.0: [sn_cited_by] reverse-link footer (complement to deliberately-dead pingbacks)
+require_once __DIR__ . '/inc/next-essay.php'; // 14.9.0: the next pillar, at the end of each essay
 require_once __DIR__ . '/inc/404-recovery.php';
 require_once __DIR__ . '/inc/post-share.php';
 require_once __DIR__ . '/inc/note-reply.php'; // v12.9.0: [sn_note_reply] reply-by-correspondence row (reuses the contact-alias machinery)
