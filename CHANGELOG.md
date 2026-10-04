@@ -12,6 +12,9 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Fixed
+- **/workflow: a map step's name sits on its own bold line.** In "What else runs this way" each name ran into its sentence ("Voice rulebooks A written set of rules..."). The name now takes the same styling as a rule's lead: bold, on its own line above the sentence.
+
 ## [15.4.0] - 2026-10-04 — a frame for the workflow page
 
 ### Added
