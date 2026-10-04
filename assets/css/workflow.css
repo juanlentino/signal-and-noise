@@ -5,6 +5,7 @@
  * .sn-workflow-page: a header (h1 + dek), a sample section (eyebrow, h2,
  * intro, a <pre><code> sample, an optional outcome line), a map (h2 + ul)
  * and the rules (h2 + ol, each item a <strong> lead then its explanation).
+ * A map item's first span is its step name, styled as the same lead.
  * Styled by STRUCTURE under the wrapper, so a renamed inner class in the
  * plugin does not drop a rule. Existing tokens only: preset colors (they
  * flip for dark mode on :root), the page type sizes, the air scale.
@@ -123,7 +124,9 @@
 	font-family: 'DM Mono', 'Courier New', monospace;
 	color: var(--wp--preset--color--blood);
 }
-.sn-workflow-page li strong {
+/* The lead of a row: a rule's <strong>, a map step's name (its first span). */
+.sn-workflow-page li strong,
+.sn-workflow-page ul > li > span:first-child {
 	display: block;
 	font-weight: 600;
 	color: var(--wp--preset--color--bone);

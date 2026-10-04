@@ -181,6 +181,7 @@ $wf_pre = preg_match( '/\.sn-workflow-page pre\s*\{([^}]*)\}/', $wf_css, $m ) ? 
 ok( 1 === preg_match( '/overflow-x:\s*auto\s*;/', $wf_pre ), 'the sample <pre> scrolls inside itself (overflow-x: auto), so the page never scrolls sideways' );
 ok( 1 === preg_match( '/max-width:\s*100%\s*;/', $wf_pre ) && 1 === preg_match( '/white-space:\s*pre\s*;/', $wf_pre ), 'the sample <pre> is max-width: 100% and white-space: pre on screen' );
 ok( 1 === preg_match( '/\.sn-workflow-page pre:focus-visible\s*\{[^}]*outline:/', $wf_css ), 'the focusable <pre> (tabindex=0) has a visible focus outline' );
+ok( 1 === preg_match( '/\.sn-workflow-page ul > li > span:first-child\s*\{[^}]*display:\s*block;[^}]*font-weight:\s*600;/', $wf_css ), 'a map step name is its own bold line, like a rule lead, so it does not run into its sentence' );
 $wf_print = preg_match( '/@media print\s*\{(.*?\})\s*\}/s', $wf_css, $m ) ? $m[1] : '';
 ok( 1 === preg_match( '/pre\s*\{[^}]*white-space:\s*pre-wrap;[^}]*overflow:\s*visible;[^}]*word-break:\s*break-word;/s', $wf_print ), 'in print the sample wraps (pre-wrap, overflow visible, break-word) instead of clipping' );
 $wf_fc = preg_match( '/@media \(forced-colors: active\)\s*\{(.*?\})\s*\}/s', $wf_css, $m ) ? $m[1] : '';
