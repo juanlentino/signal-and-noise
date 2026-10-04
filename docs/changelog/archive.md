@@ -16,6 +16,11 @@ nothing here is edited by hand again.
 
 All notable changes to Signal & Noise are documented here.
 
+## [15.3.0] - 2026-10-03 — a pageview ID on every beacon event
+
+### Added
+- **The beacon sends a pageview ID.** One random integer per page view rides every event as `pid`, so the collector (analytics worker 1.24.0 and later) can tie a view's scroll, time, vital and custom events to its pageview. It is held in memory only, redrawn on every pageview (a back-button restore included), never stored and never reused, so it cannot link two page views or two visits. The beacon still sets no cookie and uses no storage.
+
 ## [15.2.2] - 2026-10-03 — nothing foreign inside the signed content
 
 
