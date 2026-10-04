@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * Enqueue now.css on /now, uses.css on /about/uses, accessibility.css on
- * /accessibility, and resume.css on /resume. All depend on the shared
+ * /accessibility, workflow.css on /workflow, and resume.css on /resume. All depend on the shared
  * sn-components stylesheet, as the old route enqueues did.
  */
 function sn_enqueue_cms_page_styles() {
@@ -45,6 +45,13 @@ function sn_enqueue_cms_page_styles() {
 			get_theme_file_uri( 'assets/css/accessibility.css' ),
 			array( 'sn-components' ),
 			sn_asset_ver( 'assets/css/accessibility.css' )
+		);
+	} elseif ( is_page( 'workflow' ) ) {
+		wp_enqueue_style(
+			'sn-workflow',
+			get_theme_file_uri( 'assets/css/workflow.css' ),
+			array( 'sn-components' ),
+			sn_asset_ver( 'assets/css/workflow.css' )
 		);
 	} elseif ( is_page( 'resume' ) ) {
 		wp_enqueue_style(

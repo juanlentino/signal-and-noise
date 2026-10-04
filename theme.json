@@ -379,6 +379,7 @@
 		{ "name": "page-provenance", "title": "Provenance Pillar", "postTypes": ["page"] },
 		{ "name": "page-now", "title": "Now", "postTypes": ["page"] },
 		{ "name": "page-uses", "title": "Uses", "postTypes": ["page"] },
+		{ "name": "page-workflow", "title": "Workflow", "postTypes": ["page"] },
 		{ "name": "page-accessibility", "title": "Accessibility", "postTypes": ["page"] },
 		{ "name": "page-personal", "title": "Personal", "postTypes": ["page"] }
 	]
