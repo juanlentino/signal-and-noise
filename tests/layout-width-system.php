@@ -91,7 +91,7 @@ foreach ( array( 'page-contact' ) as $page ) {
 // on its line. @media conditions are skipped: `(max-width: 781px)` is a
 // breakpoint, not a width.
 echo "\nmax-width sweep over assets/css (blocks/ included)\n";
-$mw_allowed = array( 'var(--wp--custom--page-track)', '1600px', '760px', '80ch', '72ch', '60ch', '46ch', '100%', 'none' );
+$mw_allowed = array( 'var(--wp--custom--page-track)', 'var(--wp--style--global--content-size)', '1600px', '760px', '80ch', '72ch', '60ch', '46ch', '100%', 'none' );
 $mw_files   = glob( "$root/assets/css/{,blocks/}*.css", GLOB_BRACE );
 ok( count( $mw_files ) > 10, 'scanned ' . count( $mw_files ) . ' stylesheets (guard: an empty glob asserts nothing)' );
 $mw_seen = 0;
@@ -132,12 +132,15 @@ $mw_pages = array(
 	'now.css'           => array( '.sn-now-page', 'var(--wp--custom--page-track)' ),
 	'index.css'         => array( '.sn-index-page', '60rem' ),
 	'accessibility.css' => array( '.sn-a11y-page', '60rem' ),
+	// The reading track (theme.json contentSize, pinned to 760px above), by its token.
+	'workflow.css'      => array( '.sn-workflow-page', 'var(--wp--style--global--content-size)' ),
 );
 foreach ( $mw_pages as $f => $pair ) {
 	list( $sel, $want ) = $pair;
 	$css = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( "$root/assets/css/$f" ) );
 	$got = preg_match( '/' . preg_quote( $sel, '/' ) . '\s*\{[^}]*max-width:\s*([^;\s]+)/s', $css, $pm ) ? $pm[1] : '(none)';
-	ok( $got === $want, "$sel sits on " . ( '60rem' === $want ? 'its 60rem reading width' : 'the shared page track' ) . " ($want; got $got)" );
+	$where = array( '60rem' => 'its 60rem reading width', 'var(--wp--style--global--content-size)' => "the reading track ($reading)" )[ $want ] ?? 'the shared page track';
+	ok( $got === $want, "$sel sits on $where ($want; got $got)" );
 }
 
 // ── Every page is centred on one frame (owner, 2026-09-22) ──
@@ -161,7 +164,7 @@ foreach ( array( 'critical.css', 'responsive.css' ) as $f ) {
 	$typed = array_filter( $hr[1], static fn( $b ) => preg_match( '/padding-(left|right):\s*[0-9.]+(rem|px)/', $b ) );
 	ok( count( $hr[1] ) >= 2 && empty( $typed ), "$f: every header breakpoint rule pads its sides with var(--sn-gutter), none types a number (" . count( $hr[1] ) . ' rules)' );
 }
-foreach ( array( 'uses.css' => '.sn-uses-page', 'now.css' => '.sn-now-page', 'index.css' => '.sn-index-page', 'accessibility.css' => '.sn-a11y-page', 'notes.css' => '.sn-notes-page' ) as $f => $sel ) {
+foreach ( array( 'uses.css' => '.sn-uses-page', 'now.css' => '.sn-now-page', 'index.css' => '.sn-index-page', 'accessibility.css' => '.sn-a11y-page', 'notes.css' => '.sn-notes-page', 'workflow.css' => '.sn-workflow-page' ) as $f => $sel ) {
 	$css = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( "$root/assets/css/$f" ) );
 	ok( 1 === preg_match( '/' . preg_quote( $sel, '/' ) . '\s*\{[^}]*margin:\s*0 auto\s*;/s', $css ), "$sel is centred (margin: 0 auto)" );
 }

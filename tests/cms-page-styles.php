@@ -116,6 +116,23 @@ ok( in_array( 'sn-components', (array) ( $resume['deps'] ?? array() ), true ), '
 ok( ( $resume['ver'] ?? false ) !== false, 'sn-resume carries a cache-bust version' );
 ok( ! isset( $GLOBALS['__enqueued']['sn-now'] ) && ! isset( $GLOBALS['__enqueued']['sn-uses'] ) && ! isset( $GLOBALS['__enqueued']['sn-a11y'] ), 'only sn-resume enqueued on /resume' );
 
+// ── /workflow → sn-workflow only ──
+reset_enqueue();
+$GLOBALS['__page'] = 'workflow';
+sn_enqueue_cms_page_styles();
+$wf = $GLOBALS['__enqueued']['sn-workflow'] ?? null;
+ok( $wf !== null, 'sn-workflow enqueued on /workflow' );
+ok( strpos( (string) ( $wf['src'] ?? '' ), 'assets/css/workflow.css' ) !== false, 'sn-workflow src points at assets/css/workflow.css' );
+ok( in_array( 'sn-components', (array) ( $wf['deps'] ?? array() ), true ), 'sn-workflow DEPENDS on sn-components' );
+ok( ( $wf['ver'] ?? false ) !== false, 'sn-workflow carries a cache-bust version' );
+ok( array( 'sn-workflow' ) === array_keys( $GLOBALS['__enqueued'] ), 'only sn-workflow enqueued on /workflow' );
+foreach ( array( 'now', 'about/uses', 'accessibility', 'resume', 'contact' ) as $other ) {
+	reset_enqueue();
+	$GLOBALS['__page'] = $other;
+	sn_enqueue_cms_page_styles();
+	ok( ! isset( $GLOBALS['__enqueued']['sn-workflow'] ), "sn-workflow NOT enqueued on /$other" );
+}
+
 // ── An unrelated page → nothing enqueued ──
 reset_enqueue();
 $GLOBALS['__page'] = 'contact';
@@ -149,6 +166,25 @@ ok( strpos( $resume_css, '.sn-resume-skills' ) !== false, 'resume.css restyles t
 ok( strpos( $resume_css, '--wp--preset--color--' ) !== false, 'resume.css uses theme preset color tokens (no bespoke palette)' );
 ok( strpos( $resume_css, 'max(0.7rem, 11px)' ) !== false, 'resume.css honours the 11px type floor idiom' );
 ok( strpos( $resume_css, 'prefers-reduced-motion' ) !== false, 'resume.css neutralizes motion under reduced-motion' );
+
+// /workflow: the plugin writes the Page with page_template => 'page-workflow'.
+$wf_tpl = (string) @file_get_contents( __DIR__ . '/../templates/page-workflow.html' );
+ok( '' !== $wf_tpl && $wf_tpl === (string) @file_get_contents( __DIR__ . '/../templates/page-uses.html' ), 'templates/page-workflow.html exists and is the same bare frame as page-uses (header, main, post-content, footer)' );
+$wf_ct = json_decode( (string) @file_get_contents( __DIR__ . '/../theme.json' ), true )['customTemplates'] ?? array();
+ok( 1 === count( array_filter( (array) $wf_ct, static fn( $t ) => 'page-workflow' === ( $t['name'] ?? '' ) && in_array( 'page', (array) ( $t['postTypes'] ?? array() ), true ) ) ), 'theme.json customTemplates registers page-workflow for pages' );
+
+$wf_css = (string) preg_replace( '#/\*.*?\*/#s', '', (string) @file_get_contents( __DIR__ . '/../assets/css/workflow.css' ) );
+ok( '' !== $wf_css, 'workflow.css is readable' );
+ok( strpos( $wf_css, '.sn-workflow-page' ) !== false, 'workflow.css is scoped under .sn-workflow-page' );
+ok( strpos( $wf_css, '--wp--preset--color--' ) !== false && ! preg_match( '/#[0-9a-f]{3,8}\b/i', $wf_css ), 'workflow.css uses preset color tokens and no hex color' );
+$wf_pre = preg_match( '/\.sn-workflow-page pre\s*\{([^}]*)\}/', $wf_css, $m ) ? $m[1] : '';
+ok( 1 === preg_match( '/overflow-x:\s*auto\s*;/', $wf_pre ), 'the sample <pre> scrolls inside itself (overflow-x: auto), so the page never scrolls sideways' );
+ok( 1 === preg_match( '/max-width:\s*100%\s*;/', $wf_pre ) && 1 === preg_match( '/white-space:\s*pre\s*;/', $wf_pre ), 'the sample <pre> is max-width: 100% and white-space: pre on screen' );
+ok( 1 === preg_match( '/\.sn-workflow-page pre:focus-visible\s*\{[^}]*outline:/', $wf_css ), 'the focusable <pre> (tabindex=0) has a visible focus outline' );
+$wf_print = preg_match( '/@media print\s*\{(.*?\})\s*\}/s', $wf_css, $m ) ? $m[1] : '';
+ok( 1 === preg_match( '/pre\s*\{[^}]*white-space:\s*pre-wrap;[^}]*overflow:\s*visible;[^}]*word-break:\s*break-word;/s', $wf_print ), 'in print the sample wraps (pre-wrap, overflow visible, break-word) instead of clipping' );
+$wf_fc = preg_match( '/@media \(forced-colors: active\)\s*\{(.*?\})\s*\}/s', $wf_css, $m ) ? $m[1] : '';
+ok( 1 === preg_match( '/pre\s*\{[^}]*border:[^;]*CanvasText/', $wf_fc ), 'under forced-colors the sample keeps a system-color border' );
 
 // ── functions.php wires the module ──
 $fn = (string) @file_get_contents( __DIR__ . '/../functions.php' );
