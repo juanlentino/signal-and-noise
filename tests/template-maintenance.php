@@ -300,9 +300,25 @@ if ( ! function_exists( 'get_file_data' ) ) {
 }
 $GLOBALS['sn_plugin_main_file'] = tempnam( sys_get_temp_dir(), 'snp' );
 $ours = array( 'type' => 'plugin', 'action' => 'update', 'plugin' => 'signal-and-noise-tools/signal-and-noise-tools.php' );
+file_put_contents( $GLOBALS['sn_plugin_main_file'], "<?php\n/**\n * Plugin Name: Signal & Noise Tools\n * Version: 9.9.9\n * Front-End Change: no\n * Front-End Baseline: 9.9.7\n */\n" );
+$GLOBALS['sn_plugin_prior_version'] = '9.9.8';
+reset_counters(); fire_upgrader( $ours );
+ok( 0 === purge_counts()['cf'], 'our plugin alone, release says no, a forward step from at or after its baseline: the caches stay warm' );
+// Codex P1 (plugin #1924): the "no" covers one step; the updater installs the latest tag directly.
+$GLOBALS['sn_plugin_prior_version'] = '9.9.6';
+reset_counters(); fire_upgrader( $ours );
+ok( 1 === purge_counts()['cf'], 'a jump past the public release at the baseline: purges' );
+$GLOBALS['sn_plugin_prior_version'] = '9.9.10';
+reset_counters(); fire_upgrader( $ours );
+ok( 1 === purge_counts()['cf'], 'a rollback: purges' );
+$GLOBALS['sn_plugin_prior_version'] = '';
+reset_counters(); fire_upgrader( $ours );
+ok( 1 === purge_counts()['cf'], 'an unknown prior version: purges' );
+$GLOBALS['sn_plugin_prior_version'] = '9.9.8';
 file_put_contents( $GLOBALS['sn_plugin_main_file'], "<?php\n/**\n * Plugin Name: Signal & Noise Tools\n * Version: 9.9.9\n * Front-End Change: no\n */\n" );
 reset_counters(); fire_upgrader( $ours );
-ok( 0 === purge_counts()['cf'], 'our plugin alone, release says no: the caches stay warm' );
+ok( 1 === purge_counts()['cf'], 'a no with no baseline (theme 15.4.3 era header): purges' );
+file_put_contents( $GLOBALS['sn_plugin_main_file'], "<?php\n/**\n * Plugin Name: Signal & Noise Tools\n * Version: 9.9.9\n * Front-End Change: no\n * Front-End Baseline: 9.9.7\n */\n" );
 reset_counters(); fire_upgrader( array( 'type' => 'plugin', 'action' => 'update', 'plugins' => array( 'signal-and-noise-tools/signal-and-noise-tools.php', 'akismet/akismet.php' ) ) );
 ok( 1 === purge_counts()['cf'], 'ours with another plugin in the batch: purges' );
 reset_counters(); fire_upgrader( array( 'type' => 'theme', 'action' => 'update', 'themes' => array( 'signal-and-noise' ) ) );
@@ -315,7 +331,7 @@ reset_counters(); fire_upgrader( $ours );
 ok( 1 === purge_counts()['cf'], 'no header (an older release): purges, as before' );
 unlink( $GLOBALS['sn_plugin_main_file'] ); reset_counters(); fire_upgrader( $ours );
 ok( 1 === purge_counts()['cf'], 'unreadable file: purges (when in doubt, purge)' );
-unset( $GLOBALS['sn_plugin_main_file'] );
+unset( $GLOBALS['sn_plugin_main_file'], $GLOBALS['sn_plugin_prior_version'] );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
