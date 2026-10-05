@@ -300,9 +300,16 @@ function sn_update_is_only_companion( array $hook_extra ) {
 
 /**
  * Whether the companion plugin's freshly installed release declares no
- * public-site change. Reads the header from the NEW files on disk (this hook
- * runs old code, after the new files land). Anything but an explicit "no"
- * is false: when in doubt, purge.
+ * public-site change since the version it replaced. Reads the headers from
+ * the NEW files on disk (this hook runs old code, after the new files land);
+ * the version it replaced is the old plugin still loaded in this request
+ * (SNT_VERSION).
+ *
+ * "Front-End Change: no" describes one step, and the updater installs the
+ * latest tag directly, so it holds only for a FORWARD update from a version
+ * at or after the release's "Front-End Baseline:" (the last release that
+ * changed the public site). A jump past a public release, a rollback, an
+ * unknown prior version or a missing header is false: when in doubt, purge.
  *
  * @return bool
  */
@@ -311,8 +318,18 @@ function sn_plugin_release_skips_purge() {
 	if ( '' === $file || ! is_readable( $file ) || ! function_exists( 'get_file_data' ) ) {
 		return false;
 	}
-	$h = get_file_data( $file, array( 'front_end' => 'Front-End Change' ) );
-	return 'no' === strtolower( trim( (string) ( $h['front_end'] ?? '' ) ) );
+	$h      = get_file_data( $file, array( 'to' => 'Version', 'front_end' => 'Front-End Change', 'base' => 'Front-End Baseline' ) );
+	$from   = (string) ( $GLOBALS['sn_plugin_prior_version'] ?? ( defined( 'SNT_VERSION' ) ? SNT_VERSION : '' ) ); // Test seam first.
+	$to     = trim( (string) ( $h['to'] ?? '' ) );
+	$base   = trim( (string) ( $h['base'] ?? '' ) );
+	$semver = '/^\d+\.\d+\.\d+$/';
+	if ( 'no' !== strtolower( trim( (string) ( $h['front_end'] ?? '' ) ) ) ) {
+		return false;
+	}
+	if ( ! preg_match( $semver, $from ) || ! preg_match( $semver, $to ) || ! preg_match( $semver, $base ) ) {
+		return false;
+	}
+	return version_compare( $to, $from, '>' ) && version_compare( $from, $base, '>=' );
 }
 
 /**
