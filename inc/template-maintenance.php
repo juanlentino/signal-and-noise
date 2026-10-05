@@ -250,6 +250,14 @@ function sn_auto_purge_on_update( $upgrader, $hook_extra ) {
 	if ( 'theme' !== $type && 'plugin' !== $type ) {
 		return;
 	}
+	// Owner 2026-10-05 (option B): our companion plugin's release says
+	// whether it changes the public site (its `Front-End Change:` header,
+	// written by the release tool). When the update is that plugin alone and
+	// its release says "no", the page caches stay warm. Any other package,
+	// or a missing or unreadable header, purges as before.
+	if ( 'plugin' === $type && sn_update_is_only_companion( $hook_extra ) && sn_plugin_release_skips_purge() ) {
+		return;
+	}
 	// Once per request: a batch update fires upgrader_process_complete per
 	// package. A global, not a static, so the standalone tests can reset it.
 	if ( ! empty( $GLOBALS['sn_auto_purge_done'] ) ) {
@@ -266,6 +274,46 @@ function sn_auto_purge_on_update( $upgrader, $hook_extra ) {
 	) );
 }
 add_action( 'upgrader_process_complete', 'sn_auto_purge_on_update', 10, 2 );
+
+/**
+ * Whether a plugin update's packages are the companion plugin and nothing
+ * else (bulk 'plugins' or single 'plugin'). PURE.
+ *
+ * @param array $hook_extra Package descriptor from the upgrader.
+ * @return bool
+ */
+function sn_update_is_only_companion( array $hook_extra ) {
+	$plugins = (array) ( $hook_extra['plugins'] ?? array() );
+	if ( isset( $hook_extra['plugin'] ) ) {
+		$plugins[] = (string) $hook_extra['plugin'];
+	}
+	if ( array() === $plugins ) {
+		return false;
+	}
+	foreach ( $plugins as $file ) {
+		if ( 0 !== strpos( (string) $file, 'signal-and-noise-tools/' ) ) {
+			return false;
+		}
+	}
+	return true;
+}
+
+/**
+ * Whether the companion plugin's freshly installed release declares no
+ * public-site change. Reads the header from the NEW files on disk (this hook
+ * runs old code, after the new files land). Anything but an explicit "no"
+ * is false: when in doubt, purge.
+ *
+ * @return bool
+ */
+function sn_plugin_release_skips_purge() {
+	$file = (string) ( $GLOBALS['sn_plugin_main_file'] ?? ( defined( 'WP_PLUGIN_DIR' ) ? WP_PLUGIN_DIR . '/signal-and-noise-tools/signal-and-noise-tools.php' : '' ) );
+	if ( '' === $file || ! is_readable( $file ) || ! function_exists( 'get_file_data' ) ) {
+		return false;
+	}
+	$h = get_file_data( $file, array( 'front_end' => 'Front-End Change' ) );
+	return 'no' === strtolower( trim( (string) ( $h['front_end'] ?? '' ) ) );
+}
 
 /**
  * Focused origin-HTML + CDN purge when Site Editor global styles save —
