@@ -286,5 +286,36 @@ $GLOBALS['__tr'] = array();
 fire_upgrader( array( 'type' => 'plugin', 'action' => 'update', 'plugin' => 'akismet/akismet.php' ) );
 ok( ! isset( $GLOBALS['__tr']['doing_cron'] ), 'control: no lock held, none invented' );
 
+// ── Owner 2026-10-05 (option B): our plugin release can say "no public change" ──
+echo "\nScenario B: Front-End Change header\n";
+if ( ! function_exists( 'get_file_data' ) ) {
+	function get_file_data( $file, $headers ) {
+		$src = (string) file_get_contents( $file );
+		$out = array();
+		foreach ( $headers as $k => $name ) {
+			$out[ $k ] = preg_match( '/^[ \t\/*#@]*' . preg_quote( $name, '/' ) . ':(.*)$/mi', $src, $m ) ? trim( $m[1] ) : '';
+		}
+		return $out;
+	}
+}
+$GLOBALS['sn_plugin_main_file'] = tempnam( sys_get_temp_dir(), 'snp' );
+$ours = array( 'type' => 'plugin', 'action' => 'update', 'plugin' => 'signal-and-noise-tools/signal-and-noise-tools.php' );
+file_put_contents( $GLOBALS['sn_plugin_main_file'], "<?php\n/**\n * Plugin Name: Signal & Noise Tools\n * Version: 9.9.9\n * Front-End Change: no\n */\n" );
+reset_counters(); fire_upgrader( $ours );
+ok( 0 === purge_counts()['cf'], 'our plugin alone, release says no: the caches stay warm' );
+reset_counters(); fire_upgrader( array( 'type' => 'plugin', 'action' => 'update', 'plugins' => array( 'signal-and-noise-tools/signal-and-noise-tools.php', 'akismet/akismet.php' ) ) );
+ok( 1 === purge_counts()['cf'], 'ours with another plugin in the batch: purges' );
+reset_counters(); fire_upgrader( array( 'type' => 'theme', 'action' => 'update', 'themes' => array( 'signal-and-noise' ) ) );
+ok( 1 === purge_counts()['cf'], 'a theme update always purges' );
+file_put_contents( $GLOBALS['sn_plugin_main_file'], "<?php\n/**\n * Plugin Name: Signal & Noise Tools\n * Front-End Change: yes\n */\n" );
+reset_counters(); fire_upgrader( $ours );
+ok( 1 === purge_counts()['cf'], 'release says yes: purges' );
+file_put_contents( $GLOBALS['sn_plugin_main_file'], "<?php\n/**\n * Plugin Name: Signal & Noise Tools\n */\n" );
+reset_counters(); fire_upgrader( $ours );
+ok( 1 === purge_counts()['cf'], 'no header (an older release): purges, as before' );
+unlink( $GLOBALS['sn_plugin_main_file'] ); reset_counters(); fire_upgrader( $ours );
+ok( 1 === purge_counts()['cf'], 'unreadable file: purges (when in doubt, purge)' );
+unset( $GLOBALS['sn_plugin_main_file'] );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
