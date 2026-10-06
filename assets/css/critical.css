@@ -200,8 +200,10 @@ body::after {
    that is 2.5:1 light and 1.2:1 dark against the words around it, below the
    3:1 a color-only link needs, so these links read as plain text until
    hovered. Found 2026-10-06 by a sitewide audit: /contact/personal's rust
-   paragraph, the /provenance sidenotes, the /resume rail. Underlined at rest. */
-.has-rust-color a:not(.wp-element-button),
+   paragraph, the /provenance sidenotes, the /resume rail. Underlined at rest.
+   Paragraphs only: a rust post-terms list (a Note's frontmatter tags) is a
+   row of standalone targets kept bare on purpose (article.css). */
+p.has-rust-color a:not(.wp-element-button),
 .sn-sidenote a:not(.wp-element-button),
 .sn-resume-rail a:not(.wp-element-button) {
 	text-decoration-line: underline;

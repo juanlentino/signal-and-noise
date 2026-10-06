@@ -13,7 +13,7 @@ adds a bullet below. A release is a separate, deliberate act:
 ## [Unreleased]
 
 ### Fixed
-- **Links in gray text read as plain text until hovered.** The theme marks links by color alone (red, no underline), which holds against the black body text but not against the gray (rust) text: 2.5:1 in light and 1.2:1 in dark, under the 3:1 a color-only link needs (WCAG 1.4.1). A sitewide audit of every page in both palettes found three places: the gray paragraph on /contact/personal, the paper sidenotes on /provenance (SSRN and DOI), and the LinkedIn link in the /resume rail. Links there are now underlined at rest (`assets/css/critical.css`). Buttons are untouched.
+- **Links in gray text read as plain text until hovered.** The theme marks links by color alone (red, no underline), which holds against the black body text but not against the gray (rust) text: 2.5:1 in light and 1.2:1 in dark, under the 3:1 a color-only link needs (WCAG 1.4.1). A sitewide audit of every page in both palettes found three places: the gray paragraph on /contact/personal, the paper sidenotes on /provenance (SSRN and DOI), and the LinkedIn link in the /resume rail. Links there are now underlined at rest (`assets/css/critical.css`), in gray paragraphs only, so a Note's frontmatter tag list stays bare. Buttons are untouched.
 
 ## [15.5.0] - 2026-10-06 — Uses is a spec sheet
 
