@@ -62,12 +62,15 @@ workflow" → choose `main` → run.
 ### Live contrast (`contrast.yml`)
 
 `.github/workflows/contrast.yml` runs on every push to `main`, daily at
-06:41 UTC and on dispatch (`timeout-minutes: 20`). It reads the sitemap,
-samples every kind of page, and runs `tools/contrast-computed.js` in each
-with Playwright: text under AA or a link marked only by color fails the run.
-A page that does not load makes the run inconclusive (a warning, exit 2),
-never a pass. The run ends with a `contrast-summary` notice (pages, pairs,
-links, failures), read by the plugin's Health report. The cron-liveness
+06:41 UTC and on dispatch (`timeout-minutes: 20`). `tools/contrast-ci.mjs`
+reads the sitemap's pages, its two newest notes and one tag archive, loads `tools/contrast-computed.js` into each with Playwright, and fails on text below AA or on a link in running text that is neither underlined nor 3:1 against its surrounding text (WCAG 1.4.1). It skips what it cannot measure: text over background images or gradients, pseudo-element, canvas and SVG text, single-character text, `aria-hidden` subtrees, and pages behind a login (the header of `tools/contrast-computed.js` lists them).
+
+A run that cannot measure (the sitemap unreadable, the home page blocked, a
+page that does not render) exits 2, and the workflow turns that into a
+**green job with a warning annotation**: read the warning, not the check
+mark. Only a run that reaches measurement prints the `contrast-summary`
+notice (pages, pairs, links, failures). The plugin's Health report reads that
+notice and says unknown when a green run carries none. The cron-liveness
 guard in `ci.yml` fails if the daily run stops firing. Requests carry the
 `X-SN-Smoke` header only to the site's own origin.
 

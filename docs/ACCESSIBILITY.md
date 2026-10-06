@@ -115,12 +115,13 @@ itself.
 | `tests/forced-colors.php` | forced-colors / Windows High Contrast behaviour |
 | `tests/links-in-dim-text.php` | links inside dimmed text (gray paragraphs, sidenotes, the resume rail) are underlined at rest, not marked by color alone (WCAG 1.4.1) |
 | `assets/css/base.css` reduced-motion reset | under `prefers-reduced-motion: reduce`, every animation and transition is off, pseudo-elements included |
-| `.github/workflows/contrast.yml` | **the rendered site**: on every push to main, daily at 06:41 UTC and on demand, `tools/contrast-ci.mjs` loads `tools/contrast-computed.js` into a sample of live pages (Playwright) and fails on any text pair under AA or any link marked by color alone. Its `contrast-summary` notice is what the plugin's Health report reads |
+| `.github/workflows/contrast.yml` | **the rendered site**: on every push to main, daily at 06:41 UTC and on demand, `tools/contrast-ci.mjs` reads the sitemap's pages, its two newest notes and one tag archive, loads `tools/contrast-computed.js` into each with Playwright, and fails on text below AA or on a link in running text that is neither underlined nor 3:1 against its surrounding text (WCAG 1.4.1). It skips what it cannot measure: text over background images or gradients, pseudo-element, canvas and SVG text, single-character text, `aria-hidden` subtrees, and pages behind a login (the header of `tools/contrast-computed.js` lists them). A run that reaches measurement ends with a `contrast-summary` notice, which the plugin's Health report reads |
 
 ## What the source checks cannot see
 
 `contrast.yml` measures computed colors on the rendered page, so on the pages it
-samples it does see nesting, opacity chains and authored content. The list below
+samples it does see nesting, opacity chains and authored content, within the
+exclusions above. The list below
 is what the source-level tests above cannot see, and what a page outside the
 sample can still hide.
 
