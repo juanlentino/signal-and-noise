@@ -50,23 +50,31 @@
 	margin: 0;
 }
 
+.sn-now-hero {
+	margin-bottom: var(--wp--custom--air--lg);
+}
+
 /* ── Section heads ────────────────────────────────────────────────────── */
+/* Sections: a spec sheet (2026-10-06), the same bands as /uses: label and
+   count on the left, items two across on the right. */
 .sn-now-section {
-	margin-top: var(--wp--custom--air--xl);
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
+	gap: 1rem 3rem;
+	padding: var(--wp--custom--air--sm) 0;
+	border-top: 2px solid var(--wp--preset--color--bone);
 }
 .sn-now-section-head {
 	display: flex;
-	align-items: baseline;
-	justify-content: space-between;
-	gap: 1rem;
-	padding-bottom: 0.6rem;
-	border-bottom: 2px solid var(--wp--preset--color--bone);
-	margin-bottom: 0.5rem;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 0.4rem;
 }
 .sn-now-section-label {
 	font-family: 'Bebas Neue', Impact, sans-serif;
 	font-weight: 400;
 	font-size: var(--wp--custom--font-size--page-section-label);
+	line-height: 0.95;
 	letter-spacing: 0.02em;
 	text-transform: uppercase;
 	color: var(--wp--preset--color--bone);
@@ -79,19 +87,19 @@
 	color: var(--wp--preset--color--rust);
 }
 
-/* ── Items ────────────────────────────────────────────────────────────── */
+/* ── Items: cells ─────────────────────────────────────────────────────── */
 .sn-now-list {
 	list-style: none;
 	margin: 0;
 	padding: 0;
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: var(--wp--custom--air--xs) 2.5rem;
 }
 .sn-now-item {
-	padding: var(--wp--custom--air--xxs) 0;
-	border-bottom: 1px solid var(--wp--preset--color--concrete);
+	padding-top: var(--wp--custom--air--xxs);
+	border-top: 1px solid var(--wp--preset--color--concrete);
 	transition: padding 0.2s ease;
-}
-.sn-now-item:last-child {
-	border-bottom: 0;
 }
 @media (hover: hover) {
 	.sn-now-item:hover {
@@ -103,6 +111,17 @@
 	font-size: var(--wp--custom--font-size--page-item);
 	line-height: 1.5;
 	color: var(--wp--preset--color--bone);
+}
+
+@media (max-width: 900px) {
+	.sn-now-section {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+@media (max-width: 640px) {
+	.sn-now-list {
+		grid-template-columns: minmax(0, 1fr);
+	}
 }
 
 @media (prefers-reduced-motion: reduce) {
