@@ -38,6 +38,17 @@ html {
 	html {
 		scroll-behavior: auto;
 	}
+	/* A reduced-motion setting is an instruction (/maturity/a11y-maturity).
+	   The plugin's motion scan counted 44 declared transitions and
+	   animations with no counterpart, most of them hover fades, a few real
+	   movement (the roadmap fold, the pillar CTA arrow). One reset covers
+	   every sheet on the page; everyone else keeps every fade. */
+	*,
+	*::before,
+	*::after {
+		animation: none !important;
+		transition: none !important;
+	}
 }
 
 body {
