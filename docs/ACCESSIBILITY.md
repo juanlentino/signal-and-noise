@@ -95,9 +95,10 @@ being true without anything noticing.
 `root` measures 4.60 : 1 — a 0.10 margin over AA. **High Contrast measures
 3.80 : 1, already below AA**, and High Contrast is what ships. It is not a live
 defect only because nothing currently puts blood text on an asphalt ground —
-one authored pull-quote containing a link changes that, and **no test can catch
-it**, because whether one element sits inside another is a fact about the HTML,
-not the stylesheet.
+one authored pull-quote containing a link changes that, and **no source-level
+test can catch it**, because whether one element sits inside another is a fact
+about the HTML, not the stylesheet. The live check (`contrast.yml`) catches it
+on a page it samples; on any other page it stays invisible.
 
 If that combination is ever wanted, the fix is the one the companion plugin
 already uses: an explicit ink token for the emphasis red rather than `blood`
