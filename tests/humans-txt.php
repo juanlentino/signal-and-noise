@@ -65,6 +65,21 @@ ok( strpos( $body, 'open.spotify.com' ) !== false, 'body lists the Spotify profi
 ok( strpos( $body, 'x.com/juan_lentino' ) !== false, 'body lists the X profile (v10.13.4, lockstep with footer)' );
 ok( false === strpos( $body, "\xE2\x80\x94" ), 'body uses straight ASCII, no em-dash U+2014 (v10.13.4)' );
 
+// 2026-10-06: one source of truth. With the plugin, the TECHNOLOGY facts are
+// the colophon's own (sn_colophon_plain_facts()); without it, a fallback that
+// says nothing the colophon contradicts.
+ok( false === strpos( $body, 'vanilla ES5' ) && false === strpos( $body, 'for SEO, search & ops' ), 'plugin absent: the fallback drops the two claims the colophon corrected (ES5, the thin plugin line)' );
+ok( false !== strpos( $body, 'Code: hand-written PHP, plain JavaScript and theme.json, no build step' ), 'plugin absent: the fallback states the code fact the colophon states' );
+if ( ! function_exists( 'sn_colophon_plain_facts' ) ) {
+	function sn_colophon_plain_facts() {
+		return array( 'Platform' => 'WordPress with Full Site Editing: FACT-FROM-PLUGIN.', 'Records' => 'each note I publish gets a fingerprint (SHA-256).' );
+	}
+}
+$with = sn_humans_txt_body();
+ok( false !== strpos( $with, "Platform: WordPress with Full Site Editing: FACT-FROM-PLUGIN.\n" ) && false !== strpos( $with, "Records: each note I publish gets a fingerprint (SHA-256).\n" ), 'plugin present: the facts are the colophon\'s, one per line, Label: text' );
+ok( false === strpos( $with, 'Code: hand-written PHP, plain JavaScript and theme.json' ), 'plugin present: the fallback lines are not printed beside them' );
+ok( false !== strpos( $with, 'Standards - HTML5, CSS3' ), 'the Standards line (not a colophon fact) stays' );
+
 // --- Head links: rel=author autodiscovery + maker's mark ---
 ok( function_exists( 'sn_humans_txt_head_links' ), 'sn_humans_txt_head_links() is defined' );
 ob_start();

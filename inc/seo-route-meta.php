@@ -34,7 +34,7 @@ function sn_seo_page_descriptions() {
 	return (array) apply_filters(
 		'sn_seo_page_descriptions',
 		array(
-			'colophon' => 'How this site is built: the typography, tools, and engineering behind juanlentino.com.',
+			'colophon' => 'How juanlentino.com is built, who maintains it, and how each note on it is signed and timestamped.',
 		)
 	);
 }
