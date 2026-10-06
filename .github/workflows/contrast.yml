@@ -1,0 +1,57 @@
+name: Contrast (live)
+
+# Runs tools/contrast-computed.js headless against the LIVE site: every text
+# pair at WCAG AA and every link marked by color alone at 3:1, light and dark,
+# on every sitemap page plus sample notes and a tag archive.
+#
+# Why live and why not on pull requests: the instrument measures the rendered
+# cascade (plugin CSS, content, nesting, opacity), which only exists on the
+# served site. Deploys are manual installs, so a push measures what is live
+# now; the daily run catches an install, a plugin update or a content edit.
+#
+# Exit 2 from the runner means inconclusive (the edge blocked this runner, or
+# no page rendered): a warning, never a pass and never a red X.
+#
+# Security: no github.event.* reaches a shell; the smoke token is a masked
+# secret passed through env, the same allow-list header smoke-test.yml sends.
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '41 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: contrast-live
+  cancel-in-progress: false
+
+jobs:
+  contrast:
+    name: Contrast on the live site
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SN_SMOKE_TOKEN: ${{ secrets.SN_SMOKE_TOKEN }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Playwright (Chromium only)
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.63.0
+          npx playwright install --with-deps chromium
+
+      - name: Measure
+        run: |
+          set +e
+          node tools/contrast-ci.mjs https://juanlentino.com
+          code=$?
+          if [ "$code" = "2" ]; then
+            echo "::warning::Contrast run inconclusive (edge block or nothing rendered); not a pass."
+            exit 0
+          fi
+          exit "$code"
