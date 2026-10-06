@@ -96,7 +96,6 @@ async function main() {
 
 		console.log(`${out.checked} text pairs and ${out.linksChecked} links checked on ${out.pages} pages, light and dark; ${out.imaged} over images skipped.`);
 		if (out.unloaded.length) console.log(`::warning::${out.unloaded.length} page(s) rendered no <main> (blocked or broken): ${out.unloaded.join(', ')}`);
-		if (out.unloaded.length === out.pages) return 2;
 
 		for (const v of out.violations) console.log(`::error::${v.page} (${v.palette}) ${v.sel} "${v.text}": ${v.ratio}:1, needs ${v.need}:1 (${v.size}px, opacity ${v.opacity})`);
 		for (const l of out.links) console.log(`::error::${l.page} (${l.palette}) link "${l.text}" in ${l.parent}: ${l.ratio}:1 against its text, no underline (needs 3:1, WCAG 1.4.1)`);
@@ -104,8 +103,12 @@ async function main() {
 		// failures is the uncapped total: GitHub keeps only ten error annotations a step.
 		const bad = out.violations.length + out.links.length;
 		console.log(`::notice title=contrast-summary::${JSON.stringify({ pages: out.pages, checked: out.checked, links: out.linksChecked, failures: bad })}`);
-		console.log(bad ? `${bad} failure(s).` : 'Clean: every text pair at AA, every color-only link at 3:1.');
-		return bad ? 1 : 0;
+		if (bad) { console.log(`${bad} failure(s).`); return 1; }
+		// A page that did not render was not measured: never call the run clean
+		// (Codex on #508). Failures found elsewhere still go red above.
+		if (out.unloaded.length) { console.log('Inconclusive: not every page rendered.'); return 2; }
+		console.log('Clean: every text pair at AA, every color-only link at 3:1.');
+		return 0;
 	} finally {
 		// Settle in-flight routed requests before closing, or one rejects after
 		// the context is gone and crashes a run that already measured clean.
