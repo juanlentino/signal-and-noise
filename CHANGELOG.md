@@ -12,6 +12,9 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Fixed
+- **Diagram labels in eleven notes fell under AA.** The inline diagrams mute secondary labels with opacity (.5 to .7), measured as low as 3.95:1 at 10-12px. The diagrams are part of the signed notes, so `assets/css/article.css` renders those labels in rust at full strength instead: still visibly secondary, AA in both palettes, the notes' content untouched.
+
 ## [15.6.1] - 2026-10-06 — the notes month label is muted by rust alone
 
 ### Fixed
