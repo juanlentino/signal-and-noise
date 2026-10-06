@@ -59,6 +59,18 @@ Routes covered:
 To trigger a manual run: GitHub → Actions → Smoke Test → "Run
 workflow" → choose `main` → run.
 
+### Live contrast (`contrast.yml`)
+
+`.github/workflows/contrast.yml` runs on every push to `main`, daily at
+06:41 UTC and on dispatch (`timeout-minutes: 20`). It reads the sitemap,
+samples every kind of page, and runs `tools/contrast-computed.js` in each
+with Playwright: text under AA or a link marked only by color fails the run.
+A page that does not load makes the run inconclusive (a warning, exit 2),
+never a pass. The run ends with a `contrast-summary` notice (pages, pairs,
+links, failures), read by the plugin's Health report. The cron-liveness
+guard in `ci.yml` fails if the daily run stops firing. Requests carry the
+`X-SN-Smoke` header only to the site's own origin.
+
 ## Tier 3: Better Stack monitors
 
 External monitoring lives on Better Stack Uptime — migrated from the

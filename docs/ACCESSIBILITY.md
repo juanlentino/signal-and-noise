@@ -113,8 +113,16 @@ itself.
 | `tests/front-end-css-contrast.php` | **every ink/surface pair in every stylesheet, per palette**, plus 3 : 1 for focus rings and state marks |
 | `tests/front-end-css-inverts.php` | no stylesheet paints a hardcoded colour |
 | `tests/forced-colors.php` | forced-colors / Windows High Contrast behaviour |
+| `tests/links-in-dim-text.php` | links inside dimmed text (gray paragraphs, sidenotes, the resume rail) are underlined at rest, not marked by color alone (WCAG 1.4.1) |
+| `assets/css/base.css` reduced-motion reset | under `prefers-reduced-motion: reduce`, every animation and transition is off, pseudo-elements included |
+| `.github/workflows/contrast.yml` | **the rendered site**: on every push to main, daily at 06:41 UTC and on demand, `tools/contrast-ci.mjs` loads `tools/contrast-computed.js` into a sample of live pages (Playwright) and fails on any text pair under AA or any link marked by color alone. Its `contrast-summary` notice is what the plugin's Health report reads |
 
-## What none of them can see
+## What the source checks cannot see
+
+`contrast.yml` measures computed colors on the rendered page, so on the pages it
+samples it does see nesting, opacity chains and authored content. The list below
+is what the source-level tests above cannot see, and what a page outside the
+sample can still hide.
 
 - **Which element sits inside which.** Anything not declaring its own background
   is measured against the page ground. A nested surface must be declared in

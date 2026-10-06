@@ -15,6 +15,7 @@ adds a bullet below. A release is a separate, deliberate act:
 ### Changed
 - **The theme screenshot is current.** `screenshot.png` (the README image and the wp-admin theme card) was the v3.6.0 site from March; it is now the live home page at 1200×900 in light.
 - **The cron-liveness guard watches `contrast.yml`** (#511): a live contrast check that stops running now fails CI instead of going quiet.
+- **Docs:** `docs/ACCESSIBILITY.md` lists the live contrast check, the dim-text link guard and the reduced-motion reset, and says what the live check can see; `docs/MONITORING.md` documents `contrast.yml`; `readme.txt` names both.
 - **README:** Now and Uses described as spec sheets; a Front-end entry for the accessibility rules and the live contrast check.
 
 ## [15.7.0] - 2026-10-06 — reduced motion stops all motion, labels and links at AA, contrast measured live
