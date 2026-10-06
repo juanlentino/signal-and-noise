@@ -85,9 +85,13 @@
 			const bb = parse(cs.borderBottomColor);
 			if (parseFloat(cs.borderBottomWidth) > 0 && cs.borderBottomStyle !== 'none' && bb && bb.a > 0) continue;
 			const own = parse(cs.backgroundColor); if (own && own.a > 0) continue;
-			const par = a.parentElement; if (!par) continue;
-			const prose = [...par.childNodes].some(c => c.nodeType === 3 && c.textContent.trim().length > 2);
-			if (!prose) continue;
+			// The prose a link sits in may be an ancestor or two up: a CMS wraps
+			// links in spans and ems. Walk inline ancestors to the first with
+			// words of its own; stop at a block (Codex on #508, round 2).
+			const words = el => [...el.childNodes].some(c => c.nodeType === 3 && c.textContent.trim().length > 2);
+			let par = a.parentElement;
+			while (par && !words(par) && win.getComputedStyle(par).display === 'inline') par = par.parentElement;
+			if (!par || !words(par)) continue;
 			const lc = parse(cs.color), pc = parse(win.getComputedStyle(par).color);
 			if (!lc || !pc) continue;
 			const rr = ratio(lc.c, pc.c);
@@ -136,13 +140,16 @@
 			if (bg === null) bg = ground;
 			const fg = over(fgP, fgP.a * op, bg);
 			const rr = ratio(fg, bg);
-			const size = parseFloat(cs.fontSize), w = parseInt(cs.fontWeight, 10) || 400;
-			const need = size >= 24 || (size >= 18.66 && w >= 700) ? 3 : 4.5;
 			const sel = el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? '.' + el.className.trim().split(/\s+/).slice(0, 2).join('.') : '');
 			// Opacity is part of the identity: the same class at full strength and
 			// faded (a roadmap legend's done vs later cells) are different pairs.
 			// Keyed without it, the passing first cell hid every faded one.
-			const key = [page, palette, sel, cs.color, bg.join(), op.toFixed(2)].join('|');
+			const size = parseFloat(cs.fontSize), w = parseInt(cs.fontWeight, 10) || 400;
+			const need = size >= 24 || (size >= 18.66 && w >= 700) ? 3 : 4.5;
+			// The threshold is part of the identity too: a large instance passing
+			// at 3:1 must not hide a small one of the same style failing at 4.5
+			// (Codex on #508, round 2).
+			const key = [page, palette, sel, cs.color, bg.join(), op.toFixed(2), need].join('|');
 			if (seen.has(key)) continue; seen.add(key);
 			out.checked++;
 			if (rr < need) out.violations.push({ page, palette, sel, text: t.slice(0, 40), fg: fg.join(','), bg: bg.join(','), ratio: +rr.toFixed(2), need, size: +size.toFixed(1), weight: w, opacity: +op.toFixed(2) });
