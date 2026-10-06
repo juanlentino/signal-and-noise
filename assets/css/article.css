@@ -867,3 +867,19 @@ main { view-transition-name: sn-main; }
 	letter-spacing: var(--wp--custom--letter-spacing--wide);
 	text-transform: uppercase;
 }
+
+/* ── Diagram labels: muted by rust, not opacity (2026-10-06) ─────────────
+   Inline diagrams in the notes mute their secondary labels with opacity
+   (.5 to .7, from a class in the diagram's own <style> or an attribute),
+   which measured 3.95:1 and below for 10-12px text (a computed contrast
+   audit). The diagrams are part of the signed notes, so the fix lives here,
+   not in them: the same labels render in rust at full strength, still
+   visibly secondary, now AA in both palettes. Class names are the eleven
+   diagrams' own (2026-10-06 survey); the attribute forms catch the rest. */
+.wp-block-post-content svg text[opacity],
+.wp-block-post-content svg text[fill-opacity],
+.wp-block-post-content svg :is(.ph-heading, .ph-caption, .lk-heading, .lk-caption, .st-eyebrow, .st-h, .st-summary-label) {
+	opacity: 1;
+	fill-opacity: 1;
+	fill: var(--wp--preset--color--rust);
+}
