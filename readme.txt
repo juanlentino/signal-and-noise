@@ -22,7 +22,7 @@ Features:
 * Self-hosted Bebas Neue + DM Mono typography (no Google Fonts)
 * Dark mode (v12.0.0) as a token layer: follows prefers-color-scheme, with a persistent reader toggle. Contrast-gated in CI across every palette the site can present
 * View Transitions API for soft cross-page navigation
-* Sticky shrinking header; under prefers-reduced-motion every animation and transition is off
+* Fixed, solid, single-height header; under prefers-reduced-motion every animation and transition is off
 * Contrast measured on sampled live pages daily (contrast.yml): text at AA; links in running text underlined or 3:1 against the text around them
 * Inlined critical CSS; the modular stylesheets ship as one combined, minified file the theme builds itself (v10.21.6+), with per-file enqueues as the fail-open fallback
 * Skip-link, focus-visible outlines on every interactive element (WCAG 2.4.7 AA)
