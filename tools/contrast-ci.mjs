@@ -64,7 +64,8 @@ if (out.unloaded.length === out.pages) process.exit(2);
 for (const v of out.violations) console.log(`::error::${v.page} (${v.palette}) ${v.sel} "${v.text}": ${v.ratio}:1, needs ${v.need}:1 (${v.size}px, opacity ${v.opacity})`);
 for (const l of out.links) console.log(`::error::${l.page} (${l.palette}) link "${l.text}" in ${l.parent}: ${l.ratio}:1 against its text, no underline (needs 3:1, WCAG 1.4.1)`);
 // One machine-readable line for the plugin's Health report (inc/health-contrast-rendered.php).
-console.log(`::notice title=contrast-summary::${JSON.stringify({ pages: out.pages, checked: out.checked, links: out.linksChecked })}`);
+// failures is the uncapped total: GitHub keeps only ten error annotations a step.
+console.log(`::notice title=contrast-summary::${JSON.stringify({ pages: out.pages, checked: out.checked, links: out.linksChecked, failures: out.violations.length + out.links.length })}`);
 const bad = out.violations.length + out.links.length;
 console.log(bad ? `${bad} failure(s).` : 'Clean: every text pair at AA, every color-only link at 3:1.');
 process.exit(bad ? 1 : 0);
