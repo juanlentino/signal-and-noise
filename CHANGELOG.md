@@ -12,6 +12,10 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Changed
+- **The cron-liveness guard watches `contrast.yml`** (#511): a live contrast check that stops running now fails CI instead of going quiet.
+- **README:** Now and Uses described as spec sheets; a Front-end entry for the accessibility rules and the live contrast check.
+
 ## [15.7.0] - 2026-10-06 — reduced motion stops all motion, labels and links at AA, contrast measured live
 
 ### Added
