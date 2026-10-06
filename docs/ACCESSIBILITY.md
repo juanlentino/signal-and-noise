@@ -95,9 +95,10 @@ being true without anything noticing.
 `root` measures 4.60 : 1 — a 0.10 margin over AA. **High Contrast measures
 3.80 : 1, already below AA**, and High Contrast is what ships. It is not a live
 defect only because nothing currently puts blood text on an asphalt ground —
-one authored pull-quote containing a link changes that, and **no test can catch
-it**, because whether one element sits inside another is a fact about the HTML,
-not the stylesheet.
+one authored pull-quote containing a link changes that, and **no source-level
+test can catch it**, because whether one element sits inside another is a fact
+about the HTML, not the stylesheet. The live check (`contrast.yml`) catches it
+on a page it samples; on any other page it stays invisible.
 
 If that combination is ever wanted, the fix is the one the companion plugin
 already uses: an explicit ink token for the emphasis red rather than `blood`
@@ -113,8 +114,17 @@ itself.
 | `tests/front-end-css-contrast.php` | **every ink/surface pair in every stylesheet, per palette**, plus 3 : 1 for focus rings and state marks |
 | `tests/front-end-css-inverts.php` | no stylesheet paints a hardcoded colour |
 | `tests/forced-colors.php` | forced-colors / Windows High Contrast behaviour |
+| `tests/links-in-dim-text.php` | links inside dimmed text (gray paragraphs, sidenotes, the resume rail) are underlined at rest, not marked by color alone (WCAG 1.4.1) |
+| `assets/css/base.css` reduced-motion reset | under `prefers-reduced-motion: reduce`, every animation and transition is off, pseudo-elements included |
+| `.github/workflows/contrast.yml` | **the rendered site**: on every push to main, daily at 06:41 UTC and on demand, `tools/contrast-ci.mjs` reads the sitemap's pages, its two newest notes and one tag archive, loads `tools/contrast-computed.js` into each with Playwright, and fails on text below AA or on a link in running text that is neither underlined nor 3:1 against its surrounding text (WCAG 1.4.1). It skips what it cannot measure: text over background images or gradients, pseudo-element, canvas and SVG text, single-character text, `aria-hidden` subtrees, and pages behind a login (the header of `tools/contrast-computed.js` lists them). A run that reaches measurement ends with a `contrast-summary` notice, which the plugin's Health report reads |
 
-## What none of them can see
+## What the source checks cannot see
+
+`contrast.yml` measures computed colors on the rendered page, so on the pages it
+samples it does see nesting, opacity chains and authored content, within the
+exclusions above. The list below
+is what the source-level tests above cannot see, and what a page outside the
+sample can still hide.
 
 - **Which element sits inside which.** Anything not declaring its own background
   is measured against the page ground. A nested surface must be declared in

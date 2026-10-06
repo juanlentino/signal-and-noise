@@ -209,6 +209,13 @@ body {
 	text-align: center !important;
 	transition: color 0.2s ease !important;
 }
+/* An !important transition outranks base.css's reduced-motion reset (same
+   importance, higher specificity), so it carries its own (Codex on #514). */
+@media (prefers-reduced-motion: reduce) {
+	.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation-item a {
+		transition: none !important;
+	}
+}
 
 /* Hover/active — red */
 @media (hover: hover) {
