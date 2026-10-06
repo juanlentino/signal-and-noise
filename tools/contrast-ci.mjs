@@ -24,10 +24,23 @@ const ORIGIN = process.argv[2] || 'https://juanlentino.com';
 const TOKEN = process.env.SN_SMOKE_TOKEN || '';
 const headers = { 'User-Agent': 'SignalNoise-ContrastCI/1.0 (GitHub Actions)', ...(TOKEN ? { 'X-SN-Smoke': TOKEN } : {}) };
 
+// Sitemaps are read from the site's own origin only, one redirect hop at a
+// time, and the token rides only a same-origin hop: a sitemap index naming
+// another host, or a redirect off-site, is refused before anything is sent
+// (Codex on #508, round 4, P1).
 async function locs(url) {
-	const res = await fetch(url, { headers });
-	if (!res.ok) throw new Error(`${url} answered ${res.status}`);
-	return [...(await res.text()).matchAll(/<loc>([^<]+)<\/loc>/g)].map(m => m[1]);
+	const own = new URL(ORIGIN).origin;
+	for (let hop = 0; hop < 5; hop++) {
+		if (new URL(url).origin !== own) throw new Error(`refusing off-origin sitemap ${url}`);
+		const res = await fetch(url, { headers, redirect: 'manual' });
+		if (res.status >= 300 && res.status < 400 && res.headers.get('location')) {
+			url = new URL(res.headers.get('location'), url).href;
+			continue;
+		}
+		if (!res.ok) throw new Error(`${url} answered ${res.status}`);
+		return [...(await res.text()).matchAll(/<loc>([^<]+)<\/loc>/g)].map(m => m[1]);
+	}
+	throw new Error(`too many redirects reading ${url}`);
 }
 
 async function pages() {
@@ -46,6 +59,10 @@ async function pages() {
 	const notes = (await all('posts-post')).slice(-2);
 	const tags = (await all('taxonomies-post_tag')).slice(0, 1);
 	if (!pagesList.length) throw new Error('page sitemap carried no locations');
+	// Each sampled kind the index lists must yield its sample: an empty or
+	// HTML-bodied child sitemap is no sample, not a smaller run (Codex on #508, round 4).
+	if (maps.some(m => m.includes('-posts-post-')) && !notes.length) throw new Error('notes sitemap carried no locations');
+	if (maps.some(m => m.includes('-taxonomies-post_tag-')) && !tags.length) throw new Error('tags sitemap carried no locations');
 	return [...new Set([...pagesList, ...notes, ...tags, '/notes/', '/verify/'])];
 }
 

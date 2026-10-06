@@ -92,7 +92,12 @@
 			let par = a.parentElement;
 			while (par && !words(par) && win.getComputedStyle(par).display === 'inline') par = par.parentElement;
 			if (!par || !words(par)) continue;
-			const lc = parse(cs.color), pc = parse(win.getComputedStyle(par).color);
+			// The color that paints the link's glyphs: a styled child (<a><span>)
+			// can override the anchor's own (Codex on #508, round 4).
+			const tw = doc.createTreeWalker(a, NodeFilter.SHOW_TEXT);
+			let tn, paint = a;
+			while ((tn = tw.nextNode())) { if (tn.textContent.trim()) { paint = tn.parentElement; break; } }
+			const lc = parse(win.getComputedStyle(paint).color), pc = parse(win.getComputedStyle(par).color);
 			if (!lc || !pc) continue;
 			// Compare what is ON SCREEN: each color with its own alpha and its
 			// opacity chain, composited over the ground under the text. Raw RGB
@@ -105,7 +110,7 @@
 				}
 				return [255, 255, 255];
 			})();
-			const lFx = over(lc, lc.a * chain(a), ground), pFx = over(pc, pc.a * chain(par), ground);
+			const lFx = over(lc, lc.a * chain(paint), ground), pFx = over(pc, pc.a * chain(par), ground);
 			const rr = ratio(lFx, pFx);
 			out.linksChecked++;
 			if (rr < 3) out.links.push({ page, palette, text: t.slice(0, 40), link: lFx.join(','), text_color: pFx.join(','), ratio: +rr.toFixed(2), parent: par.tagName.toLowerCase() + (typeof par.className === 'string' && par.className ? '.' + par.className.trim().split(/\s+/)[0] : '') });
@@ -183,7 +188,10 @@
 			await new Promise((res, rej) => { fr.onload = res; fr.onerror = res; fr.src = page; setTimeout(res, 12000); });
 			await new Promise(r => setTimeout(r, 800));
 			const doc = fr.contentDocument;
-			if (!doc || !doc.body || !doc.querySelector('main')) out.unloaded.push(page);
+			// Rendered means the route itself: the 404 template has a <main> too,
+			// so a vanished route would be measured as its error page and pass
+			// (Codex on #508, round 4). WordPress marks that page body.error404.
+			if (!doc || !doc.body || !doc.querySelector('main') || doc.body.classList.contains('error404')) out.unloaded.push(page);
 			if (doc && doc.body) {
 				const kill = doc.createElement('style');
 				kill.textContent = '*, *::before, *::after { animation: none !important; transition: none !important; }';
