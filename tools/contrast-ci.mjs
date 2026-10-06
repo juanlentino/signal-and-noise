@@ -32,11 +32,17 @@ async function locs(url) {
 
 async function pages() {
 	const maps = await locs(`${ORIGIN}/wp-sitemap.xml`);
+	// An edge block can answer 200 with an HTML page: no <loc> at all. That is
+	// no sitemap, not an empty site; never let it shrink the run to two pages
+	// and call that clean (Codex on #508).
+	if (!maps.length) throw new Error('sitemap index carried no locations');
 	const path = u => new URL(u).pathname;
 	const of = kind => maps.find(m => m.includes(`-${kind}-`));
 	const pagesList = of('posts-page') ? (await locs(of('posts-page'))).map(path) : [];
-	const notes = of('posts-post') ? (await locs(of('posts-post'))).map(path).slice(0, 2) : [];
+	// The posts sitemap lists oldest first: sample the two NEWEST notes (Codex on #508).
+	const notes = of('posts-post') ? (await locs(of('posts-post'))).map(path).slice(-2) : [];
 	const tags = of('taxonomies-post_tag') ? (await locs(of('taxonomies-post_tag'))).map(path).slice(0, 1) : [];
+	if (!pagesList.length) throw new Error('page sitemap carried no locations');
 	return [...new Set([...pagesList, ...notes, ...tags, '/notes/', '/verify/'])];
 }
 
@@ -44,7 +50,17 @@ const list = await pages().catch(e => { console.log(`::warning::sitemap unreadab
 const tool = await readFile(new URL('./contrast-computed.js', import.meta.url), 'utf8');
 
 const browser = await chromium.launch();
-const context = await browser.newContext({ extraHTTPHeaders: headers, viewport: { width: 1440, height: 900 } });
+// The allow-list token goes to the site's own origin only, never to a third
+// party the page loads (fonts, embeds, analytics): headers are added per
+// request by origin, not context-wide (Codex on #508, P1).
+const context = await browser.newContext({ userAgent: headers['User-Agent'], viewport: { width: 1440, height: 900 } });
+await context.route('**/*', route => {
+	const req = route.request();
+	if (TOKEN && new URL(req.url()).origin === new URL(ORIGIN).origin) {
+		return route.continue({ headers: { ...req.headers(), 'x-sn-smoke': TOKEN } });
+	}
+	return route.continue();
+});
 const page = await context.newPage();
 const first = await page.goto(`${ORIGIN}/`, { waitUntil: 'load', timeout: 60000 });
 if (!first || first.status() !== 200) {

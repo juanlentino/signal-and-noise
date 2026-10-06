@@ -54,7 +54,15 @@
 		return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
 	};
 	const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
-	const parse = s => { const m = s.match(/rgba?\(([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)(?:[,\s/]+([\d.]+))?/); return m ? { c: [+m[1], +m[2], +m[3]], a: m[4] === undefined ? 1 : +m[4] } : null; };
+	// rgb()/rgba(), and color(srgb r g b / a): what a color-mix() computes to.
+	// Unparsed, a visible color-mix rule read as no border at all (the notes'
+	// 55% subscribe rule, 2026-10-06).
+	const parse = s => {
+		let m = s.match(/rgba?\(([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)(?:[,\s/]+([\d.]+))?/);
+		if (m) return { c: [+m[1], +m[2], +m[3]], a: m[4] === undefined ? 1 : +m[4] };
+		m = s.match(/color\(srgb\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)(?:\s*\/\s*([\d.]+))?\)/);
+		return m ? { c: [m[1] * 255, m[2] * 255, m[3] * 255].map(Math.round), a: m[4] === undefined ? 1 : +m[4] } : null;
+	};
 	const over = (top, alpha, under) => under.map((u, i) => Math.round(top.c[i] * alpha + u * (1 - alpha)));
 
 	// LINKS (2026-10-06). A link marked by color alone must differ from the
@@ -72,7 +80,10 @@
 			const r = a.getBoundingClientRect(); if (r.width < 1 || r.height < 1) continue;
 			if (a.closest('[aria-hidden="true"]')) continue;
 			if (cs.textDecorationLine.includes('underline')) continue;
-			if (parseFloat(cs.borderBottomWidth) > 0 && cs.borderBottomStyle !== 'none') continue;
+			// A bottom border marks the link only if it is visible at rest: a
+			// transparent one reserved for hover is no cue (Codex on #508).
+			const bb = parse(cs.borderBottomColor);
+			if (parseFloat(cs.borderBottomWidth) > 0 && cs.borderBottomStyle !== 'none' && bb && bb.a > 0) continue;
 			const own = parse(cs.backgroundColor); if (own && own.a > 0) continue;
 			const par = a.parentElement; if (!par) continue;
 			const prose = [...par.childNodes].some(c => c.nodeType === 3 && c.textContent.trim().length > 2);
