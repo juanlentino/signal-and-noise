@@ -14,6 +14,7 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ### Changed
 - **Uses is a spec sheet, like the colophon.** Each section is a band: its label and count on the left, its items two across on the right, each item its name over its note. One column of items under 640px, and the label stacks above them under 900px. CSS only (`assets/css/uses.css`); the markup, the items and their words are unchanged. At 1440px the page drops from 1,848px to about 1,370px tall.
+- The new `uses.css` section comment is dated rather than naming a version it was never cut as.
 
 ## [15.4.5] - 2026-10-06 — humans.txt prints the colophon's own facts
 
