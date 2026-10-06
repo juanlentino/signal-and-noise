@@ -195,6 +195,20 @@ body::after {
 	);
 }
 
+/* --- Links in dim text (WCAG 1.4.1) ---
+   theme.json marks links by color alone (blood, no underline). In rust text
+   that is 2.5:1 light and 1.2:1 dark against the words around it, below the
+   3:1 a color-only link needs, so these links read as plain text until
+   hovered. Found 2026-10-06 by a sitewide audit: /contact/personal's rust
+   paragraph, the /provenance sidenotes, the /resume rail. Underlined at rest. */
+.has-rust-color a:not(.wp-element-button),
+.sn-sidenote a:not(.wp-element-button),
+.sn-resume-rail a:not(.wp-element-button) {
+	text-decoration-line: underline;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 3px;
+}
+
 /* --- Skip to Content (Accessibility) --- */
 .sn-skip-link {
 	position: absolute;
