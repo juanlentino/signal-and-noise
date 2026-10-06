@@ -440,13 +440,9 @@ jobs:
           # outlier at ~2.3x and still catches a dead hourly cron within one
           # day. The nominal schedule is not the measured delivery; calibrate
           # to the delivery.
-          #
-          # contrast fires daily (41 6 * * *), the version-tag-parity cadence, so
-          # the same 48h: a day of cadence plus a day of slack (Codex on #508).
           rows=$(printf '%s\n' \
             'version-tag-parity.yml:48' \
             'smoke-test.yml:24' \
-            'contrast.yml:48' \
             | while IFS=: read -r wf grace; do
                 [ -n "$wf" ] || continue
                 created=$(api "repos/${REPO}/actions/workflows/${wf}" '.created_at') || created=""
