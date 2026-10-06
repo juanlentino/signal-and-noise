@@ -13,6 +13,7 @@ adds a bullet below. A release is a separate, deliberate act:
 ## [Unreleased]
 
 ### Changed
+- **The theme screenshot is current.** `screenshot.png` (the README image and the wp-admin theme card) was the v3.6.0 site from March; it is now the live home page at 1200×900 in light.
 - **The cron-liveness guard watches `contrast.yml`** (#511): a live contrast check that stops running now fails CI instead of going quiet.
 - **README:** Now and Uses described as spec sheets; a Front-end entry for the accessibility rules and the live contrast check.
 
