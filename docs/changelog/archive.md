@@ -16,6 +16,11 @@ nothing here is edited by hand again.
 
 All notable changes to Signal & Noise are documented here.
 
+## [15.4.5] - 2026-10-06 — humans.txt prints the colophon's own facts
+
+### Changed
+- **humans.txt and the colophon now share one source.** humans.txt's stack lines are no longer copied by hand: they print the colophon's own facts from the companion plugin (`sn_colophon_plain_facts()`, plugin colophon rewrite of 2026-10-06), so the two cannot drift. The plugin-absent fallback drops the two claims the colophon corrected ("vanilla ES5" and the thin "SEO, search & ops" line). The /colophon search description now matches the page: how the site is built, who maintains it, and how each note is signed and timestamped. The README's Type line names where each face is used, and its IndieWeb line no longer claims a live `[sn_build]` line on the colophon (the page ends with the linked theme and plugin versions; the shortcode stays registered).
+
 ## [15.4.4] - 2026-10-05 — a plugin release's no public change holds only from its baseline forward
 
 ### Fixed
