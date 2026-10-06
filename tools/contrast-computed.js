@@ -94,9 +94,21 @@
 			if (!par || !words(par)) continue;
 			const lc = parse(cs.color), pc = parse(win.getComputedStyle(par).color);
 			if (!lc || !pc) continue;
-			const rr = ratio(lc.c, pc.c);
+			// Compare what is ON SCREEN: each color with its own alpha and its
+			// opacity chain, composited over the ground under the text. Raw RGB
+			// can pass 3:1 where faded colors have converged (Codex on #508).
+			const chain = el => { let o = 1; for (let x = el; x && x !== doc.documentElement; x = x.parentElement) o *= parseFloat(win.getComputedStyle(x).opacity); return o; };
+			const ground = (() => {
+				for (let x = par; x; x = x.parentElement) {
+					const b = parse(win.getComputedStyle(x).backgroundColor);
+					if (b && b.a >= 0.999) return b.c;
+				}
+				return [255, 255, 255];
+			})();
+			const lFx = over(lc, lc.a * chain(a), ground), pFx = over(pc, pc.a * chain(par), ground);
+			const rr = ratio(lFx, pFx);
 			out.linksChecked++;
-			if (rr < 3) out.links.push({ page, palette, text: t.slice(0, 40), link: lc.c.join(','), text_color: pc.c.join(','), ratio: +rr.toFixed(2), parent: par.tagName.toLowerCase() + (typeof par.className === 'string' && par.className ? '.' + par.className.trim().split(/\s+/)[0] : '') });
+			if (rr < 3) out.links.push({ page, palette, text: t.slice(0, 40), link: lFx.join(','), text_color: pFx.join(','), ratio: +rr.toFixed(2), parent: par.tagName.toLowerCase() + (typeof par.className === 'string' && par.className ? '.' + par.className.trim().split(/\s+/)[0] : '') });
 		}
 	}
 
@@ -127,10 +139,16 @@
 				const acs = win.getComputedStyle(a);
 				op *= parseFloat(acs.opacity);
 				if (bg === null) {
-					// Only a real image (url()) makes the ratio unknowable. A gradient
-					// here is the house underline idiom (a 1px currentColor bar grown
-					// on hover), not a ground; skipping it hid every note title.
-					if (/url\(/.test(acs.backgroundImage)) { imaged = true; break; }
+					// An image or a gradient that covers the box makes the ratio
+					// unknowable: skip. The one exemption is the house underline, a
+					// gradient one or two pixels tall (background-size `0 1px`,
+					// grown to `100% 1px` on hover): it is a line, not a ground, and
+					// skipping it hid every note title (Codex on #508, both ways).
+					if (acs.backgroundImage !== 'none') {
+						const tall = acs.backgroundSize.split(',').map(s => s.trim().split(/\s+/)[1] || 'auto');
+						const line = /gradient/.test(acs.backgroundImage) && !/url\(/.test(acs.backgroundImage) && tall.every(h => /^[0-2](\.\d+)?px$/.test(h));
+						if (!line) { imaged = true; break; }
+					}
 					const p = parse(acs.backgroundColor);
 					if (p && p.a >= 0.999) bg = p.c;
 					else if (p && p.a > 0) { bg = over(p, p.a, ground); } // translucent over ground (approx.)
