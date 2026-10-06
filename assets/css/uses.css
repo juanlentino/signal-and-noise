@@ -19,6 +19,9 @@
 
 
 /* ── Hero ─────────────────────────────────────────────────────────────── */
+.sn-uses-hero {
+	margin-bottom: var(--wp--custom--air--lg);
+}
 .sn-uses-eyebrow {
 	font-family: 'DM Mono', 'Courier New', monospace;
 	font-size: max(0.7rem, 11px);
@@ -52,23 +55,28 @@
 	margin: 0;
 }
 
-/* ── Section heads ────────────────────────────────────────────────────── */
+/* ── Sections: a spec sheet (15.5) ─────────────────────────────────────
+   Each section is a band, like the colophon's: its label and count on the
+   left, its items two across on the right. Was one full-width list per
+   section, a 1,849px scroll at 1440px for thirteen short items. */
 .sn-uses-section {
-	margin-top: var(--wp--custom--air--xl);
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
+	gap: 1rem 3rem;
+	padding: var(--wp--custom--air--sm) 0;
+	border-top: 2px solid var(--wp--preset--color--bone);
 }
 .sn-uses-section-head {
 	display: flex;
-	align-items: baseline;
-	justify-content: space-between;
-	gap: 1rem;
-	padding-bottom: 0.6rem;
-	border-bottom: 2px solid var(--wp--preset--color--bone);
-	margin-bottom: 0.5rem;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 0.4rem;
 }
 .sn-uses-section-label {
 	font-family: 'Bebas Neue', Impact, sans-serif;
 	font-weight: 400;
 	font-size: var(--wp--custom--font-size--page-section-label);
+	line-height: 0.95;
 	letter-spacing: 0.02em;
 	text-transform: uppercase;
 	color: var(--wp--preset--color--bone);
@@ -81,29 +89,22 @@
 	color: var(--wp--preset--color--rust);
 }
 
-/* ── Items ────────────────────────────────────────────────────────────── */
+/* ── Items: cells, name over note ─────────────────────────────────────── */
 .sn-uses-list {
 	list-style: none;
 	margin: 0;
 	padding: 0;
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: var(--wp--custom--air--xs) 2.5rem;
 }
 .sn-uses-item {
-	display: grid;
-	grid-template-columns: 1fr;
-	gap: 0.2rem;
-	padding: var(--wp--custom--air--xxs) 0;
-	border-bottom: 1px solid var(--wp--preset--color--concrete);
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	padding-top: var(--wp--custom--air--xxs);
+	border-top: 1px solid var(--wp--preset--color--concrete);
 	transition: padding 0.2s ease;
-}
-.sn-uses-item:last-child {
-	border-bottom: 0;
-}
-@media (min-width: 720px) {
-	.sn-uses-item {
-		grid-template-columns: 1fr auto;
-		gap: 2rem;
-		align-items: baseline;
-	}
 }
 @media (hover: hover) {
 	.sn-uses-item:hover {
@@ -123,9 +124,15 @@
 	text-transform: uppercase;
 	color: var(--wp--preset--color--rust);
 }
-@media (min-width: 720px) {
-	.sn-uses-item-note {
-		text-align: right;
+
+@media (max-width: 900px) {
+	.sn-uses-section {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+@media (max-width: 640px) {
+	.sn-uses-list {
+		grid-template-columns: minmax(0, 1fr);
 	}
 }
 
