@@ -14,9 +14,10 @@
  * flush rewrites (that is the plugin's job).
  *
  * Owner + theme facts come from wp_get_theme() so they never drift from
- * style.css. The profile URLs and stack lines are hardcoded in lockstep with
- * parts/footer.html and the CMS-owned /colophon content (Site Editor override
- * rendering the plugin's [sn_colophon], since plugin v10.13.0) — keep them in sync.
+ * style.css. The profile URLs are hardcoded in lockstep with parts/footer.html.
+ * The stack lines are NOT copied: since 2026-10-06 they are the colophon's own
+ * facts, read from the plugin (sn_colophon_plain_facts()), so the page and this
+ * file cannot drift. Only the plugin-absent fallback is written here.
  *
  * @package SignalNoise
  */
@@ -40,7 +41,7 @@ function sn_humans_txt_is_request( $uri ) {
 
 /**
  * Build the plain-text humans.txt body. Trusted by construction: theme-header
- * values + hardcoded literals, no user input.
+ * values, literals and the plugin's colophon facts, no user input.
  *
  * @return string
  */
@@ -64,15 +65,20 @@ function sn_humans_txt_body() {
 		'',
 		'/* TECHNOLOGY */',
 		'Standards - HTML5, CSS3, WordPress Full Site Editing, PHP 8.0+',
-		'Type - Bebas Neue (display), DM Mono (body & UI)',
-		'Build - buildless: hand-written PHP, theme.json, vanilla ES5. No bundler.',
-		'Hosting - Cloudways, Cloudflare CDN & DNS',
-		'Tooling - companion plugin Signal & Noise Tools for SEO, search & ops',
-		'',
-		'/* THEME */',
-		$name . ' v' . $version,
-		'',
 	);
+	// 2026-10-06: one source of truth. The colophon's facts live in the
+	// companion plugin ([sn_colophon]); humans.txt prints the same words. The
+	// fallback (plugin off) says nothing the colophon contradicts.
+	$facts = function_exists( 'sn_colophon_plain_facts' ) ? (array) sn_colophon_plain_facts() : array(
+		'Platform'         => 'WordPress with Full Site Editing, no page builder.',
+		'Code'             => 'hand-written PHP, plain JavaScript and theme.json, no build step.',
+		'Hosting'          => 'Cloudways, with Cloudflare for the CDN and DNS.',
+		'Type'             => 'Bebas Neue for headings, DM Mono for body text.',
+	);
+	foreach ( $facts as $label => $text ) {
+		$lines[] = $label . ': ' . $text;
+	}
+	array_push( $lines, '', '/* THEME */', $name . ' v' . $version, '' );
 
 	return implode( "\n", $lines ) . "\n";
 }
@@ -94,7 +100,7 @@ function sn_humans_txt_send() {
 		status_header( 200 );
 	}
 	header( 'Content-Type: text/plain; charset=' . get_option( 'blog_charset', 'UTF-8' ) );
-	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- plain-text body built from theme-header values + hardcoded literals; esc_html would corrupt the "&" in "Signal & Noise" inside a text/plain document.
+	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- plain-text body built from theme-header values, literals and the companion plugin's colophon facts (its own literals); esc_html would corrupt the "&" in "Signal & Noise" inside a text/plain document.
 	echo sn_humans_txt_body();
 }
 
