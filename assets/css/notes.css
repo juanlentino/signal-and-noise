@@ -533,7 +533,8 @@
 
 /* THE MONTH DIVIDER — quieter than the year band by design. The year band
    DIVIDES (rule, stronger colour); the month band only MARKS where you are, so
-   it carries no rule and sits at the same 11px floor in muted rust. Aligned to
+   it carries no rule and sits at the same 11px floor in muted rust (rust is the
+   mute: an extra opacity .75 took the dark palette to 4.25:1, 2026-10-06). Aligned to
    the date column so the eye reads it as part of the ledger's left margin. */
 .sn-notes-month-band {
 	font-family: 'DM Mono', 'Courier New', monospace;
@@ -545,7 +546,6 @@
 	align-items: baseline;
 	gap: 0.6rem;
 	margin: 1.5rem 0 0.15rem;
-	opacity: 0.75;
 }
 .sn-notes-month-band:first-child {
 	margin-top: 0.5rem;
