@@ -108,10 +108,14 @@
 	const shown = (el, win) => {
 		const cs = win.getComputedStyle(el);
 		if (cs.display === 'none' || cs.visibility === 'hidden') return false;
-		const r = el.getBoundingClientRect();
+		// display: contents has no box of its own, so its rect is zero though its
+		// text renders: measure what it contains (Codex on #517, #518).
+		const box = n => { if (win.getComputedStyle(n).display !== 'contents') return n.getBoundingClientRect(); const g = n.ownerDocument.createRange(); g.selectNodeContents(n); return g.getBoundingClientRect(); };
+		const r = box(el);
 		if (r.width <= 1 || r.height <= 1) return false;
 		for (let x = el; x && x !== el.ownerDocument.documentElement; x = x.parentElement) {
 			const xs = win.getComputedStyle(x);
+			if (xs.display === 'contents') continue;
 			if (/^(absolute|fixed)$/.test(xs.position) && /^rect\(0(px)?,? 0(px)?,? 0(px)?,? 0(px)?\)$/.test(xs.clip)) return false;
 			if (/^inset\(50%\)$/.test(xs.clipPath)) return false;
 			if (x !== el && xs.overflow === 'hidden') { const xr = x.getBoundingClientRect(); if (xr.width <= 1 || xr.height <= 1) return false; }
