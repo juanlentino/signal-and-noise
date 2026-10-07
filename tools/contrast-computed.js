@@ -100,12 +100,27 @@
 	};
 	// Visible to a reader: an sr-only label (1x1, clipped) carries no color
 	// anyone sees (Codex on #508).
+	// Only clipping that removes the content counts: the sr-only patterns
+	// (clip: rect(0 0 0 0) on a positioned box, clip-path: inset(50%)), not
+	// any clip-path, which can leave a link fully visible (Codex on #517).
 	const shown = (el, win) => {
 		const cs = win.getComputedStyle(el);
 		if (cs.display === 'none' || cs.visibility === 'hidden') return false;
-		if ((cs.clip && cs.clip !== 'auto') || (cs.clipPath && cs.clipPath !== 'none')) return false;
+		if (/^(absolute|fixed)$/.test(cs.position) && /^rect\(0(px)?,? 0(px)?,? 0(px)?,? 0(px)?\)$/.test(cs.clip)) return false;
+		if (/^inset\(50%\)$/.test(cs.clipPath)) return false;
 		const r = el.getBoundingClientRect();
 		return r.width > 1 && r.height > 1;
+	};
+	// Prose a reader sees: visible, not in a link, not aria-hidden.
+	const proseNodes = (el, doc, win) => {
+		const w = doc.createTreeWalker(el, NodeFilter.SHOW_TEXT), out = [];
+		let x;
+		while ((x = w.nextNode())) {
+			const pe = x.parentElement;
+			if (!x.textContent.trim() || pe.closest('a') || pe.closest('[aria-hidden="true"]') || !shown(pe, win)) continue;
+			out.push(x);
+		}
+		return out;
 	};
 
 	// LINKS (2026-10-06). A link marked by color alone must differ from the
@@ -136,13 +151,11 @@
 			// tag list) is not: measured live, counting those flagged 248 tag and
 			// date links that sit apart from any sentence.
 			const PROSE = /^(P|LI|DD|DT|BLOCKQUOTE|FIGCAPTION|CAPTION|TD|TH|LABEL)$/;
+			// Hidden and aria-hidden text is not surrounding words (Codex on #517).
 			const words = el => {
 				if ([...el.childNodes].some(c => c.nodeType === 3 && c.textContent.trim().length > 2)) return true;
 				if (!PROSE.test(el.tagName)) return false;
-				const w = doc.createTreeWalker(el, NodeFilter.SHOW_TEXT);
-				let x, n = 0;
-				while ((x = w.nextNode())) if (!x.parentElement.closest('a')) n += x.textContent.trim().length;
-				return n > 2;
+				return proseNodes(el, doc, win).reduce((n, x) => n + x.textContent.trim().length, 0) > 2;
 			};
 			let par = a.parentElement;
 			while (par && !words(par) && win.getComputedStyle(par).display === 'inline') par = par.parentElement;
@@ -151,21 +164,24 @@
 			// worst one counted. A styled child (<a><span>) can override the
 			// anchor (round 4), and an sr-only label first in the link must not
 			// stand in for the visible words (Codex on #508).
-			const pc = parse(win.getComputedStyle(par).color);
-			if (!pc) continue;
 			// Compare what is ON SCREEN: each color with its own alpha and its
 			// opacity chain, composited over the ground under the text. Raw RGB
 			// can pass 3:1 where faded colors have converged (Codex on #508).
+			// The prose side is every visible non-link text node's own color
+			// (a sentence in spans can differ from its parent's), the link side
+			// every visible glyph run; the worst pair counts (Codex on #517).
 			const chain = el => { let o = 1; for (let x = el; x && x !== doc.documentElement; x = x.parentElement) o *= parseFloat(win.getComputedStyle(x).opacity); return o; };
 			const ground = groundUnder(par, win, [255, 255, 255]);
-			const pFx = over(pc, pc.a * chain(par), ground);
+			const fxOf = el => { const c = parse(win.getComputedStyle(el).color); return c ? over(c, c.a * chain(el), ground) : null; };
+			const proseEls = proseNodes(par, doc, win).map(x => x.parentElement);
+			const pFxs = [...new Set(proseEls.length ? proseEls : [par])].map(fxOf).filter(Boolean);
+			if (!pFxs.length) continue;
 			const tw = doc.createTreeWalker(a, NodeFilter.SHOW_TEXT);
-			let tn, rr = Infinity, lFx = null;
+			let tn, rr = Infinity, lFx = null, pFx = null;
 			while ((tn = tw.nextNode())) {
 				if (!tn.textContent.trim() || !shown(tn.parentElement, win)) continue;
-				const lc = parse(win.getComputedStyle(tn.parentElement).color); if (!lc) continue;
-				const fx = over(lc, lc.a * chain(tn.parentElement), ground), q = ratio(fx, pFx);
-				if (q < rr) { rr = q; lFx = fx; }
+				const fx = fxOf(tn.parentElement); if (!fx) continue;
+				for (const p of pFxs) { const q = ratio(fx, p); if (q < rr) { rr = q; lFx = fx; pFx = p; } }
 			}
 			if (!lFx) continue;
 			out.linksChecked++;
@@ -210,9 +226,12 @@
 					// on #508). no-repeat and repeat-x stay one line.
 					if (acs.backgroundImage !== 'none') {
 						const tall = acs.backgroundSize.split(',').map(s => s.trim().split(/\s+/)[1] || 'auto');
-						const reps = acs.backgroundRepeat.split(',').map(s => s.trim());
+						// Only the vertical axis decides: round or space across is still
+						// one line down (Codex on #517).
+						const yRep = v => { const k = v.trim().split(/\s+/); return k.length === 2 ? k[1] : (k[0] === 'repeat-x' ? 'no-repeat' : k[0] === 'repeat-y' ? 'repeat' : k[0]); };
+						const reps = acs.backgroundRepeat.split(',');
 						const line = /gradient/.test(acs.backgroundImage) && !/url\(/.test(acs.backgroundImage)
-							&& tall.every(h => /^[0-2](\.\d+)?px$/.test(h)) && reps.every(v => v === 'no-repeat' || v === 'repeat-x' || v === 'repeat no-repeat' || v === 'no-repeat no-repeat');
+							&& tall.every(h => /^[0-2](\.\d+)?px$/.test(h)) && reps.every(v => yRep(v) === 'no-repeat');
 						if (!line) { imaged = true; break; }
 					}
 					const p = parse(acs.backgroundColor);

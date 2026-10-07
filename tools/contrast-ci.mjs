@@ -95,14 +95,22 @@ async function main() {
 				const req = route.request();
 				if (new URL(req.url()).origin !== own) return route.continue();
 				try {
-					let url = req.url(), response;
+					let url = req.url(), method = req.method(), postData = req.postDataBuffer() || undefined, response;
+					let hdrs = { ...req.headers(), 'x-sn-smoke': TOKEN };
 					for (let hop = 0; hop < 5; hop++) {
-						response = await route.fetch({ url, headers: { ...req.headers(), 'x-sn-smoke': TOKEN }, maxRedirects: 0 });
-						const loc = response.status() >= 300 && response.status() < 400 && response.headers()['location'];
+						response = await route.fetch({ url, method, headers: hdrs, postData, maxRedirects: 0 });
+						const st = response.status(), loc = st >= 300 && st < 400 && response.headers()['location'];
 						if (!loc) break;
 						const next = new URL(loc, url);
 						if (next.origin !== own) break;
 						url = next.href;
+						// A browser's redirect rules: 303 turns anything but HEAD into
+						// GET, 301/302 turn POST into GET; the body and its headers go
+						// (Codex on #517). 307/308 keep both.
+						if ((st === 303 && method !== 'HEAD') || ((st === 301 || st === 302) && method === 'POST')) {
+							method = 'GET'; postData = undefined;
+							hdrs = Object.fromEntries(Object.entries(hdrs).filter(([k]) => !/^content-(type|length|encoding|language|location)$/i.test(k)));
+						}
 					}
 					return await route.fulfill({ response });
 				} catch {
