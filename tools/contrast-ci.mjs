@@ -88,7 +88,10 @@ async function main() {
 		// (Codex on #517, round 2). Only failures before measurement ends count.
 		const routeIssues = [];
 		let measured = false;
-		if (TOKEN) {
+		// The route is installed with or without the token: it is also what
+		// records asset failures, and a tokenless run (local, console) must not
+		// lose that (Codex on #517, #518). Only the header depends on the token.
+		{
 			const own = new URL(ORIGIN).origin;
 			// Fulfilling with a 3xx gives the handler no second look at the next
 			// hop, so it would leave without the token and meet the WAF (Codex on
@@ -107,7 +110,7 @@ async function main() {
 				const critical = ['document', 'stylesheet', 'font', 'image', 'script'].includes(req.resourceType());
 				try {
 					let url = req.url(), method = req.method(), postData = req.postDataBuffer() || undefined, response;
-					let hdrs = { ...req.headers(), 'x-sn-smoke': TOKEN };
+					let hdrs = { ...req.headers(), ...(TOKEN ? { 'x-sn-smoke': TOKEN } : {}) };
 					let settled = false;
 					for (let hop = 0; hop < 5; hop++) {
 						response = await route.fetch({ url, method, headers: hdrs, postData, maxRedirects: 0 });
@@ -132,7 +135,10 @@ async function main() {
 					// Documents are judged by the page's own render (unloaded) instead.
 					if (!measured && critical && req.resourceType() !== 'document' && response.status() >= 400) routeIssues.push(`${req.resourceType()} answered ${response.status()}: ${req.url()}`);
 					const dir = u => new URL(u).pathname.replace(/[^/]*$/, '');
-					if (url !== req.url() && req.resourceType() !== 'document' && dir(url) !== dir(req.url())) routeIssues.push(`${req.resourceType()} redirected across directories: ${req.url()}`);
+					// Only bodies that resolve relative URLs can be broken by a moved
+					// base: stylesheets and scripts. A font or a raster image is the
+					// same bytes wherever it came from (Codex on #517, #518).
+					if (url !== req.url() && ['stylesheet', 'script'].includes(req.resourceType()) && dir(url) !== dir(req.url())) routeIssues.push(`${req.resourceType()} redirected across directories: ${req.url()}`);
 					return await route.fulfill({ response });
 				} catch {
 					if (!measured && critical) routeIssues.push(`${req.resourceType()} failed: ${req.url()}`);
