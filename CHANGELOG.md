@@ -12,6 +12,9 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Fixed
+- **The live contrast check sees what it used to miss** (#509, the eight Codex P2s left from #508). Links: every visible text node is measured and the worst counts, so an sr-only label first in a link no longer stands in for the visible words; a sentence wrapped in sibling spans inside a prose element counts as running text. Colors: lab, lch, oklab, oklch, display-p3 and signed srgb are converted to clamped sRGB instead of skipped. Grounds: translucent backgrounds composite in order in both measures; a thin gradient that repeats down its box is a ground, not an underline. Pages: an unloaded page is not measured, so an edge block reads inconclusive, not failed. Runner: same-origin redirects are followed with the allow-list token inside the route, and a failed routed fetch is aborted instead of stalling the page. Verified: on the live site the new script matches the old (33 pages, 1,290 pairs, 100 links, 0 failures), and on fixtures it catches the five cases the old one missed or mismeasured.
+
 ## [15.8.0] - 2026-10-06 — reduced motion reaches the menu, docs match the code
 
 ### Fixed

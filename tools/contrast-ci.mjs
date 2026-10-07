@@ -12,7 +12,8 @@
  * coverage, not the count).
  *
  * Exit codes: 0 clean; 1 violations; 2 inconclusive (the edge blocked this
- * runner, or no page loaded), reported as a warning by the workflow, never as
+ * runner, a routed asset failed or redirected across directories, or no
+ * page loaded), reported as a warning by the workflow, never as
  * a pass.
  *
  * Usage: node tools/contrast-ci.mjs [origin]   (needs `playwright` installed)
@@ -81,16 +82,64 @@ async function main() {
 		// is routed (and judged by origin) afresh. route.continue({ headers })
 		// would carry the token through every redirect, cross-origin included
 		// (Codex on #508, P1, both rounds).
+		// A routed asset that failed, or a subresource that redirected into
+		// another directory (its relative url()s would resolve from the old
+		// path), changes what is measured: such a run is never called clean
+		// (Codex on #517, round 2). Only failures before measurement ends count.
+		const routeIssues = [];
+		let measured = false;
 		if (TOKEN) {
 			const own = new URL(ORIGIN).origin;
+			// Fulfilling with a 3xx gives the handler no second look at the next
+			// hop, so it would leave without the token and meet the WAF (Codex on
+			// #508). Same-origin redirects are followed here, one hop at a time,
+			// up to five; an off-origin one is handed back as the 3xx, and the
+			// browser's next request for it is routed to continue() tokenless.
+			// ponytail: the final body is fulfilled under the requested URL, so a
+			// redirected document keeps its pre-redirect address; the sitemap
+			// lists canonical URLs, so the pages this run loads do not redirect.
 			await context.route('**/*', async route => {
 				const req = route.request();
 				if (new URL(req.url()).origin !== own) return route.continue();
+				// What a measured page is built from: CSS, fonts, images, and scripts
+				// that write DOM (contact-aliases.js builds the contact links). A
+				// failure in any of them changes what is scanned (Codex on #517).
+				const critical = ['document', 'stylesheet', 'font', 'image', 'script'].includes(req.resourceType());
 				try {
-					const response = await route.fetch({ headers: { ...req.headers(), 'x-sn-smoke': TOKEN }, maxRedirects: 0 });
+					let url = req.url(), method = req.method(), postData = req.postDataBuffer() || undefined, response;
+					let hdrs = { ...req.headers(), 'x-sn-smoke': TOKEN };
+					let settled = false;
+					for (let hop = 0; hop < 5; hop++) {
+						response = await route.fetch({ url, method, headers: hdrs, postData, maxRedirects: 0 });
+						const st = response.status(), loc = st >= 300 && st < 400 && response.headers()['location'];
+						if (!loc) { settled = true; break; }
+						const next = new URL(loc, url);
+						if (next.origin !== own) { settled = true; break; }
+						url = next.href;
+						// A browser's redirect rules: 303 turns anything but HEAD into
+						// GET, 301/302 turn POST into GET; the body and its headers go
+						// (Codex on #517). 307/308 keep both.
+						if ((st === 303 && method !== 'HEAD') || ((st === 301 || st === 302) && method === 'POST')) {
+							method = 'GET'; postData = undefined;
+							hdrs = Object.fromEntries(Object.entries(hdrs).filter(([k]) => !/^content-(type|length|encoding|language|location)$/i.test(k)));
+						}
+					}
+					// Five same-origin hops and still redirecting: the chain did not
+					// resolve, so what reached the page is not the asset (Codex on #517).
+					if (!settled && !measured && critical) routeIssues.push(`${req.resourceType()} redirected more than five times: ${req.url()}`);
+					// An HTTP error is a completed request, not a thrown one: a 404
+					// stylesheet or a 500 image never reached the catch (Codex on #517).
+					// Documents are judged by the page's own render (unloaded) instead.
+					if (!measured && critical && req.resourceType() !== 'document' && response.status() >= 400) routeIssues.push(`${req.resourceType()} answered ${response.status()}: ${req.url()}`);
+					const dir = u => new URL(u).pathname.replace(/[^/]*$/, '');
+					if (url !== req.url() && req.resourceType() !== 'document' && dir(url) !== dir(req.url())) routeIssues.push(`${req.resourceType()} redirected across directories: ${req.url()}`);
 					return await route.fulfill({ response });
 				} catch {
-					// A request still in flight when the run closes the context.
+					if (!measured && critical) routeIssues.push(`${req.resourceType()} failed: ${req.url()}`);
+					// A fetch that timed out or failed, or one still in flight when
+					// the run closes the context: settle the route, or the request
+					// stalls the page until the run times out (Codex on #508).
+					await route.abort().catch(() => {});
 				}
 			});
 		}
@@ -110,6 +159,7 @@ async function main() {
 		await page.evaluate(p => { window.__snContrastPages = p; }, list);
 		await page.addScriptTag({ content: tool });
 		const out = await page.evaluate(() => window.__snContrastDone, null, { timeout: 0 });
+		measured = true;
 
 		console.log(`${out.checked} text pairs and ${out.linksChecked} links checked on ${out.pages} pages, light and dark; ${out.imaged} over images skipped.`);
 		if (out.unloaded.length) console.log(`::warning::${out.unloaded.length} page(s) rendered no <main> (blocked or broken): ${out.unloaded.join(', ')}`);
@@ -124,6 +174,11 @@ async function main() {
 		// A page that did not render was not measured: never call the run clean
 		// (Codex on #508). Failures found elsewhere still go red above.
 		if (out.unloaded.length) { console.log('Inconclusive: not every page rendered.'); return 2; }
+		if (routeIssues.length) {
+			console.log(`::warning::${routeIssues.length} routed request(s) changed what was measured: ${routeIssues.slice(0, 5).join('; ')}`);
+			console.log('Inconclusive: an asset failed or redirected.');
+			return 2;
+		}
 		console.log('Clean: every text pair at AA, every color-only link at 3:1.');
 		return 0;
 	} finally {
