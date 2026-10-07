@@ -23,12 +23,17 @@
  * Compare runs the same way: capture, fix, capture again.
  *
  * WHAT THIS ONE CANNOT SEE: text over background-image is recorded and
- * skipped (ratio against an image is not a number); generated content
+ * skipped (ratio against an image is not a number; a thin non-repeating
+ * underline gradient is a line, not an image); generated content
  * (::before/::after) and canvas/SVG text are not walked; single-glyph
  * text nodes (an em-dash placeholder) are below the walker's floor;
  * pages behind auth are out of scope. Text inside aria-hidden subtrees
  * is SKIPPED on purpose: decorative-by-declaration is outside WCAG
  * contrast scope (the /verify ghost numerals are the canonical case).
+ * Every computed color format is read (CSS Color 4 lab/lch/oklab/oklch,
+ * display-p3, signed srgb) by converting it to clamped sRGB; translucent
+ * backgrounds are composited in order (an ancestor's opacity is applied to
+ * its own background, an approximation of opacity groups).
  *
  * FIRST-RUN LESSON, kept for the next reader: measure the SETTLED page.
  * Entrance animations sit paused at from{opacity:.01} in offscreen
@@ -57,13 +62,51 @@
 	// rgb()/rgba(), and color(srgb r g b / a): what a color-mix() computes to.
 	// Unparsed, a visible color-mix rule read as no border at all (the notes'
 	// 55% subscribe rule, 2026-10-06).
+	// Every other format (lab, lch, oklab, oklch, display-p3, a signed srgb
+	// channel) is drawn into a 1x1 canvas and read back as clamped sRGB: before,
+	// it parsed to null and the text was skipped silently (Codex on #508).
+	// CSS.supports gates the draw: an invalid string would leave the previous
+	// fillStyle in place and return the last color as this one.
+	const cache = new Map();
+	const ctx = (() => { const c = document.createElement('canvas'); c.width = c.height = 1; return c.getContext('2d', { willReadFrequently: true }); })();
 	const parse = s => {
-		let m = s.match(/rgba?\(([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)(?:[,\s/]+([\d.]+))?/);
-		if (m) return { c: [+m[1], +m[2], +m[3]], a: m[4] === undefined ? 1 : +m[4] };
-		m = s.match(/color\(srgb\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)(?:\s*\/\s*([\d.]+))?\)/);
-		return m ? { c: [m[1] * 255, m[2] * 255, m[3] * 255].map(Math.round), a: m[4] === undefined ? 1 : +m[4] } : null;
+		if (cache.has(s)) return cache.get(s);
+		let v = null;
+		const m = s.match(/^rgba?\(([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)(?:[,\s/]+([\d.]+))?\)$/);
+		if (m) v = { c: [+m[1], +m[2], +m[3]], a: m[4] === undefined ? 1 : +m[4] };
+		else if (s && CSS.supports('color', s)) {
+			ctx.clearRect(0, 0, 1, 1); ctx.fillStyle = s; ctx.fillRect(0, 0, 1, 1);
+			const d = ctx.getImageData(0, 0, 1, 1).data;
+			v = { c: [d[0], d[1], d[2]], a: d[3] / 255 };
+		}
+		cache.set(s, v);
+		return v;
 	};
 	const over = (top, alpha, under) => under.map((u, i) => Math.round(top.c[i] * alpha + u * (1 - alpha)));
+	// The surface under an element: every background from the first opaque one
+	// (or the page ground) inward, composited in order. Both measures use it;
+	// before, text composited one translucent layer and links skipped them all
+	// (Codex on #508). ponytail: an ancestor's opacity multiplies only its own
+	// background, not a true opacity group; exact compositing would need the
+	// painted pixels.
+	const groundUnder = (el, win, base) => {
+		const layers = [];
+		for (let x = el; x; x = x.parentElement) {
+			const cs = win.getComputedStyle(x), b = parse(cs.backgroundColor);
+			if (b && b.a > 0) layers.push({ b, a: b.a * parseFloat(cs.opacity) });
+			if (b && b.a >= 0.999 && parseFloat(cs.opacity) >= 0.999) break;
+		}
+		return layers.reverse().reduce((g, l) => over(l.b, l.a, g), base);
+	};
+	// Visible to a reader: an sr-only label (1x1, clipped) carries no color
+	// anyone sees (Codex on #508).
+	const shown = (el, win) => {
+		const cs = win.getComputedStyle(el);
+		if (cs.display === 'none' || cs.visibility === 'hidden') return false;
+		if ((cs.clip && cs.clip !== 'auto') || (cs.clipPath && cs.clipPath !== 'none')) return false;
+		const r = el.getBoundingClientRect();
+		return r.width > 1 && r.height > 1;
+	};
 
 	// LINKS (2026-10-06). A link marked by color alone must differ from the
 	// text around it by 3:1 (WCAG 1.4.1). The theme drops underlines, so a
@@ -76,8 +119,7 @@
 		for (const a of doc.querySelectorAll('a[href]')) {
 			const t = a.textContent.trim(); if (!t) continue;
 			const cs = win.getComputedStyle(a);
-			if (cs.display === 'none' || cs.visibility === 'hidden') continue;
-			const r = a.getBoundingClientRect(); if (r.width < 1 || r.height < 1) continue;
+			if (!shown(a, win)) continue;
 			if (a.closest('[aria-hidden="true"]')) continue;
 			if (cs.textDecorationLine.includes('underline')) continue;
 			// A bottom border marks the link only if it is visible at rest: a
@@ -87,31 +129,45 @@
 			const own = parse(cs.backgroundColor); if (own && own.a > 0) continue;
 			// The prose a link sits in may be an ancestor or two up: a CMS wraps
 			// links in spans and ems. Walk inline ancestors to the first with
-			// words of its own; stop at a block (Codex on #508, round 2).
-			const words = el => [...el.childNodes].some(c => c.nodeType === 3 && c.textContent.trim().length > 2);
+			// words of its own; stop at a block (Codex on #508, round 2). Words
+			// are its own text nodes, or, inside a prose element, any text under it
+			// outside a link: a sentence wrapped wholly in sibling spans is still
+			// running text (Codex on #508). A layout div of spans (a meta row, a
+			// tag list) is not: measured live, counting those flagged 248 tag and
+			// date links that sit apart from any sentence.
+			const PROSE = /^(P|LI|DD|DT|BLOCKQUOTE|FIGCAPTION|CAPTION|TD|TH|LABEL)$/;
+			const words = el => {
+				if ([...el.childNodes].some(c => c.nodeType === 3 && c.textContent.trim().length > 2)) return true;
+				if (!PROSE.test(el.tagName)) return false;
+				const w = doc.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+				let x, n = 0;
+				while ((x = w.nextNode())) if (!x.parentElement.closest('a')) n += x.textContent.trim().length;
+				return n > 2;
+			};
 			let par = a.parentElement;
 			while (par && !words(par) && win.getComputedStyle(par).display === 'inline') par = par.parentElement;
 			if (!par || !words(par)) continue;
-			// The color that paints the link's glyphs: a styled child (<a><span>)
-			// can override the anchor's own (Codex on #508, round 4).
-			const tw = doc.createTreeWalker(a, NodeFilter.SHOW_TEXT);
-			let tn, paint = a;
-			while ((tn = tw.nextNode())) { if (tn.textContent.trim()) { paint = tn.parentElement; break; } }
-			const lc = parse(win.getComputedStyle(paint).color), pc = parse(win.getComputedStyle(par).color);
-			if (!lc || !pc) continue;
+			// The colors that paint the link's glyphs: every VISIBLE text node,
+			// worst one counted. A styled child (<a><span>) can override the
+			// anchor (round 4), and an sr-only label first in the link must not
+			// stand in for the visible words (Codex on #508).
+			const pc = parse(win.getComputedStyle(par).color);
+			if (!pc) continue;
 			// Compare what is ON SCREEN: each color with its own alpha and its
 			// opacity chain, composited over the ground under the text. Raw RGB
 			// can pass 3:1 where faded colors have converged (Codex on #508).
 			const chain = el => { let o = 1; for (let x = el; x && x !== doc.documentElement; x = x.parentElement) o *= parseFloat(win.getComputedStyle(x).opacity); return o; };
-			const ground = (() => {
-				for (let x = par; x; x = x.parentElement) {
-					const b = parse(win.getComputedStyle(x).backgroundColor);
-					if (b && b.a >= 0.999) return b.c;
-				}
-				return [255, 255, 255];
-			})();
-			const lFx = over(lc, lc.a * chain(paint), ground), pFx = over(pc, pc.a * chain(par), ground);
-			const rr = ratio(lFx, pFx);
+			const ground = groundUnder(par, win, [255, 255, 255]);
+			const pFx = over(pc, pc.a * chain(par), ground);
+			const tw = doc.createTreeWalker(a, NodeFilter.SHOW_TEXT);
+			let tn, rr = Infinity, lFx = null;
+			while ((tn = tw.nextNode())) {
+				if (!tn.textContent.trim() || !shown(tn.parentElement, win)) continue;
+				const lc = parse(win.getComputedStyle(tn.parentElement).color); if (!lc) continue;
+				const fx = over(lc, lc.a * chain(tn.parentElement), ground), q = ratio(fx, pFx);
+				if (q < rr) { rr = q; lFx = fx; }
+			}
+			if (!lFx) continue;
 			out.linksChecked++;
 			if (rr < 3) out.links.push({ page, palette, text: t.slice(0, 40), link: lFx.join(','), text_color: pFx.join(','), ratio: +rr.toFixed(2), parent: par.tagName.toLowerCase() + (typeof par.className === 'string' && par.className ? '.' + par.className.trim().split(/\s+/)[0] : '') });
 		}
@@ -149,14 +205,18 @@
 					// gradient one or two pixels tall (background-size `0 1px`,
 					// grown to `100% 1px` on hover): it is a line, not a ground, and
 					// skipping it hid every note title (Codex on #508, both ways).
+					// A thin layer is a line only while it cannot tile down the box:
+					// repeat, repeat-y, round or space paints it as a ground (Codex
+					// on #508). no-repeat and repeat-x stay one line.
 					if (acs.backgroundImage !== 'none') {
 						const tall = acs.backgroundSize.split(',').map(s => s.trim().split(/\s+/)[1] || 'auto');
-						const line = /gradient/.test(acs.backgroundImage) && !/url\(/.test(acs.backgroundImage) && tall.every(h => /^[0-2](\.\d+)?px$/.test(h));
+						const reps = acs.backgroundRepeat.split(',').map(s => s.trim());
+						const line = /gradient/.test(acs.backgroundImage) && !/url\(/.test(acs.backgroundImage)
+							&& tall.every(h => /^[0-2](\.\d+)?px$/.test(h)) && reps.every(v => v === 'no-repeat' || v === 'repeat-x' || v === 'repeat no-repeat' || v === 'no-repeat no-repeat');
 						if (!line) { imaged = true; break; }
 					}
 					const p = parse(acs.backgroundColor);
-					if (p && p.a >= 0.999) bg = p.c;
-					else if (p && p.a > 0) { bg = over(p, p.a, ground); } // translucent over ground (approx.)
+					if (p && p.a > 0) bg = groundUnder(a, win, ground);
 				}
 			}
 			if (imaged) { out.imaged++; continue; }
@@ -179,6 +239,8 @@
 		}
 	}
 
+	// Debug hook: fixtures call the measures directly (verification, not CI).
+	window.__snContrastFns = { parse, measure, measureLinks };
 	window.__snContrastDone = (async () => {
 		const out = { violations: [], links: [], checked: 0, linksChecked: 0, imaged: 0, decorative: 0, pages: PAGES.length, unloaded: [] };
 		for (const page of PAGES) {
@@ -191,8 +253,11 @@
 			// Rendered means the route itself: the 404 template has a <main> too,
 			// so a vanished route would be measured as its error page and pass
 			// (Codex on #508, round 4). WordPress marks that page body.error404.
-			if (!doc || !doc.body || !doc.querySelector('main') || doc.body.classList.contains('error404')) out.unloaded.push(page);
-			if (doc && doc.body) {
+			const unloaded = !doc || !doc.body || !doc.querySelector('main') || doc.body.classList.contains('error404');
+			if (unloaded) out.unloaded.push(page);
+			// An unloaded page is not measured: its error document's contrast
+			// must not turn an edge block into a hard failure (Codex on #508).
+			if (!unloaded) {
 				const kill = doc.createElement('style');
 				kill.textContent = '*, *::before, *::after { animation: none !important; transition: none !important; }';
 				doc.head.appendChild(kill);

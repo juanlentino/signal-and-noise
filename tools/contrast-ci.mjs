@@ -83,14 +83,33 @@ async function main() {
 		// (Codex on #508, P1, both rounds).
 		if (TOKEN) {
 			const own = new URL(ORIGIN).origin;
+			// Fulfilling with a 3xx gives the handler no second look at the next
+			// hop, so it would leave without the token and meet the WAF (Codex on
+			// #508). Same-origin redirects are followed here, one hop at a time,
+			// up to five; an off-origin one is handed back as the 3xx, and the
+			// browser's next request for it is routed to continue() tokenless.
+			// ponytail: the final body is fulfilled under the requested URL, so a
+			// redirected document keeps its pre-redirect address; the sitemap
+			// lists canonical URLs, so the pages this run loads do not redirect.
 			await context.route('**/*', async route => {
 				const req = route.request();
 				if (new URL(req.url()).origin !== own) return route.continue();
 				try {
-					const response = await route.fetch({ headers: { ...req.headers(), 'x-sn-smoke': TOKEN }, maxRedirects: 0 });
+					let url = req.url(), response;
+					for (let hop = 0; hop < 5; hop++) {
+						response = await route.fetch({ url, headers: { ...req.headers(), 'x-sn-smoke': TOKEN }, maxRedirects: 0 });
+						const loc = response.status() >= 300 && response.status() < 400 && response.headers()['location'];
+						if (!loc) break;
+						const next = new URL(loc, url);
+						if (next.origin !== own) break;
+						url = next.href;
+					}
 					return await route.fulfill({ response });
 				} catch {
-					// A request still in flight when the run closes the context.
+					// A fetch that timed out or failed, or one still in flight when
+					// the run closes the context: settle the route, or the request
+					// stalls the page until the run times out (Codex on #508).
+					await route.abort().catch(() => {});
 				}
 			});
 		}
