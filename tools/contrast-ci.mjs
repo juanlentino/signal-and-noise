@@ -12,7 +12,8 @@
  * coverage, not the count).
  *
  * Exit codes: 0 clean; 1 violations; 2 inconclusive (the edge blocked this
- * runner, or no page loaded), reported as a warning by the workflow, never as
+ * runner, a routed asset failed or redirected across directories, or no
+ * page loaded), reported as a warning by the workflow, never as
  * a pass.
  *
  * Usage: node tools/contrast-ci.mjs [origin]   (needs `playwright` installed)
@@ -81,6 +82,12 @@ async function main() {
 		// is routed (and judged by origin) afresh. route.continue({ headers })
 		// would carry the token through every redirect, cross-origin included
 		// (Codex on #508, P1, both rounds).
+		// A routed asset that failed, or a subresource that redirected into
+		// another directory (its relative url()s would resolve from the old
+		// path), changes what is measured: such a run is never called clean
+		// (Codex on #517, round 2). Only failures before measurement ends count.
+		const routeIssues = [];
+		let measured = false;
 		if (TOKEN) {
 			const own = new URL(ORIGIN).origin;
 			// Fulfilling with a 3xx gives the handler no second look at the next
@@ -112,8 +119,11 @@ async function main() {
 							hdrs = Object.fromEntries(Object.entries(hdrs).filter(([k]) => !/^content-(type|length|encoding|language|location)$/i.test(k)));
 						}
 					}
+					const dir = u => new URL(u).pathname.replace(/[^/]*$/, '');
+					if (url !== req.url() && req.resourceType() !== 'document' && dir(url) !== dir(req.url())) routeIssues.push(`${req.resourceType()} redirected across directories: ${req.url()}`);
 					return await route.fulfill({ response });
 				} catch {
+					if (!measured && ['document', 'stylesheet', 'font', 'image'].includes(req.resourceType())) routeIssues.push(`${req.resourceType()} failed: ${req.url()}`);
 					// A fetch that timed out or failed, or one still in flight when
 					// the run closes the context: settle the route, or the request
 					// stalls the page until the run times out (Codex on #508).
@@ -137,6 +147,7 @@ async function main() {
 		await page.evaluate(p => { window.__snContrastPages = p; }, list);
 		await page.addScriptTag({ content: tool });
 		const out = await page.evaluate(() => window.__snContrastDone, null, { timeout: 0 });
+		measured = true;
 
 		console.log(`${out.checked} text pairs and ${out.linksChecked} links checked on ${out.pages} pages, light and dark; ${out.imaged} over images skipped.`);
 		if (out.unloaded.length) console.log(`::warning::${out.unloaded.length} page(s) rendered no <main> (blocked or broken): ${out.unloaded.join(', ')}`);
@@ -151,6 +162,11 @@ async function main() {
 		// A page that did not render was not measured: never call the run clean
 		// (Codex on #508). Failures found elsewhere still go red above.
 		if (out.unloaded.length) { console.log('Inconclusive: not every page rendered.'); return 2; }
+		if (routeIssues.length) {
+			console.log(`::warning::${routeIssues.length} routed request(s) changed what was measured: ${routeIssues.slice(0, 5).join('; ')}`);
+			console.log('Inconclusive: an asset failed or redirected.');
+			return 2;
+		}
 		console.log('Clean: every text pair at AA, every color-only link at 3:1.');
 		return 0;
 	} finally {

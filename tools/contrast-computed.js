@@ -103,17 +103,27 @@
 	// Only clipping that removes the content counts: the sr-only patterns
 	// (clip: rect(0 0 0 0) on a positioned box, clip-path: inset(50%)), not
 	// any clip-path, which can leave a link fully visible (Codex on #517).
+	// The element and every ancestor: a clipped or 1px overflow-hidden wrapper
+	// hides an inner span whose own styles look visible (Codex on #517, round 2).
 	const shown = (el, win) => {
 		const cs = win.getComputedStyle(el);
 		if (cs.display === 'none' || cs.visibility === 'hidden') return false;
-		if (/^(absolute|fixed)$/.test(cs.position) && /^rect\(0(px)?,? 0(px)?,? 0(px)?,? 0(px)?\)$/.test(cs.clip)) return false;
-		if (/^inset\(50%\)$/.test(cs.clipPath)) return false;
 		const r = el.getBoundingClientRect();
-		return r.width > 1 && r.height > 1;
+		if (r.width <= 1 || r.height <= 1) return false;
+		for (let x = el; x && x !== el.ownerDocument.documentElement; x = x.parentElement) {
+			const xs = win.getComputedStyle(x);
+			if (/^(absolute|fixed)$/.test(xs.position) && /^rect\(0(px)?,? 0(px)?,? 0(px)?,? 0(px)?\)$/.test(xs.clip)) return false;
+			if (/^inset\(50%\)$/.test(xs.clipPath)) return false;
+			if (x !== el && xs.overflow === 'hidden') { const xr = x.getBoundingClientRect(); if (xr.width <= 1 || xr.height <= 1) return false; }
+		}
+		return true;
 	};
 	// Prose a reader sees: visible, not in a link, not aria-hidden.
+	// Only this prose run: a nested block (a sub-list under a list item) is
+	// rejected with its subtree, so its text is never a link's neighbor
+	// (Codex on #517, round 2).
 	const proseNodes = (el, doc, win) => {
-		const w = doc.createTreeWalker(el, NodeFilter.SHOW_TEXT), out = [];
+		const w = doc.createTreeWalker(el, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, { acceptNode: n => n.nodeType === 3 ? NodeFilter.FILTER_ACCEPT : (n !== el && !/^(inline|contents)/.test(win.getComputedStyle(n).display) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_SKIP) }), out = [];
 		let x;
 		while ((x = w.nextNode())) {
 			const pe = x.parentElement;
@@ -207,8 +217,9 @@
 			const el = n.parentElement; if (!el || ['SCRIPT', 'STYLE', 'NOSCRIPT'].includes(el.tagName)) continue;
 			if (el.closest('[aria-hidden="true"]')) { out.decorative++; continue; }
 			const cs = win.getComputedStyle(el);
-			if (cs.display === 'none' || cs.visibility === 'hidden') continue;
-			const r = el.getBoundingClientRect(); if (r.width < 2 || r.height < 2) continue;
+			// The same visibility test as the links: sr-only text inside a clipped
+			// or 1px wrapper is not on screen, so it has no contrast to fail.
+			if (!shown(el, win)) continue;
 			// effective fg: computed color, alpha-multiplied by the opacity chain
 			const fgP = parse(cs.color); if (!fgP) continue;
 			let op = 1, bg = null, imaged = false;
@@ -235,7 +246,10 @@
 						if (!line) { imaged = true; break; }
 					}
 					const p = parse(acs.backgroundColor);
-					if (p && p.a > 0) bg = groundUnder(a, win, ground);
+					// The walk includes html and body, so it starts from bare white:
+					// starting from the page ground composited a translucent body
+					// twice (Codex on #517, round 2).
+					if (p && p.a > 0) bg = groundUnder(a, win, [255, 255, 255]);
 				}
 			}
 			if (imaged) { out.imaged++; continue; }
