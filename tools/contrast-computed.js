@@ -189,7 +189,9 @@
 			const tw = doc.createTreeWalker(a, NodeFilter.SHOW_TEXT);
 			let tn, rr = Infinity, lFx = null, pFx = null;
 			while ((tn = tw.nextNode())) {
-				if (!tn.textContent.trim() || !shown(tn.parentElement, win)) continue;
+				// Decorative glyphs (an aria-hidden arrow) are outside contrast
+				// scope here as everywhere else in this instrument (Codex on #517).
+				if (!tn.textContent.trim() || tn.parentElement.closest('[aria-hidden="true"]') || !shown(tn.parentElement, win)) continue;
 				const fx = fxOf(tn.parentElement); if (!fx) continue;
 				for (const p of pFxs) { const q = ratio(fx, p); if (q < rr) { rr = q; lFx = fx; pFx = p; } }
 			}
