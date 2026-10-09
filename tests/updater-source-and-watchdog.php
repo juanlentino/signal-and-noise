@@ -191,6 +191,22 @@ if ( function_exists( 'sn_gh_theme_version_watchdog' ) ) {
 	ok( array() === $GLOBALS['__deleted'], 'no version change: deletes nothing (safe on every request)' );
 }
 
+// ── Read-time guard: an entry for the installed version is not an update ──
+$GLOBALS['__theme_version'] = '15.8.0';
+$mkt = static function ( $v ) { $t = new stdClass(); $t->response = array( SN_GH_THEME_STYLESHEET => array( 'theme' => SN_GH_THEME_STYLESHEET, 'new_version' => $v ), 'other' => array( 'new_version' => '9.9' ) ); return $t; };
+$stale = $mkt( '15.8.0' );
+$read  = sn_gh_theme_update_drop_stale( $stale );
+ok( ! isset( $read->response[ SN_GH_THEME_STYLESHEET ] ) && isset( $read->no_update[ SN_GH_THEME_STYLESHEET ] ), 'read guard: "update to the installed version" moves to no_update (the stale badge after an install)' );
+ok( isset( $read->response['other'] ), 'read guard: another theme\'s update is left alone' );
+ok( isset( $stale->response[ SN_GH_THEME_STYLESHEET ] ), 'read guard: the object read is copied, never changed' );
+ok( ! isset( sn_gh_theme_update_drop_stale( $mkt( '15.7.0' ) )->response[ SN_GH_THEME_STYLESHEET ] ), 'read guard: an OLDER "new" version is not an update either' );
+$real = $mkt( '15.9.0' );
+ok( sn_gh_theme_update_drop_stale( $real ) === $real, 'read guard: a real newer release stays an update, untouched' );
+ok( false === sn_gh_theme_update_drop_stale( false ), 'read guard: no record is passed through' );
+$GLOBALS['__theme_version'] = '';
+ok( sn_gh_theme_update_drop_stale( $stale ) === $stale, 'read guard: an unreadable installed version changes nothing' );
+ok( in_array( 'sn_gh_theme_update_drop_stale', $GLOBALS['__filters']['site_transient_update_themes'] ?? array(), true ), 'read guard: registered on every read of update_themes' );
+
 // cleanup
 function rrm( $d ) { if ( ! is_dir( $d ) ) return; foreach ( scandir( $d ) as $f ) { if ( '.' === $f || '..' === $f ) continue; $p = "$d/$f"; is_dir( $p ) ? rrm( $p ) : @unlink( $p ); } @rmdir( $d ); }
 rrm( $base );

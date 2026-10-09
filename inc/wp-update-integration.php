@@ -556,6 +556,43 @@ add_filter( 'pre_set_site_transient_update_themes', function( $transient ) {
 } );
 
 /**
+ * Read-time guard: never report the theme as updatable to the version that
+ * is already installed (the plugin's twin: sn_plugin_update_drop_stale()).
+ *
+ * The install request runs the OLD code to its end, and anything in it that
+ * rebuilds `update_themes` writes "new version available" for the version
+ * just installed. The version watchdog below clears that on the first
+ * new-code request, but the desk fires many requests at once after an
+ * install, so the stale write can land after the watchdog ran and stay until
+ * WordPress re-checks. Checking on READ makes every reader right whoever
+ * wrote the record: an entry whose new_version is not newer than the
+ * installed Version moves from `response` to `no_update`. A copy is returned;
+ * the object read is never changed.
+ *
+ * @param mixed $transient The update_themes site transient as read.
+ * @return mixed
+ */
+function sn_gh_theme_update_drop_stale( $transient ) {
+	if ( ! is_object( $transient ) || ! isset( $transient->response ) || ! is_array( $transient->response ) ) {
+		return $transient;
+	}
+	$entry = $transient->response[ SN_GH_THEME_STYLESHEET ] ?? null;
+	if ( ! is_array( $entry ) || ! isset( $entry['new_version'] ) ) {
+		return $transient;
+	}
+	$installed = (string) wp_get_theme( SN_GH_THEME_STYLESHEET )->get( 'Version' );
+	if ( '' === $installed || version_compare( (string) $entry['new_version'], $installed, '>' ) ) {
+		return $transient;
+	}
+	$out = clone $transient;
+	unset( $out->response[ SN_GH_THEME_STYLESHEET ] );
+	$out->no_update                            = isset( $out->no_update ) && is_array( $out->no_update ) ? $out->no_update : array();
+	$out->no_update[ SN_GH_THEME_STYLESHEET ] = $entry;
+	return $out;
+}
+add_filter( 'site_transient_update_themes', 'sn_gh_theme_update_drop_stale' );
+
+/**
  * Rename the unpacked source directory so WP installs to the correct
  * stylesheet slug.
  *
