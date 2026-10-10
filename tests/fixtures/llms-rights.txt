@@ -1,0 +1,6 @@
+## Rights
+
+- [RSL license](https://juanlentino.com/license.xml): machine-readable terms. Search and AI input are permitted unconditionally and free. AI training is reserved by default and permitted only under the attribution conditions stated in the TDM policy.
+- [TDM policy](https://juanlentino.com/tdm-policy/): the text-and-data-mining reservation behind the TDM-Reservation headers and [tdmrep.json](https://juanlentino.com/.well-known/tdmrep.json), and the conditions a training licence requires.
+- **Identified agents**: a request signed with [Web Bot Auth](https://datatracker.ietf.org/doc/html/draft-meunier-web-bot-auth-architecture-02) and verified at the edge is answered with the licence terms in its `TDM-Licence-*` response headers, keyed to the identity it proved. That is an offer addressed to a known party, not a grant: proving who you are does not satisfy the training conditions, which apply in full.
+

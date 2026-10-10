@@ -178,7 +178,9 @@ ok( strpos( $body, 'reserved by default' ) < strpos( $body, 'TDM-Licence' ), 'th
 // touched it, so this is the first exercise of the actual query path.
 class WP_Query {
 	public $posts;
-	public function __construct( $args ) { $this->posts = $GLOBALS['__llms_query_posts'] ?? array(); }
+	public $found_posts = 51;
+	public static $args;
+	public function __construct( $args ) { self::$args = $args; $this->posts = $GLOBALS['__llms_query_posts'] ?? array(); }
 }
 function get_the_title( $p ) { return is_object( $p ) ? $p->post_title : ''; }
 function get_permalink( $p ) { return 'https://juanlentino.com/notes/' . ( is_object( $p ) ? $p->ID : $p ) . '/'; }
@@ -194,6 +196,37 @@ $GLOBALS['__llms_query_posts'] = array(
 $recent = sn_llms_txt_recent_notes( 10 );
 ok( 'Signal & Noise' === ( $recent[0]['title'] ?? null ),
 	'recent-notes title decodes HTML entities before it reaches the text/plain body — got: ' . var_export( $recent[0]['title'] ?? null, true ) );
+
+
+// --- 2026-10-10: Start Here and Objections listed; the summary counts derived ---
+$px = array(
+	array( 'slug' => 'provenance/over-detection', 'title' => 'Provenance Over Detection', 'designation' => '1.01' ),
+	array( 'slug' => 'provenance/as-substrate', 'title' => 'Provenance as Substrate', 'designation' => '1.02' ),
+	array( 'slug' => 'provenance/without-institutions', 'title' => 'Provenance Without Institutions', 'designation' => '1.03' ),
+);
+$lv = sn_llms_txt_body( false, array(), $px, array(), 51 );
+$lv_sum = substr( $lv, 0, strpos( $lv, "\n## " ) );
+ok( false !== strpos( $lv, "- [Objections](https://juanlentino.com/provenance/objections/): " ) && strpos( $lv, '- [Provenance](' ) < strpos( $lv, '- [Objections](' ) && strpos( $lv, '- [Objections](' ) < strpos( $lv, '- [Notes](' ), 'Objections is listed directly after Provenance' );
+ok( false !== strpos( $lv, "- [Start Here](https://juanlentino.com/notes/start-here/): " ) && strpos( $lv, '- [Notes](' ) < strpos( $lv, '- [Start Here](' ) && strpos( $lv, '- [Start Here](' ) < strpos( $lv, '- [About](' ), 'Start Here is listed directly after Notes' );
+ok( 1 === substr_count( $lv, '/provenance/objections/' ) && strpos( $lv, '/provenance/objections/' ) < strpos( $lv, '## Pillar essays' ), 'Objections appears once, in Key pages, not swept in with the pillar essays' );
+ok( false !== strpos( $lv_sum, '51 notes, three SSRN papers, a verifier' ), 'the summary states the counts it was given: 51 notes, three papers (one per listed pillar)' );
+ok( false === strpos( $lv, 'Forty-plus' ) && false === strpos( $lv, 'two SSRN papers' ), 'the hand-written "Forty-plus notes, two SSRN papers" is gone' );
+ok( false !== strpos( sn_llms_txt_body( false, array(), array_slice( $px, 0, 2 ), array(), 52 ), '52 notes, two SSRN papers' ), 'the counts follow the corpus: 52 notes and two pillars read as such' );
+$unknown = sn_llms_txt_body( false );
+ok( 1 === preg_match( '/anchor music rights\. A verifier that runs in the reader\'s browser\. Also/', $unknown ), 'with no count and no pillars the summary states no number at all, never a guess' );
+ok( sn_llms_txt_body( false, array(), $px, array(), 51 ) === $lv, 'deterministic: the same corpus gives the same bytes' );
+foreach ( array( $lv, sn_llms_txt_body( false ) ) as $variant_body ) {
+	$rights = substr( $variant_body, strpos( $variant_body, "## Rights\n" ) );
+	ok( $rights === (string) file_get_contents( __DIR__ . '/fixtures/llms-rights.txt' ), 'the Rights section is byte-identical to the fixture taken before this change' );
+}
+$fullx = sn_llms_txt_body( true, array(), $px, array(), 51 );
+ok( false !== strpos( $fullx, '/notes/start-here/' ) && false !== strpos( $fullx, '/provenance/objections/' ) && false !== strpos( $fullx, '51 notes, three SSRN papers' ), 'the full variant carries the same key pages and summary' );
+ok( false !== strpos( (string) file_get_contents( __DIR__ . '/../inc/llms-txt.php' ), 'sn_llms_txt_body( $full, $notes, $pillars, $topics, sn_llms_txt_note_count() )' ), 'the route passes the derived note count' );
+ok( false !== strpos( (string) file_get_contents( __DIR__ . '/../inc/abilities-diagnostics.php' ), 'sn_llms_txt_body( $full, $notes, $pillars, $topics, $count )' ), 'the get-llms-txt ability passes the same inputs as the route (count, and Topics for full)' );
+
+// The count's corpus: every published, non-password post (what /notes/ lists), filters off.
+ok( 51 === sn_llms_txt_note_count() && 'post' === WP_Query::$args['post_type'] && 'publish' === WP_Query::$args['post_status'] && false === WP_Query::$args['has_password'] && ! isset( WP_Query::$args['category_name'] ) && true === WP_Query::$args['suppress_filters'], 'the note count is the published, non-password posts /notes/ lists: no category filter, filters suppressed' );
+ok( false !== strpos( sn_llms_txt_body( false, array(), array( $px[0] ), array(), 1 ), '1 note, one SSRN paper' ), 'one note and one paper read in the singular' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

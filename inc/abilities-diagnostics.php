@@ -1004,7 +1004,11 @@ function sn_theme_ability_llms_txt( $input = array() ) {
 		// #311: the route passes the pillar descriptors too; without them the
 		// body has no "Pillar essays" section and differs from /llms.txt.
 		$pillars = function_exists( 'sn_theme_pillar_descriptors' ) ? (array) sn_theme_pillar_descriptors() : array();
-		$body    = (string) sn_llms_txt_body( $full, $notes, $pillars );
+		// 2026-10-10: the same inputs the route passes, so the index output is
+		// the served /llms.txt byte for byte and the full output carries Topics.
+		$topics  = $full && function_exists( 'sn_llms_txt_topics' ) ? sn_llms_txt_topics() : array();
+		$count   = function_exists( 'sn_llms_txt_note_count' ) ? sn_llms_txt_note_count() : null;
+		$body    = (string) sn_llms_txt_body( $full, $notes, $pillars, $topics, $count );
 		return array(
 			'variant' => $full ? 'full' : 'index',
 			'content' => $body,

@@ -52,7 +52,7 @@ function sn_llms_txt_variant( $uri ) {
  *                       mirroring $notes). Empty set = section omitted entirely.
  * @return string
  */
-function sn_llms_txt_body( $full = false, $notes = array(), $pillars = array(), $topics = array() ) {
+function sn_llms_txt_body( $full = false, $notes = array(), $pillars = array(), $topics = array(), $note_count = null ) {
 	$name = (string) get_bloginfo( 'name' );
 	if ( '' === $name ) {
 		$name = 'Signal & Noise';
@@ -66,14 +66,21 @@ function sn_llms_txt_body( $full = false, $notes = array(), $pillars = array(), 
 		// producer, and audio engineer. Long-form notes on craft" and never said
 		// the word provenance; for a generative engine this is the first, often
 		// only, paragraph read about the site. Research register, no product.
-		'> Music provenance research by Juan Lentino (ORCID 0009-0006-8151-5920): why cryptographic records of authorship made at creation, not AI detection after the fact, should anchor music rights. Forty-plus notes, two SSRN papers, a verifier that runs in the reader\'s browser. Also a producer\'s discography and background.',
+		// 2026-10-10: the counts are derived (sn_llms_txt_summary_facts()). The
+		// hand-written "Forty-plus notes, two SSRN papers" disagreed with the
+		// corpus and with this file's own Pillar essays section.
+		'> Music provenance research by Juan Lentino (ORCID 0009-0006-8151-5920): why cryptographic records of authorship made at creation, not AI detection after the fact, should anchor music rights. ' . sn_llms_txt_summary_facts( $note_count, $pillars ) . ' Also a producer\'s discography and background.',
 		'',
 		'Content is hand-written. Analytics are first-party and cookieless; the site sets no advertising or cross-site tracking cookies.',
 		'',
 		'## Key pages',
 		'',
 		'- [Provenance](' . $home . '/provenance/): the research hub — the argument, the papers, the verifier.',
+		// 2026-10-10: listed on purpose, not derived from /provenance/'s children
+		// (the pillar essays have their own section below).
+		'- [Objections](' . $home . '/provenance/objections/): the common objections to music provenance, each answered briefly with a link to the full note.',
 		'- [Notes](' . $home . '/notes/): every note, one every few days, each signed and anchored (primary writing).',
+		'- [Start Here](' . $home . '/notes/start-here/): the map of what a note is, how to verify one, and where to begin.',
 		'- [About](' . $home . '/about/): who Juan Lentino is — background and identity.',
 		'- [Résumé](' . $home . '/resume/): professional experience and credentials.',
 		'- [Music](' . $home . '/music/): discography and featured work.',
@@ -313,7 +320,7 @@ function sn_llms_txt_send( $full = false ) {
 	$pillars = function_exists( 'sn_theme_pillar_descriptors' ) ? (array) sn_theme_pillar_descriptors() : array();
 	$topics = $full ? sn_llms_txt_topics() : array();
 	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- plain-text markdown from home_url() + published post titles/permalinks + the curated pillar descriptors + the tag descriptions; esc_html would corrupt the "&" and markdown punctuation in a text/plain document.
-	echo sn_llms_txt_body( $full, $notes, $pillars, $topics );
+	echo sn_llms_txt_body( $full, $notes, $pillars, $topics, sn_llms_txt_note_count() );
 }
 
 /**
@@ -331,4 +338,54 @@ function sn_llms_txt_maybe_serve() {
 
 if ( ! defined( 'SN_LLMS_TXT_TEST' ) || ! SN_LLMS_TXT_TEST ) {
 	add_action( 'template_redirect', 'sn_llms_txt_maybe_serve', 0 );
+}
+
+/**
+ * The summary's counts, derived so the sentence cannot disagree with the
+ * corpus. PURE. A count that is unknown is left out, never guessed.
+ *
+ * @param int|null $note_count Published notes (sn_llms_txt_note_count()), or null.
+ * @param array    $pillars    The pillar descriptors the Pillar essays section lists.
+ * @return string
+ */
+function sn_llms_txt_summary_facts( $note_count, $pillars ) {
+	$words  = array( 1 => 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine' );
+	$papers = 0;
+	foreach ( is_array( $pillars ) ? $pillars : array() as $p ) {
+		$papers += ( ! empty( $p['slug'] ) && ! empty( $p['title'] ) ) ? 1 : 0;
+	}
+	$facts = array();
+	if ( is_int( $note_count ) && $note_count > 0 ) {
+		$facts[] = $note_count . ' ' . ( 1 === $note_count ? 'note' : 'notes' );
+	}
+	if ( $papers > 0 ) {
+		$facts[] = ( $words[ $papers ] ?? (string) $papers ) . ' SSRN ' . ( 1 === $papers ? 'paper' : 'papers' );
+	}
+	$facts[] = 'a verifier that runs in the reader\'s browser';
+	return ucfirst( implode( ', ', $facts ) ) . '.';
+}
+
+/**
+ * Published, non-password posts: the count the summary states. The same
+ * corpus /notes/ and the Notes section list (sn_notes_index(),
+ * sn_llms_txt_recent_notes()): the theme's notes are every published post,
+ * not a category. Filters off, so no pre_get_posts can narrow it. null where
+ * WP_Query is unavailable.
+ *
+ * @return int|null
+ */
+function sn_llms_txt_note_count() {
+	if ( ! class_exists( 'WP_Query' ) ) {
+		return null;
+	}
+	$q = new WP_Query( array(
+		'post_type'           => 'post',
+		'post_status'         => 'publish',
+		'has_password'        => false,
+		'fields'              => 'ids',
+		'posts_per_page'      => 1,
+		'ignore_sticky_posts' => true,
+		'suppress_filters'    => true,
+	) );
+	return isset( $q->found_posts ) ? (int) $q->found_posts : null;
 }
