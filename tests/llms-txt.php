@@ -178,7 +178,9 @@ ok( strpos( $body, 'reserved by default' ) < strpos( $body, 'TDM-Licence' ), 'th
 // touched it, so this is the first exercise of the actual query path.
 class WP_Query {
 	public $posts;
-	public function __construct( $args ) { $this->posts = $GLOBALS['__llms_query_posts'] ?? array(); }
+	public $found_posts = 51;
+	public static $args;
+	public function __construct( $args ) { self::$args = $args; $this->posts = $GLOBALS['__llms_query_posts'] ?? array(); }
 }
 function get_the_title( $p ) { return is_object( $p ) ? $p->post_title : ''; }
 function get_permalink( $p ) { return 'https://juanlentino.com/notes/' . ( is_object( $p ) ? $p->ID : $p ) . '/'; }
@@ -223,7 +225,6 @@ ok( false !== strpos( (string) file_get_contents( __DIR__ . '/../inc/llms-txt.ph
 ok( false !== strpos( (string) file_get_contents( __DIR__ . '/../inc/abilities-diagnostics.php' ), 'sn_llms_txt_body( $full, $notes, $pillars, $topics, $count )' ), 'the get-llms-txt ability passes the same inputs as the route (count, and Topics for full)' );
 
 // The count's corpus: every published, non-password post (what /notes/ lists), filters off.
-class WP_Query { public static $args; public $found_posts = 51; public function __construct( $a ) { self::$args = $a; } }
 ok( 51 === sn_llms_txt_note_count() && 'post' === WP_Query::$args['post_type'] && 'publish' === WP_Query::$args['post_status'] && false === WP_Query::$args['has_password'] && ! isset( WP_Query::$args['category_name'] ) && true === WP_Query::$args['suppress_filters'], 'the note count is the published, non-password posts /notes/ lists: no category filter, filters suppressed' );
 ok( false !== strpos( sn_llms_txt_body( false, array(), array( $px[0] ), array(), 1 ), '1 note, one SSRN paper' ), 'one note and one paper read in the singular' );
 
