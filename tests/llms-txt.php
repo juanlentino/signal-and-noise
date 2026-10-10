@@ -222,5 +222,10 @@ ok( false !== strpos( $fullx, '/notes/start-here/' ) && false !== strpos( $fullx
 ok( false !== strpos( (string) file_get_contents( __DIR__ . '/../inc/llms-txt.php' ), 'sn_llms_txt_body( $full, $notes, $pillars, $topics, sn_llms_txt_note_count() )' ), 'the route passes the derived note count' );
 ok( false !== strpos( (string) file_get_contents( __DIR__ . '/../inc/abilities-diagnostics.php' ), 'sn_llms_txt_body( $full, $notes, $pillars, $topics, $count )' ), 'the get-llms-txt ability passes the same inputs as the route (count, and Topics for full)' );
 
+// The count's corpus: every published, non-password post (what /notes/ lists), filters off.
+class WP_Query { public static $args; public $found_posts = 51; public function __construct( $a ) { self::$args = $a; } }
+ok( 51 === sn_llms_txt_note_count() && 'post' === WP_Query::$args['post_type'] && 'publish' === WP_Query::$args['post_status'] && false === WP_Query::$args['has_password'] && ! isset( WP_Query::$args['category_name'] ) && true === WP_Query::$args['suppress_filters'], 'the note count is the published, non-password posts /notes/ lists: no category filter, filters suppressed' );
+ok( false !== strpos( sn_llms_txt_body( false, array(), array( $px[0] ), array(), 1 ), '1 note, one SSRN paper' ), 'one note and one paper read in the singular' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

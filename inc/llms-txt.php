@@ -366,8 +366,11 @@ function sn_llms_txt_summary_facts( $note_count, $pillars ) {
 }
 
 /**
- * Published, non-password posts in the Notes category: the count the summary
- * states. null where WP_Query is unavailable.
+ * Published, non-password posts: the count the summary states. The same
+ * corpus /notes/ and the Notes section list (sn_notes_index(),
+ * sn_llms_txt_recent_notes()): the theme's notes are every published post,
+ * not a category. Filters off, so no pre_get_posts can narrow it. null where
+ * WP_Query is unavailable.
  *
  * @return int|null
  */
@@ -376,12 +379,13 @@ function sn_llms_txt_note_count() {
 		return null;
 	}
 	$q = new WP_Query( array(
-		'post_type'      => 'post',
-		'post_status'    => 'publish',
-		'has_password'   => false,
-		'category_name'  => 'notes',
-		'fields'         => 'ids',
-		'posts_per_page' => 1,
+		'post_type'           => 'post',
+		'post_status'         => 'publish',
+		'has_password'        => false,
+		'fields'              => 'ids',
+		'posts_per_page'      => 1,
+		'ignore_sticky_posts' => true,
+		'suppress_filters'    => true,
 	) );
 	return isset( $q->found_posts ) ? (int) $q->found_posts : null;
 }
