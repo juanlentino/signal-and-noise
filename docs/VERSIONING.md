@@ -2,86 +2,41 @@
 
 How releases work for Signal & Noise. Read this before opening a PR that changes shippable code, and before cutting a release. Short version: **a PR adds an `## [Unreleased]` bullet and closes an issue; only a release stamps `Version:`.**
 
-## The WordPress shape (since 2026-09-11)
+## By date (since 2026-10-11)
 
-`X.Y.0` is a **release**, `X.Y.Z` is a **fix** to it, and `X` rolls by itself
-when `Y` would reach 10 (`13.9.0 → 14.0.0`). This is how WordPress core
-numbers (4.9 → 5.0) and how WooCommerce, Jetpack, Yoast and ACF number, so a
-WordPress reader already knows how to read it. Three components always
-(`13.0.0`, the WooCommerce form — not core's `6.8`: `version_compare( '13.0',
-'13.0.0' )` calls the two-part form *older*, and every tool here parses three
-integers).
+A version is `YYYY.M.N`: the year, the month, and the cut's place in that
+month. `2026.10.1`, `2026.10.2`, then `2026.11.1`. The plugin uses the same
+scheme from the same day.
 
-| Component | Means | Moves when |
-|---|---|---|
-| `X` | the tens digit of the release count | `Y` would become 10 |
-| `Y` | a **release** — one arc of merged work, features or fixes | `tools/cut-release.sh release` |
-| `Z` | a **fix** to a shipped release | `tools/cut-release.sh fix` |
+This theme is private. One site installs it, it is not on WordPress.org and
+never will be. A version number has one reader, that site (and the agents that
+work on it), and three jobs: always go up, say at a glance how old an install
+is, and name a point to roll back to. A date does all three.
 
-**`X` is not a breaking-change flag.** A release that breaks something —
-removes or renames a public hook, changes a settings schema without a
-migration, shifts behaviour so that a site has to act — says **BREAKING** in
-its CHANGELOG headline and release title, on whatever number it happens to
-get. There is no `major` argument; the script refuses it and says why.
+The two schemes before it assumed a reader who does not exist. SemVer (to
+2026-09-11) warns API consumers about breakage, and there are none. The
+WordPress shape (2026-09-11 to 2026-10-11: `X.Y.0` a release, `X.Y.Z` a fix,
+`X` rolling when `Y` would reach 10) is how WordPress.org themes number, so
+their readers can read it; it took this theme from 14.0.0 to 15.8.2 and the
+plugin from 14.0.0 to 24.0.0 in a month. The history of both, with the
+research behind the WordPress shape, is in the plugin's
+`docs/proposals/2026-09-11-versioning-scheme.md`.
 
-**Cadence is the other half.** Each component stays two digits only if
-releases are cut per **arc**, not per merged fix. A `docs/`, `tools/`,
-`.github/`-only merge never gets its own cut.
+Three integers always: PHP's `version_compare` orders `2026.10.1` above
+`15.8.2` and `2026.10.12` above `2026.10.9`, and the GitHub tags API lists the
+highest version first. `tools/cut-release.sh` refuses a next version that
+would not sort above the current one.
 
-### Why this replaced SemVer (2026-09-11)
+**Release, fix, BREAKING.** The number no longer says whether a cut adds or
+repairs; the CHANGELOG does. `release` is the only kind (`fix`, `patch` and
+`minor` are accepted and mean the same). A cut that breaks something says
+**BREAKING** in its headline. There is no `major` argument.
 
-The rule until this date was strict SemVer with no caps. The plugin's minor
-reached **110** in seventeen days because it counted merged fixes at a dozen a
-day; its MAJOR moved once, because nothing broke — a signal with no receiver,
-since the theme is the plugin's only integrator and both are owned here.
-Owner: "I'm not liking the three digits" → "I'd go WordPress since it's a
-WordPress plugin." The survey of what the Linux kernel, Apple, Ubuntu and
-CalVer do about a number getting big is in the plugin repo,
-`docs/proposals/2026-09-11-versioning-scheme.md`. The theme's first release
-under the shape is **13.0.0** — the roll, not a break.
-
-### Historical context (2026-05-26 — caps dropped; 2026-09-11 — SemVer dropped)
-
-Until 2026-05-26 this project had cap overrides (7 per minor, 5 per major)
-that forced fictional majors; the v4.4.x audit removed them and the project
-ran strict SemVer for three and a half months. The WordPress shape is not a
-cap: `X` rolling at `Y = 10` claims nothing about the release, which is the
-difference that made the old caps dishonest and this rule not.
-
-## Worked example: why v12.0.0 was a major (and dark mode was not the reason)
-
-Recorded 2026-08-20 because it is the cleanest case of the rule the cap policy
-above exists to protect, and because the obvious answer was wrong.
-
-v12.0.0 shipped **dark mode**. That is a big, visible, user-facing capability,
-and it is a **MINOR**. It removes nothing, renames nothing, moves no floor, and
-requires no user action: it follows the OS, degrades to the light palette, and
-writes nothing to the database. "Feels large" is not a SemVer criterion.
-
-The major was earned by something the dark mode *exposed*. The site has never
-served one palette (`theme.json`, the shipped `high-contrast` variation, and now
-`dark`), and `get-design-tokens` had always returned `colors` as a flat
-`slug => hex` map describing exactly one of them. Reshaping that field into a
-struct is a **removed/renamed public response on the Abilities surface**, with
-the old shape deleted rather than aliased. That is the break.
-
-Every manufactured alternative was checked and rejected first:
-
-| Candidate | Verdict |
-|---|---|
-| Deprecation-ladder removals | Empty. No `@deprecated`, no `_deprecated_function` anywhere. |
-| WP floor 7.0 to 7.1 | Manufactured. Tested to 7.1, but nothing depends on a 7.1 feature. |
-| PHP floor 8.3 to 8.4 | Same. Cloudways runs 8.4; no 8.4 syntax is used. |
-| theme.json v3 to v4 | WP has not shipped a v4 schema. Nothing to migrate. |
-| Back-compat shims | The one in `abilities-registration.php` is documented "for tests only". Not public. |
-
-**The test to apply:** would you still make this change if the version number
-were not in question? If yes, it is earned. If the change exists to justify the
-number, it is the fictional major the caps were dropped to prevent.
-
-The five follow-on releases (v12.0.1 through v12.0.4) were all PATCH. One of
-them fixed a live outage and another rewrote 68 CSS rules, and neither touches
-the public contract, which is the only thing MAJOR measures.
+**Cadence.** Merge freely. Cut when there is something to install: an arc that
+closed, a regression the site should not keep, or a change the owner wants to
+see. At most once a day unless a regression cannot wait. A `docs/`, `tools/`,
+`.github/`-only merge rides the next cut. Show a visible change on live data
+before it merges, so a problem found after install does not cost a cut.
 
 ## What is shippable (and therefore needs an Unreleased bullet)
 
@@ -134,44 +89,41 @@ A release is a deliberate, separate act: `tools/cut-release.sh`.
 
 - Stamps `Version:` in `style.css` **and** `Stable tag:` in `readme.txt`, which
   must never drift apart.
-- Promotes `## [Unreleased]` to `## [X.Y.Z] - YYYY-MM-DD - headline` and archives
+- Promotes `## [Unreleased]` to `## [YYYY.M.N] - YYYY-MM-DD - headline` and archives
   the previous cut into `docs/changelog/`.
 - Creates or moves the GitHub milestone.
 - **Prints** the tag command rather than running it, unless given `--tag`.
 - Refuses a dirty worktree, and refuses an empty `Unreleased` — nothing to cut
   is not a release.
 
-Once the cut PR is squash-merged, tagging and the draft release are one
-dispatch (since 2026-09-24, ported from the plugin):
+Once the cut PR is squash-merged, tagging is one dispatch (since 2026-09-24,
+ported from the plugin):
 
 ```bash
-gh workflow run release.yml -f version=X.Y.Z
+gh workflow run release.yml -f version=YYYY.M.N
 ```
 
 `.github/workflows/release.yml` refuses unless main's `style.css` `Version:`
 and `readme.txt` `Stable tag:` both equal the input and the tag does not exist
 yet. It tags the commit that set the version (the squash commit, never main's
-head) and drafts the release from that version's CHANGELOG section. It exists
+head). It creates no GitHub release: the updater reads tags, and nothing
+reads a release (2026-10-11). It exists
 so a session that can dispatch a workflow but cannot push a tag can still
 finish a release. Checked against v14.1.1 through v14.3.0: each resolves to
 the commit its tag already points at.
 
-### Choosing the digit, once, at the cut
+### One kind of cut
 
-| Argument | Means |
-|---|---|
-| **release** | An arc closed: `Y + 1` (or `X + 1`, `Y = 0` when `Y` was 9). Features and fixes alike. |
-| **fix** | Something that must reach sites before the next arc: `Z + 1`. |
-
-A cut is a release unless it is a hotfix to the release that just shipped.
-If the arc contains a breaking change, the headline starts with `BREAKING:`.
+`tools/cut-release.sh release "headline"`. The script computes the date
+number; a headline that starts with `BREAKING:` is how a cut says it breaks
+something.
 
 ## CHANGELOG conventions
 
 [CHANGELOG.md](../CHANGELOG.md) follows roughly the [Keep a Changelog](https://keepachangelog.com/) format with project-specific tweaks:
 
 - **Newest at top.**
-- **One section per RELEASE.** Heading: `## [X.Y.Z] - YYYY-MM-DD - one-line summary`, written by `cut-release.sh`, not by hand.
+- **One section per RELEASE.** Heading: `## [YYYY.M.N] - YYYY-MM-DD - one-line summary`, written by `cut-release.sh`, not by hand.
 - **Body sections** under each version, when relevant: `### Added`, `### Changed`, `### Fixed`, `### Removed`, `### Deprecated`. Inline-link to source files (`[inc/foo.php](inc/foo.php)`) so the entry is browseable from GitHub.
 - **Long-form rationale is welcome.** This isn't a public-facing changelog — future-you reads it more than anyone else. Document the WHY, especially for non-obvious decisions (defensive migrations, design reverts, accessibility gaps closed).
 - **`## [Unreleased]`** is the working log. It accumulates across PRs for as long as it takes, and is emptied only by a release. The root file holds Unreleased plus the current cut; everything older lives in `docs/changelog/`.
@@ -206,7 +158,7 @@ Fix: bumped each number's `margin-bottom` from `0` to `var:preset|spacing|10`
 
 ## See also
 
-- Global versioning rules: `~/.claude/CLAUDE.md` (the SemVer line there is overridden for these two repos by this file)
+- Global versioning rules: `~/.claude/CLAUDE.md` (its SemVer default is overridden for this repo and the plugin by this file)
 - Project overrides: CLAUDE.md (`CLAUDE.md`, local-only)
 - Release script: [tools/cut-release.sh](../tools/cut-release.sh) — the only thing that stamps a version
 - Changelog archive: [docs/changelog/](changelog/) — everything older than the current cut
