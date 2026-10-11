@@ -17,7 +17,7 @@ The two schemes before it assumed a reader who does not exist. SemVer (to
 2026-09-11) warns API consumers about breakage, and there are none. The
 WordPress shape (2026-09-11 to 2026-10-11: `X.Y.0` a release, `X.Y.Z` a fix,
 `X` rolling when `Y` would reach 10) is how WordPress.org themes number, so
-their readers can read it; it took this theme from 14.0.0 to 15.8.2 and the
+their readers can read it; it took this theme from 13.0.0 to 15.8.2 and the
 plugin from 14.0.0 to 24.0.0 in a month. The history of both, with the
 research behind the WordPress shape, is in the plugin's
 `docs/proposals/2026-09-11-versioning-scheme.md`.
