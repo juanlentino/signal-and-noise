@@ -12,6 +12,9 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Changed
+- **Versions are by date: `YYYY.M.N`.** The next cut is 2026.10.1, then 2026.10.2, and N starts again each month. One site installs this theme and nothing else ever will, so the number only has to go up and say how old an install is. `tools/cut-release.sh` computes the date number (`fix` is accepted and means the same as `release`; `major` is refused) and refuses a version that would not sort above the current one. The release workflow tags the cut and no longer drafts a GitHub release, which nothing read. docs/VERSIONING.md says why; the plugin changed the same day.
+
 ## [15.8.2] - 2026-10-10 — llms.txt lists Start Here and Objections, and its counts follow the site
 
 ### Fixed

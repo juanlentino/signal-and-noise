@@ -16,9 +16,13 @@
 # diff. --tag opts into tagging; nothing opts into committing.
 #
 # Usage:
-#   tools/cut-release.sh release|fix "one-line headline"   (WordPress shape — docs/VERSIONING.md)
-#   tools/cut-release.sh minor "the batch door" --dry-run
-#   tools/cut-release.sh patch "envelope fix" --tag
+#   tools/cut-release.sh release "one-line headline"   (by date, YYYY.M.N: docs/VERSIONING.md)
+#   tools/cut-release.sh release "the batch door" --dry-run
+#   tools/cut-release.sh release "envelope fix" --tag
+#
+# Numbering is by date (owner 2026-10-11): YYYY.M.N, N the cut's place in its
+# month. One site installs this theme and nobody else ever will, so the number
+# only has to go up and say how old an install is.
 #
 # Refuses: a dirty worktree, an empty Unreleased, an unparseable Version.
 #
@@ -48,16 +52,13 @@ for arg in "$@"; do
   esac
 done
 
-# WordPress shape (owner decision 2026-09-11, docs/VERSIONING.md): X.Y.0 is a
-# RELEASE, X.Y.Z a FIX to it, and X rolls by itself when Y would reach 10.
-# `major` is refused: the first digit is the tens digit of the release count,
-# not a claim about breakage — a breaking release says BREAKING in its
-# headline instead. `minor`/`patch` stay as aliases for muscle memory.
+# By date (owner decision 2026-10-11, docs/VERSIONING.md): every cut is the
+# next number of its month. `major` is refused: the first number is the year,
+# not a claim about breakage; a breaking release says BREAKING in its headline.
 case "$LEVEL" in
-  release|minor) LEVEL=release ;;
-  fix|patch)     LEVEL=fix ;;
-  major) die "there is no 'major' cut: X rolls on its own when Y would reach 10. Cut a release and put BREAKING in the headline if it breaks something." ;;
-  *) die "first argument must be release or fix (got '${LEVEL}')" ;;
+  release|minor|fix|patch) LEVEL=release ;;
+  major) die "there is no 'major' cut: the first number is the year. Cut a release and put BREAKING in the headline if it breaks something." ;;
+  *) die "first argument must be release (got '${LEVEL}')" ;;
 esac
 [ -n "$HEADLINE" ] || die "second argument must be a one-line headline"
 case "$HEADLINE" in
@@ -85,13 +86,19 @@ README_TAG="$(grep -m1 -E '^Stable tag:' "$README_FILE" | grep -oE '[0-9]+\.[0-9
 [ "$README_TAG" = "$CURRENT" ] || die "style.css says ${CURRENT} but ${README_FILE} says ${README_TAG}. Fix the drift before cutting."
 
 IFS=. read -r MAJ MIN PAT <<< "$CURRENT"
-case "$LEVEL" in
-  release)
-    if [ "$MIN" -ge 9 ]; then MAJ=$((MAJ + 1)); MIN=0; else MIN=$((MIN + 1)); fi
-    PAT=0 ;;
-  fix) PAT=$((PAT + 1)) ;;
-esac
-NEXT="${MAJ}.${MIN}.${PAT}"
+# YYYY.M.N: the next N in this UTC month, or 1 when the month changed (or the
+# current version is from before the date scheme, like 15.8.2).
+YEAR="${SN_CUT_YEAR:-$(date -u +%Y)}"
+MONTH="${SN_CUT_MONTH:-$(date -u +%-m)}"
+if [ "$MAJ" = "$YEAR" ] && [ "$MIN" = "$MONTH" ]; then
+  NEXT="${YEAR}.${MONTH}.$((PAT + 1))"
+else
+  NEXT="${YEAR}.${MONTH}.1"
+fi
+# Never down: a cut that would not sort above the installed version is refused.
+command -v php >/dev/null 2>&1 || die "php is required for the version-order check (version_compare)."
+php -r 'exit(version_compare($argv[1], $argv[2]) > 0 ? 0 : 1);' "$NEXT" "$CURRENT" 2>/dev/null \
+  || die "next version ${NEXT} does not sort above ${CURRENT}; refusing to go down."
 TODAY="$(date -u +%Y-%m-%d)"
 
 # ── Unreleased must have something in it ─────────────────────────────────
