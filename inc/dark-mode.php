@@ -139,7 +139,9 @@ add_filter( 'site_icon_meta_tags', '__return_empty_array' );
  * `aria-pressed` rather than a switch role: a two-state button is announced
  * correctly by every screen reader without the extra semantics a switch
  * implies. The visible label reports STATE ("Light" = you are in light); the
- * accessible name reports the ACTION.
+ * accessible name starts with that visible word, then reports the ACTION
+ * ("Light: switch to dark theme"), so the name contains the visible text
+ * (WCAG 2.5.3 Label in Name, 2026.10).
  *
  * @since theme v12.0.2
  * @param array $atts Shortcode attributes. `placement`: 'footer' (default) or 'header'.
@@ -153,7 +155,7 @@ function sn_dark_mode_toggle_markup( $atts = array() ) {
 	// lives in assets/js/dark-mode-toggle.js under the same namespace. The
 	// server state below is what the server-side directive processor reads,
 	// so the bytes it renders are the button's resting shape: pressed false,
-	// "Light", "Switch to dark theme", hidden. The strings ride the state so
+	// "Light", "Light: switch to dark theme", hidden. The strings ride the state so
 	// translation stays in PHP; the module derives `label` and `ariaLabel`
 	// from them. Directive values must not be null server-side: a null
 	// `data-wp-text` blanks the element and a null bind drops the attribute.
@@ -164,14 +166,14 @@ function sn_dark_mode_toggle_markup( $atts = array() ) {
 				'isDark'    => false,
 				'ready'     => false,
 				'label'     => __( 'Light', 'signal-and-noise' ),
-				'ariaLabel' => __( 'Switch to dark theme', 'signal-and-noise' ),
+				'ariaLabel' => __( 'Light: switch to dark theme', 'signal-and-noise' ),
 				'labels'    => array(
 					'light' => __( 'Light', 'signal-and-noise' ),
 					'dark'  => __( 'Dark', 'signal-and-noise' ),
 				),
 				'names'     => array(
-					'toDark'  => __( 'Switch to dark theme', 'signal-and-noise' ),
-					'toLight' => __( 'Switch to light theme', 'signal-and-noise' ),
+					'toDark'  => __( 'Light: switch to dark theme', 'signal-and-noise' ),
+					'toLight' => __( 'Dark: switch to light theme', 'signal-and-noise' ),
 				),
 			)
 		);
@@ -185,7 +187,7 @@ function sn_dark_mode_toggle_markup( $atts = array() ) {
 		. ' data-wp-bind--aria-pressed="state.isDark"'
 		. ' data-wp-bind--aria-label="state.ariaLabel"'
 		. ' aria-pressed="false"'
-		. ' aria-label="' . esc_attr__( 'Switch to dark theme', 'signal-and-noise' ) . '">'
+		. ' aria-label="' . esc_attr__( 'Light: switch to dark theme', 'signal-and-noise' ) . '">'
 		. '<span class="sn-theme-toggle__dot" aria-hidden="true"></span>'
 		. '<span class="sn-theme-toggle__label" data-wp-text="state.label">'
 		. esc_html__( 'Light', 'signal-and-noise' )
