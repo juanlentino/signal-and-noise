@@ -74,7 +74,7 @@ globalThis.localStorage = {
 globalThis.window = { matchMedia: function () { return { matches: false, addEventListener: function () {} }; } };
 
 const stub = await import(stubUrl);
-stub.__setServerState('signal-noise/theme-toggle', { isDark: false, ready: false, label: 'Light', ariaLabel: 'Switch to dark theme', labels: { light: 'Light', dark: 'Dark' }, names: { toDark: 'Switch to dark theme', toLight: 'Switch to light theme' } });
+stub.__setServerState('signal-noise/theme-toggle', { isDark: false, ready: false, label: 'Light', ariaLabel: 'Light: switch to dark theme', labels: { light: 'Light', dark: 'Dark' }, names: { toDark: 'Light: switch to dark theme', toLight: 'Dark: switch to light theme' } });
 await import(pathToFileURL(process.argv[2]).href);
 const s = stub.store('signal-noise/theme-toggle');
 s.callbacks.init();

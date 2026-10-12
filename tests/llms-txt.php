@@ -86,6 +86,19 @@ ok( strpos( $body, 'https://juanlentino.com/.well-known/agents.json' ) !== false
 ok( strpos( $body, 'https://juanlentino.com/wp-json/wp-abilities/v1/abilities' ) !== false, 'Machine surfaces links the Abilities API' );
 ok( strpos( $body, 'append `.md` to a note URL (https://juanlentino.com/notes/<slug>.md)' ) !== false, 'Machine surfaces names the note Markdown URL convention' );
 
+// --- 2026.10 (live audit): theme-written copy states facts in the house style ---
+// The endpoint answers 401 to an anonymous request, so the line says it needs
+// authentication rather than inviting anyone to "discover and run" it.
+ok( 1 === preg_match( '/\[Abilities API\]\([^)]*\): [^\n]*authenticat/', $body ) && false === strpos( $body, 'discover and run site abilities' ), 'the Abilities API line says it requires authentication, not "discover and run"' );
+// The Spotify players on /music/ set their own cookies by the owner's choice;
+// the line matches the Privacy Policy instead of claiming no tracking cookies.
+ok( false === strpos( $body, 'sets no advertising or cross-site tracking cookies' ) && false !== strpos( $body, 'may set their own cookies' ), 'the cookie sentence says the site sets none of its own and third-party players may set theirs' );
+// American English and no em dashes in the copy this file writes. Tag
+// descriptions and note summaries are the owner's content and come from the
+// database, so the check runs on a body built with none.
+ok( false === strpos( $body, "\u{2014}" ), 'no em dash in the theme-written llms.txt copy' );
+ok( 0 === preg_match( '/licence(?!-)/i', str_replace( 'TDM-Licence-', '', $body ) ), 'license, not licence (the TDM-Licence-* header name is a real header and stays)' );
+
 // --- Full variant appends a Notes section from injected rows (no WP_Query in tests) ---
 $rows = array(
 	array( 'title' => 'A Test Note', 'url' => 'https://juanlentino.com/notes/a-test-note/', 'summary' => 'A short summary.' ),

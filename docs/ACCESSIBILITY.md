@@ -137,3 +137,15 @@ sample can still hide.
 Non-text contrast, opacity and reachability were listed as out of scope here
 until 2026-08-20; the first is now covered for focus rings and state marks, the
 other two are not.
+
+## Keyboard, names and targets (2026-10)
+
+- **Single-key shortcuts can be turned off (WCAG 2.1.4).** `/` opens the search palette on every page (`assets/js/command-palette.js`). `j`, `k` and `?` work on single notes only (`assets/js/keyboard-nav.js`). Two controls turn all four off:
+  - a checkbox in the `?` cheat-sheet;
+  - a "Turn off / Turn on single-key shortcuts" row in the palette, reachable on every page with Cmd/Ctrl-K or the Search button.
+
+  The choice is one localStorage key, `sn-single-key-shortcuts` = `off`. There is no cookie and no identifier. Every handler reads the key at keydown time. Shortcuts are on by default, and storage that throws fails safe to on. Pinned by `tests/js/single-key-shortcuts.test.cjs`.
+- **The theme toggle's name starts with its visible word (WCAG 2.5.3).** The visible text is the state ("Light"/"Dark"). The name is that word, then the action: "Light: switch to dark theme". Pinned by `tests/theme-toggle-directives.php`.
+- **Standalone targets are at least 24px (WCAG 2.5.8).** The /notes/ row tag links use `min-height: 24px` (`tests/target-size.php`). Links inside prose are exempt.
+- **The header nav marks the current page** with `aria-current="page"` (`inc/nav-current.php`, `tests/nav-current.php`).
+- **The 11px floor is scanned statically** across every theme stylesheet (`tests/type-floor.php`). em and % sizes cannot be resolved statically, so the em-sized footnote marker is pinned by name.

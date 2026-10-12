@@ -20,9 +20,10 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * The four editorial groups, in render order.
+ * The editorial groups, in render order.
  *
  * @since 12.15.0
+ * 2026.10: "What to do about it" (`practical`) leads, for the procedural notes.
  * 13.4.0: each group carries an `id`, the value a tag's `sn_tag_group` term
  * meta names. The slug lists below are now the SEED: a tag with meta files
  * where the meta says, a tag without meta files where the list says, and a
@@ -33,6 +34,12 @@ defined( 'ABSPATH' ) || exit;
  */
 function sn_notes_tag_groups() {
 	return array(
+		array(
+			'id'    => 'practical',
+			'title' => 'What to do about it',
+			'dek'   => 'Procedures for the moment a statement, a credit, or an offer lands in your inbox.',
+			'slugs' => array( 'practical' ),
+		),
 		array(
 			'id'    => 'record',
 			'title' => 'The record',
@@ -128,16 +135,24 @@ function sn_notes_tag_groups_resolved() {
 	$out    = array();
 	$placed = array();
 	// 13.4.0: the term's own meta files it first; the seed list second.
-	$filed = array();
+	$filed   = array();
+	$meta_of = array();
 	foreach ( $all as $term ) {
 		$gid = sn_notes_tag_group_of( $term );
 		if ( '' !== $gid ) {
-			$filed[ $gid ][] = $term->slug;
+			$filed[ $gid ][]         = $term->slug;
+			$meta_of[ $term->slug ] = $gid;
 		}
 	}
 	foreach ( sn_notes_tag_groups() as $group ) {
 		$terms = array();
 		foreach ( array_unique( array_merge( $filed[ $group['id'] ] ?? array(), $group['slugs'] ) ) as $slug ) {
+			// A seed slug whose meta files it elsewhere belongs to that group,
+			// even a LATER one: without this, walking groups in order placed it
+			// in its seed group first and the owner's re-filing was ignored.
+			if ( isset( $meta_of[ $slug ] ) && $meta_of[ $slug ] !== $group['id'] ) {
+				continue;
+			}
 			if ( isset( $by_slug[ $slug ] ) && ! isset( $placed[ $slug ] ) ) {
 				$terms[]        = $by_slug[ $slug ];
 				$placed[ $slug ] = true;

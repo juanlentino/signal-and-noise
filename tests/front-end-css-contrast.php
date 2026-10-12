@@ -171,6 +171,7 @@ $on_surface = array(
 		=> array( array( 'from' => '.sn-cmdk-option.is-active' ) ),
 	'.sn-kbdn-title'                                  => array( array( 'from' => '.sn-kbdn-panel' ) ),
 	'.sn-kbdn-list dd'                                => array( array( 'from' => '.sn-kbdn-panel' ) ),
+	'.sn-kbdn-toggle'                                 => array( array( 'from' => '.sn-kbdn-panel' ) ), // 2026.10: the 2.1.4 off switch's label sits on the panel
 );
 
 $skip_ink = array( 'currentcolor', 'inherit', 'transparent', 'unset', 'initial', 'revert' );

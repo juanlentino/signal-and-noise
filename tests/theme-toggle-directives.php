@@ -10,7 +10,7 @@
  * suite pins both with core's real code, not a re-derivation:
  *
  *  1. The server-rendered bytes are the button's resting shape: pressed
- *     "false", "Switch to dark theme", "Light", hidden. A null directive
+ *     "false", "Light: switch to dark theme", "Light", hidden. A null directive
  *     value would blank the label (`data-wp-text`) or drop an attribute
  *     (`data-wp-bind`), which is why the server state carries the strings.
  *  2. Under the state the module sets after init (ready, dark or light), the
@@ -69,15 +69,24 @@ ok( ! str_contains( $js_code, 'querySelectorAll( \'.sn-theme-toggle\' )' ) && ! 
 echo "\nGroup 2: core's processor, the server state the theme set\n";
 $p = wp_interactivity();
 $server = wp_interactivity_state( 'signal-noise/theme-toggle' );
-ok( array( 'isDark' => false, 'ready' => false, 'label' => 'Light', 'ariaLabel' => 'Switch to dark theme' ) === array_intersect_key( $server, array_flip( array( 'isDark', 'ready', 'label', 'ariaLabel' ) ) ),
-	'the render set the resting state: not dark, not ready, "Light", "Switch to dark theme"' );
+ok( array( 'isDark' => false, 'ready' => false, 'label' => 'Light', 'ariaLabel' => 'Light: switch to dark theme' ) === array_intersect_key( $server, array_flip( array( 'isDark', 'ready', 'label', 'ariaLabel' ) ) ),
+	'the render set the resting state: not dark, not ready, "Light", "Light: switch to dark theme"' );
 ok( isset( $server['labels']['light'], $server['labels']['dark'], $server['names']['toDark'], $server['names']['toLight'] ), 'both label strings and both action names ride the state (translation stays in PHP)' );
+
+// WCAG 2.5.3 Label in Name (2026.10, live audit P2-1): the accessible name
+// must contain the visible text, so a voice user saying "click Light" hits
+// the button. The name starts with the visible state word, then the action.
+ok( 0 === strpos( $server['names']['toDark'], $server['labels']['light'] ) && 0 === strpos( $server['names']['toLight'], $server['labels']['dark'] ),
+	'each accessible name starts with the visible word shown in that state (' . $server['names']['toDark'] . ' / ' . $server['names']['toLight'] . ')' );
+$rest = new WP_HTML_Tag_Processor( $html );
+$rest->next_tag( 'button' );
+ok( 0 === strpos( (string) $rest->get_attribute( 'aria-label' ), 'Light' ), 'the server-rendered resting name starts with its visible label "Light": ' . $rest->get_attribute( 'aria-label' ) );
 
 $rendered = $p->process_directives( $html );
 $expected = '<button type="button" class="sn-theme-toggle sn-theme-toggle--header" hidden'
 	. ' data-wp-interactive="signal-noise/theme-toggle" data-wp-init="callbacks.init" data-wp-on--click="actions.toggle"'
 	. ' data-wp-bind--hidden="!state.ready" data-wp-bind--aria-pressed="state.isDark" data-wp-bind--aria-label="state.ariaLabel"'
-	. ' aria-pressed="false" aria-label="Switch to dark theme">'
+	. ' aria-pressed="false" aria-label="Light: switch to dark theme">'
 	. '<span class="sn-theme-toggle__dot" aria-hidden="true"></span>'
 	. '<span class="sn-theme-toggle__label" data-wp-text="state.label">Light</span></button>';
 ok( $rendered === $expected, 'resting render is byte for byte the button the IIFE shipped, plus the directives' . ( $rendered === $expected ? '' : "\n   got: $rendered" ) );
@@ -87,8 +96,8 @@ ok( str_contains( $rendered, 'aria-pressed="false"' ), 'a boolean false on an ar
 echo "\nGroup 3: the states the module reaches, rendered by the same processor\n";
 $tp = new WP_HTML_Tag_Processor( '' );
 foreach ( array(
-	'dark'  => array( 'isDark' => true,  'ready' => true, 'label' => 'Dark',  'ariaLabel' => 'Switch to light theme' ),
-	'light' => array( 'isDark' => false, 'ready' => true, 'label' => 'Light', 'ariaLabel' => 'Switch to dark theme' ),
+	'dark'  => array( 'isDark' => true,  'ready' => true, 'label' => 'Dark',  'ariaLabel' => 'Dark: switch to light theme' ),
+	'light' => array( 'isDark' => false, 'ready' => true, 'label' => 'Light', 'ariaLabel' => 'Light: switch to dark theme' ),
 ) as $name => $state ) {
 	wp_interactivity_state( 'signal-noise/theme-toggle', $state );
 	$out = $p->process_directives( $html );

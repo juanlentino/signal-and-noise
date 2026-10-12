@@ -197,15 +197,7 @@ function sn_css_ensure_combined() {
 			unlink( $tmp );
 			return null;
 		}
-		foreach ( (array) glob( $dir . '/sn-styles-*.css' ) as $old ) {
-			// 13.2.5: age-gated. A superseded hash stays for
-			// SN_CSS_COMBINE_GRACE_SECS so a page a reader's browser cached
-			// before the rebuild still finds its stylesheet.
-			if ( $old !== $target && filemtime( $old ) < time() - SN_CSS_COMBINE_GRACE_SECS ) {
-				// phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink -- pruning our own previous-hash artifacts past the grace window.
-				unlink( $old );
-			}
-		}
+		sn_css_prune_superseded( $dir, $target );
 		foreach ( (array) glob( $dir . '/sn-styles-*.tmp' ) as $orphan ) {
 			// Crash-orphaned temps only — age-gated so a concurrent
 			// builder's LIVE temp is never deleted mid-write (that would
@@ -223,4 +215,44 @@ function sn_css_ensure_combined() {
 		'ver'  => $hash,
 	);
 	return $GLOBALS['sn_css_combined_memo'];
+}
+
+/**
+ * Delete superseded sn-styles-<hash>.css files whose grace has run out.
+ *
+ * 13.2.5 kept a superseded hash for SN_CSS_COMBINE_GRACE_SECS so a page a
+ * reader's browser cached before a rebuild still finds its stylesheet.
+ * 2026.10 (theme audit P2-1): the grace counts from when the hash was
+ * SUPERSEDED, not when it was built. Aging it by its own mtime deleted the
+ * previous hash in the very request that replaced it whenever two releases
+ * were more than a week apart, repeating the 2026-09-17 incident.
+ *
+ * A hash is superseded when the next newer one is built, so its supersession
+ * time is that file's mtime (the newest non-target is superseded by $target,
+ * just written). Build mtimes never move afterwards, so this needs no sidecar
+ * or option.
+ *
+ * @param string $dir    The sn-css directory.
+ * @param string $target The stylesheet this request just built.
+ */
+function sn_css_prune_superseded( $dir, $target ) {
+	clearstatcache();
+	$built = array();
+	foreach ( (array) glob( $dir . '/sn-styles-*.css' ) as $file ) {
+		$mtime = filemtime( $file );
+		if ( false !== $mtime ) {
+			$built[ $file ] = $mtime;
+		}
+	}
+	unset( $built[ $target ] );
+	arsort( $built ); // Newest first.
+
+	$superseded_at = time(); // The newest sibling was replaced just now.
+	foreach ( $built as $file => $mtime ) {
+		if ( $superseded_at < time() - SN_CSS_COMBINE_GRACE_SECS ) {
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink -- pruning our own previous-hash artifacts past the grace window.
+			unlink( $file );
+		}
+		$superseded_at = $mtime; // The next older hash was replaced when this one was built.
+	}
 }

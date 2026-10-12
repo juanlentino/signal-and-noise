@@ -71,17 +71,20 @@ function sn_llms_txt_body( $full = false, $notes = array(), $pillars = array(), 
 		// corpus and with this file's own Pillar essays section.
 		'> Music provenance research by Juan Lentino (ORCID 0009-0006-8151-5920): why cryptographic records of authorship made at creation, not AI detection after the fact, should anchor music rights. ' . sn_llms_txt_summary_facts( $note_count, $pillars ) . ' Also a producer\'s discography and background.',
 		'',
-		'Content is hand-written. Analytics are first-party and cookieless; the site sets no advertising or cross-site tracking cookies.',
+		// 2026.10: the cookie clause follows the Privacy Policy. The Spotify
+		// players on /music/ load with the page by the owner's choice and set
+		// their own cookies, so "no cross-site tracking cookies" was not true.
+		'Content is hand-written. Analytics are first-party and cookieless; the site sets no cookies of its own, and embedded third-party players (such as Spotify) may set their own cookies, governed by that provider\'s privacy policy.',
 		'',
 		'## Key pages',
 		'',
-		'- [Provenance](' . $home . '/provenance/): the research hub — the argument, the papers, the verifier.',
+		'- [Provenance](' . $home . '/provenance/): the research hub: the argument, the papers, the verifier.',
 		// 2026-10-10: listed on purpose, not derived from /provenance/'s children
 		// (the pillar essays have their own section below).
 		'- [Objections](' . $home . '/provenance/objections/): the common objections to music provenance, each answered briefly with a link to the full note.',
 		'- [Notes](' . $home . '/notes/): every note, one every few days, each signed and anchored (primary writing).',
 		'- [Start Here](' . $home . '/notes/start-here/): the map of what a note is, how to verify one, and where to begin.',
-		'- [About](' . $home . '/about/): who Juan Lentino is — background and identity.',
+		'- [About](' . $home . '/about/): who Juan Lentino is: background and identity.',
 		'- [Résumé](' . $home . '/resume/): professional experience and credentials.',
 		'- [Music](' . $home . '/music/): discography and featured work.',
 		'- [Uses](' . $home . '/about/uses/): tools, gear, and software.',
@@ -128,8 +131,9 @@ function sn_llms_txt_body( $full = false, $notes = array(), $pillars = array(), 
 		'',
 		'## Machine surfaces',
 		'',
-		'- [Discovery manifest](' . $home . '/.well-known/agents.json): a JSON index of every machine surface — feeds, sitemap, abilities, and provenance verification — for agents and crawlers.',
-		'- [Abilities API](' . $home . '/wp-json/wp-abilities/v1/abilities): discover and run site abilities (the agent/automation surface).',
+		'- [Discovery manifest](' . $home . '/.well-known/agents.json): a JSON index of every machine surface (feeds, sitemap, abilities, and provenance verification) for agents and crawlers.',
+		// 2026.10: the endpoint answers 401 without a signed-in user; say so.
+		'- [Abilities API](' . $home . '/wp-json/wp-abilities/v1/abilities): the agent and automation surface. It requires an authenticated WordPress user; an anonymous request gets 401.',
 		'- Notes as Markdown: append `.md` to a note URL (' . $home . '/notes/<slug>.md) for the note as Markdown.',
 		'',
 		'## Rights',
@@ -146,7 +150,7 @@ function sn_llms_txt_body( $full = false, $notes = array(), $pillars = array(), 
 		// than at CC BY 4.0, precisely so the weaker half cannot be read as
 		// the whole term. Substance is pinned in tests/llms-txt.php.
 		'- [RSL license](' . $home . '/license.xml): machine-readable terms. Search and AI input are permitted unconditionally and free. AI training is reserved by default and permitted only under the attribution conditions stated in the TDM policy.',
-		'- [TDM policy](' . $home . '/tdm-policy/): the text-and-data-mining reservation behind the TDM-Reservation headers and [tdmrep.json](' . $home . '/.well-known/tdmrep.json), and the conditions a training licence requires.',
+		'- [TDM policy](' . $home . '/tdm-policy/): the text-and-data-mining reservation behind the TDM-Reservation headers and [tdmrep.json](' . $home . '/.well-known/tdmrep.json), and the conditions a training license requires.',
 		// v12.12.0. sn-rights-signals v1.24.0 answers a VERIFIED agent with the
 		// terms in its response headers, keyed to the identity it proved. Stated
 		// here because otherwise the behaviour is undiscoverable: only an agent
@@ -160,7 +164,7 @@ function sn_llms_txt_body( $full = false, $notes = array(), $pillars = array(), 
 		// available here and is worse — proving WHO you are is not meeting the
 		// conditions, and an agent concluding "signed, therefore licensed" would
 		// take a licence it does not hold. Pinned in tests/llms-txt.php.
-		'- **Identified agents**: a request signed with [Web Bot Auth](https://datatracker.ietf.org/doc/html/draft-meunier-web-bot-auth-architecture-02) and verified at the edge is answered with the licence terms in its `TDM-Licence-*` response headers, keyed to the identity it proved. That is an offer addressed to a known party, not a grant: proving who you are does not satisfy the training conditions, which apply in full.',
+		'- **Identified agents**: a request signed with [Web Bot Auth](https://datatracker.ietf.org/doc/html/draft-meunier-web-bot-auth-architecture-02) and verified at the edge is answered with the license terms in its `TDM-Licence-*` response headers, keyed to the identity it proved. That is an offer addressed to a known party, not a grant: proving who you are does not satisfy the training conditions, which apply in full.',
 		'',
 	) );
 

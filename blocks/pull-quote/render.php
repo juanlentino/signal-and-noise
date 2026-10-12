@@ -5,7 +5,7 @@
  * Emits the .sn-pull-quote aside (the class assets/css/article.css targets,
  * NOT the pattern's .sn-pattern-pull-quote; it moves to ./style.css once the
  * pattern retires, #391). Each slot is omitted when empty so
- * an unattributed quote renders no empty attribution line. Both slots wp_kses_post'd.
+ * an unattributed quote renders no empty attribution line. Both slots wp_kses_post'd, once.
  *
  * @package SignalNoise
  * @since 9.11.0
@@ -17,9 +17,11 @@ $attr    = wp_kses_post( $attributes['attribution'] ?? '' );
 // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $wrapper is core-escaped attribute markup from get_block_wrapper_attributes().
 echo '<aside ' . $wrapper . '>';
 if ( '' !== $body ) {
-	echo '<p class="sn-pull-quote__body">' . wp_kses_post( $body ) . '</p>';
+	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $body is wp_kses_post()'d above, once.
+	echo '<p class="sn-pull-quote__body">' . $body . '</p>';
 }
 if ( '' !== $attr ) {
-	echo '<p class="sn-pull-quote__attribution">' . wp_kses_post( $attr ) . '</p>';
+	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $attr is wp_kses_post()'d above, once.
+	echo '<p class="sn-pull-quote__attribution">' . $attr . '</p>';
 }
 echo '</aside>';

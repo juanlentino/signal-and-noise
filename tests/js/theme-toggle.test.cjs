@@ -44,8 +44,8 @@ async function fixture({ stored = null, dark = false, readFails = false, writeFa
   stub.__reset();
   // What inc/dark-mode.php serialises for the runtime.
   stub.__setServerState('signal-noise/theme-toggle', {
-    isDark: false, ready: false, label: 'Light', ariaLabel: 'Switch to dark theme',
-    labels: { light: 'Light', dark: 'Dark' }, names: { toDark: 'Switch to dark theme', toLight: 'Switch to light theme' },
+    isDark: false, ready: false, label: 'Light', ariaLabel: 'Light: switch to dark theme',
+    labels: { light: 'Light', dark: 'Dark' }, names: { toDark: 'Light: switch to dark theme', toLight: 'Dark: switch to light theme' },
   });
   await import(`${MODULE}?scenario=${n++}`);
   const s = stub.store('signal-noise/theme-toggle');
@@ -68,7 +68,7 @@ for (const scenario of [
     const next = initial === 'Light' ? 'Dark' : 'Light';
     assert.equal(f.s.state.label, next);
     assert.equal(f.s.state.isDark, next === 'Dark');
-    assert.equal(f.s.state.ariaLabel, next === 'Dark' ? 'Switch to light theme' : 'Switch to dark theme');
+    assert.equal(f.s.state.ariaLabel, next === 'Dark' ? 'Dark: switch to light theme' : 'Light: switch to dark theme');
     assert.equal(f.attributes['data-theme'], next.toLowerCase());
     assert.equal(f.metas[0].attributes.content, next === 'Dark' ? '#0a0a0a' : '#ffffff', 'both theme-color metas follow the choice');
     assert.equal(f.metas[1].attributes.content, next === 'Dark' ? '#0a0a0a' : '#ffffff');

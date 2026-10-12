@@ -264,10 +264,10 @@ echo $sn_header_html;
 			      // is now the second reader of both facts. Two copies of a feed
 			      // path is two things to keep in step. ?>
 			<p class="sn-notes-subscribe">
-				Every note lands in whatever reader you already use, the day it goes up
-				&mdash; <a href="<?php echo esc_url( function_exists( 'sn_subscribe_feed_url' ) ? sn_subscribe_feed_url() : home_url( '/notes/feed/' ) ); ?>">RSS</a> or <a href="<?php echo esc_url( function_exists( 'sn_feed_json_pretty_url' ) ? sn_feed_json_pretty_url() : home_url( '/feed/json/' ) ); ?>">JSON Feed</a>. No reader yet? NetNewsWire, Reeder and Feedbin read both, among others.<span class="sn-notes-cursor" aria-hidden="true"></span>
+				Every note lands in whatever reader you already use, the day it goes up:
+				<a href="<?php echo esc_url( function_exists( 'sn_subscribe_feed_url' ) ? sn_subscribe_feed_url() : home_url( '/notes/feed/' ) ); ?>">RSS</a> or <a href="<?php echo esc_url( function_exists( 'sn_feed_json_pretty_url' ) ? sn_feed_json_pretty_url() : home_url( '/feed/json/' ) ); ?>">JSON Feed</a>. No reader yet? NetNewsWire, Reeder and Feedbin read both, among others.<span class="sn-notes-cursor" aria-hidden="true"></span>
 			</p>
-			<p class="sn-notes-subscribe-privacy">Nothing is sent to me, and nothing about you is collected &mdash; a reader fetches the file the same way a browser fetches a page.</p>
+			<p class="sn-notes-subscribe-privacy">Nothing is sent to me, and nothing about you is collected: a reader fetches the file the same way a browser fetches a page.</p>
 			<?php // The one sentence worth carrying over from that page. On a site
 			      // arguing about what gets recorded about people, how the feed
 			      // behaves is the point, not a footnote.

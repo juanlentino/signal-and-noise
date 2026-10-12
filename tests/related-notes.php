@@ -34,6 +34,7 @@ $GLOBALS['__queried_id']  = 0;      // get_queried_object_id() return.
 function mk_post( $id, $tag_ids, $ts, $title, $link, $status = 'publish', $type = 'post' ) {
 	$p              = new stdClass();
 	$p->ID          = $id;
+	$p->post_password = ''; // WP_Post always carries it.
 	$p->__type      = $type;
 	$p->__tag_ids   = $tag_ids;
 	$p->__ts        = $ts;
@@ -157,6 +158,11 @@ if ( ! class_exists( 'WP_Query' ) ) {
 				// stub let a PAGE ride the heuristic backfill — exactly the
 				// stub-drift class this repo's rules exist for.
 				if ( ( $p->__type ?? 'post' ) !== (string) ( $args['post_type'] ?? 'post' ) ) {
+					continue;
+				}
+				// Models the real has_password arg: false keeps only posts with
+				// no password; absent, protected posts ride along.
+				if ( array_key_exists( 'has_password', $args ) && false === $args['has_password'] && '' !== (string) ( $p->post_password ?? '' ) ) {
 					continue;
 				}
 				if ( $has_tax ) {
@@ -435,6 +441,23 @@ ok( array( 2, 3 ) === sn_related_notes_excluded_ids( 1 ), 'excluded: the linked 
 $GLOBALS['__cited'] = array();
 $GLOBALS['POSTS'][1]->post_content = '';
 ok( array( 2, 3, 4 ) === array_map( fn( $p ) => (int) $p->ID, sn_related_notes_query( 1, 3 ) ), 'control: with nothing linked, the tag matches lead as before' );
+
+// ── 2026.10 (theme audit P3-8): password-protected notes never surface ──
+// Every sibling surface (notes index, JSON Feed, llms.txt, page index)
+// excludes them; a "Protected: ..." title must not link from "More on this".
+kernel_fixture();
+$GLOBALS['__ml_rows'] = array();
+$GLOBALS['POSTS'][2]->post_password = 'secret'; // the newest shared-tag match
+$GLOBALS['POSTS'][5]->post_password = 'secret'; // a backfill candidate
+$res = sn_related_notes_query( 1, 3 );
+ok( ! in_array( 2, ids_of( $res ), true ) && ! in_array( 5, ids_of( $res ), true ), 'heuristic: a protected note is neither a tag match nor backfill: ' . implode( ',', ids_of( $res ) ) );
+ok( array( 3, 4 ) === ids_of( $res ), 'heuristic: the list is what remains, unpadded: ' . implode( ',', ids_of( $res ) ) );
+kernel_fixture();
+$GLOBALS['POSTS'][5]->post_password = 'secret';
+$GLOBALS['__ml_rows'] = array( array( 'post_id' => 5, 'score' => 0.9 ), array( 'post_id' => 4, 'score' => 0.8 ), array( 'post_id' => 3, 'score' => 0.7 ) );
+$res = sn_related_notes_query( 1, 3 );
+ok( ! in_array( 5, ids_of( $res ), true ), 'kernel: a protected note in the artifact is dropped: ' . implode( ',', ids_of( $res ) ) );
+$GLOBALS['__ml_rows'] = array();
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

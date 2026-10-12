@@ -148,6 +148,7 @@
 @media (prefers-reduced-motion: reduce) {
 	.sn-notes-pillar { transition: none; }
 	.sn-notes-pillar::before { transition: none; }
+	.sn-notes-pillar-cta::after { transition: none; }
 }
 
 /* COMPACT DENSITY ──────────────────────────────────────────────
@@ -215,7 +216,7 @@
 .is-compact .sn-notes-pillar-eyebrow {
 	/* Reading time only — "Pillar Essay" is already the section label. */
 	margin: 0;
-	font-size: max(0.65rem, 10px);
+	font-size: max(0.6875rem, 11px);
 	color: var(--wp--preset--color--rust);
 	white-space: nowrap;
 }

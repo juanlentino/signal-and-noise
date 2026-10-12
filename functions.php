@@ -179,4 +179,5 @@ require_once __DIR__ . '/inc/contact-email.php'; // v10.16.0: [sn_email] scraper
 require_once __DIR__ . '/inc/feed-websub.php'; // D4 (v10.9.0): WebSub <atom:link rel="hub"> advertisement in the RSS2 + Atom feeds
 require_once __DIR__ . '/inc/reading-path-slot.php'; // v11.9.0: [sn_reading_path] block bridge — the plugin's reading-chain nav resolves on single Notes (empty slot when the plugin is absent)
 require_once __DIR__ . '/inc/palettes.php'; // v12.0.0: every palette the site can present (root + variations + dark), read from the files that define them
+require_once __DIR__ . '/inc/nav-current.php'; // 2026.10: aria-current="page" on the header nav link for the page being viewed (custom links get none from core)
 require_once __DIR__ . '/inc/dark-mode.php'; // v11.13.0: dark palette plumbing — pre-paint data-theme stamp, per-scheme theme-color, the brand icon set (assets/brand/), [sn_theme_toggle]

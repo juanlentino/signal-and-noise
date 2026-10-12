@@ -12,12 +12,20 @@
  * prefers-reduced-motion: no-preference; it still appears instantly under
  * reduced motion. Labels are written with textContent only — never innerHTML.
  *
+ * 2026.10 (WCAG 2.1.4 Character Key Shortcuts): j, k, ? and the palette's /
+ * can be turned off with the checkbox in the cheat-sheet (or the row in the
+ * palette, reachable on every page with Cmd/Ctrl-K or the Search button).
+ * The choice is one localStorage key per browser, no cookie, no identifier;
+ * on is the default. singleKeysOn()/setSingleKeys() are kept verbatim in
+ * command-palette.js, like isFormField, because the two files load on
+ * different pages.
+ *
  * @since theme v10.7.0
  */
 ( function () {
 	'use strict';
 
-	var sheet, panel, lastFocus;
+	var sheet, panel, toggle, lastFocus;
 	var isOpen = false;
 
 	// Mirrors command-palette.js isFormField verbatim — both must skip while
@@ -28,6 +36,31 @@
 		if ( tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' ) { return true; }
 		if ( el.isContentEditable ) { return true; }
 		return false;
+	}
+
+	// ── Single-key shortcut preference (WCAG 2.1.4) ─────────────────────────
+	// Mirrors command-palette.js verbatim. Read at keydown time, never cached,
+	// so a switch in one place is honored by every handler at once. Storage
+	// that throws (private mode, blocked site data) fails safe: shortcuts on,
+	// and the switch still works for the rest of this page view.
+	var SHORTCUT_KEY = 'sn-single-key-shortcuts';
+	var shortcutMemo = null;
+	function singleKeysOn() {
+		try {
+			return window.localStorage.getItem( SHORTCUT_KEY ) !== 'off';
+		} catch ( err ) {
+			return shortcutMemo !== 'off';
+		}
+	}
+	function setSingleKeys( on ) {
+		shortcutMemo = on ? null : 'off';
+		try {
+			if ( on ) {
+				window.localStorage.removeItem( SHORTCUT_KEY );
+			} else {
+				window.localStorage.setItem( SHORTCUT_KEY, 'off' );
+			}
+		} catch ( err ) {}
 	}
 
 	// ── j / k navigation ─────────────────────────────────────────────────────
@@ -89,6 +122,20 @@
 		}
 		panel.appendChild( dl );
 
+		// The off switch. A native checkbox in a label: Space toggles it, the
+		// whole label row is the target, and the name is the visible text.
+		var row = document.createElement( 'label' );
+		row.className = 'sn-kbdn-toggle';
+		toggle = document.createElement( 'input' );
+		toggle.type = 'checkbox';
+		toggle.checked = singleKeysOn();
+		toggle.addEventListener( 'change', function () { setSingleKeys( toggle.checked ); } );
+		row.appendChild( toggle );
+		var rowText = document.createElement( 'span' );
+		rowText.textContent = 'Single-key shortcuts (J, K, /, ?)';
+		row.appendChild( rowText );
+		panel.appendChild( row );
+
 		sheet.appendChild( panel );
 		document.body.appendChild( sheet );
 
@@ -100,6 +147,7 @@
 		if ( isOpen ) { return; }
 		lastFocus = document.activeElement;
 		isOpen = true;
+		toggle.checked = singleKeysOn();
 		sheet.hidden = false;
 		// Defer focus so the unhide has applied (Safari focus-on-hidden quirk).
 		window.setTimeout( function () { panel.focus(); }, 0 );
@@ -123,18 +171,20 @@
 		if ( e.metaKey || e.ctrlKey || e.altKey ) { return; }
 
 		// While the overlay is open it owns the keyboard: Escape (or ?) closes,
-		// Tab is trapped on the panel (the single focus target). j/k do not fire.
+		// Tab is trapped on the switch (the one control). j/k do not fire.
 		if ( isOpen ) {
 			if ( e.key === 'Escape' || e.keyCode === 27 || e.key === '?' ) {
 				e.preventDefault();
 				close();
 			} else if ( e.key === 'Tab' || e.keyCode === 9 ) {
 				e.preventDefault();
-				panel.focus();
+				toggle.focus();
 			}
 			return;
 		}
 
+		// Closed: the reader turned single-key shortcuts off (WCAG 2.1.4).
+		if ( ! singleKeysOn() ) { return; }
 		// Closed: don't fire while typing.
 		if ( isFormField( document.activeElement ) ) { return; }
 

@@ -12,7 +12,8 @@ function add_feed( $n, $cb ) { $GLOBALS['__feeds'][ $n ] = $cb; return "do_feed_
 function add_action( $h, $cb, $p = 10, $a = 1 ) { return true; }
 function add_filter( $h, $cb, $p = 10, $a = 1 ) { return true; }
 function get_permalink( $p = null ) { return 'https://x.test/notes/n-' . ( is_object( $p ) ? $p->ID : $p ) . '/'; }
-function get_the_title( $p = null ) { return 'Note "' . ( is_object( $p ) ? $p->ID : $p ) . '" & co'; }
+function get_the_title( $p = null ) { return $GLOBALS['__title'] ?? 'Note "' . ( is_object( $p ) ? $p->ID : $p ) . '" & co'; }
+if ( ! function_exists( 'wp_strip_all_tags' ) ) { function wp_strip_all_tags( $s ) { return trim( strip_tags( (string) $s ) ); } }
 function get_post_time( $f, $gmt, $p ) { return $GLOBALS['__pubdate'] ?? '2026-06-07T12:00:00+00:00'; }
 function get_post_modified_time( $f, $gmt, $p ) { return $GLOBALS['__moddate'] ?? '2026-06-07T13:00:00+00:00'; }
 function get_the_category( $id ) { $c = new stdClass(); $c->name = 'analysis'; return array( $c ); }
@@ -91,6 +92,14 @@ $decoded = json_decode( $json, true );
 ok( $decoded['version'] === 'https://jsonfeed.org/version/1.1', 'feed round-trips with JSON Feed 1.1 version' );
 ok( strpos( $json, '&amp;' ) === false, 'no HTML-entity mangling in JSON (title used esc-free path)' );
 ok( strpos( $decoded['items'][0]['title'], '&' ) !== false, 'raw ampersand survives into decoded title' );
+
+// 2026.10 (theme audit P3-9): `title` is plain text in JSON Feed. get_the_title()
+// runs the_title filters, which may emit entities or markup (wptexturize,
+// a plugin); decode and strip, as content-json-document.php and llms.txt do.
+$GLOBALS['__title'] = 'Trust doesn&#8217;t disappear &amp; <em>relocates</em>';
+$plain = sn_feed_json_build_item( (object) array( 'ID' => 12, 'post_content' => 'x' ) );
+ok( "Trust doesn\u{2019}t disappear & relocates" === $plain['title'], 'item title is decoded plain text, no entities or tags: ' . $plain['title'] );
+unset( $GLOBALS['__title'] );
 
 // JF-2: a false/zeroed post date must be OMITTED, never serialized as `false`.
 $GLOBALS['__pubdate'] = false; $GLOBALS['__moddate'] = false;

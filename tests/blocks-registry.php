@@ -29,7 +29,7 @@ function wp_register_script( $h, $src, $deps = array(), $v = false, $f = false )
 function get_theme_file_uri( $p = '' ) { return 'https://x.test/' . $p; }
 function wp_get_theme() { return new class { public function get( $k ) { return '9.11.0'; } }; }
 function get_block_wrapper_attributes( $a = array() ) { return 'class="' . ( $a['class'] ?? '' ) . '"'; }
-function wp_kses_post( $s ) { return $s; }
+function wp_kses_post( $s ) { $GLOBALS['__kses_calls'] = ( $GLOBALS['__kses_calls'] ?? 0 ) + 1; return $s; }
 
 $blocks_dir = __DIR__ . '/../blocks';
 
@@ -59,7 +59,10 @@ ok( strpos( $out, 'sn-sidenote' ) !== false && strpos( $out, 'A margin note' ) !
 
 // Behavioral render: pull-quote with both fields, then empty fields.
 $attributes = array( 'body' => 'Thesis', 'attribution' => 'Author' );
+$GLOBALS['__kses_calls'] = 0;
 ob_start(); include "$blocks_dir/pull-quote/render.php"; $pq = ob_get_clean();
+// 2026.10 (theme audit P3-10): each slot is sanitized once, not twice.
+ok( 2 === $GLOBALS['__kses_calls'], 'pull-quote sanitizes each slot exactly once (' . $GLOBALS['__kses_calls'] . ' wp_kses_post calls for 2 slots)' );
 ok( strpos( $pq, 'sn-pull-quote__body' ) !== false && strpos( $pq, 'sn-pull-quote__attribution' ) !== false, 'pull-quote renders both slots when set' );
 ok( strpos( $pq, 'sn-pull-quote' ) !== false && strpos( $pq, 'sn-pattern-pull-quote' ) === false, 'pull-quote block uses .sn-pull-quote (CSS-matching), not the pattern class' );
 $attributes = array( 'body' => 'Only body', 'attribution' => '' );

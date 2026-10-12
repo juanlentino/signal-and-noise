@@ -191,6 +191,13 @@ ok(
 	false !== strpos( $src_markup, 'Nothing is sent to me, and nothing about you is collected' ),
 	'with every word intact — this was never a rewrite'
 );
+// 2026.10 (live audit P3-7): no em dashes in the hero's reader-facing copy,
+// either as the character or the entity.
+preg_match( '/<p class="sn-notes-subscribe-privacy">(.*?)<\/p>/s', $src_markup, $m_priv );
+ok(
+	false === strpos( ( $m_para[1] ?? '' ) . ( $m_priv[1] ?? '' ), '&mdash;' ) && false === strpos( ( $m_para[1] ?? '' ) . ( $m_priv[1] ?? '' ), "\u{2014}" ),
+	'the subscribe and privacy lines carry no em dash'
+);
 // The distinguishing treatment has to survive the tag change, or "same words,
 // same look" is only half true. It is the ONLY property still declared for
 // this class — everything else now inherits from the parent paragraph.
