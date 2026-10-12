@@ -86,5 +86,8 @@ ok( 0 === sn_prov_brow_page_id(), 'non-main query: no placement' );
 $GLOBALS['__ctx']['main_query'] = true;
 ok( 7 === sn_prov_brow_page_id(), 'a reader-facing singular page: placement allowed' );
 
+// 2026.10: the reset helper reset nothing and had no caller; it is gone.
+ok( ! function_exists( 'sn_prov_brow_reset' ), 'no sn_prov_brow_reset(): a reset that cannot reset is not kept as a seam' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

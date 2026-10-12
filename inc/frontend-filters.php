@@ -118,16 +118,13 @@ if ( ! defined( 'SN_FRONTEND_FILTERS_TEST' ) || ! SN_FRONTEND_FILTERS_TEST ) {
 	add_filter( 'the_generator', '__return_empty_string' );
 
 	/**
-	 * Head-sweep (A4): drop the legacy xmlrpc-era discovery links core still
-	 * emits at wp_head priority 10. Both advertise surfaces this site does not
-	 * serve:
-	 *   - rsd_link()         → <link rel="EditURI" … xmlrpc.php?rsd> (Really Simple
-	 *                          Discovery — points at the disabled xmlrpc.php).
-	 *   - wlwmanifest_link() → <link rel="wlwmanifest" … wlwmanifest.xml> (Windows
-	 *                          Live Writer, retired in 2017).
-	 * No explicit priority arg is needed: core registers both at the default
-	 * priority 10, which is what remove_action() matches when omitted.
+	 * Head-sweep (A4): drop the legacy xmlrpc-era discovery link core still
+	 * emits at wp_head priority 10: rsd_link() → <link rel="EditURI" …
+	 * xmlrpc.php?rsd> (Really Simple Discovery, pointing at the disabled
+	 * xmlrpc.php). No explicit priority arg is needed: core registers it at the
+	 * default priority 10, which is what remove_action() matches when omitted.
+	 * (wlwmanifest_link was removed here too until 2026.10; core stopped
+	 * hooking it in WP 6.3, and the theme requires 7.0.)
 	 */
 	remove_action( 'wp_head', 'rsd_link' );
-	remove_action( 'wp_head', 'wlwmanifest_link' );
 }

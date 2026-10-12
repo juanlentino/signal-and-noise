@@ -4,7 +4,7 @@
  *
  * Two behaviours:
  *   1. inc/frontend-filters.php strips the legacy xmlrpc-era head links
- *      (rsd_link / wlwmanifest_link) via file-scope remove_action() — same
+ *      (rsd_link; wlwmanifest_link left with core in WP 6.3) via file-scope remove_action() — same
  *      mechanism as the existing wp_generator strip.
  *   2. inc/dark-mode.php emits a PAIR of <meta name="theme-color"> tags in a
  *      priority-1 wp_head closure, one per colour scheme, each pinned to the
@@ -138,7 +138,9 @@ require __DIR__ . '/../inc/frontend-filters.php';
 
 ok( removed_has( 'wp_head', 'wp_generator' ), 'existing wp_generator strip still present (sanity)' );
 ok( removed_has( 'wp_head', 'rsd_link' ), 'A4: rsd_link (EditURI/RSD) removed from wp_head' );
-ok( removed_has( 'wp_head', 'wlwmanifest_link' ), 'A4: wlwmanifest_link removed from wp_head' );
+// 2026.10: core stopped hooking wlwmanifest_link in WP 6.3 (and deprecated it);
+// the theme requires 7.0, so removing it was dead code with a false comment.
+ok( ! removed_has( 'wp_head', 'wlwmanifest_link' ), 'no dead remove_action for wlwmanifest_link (core dropped the hook in WP 6.3)' );
 
 // ── 2. theme-color meta (inc/assets-frontend.php) ──
 require __DIR__ . '/../inc/assets-frontend.php';

@@ -55,13 +55,6 @@ function sn_prov_brow_placed( $set = null ) {
 	return $placed;
 }
 
-/** Reset between queries so a second loop cannot inherit the first's flag. */
-function sn_prov_brow_reset() {
-	// Cheap and explicit: the static above is per-request, and the only way to
-	// clear it is a fresh request. Kept as a named seam for the tests.
-	return sn_prov_brow_placed();
-}
-
 /**
  * The reader-facing, main-query, singular signed Page this render may decorate.
  *
