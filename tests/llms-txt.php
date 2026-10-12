@@ -84,6 +84,7 @@ ok( strpos( $body, 'reserved by default' ) < strpos( $body, 'permitted only unde
 ok( strpos( $body, "\n## Machine surfaces\n" ) !== false, 'has a Machine surfaces H2 section' );
 ok( strpos( $body, 'https://juanlentino.com/.well-known/agents.json' ) !== false, 'Machine surfaces links the discovery manifest (/.well-known/agents.json)' );
 ok( strpos( $body, 'https://juanlentino.com/wp-json/wp-abilities/v1/abilities' ) !== false, 'Machine surfaces links the Abilities API' );
+ok( strpos( $body, 'append `.md` to a note URL (https://juanlentino.com/notes/<slug>.md)' ) !== false, 'Machine surfaces names the note Markdown URL convention' );
 
 // --- Full variant appends a Notes section from injected rows (no WP_Query in tests) ---
 $rows = array(

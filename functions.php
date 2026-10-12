@@ -68,6 +68,7 @@
  *   inc/note-uid.php             — canonical lowercase+trim read of the plugin-owned _sn_prov_uid meta (v10.49.0)
  *   inc/content-json-document.php — content-as-data JSON document builder (machine-readability sub-project C, v10.38.0)
  *   inc/content-json.php         — /<url>.json virtual route: every Note/Page reachable as JSON + <head> alternate link (v10.38.0)
+ *   inc/note-markdown.php        : <head> text/markdown alternate for /notes/<slug>.md (served by the sn-rights-signals Worker)
  *   inc/disable-smart-quotes.php — straight quotes: disable wptexturize site-wide (v10.13.2)
  *   inc/seo-route-meta.php       — template-driven Page descriptions for the plugin's sn_seo_singular_description filter (v10.13.0)
  *   inc/colophon-meta.php        — [sn_build] live colophon line: theme+plugin version, git short SHA, deploy time (C2, v10.5.0)
@@ -169,6 +170,7 @@ require_once __DIR__ . '/inc/agents-manifest.php'; // v10.37.0: /.well-known/age
 require_once __DIR__ . '/inc/note-uid.php'; // v10.49.0: canonical lowercase+trim read of the plugin-owned _sn_prov_uid meta (shared by the .json twin + both feeds; closes a trim drift)
 require_once __DIR__ . '/inc/content-json-document.php'; // v10.38.0: content-as-data JSON document builder (machine-readability, sub-project C)
 require_once __DIR__ . '/inc/content-json.php';          // v10.38.0: /<url>.json virtual route — every Note/Page reachable as JSON (machine-readability, sub-project C)
+require_once __DIR__ . '/inc/note-markdown.php';         // A note's Markdown twin, advertised; the edge Worker serves /notes/<slug>.md
 require_once __DIR__ . '/inc/disable-smart-quotes.php'; // v10.13.2: straight quotes — disable wptexturize site-wide
 require_once __DIR__ . '/inc/seo-route-meta.php'; // v10.13.0: template-driven Page descriptions for the plugin's sn_seo_singular_description filter (today /colophon)
 require_once __DIR__ . '/inc/colophon-meta.php'; // C2 (v10.5.0): [sn_build] live colophon line (theme+plugin version, git short SHA, deploy time)
