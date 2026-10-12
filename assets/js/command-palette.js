@@ -127,6 +127,12 @@
 			for ( i = 0; i < data.recent.length; i++ ) {
 				out.push( { type: 'note', label: data.recent[ i ].t, sub: 'Note', url: data.recent[ i ].u } );
 			}
+			// WCAG 2.1.4: the switch for / and the note shortcuts j, k, ?.
+			out.push( {
+				type: 'shortcuts',
+				label: ( singleKeysOn() ? 'Turn off' : 'Turn on' ) + ' single-key shortcuts (/, J, K, ?)',
+				sub: 'Setting'
+			} );
 			return out;
 		}
 
@@ -211,6 +217,13 @@
 	function activate( index ) {
 		var item = items[ index ];
 		if ( ! item ) { return; }
+		if ( item.type === 'shortcuts' ) {
+			setSingleKeys( ! singleKeysOn() );
+			syncTriggerKeys();
+			render( input.value );
+			setActive( index );
+			return;
+		}
 		if ( item.type === 'search' ) {
 			var q = item.query || input.value.replace( /^\s+|\s+$/g, '' );
 			var url = data.notesUrl + ( q ? '?s=' + encodeURIComponent( q ) : '' );
@@ -353,6 +366,37 @@
 
 	// ── Global key + trigger wiring ──────────────────────────────────────────
 
+	// ── Single-key shortcut preference (WCAG 2.1.4, 2026.10) ───────────────
+	// Mirrors keyboard-nav.js verbatim. "/" is the palette's single-key
+	// shortcut; the palette row below is the off (and back on) switch on every
+	// page, since the ? cheat-sheet only exists on notes.
+	var SHORTCUT_KEY = 'sn-single-key-shortcuts';
+	var shortcutMemo = null;
+	function singleKeysOn() {
+		try {
+			return window.localStorage.getItem( SHORTCUT_KEY ) !== 'off';
+		} catch ( err ) {
+			return shortcutMemo !== 'off';
+		}
+	}
+	function setSingleKeys( on ) {
+		shortcutMemo = on ? null : 'off';
+		try {
+			if ( on ) {
+				window.localStorage.removeItem( SHORTCUT_KEY );
+			} else {
+				window.localStorage.setItem( SHORTCUT_KEY, 'off' );
+			}
+		} catch ( err ) {}
+	}
+
+	// The trigger advertises "/" only while it works.
+	function syncTriggerKeys() {
+		if ( trigger ) {
+			trigger.setAttribute( 'aria-keyshortcuts', singleKeysOn() ? 'Control+K Meta+K /' : 'Control+K Meta+K' );
+		}
+	}
+
 	function isFormField( el ) {
 		if ( ! el ) { return false; }
 		var tag = el.tagName;
@@ -373,6 +417,7 @@
 		}
 		// "/" — only when not typing into a form field, and the palette is closed.
 		if ( ! isOpen && ( e.key === '/' || e.keyCode === 191 ) && ! e.metaKey && ! e.ctrlKey && ! e.altKey ) {
+			if ( ! singleKeysOn() ) { return; }
 			if ( isFormField( document.activeElement ) ) { return; }
 			e.preventDefault();
 			open();
@@ -383,6 +428,7 @@
 		document.addEventListener( 'keydown', onGlobalKeydown );
 
 		trigger = document.querySelector( '.sn-cmdk-trigger' );
+		syncTriggerKeys();
 		if ( trigger ) {
 			trigger.addEventListener( 'click', function () {
 				isOpen ? close() : open( trigger );
