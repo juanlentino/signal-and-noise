@@ -81,7 +81,9 @@ foreach ( sn_notes_tag_groups() as $g ) {
 	}
 }
 ok( count( $declared ) === count( array_unique( $declared ) ), 'no slug is declared in two groups' );
-ok( count( sn_notes_tag_groups() ) === 4, 'four editorial groups' );
+ok( count( sn_notes_tag_groups() ) === 5, 'five editorial groups' );
+ok( 'practical' === sn_notes_tag_groups()[0]['id'] && 'What to do about it' === sn_notes_tag_groups()[0]['title'] && array( 'practical' ) === sn_notes_tag_groups()[0]['slugs'], 'the practical group renders first, seeded with the practical tag' );
+ok( 'Procedures for the moment a statement, a credit, or an offer lands in your inbox.' === sn_notes_tag_groups()[0]['dek'], 'the practical group carries its dek' );
 foreach ( sn_notes_tag_groups() as $g ) {
 	ok( '' !== trim( $g['dek'] ), 'group "' . wp_strip_all_tags_shim( $g['title'] ) . '" has a dek' );
 }
@@ -134,7 +136,24 @@ ok( array( 'music-rights', 'c2pa' ) === ( $by_title['The record'] ?? null ), 'me
 ok( array( 'fair-use' ) === ( $by_title['Why it isn&rsquo;t built'] ?? null ), 'a tag in no seed list files where its meta says' );
 ok( ! isset( $by_title['Not yet filed'] ), 'nothing falls through when every tag is filed' );
 ok( 'built' === sn_notes_tag_group_of( $fair ) && '' === sn_notes_tag_group_of( $c2pa ) && 'record' === sn_notes_tag_group_effective( $c2pa ) && '' === sn_notes_tag_group_effective( mk_term( 'orphan', 'Orphan' ) ), 'group_of reads meta only; effective falls back to the seed, then to unfiled' );
-ok( array( 'record', 'settles', 'built', 'work' ) === sn_notes_tag_group_ids(), 'the four group ids, in render order' );
+ok( array( 'practical', 'record', 'settles', 'built', 'work' ) === sn_notes_tag_group_ids(), 'the five group ids, in render order' );
+$GLOBALS['TERM_META'] = array();
+
+// ── Re-filing works in BOTH directions (theme audit P2-6) ────────────
+// Groups are walked in render order and each merges its meta-filed slugs
+// with its seed. A seeded tag whose meta names a LATER group used to be
+// placed in its seed group first, so the owner's choice was ignored.
+$GLOBALS['TERMS'] = array(); $GLOBALS['TERM_META'] = array();
+$c2pa  = mk_term( 'c2pa', 'C2PA' );             // seeded under record (early)
+$wrt   = mk_term( 'writing', 'Writing' );       // seeded under work (last)
+$GLOBALS['TERM_META'][ $c2pa->term_id ] = array( SN_TAG_GROUP_META => 'work' );   // moved LATER
+$GLOBALS['TERM_META'][ $wrt->term_id ]  = array( SN_TAG_GROUP_META => 'settles' ); // moved EARLIER
+$by_title = array();
+foreach ( sn_notes_tag_groups_resolved() as $g ) { $by_title[ $g['title'] ] = array_map( static fn( $t ) => $t->slug, $g['terms'] ); }
+ok( ! isset( $by_title['The record'] ), 'a seeded tag re-filed into a LATER group leaves its seed group' );
+ok( array( 'c2pa' ) === ( $by_title['The work'] ?? null ), 'a seeded tag re-filed into a LATER group renders where its meta says' );
+ok( array( 'writing' ) === ( $by_title['What it settles'] ?? null ), 'a seeded tag re-filed into an EARLIER group renders where its meta says' );
+ok( 'work' === sn_notes_tag_group_effective( $c2pa ), 'the admin select and the page agree on the moved tag' );
 $GLOBALS['TERM_META'] = array();
 
 // ── No terms at all: empty, not a crash ──────────────────────────────

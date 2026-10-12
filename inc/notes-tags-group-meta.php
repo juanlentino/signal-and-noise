@@ -2,7 +2,7 @@
 /**
  * Signal & Noise: the Group field on Posts › Tags.
  *
- * Files a tag under one of /notes/tags/' four headings without a release: the
+ * Files a tag under one of /notes/tags/' headings without a release: the
  * value lives in term meta (`sn_tag_group`, one of sn_notes_tag_group_ids()),
  * the page reads it first (inc/notes-tags-data.php), and the slug lists in
  * the theme stay only as the seed for tags nobody has filed by hand. The
@@ -55,7 +55,7 @@ function sn_tag_group_sanitize( $value ) {
 }
 
 /**
- * The select: "Not yet filed" plus the four groups, in render order.
+ * The select: "Not yet filed" plus the groups, in render order.
  *
  * @param string $selected The effective group id, '' for unfiled.
  * @return string

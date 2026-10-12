@@ -46,7 +46,7 @@ ok( 'built' === sn_tag_group_sanitize( 'built' ) && '' === sn_tag_group_sanitize
 
 // C: the select shows the effective group.
 $fair = mk_term( 7, 'brand-new' ); $c2pa = mk_term( 8, 'c2pa' ); // brand-new is in no seed list
-ok( str_contains( sn_tag_group_select( '' ), 'value="" selected="selected"' ) && substr_count( sn_tag_group_select( '' ), '<option' ) === 5, 'C1 five options, unfiled selected by default' );
+ok( str_contains( sn_tag_group_select( '' ), 'value="" selected="selected"' ) && substr_count( sn_tag_group_select( '' ), '<option' ) === 6 && str_contains( sn_tag_group_select( '' ), 'value="practical"' ), 'C1 six options (unfiled + five groups, practical included), unfiled selected by default' );
 ob_start(); sn_tag_group_edit_field( $c2pa ); $h = ob_get_clean();
 ok( str_contains( $h, 'value="record" selected="selected"' ) && str_contains( $h, 'name="sn_tag_group"' ), 'C2 a seeded tag with no meta shows its seed group selected' );
 ob_start(); sn_tag_group_edit_field( $fair ); $h = ob_get_clean();
