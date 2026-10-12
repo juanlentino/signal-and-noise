@@ -85,8 +85,12 @@ function snm_ctx( $media ) {
 $VESTIBULAR = '/\b(transform|translate|scale|rotate|top|left|right|bottom|inset|width|height|max-height|margin|padding|flex-basis|grid-template|all)\b/';
 
 $sites = array(); $resets = array(); $exempt = 0; $kf_defined = 0;
-foreach ( glob( $root . '/assets/css/*.css' ) as $file ) {
-	$short = basename( $file );
+// 2026.10 (theme audit P3-10): block stylesheets too. The scan read only
+// assets/css/*.css, so the one unguarded transition in the theme (the pillar
+// CTA arrow, blocks/pillar-essays/style.css) sat outside it.
+$motion_files = array_merge( glob( $root . '/assets/css/*.css' ), glob( $root . '/assets/css/blocks/*.css' ), glob( $root . '/blocks/*/style.css' ) );
+foreach ( $motion_files as $file ) {
+	$short = substr( $file, strlen( $root ) + 1 );
 	foreach ( snm_rules( (string) file_get_contents( $file ) ) as $r ) {
 		if ( isset( $r['kf'] ) ) { $kf_defined++; continue; }
 		$ctx = snm_ctx( $r['media'] );
@@ -140,6 +144,23 @@ echo "Group: assertions\n";
 ok( count( $sites ) >= 8, 'the scan SEES motion — ' . count( $sites ) . ' guarded-or-not sites inventoried (floor 8 guards a scan that silently matches nothing)' );
 ok( $kf_defined >= 8, $kf_defined . ' @keyframes definitions seen (floor 8 — same silent-scan guard; 9 real today, comments that SAY @keyframes are stripped first)' );
 ok( array() === $unpaired, 'every vestibular motion site is guarded (OPTIN or RESET)' . ( $unpaired ? ' — UNPAIRED: ' . implode( '; ', array_slice( $unpaired, 0, 6 ) ) : '' ) );
+
+// A block stylesheet travels on its own (the editor canvas, a page without
+// the combined sheet), so each of its motion sites carries its own guard in
+// the same file rather than leaning on base.css's global reset. 2026.10:
+// the pillar CTA arrow was the one that leaned.
+$block_leaning = array();
+foreach ( $sites as $s ) {
+	if ( 0 !== strpos( $s['file'], 'blocks/' ) || 'no-preference' === $s['ctx'] ) { continue; }
+	$own = snm_rules( (string) file_get_contents( $root . '/' . $s['file'] ) );
+	$found = false;
+	foreach ( $own as $r ) {
+		if ( isset( $r['kf'] ) || 'reduce' !== snm_ctx( $r['media'] ) ) { continue; }
+		if ( in_array( $s['sel'], array_map( 'trim', explode( ',', $r['sel'] ) ), true ) && preg_match( '/transition\s*:\s*none|animation\s*:\s*none/', $r['decl'] ) ) { $found = true; break; }
+	}
+	if ( ! $found ) { $block_leaning[] = $s['file'] . ' :: ' . $s['sel']; }
+}
+ok( array() === $block_leaning, 'every block stylesheet guards its own motion in the same file' . ( $block_leaning ? ' — leaning on the global reset: ' . implode( '; ', $block_leaning ) : '' ) );
 
 // ── JS motion: every file touching a motion API is classified, and the
 //    claimed guard is verified by grep — a guard CLAIMED is a guard FOUND. ──

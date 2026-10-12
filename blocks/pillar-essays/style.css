@@ -148,6 +148,7 @@
 @media (prefers-reduced-motion: reduce) {
 	.sn-notes-pillar { transition: none; }
 	.sn-notes-pillar::before { transition: none; }
+	.sn-notes-pillar-cta::after { transition: none; }
 }
 
 /* COMPACT DENSITY ──────────────────────────────────────────────
