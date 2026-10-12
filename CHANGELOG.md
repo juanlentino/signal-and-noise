@@ -36,7 +36,7 @@ adds a bullet below. A release is a separate, deliberate act:
 - **The pillar CTA arrow guards its own motion**, and `tests/motion-pairing.php` now reads block stylesheets.
 - **llms.txt states facts in house style.** The Abilities API line says it requires authentication (it answers 401 anonymously); the cookie sentence follows the Privacy Policy (third-party players may set their own cookies); three em dashes become colons or parentheses; "licence" becomes "license" in prose (the `TDM-Licence-*` header name stays; `tests/fixtures/llms-rights.txt` regenerated for those two words only).
 - **The /notes/ subscribe lines use colons, not em dashes.**
-- **Service headings keep their phone size as h2**, ahead of the staged h3-to-h2 change on /services/.
+- **Headings promoted from h3 to h2 keep their phone size**, ahead of the staged h3-to-h2 changes on /services/ and /provenance/objections/: the 480px shrink rule now also reaches an h2 in a service-image column and an x-large h2 in a group. Measured on the live Objections page with the rule injected: 20.8px at 375 and 42px at 1440, identical to today's h3s. Pinned by `tests/heading-level-phone-size.php`.
 
 ## [15.8.2] - 2026-10-10 — llms.txt lists Start Here and Objections, and its counts follow the site
 
