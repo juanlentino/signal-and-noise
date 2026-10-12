@@ -478,7 +478,7 @@ main { view-transition-name: sn-main; }
 .single-post .wp-block-post-content sup a[href^="#footnote-"],
 .single-post .wp-block-post-content sup[data-fn] a {
 	font-family: 'DM Mono', 'Courier New', monospace;
-	font-size: 0.75em;
+	font-size: max(0.75em, 11px); /* 11px floor: 0.75em alone can compute under it */
 	color: var(--wp--preset--color--blood);
 	text-decoration: none;
 	margin: 0 0.1em;
