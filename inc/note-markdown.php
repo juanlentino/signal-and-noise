@@ -1,6 +1,6 @@
 <?php
 /**
- * Signal & Noise — advertise a note's Markdown twin at /notes/<slug>.md.
+ * Signal & Noise: advertise a note's Markdown twin at /notes/<slug>.md.
  *
  * The Markdown itself is served at the edge by sn-rights-signals (the same
  * converter that answers `Accept: text/markdown`); WordPress never renders it.
