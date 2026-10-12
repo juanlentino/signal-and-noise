@@ -29,6 +29,8 @@
  *   4. `admin_init` self-recovery — on every admin pageview, if an
  *      orphaned backup is detected (post_install never fired, e.g.
  *      PHP timeout mid-install), restore it intelligently. Idempotent.
+ *      It waits while SN_THEME_GIT_UPDATE_LOCK is held (2026.10), so a
+ *      Heartbeat cannot restore .git into the dir an update is replacing.
  *
  * Why same-filesystem `rename()`: atomic at the kernel level — no
  * window where `.git` exists in both places or neither. Cross-FS
@@ -56,6 +58,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 function sn_theme_git_backup_path() {
 	return trailingslashit( WP_CONTENT_DIR ) . 'upgrade/sn-' . SN_GH_THEME_STYLESHEET . '-git-backup';
 }
+
+/**
+ * The transient held from pre_install to post_install (2026.10, theme audit
+ * P2-2). admin_init also fires on admin-ajax.php, so a Heartbeat from another
+ * open wp-admin tab could run the self-recovery between the rename and core's
+ * clear_destination(), put .git back into the old theme dir, and have it
+ * deleted with that dir. While this is set the recovery waits. The TTL is
+ * what keeps the recovery alive for an update that died before post_install.
+ */
+const SN_THEME_GIT_UPDATE_LOCK     = 'sn_theme_git_update_lock';
+const SN_THEME_GIT_UPDATE_LOCK_TTL = 15 * MINUTE_IN_SECONDS;
 
 /**
  * Move .git out of the theme dir before WP's clear_destination() can
@@ -99,7 +112,12 @@ add_filter( 'upgrader_pre_install', function( $response, $hook_extra ) {
 		wp_mkdir_p( $upgrade_dir );
 	}
 
+	// Taken BEFORE the rename, so there is no instant where the backup exists
+	// and the recovery is free to move it.
+	set_transient( SN_THEME_GIT_UPDATE_LOCK, time(), SN_THEME_GIT_UPDATE_LOCK_TTL );
+
 	if ( ! @rename( $git_dir, $backup ) ) {
+		delete_transient( SN_THEME_GIT_UPDATE_LOCK );
 		return new WP_Error(
 			'sn_git_backup_failed',
 			sprintf(
@@ -128,6 +146,10 @@ add_filter( 'upgrader_post_install', function( $response, $hook_extra, $result )
 	if ( $theme !== SN_GH_THEME_STYLESHEET ) {
 		return $response;
 	}
+
+	// The install is over either way; from here the restore below or the
+	// admin_init recovery owns the backup.
+	delete_transient( SN_THEME_GIT_UPDATE_LOCK );
 
 	$backup = sn_theme_git_backup_path();
 	if ( ! is_dir( $backup ) ) {
@@ -161,6 +183,11 @@ add_filter( 'upgrader_post_install', function( $response, $hook_extra, $result )
  * backup and skips.
  */
 add_action( 'admin_init', function() {
+	// An update is in flight: its own post_install restores .git.
+	if ( false !== get_transient( SN_THEME_GIT_UPDATE_LOCK ) ) {
+		return;
+	}
+
 	$backup = sn_theme_git_backup_path();
 	if ( ! is_dir( $backup ) ) {
 		return;
