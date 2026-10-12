@@ -202,8 +202,11 @@
 		padding-right: 1.25rem !important;
 	}
 
-	/* Service headings — smaller on phone */
+	/* Service headings — smaller on phone. h2 too (2026.10): the /services/
+	   offering headings are moving from h3 to h2 so the page does not skip a
+	   level, and they must keep the same phone size. */
 	.wp-block-column:has(.sn-service-image) h3,
+	.wp-block-column:has(.sn-service-image) h2,
 	.wp-block-group h3 {
 		font-size: 1.3rem !important;
 	}
