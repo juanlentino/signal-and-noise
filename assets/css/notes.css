@@ -363,6 +363,14 @@
 		border-bottom-color: var(--wp--preset--color--blood);
 	}
 }
+/* Standalone targets, not prose links: the bare 11px line measured 19.7px
+   tall at 375px, under WCAG 2.5.8's 24px (2026.10). The row grows by the
+   difference; the label stays centered. */
+.sn-notes-row-meta a.sn-notes-row-tags {
+	display: inline-flex;
+	align-items: center;
+	min-height: 24px;
+}
 .sn-notes-row-sep {
 	opacity: 0.5;
 }
