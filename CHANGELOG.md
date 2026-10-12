@@ -12,6 +12,8 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+## [2026.10.1] - 2026-10-12 — notes as Markdown, a practical shelf, and keyboard you can switch off
+
 ### Added
 - **/notes/tags/ opens with "What to do about it".** A new first group, seeded with the `practical` tag (live on 4 notes): "Procedures for the moment a statement, a credit, or an offer lands in your inbox." Pinned by `tests/notes-tags-index.php` and `tests/notes-tags-group-meta.php`.
 - **Single-key shortcuts can be turned off (WCAG 2.1.4).** `j`, `k`, `?` (notes) and `/` (site-wide) had no off switch. A checkbox in the `?` cheat-sheet and a row in the search palette (Cmd/Ctrl-K or the Search button, on every page) store one localStorage key, read by every handler at keydown time. On by default; blocked storage fails safe to on; the Search button's `aria-keyshortcuts` drops `/` while off. Pinned by `tests/js/single-key-shortcuts.test.cjs`.
@@ -37,9 +39,4 @@ adds a bullet below. A release is a separate, deliberate act:
 - **llms.txt states facts in house style.** The Abilities API line says it requires authentication (it answers 401 anonymously); the cookie sentence follows the Privacy Policy (third-party players may set their own cookies); three em dashes become colons or parentheses; "licence" becomes "license" in prose (the `TDM-Licence-*` header name stays; `tests/fixtures/llms-rights.txt` regenerated for those two words only).
 - **The /notes/ subscribe lines use colons, not em dashes.**
 - **Headings promoted from h3 to h2 keep their phone size**, ahead of the staged h3-to-h2 changes on /services/ and /provenance/objections/: the 480px shrink rule now also reaches an h2 in a service-image column and an x-large h2 in a group. Measured on the live Objections page with the rule injected: 20.8px at 375 and 42px at 1440, identical to today's h3s. Pinned by `tests/heading-level-phone-size.php`.
-
-## [15.8.2] - 2026-10-10 — llms.txt lists Start Here and Objections, and its counts follow the site
-
-### Fixed
-- **llms.txt lists Start Here and Objections, and its summary counts can no longer go stale.** Read live on 2026-10-10, the summary said "Forty-plus notes, two SSRN papers" while the site held 51 notes and its own Pillar essays section listed three papers. The counts are now derived (`sn_llms_txt_summary_facts()`): notes from the published, non-password posts, the same corpus /notes/ lists (`sn_llms_txt_note_count()`, filters suppressed), papers from the pillar descriptors the Pillar essays section lists; a count that is unknown is left out, never guessed. Key pages gains `/provenance/objections/` directly after Provenance and `/notes/start-here/` directly after Notes, listed by hand on purpose: the list is not derived from the children of `/provenance/`, whose pillar essays have their own section. The `get-llms-txt` ability now passes the same inputs as the route, so its index output is the served `/llms.txt` byte for byte and its full output carries Topics, which it had been missing. No cache was added: the file rides the edge's machine lifetime (5 minutes) and the plugin's publish purge. The Rights section is unchanged, pinned byte for byte against `tests/fixtures/llms-rights.txt`, captured before the change. Pinned by `tests/llms-txt.php`.
 
