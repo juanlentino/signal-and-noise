@@ -124,21 +124,40 @@ ac_eq( '/* sentinel */', (string) file_get_contents( $info['file'] ), 'target co
 ac_true( is_array( $again ) && $again['ver'] === $info['ver'], 'envelope still returned for the existing target' );
 
 // ─── Test 5: sibling cleanup on fresh build is AGE-GATED (13.2.5) ─────
-// A previous hash written recently is the stylesheet a reader's cached page
-// still points at; it survives the rebuild. One past the grace window is
-// pruned. Before 13.2.5 both were deleted on the spot, and the owner's phone
-// painted the home page without its stylesheet.
-echo "\nTest 5: superseded sn-styles-*.css siblings: recent kept, old pruned\n";
+// A previous hash is the stylesheet a reader's cached page still points at;
+// it survives the rebuild. Before 13.2.5 every sibling was deleted on the
+// spot, and the owner's phone painted the home page without its stylesheet.
+//
+// 2026.10 (theme audit P2-1): the grace counts from when a hash was
+// SUPERSEDED, not when it was built. A rebuild only happens on a release, so
+// after a quiet week the previous hash's own mtime was already past the
+// window and it was deleted in the same request that replaced it: no grace at
+// all. A file's supersession time is the build time (mtime) of the next newer
+// hash, which never moves, so no sidecar or option is needed.
+echo "\nTest 5: superseded sn-styles-*.css siblings: grace counts from supersession\n";
 ac_reset_memo();
-$recent = dirname( $info['file'] ) . '/sn-styles-deadbeef0000.css';
-$old    = dirname( $info['file'] ) . '/sn-styles-0ld0ld0ld0ld.css';
-file_put_contents( $recent, 'previous hash, written just now' );
-file_put_contents( $old, 'previous hash, written long ago' );
-touch( $old, time() - SN_CSS_COMBINE_GRACE_SECS - 60 );
+$dir5   = dirname( $info['file'] );
+$recent = $dir5 . '/sn-styles-deadbeef0000.css';
+$prev   = $dir5 . '/sn-styles-9e0000000000.css';
+$older  = $dir5 . '/sn-styles-0ld0ld0ld0ld.css';
+file_put_contents( $prev, 'previous hash, built 30 days ago, replaced by THIS rebuild' );
+file_put_contents( $older, 'older hash, built 40 days ago, replaced 30 days ago' );
+touch( $prev, time() - 30 * 86400 );
+touch( $older, time() - 40 * 86400 );
+clearstatcache();
 unlink( $info['file'] ); // force a rebuild
 sn_css_ensure_combined();
+clearstatcache();
+ac_true( file_exists( $prev ), 'the hash this rebuild replaces SURVIVES even when it was built long ago (a quiet week must not cost the grace)' );
+ac_true( ! file_exists( $older ), 'a hash superseded longer ago than the grace window is pruned' );
+@unlink( $prev );
+
+ac_reset_memo();
+file_put_contents( $recent, 'previous hash, written just now' );
+unlink( $info['file'] );
+sn_css_ensure_combined();
+clearstatcache();
 ac_true( file_exists( $recent ), 'a superseded hash inside the grace window SURVIVES the rebuild (a cached page can still dress itself)' );
-ac_true( ! file_exists( $old ), 'a superseded hash past the grace window is pruned' );
 ac_true( SN_CSS_COMBINE_GRACE_SECS >= 86400, 'the grace window is at least a day' );
 unlink( $recent );
 
