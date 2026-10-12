@@ -169,7 +169,9 @@ function sn_feed_json_build_item( $post ) {
 		// plugin tags RSS and Atom the same way). The id stays the bare
 		// permalink: readers key read state on it.
 		'url'          => (string) get_permalink( $post ) . ( false === strpos( (string) get_permalink( $post ), '?' ) ? '?' : '&' ) . 'utm_source=jsonfeed&utm_medium=feed',
-		'title'        => get_the_title( $post ),
+		// Plain text per the JSON Feed spec: the_title filters may emit
+		// entities or markup, so decode and strip like content-json-document.php.
+		'title'        => wp_strip_all_tags( html_entity_decode( get_the_title( $post ), ENT_QUOTES, 'UTF-8' ) ),
 		'content_html' => (string) apply_filters( 'the_content', $post->post_content ),
 	);
 	// get_post_time('c',…) returns FALSE on a zeroed/invalid post date; a bare
