@@ -8,7 +8,8 @@
  *
  * "Current" means this exact page: paths compared without a trailing slash or
  * query string. A child URL is not the page (/notes is not current on a single
- * note), "/" is current only on the front page, and an off-site link never is.
+ * note) and an off-site link never is. The front page is left untouched: the
+ * owner's rule keeps the home page (Page 383) out of every site-wide change.
  *
  * @package SignalNoise
  * @since 2026.10
@@ -51,7 +52,7 @@ function sn_nav_mark_current( $block_content, $block ) {
 	$link    = sn_nav_current_path( $url );
 	// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- only compared against a link path, never output or stored.
 	$request = sn_nav_current_path( isset( $_SERVER['REQUEST_URI'] ) ? wp_unslash( $_SERVER['REQUEST_URI'] ) : '' );
-	if ( null === $link || $link !== $request ) {
+	if ( null === $link || '/' === $request || $link !== $request ) {
 		return $block_content;
 	}
 	$p = new WP_HTML_Tag_Processor( $block_content );
