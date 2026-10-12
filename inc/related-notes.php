@@ -74,7 +74,9 @@ function sn_related_notes_query( $post_id, $limit = 3 ) {
 				// Publish AND type re-checked here, not trusted from the
 				// artifact: post IDs are global across types, so a stale or
 				// widened artifact must never surface a non-Note in this footer.
-				if ( ! $p || 'publish' !== get_post_status( $p ) || 'post' !== get_post_type( $p ) ) {
+				// 2026.10: a protected note is skipped too, as on every sibling
+				// surface (notes index, JSON Feed, llms.txt).
+				if ( ! $p || 'publish' !== get_post_status( $p ) || 'post' !== get_post_type( $p ) || '' !== (string) $p->post_password ) {
 					continue;
 				}
 				$seen[ $rid ] = true;
@@ -112,6 +114,7 @@ function sn_related_notes_query( $post_id, $limit = 3 ) {
 			array(
 				'post_type'             => 'post',
 				'post_status'           => 'publish',
+				'has_password'          => false, // 2026.10: never a "Protected: ..." title.
 				'post__not_in'          => array_values( array_unique( $primary_exclude ) ),
 				'posts_per_page'        => $limit - count( $selected ),
 				'orderby'               => 'date',
@@ -144,6 +147,7 @@ function sn_related_notes_query( $post_id, $limit = 3 ) {
 			array(
 				'post_type'             => 'post',
 				'post_status'           => 'publish',
+				'has_password'          => false, // 2026.10: never a "Protected: ..." title.
 				'post__not_in'          => array_values( array_unique( $exclude ) ),
 				'posts_per_page'        => $need,
 				'orderby'               => 'date',
