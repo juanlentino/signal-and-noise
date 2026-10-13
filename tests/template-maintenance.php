@@ -188,7 +188,7 @@ $c = purge_counts();
 ok( 1 === $c['breeze'], 'Breeze file cache purge fired' );
 ok( array( false, false, true ) === $GLOBALS['__breeze_args'], 'Breeze is asked for its HTML folder only, with no object-cache work' );
 ok( 0 === $c['breeze_action'], 'breeze_clear_all_cache is never fired (it ends in wp_cache_flush)' );
-ok( 1 === $c['varnish'], 'Varnish purge fired' );
+ok( 0 === $c['varnish'], 'no Varnish purge: Varnish is off for this app (Cloudways varnish_enabled false)' );
 ok( 1 === $c['cf'], 'Cloudflare zone purge fired' );
 ok( 0 === $c['flush'], 'the object cache is NOT flushed (Core and the readings live there)' );
 ok( array( 'transient' ) === $GLOBALS['__flush_groups'], 'transients clear as a group; site transients (update_core) stay' );
@@ -218,7 +218,7 @@ echo "\nScenario 5: our plugin update purges the full chain\n";
 reset_counters();
 fire_upgrader( array( 'type' => 'plugin', 'action' => 'update', 'plugins' => array( 'signal-and-noise-tools/signal-and-noise-tools.php' ) ) );
 $c = purge_counts();
-ok( 1 === $c['breeze'] && 1 === $c['varnish'] && 1 === $c['cf'], 'plugin update fires Breeze + Varnish + Cloudflare' );
+ok( 1 === $c['breeze'] && 0 === $c['varnish'] && 1 === $c['cf'], 'plugin update fires Breeze + Cloudflare, no Varnish' );
 
 // ── 5b. Single-package upgrades pass the singular key (#312) ──
 // Theme_Upgrader::upgrade() / Plugin_Upgrader::upgrade() (update.php?action=
@@ -243,7 +243,7 @@ reset_counters();
 fire_styles_save();
 $c = purge_counts();
 ok( 1 === $c['breeze'], 'Breeze purge fired on styles save' );
-ok( 1 === $c['varnish'], 'Varnish purge fired on styles save' );
+ok( 0 === $c['varnish'], 'no Varnish purge on styles save' );
 ok( 1 === $c['cf'], 'Cloudflare purge fired on styles save' );
 ok( 0 === $c['flush'], 'styles save does not flush the object cache' );
 ok( array() === $GLOBALS['__flush_groups'], 'styles save leaves transients alone' );
