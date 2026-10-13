@@ -100,13 +100,15 @@ add_action( 'sn_before_cache_flush', 'sn_before_cache_flush_bump_epoch' );
  * value Breeze checks before it writes advanced-cache.php). A Breeze hit is
  * answered before WordPress loads, so it leaves without the CDN header and
  * Cache-Tag (inc/cache-headers-hooks.php); a copy the edge stores from one is
- * out of reach of every tag purge. null when there is no setting to read: not
- * known is not off.
+ * out of reach of every tag purge. null when Breeze is not loaded or has no
+ * setting to read: not known is not off.
  *
  * @return array{breeze_file:bool,breeze_page_cache:?bool}
  */
 function sn_purge_leg_state() {
-	$breeze = get_option( 'breeze_basic_settings', null );
+	// Deactivating Breeze leaves its settings behind, so read them only while
+	// Breeze is loaded (the class the purge chain itself calls).
+	$breeze = class_exists( 'Breeze_PurgeCache' ) ? get_option( 'breeze_basic_settings', null ) : null;
 	return array(
 		'breeze_file'       => (bool) has_action( 'breeze_clear_all_cache' ),
 		'breeze_page_cache' => is_array( $breeze ) ? filter_var( $breeze['breeze-active'] ?? false, FILTER_VALIDATE_BOOLEAN ) : null,
@@ -265,9 +267,7 @@ function sn_purge_verify_backoff_for( $attempt, $base ) {
 
 /**
  * Probe every verified route; a route that reads stale is escalated — re-evict the
- * CDN (the Cloudways Varnish leg already fired once this request under its
- * per-request guard, so the resistant layer is CF re-seeding) + back off for
- * propagation, then re-probe — up to a small attempt budget. Returns the per-route
+ * CDN (the resistant layer is CF re-seeding) + back off for propagation, then re-probe, up to a small attempt budget. Returns the per-route
  * probe results + a `resolved` verdict (false iff any route is DEFINITIVELY stale;
  * an unknown/unreachable route never flips resolved — it is surfaced honestly).
  *

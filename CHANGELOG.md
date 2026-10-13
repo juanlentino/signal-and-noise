@@ -17,7 +17,7 @@ adds a bullet below. A release is a separate, deliberate act:
 - **A superseded combined stylesheet now survives 8 days, not 7.** The edge may serve a page up to its stale-if-error (7 days) plus its edge TTL (2 hours) old during an origin outage, so the stylesheet that page names has to outlive both. Pinned by tests/asset-combine.php.
 
 ### Added
-- **The purge report says whether Breeze's page cache is on** (`legs.breeze_page_cache`: true, false, or null when there is no Breeze setting to read). A Breeze hit leaves without the CDN header and `Cache-Tag`, so a copy the edge stores from one is out of reach of every tag purge. Read from Breeze's own `breeze_basic_settings` / `breeze-active`, the value Breeze checks before it writes `advanced-cache.php`. Pinned by tests/purge-verify.php.
+- **The purge report says whether Breeze's page cache is on** (`legs.breeze_page_cache`: true, false, or null when Breeze is not loaded or has no setting to read; a deactivated Breeze leaves its settings behind). A Breeze hit leaves without the CDN header and `Cache-Tag`, so a copy the edge stores from one is out of reach of every tag purge. Read from Breeze's own `breeze_basic_settings` / `breeze-active`, the value Breeze checks before it writes `advanced-cache.php`. Pinned by tests/purge-verify.php.
 
 ## [2026.10.2] - 2026-10-13 — every note carries its own cache label
 

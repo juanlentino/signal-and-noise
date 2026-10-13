@@ -196,6 +196,12 @@ ok( ! isset( $GLOBALS['sn_cf_verified_result'] ), 'the stashed CF result is cons
 ok( array_key_exists( 'breeze_page_cache', $report['legs'] ) && null === $report['legs']['breeze_page_cache'], 'no Breeze setting => breeze_page_cache is null (unknown), not false' );
 $GLOBALS['__options']['breeze_basic_settings'] = array( 'breeze-active' => '1' );
 fire( 'sn_after_full_cache_flush', array( 'origin_html' => true, 'cloudflare' => true ), 0 );
+$dead = get_option( 'sn_last_purge_report', array() )['legs'];
+ok( array_key_exists( 'breeze_page_cache', $dead ) && null === $dead['breeze_page_cache'], 'Breeze deactivated (setting left behind, Breeze not loaded) => null, not true' );
+if ( ! class_exists( 'Breeze_PurgeCache' ) ) {
+	class Breeze_PurgeCache {} // Breeze loaded from here on.
+}
+fire( 'sn_after_full_cache_flush', array( 'origin_html' => true, 'cloudflare' => true ), 0 );
 ok( true === ( get_option( 'sn_last_purge_report', null )['legs']['breeze_page_cache'] ?? null ), 'Breeze page cache ON is flagged in the report' );
 $GLOBALS['__options']['breeze_basic_settings'] = array( 'breeze-active' => '0' );
 fire( 'sn_after_full_cache_flush', array( 'origin_html' => true, 'cloudflare' => true ), 0 );
