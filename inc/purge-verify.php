@@ -92,16 +92,24 @@ function sn_before_cache_flush_bump_epoch( $args ) {
 add_action( 'sn_before_cache_flush', 'sn_before_cache_flush_bump_epoch' );
 
 /**
- * Introspect which origin-HTML purge legs are wired (without firing anything),
- * for the report's Breeze columns. Breeze registers breeze_clear_all_cache; the
- * companion plugin hooks breeze_clear_varnish (its Cloudways purge).
+ * Introspect the origin-HTML legs (without firing anything), for the report's
+ * Breeze columns. Breeze registers breeze_clear_all_cache.
  *
- * @return array{breeze_file:bool,breeze_varnish:bool}
+ * 2026.10 cache batch: breeze_page_cache says whether Breeze's page cache is on,
+ * read from Breeze's own setting (breeze_basic_settings, key breeze-active, the
+ * value Breeze checks before it writes advanced-cache.php). A Breeze hit is
+ * answered before WordPress loads, so it leaves without the CDN header and
+ * Cache-Tag (inc/cache-headers-hooks.php); a copy the edge stores from one is
+ * out of reach of every tag purge. null when there is no setting to read: not
+ * known is not off.
+ *
+ * @return array{breeze_file:bool,breeze_page_cache:?bool}
  */
 function sn_purge_leg_state() {
+	$breeze = get_option( 'breeze_basic_settings', null );
 	return array(
-		'breeze_file'    => (bool) has_action( 'breeze_clear_all_cache' ),
-		'breeze_varnish' => (bool) has_action( 'breeze_clear_varnish' ),
+		'breeze_file'       => (bool) has_action( 'breeze_clear_all_cache' ),
+		'breeze_page_cache' => is_array( $breeze ) ? filter_var( $breeze['breeze-active'] ?? false, FILTER_VALIDATE_BOOLEAN ) : null,
 	);
 }
 
@@ -112,11 +120,12 @@ function sn_purge_leg_state() {
  * _transient_sn_% row, so a transient report would erase itself (see the
  * transients-are-flush-volatile-under-Breeze note).
  *
- * Per-leg truth: the Varnish leg reads the companion plugin's
- * sn_cloudways_last_purge (the real {ok,http,operation_id} confirmation); the CF
- * leg is a confirmed {accepted,http,cf_success} on a verified purge (the manual
- * button, which ran the blocking CF variant and stashed its result) or a plain
- * dispatched-but-unconfirmed record on a fast auto-purge.
+ * Per-leg truth: the CF leg is a confirmed {accepted,http,cf_success} on a
+ * verified purge (the manual button, which ran the blocking CF variant and
+ * stashed its result) or a plain dispatched-but-unconfirmed record on a fast
+ * auto-purge. There is no Varnish leg (2026.10 cache batch): Varnish is off for
+ * this app and the chain no longer fires it, so the companion's last Cloudways
+ * record would describe some older purge, not this one.
  *
  * @param array $args    Parsed purge args (from sn_after_full_cache_flush).
  * @param int   $cleared Template overrides cleared (the flush's int return).
@@ -130,44 +139,6 @@ function sn_write_purge_report( $args, $cleared = 0 ) {
 
 	$verified = ! empty( $args['verified'] );
 	$state    = sn_purge_leg_state();
-
-	// Varnish leg — the Cloudways confirmation is authoritative when present.
-	$cw = get_option( 'sn_cloudways_last_purge', array() );
-	if ( is_array( $cw ) && ! empty( $cw ) ) {
-		$varnish = array(
-			'via'          => 'cloudways',
-			'ok'           => ! empty( $cw['ok'] ),
-			'http'         => isset( $cw['http'] ) ? (int) $cw['http'] : 0,
-			'operation_id' => isset( $cw['operation_id'] ) ? (int) $cw['operation_id'] : 0,
-		);
-		// v11.4.8: carry the plugin's two qualifier markers (companion v10.52.2 /
-		// v10.52.4). Without them this leg reads `ok: true, http: 422` and the
-		// reader has to KNOW that combination means "coalesced onto an in-flight
-		// purge" rather than a contradiction — the exact inference that cost an
-		// afternoon on 2026-08-05. Copied only when present, so a report from an
-		// older companion keeps its current shape rather than gaining false
-		// negatives.
-		if ( ! empty( $cw['coalesced'] ) ) {
-			$varnish['coalesced'] = true;
-		}
-		if ( ! empty( $cw['reauthed'] ) ) {
-			$varnish['reauthed'] = true;
-		}
-		// Companion v10.52.5: a transport failure (timeout, DNS, reset) is not
-		// evidence the purge did not run — only that we never heard back. Observed
-		// live: a 5s timeout was recorded as failed, and the operation it started
-		// was still running seconds later. Carrying this keeps "we do not know"
-		// distinct from "it failed" in the durable record, and `stage` says which
-		// step the attempt reached rather than leaving it to be inferred.
-		if ( ! empty( $cw['inconclusive'] ) ) {
-			$varnish['inconclusive'] = true;
-		}
-		if ( ! empty( $cw['stage'] ) ) {
-			$varnish['stage'] = (string) $cw['stage'];
-		}
-	} else {
-		$varnish = array( 'via' => 'breeze', 'listener' => $state['breeze_varnish'] );
-	}
 
 	// CF leg — confirmed on a verified purge, else dispatched-but-unconfirmed.
 	$cf_result = isset( $GLOBALS['sn_cf_verified_result'] ) ? $GLOBALS['sn_cf_verified_result'] : null;
@@ -187,9 +158,9 @@ function sn_write_purge_report( $args, $cleared = 0 ) {
 		'mode'               => $verified ? 'verified' : 'auto',
 		'epoch'              => sn_render_epoch(),
 		'legs'               => array(
-			'breeze_file' => $state['breeze_file'],
-			'varnish'     => $varnish,
-			'cf'          => $cf,
+			'breeze_file'       => $state['breeze_file'],
+			'breeze_page_cache' => $state['breeze_page_cache'],
+			'cf'                => $cf,
 		),
 		'template_overrides' => (int) $cleared,
 	);

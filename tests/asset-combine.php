@@ -159,6 +159,10 @@ sn_css_ensure_combined();
 clearstatcache();
 ac_true( file_exists( $recent ), 'a superseded hash inside the grace window SURVIVES the rebuild (a cached page can still dress itself)' );
 ac_true( SN_CSS_COMBINE_GRACE_SECS >= 86400, 'the grace window is at least a day' );
+// 2026.10 cache batch: the edge may serve a page up to its stale-if-error
+// (7 days) plus its edge TTL (2 hours) old, so the stylesheet it names must
+// outlive that. 7 days exactly left a 2-hour gap during a long outage.
+ac_true( SN_CSS_COMBINE_GRACE_SECS > 604800 + 7200, 'the grace outlives the edge stale-if-error plus its TTL (an outage-served page can still dress itself)' );
 unlink( $recent );
 
 // ─── Test 6: relative url() aborts the combine (fail open) ────────────
