@@ -129,3 +129,38 @@ function sn_edge_cache_body_ok( $bytes ) {
 function sn_edge_cache_still_ours( $existing, $status ) {
 	return SN_EDGE_BROWSER_CACHE_CONTROL === (string) $existing && 200 === (int) $status;
 }
+
+/**
+ * The Cache-Tag value for a response. PURE. Every cached response keeps the
+ * site tag; a single note adds its own; a list page, a feed or a machine
+ * file adds the list tag.
+ *
+ * @param string $kind    'html' or 'machine'.
+ * @param int    $note_id The note this page is, 0 when it is not one.
+ * @param bool   $lists   Whether the page lists notes.
+ * @return string
+ */
+function sn_edge_cache_tags( $kind, $note_id, $lists ) {
+	$tags = array( SN_EDGE_CACHE_TAG );
+	if ( (int) $note_id > 0 ) {
+		$tags[] = sn_edge_cache_note_tag( (int) $note_id );
+	}
+	if ( 'machine' === $kind || $lists ) {
+		$tags[] = SN_EDGE_CACHE_LIST_TAG;
+	}
+	return implode( ',', $tags );
+}
+
+/**
+ * Is this path a page that lists notes? PURE over the path (no query
+ * string): home, /notes/ and its pages, /notes/tags/, /index/, /provenance/,
+ * and the tag and category archives.
+ *
+ * @param string $uri Request URI.
+ * @return bool
+ */
+function sn_edge_cache_is_list_path( $uri ) {
+	$path = '/' . trim( (string) strtok( (string) $uri, '?' ), '/' );
+	return in_array( $path, array( '/', '/notes', '/notes/tags', '/index', '/provenance' ), true )
+		|| 1 === preg_match( '#^/(notes/page/\d+|tag/[^/]+(/page/\d+)?|category/[^/]+(/page/\d+)?)$#', $path );
+}

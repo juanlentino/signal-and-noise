@@ -52,9 +52,24 @@ foreach ( array( 'Cache-Control' => SN_EDGE_BROWSER_CACHE_CONTROL, 'the HTML edg
 	ok( '' !== $value && false === stripos( $value, 's-maxage' ) && false === stripos( $value, 'revalidate,' ) && false === stripos( $value, 'no-cache' ), $what . ' carries no s-maxage (nor must-revalidate, proxy-revalidate, no-cache)' );
 }
 $hooks_src = (string) file_get_contents( __DIR__ . '/../inc/cache-headers-hooks.php' );
+ok( false !== strpos( $hooks_src, "sn_edge_cache_tags( \$kind, sn_edge_cache_note_id()," ), 'the emitted Cache-Tag passes the single note id, so it carries sn-note-<ID>' );
 ok( 1 === substr_count( $hooks_src, "header( 'Cache-Control: '" ) && false !== strpos( $hooks_src, "header( 'Cache-Control: ' . SN_EDGE_BROWSER_CACHE_CONTROL );" ), 'the one Cache-Control this module writes is that constant, never a built value' );
 ok( false !== strpos( $hooks_src, "header( 'Cloudflare-CDN-Cache-Control: ' . \$cdn );" ) && false === strpos( $hooks_src, "header( 'CDN-Cache-Control" ), 'the edge lifetime goes in Cloudflare-CDN-Cache-Control (not passed downstream), not CDN-Cache-Control' );
-ok( 'sn-render' === SN_EDGE_CACHE_TAG && false !== strpos( $hooks_src, "header( 'Cache-Tag: ' . SN_EDGE_CACHE_TAG );" ) && strpos( $hooks_src, "header( 'Cloudflare-CDN-Cache-Control: '" ) < strpos( $hooks_src, "header( 'Cache-Tag: '" ) && false !== strpos( $hooks_src, "header_remove( 'Cache-Tag' );" ), 'every response that gets the edge lifetime carries the one cache tag, and loses it with the lifetime' );
+ok( 'sn-render' === SN_EDGE_CACHE_TAG && false !== strpos( $hooks_src, "header( 'Cache-Tag: ' . sn_edge_cache_tags( \$kind," ) && strpos( $hooks_src, "header( 'Cloudflare-CDN-Cache-Control: '" ) < strpos( $hooks_src, "header( 'Cache-Tag: '" ) && false !== strpos( $hooks_src, "header_remove( 'Cache-Tag' );" ), 'every response that gets the edge lifetime carries the one cache tag, and loses it with the lifetime' );
+
+echo "Group: a note's own tag and the lists' tag (2026-10-13)\n";
+ok( 'sn-render,sn-note-42' === sn_edge_cache_tags( 'html', 42, false ), 'a single note carries the site tag and its own, so the plugin can purge every copy of it (any query string, any tier) without emptying the site' );
+ok( 'sn-render,sn-lists' === sn_edge_cache_tags( 'html', 0, true ), 'a page that lists notes carries the list tag' );
+ok( 'sn-render,sn-lists' === sn_edge_cache_tags( 'machine', 0, false ), 'every feed and machine file carries the list tag: they carry note bodies' );
+ok( 'sn-render' === sn_edge_cache_tags( 'html', 0, false ), 'any other page keeps the site tag alone, which every save that changes a list still purges' );
+ok( 'sn-note-7' === sn_edge_cache_note_tag( '7' ) && 'sn-lists' === SN_EDGE_CACHE_LIST_TAG, 'the names the plugin builds and detects (sn_edge_cache_note_tag, SN_EDGE_CACHE_LIST_TAG)' );
+foreach ( array( '/', '/notes/', '/notes', '/notes/page/3/', '/notes/tags/', '/index/', '/provenance/', '/tag/cache/', '/tag/cache/page/2/', '/category/essays/', '/notes/?utm_source=share' ) as $u ) {
+	ok( sn_edge_cache_is_list_path( $u ), "$u lists notes" );
+}
+foreach ( array( '/notes/a-note/', '/about/', '/provenance/over-detection/', '/notes/tags/extra/', '/notesy/' ) as $u ) {
+	ok( ! sn_edge_cache_is_list_path( $u ), "$u is not a list by its path" );
+}
+ok( false !== strpos( $hooks_src, "is_singular( 'post' ) ? (int) get_queried_object_id()" ) && false !== strpos( $hooks_src, '|| is_front_page() || is_home() || is_archive()' ), 'only a single post gets a note tag; WordPress\'s home and archive reading widens the list rule' );
 
 echo "Group: taking the edge header back\n";
 ok( true === sn_edge_cache_still_ours( 'public, max-age=0', 200 ), 'untouched and 200: the edge header stays' );

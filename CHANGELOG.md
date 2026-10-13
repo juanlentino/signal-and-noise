@@ -12,6 +12,9 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Added
+- **Each note, and every page that lists notes, carries a cache tag of its own.** Every cached response still carries `sn-render`. A single note now also carries `sn-note-<ID>`, and the pages, feeds and machine files listed here carry `sn-lists`: home, /notes/ and its pages, /notes/tags/, /index/, /provenance/, the tag and category archives, every feed (JSON included), llms.txt and llms-full.txt. With these, the companion plugin can refresh a note whose save changed nothing other pages list by purging those two tags in one call. That clears every copy of the note's page whatever its query string (share and feed links with `?utm_source=` are separate copies at the edge), in every tier, without emptying the whole site. `sn_edge_cache_note_tag()` and `SN_EDGE_CACHE_LIST_TAG` are the names the plugin reads, and without them it keeps the whole-site purge. No page output changes; only the `Cache-Tag` header, which Cloudflare strips before the visitor. Pinned by tests/cache-headers.php.
+
 ## [2026.10.1] - 2026-10-12 — notes as Markdown, a practical shelf, and keyboard you can switch off
 
 ### Added
