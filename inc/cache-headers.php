@@ -44,6 +44,26 @@ if ( ! defined( 'ABSPATH' ) ) {
 const SN_EDGE_CACHE_TAG = 'sn-render';
 
 /**
+ * 2026-10-13: two narrower tags beside it. A single note also carries its own
+ * (sn_edge_cache_note_tag()), and every page that lists notes, every feed and
+ * every machine file carries this one. A note save that changed nothing other
+ * pages list (the plugin decides) purges just those two, which clears every
+ * copy of the note's page whatever its query string (?utm_source= share and
+ * feed links are their own copies at the edge) and every tier.
+ */
+const SN_EDGE_CACHE_LIST_TAG = 'sn-lists';
+
+/**
+ * The cache tag a single note carries. The plugin builds the same name to purge it.
+ *
+ * @param int $post_id Note ID.
+ * @return string
+ */
+function sn_edge_cache_note_tag( $post_id ) {
+	return 'sn-note-' . (int) $post_id;
+}
+
+/**
  * 15.2.1: an HTML body under this is not a page and is never stored. The guard
  * theme 13.3.1 had lived in an output buffer that #400 removed; the empty
  * /provenance/ of 2026-10-03 was cached for 21 minutes without it.

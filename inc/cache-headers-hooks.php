@@ -48,11 +48,31 @@ function sn_edge_cache_emit( $kind ) {
 	header_remove( 'Pragma' );
 	header( 'Cache-Control: ' . SN_EDGE_BROWSER_CACHE_CONTROL );
 	header( 'Cloudflare-CDN-Cache-Control: ' . $cdn );
-	header( 'Cache-Tag: ' . SN_EDGE_CACHE_TAG );
+	header( 'Cache-Tag: ' . sn_edge_cache_tags( $kind, sn_edge_cache_note_id(), 'html' === $kind && sn_edge_cache_request_lists() ) );
 	header_register_callback( 'sn_edge_cache_recheck' );
 	if ( 'html' === $kind ) {
 		ob_start( 'sn_edge_cache_floor' ); // the whole page, so its size is known before a header leaves.
 	}
+}
+
+/**
+ * The note this response is, 0 when it is not a single note.
+ *
+ * @return int
+ */
+function sn_edge_cache_note_id() {
+	return function_exists( 'is_singular' ) && is_singular( 'post' ) ? (int) get_queried_object_id() : 0;
+}
+
+/**
+ * Does this page list notes? The path rule, or WordPress's own reading of
+ * the request (a paged or filtered archive the path rule does not name).
+ *
+ * @return bool
+ */
+function sn_edge_cache_request_lists() {
+	$uri = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
+	return sn_edge_cache_is_list_path( $uri ) || is_front_page() || is_home() || is_archive();
 }
 
 /**
