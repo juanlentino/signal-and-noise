@@ -52,6 +52,7 @@ foreach ( array( 'Cache-Control' => SN_EDGE_BROWSER_CACHE_CONTROL, 'the HTML edg
 	ok( '' !== $value && false === stripos( $value, 's-maxage' ) && false === stripos( $value, 'revalidate,' ) && false === stripos( $value, 'no-cache' ), $what . ' carries no s-maxage (nor must-revalidate, proxy-revalidate, no-cache)' );
 }
 $hooks_src = (string) file_get_contents( __DIR__ . '/../inc/cache-headers-hooks.php' );
+ok( false !== strpos( $hooks_src, "sn_edge_cache_tags( \$kind, sn_edge_cache_note_id()," ), 'the emitted Cache-Tag passes the single note id, so it carries sn-note-<ID>' );
 ok( 1 === substr_count( $hooks_src, "header( 'Cache-Control: '" ) && false !== strpos( $hooks_src, "header( 'Cache-Control: ' . SN_EDGE_BROWSER_CACHE_CONTROL );" ), 'the one Cache-Control this module writes is that constant, never a built value' );
 ok( false !== strpos( $hooks_src, "header( 'Cloudflare-CDN-Cache-Control: ' . \$cdn );" ) && false === strpos( $hooks_src, "header( 'CDN-Cache-Control" ), 'the edge lifetime goes in Cloudflare-CDN-Cache-Control (not passed downstream), not CDN-Cache-Control' );
 ok( 'sn-render' === SN_EDGE_CACHE_TAG && false !== strpos( $hooks_src, "header( 'Cache-Tag: ' . sn_edge_cache_tags( \$kind," ) && strpos( $hooks_src, "header( 'Cloudflare-CDN-Cache-Control: '" ) < strpos( $hooks_src, "header( 'Cache-Tag: '" ) && false !== strpos( $hooks_src, "header_remove( 'Cache-Tag' );" ), 'every response that gets the edge lifetime carries the one cache tag, and loses it with the lifetime' );
