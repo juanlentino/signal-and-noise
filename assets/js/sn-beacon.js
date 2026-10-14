@@ -33,7 +33,11 @@
     // Owner-device gate: the plugin sets sn_owner=1 on the owner's browsers at
     // login and never clears it on logout, so logged-out (edge-cached) visits on
     // those devices are not counted. Exact cookie name match; fail open on error.
-    if (isOwnerDevice()) return;
+    // The Claude app's built-in browser pane (UA token "Claude/<n>") is the
+    // owner's agent browser, on a cookie jar without that flag; while hidden it
+    // reports visible but paints nothing until shown, so its loads were landing
+    // as minutes-long desktop LCP samples (2026-10-13). It counts as owner too.
+    if (isOwnerDevice() || /\bClaude\/\d/.test(String(navigator.userAgent || ''))) return;
 
     // 0) Bot signals (observe-only, theme 14.6): four booleans and the raw UTC
     // offset ride on EVERY event as `sg`; the worker packs them into one number.
