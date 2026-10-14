@@ -49,8 +49,12 @@ define( 'SN_CSS_COMBINE_SCHEME', 'v1' );
  * rule, red footer icons, the toggle unstyled). A hash is ~12 KB; keeping
  * the last few for a week costs nothing and lets a stale page still dress
  * itself until the reader reloads.
+ *
+ * 2026.10 cache batch: 8 days, not 7. The edge may serve a page up to its
+ * stale-if-error (7 days, SN_EDGE_HTML_SIE) plus its edge TTL (2 hours) old
+ * during an origin outage, so the stylesheet that page names must outlive both.
  */
-define( 'SN_CSS_COMBINE_GRACE_SECS', 7 * 24 * 3600 );
+define( 'SN_CSS_COMBINE_GRACE_SECS', 8 * 24 * 3600 );
 
 /**
  * The ordered stylesheet sources, mirroring the cascade the per-file

@@ -176,7 +176,6 @@ echo "\nScenario 2: an auto edge-purge schedules one deferred verify\n";
 $GLOBALS['__cron']                              = array();
 $GLOBALS['__http_gets']                         = array();
 $GLOBALS['__options']['sn_render_epoch']        = 5;
-$GLOBALS['__options']['sn_cloudways_last_purge'] = array( 'ok' => true, 'http' => 200, 'operation_id' => 1 );
 $t0 = time();
 fire( 'sn_after_full_cache_flush', array( 'origin_html' => true, 'cloudflare' => true ), 0 );
 

@@ -170,7 +170,11 @@ ok( sn_render_epoch() === $before, 'a pure object-cache flush does NOT bump the 
 echo "\nScenario 6: durable sn_last_purge_report\n";
 ok( ! empty( $GLOBALS['__actions']['sn_after_full_cache_flush'] ), 'report writer registered on sn_after_full_cache_flush' );
 
-// Verified purge: Cloudways Varnish leg accepted + a confirmed CF result.
+// Verified purge with a confirmed CF result.
+// 2026.10 cache batch: Varnish is off for this app (Cloudways API:
+// varnish_enabled false), so the theme no longer fires breeze_clear_varnish
+// and the report carries no Varnish leg. An old Cloudways confirmation left in
+// the option must NOT be reported as this purge's result.
 $GLOBALS['__options']['sn_cloudways_last_purge'] = array( 'time' => 111, 'ok' => true, 'http' => 200, 'operation_id' => 98765 );
 $GLOBALS['sn_cf_verified_result']                = array( 'accepted' => true, 'http' => 200, 'cf_success' => true );
 fire( 'sn_after_full_cache_flush', array( 'origin_html' => true, 'cloudflare' => true, 'verified' => true ), 4 );
@@ -179,61 +183,35 @@ $report = get_option( 'sn_last_purge_report', null );
 ok( is_array( $report ), 'report written as an option' );
 ok( 'verified' === ( $report['mode'] ?? '' ), 'mode records a verified purge' );
 ok( (int) $report['epoch'] === sn_render_epoch(), 'report carries the current epoch' );
-ok( 'cloudways' === ( $report['legs']['varnish']['via'] ?? '' ) && ! empty( $report['legs']['varnish']['ok'] ), 'Varnish leg reads the Cloudways confirmation' );
-ok( 98765 === ( $report['legs']['varnish']['operation_id'] ?? 0 ), 'Varnish leg carries the Cloudways operation id' );
+ok( ! isset( $report['legs']['varnish'] ), 'no Varnish leg: a stale Cloudways confirmation is never reported as this purge' );
 ok( true === ( $report['legs']['cf']['cf_success'] ?? null ), 'CF leg records the confirmed success' );
 ok( 4 === ( $report['template_overrides'] ?? -1 ), 'report carries the template-override count' );
 ok( false === $GLOBALS['__option_writes']['sn_last_purge_report']['autoload'], 'report option is NON-autoloaded' );
 ok( ! isset( $GLOBALS['sn_cf_verified_result'] ), 'the stashed CF result is consumed (unset) after the report' );
-ok( ! isset( $report['legs']['varnish']['coalesced'] ), 'a plain 200 purge carries NO coalesced marker' );
-ok( ! isset( $report['legs']['varnish']['reauthed'] ), 'a plain 200 purge carries NO reauthed marker' );
 
-// v11.4.8: the companion's qualifier markers must survive into the durable
-// report. Without them the leg reads `ok: true, http: 422` and the reader has
-// to know that means "coalesced onto an in-flight purge" rather than a
-// contradiction — an inference that cost an afternoon on 2026-08-05.
-$GLOBALS['__options']['sn_cloudways_last_purge'] = array( 'time' => 333, 'ok' => true, 'http' => 422, 'operation_id' => 92898575, 'coalesced' => true );
-$GLOBALS['sn_cf_verified_result']                = array( 'accepted' => true, 'http' => 200, 'cf_success' => true );
-fire( 'sn_after_full_cache_flush', array( 'origin_html' => true, 'cloudflare' => true, 'verified' => true ), 0 );
-$coal = get_option( 'sn_last_purge_report', null );
-ok( true === ( $coal['legs']['varnish']['coalesced'] ?? null ), 'a coalesced purge carries the marker into the report' );
-ok( ! empty( $coal['legs']['varnish']['ok'] ), 'and still reads ok — a 422 that coalesced is a success' );
-ok( 422 === ( $coal['legs']['varnish']['http'] ?? 0 ), 'the real 422 is preserved alongside it' );
-ok( 92898575 === ( $coal['legs']['varnish']['operation_id'] ?? 0 ), 'the adopted operation id survives' );
-
-$GLOBALS['__options']['sn_cloudways_last_purge'] = array( 'time' => 444, 'ok' => true, 'http' => 200, 'operation_id' => 7, 'reauthed' => true );
-$GLOBALS['sn_cf_verified_result']                = array( 'accepted' => true, 'http' => 200, 'cf_success' => true );
-fire( 'sn_after_full_cache_flush', array( 'origin_html' => true, 'cloudflare' => true, 'verified' => true ), 0 );
-$re = get_option( 'sn_last_purge_report', null );
-ok( true === ( $re['legs']['varnish']['reauthed'] ?? null ), 'a re-authenticated purge carries the reauthed marker' );
-
-// An OLDER companion emits neither key; the leg must keep its existing shape
-// rather than gaining `false` values that read as "checked and negative".
-$GLOBALS['__options']['sn_cloudways_last_purge'] = array( 'time' => 555, 'ok' => true, 'http' => 200, 'operation_id' => 9 );
-$GLOBALS['sn_cf_verified_result']                = array( 'accepted' => true, 'http' => 200, 'cf_success' => true );
-fire( 'sn_after_full_cache_flush', array( 'origin_html' => true, 'cloudflare' => true, 'verified' => true ), 0 );
-$old = get_option( 'sn_last_purge_report', null );
-ok( ! array_key_exists( 'coalesced', $old['legs']['varnish'] ), 'an older companion produces no coalesced key at all' );
-ok( ! array_key_exists( 'reauthed', $old['legs']['varnish'] ), 'an older companion produces no reauthed key at all' );
-
-// Companion v10.52.5: "we do not know" must stay distinct from "it failed".
-$GLOBALS['__options']['sn_cloudways_last_purge'] = array( 'time' => 666, 'ok' => false, 'stage' => 'dispatch', 'http' => 0, 'operation_id' => 0, 'inconclusive' => true, 'error' => 'http_request_failed: cURL error 28' );
-$GLOBALS['sn_cf_verified_result']                = array( 'accepted' => true, 'http' => 200, 'cf_success' => true );
-fire( 'sn_after_full_cache_flush', array( 'origin_html' => true, 'cloudflare' => true, 'verified' => true ), 0 );
-$inc = get_option( 'sn_last_purge_report', null );
-ok( true === ( $inc['legs']['varnish']['inconclusive'] ?? null ), 'an inconclusive purge carries the marker into the report' );
-ok( 'dispatch' === ( $inc['legs']['varnish']['stage'] ?? '' ), 'the stage the attempt reached is carried too' );
-ok( empty( $inc['legs']['varnish']['ok'] ), 'and it still reads not-ok — inconclusive is not success' );
-
-$GLOBALS['__options']['sn_cloudways_last_purge'] = array( 'time' => 777, 'ok' => false, 'stage' => 'auth', 'http' => 429, 'error' => 'Too many requests' );
-$GLOBALS['sn_cf_verified_result']                = array( 'accepted' => true, 'http' => 200, 'cf_success' => true );
-fire( 'sn_after_full_cache_flush', array( 'origin_html' => true, 'cloudflare' => true, 'verified' => true ), 0 );
-$auth = get_option( 'sn_last_purge_report', null );
-ok( 'auth' === ( $auth['legs']['varnish']['stage'] ?? '' ), 'an auth-stage failure is distinguishable in the report' );
-ok( empty( $auth['legs']['varnish']['inconclusive'] ), 'an auth failure is not marked inconclusive' );
+// Breeze page cache: its hits leave without Cloudflare-CDN-Cache-Control or
+// Cache-Tag, so a tag purge cannot reach a copy the edge stored from one. The
+// report names whether it is on: true / false from Breeze's own setting, null
+// when there is no setting to read (never coerced to false).
+ok( array_key_exists( 'breeze_page_cache', $report['legs'] ) && null === $report['legs']['breeze_page_cache'], 'no Breeze setting => breeze_page_cache is null (unknown), not false' );
+$GLOBALS['__options']['breeze_basic_settings'] = array( 'breeze-active' => '1' );
+fire( 'sn_after_full_cache_flush', array( 'origin_html' => true, 'cloudflare' => true ), 0 );
+$dead = get_option( 'sn_last_purge_report', array() )['legs'];
+ok( array_key_exists( 'breeze_page_cache', $dead ) && null === $dead['breeze_page_cache'], 'Breeze deactivated (setting left behind, Breeze not loaded) => null, not true' );
+if ( ! class_exists( 'Breeze_PurgeCache' ) ) {
+	class Breeze_PurgeCache {} // Breeze loaded from here on.
+}
+fire( 'sn_after_full_cache_flush', array( 'origin_html' => true, 'cloudflare' => true ), 0 );
+ok( true === ( get_option( 'sn_last_purge_report', null )['legs']['breeze_page_cache'] ?? null ), 'Breeze page cache ON is flagged in the report' );
+$GLOBALS['__options']['breeze_basic_settings'] = array( 'breeze-active' => '0' );
+fire( 'sn_after_full_cache_flush', array( 'origin_html' => true, 'cloudflare' => true ), 0 );
+ok( false === ( get_option( 'sn_last_purge_report', null )['legs']['breeze_page_cache'] ?? null ), 'Breeze page cache OFF reads false' );
+$GLOBALS['__options']['breeze_basic_settings'] = array();
+fire( 'sn_after_full_cache_flush', array( 'origin_html' => true, 'cloudflare' => true ), 0 );
+ok( false === ( get_option( 'sn_last_purge_report', null )['legs']['breeze_page_cache'] ?? null ), 'a Breeze setting without the key reads false (Breeze treats a missing key as off)' );
+unset( $GLOBALS['__options']['breeze_basic_settings'] );
 
 // Auto (non-verified) purge: CF is dispatched but unconfirmed.
-$GLOBALS['__options']['sn_cloudways_last_purge'] = array( 'time' => 222, 'ok' => true, 'http' => 200, 'operation_id' => 55 );
 fire( 'sn_after_full_cache_flush', array( 'origin_html' => true, 'cloudflare' => true ), 0 );
 $report = get_option( 'sn_last_purge_report', null );
 ok( 'auto' === ( $report['mode'] ?? '' ), 'mode records an auto purge' );
@@ -356,7 +334,6 @@ echo "\nScenario 10: verified report carries routes; auto defers the probe\n";
 $GLOBALS['__filters']['sn_verified_purge_routes']   = array( function () { return array( '/' ); } );
 $GLOBALS['__filters']['sn_purge_verify_backoff_us'] = array( function () { return 0; } );
 $GLOBALS['__options']['sn_render_epoch']            = 9;
-$GLOBALS['__options']['sn_cloudways_last_purge']    = array( 'ok' => true, 'http' => 200, 'operation_id' => 1 );
 $GLOBALS['sn_cf_verified_result']                   = array( 'accepted' => true, 'http' => 200, 'cf_success' => true );
 $GLOBALS['__http_queue']                            = array( array( 'code' => 200, 'body' => epoch_html( 9 ), 'headers' => array( 'cf-cache-status' => 'MISS' ) ) );
 fire( 'sn_after_full_cache_flush', array( 'origin_html' => true, 'cloudflare' => true, 'verified' => true ), 0 );

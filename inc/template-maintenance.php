@@ -38,8 +38,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  *   2. Transients: the transient group in Redis when a persistent object
  *      cache is in use (14.10.0), plus the old targeted sn_* SQL DELETE.
  *   3. Origin HTML caches: Breeze's page files and minified assets called
- *      directly (14.10.0; its clear-all action flushed Redis), then the
- *      breeze_clear_varnish action.
+ *      directly (14.10.0; its clear-all action flushed Redis). No Varnish
+ *      step: Varnish is off for this app (2026.10 cache batch).
  *      Plugin no-op if not installed; safe to call unconditionally.
  *   4. CDN cache (Cloudflare) via our own purge module — gated on
  *      having a configured token.
@@ -148,7 +148,12 @@ function sn_purge_all_caches( $args = array() ) {
 		if ( class_exists( 'Breeze_PurgeCache' ) ) {
 			Breeze_PurgeCache::breeze_cache_flush( false, false, true );
 		}
-		do_action( 'breeze_clear_varnish' );
+		// 2026.10 cache batch: no breeze_clear_varnish here any more. Varnish is
+		// off for this app (Cloudways API: varnish_enabled false), so the action
+		// only ran the companion's Cloudways app purge, which with Varnish off
+		// just emptied Redis again (up to 10 s of blocking API calls). If Varnish
+		// is ever turned back on, restore the action here and the report leg in
+		// inc/purge-verify.php.
 	}
 
 	if ( $args['cloudflare'] ) {
