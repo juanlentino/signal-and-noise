@@ -16,6 +16,14 @@ nothing here is edited by hand again.
 
 All notable changes to Signal & Noise are documented here.
 
+## [2026.10.6] - 2026-10-15 — One EN | ES switch in the header on every page
+
+### Changed
+- **One language switch, in the header, on every page.** The EN | ES control is now a bordered, two-part switch drawn like the theme toggle. The current language is filled; the other is the link, with the toggle's hover and focus. On a page with a translation it goes there; on an English-only page (notes, résumé, colophon), ES goes to /inicio/ and its accessible name says "página de inicio". It renders nothing until the Spanish home is published.
+
+### Removed
+- **The footer's language link.** The header switch is the one place (owner, 2026-10-15).
+
 ## [2026.10.5] - 2026-10-15 — The header and footer in Spanish, and a site-wide Español link
 
 ### Added
