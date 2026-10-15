@@ -116,6 +116,19 @@ add_action(
 add_filter( 'site_icon_meta_tags', '__return_empty_array' );
 
 /**
+ * The toggle's words in the page's language (Spanish on a Spanish page,
+ * inc/lang-chrome.php). Guarded: this file loads before that one, and the
+ * fixture suites load it alone.
+ *
+ * @param string $en English.
+ * @param string $es Spanish.
+ * @return string
+ */
+function sn_dark_mode_t( $en, $es ) {
+	return function_exists( 'sn_theme_t' ) ? sn_theme_t( $en, $es ) : $en;
+}
+
+/**
  * The toggle button.
  *
  * TWO PLACEMENTS, ONE CONTROL — and the reason is the footer, not the toggle.
@@ -147,19 +160,6 @@ add_filter( 'site_icon_meta_tags', '__return_empty_array' );
  * @param array $atts Shortcode attributes. `placement`: 'footer' (default) or 'header'.
  * @return string Button markup.
  */
-/**
- * The toggle's words in the page's language (Spanish on a Spanish page,
- * inc/lang-chrome.php). Guarded: this file loads before that one, and the
- * fixture suites load it alone.
- *
- * @param string $en English.
- * @param string $es Spanish.
- * @return string
- */
-function sn_dark_mode_t( $en, $es ) {
-	return function_exists( 'sn_theme_t' ) ? sn_theme_t( $en, $es ) : $en;
-}
-
 function sn_dark_mode_toggle_markup( $atts = array() ) {
 	$atts      = shortcode_atts( array( 'placement' => 'footer' ), (array) $atts, 'sn_theme_toggle' );
 	$placement = ( 'header' === $atts['placement'] ) ? 'header' : 'footer';

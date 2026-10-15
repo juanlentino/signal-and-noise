@@ -131,7 +131,12 @@ foreach ( array( 'core/navigation', 'core/html' ) as $sn_chrome_block ) {
 	add_filter(
 		'render_block_' . $sn_chrome_block,
 		static function ( $html ) {
-			return sn_theme_is_spanish() ? sn_lang_chrome_strings( (string) $html, sn_lang_spanish_url_for( '/' ) ) : $html;
+			if ( ! sn_theme_is_spanish() ) {
+				return $html;
+			}
+			// Only the logo needs the Spanish home; skip the lookup elsewhere.
+			$es_home = false !== strpos( (string) $html, 'sn-logo-link' ) ? sn_lang_spanish_url_for( '/' ) : '';
+			return sn_lang_chrome_strings( (string) $html, $es_home );
 		}
 	);
 }
