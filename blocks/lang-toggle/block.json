@@ -5,12 +5,26 @@
 	"title": "Language toggle (EN / ES)",
 	"category": "signal-noise",
 	"icon": "translation",
-	"description": "Links an English page and its Spanish version. Renders nothing on a page with no published counterpart.",
+	"description": "The EN / ES link. Header: on a page with a published counterpart. Footer: the site-wide Español / English link, once the Spanish home is published.",
 	"textdomain": "signal-and-noise",
 	"supports": {
 		"autoRegister": true,
-		"html": false,
-		"multiple": false
+		"html": false
 	},
-	"render": "file:./render.php"
+	"render": "file:./render.php",
+	"attributes": {
+		"placement": {
+			"type": "string",
+			"enum": [
+				"header",
+				"footer"
+			],
+			"default": "header"
+		}
+	},
+	"example": {
+		"attributes": {
+			"placement": "header"
+		}
+	}
 }

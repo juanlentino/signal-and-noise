@@ -33,7 +33,7 @@
  * @package SignalNoise
  */
 if ( ! defined( 'ABSPATH' ) ) { exit; }
-echo <<<'HTML'
+$sn_meta_nav = <<<'HTML'
 
 		<nav class="sn-footer__meta-nav" aria-label="Site meta">
 			<a href="/now" aria-label="Now: what I&#8217;m focused on" title="Now"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="6.25"/><path d="M8 4.75V8l2.25 1.5"/></svg></a>
@@ -47,3 +47,7 @@ echo <<<'HTML'
 			<a href="/privacy-policy" aria-label="Privacy policy" title="Privacy"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><path d="M8 2 3 3.9v4c0 3 2.1 5.2 5 6.2 2.9-1 5-3.2 5-6.2v-4L8 2Z"/><path d="M6 7.9 7.4 9.3 10.2 6.3"/></svg></a>
 		</nav>
 HTML . "\n\t\t";
+// On a Spanish page the labels switch (inc/lang-chrome-footer.php); English
+// pages get the pinned bytes above, untouched.
+// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static markup.
+echo function_exists( 'sn_theme_is_spanish' ) && sn_theme_is_spanish() ? sn_lang_meta_nav( $sn_meta_nav ) : $sn_meta_nav;
