@@ -2026,39 +2026,48 @@ img.sn-img-dim {
 	margin-right: auto;
 }
 
-/* The EN / ES link (inc/lang-toggle.php): the header's nav voice, small. The
-   link keeps the site's focus ring; the current language is plain text. */
-.sn-lang-toggle {
+/* The EN | ES switch (inc/lang-toggle.php): drawn like the theme toggle,
+   one hairline box split in two. The current language is filled (bone on
+   void, inverting with the palette); the other is the link and takes the
+   toggle's blood hover and focus. 24px tall minimum (WCAG 2.5.8). */
+.sn-lang-switch {
 	display: inline-flex;
-	align-items: center;
-	gap: 0.4em;
+	flex-shrink: 0;
+	border: 1px solid color-mix( in srgb, var(--wp--preset--color--bone) 38%, transparent );
 	font-family: var(--wp--preset--font-family--heading);
-	font-size: var(--wp--preset--font-size--nav);
-	letter-spacing: var(--wp--custom--letter-spacing--wide);
+	font-size: 0.7rem;
+	line-height: 1;
+	letter-spacing: 0.08em;
 	text-transform: uppercase;
 }
-.sn-lang-toggle__current {
-	font-weight: 400;
-}
-.sn-lang-toggle__link {
-	color: inherit;
-	text-decoration: underline;
-	text-underline-offset: 0.2em;
-	min-height: 24px;
+.sn-lang-switch__seg {
 	display: inline-flex;
 	align-items: center;
+	min-height: 24px;
+	padding: 0.4rem 0.6rem;
+	color: var(--wp--preset--color--bone);
+	text-decoration: none;
+	transition: color 0.2s ease, background-color 0.2s ease;
 }
-/* The footer's site-wide language link: the meta strip's voice. */
-.sn-lang-footer {
-	margin: 0;
-	font-size: max(var(--wp--custom--font-size--micro), 11px);
+.sn-lang-switch__seg.is-current {
+	background: var(--wp--preset--color--bone);
+	color: var(--wp--preset--color--void);
 }
-.sn-lang-footer a {
-	color: inherit;
-	text-underline-offset: 0.2em;
+.sn-lang-switch__seg:focus-visible {
+	background: var(--wp--preset--color--blood);
+	color: var(--wp--preset--color--void);
+	outline: none;
 }
-.sn-lang-toggle__sep {
-	opacity: 0.5;
+@media (hover: hover) {
+	a.sn-lang-switch__seg:hover {
+		background: var(--wp--preset--color--blood);
+		color: var(--wp--preset--color--void);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.sn-lang-switch__seg {
+		transition: none;
+	}
 }
 
 @media (max-width: 781px) {

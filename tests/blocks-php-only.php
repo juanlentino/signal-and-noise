@@ -116,9 +116,9 @@ foreach ( $files as $f ) {
 	if ( preg_match_all( '/<!-- wp:signal-noise\/([a-z][a-z0-9-]*)( \{[^}]*\})? \/-->/', $h, $m ) ) { foreach ( $m[1] as $n ) { $placed[ $n ] = ( $placed[ $n ] ?? 0 ) + 1; } }
 }
 ok( array() === $left, 'no template or part emits a migrated shortcode' . ( $left ? ' — LEFT: ' . implode( ', ', $left ) : '' ) );
-$want = array( 'prov-chip' => 1, 'prov-panel' => 1, 'related-notes' => 1, 'cited-by' => 1, 'note-share' => 1, 'note-reply' => 1, 'updated-date' => 1, 'post-pillar' => 1, 'theme-toggle' => 2, 'suggestions-404' => 1, 'meta-nav' => 1, 'next-essay' => 1, 'lang-toggle' => 2 );
+$want = array( 'prov-chip' => 1, 'prov-panel' => 1, 'related-notes' => 1, 'cited-by' => 1, 'note-share' => 1, 'note-reply' => 1, 'updated-date' => 1, 'post-pillar' => 1, 'theme-toggle' => 2, 'suggestions-404' => 1, 'meta-nav' => 1, 'next-essay' => 1, 'lang-toggle' => 1 );
 ksort( $want ); ksort( $placed );
-ok( $want === $placed, 'each block is placed exactly where its shortcode was (toggle twice): ' . json_encode( $placed ) );
+ok( $want === $placed, 'each block is placed exactly where its shortcode was (theme toggle twice): ' . json_encode( $placed ) );
 ok( false !== strpos( (string) file_get_contents( $root . '/parts/header.html' ), '<!-- wp:signal-noise/theme-toggle {"placement":"header"} /-->' ), 'the header toggle carries placement:header' );
 ok( false !== strpos( (string) file_get_contents( $root . '/parts/footer.html' ), '<!-- wp:signal-noise/theme-toggle /-->' ), 'the footer toggle carries no attribute (default footer)' );
 ok( false !== strpos( (string) file_get_contents( $root . '/templates/single.html' ), '[sn_reading_path]' ), 'the PLUGIN\'s [sn_reading_path] stays a shortcode — not this arc\'s' );

@@ -2,29 +2,15 @@
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 3,
 	"name": "signal-noise/lang-toggle",
-	"title": "Language toggle (EN / ES)",
+	"title": "Language switch (EN | ES)",
 	"category": "signal-noise",
 	"icon": "translation",
-	"description": "The EN / ES link. Header: on a page with a published counterpart. Footer: the site-wide Español / English link, once the Spanish home is published.",
+	"description": "The EN | ES switch in the header: to this page's translation, or to the Spanish home when there is none. Renders nothing until the Spanish home is published.",
 	"textdomain": "signal-and-noise",
 	"supports": {
 		"autoRegister": true,
-		"html": false
+		"html": false,
+		"multiple": false
 	},
-	"render": "file:./render.php",
-	"attributes": {
-		"placement": {
-			"type": "string",
-			"enum": [
-				"header",
-				"footer"
-			],
-			"default": "header"
-		}
-	},
-	"example": {
-		"attributes": {
-			"placement": "header"
-		}
-	}
+	"render": "file:./render.php"
 }

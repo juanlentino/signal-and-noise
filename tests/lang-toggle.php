@@ -29,17 +29,18 @@ function sn_discography_shortcode_bridge_probe() {
 }
 $pair = array( 'en' => 'https://x.test/music/', 'es' => 'https://x.test/musica/' );
 
-echo "Group: the toggle\n";
-ok( '' === sn_lang_toggle_html( array(), 'en' ), 'no pair: renders nothing (an unpaired page, or a draft translation)' );
-ok( '' === sn_lang_toggle_html( array( 'en' => 'https://x.test/music/' ), 'en' ), 'half a pair: renders nothing' );
-$en = sn_lang_toggle_html( $pair, 'en' );
-ok( false !== strpos( $en, '<nav class="sn-lang-toggle" aria-label="Language">' ), 'an English page labels the nav in English' );
-ok( false !== strpos( $en, 'href="https://x.test/musica/" hreflang="es" lang="es-AR" aria-label="Español (ES)">ES</a>' ), 'English page: ES is a link to the Spanish page, hreflang es, lang es-AR, name keeps the visible ES' );
-ok( false !== strpos( $en, '<span class="sn-lang-toggle__current" aria-current="true">EN</span>' ), 'English page: EN is plain text marked current' );
+echo "Group: the switch\n";
+ok( '' === sn_lang_toggle_html( array(), 'en' ), 'no pair and no Spanish home: nothing (the site before /inicio/ is published)' );
+ok( '' === sn_lang_toggle_html( array( 'en' => 'https://x.test/music/' ), 'en' ), 'half a pair, no Spanish home: nothing' );
+$en = sn_lang_toggle_html( $pair, 'en', 'https://x.test/inicio/' );
+ok( 0 === strpos( $en, '<nav class="sn-lang-switch" aria-label="Language">' ), 'an English page labels the switch in English' );
+ok( false !== strpos( $en, '<span class="sn-lang-switch__seg is-current" aria-current="true">EN</span><a class="sn-lang-switch__seg" href="https://x.test/musica/" hreflang="es" lang="es-AR" aria-label="Español (ES)">ES</a>' ), 'EN is the filled current segment, ES links to the translation; EN | ES order, no separator glyph' );
 ok( 1 === substr_count( $en, '<a ' ), 'exactly one link (no link to the page you are on)' );
-$es = sn_lang_toggle_html( $pair, 'es' );
-ok( false !== strpos( $es, 'aria-label="Idioma"' ) && false !== strpos( $es, 'href="https://x.test/music/" hreflang="en" lang="en" aria-label="English (EN)">EN</a>' ), 'Spanish page: nav labelled Idioma, EN links back to English' );
-ok( false === strpos( $en . $es, 'cookie' ) && false === strpos( $en . $es, 'localStorage' ), 'a plain link: no storage' );
+$es = sn_lang_toggle_html( $pair, 'es', 'https://x.test/inicio/' );
+ok( false !== strpos( $es, 'aria-label="Idioma"' ) && false !== strpos( $es, '<a class="sn-lang-switch__seg" href="https://x.test/music/" hreflang="en" lang="en" aria-label="English (EN)">EN</a><span class="sn-lang-switch__seg is-current" aria-current="true">ES</span>' ), 'Spanish page: labelled Idioma, EN links back, ES is current' );
+$home = sn_lang_toggle_html( array(), 'en', 'https://x.test/inicio/' );
+ok( false !== strpos( $home, 'href="https://x.test/inicio/"' ) && false !== strpos( $home, 'aria-label="Español (ES): página de inicio"' ), 'an English page with no translation: ES goes to the Spanish home and its name says so' );
+ok( false === strpos( $en . $es . $home, 'cookie' ) && false === strpos( $en . $es . $home, 'localStorage' ), 'plain links: no storage' );
 ok( '' === sn_lang_toggle_markup(), 'without the companion plugin, the block renders nothing' );
 ok( false === sn_theme_is_spanish(), 'without the plugin, no page is Spanish' );
 
