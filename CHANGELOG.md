@@ -12,6 +12,9 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Changed
+- **The Varnish comment in the maintenance purge says the companion's purge is retired.** It told a future reader to restore `breeze_clear_varnish` if Varnish came back; the plugin retired that purge on 2026-10-14 (signal-and-noise-tools#2085), so the action would reach nothing. Comment only.
+
 ## [2026.10.3] - 2026-10-14 — the cache has one layer, and the app's browser stops counting
 
 ### Changed

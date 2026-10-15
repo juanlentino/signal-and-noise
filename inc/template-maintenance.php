@@ -151,9 +151,10 @@ function sn_purge_all_caches( $args = array() ) {
 		// 2026.10 cache batch: no breeze_clear_varnish here any more. Varnish is
 		// off for this app (Cloudways API: varnish_enabled false), so the action
 		// only ran the companion's Cloudways app purge, which with Varnish off
-		// just emptied Redis again (up to 10 s of blocking API calls). If Varnish
-		// is ever turned back on, restore the action here and the report leg in
-		// inc/purge-verify.php.
+		// just emptied Redis again (up to 10 s of blocking API calls). The
+		// companion retired that purge on 2026-10-14 (plugin #2085), so restoring
+		// the action would reach nothing; Varnish coming back needs a new purge
+		// leg in the companion, not this action.
 	}
 
 	if ( $args['cloudflare'] ) {
