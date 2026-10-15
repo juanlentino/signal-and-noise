@@ -44,6 +44,8 @@ ok( false === strpos( $en . $es . $home, 'cookie' ) && false === strpos( $en . $
 ok( '' === sn_lang_toggle_markup(), 'without the companion plugin, the block renders nothing' );
 ok( false === sn_theme_is_spanish(), 'without the plugin, no page is Spanish' );
 
+ok( false !== strpos( sn_discography_shortcode_bridge_probe(), 'Since 2022 alone, roughly 110 tracks' ), 'the bridge line is English on an English page' );
+
 echo "\nGroup: the release note on a card\n";
 ok( '' === sn_discography_render_note( array() ), 'no note: nothing' );
 ok( '<p class="sn-disco-note">Stage manager (listed on Muso.AI as Manager).</p>' === sn_discography_render_note( array( 'note' => 'Stage manager (listed on Muso.AI as Manager).' ) ), 'an English note renders on an English page' );

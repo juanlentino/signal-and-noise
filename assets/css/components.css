@@ -2032,6 +2032,7 @@ img.sn-img-dim {
    toggle's blood hover and focus. 24px tall minimum (WCAG 2.5.8). */
 .sn-lang-switch {
 	display: inline-flex;
+	flex-shrink: 0;
 	border: 1px solid color-mix( in srgb, var(--wp--preset--color--bone) 38%, transparent );
 	font-family: var(--wp--preset--font-family--heading);
 	font-size: 0.7rem;
