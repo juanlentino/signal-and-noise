@@ -18,11 +18,15 @@ function __( $s ) { return $s; }
 function _n( $a, $b, $n ) { return 1 === $n ? $a : $b; }
 function esc_html__( $s ) { return esc_html( $s ); }
 function add_shortcode() {}
-function apply_filters( $t, $v ) { return $v; }
+function apply_filters( $t, $v ) { return 'sn_discography_entries' === $t ? ( $GLOBALS['__entries'] ?? $v ) : $v; }
 
 require __DIR__ . '/../inc/lang-toggle.php';
 require __DIR__ . '/../inc/discography-render.php';
 
+function sn_discography_shortcode_bridge_probe() {
+	$GLOBALS['__entries'] = array( array( 'id' => 'a', 'title' => 'T', 'year' => 2020, 'roles' => array( 'Mixing' ) ) );
+	return sn_discography_shortcode();
+}
 $pair = array( 'en' => 'https://x.test/music/', 'es' => 'https://x.test/musica/' );
 
 echo "Group: the toggle\n";
@@ -30,7 +34,7 @@ ok( '' === sn_lang_toggle_html( array(), 'en' ), 'no pair: renders nothing (an u
 ok( '' === sn_lang_toggle_html( array( 'en' => 'https://x.test/music/' ), 'en' ), 'half a pair: renders nothing' );
 $en = sn_lang_toggle_html( $pair, 'en' );
 ok( false !== strpos( $en, '<nav class="sn-lang-toggle" aria-label="Language">' ), 'an English page labels the nav in English' );
-ok( false !== strpos( $en, 'href="https://x.test/musica/" hreflang="es" lang="es" aria-label="Español (ES)">ES</a>' ), 'English page: ES is a link to the Spanish page, hreflang + lang es, name keeps the visible ES' );
+ok( false !== strpos( $en, 'href="https://x.test/musica/" hreflang="es" lang="es-AR" aria-label="Español (ES)">ES</a>' ), 'English page: ES is a link to the Spanish page, hreflang es, lang es-AR, name keeps the visible ES' );
 ok( false !== strpos( $en, '<span class="sn-lang-toggle__current" aria-current="true">EN</span>' ), 'English page: EN is plain text marked current' );
 ok( 1 === substr_count( $en, '<a ' ), 'exactly one link (no link to the page you are on)' );
 $es = sn_lang_toggle_html( $pair, 'es' );
@@ -38,6 +42,8 @@ ok( false !== strpos( $es, 'aria-label="Idioma"' ) && false !== strpos( $es, 'hr
 ok( false === strpos( $en . $es, 'cookie' ) && false === strpos( $en . $es, 'localStorage' ), 'a plain link: no storage' );
 ok( '' === sn_lang_toggle_markup(), 'without the companion plugin, the block renders nothing' );
 ok( false === sn_theme_is_spanish(), 'without the plugin, no page is Spanish' );
+
+ok( false !== strpos( sn_discography_shortcode_bridge_probe(), 'Since 2022 alone, roughly 110 tracks' ), 'the bridge line is English on an English page' );
 
 echo "\nGroup: the release note on a card\n";
 ok( '' === sn_discography_render_note( array() ), 'no note: nothing' );
@@ -59,6 +65,7 @@ ok( false !== strpos( sn_lang_toggle_markup(), 'aria-label="Idioma"' ), 'the blo
 ok( 'lanzamientos' === sn_disco_t( 'releases', 'lanzamientos' ), 'a label switches to Spanish' );
 ok( '<p class="sn-disco-note">Jefe de escenario.</p>' === sn_discography_render_note( array( 'note' => 'Stage manager.', 'note_es' => 'Jefe de escenario.' ) ), 'a Spanish note wins on a Spanish page' );
 ok( '<p class="sn-disco-note" lang="en">Stage manager.</p>' === sn_discography_render_note( array( 'note' => 'Stage manager.', 'note_es' => '' ) ), 'an empty Spanish note falls back to English, marked lang="en"' );
+ok( false !== strpos( sn_discography_shortcode_bridge_probe(), 'Solo desde 2022, pasaron por mis manos unos 110 temas.' ), 'the bridge line is Spanish on a Spanish page' );
 $card = sn_discography_render_card( array( 'title' => 'T', 'spotify_id' => 'abc', 'muso_url' => 'https://muso.ai/x' ) );
 ok( false !== strpos( $card, 'aria-label="Reproducir T"' ) && false !== strpos( $card, 'Créditos' ), 'the card\'s play name and Credits link are Spanish' );
 

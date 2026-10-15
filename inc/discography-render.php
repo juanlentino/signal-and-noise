@@ -161,7 +161,7 @@ function sn_discography_shortcode() {
 	// The bridge to /resume's "~110 tracks since 2022": static copy, never
 	// computed from the discography count. Below the sticky rail, not in it,
 	// so it scrolls with the page instead of riding the rail.
-	$out .= '<p class="sn-catalog-meta sn-disco-bridge"' . ( sn_disco_is_es() ? ' lang="en"' : '' ) . '>' . esc_html__( 'A selection. Since 2022 alone, roughly 110 tracks have passed through my hands.', 'signal-and-noise' ) . '</p>';
+	$out .= '<p class="sn-catalog-meta sn-disco-bridge">' . esc_html( sn_disco_t( __( 'A selection. Since 2022 alone, roughly 110 tracks have passed through my hands.', 'signal-and-noise' ), 'Una selección. Solo desde 2022, pasaron por mis manos unos 110 temas.' ) ) . '</p>';
 
 	// ── Year-grouped cover grid. ──
 	foreach ( $by_year as $year => $year_entries ) {
@@ -317,10 +317,9 @@ function sn_disco_is_es() {
 }
 
 /**
- * A discography label in the page's language. The Spanish strings are the
- * interface's own words (counts, buttons, filters), not the owner's copy:
- * the bridge line under the rail is his sentence and stays English, marked
- * lang="en", until he writes the Spanish one into the page.
+ * A discography label in the page's language: the interface's words (counts,
+ * buttons, filters) and the bridge line, whose Spanish the owner approved
+ * on 2026-10-15 (Argentine Spanish, voseo).
  *
  * @param string $en English (already passed through __()).
  * @param string $es Spanish.

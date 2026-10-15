@@ -46,7 +46,9 @@ function sn_music_featured_shortcode() {
 
 	$out  = '<div class="sn-music-featured">';
 	$out .= '<p class="sn-music-featured__label"><span class="sn-music-featured__dot" aria-hidden="true"></span>'
-		. esc_html__( 'Featured', 'signal-and-noise' ) . ' &middot; ' . esc_html__( 'Press play', 'signal-and-noise' ) . '</p>';
+		. ( function_exists( 'sn_theme_is_spanish' ) && sn_theme_is_spanish()
+			? esc_html( 'Destacado' ) . ' &middot; ' . esc_html( 'Escuchá' ) // /musica/: Argentine Spanish (owner, 2026-10-15).
+			: esc_html__( 'Featured', 'signal-and-noise' ) . ' &middot; ' . esc_html__( 'Press play', 'signal-and-noise' ) ) . '</p>';
 	$out .= '<iframe class="sn-music-featured__player" src="' . esc_url( $embed )
 		. '" width="100%" height="' . (int) $height . '" loading="lazy"'
 		. ' allow="encrypted-media; clipboard-write; fullscreen; picture-in-picture" allowfullscreen'

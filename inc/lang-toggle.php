@@ -32,14 +32,15 @@ function sn_lang_toggle_html( $pair, $current ) {
 		return '';
 	}
 	$langs = array(
-		'en' => array( 'EN', 'English (EN)' ),
-		'es' => array( 'ES', 'Español (ES)' ),
+		// Visible text, accessible name, lang (the Spanish pages are es-AR).
+		'en' => array( 'EN', 'English (EN)', 'en' ),
+		'es' => array( 'ES', 'Español (ES)', 'es-AR' ),
 	);
 	$items = array();
 	foreach ( $langs as $code => $text ) {
 		$items[] = $code === $current
 			? '<span class="sn-lang-toggle__current" aria-current="true">' . esc_html( $text[0] ) . '</span>'
-			: '<a class="sn-lang-toggle__link" href="' . esc_url( $pair[ $code ] ) . '" hreflang="' . esc_attr( $code ) . '" lang="' . esc_attr( $code ) . '" aria-label="' . esc_attr( $text[1] ) . '">' . esc_html( $text[0] ) . '</a>';
+			: '<a class="sn-lang-toggle__link" href="' . esc_url( $pair[ $code ] ) . '" hreflang="' . esc_attr( $code ) . '" lang="' . esc_attr( $text[2] ) . '" aria-label="' . esc_attr( $text[1] ) . '">' . esc_html( $text[0] ) . '</a>';
 	}
 	return '<nav class="sn-lang-toggle" aria-label="' . esc_attr( 'es' === $current ? 'Idioma' : 'Language' ) . '">'
 		. implode( '<span class="sn-lang-toggle__sep" aria-hidden="true">/</span>', $items )
