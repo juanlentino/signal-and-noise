@@ -53,7 +53,7 @@ function sn_enqueue_cms_page_styles() {
 			array( 'sn-components' ),
 			sn_asset_ver( 'assets/css/workflow.css' )
 		);
-	} elseif ( is_page( 'resume' ) ) {
+	} elseif ( is_page( 'resume' ) || ( function_exists( 'sn_lang_is_page' ) && sn_lang_is_page( 'resume' ) ) ) { // and /cv/, its Spanish page
 		wp_enqueue_style(
 			'sn-resume',
 			get_theme_file_uri( 'assets/css/resume.css' ),

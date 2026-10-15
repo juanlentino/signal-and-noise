@@ -193,5 +193,6 @@ ok( 1 === preg_match( '/pre\s*\{[^}]*border:[^;]*CanvasText/', $wf_fc ), 'under 
 $fn = (string) @file_get_contents( __DIR__ . '/../functions.php' );
 ok( strpos( $fn, 'inc/cms-page-styles.php' ) !== false, 'functions.php requires inc/cms-page-styles.php' );
 
+ok( false !== strpos( (string) file_get_contents( __DIR__ . '/../inc/cms-page-styles.php' ), "sn_lang_is_page( 'resume' )" ), 'resume.css also loads on /cv/, the Spanish résumé (paired to /resume)' );
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
