@@ -37,7 +37,7 @@ function sn_lang_nav_labels() {
 	return array(
 		'/'         => 'Inicio',
 		'/about'    => 'Sobre mí',
-		'/resume'   => 'Currículum',
+		'/resume'   => 'Curriculum vitae',
 		'/music'    => 'Música',
 		'/services' => 'Servicios',
 		'/notes'    => 'Notas',
