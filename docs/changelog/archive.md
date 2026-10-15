@@ -16,6 +16,12 @@ nothing here is edited by hand again.
 
 All notable changes to Signal & Noise are documented here.
 
+## [2026.10.5] - 2026-10-15 — The header and footer in Spanish, and a site-wide Español link
+
+### Added
+- **The header and footer speak Spanish on the Spanish pages** (`inc/lang-chrome.php`, `inc/lang-chrome-footer.php`). The header nav reads Inicio, Sobre mí, Currículum, Música, Servicios, Notas and Contacto. Each link points at the published Spanish page where one exists and at the English page otherwise, and `aria-current` marks the Spanish page being viewed. The logo links to /inicio/. The menu, search and theme-toggle labels switch to Spanish, and so do the footer meta-nav labels: the pages they reach stay English, and each label says "(en inglés)" and carries `hreflang="en"`. English pages render as before, byte for byte; `tests/footer-meta-nav.php` still pins the meta-nav. Owner, 2026-10-15.
+- **A site-wide language link in the footer** (`signal-noise/lang-toggle` with `placement: footer`). Once the Spanish home is published, every English page shows "Español" (to its own translation, else /inicio/) and every Spanish page shows "English". It is a plain link with no storage. Pinned in `tests/lang-chrome.php`.
+
 ## [2026.10.4] - 2026-10-15 — Spanish storefront: the EN / ES toggle and Spanish discography strings
 
 ### Added
