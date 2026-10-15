@@ -1142,6 +1142,13 @@
 	color: var(--wp--preset--color--rust);
 	margin: 0.45rem 0 0;
 }
+.sn-disco-note {
+	font-family: var(--wp--preset--font-family--body);
+	font-size: max(0.74rem, 12px);
+	font-style: italic;
+	color: var(--wp--preset--color--bone);
+	margin: 0.35rem 0 0;
+}
 .sn-disco-credits {
 	display: inline-block;
 	font-family: 'DM Mono', 'Courier New', monospace;
@@ -2017,6 +2024,32 @@ img.sn-img-dim {
    middle of the gap, competing with the logo. */
 .sn-header .sn-site-title {
 	margin-right: auto;
+}
+
+/* The EN / ES link (inc/lang-toggle.php): the header's nav voice, small. The
+   link keeps the site's focus ring; the current language is plain text. */
+.sn-lang-toggle {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4em;
+	font-family: var(--wp--preset--font-family--heading);
+	font-size: var(--wp--preset--font-size--nav);
+	letter-spacing: var(--wp--custom--letter-spacing--wide);
+	text-transform: uppercase;
+}
+.sn-lang-toggle__current {
+	font-weight: 400;
+}
+.sn-lang-toggle__link {
+	color: inherit;
+	text-decoration: underline;
+	text-underline-offset: 0.2em;
+	min-height: 24px;
+	display: inline-flex;
+	align-items: center;
+}
+.sn-lang-toggle__sep {
+	opacity: 0.5;
 }
 
 @media (max-width: 781px) {

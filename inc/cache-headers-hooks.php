@@ -72,7 +72,11 @@ function sn_edge_cache_note_id() {
  */
 function sn_edge_cache_request_lists() {
 	$uri = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
-	return sn_edge_cache_is_list_path( $uri ) || is_front_page() || is_home() || is_archive();
+	// The Spanish home (/inicio/, paired to the front page by the plugin's
+	// inc/bilingual.php) shows what the home shows, so it lists notes too.
+	$es_home = function_exists( 'sn_lang_en_counterpart' ) && is_page()
+		&& (int) get_option( 'page_on_front' ) === (int) sn_lang_en_counterpart( get_queried_object_id() );
+	return sn_edge_cache_is_list_path( $uri ) || is_front_page() || is_home() || is_archive() || $es_home;
 }
 
 /**

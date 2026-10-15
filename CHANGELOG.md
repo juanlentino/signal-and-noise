@@ -12,7 +12,13 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Added
+- **The EN / ES toggle (`signal-noise/lang-toggle`, in the header).** On a storefront page that has a published Spanish version (`/inicio/`, `/sobre-mi/`, `/musica/`, `/servicios/`; the pairing lives in the companion plugin's `inc/bilingual.php`), the header shows `EN / ES`. The other language is a plain link carrying `hreflang` and `lang`, and its accessible name keeps the visible letters. The current language is text marked `aria-current`. It renders nothing on any other page and nothing without the plugin. It uses no cookie, no storage and no redirect by browser language. `inc/lang-toggle.php`, pinned in `tests/lang-toggle.php`.
+- **/musica speaks Spanish in the discography's interface:** the release counts, the filter group and chips, Credits, Liner notes, the track counts and the play names. The bridge line under the filters is the owner's copy, so it stays English and is marked `lang="en"`.
+- **A release note under a card's roles** (`sn_discography_render_note()`), from the plugin's new Release notes box: the Richter stage-manager line. On a Spanish page an empty Spanish note shows the English one, marked `lang="en"`.
+
 ### Changed
+- **`/inicio/` is tagged `sn-lists`, like the home page it translates,** so a note save refreshes it too.
 - **The Varnish comment in the maintenance purge says the companion's purge is retired.** It told a future reader to restore `breeze_clear_varnish` if Varnish came back; the plugin retired that purge on 2026-10-14 (signal-and-noise-tools#2085), so the action would reach nothing. Comment only.
 
 ## [2026.10.3] - 2026-10-14 — the cache has one layer, and the app's browser stops counting

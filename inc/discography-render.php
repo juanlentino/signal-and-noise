@@ -138,7 +138,7 @@ function sn_discography_shortcode() {
 	// ── Controls rail: count + role-filter chips. ──
 	$out .= '<div class="sn-disco-controls">';
 	$out .= '<p class="sn-disco-count"><strong data-disco-count>' . (int) $count . '</strong> '
-		. esc_html__( 'releases', 'signal-and-noise' );
+		. esc_html( sn_disco_t( __( 'releases', 'signal-and-noise' ), 'lanzamientos' ) );
 	if ( ! empty( $years ) ) {
 		$out .= ' <span class="sn-disco-span">&middot; ' . (int) min( $years ) . ' &rarr; ' . (int) max( $years ) . '</span>';
 	}
@@ -146,9 +146,9 @@ function sn_discography_shortcode() {
 
 	// Per-role count badges ("Mixing · 6"). The middot separator is added in CSS
 	// (::before on .sn-disco-chip__count) so the screen-reader label stays clean.
-	$out .= '<div class="sn-disco-filters" role="group" aria-label="' . esc_attr( 'Filter by role' ) . '">';
+	$out .= '<div class="sn-disco-filters" role="group" aria-label="' . esc_attr( sn_disco_t( 'Filter by role', 'Filtrar por rol' ) ) . '">';
 	$out .= '<button type="button" class="sn-disco-chip is-active" data-role="*" data-count="' . (int) $count . '" aria-pressed="true">'
-		. esc_html__( 'All', 'signal-and-noise' )
+		. esc_html( sn_disco_t( __( 'All', 'signal-and-noise' ), 'Todos' ) )
 		. ' <span class="sn-disco-chip__count">' . (int) $count . '</span></button>';
 	foreach ( $roles as $role ) {
 		$role_count = sn_discography_count_for_role( $entries, $role );
@@ -161,7 +161,7 @@ function sn_discography_shortcode() {
 	// The bridge to /resume's "~110 tracks since 2022": static copy, never
 	// computed from the discography count. Below the sticky rail, not in it,
 	// so it scrolls with the page instead of riding the rail.
-	$out .= '<p class="sn-catalog-meta sn-disco-bridge">' . esc_html__( 'A selection. Since 2022 alone, roughly 110 tracks have passed through my hands.', 'signal-and-noise' ) . '</p>';
+	$out .= '<p class="sn-catalog-meta sn-disco-bridge"' . ( sn_disco_is_es() ? ' lang="en"' : '' ) . '>' . esc_html__( 'A selection. Since 2022 alone, roughly 110 tracks have passed through my hands.', 'signal-and-noise' ) . '</p>';
 
 	// ── Year-grouped cover grid. ──
 	foreach ( $by_year as $year => $year_entries ) {
@@ -171,7 +171,7 @@ function sn_discography_shortcode() {
 		$out .= '<section class="sn-disco-year" data-year="' . esc_attr( (string) $year ) . '">';
 		$out .= '<h2 class="sn-disco-year__label">' . esc_html( $year_label )
 			. ' <span class="sn-disco-year__count">' . (int) $n . ' '
-			. esc_html( 1 === $n ? 'release' : 'releases' ) . '</span></h2>';
+			. esc_html( 1 === $n ? sn_disco_t( 'release', 'lanzamiento' ) : sn_disco_t( 'releases', 'lanzamientos' ) ) . '</span></h2>';
 		$out .= '<div class="sn-disco-grid">';
 		foreach ( $year_entries as $entry ) {
 			$out .= sn_discography_render_card( $entry );
@@ -181,7 +181,7 @@ function sn_discography_shortcode() {
 	}
 
 	// Hidden empty state — revealed by the filter JS when nothing matches.
-	$out .= '<p class="sn-disco-empty" hidden>' . esc_html__( 'No releases with that credit.', 'signal-and-noise' ) . '</p>';
+	$out .= '<p class="sn-disco-empty" hidden>' . esc_html( sn_disco_t( __( 'No releases with that credit.', 'signal-and-noise' ), 'Ningún lanzamiento con ese crédito.' ) ) . '</p>';
 
 	$out .= '</div>'; // .sn-discography
 
@@ -217,7 +217,7 @@ function sn_discography_render_card( $entry ) {
 	// ── Cover (the play affordance when playable). ──
 	if ( $playable ) {
 		$out .= '<div class="sn-disco-cover-wrap" role="button" tabindex="0" aria-label="'
-			. esc_attr( 'Play ' . $title ) . '">';
+			. esc_attr( sn_disco_t( 'Play ', 'Reproducir ' ) . $title ) . '">';
 	} else {
 		$out .= '<div class="sn-disco-cover-wrap sn-disco-cover-wrap--static">';
 	}
@@ -241,9 +241,10 @@ function sn_discography_render_card( $entry ) {
 	if ( ! empty( $roles ) ) {
 		$out .= '<p class="sn-disco-roles">' . esc_html( implode( ' · ', $roles ) ) . '</p>';
 	}
+	$out .= sn_discography_render_note( $entry );
 	if ( '' !== $muso_url ) {
 		$out .= '<a class="sn-disco-credits" href="' . esc_url( $muso_url ) . '" target="_blank" rel="noopener">'
-			. esc_html__( 'Credits', 'signal-and-noise' ) . ' &#8599;</a>';
+			. esc_html( sn_disco_t( __( 'Credits', 'signal-and-noise' ), 'Créditos' ) ) . ' &#8599;</a>';
 	}
 	$out .= '</div>'; // .sn-disco-meta
 
@@ -276,8 +277,8 @@ function sn_discography_render_liner( $entry ) {
 	$count = count( $tracks );
 	$out   = '<details class="sn-disco-liner">';
 	$out  .= '<summary class="sn-disco-liner__summary"><span class="sn-disco-liner__label">'
-		. esc_html__( 'Liner notes', 'signal-and-noise' ) . '</span> <span class="sn-disco-liner__count">'
-		. esc_html( sprintf( _n( '%d track', '%d tracks', $count, 'signal-and-noise' ), $count ) ) . '</span></summary>';
+		. esc_html( sn_disco_t( __( 'Liner notes', 'signal-and-noise' ), 'Notas del disco' ) ) . '</span> <span class="sn-disco-liner__count">'
+		. esc_html( sprintf( sn_disco_is_es() ? ( 1 === $count ? '%d pista' : '%d pistas' ) : _n( '%d track', '%d tracks', $count, 'signal-and-noise' ), $count ) ) . '</span></summary>';
 	$out  .= '<ol class="sn-disco-tracklist">';
 	foreach ( $tracks as $track ) {
 		$t_title = (string) ( $track['title'] ?? '' );
@@ -289,7 +290,7 @@ function sn_discography_render_liner( $entry ) {
 		$out .= '<li class="sn-disco-track">';
 		if ( '' !== $t_prev ) {
 			$out .= '<button type="button" class="sn-disco-track__play" data-preview="' . esc_url( $t_prev )
-				. '" aria-pressed="false" aria-label="' . esc_attr( sprintf( __( 'Play a 30-second preview of %s', 'signal-and-noise' ), $t_title ) )
+				. '" aria-pressed="false" aria-label="' . esc_attr( sprintf( sn_disco_t( __( 'Play a 30-second preview of %s', 'signal-and-noise' ), 'Reproducir un fragmento de 30 segundos de %s' ), $t_title ) )
 				. '"><span class="sn-disco-track__icon" aria-hidden="true"></span></button>';
 		} else {
 			$out .= '<span class="sn-disco-track__noplay" aria-hidden="true"></span>';
@@ -304,6 +305,50 @@ function sn_discography_render_liner( $entry ) {
 	$out .= '</details>';
 
 	return $out;
+}
+
+/**
+ * Is the page being viewed Spanish? (inc/lang-toggle.php asks the plugin.)
+ *
+ * @return bool
+ */
+function sn_disco_is_es() {
+	return function_exists( 'sn_theme_is_spanish' ) && sn_theme_is_spanish();
+}
+
+/**
+ * A discography label in the page's language. The Spanish strings are the
+ * interface's own words (counts, buttons, filters), not the owner's copy:
+ * the bridge line under the rail is his sentence and stays English, marked
+ * lang="en", until he writes the Spanish one into the page.
+ *
+ * @param string $en English (already passed through __()).
+ * @param string $es Spanish.
+ * @return string
+ */
+function sn_disco_t( $en, $es ) {
+	return sn_disco_is_es() ? $es : $en;
+}
+
+/**
+ * The owner's note on a release (the plugin's inc/discography-notes.php merges
+ * `note` and `note_es` onto the entry), e.g. the Richter stage-manager line.
+ * On a Spanish page an empty Spanish note falls back to the English one,
+ * marked lang="en".
+ *
+ * @param array<string,mixed> $entry One entry.
+ * @return string A <p>, or ''.
+ */
+function sn_discography_render_note( $entry ) {
+	$en = trim( (string) ( $entry['note'] ?? '' ) );
+	$es = trim( (string) ( $entry['note_es'] ?? '' ) );
+	if ( sn_disco_is_es() && '' !== $es ) {
+		return '<p class="sn-disco-note">' . esc_html( $es ) . '</p>';
+	}
+	if ( '' === $en ) {
+		return '';
+	}
+	return '<p class="sn-disco-note"' . ( sn_disco_is_es() ? ' lang="en"' : '' ) . '>' . esc_html( $en ) . '</p>';
 }
 
 add_shortcode( 'sn_discography', 'sn_discography_shortcode' );
