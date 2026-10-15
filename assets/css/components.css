@@ -2048,6 +2048,15 @@ img.sn-img-dim {
 	display: inline-flex;
 	align-items: center;
 }
+/* The footer's site-wide language link: the meta strip's voice. */
+.sn-lang-footer {
+	margin: 0;
+	font-size: max(var(--wp--custom--font-size--micro), 11px);
+}
+.sn-lang-footer a {
+	color: inherit;
+	text-underline-offset: 0.2em;
+}
 .sn-lang-toggle__sep {
 	opacity: 0.5;
 }

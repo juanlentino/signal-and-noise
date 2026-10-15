@@ -147,6 +147,19 @@ add_filter( 'site_icon_meta_tags', '__return_empty_array' );
  * @param array $atts Shortcode attributes. `placement`: 'footer' (default) or 'header'.
  * @return string Button markup.
  */
+/**
+ * The toggle's words in the page's language (Spanish on a Spanish page,
+ * inc/lang-chrome.php). Guarded: this file loads before that one, and the
+ * fixture suites load it alone.
+ *
+ * @param string $en English.
+ * @param string $es Spanish.
+ * @return string
+ */
+function sn_dark_mode_t( $en, $es ) {
+	return function_exists( 'sn_theme_t' ) ? sn_theme_t( $en, $es ) : $en;
+}
+
 function sn_dark_mode_toggle_markup( $atts = array() ) {
 	$atts      = shortcode_atts( array( 'placement' => 'footer' ), (array) $atts, 'sn_theme_toggle' );
 	$placement = ( 'header' === $atts['placement'] ) ? 'header' : 'footer';
@@ -165,15 +178,15 @@ function sn_dark_mode_toggle_markup( $atts = array() ) {
 			array(
 				'isDark'    => false,
 				'ready'     => false,
-				'label'     => __( 'Light', 'signal-and-noise' ),
-				'ariaLabel' => __( 'Light: switch to dark theme', 'signal-and-noise' ),
+				'label'     => sn_dark_mode_t( __( 'Light', 'signal-and-noise' ), 'Claro' ),
+				'ariaLabel' => sn_dark_mode_t( __( 'Light: switch to dark theme', 'signal-and-noise' ), 'Claro: cambiar al tema oscuro' ),
 				'labels'    => array(
-					'light' => __( 'Light', 'signal-and-noise' ),
-					'dark'  => __( 'Dark', 'signal-and-noise' ),
+					'light' => sn_dark_mode_t( __( 'Light', 'signal-and-noise' ), 'Claro' ),
+					'dark'  => sn_dark_mode_t( __( 'Dark', 'signal-and-noise' ), 'Oscuro' ),
 				),
 				'names'     => array(
-					'toDark'  => __( 'Light: switch to dark theme', 'signal-and-noise' ),
-					'toLight' => __( 'Dark: switch to light theme', 'signal-and-noise' ),
+					'toDark'  => sn_dark_mode_t( __( 'Light: switch to dark theme', 'signal-and-noise' ), 'Claro: cambiar al tema oscuro' ),
+					'toLight' => sn_dark_mode_t( __( 'Dark: switch to light theme', 'signal-and-noise' ), 'Oscuro: cambiar al tema claro' ),
 				),
 			)
 		);
@@ -187,10 +200,10 @@ function sn_dark_mode_toggle_markup( $atts = array() ) {
 		. ' data-wp-bind--aria-pressed="state.isDark"'
 		. ' data-wp-bind--aria-label="state.ariaLabel"'
 		. ' aria-pressed="false"'
-		. ' aria-label="' . esc_attr__( 'Light: switch to dark theme', 'signal-and-noise' ) . '">'
+		. ' aria-label="' . esc_attr( sn_dark_mode_t( __( 'Light: switch to dark theme', 'signal-and-noise' ), 'Claro: cambiar al tema oscuro' ) ) . '">'
 		. '<span class="sn-theme-toggle__dot" aria-hidden="true"></span>'
 		. '<span class="sn-theme-toggle__label" data-wp-text="state.label">'
-		. esc_html__( 'Light', 'signal-and-noise' )
+		. esc_html( sn_dark_mode_t( __( 'Light', 'signal-and-noise' ), 'Claro' ) )
 		. '</span>'
 		. '</button>';
 }
