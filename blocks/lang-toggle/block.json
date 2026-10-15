@@ -1,0 +1,16 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "signal-noise/lang-toggle",
+	"title": "Language toggle (EN / ES)",
+	"category": "signal-noise",
+	"icon": "translation",
+	"description": "Links an English page and its Spanish version. Renders nothing on a page with no published counterpart.",
+	"textdomain": "signal-and-noise",
+	"supports": {
+		"autoRegister": true,
+		"html": false,
+		"multiple": false
+	},
+	"render": "file:./render.php"
+}

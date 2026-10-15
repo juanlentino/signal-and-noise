@@ -285,7 +285,8 @@ add_action( 'init', 'sn_register_note_share' );
  * mirrors sn_enqueue_print_styles above.
  */
 function sn_enqueue_discography() {
-	if ( is_page( 'music' ) ) {
+	// /musica/ (the Spanish page, paired by the plugin) carries the same timeline.
+	if ( is_page( 'music' ) || ( function_exists( 'sn_lang_is_page' ) && sn_lang_is_page( 'music' ) ) ) {
 		wp_enqueue_script(
 			'sn-discography',
 			get_theme_file_uri( 'assets/js/discography.js' ),
