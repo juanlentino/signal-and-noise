@@ -44,10 +44,9 @@ $es_nav = sn_lang_meta_nav( $nav );
 ok( '' !== $nav && 5 === substr_count( $es_nav, 'hreflang="en"' ), 'all five meta links switch, each marked hreflang="en"' );
 ok( false !== strpos( $es_nav, 'title="Colofón"' ) && false !== strpos( $es_nav, '(en inglés)' ), 'labels are Spanish and say the page is English' );
 ok( false === strpos( $nav, 'Colofón' ), 'the English meta-nav is untouched (the pinned bytes render without the plugin)' );
-ok( '' === sn_lang_footer_link_html( 'en', array(), '', 'https://x.test/' ), 'no published Spanish home: no footer link' );
-ok( '<p class="sn-lang-footer"><a href="https://x.test/inicio/" hreflang="es" lang="es-AR">Español</a></p>' === sn_lang_footer_link_html( 'en', array(), 'https://x.test/inicio/', 'https://x.test/' ), 'an unpaired English page links Español to the Spanish home' );
-ok( false !== strpos( sn_lang_footer_link_html( 'en', array( 'en' => 'https://x.test/music/', 'es' => 'https://x.test/musica/' ), 'https://x.test/inicio/', 'https://x.test/' ), 'href="https://x.test/musica/"' ), 'a paired English page links Español to its own translation' );
-ok( '<p class="sn-lang-footer"><a href="https://x.test/music/" hreflang="en" lang="en">English</a></p>' === sn_lang_footer_link_html( 'es', array( 'en' => 'https://x.test/music/', 'es' => 'https://x.test/musica/' ), 'https://x.test/inicio/', 'https://x.test/' ), 'a Spanish page links English back to its English page' );
+$footer = (string) file_get_contents( __DIR__ . '/../parts/footer.html' );
+ok( false === strpos( $footer, 'lang-toggle' ) && false === strpos( $footer, 'sn-lang-footer' ), 'the footer carries no language link: the header switch is the one place' );
+ok( ! function_exists( 'sn_lang_footer_link_html' ), 'the footer link builder is gone' );
 ok( 'Light' === sn_theme_t( 'Light', 'Claro' ), 'without the plugin, the theme speaks English' );
 
 echo "\nResult: $pass passed, $fail failed.\n";

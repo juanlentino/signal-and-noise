@@ -283,7 +283,10 @@ $ALLOWED = array(
 	// a correct inversion, because the button is meant to read as a block of
 	// ink. Raised deliberately: the cap exists to force this sentence to be
 	// written, not to be nudged upward whenever it fires.
-	'assets/css/components.css' => 3,
+	// FOURTH (2026-10-15): the EN | ES switch's current segment
+	// (.sn-lang-switch__seg.is-current), the same block-of-ink case: it reads
+	// as a filled key in either palette, bone on void inverting together.
+	'assets/css/components.css' => 4,
 );
 
 $offenders = array();
