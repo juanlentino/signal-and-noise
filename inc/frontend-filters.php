@@ -128,20 +128,8 @@ if ( ! defined( 'SN_FRONTEND_FILTERS_TEST' ) || ! SN_FRONTEND_FILTERS_TEST ) {
 	 */
 	remove_action( 'wp_head', 'rsd_link' );
 
-	/**
-	 * CSP prep (2026-10-16): no emoji loader. Core prints an inline
-	 * <script type="module"> (plus a #wp-emoji-settings JSON island) on every
-	 * page and in every oEmbed frame; it is the one executable inline script
-	 * the theme does not own, and it would need 'unsafe-inline' or a hash that
-	 * changes with core. All it does is swap emoji for s.w.org images in a
-	 * browser that cannot draw them; every current browser can, and nothing in
-	 * the theme styles or targets img.emoji / img.wp-smiley, so emoji render as
-	 * the system's own glyphs. Priorities are core's (default-filters.php,
-	 * 7.1): the head script at 7, the rest at 10. The feed and email
-	 * staticize filters stay: they run server-side and never reach a page.
-	 */
-	remove_action( 'wp_head', 'print_emoji_detection_script', 7 );
-	remove_action( 'embed_head', 'print_emoji_detection_script' );
-	remove_action( 'wp_enqueue_scripts', 'wp_enqueue_emoji_styles' );
-	remove_action( 'enqueue_embed_scripts', 'wp_enqueue_emoji_styles' );
+	// Emoji stays for readers (owner, 2026-09-29; plugin 19.7.1, #1800): core's
+	// loader runs on pages, feeds and email, off in wp-admin only. Theme
+	// 2026.10.9 removed it for CSP prep and was reverted (2026.10.10). A strict
+	// CSP must allow the loader's inline module, by hash, not remove it.
 }
