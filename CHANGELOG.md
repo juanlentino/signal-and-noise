@@ -12,6 +12,10 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+
+### Fixed
+- **A note's excerpt on /notes is whole.** The row reveal clamped it to three lines, so a sentence could end mid-thought ("stop being..."). The clamp is gone; the reveal takes the excerpt's own height.
+
 ### Security
 - The command palette's URL guard refuses any backslash, so `/\host` (which browsers read as `//host`) can no longer leave the site.
 - **A note title can no longer add a line to the reply email.** The Reply row's `mailto:` subject now turns every control character (CR, LF, NUL, DEL and the rest of C0) into one space before it is encoded, so a title cannot start a new mail header such as `Bcc:` in a reader's mail client.
