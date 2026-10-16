@@ -82,22 +82,23 @@ function sn_lang_nav_link_html( $html, $label, $path, $es_url, $request ) {
 	if ( '' === $es_url ) {
 		return $html;
 	}
-	// A callback, not a replacement string: a "$1" or "\\1" in the URL would
-	// otherwise be read as a backreference (2026-10-16 audit).
-	$href = esc_url( $es_url );
-	$html = (string) preg_replace_callback(
-		'/(<a\b[^>]*\bhref=")[^"]*(")/',
-		static function ( $m ) use ( $href ) {
-			return $m[1] . $href . $m[2];
-		},
-		$html,
-		1
-	);
-	$es_path = rtrim( (string) wp_parse_url( $es_url, PHP_URL_PATH ), '/' );
-	if ( '' !== $es_path && $es_path === $request && false === strpos( $html, 'aria-current=' ) ) {
-		$html = (string) preg_replace( '/<a\b/', '<a aria-current="page"', $html, 1 );
+	// Core's HTML API, not a regex: the href is found and written as an
+	// attribute, so quoting, entities, a ">" inside a value, and "$1" or "\\1"
+	// in the URL are core's problem (2026-10-16 audit). set_attribute() runs
+	// href through esc_url() itself, and a new attribute lands right after the
+	// tag name, which is where aria-current always went.
+	$tags = new WP_HTML_Tag_Processor( $html );
+	if ( ! $tags->next_tag( 'A' ) ) {
+		return $html;
 	}
-	return $html;
+	if ( null !== $tags->get_attribute( 'href' ) ) {
+		$tags->set_attribute( 'href', $es_url );
+	}
+	$es_path = rtrim( (string) wp_parse_url( $es_url, PHP_URL_PATH ), '/' );
+	if ( '' !== $es_path && $es_path === $request && null === $tags->get_attribute( 'aria-current' ) ) {
+		$tags->set_attribute( 'aria-current', 'page' );
+	}
+	return $tags->get_updated_html();
 }
 
 add_filter(

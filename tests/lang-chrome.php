@@ -18,6 +18,9 @@ function wp_parse_url( $u, $c = -1 ) { return parse_url( $u, $c ); }
 function add_filter() {}
 function __( $s ) { return $s; }
 
+// sn_lang_nav_link_html() writes the href through WP_HTML_Tag_Processor.
+require __DIR__ . '/lib/wp-html-api.php';
+snt_require_wp_html_api();
 require __DIR__ . '/../inc/lang-toggle.php';
 require __DIR__ . '/../inc/lang-chrome.php';
 
@@ -38,6 +41,21 @@ foreach ( array( 'https://x.test/musica/?a=$1', 'https://x.test/musica/?a=\\1', 
 	$got = sn_lang_nav_link_html( $li, 'Music', '/music', $odd, '/nope' );
 	ok( false !== strpos( $got, 'href="' . $odd . '"' ), 'a "$" or "\\" in the Spanish URL stays literal in href: ' . $odd . ' -> ' . $got );
 	ok( 1 === substr_count( $got, '<a ' ), 'and the link is not duplicated by a backreference: ' . $odd );
+}
+
+// Markup a regex on `href="..."` misreads: a ">" inside an earlier value ends
+// its `[^>]*` early, and a single-quoted or unquoted href never matches. Core's
+// HTML API parses the tag, so each one gets the Spanish href.
+$musica = 'https://x.test/musica/';
+foreach ( array(
+	'<a title="Music > Spanish" href="/music"><span class="wp-block-navigation-item__label">Music</span></a>',
+	"<a class=\"wp-block-navigation-item__content\" href='/music'><span class=\"wp-block-navigation-item__label\">Music</span></a>",
+	'<a class="wp-block-navigation-item__content" href=/music><span class="wp-block-navigation-item__label">Music</span></a>',
+) as $odd_tag ) {
+	$got  = sn_lang_nav_link_html( $odd_tag, 'Music', '/music', $musica, '/nope' );
+	$tags = new WP_HTML_Tag_Processor( $got );
+	$tags->next_tag( 'A' );
+	ok( $musica === $tags->get_attribute( 'href' ) && 1 === substr_count( $got, '<a ' ), 'the Spanish href lands on an odd tag: ' . $odd_tag . ' -> ' . $got );
 }
 
 echo "\nGroup: the chrome strings\n";
