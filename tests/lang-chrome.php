@@ -31,6 +31,14 @@ $notes = sn_lang_nav_link_html( str_replace( array( '/music', 'Music' ), array( 
 ok( false !== strpos( $notes, '>Notas</span>' ) && false !== strpos( $notes, 'href="/notes"' ), 'a page with no Spanish version keeps its English href under a Spanish label' );
 ok( false === strpos( $notes, 'aria-current' ), 'not current: no aria-current' );
 ok( $li === sn_lang_nav_link_html( $li, 'Gallery', '/gallery', '', '/musica' ), 'an unknown link is left alone' );
+// A URL is a replacement string for preg_replace(): "$1" or "\\1" in it would be
+// read as a backreference and splice in the matched "<a ... href=" prefix
+// (2026-10-16 audit). The href must carry the URL byte for byte.
+foreach ( array( 'https://x.test/musica/?a=$1', 'https://x.test/musica/?a=\\1', 'https://x.test/musica/?a=${2}' ) as $odd ) {
+	$got = sn_lang_nav_link_html( $li, 'Music', '/music', $odd, '/nope' );
+	ok( false !== strpos( $got, 'href="' . $odd . '"' ), 'a "$" or "\\" in the Spanish URL stays literal in href: ' . $odd . ' -> ' . $got );
+	ok( 1 === substr_count( $got, '<a ' ), 'and the link is not duplicated by a backreference: ' . $odd );
+}
 
 echo "\nGroup: the chrome strings\n";
 $logo = '<a href="/" class="sn-logo-link" aria-label="Juan Lentino — home">';

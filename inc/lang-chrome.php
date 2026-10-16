@@ -82,7 +82,17 @@ function sn_lang_nav_link_html( $html, $label, $path, $es_url, $request ) {
 	if ( '' === $es_url ) {
 		return $html;
 	}
-	$html = (string) preg_replace( '/(<a\b[^>]*\bhref=")[^"]*(")/', '${1}' . esc_url( $es_url ) . '${2}', $html, 1 );
+	// A callback, not a replacement string: a "$1" or "\\1" in the URL would
+	// otherwise be read as a backreference (2026-10-16 audit).
+	$href = esc_url( $es_url );
+	$html = (string) preg_replace_callback(
+		'/(<a\b[^>]*\bhref=")[^"]*(")/',
+		static function ( $m ) use ( $href ) {
+			return $m[1] . $href . $m[2];
+		},
+		$html,
+		1
+	);
 	$es_path = rtrim( (string) wp_parse_url( $es_url, PHP_URL_PATH ), '/' );
 	if ( '' !== $es_path && $es_path === $request && false === strpos( $html, 'aria-current=' ) ) {
 		$html = (string) preg_replace( '/<a\b/', '<a aria-current="page"', $html, 1 );

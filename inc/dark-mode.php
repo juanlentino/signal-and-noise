@@ -45,7 +45,22 @@ const SN_THEME_STORAGE_KEY = 'sn-theme';
  * pin every first-time visitor to light and make the OS setting dead.
  *
  * Priority 1 puts it ahead of the critical CSS inliner (priority 50).
+ *
+ * CSP: THESE BYTES ARE HASHED IN THE EDGE POLICY. The script is static on
+ * purpose (no nonce, no per-request data), so a script-src without
+ * 'unsafe-inline' can allow it by hash. Its sha256, over exactly the bytes
+ * between `<script id="sn-theme-init">` and `</script>` (leading and trailing
+ * newline included), is
+ *
+ *     sha256-+aDIk0AQYDEK+tK47t/wNITT4nprLRPhL+LH2Hb8THs=
+ *
+ * Change one byte here (or SN_THEME_STORAGE_KEY) and the hash changes: update
+ * SN_THEME_INIT_SHA256 and this comment, and the owner updates the Cloudflare
+ * Content-Security-Policy in the same release, or the flash fix stops running.
+ * tests/theme-init-csp-hash.php fails until the three agree.
  */
+const SN_THEME_INIT_SHA256 = 'sha256-+aDIk0AQYDEK+tK47t/wNITT4nprLRPhL+LH2Hb8THs=';
+
 add_action(
 	'wp_head',
 	function () {

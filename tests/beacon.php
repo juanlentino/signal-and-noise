@@ -39,7 +39,27 @@ if ( ! function_exists( 'wp_json_encode' ) ) {
 }
 if ( ! function_exists( 'get_the_ID' ) ) { function get_the_ID() { return $GLOBALS['__post_id'] ?? 42; } }
 $GLOBALS['__post_id'] = 42;
-if ( ! function_exists( 'add_action' ) ) { function add_action() {} }
+// wp_footer callbacks are captured: the config island is printed from one.
+$GLOBALS['__footer'] = array();
+if ( ! function_exists( 'add_action' ) ) {
+	function add_action( $hook, $cb = null, $pri = 10 ) {
+		if ( 'wp_footer' === $hook ) { $GLOBALS['__footer'][] = array( 'cb' => $cb, 'pri' => $pri ); }
+	}
+}
+if ( ! function_exists( 'wp_get_inline_script_tag' ) ) {
+	// Core's shape (7.1): attributes in order, data trimmed and wrapped in newlines.
+	function wp_get_inline_script_tag( $data, $attrs = array() ) {
+		$a = '';
+		foreach ( $attrs as $k => $v ) { $a .= ' ' . $k . '="' . htmlspecialchars( (string) $v, ENT_QUOTES ) . '"'; }
+		return '<script' . $a . ">\n" . trim( $data, "\n\r " ) . "\n</script>\n";
+	}
+}
+/** The footer output, as a reader's browser would get it. */
+function footer_html() {
+	$out = '';
+	foreach ( $GLOBALS['__footer'] as $f ) { ob_start(); call_user_func( $f['cb'] ); $out .= ob_get_clean(); }
+	return $out;
+}
 if ( ! function_exists( 'add_filter' ) ) { function add_filter() {} }
 if ( ! defined( 'JSON_HEX_TAG' ) ) { define( 'JSON_HEX_TAG', 1 ); }
 if ( ! defined( 'JSON_UNESCAPED_SLASHES' ) ) { define( 'JSON_UNESCAPED_SLASHES', 64 ); }
@@ -49,7 +69,7 @@ require __DIR__ . '/../inc/beacon.php';
 
 $pass = 0; $fail = 0;
 function ok( $cond, $label ) { global $pass, $fail; if ( $cond ) { $pass++; echo "PASS: $label\n"; } else { $fail++; echo "FAIL: $label\n"; } }
-function reset_state() { $GLOBALS['__enqueued_scripts'] = array(); $GLOBALS['__inline'] = array(); $GLOBALS['__filters'] = array(); }
+function reset_state() { $GLOBALS['__enqueued_scripts'] = array(); $GLOBALS['__inline'] = array(); $GLOBALS['__filters'] = array(); $GLOBALS['__footer'] = array(); }
 
 ok( function_exists( 'sn_beacon_enqueue' ), 'sn_beacon_enqueue() is defined' );
 ok( function_exists( 'sn_beacon_enabled' ), 'sn_beacon_enabled() is defined' );
@@ -72,23 +92,35 @@ ok( strpos( (string) ( $wv['src'] ?? '' ), 'assets/js/web-vitals.iife.js' ) !== 
 ok( ( $wv['args']['strategy'] ?? '' ) === 'defer' && ( $wv['args']['in_footer'] ?? false ) === true, 'web-vitals deferred + footer (matches the beacon)' );
 ok( in_array( 'sn-web-vitals', (array) ( $s['deps'] ?? array() ), true ), 'sn-beacon DEPENDS on sn-web-vitals (load + execution order)' );
 
-$inline = $GLOBALS['__inline']['sn-beacon'] ?? null;
-ok( $inline !== null, 'data island injected on sn-beacon' );
-ok( ( $inline['position'] ?? '' ) === 'before', 'island injected BEFORE the deferred module' );
-ok( strpos( (string) ( $inline['data'] ?? '' ), 'window.SN_BEACON=' ) !== false, 'island assigns window.SN_BEACON' );
-ok( strpos( (string) ( $inline['data'] ?? '' ), '"endpoint"' ) !== false, 'island carries an endpoint' );
-ok( strpos( (string) ( $inline['data'] ?? '' ), '/_sn/px' ) !== false, 'endpoint is the worker route /_sn/px' );
-ok( strpos( (string) ( $inline['data'] ?? '' ), '"k"' ) !== false, 'island carries the site token field k' );
-ok( strpos( (string) ( $inline['data'] ?? '' ), '"id":42' ) !== false, 'island carries id:42' );
+// 2026-10-16 (CSP prep): the config is a JSON data island, not an inline
+// script, so a script-src without 'unsafe-inline' does not block it.
+ok( ! isset( $GLOBALS['__inline']['sn-beacon'] ), 'no executable inline script is attached to sn-beacon any more' );
+$foot = footer_html();
+ok( 1 === count( $GLOBALS['__footer'] ) && 1 === (int) $GLOBALS['__footer'][0]['pri'], 'the island prints from ONE wp_footer callback at priority 1 (before footer scripts at 20)' );
+ok( 1 === preg_match( '#<script type="application/json" id="sn-beacon-data">\n(.*)\n</script>#', $foot, $m ), 'island is <script type="application/json" id="sn-beacon-data">' );
+$island = json_decode( $m[1] ?? '', true );
+ok( is_array( $island ), 'island body is valid JSON' );
+ok( strpos( $foot, 'window.SN_BEACON' ) === false, 'island does not assign window.SN_BEACON (not executable)' );
+ok( '/_sn/px' === ( $island['endpoint'] ?? null ), 'endpoint is the worker route /_sn/px' );
+ok( array_key_exists( 'k', (array) $island ), 'island carries the site token field k' );
+ok( 42 === ( $island['id'] ?? null ), 'island carries id:42' );
 
 // Zero id (archives/home/404 where get_the_ID() returns 0) — island still emitted with id:0.
 $GLOBALS['__post_id'] = 0;
 reset_state();
 sn_beacon_enqueue();
-$inline_zero = $GLOBALS['__inline']['sn-beacon'] ?? null;
-ok( $inline_zero !== null, 'island still emitted when id=0' );
-ok( strpos( (string) ( $inline_zero['data'] ?? '' ), '"id":0' ) !== false, 'island carries id:0 (not false)' );
+$foot0 = footer_html();
+ok( strpos( $foot0, 'id="sn-beacon-data"' ) !== false, 'island still emitted when id=0' );
+ok( strpos( $foot0, '"id":0' ) !== false, 'island carries id:0 (not false)' );
 $GLOBALS['__post_id'] = 42;
+
+// JSON_HEX_TAG: a value carrying "</script>" cannot close the island.
+reset_state();
+$GLOBALS['__filters']['sn_beacon_token'] = '</script><script>alert(1)</script>';
+sn_beacon_enqueue();
+$footx = footer_html();
+ok( 1 === substr_count( $footx, '</script>' ) && strpos( $footx, '<script>alert' ) === false, 'a "</script>" in a value stays inside the island (JSON_HEX_TAG)' );
+ok( '</script><script>alert(1)</script>' === ( json_decode( preg_replace( '#^.*?>\n|\n</script>\n$#s', '', $footx ), true )['k'] ?? null ), 'and JSON.parse gets the value back intact' );
 
 // Disabled via filter → nothing enqueued.
 reset_state();
