@@ -12,6 +12,8 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+- **The Spanish header nav writes its links through core's HTML API.** `sn_lang_nav_link_html()` (`inc/lang-chrome.php`) swapped the href with a regex on `href="..."` and added `aria-current` with another; it now uses `WP_HTML_Tag_Processor` (`next_tag`, `get_attribute`, `set_attribute`), so a `>` inside an earlier attribute value, a single-quoted or unquoted href, and `$1` or `\1` in the URL are parsed by core. Output for the rendered navigation-link is byte for byte the same; an odd source tag now comes out with a double-quoted href. `tests/lang-chrome.php` pins three such tags (red against the regex: 21 passed, 3 failed).
+
 ## [2026.10.10] - 2026-10-16 — emoji is back for readers
 
 ### Fixed
