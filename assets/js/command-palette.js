@@ -3,7 +3,7 @@
  *
  * Open with ⌘/Ctrl-K, "/" (outside form fields), or the visible trigger button.
  * Three action types:
- *   1. Search notes → location.assign( notesUrl + '?s=' + encodeURIComponent(q) )
+ *   1. Search notes → location.assign( origin + notes path + '?s=' + encodeURIComponent(q) )
  *   2. Jump to a note — empty query lists recent (data.recent);
  *      typing ranks the FULL corpus (data.notes) with plain token
  *      scoring (v11.2.0). No model in the browser, ever — site commitment.
@@ -237,14 +237,18 @@
 		}
 		if ( item.type === 'search' ) {
 			var q = item.query || input.value.replace( /^\s+|\s+$/g, '' );
-			var url = ( safeUrl( data.notesUrl ) || '/notes/' ) + ( q ? '?s=' + encodeURIComponent( q ) : '' );
-			window.location.assign( url );
+			go( ( safeUrl( data.notesUrl ) || '/notes/' ) + ( q ? '?s=' + encodeURIComponent( q ) : '' ) );
 			return;
 		}
 		var to = safeUrl( item.url );
 		if ( to ) {
-			window.location.assign( to );
+			go( to );
 		}
+	}
+
+	// The page's own origin leads, so the scheme and host never come from data.
+	function go( path ) {
+		window.location.assign( window.location.origin + path );
 	}
 
 	// The island is DOM text, so a URL from it is reduced to a same-site path

@@ -127,7 +127,7 @@ test('palette: a javascript: URL from the island is never navigated to', () => {
     addEventListener(type, fn) { if (type === 'keydown') keys.push(fn); }, removeEventListener() {},
   };
   document.activeElement = document.body;
-  vm.runInNewContext(JS('command-palette.js'), { document, window: { setTimeout(fn) { fn(); }, location: { assign(u) { navigations.push(u); } } } });
+  vm.runInNewContext(JS('command-palette.js'), { document, window: { setTimeout(fn) { fn(); }, location: { origin: 'https://site.test', assign(u) { navigations.push(u.replace('https://site.test', '')); } } } });
   trigger.handlers.click[0]();
   const input = nodes.find((n) => n.tagName === 'INPUT');
   const press = (key) => { const e = { key, keyCode: 0, preventDefault() {} }; for (const fn of input.handlers.keydown || []) fn(e); };
