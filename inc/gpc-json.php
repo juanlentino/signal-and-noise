@@ -6,7 +6,7 @@
  * (https://globalprivacycontrol.github.io/gpc-spec/): {"gpc":true,"lastUpdate":"…"}.
  * This is the server-side DECLARATION that the site honors GPC — the counterpart
  * to the analytics beacon's client-side GPC bail (assets/js/sn-beacon.js). The
- * site is cookieless and sets no cross-site tracking, so the declaration is honest.
+ * site sets no cookies on readers and sets no cross-site tracking, so the declaration is honest.
  *
  * Same flush-free virtual-route mechanism as /.well-known/security.txt
  * (template_redirect priority 0). lastUpdate is a FIXED date (not request-time)
