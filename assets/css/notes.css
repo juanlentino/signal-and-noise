@@ -462,13 +462,9 @@
 	   where it said the track was 720px and that no max-width was set; both
 	   were out of date.) */
 	max-width: 80ch;
-	/* Three lines is a scent, not the note. Clamping bounds how far the rows
-	   below can be displaced by a reveal — an unclamped 5-line excerpt shoves
-	   thirty rows a quarter-screen down and the list stops feeling stable. */
-	display: -webkit-box;
-	-webkit-box-orient: vertical;
-	-webkit-line-clamp: 3;
-	line-clamp: 3;
+	/* The whole excerpt, never clamped (owner, 2026-10-16: a sentence cut at
+	   "stop being..." reads as broken). The 0fr to 1fr reveal above takes the
+	   excerpt's natural height. */
 }
 .sn-notes-row:focus-within .sn-notes-row-excerpt {
 	padding-top: 0.4rem;
