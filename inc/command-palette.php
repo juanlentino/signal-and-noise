@@ -13,6 +13,9 @@
  */
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
+/** The id of the JSON data island assets/js/command-palette.js reads. */
+const SN_CMDK_ISLAND_ID = 'sn-cmdk-data';
+
 /**
  * Build the JS data island. Pure + testable.
  *
@@ -149,8 +152,21 @@ function sn_cmdk_enqueue() {
 		sn_asset_ver( 'assets/js/command-palette.js' ),
 		array( 'in_footer' => true, 'strategy' => 'defer' )
 	);
+	// A JSON data island, not an inline script: it is not executable, so the
+	// CSP script-src needs no 'unsafe-inline' for it (2026-10-16).
+	// JSON_HEX_TAG keeps "<" out of it, so no title can close the tag.
 	$json = wp_json_encode( sn_cmdk_build_data(), JSON_HEX_TAG | JSON_UNESCAPED_SLASHES );
-	wp_add_inline_script( 'sn-command-palette', 'window.SN_CMDK=' . $json . ';', 'before' );
+	if ( false === $json ) {
+		return;
+	}
+	$tag = wp_get_inline_script_tag( $json, array( 'type' => 'application/json', 'id' => SN_CMDK_ISLAND_ID ) );
+	add_action(
+		'wp_footer',
+		static function () use ( $tag ) {
+			echo $tag; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- wp_get_inline_script_tag() output; JSON_HEX_TAG data.
+		},
+		1
+	);
 }
 
 // The visible trigger button is server-rendered in the footer utility bar

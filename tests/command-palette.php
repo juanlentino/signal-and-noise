@@ -25,7 +25,11 @@ function ok( $c, $m ) {
 	else { $fail++; echo "FAIL: $m\n"; }
 }
 
-function add_action( $h, $cb, $p = 10, $a = 1 ) { return true; }
+$GLOBALS['__footer'] = array();
+function add_action( $h, $cb, $p = 10, $a = 1 ) {
+	if ( 'wp_footer' === $h ) { $GLOBALS['__footer'][] = array( 'cb' => $cb, 'pri' => $p ); }
+	return true;
+}
 function add_filter( $h, $cb, $p = 10, $a = 1 ) { return true; }
 $GLOBALS['__filters'] = array();
 function apply_filters( $tag, $value ) {
@@ -166,6 +170,35 @@ $rq = $GLOBALS['__qargs_all'][0] ?? array();
 $nq = $GLOBALS['__qargs_all'][1] ?? array();
 ok( false === ( $rq['has_password'] ?? null ), 'recent: query excludes password-protected posts' );
 ok( false === ( $nq['has_password'] ?? null ), 'notes: query excludes password-protected posts' );
+
+// 2026-10-16 (CSP prep): the palette data is a JSON data island printed at
+// wp_footer, not an executable inline script, so a script-src without
+// 'unsafe-inline' does not block it. The JS reads #sn-cmdk-data.
+$GLOBALS['__scripts'] = array(); $GLOBALS['__inline'] = array();
+function wp_enqueue_style() {}
+function wp_enqueue_script( $h ) { $GLOBALS['__scripts'][] = $h; }
+function wp_add_inline_script( $h, $d, $pos = 'after' ) { $GLOBALS['__inline'][ $h ] = $d; }
+function get_theme_file_uri( $p = '' ) { return 'https://x.test/' . $p; }
+function sn_asset_ver( $p ) { return '1'; }
+function wp_get_inline_script_tag( $data, $attrs = array() ) {
+	$a = '';
+	foreach ( $attrs as $k => $v ) { $a .= ' ' . $k . '="' . htmlspecialchars( (string) $v, ENT_QUOTES ) . '"'; }
+	return '<script' . $a . ">\n" . trim( $data, "\n\r " ) . "\n</script>\n";
+}
+$GLOBALS['__filters'] = array();
+reset_qargs();
+sn_cmdk_enqueue();
+ok( in_array( 'sn-command-palette', $GLOBALS['__scripts'], true ), 'enqueue: the palette script is enqueued' );
+ok( ! isset( $GLOBALS['__inline']['sn-command-palette'] ), 'enqueue: no executable inline script (window.SN_CMDK=) is attached any more' );
+ok( 1 === count( $GLOBALS['__footer'] ) && 1 === (int) $GLOBALS['__footer'][0]['pri'], 'enqueue: the island prints from ONE wp_footer callback at priority 1' );
+$cb = $GLOBALS['__footer'][0]['cb'] ?? null;
+ob_start();
+if ( is_callable( $cb ) ) { call_user_func( $cb ); }
+$foot = (string) ob_get_clean();
+ok( 1 === preg_match( '#<script type="application/json" id="sn-cmdk-data">\n(.*)\n</script>#', $foot, $m ), 'enqueue: island is <script type="application/json" id="sn-cmdk-data">' );
+$island = json_decode( $m[1] ?? '', true );
+ok( 'https://x.test/notes/' === ( $island['notesUrl'] ?? null ) && isset( $island['recent'], $island['pillars'], $island['notes'] ), 'enqueue: the island carries the built data' );
+ok( false === strpos( $foot, 'window.SN_CMDK' ), 'enqueue: the island assigns no global' );
 
 echo "Result: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

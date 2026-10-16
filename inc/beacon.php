@@ -2,9 +2,12 @@
 /**
  * Signal & Noise — analytics beacon enqueue (P1).
  *
- * Loads assets/js/sn-beacon.js on the front end and injects a
- * window.SN_BEACON data island (endpoint + public site token + post id)
- * via wp_add_inline_script, mirroring inc/command-palette.php. The token
+ * Loads assets/js/sn-beacon.js on the front end and prints its config
+ * (endpoint + public site token + post id) as a JSON data island,
+ * <script type="application/json" id="sn-beacon-data">, which the script
+ * reads with JSON.parse. A data island is not executable, so it needs no
+ * 'unsafe-inline' in the CSP script-src (2026-10-16), mirroring
+ * inc/command-palette.php. The token
  * is PUBLIC by design (it ships in page source) — it is a spam deterrent
  * the Cloudflare Worker validates, not a secret. Cookieless; the script
  * no-ops under DNT/GPC.
@@ -16,6 +19,9 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+
+/** The id of the JSON data island assets/js/sn-beacon.js reads. */
+const SN_BEACON_ISLAND_ID = 'sn-beacon-data';
 
 /**
  * Whether the analytics beacon is active. Default true; the companion
@@ -71,11 +77,22 @@ function sn_beacon_enqueue() {
 		'k'        => sn_beacon_token(),
 		'id'       => (int) get_the_ID(),
 	);
+	// JSON_HEX_TAG keeps "<" out of the island, so no value can close it.
+	// Built here, at enqueue time and before the loop, so get_the_ID() is the
+	// queried page (0 on archives), and printed at wp_footer priority 1, ahead
+	// of the deferred script that reads it.
 	$json = wp_json_encode( $cfg, JSON_HEX_TAG | JSON_UNESCAPED_SLASHES );
 	if ( false === $json ) {
 		return;
 	}
-	wp_add_inline_script( 'sn-beacon', 'window.SN_BEACON=' . $json . ';', 'before' );
+	$tag = wp_get_inline_script_tag( $json, array( 'type' => 'application/json', 'id' => SN_BEACON_ISLAND_ID ) );
+	add_action(
+		'wp_footer',
+		static function () use ( $tag ) {
+			echo $tag; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- wp_get_inline_script_tag() output; JSON_HEX_TAG data.
+		},
+		1
+	);
 }
 
 if ( ! defined( 'SN_BEACON_TEST' ) || ! SN_BEACON_TEST ) {

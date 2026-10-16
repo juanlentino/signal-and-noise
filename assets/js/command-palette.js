@@ -4,10 +4,10 @@
  * Open with ⌘/Ctrl-K, "/" (outside form fields), or the visible trigger button.
  * Three action types:
  *   1. Search notes → location.assign( notesUrl + '?s=' + encodeURIComponent(q) )
- *   2. Jump to a note — empty query lists recent (window.SN_CMDK.recent);
- *      typing ranks the FULL corpus (window.SN_CMDK.notes) with plain token
+ *   2. Jump to a note — empty query lists recent (data.recent);
+ *      typing ranks the FULL corpus (data.notes) with plain token
  *      scoring (v11.2.0). No model in the browser, ever — site commitment.
- *   3. Jump to a pillar page (window.SN_CMDK.pillars)
+ *   3. Jump to a pillar page (data.pillars)
  *
  * Buildless ES5 (no JSX, no build step). Distinct from the plugin's wp-admin
  * @wordpress/commands palette — these never coexist on one document.
@@ -17,7 +17,7 @@
  *   - input is role="combobox" with aria-activedescendant tracking the active
  *     option — REAL DOM focus stays on the input; options are never focused.
  *
- * XSS: option labels come from window.SN_CMDK (JSON_HEX_TAG-encoded server-side)
+ * XSS: option labels come from the #sn-cmdk-data island (JSON_HEX_TAG-encoded server-side)
  * and are written with textContent only — never innerHTML.
  *
  * @since theme v9.11.0
@@ -25,7 +25,18 @@
 ( function () {
 	'use strict';
 
-	var data = window.SN_CMDK || { notesUrl: '/notes/', recent: [], pillars: [], notes: [] };
+	// Data comes from the JSON data island <script type="application/json"
+	// id="sn-cmdk-data"> (inc/command-palette.php, 2026-10-16), which needs no
+	// 'unsafe-inline' in the CSP. window.SN_CMDK is the fallback for a page
+	// cached before that change; drop it one release later.
+	function readData() {
+		var el = document.getElementById ? document.getElementById( 'sn-cmdk-data' ) : null;
+		if ( el ) {
+			try { return JSON.parse( el.textContent ); } catch ( e ) { /* fall through */ }
+		}
+		return window.SN_CMDK;
+	}
+	var data = readData() || { notesUrl: '/notes/', recent: [], pillars: [], notes: [] };
 	if ( ! data.notes ) { data.notes = []; } // Pre-11.2.0 island shape.
 
 	// Ranked-search cap: how many scored notes render for a query.

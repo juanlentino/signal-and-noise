@@ -127,4 +127,21 @@ if ( ! defined( 'SN_FRONTEND_FILTERS_TEST' ) || ! SN_FRONTEND_FILTERS_TEST ) {
 	 * hooking it in WP 6.3, and the theme requires 7.0.)
 	 */
 	remove_action( 'wp_head', 'rsd_link' );
+
+	/**
+	 * CSP prep (2026-10-16): no emoji loader. Core prints an inline
+	 * <script type="module"> (plus a #wp-emoji-settings JSON island) on every
+	 * page and in every oEmbed frame; it is the one executable inline script
+	 * the theme does not own, and it would need 'unsafe-inline' or a hash that
+	 * changes with core. All it does is swap emoji for s.w.org images in a
+	 * browser that cannot draw them; every current browser can, and nothing in
+	 * the theme styles or targets img.emoji / img.wp-smiley, so emoji render as
+	 * the system's own glyphs. Priorities are core's (default-filters.php,
+	 * 7.1): the head script at 7, the rest at 10. The feed and email
+	 * staticize filters stay: they run server-side and never reach a page.
+	 */
+	remove_action( 'wp_head', 'print_emoji_detection_script', 7 );
+	remove_action( 'embed_head', 'print_emoji_detection_script' );
+	remove_action( 'wp_enqueue_scripts', 'wp_enqueue_emoji_styles' );
+	remove_action( 'enqueue_embed_scripts', 'wp_enqueue_emoji_styles' );
 }

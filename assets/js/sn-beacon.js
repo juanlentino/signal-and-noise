@@ -16,9 +16,26 @@
  * until the page is actually shown — document.prerendering + prerenderingchange.
  */
 (function () {
+  // Config comes from the JSON data island <script type="application/json"
+  // id="sn-beacon-data"> (inc/beacon.php, 2026-10-16), which needs no
+  // 'unsafe-inline' in the CSP. The window.SN_BEACON fallback is for a page
+  // cached before that change, which still assigns the global inline; drop it
+  // one release later.
+  function readConfig() {
+    var el = document.getElementById ? document.getElementById('sn-beacon-data') : null;
+    if (el) {
+      try { return JSON.parse(el.textContent); } catch (e) { /* fall through */ }
+    }
+    return window.SN_BEACON;
+  }
+
   function init() {
-    var cfg = window.SN_BEACON;
-    if (!cfg || !cfg.endpoint || !cfg.k) return;
+    var cfg = readConfig();
+    if (!cfg) return;
+    // window.SN_BEACON stays the public API: callers use
+    // window.SN_BEACON.event(name, props), so the parsed object is exposed.
+    window.SN_BEACON = cfg;
+    if (!cfg.endpoint || !cfg.k) return;
 
     // Custom-event API: a no-op stub set BEFORE the privacy gate so callers can
     // always invoke window.SN_BEACON.event(name, props) without a guard. Under

@@ -82,7 +82,11 @@ function sn_note_reply_markup( $post_id ) {
 	// get_the_title() returns entity-encoded text (WordPress stores "&" in a
 	// title as "&#038;"); decode it back to the literal character before it
 	// becomes a mail subject, or a reader's mail client shows "&#038;" (#328).
-	$title   = trim( wp_specialchars_decode( (string) get_the_title( $post_id ), ENT_QUOTES ) );
+	$title   = wp_specialchars_decode( (string) get_the_title( $post_id ), ENT_QUOTES );
+	// No C0 control or DEL reaches the mailto subject: a CR/LF there could
+	// start a new header line (Bcc:) in the reader's mail client. Each run
+	// becomes one space, then the ends are trimmed (2026-10-16 audit).
+	$title   = trim( (string) preg_replace( '/[\x00-\x1F\x7F]+/', ' ', $title ) );
 	$subject = ( '' !== $title ) ? 'Re: ' . $title : '';
 	$span    = sn_email_markup(
 		sn_note_reply_alias(),

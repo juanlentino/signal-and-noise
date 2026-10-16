@@ -47,7 +47,7 @@ if ( ! function_exists( 'add_filter' ) ) {
 }
 if ( ! function_exists( 'remove_action' ) ) {
 	function remove_action( $hook, $cb, $pri = 10 ) {
-		$GLOBALS['__removed'][] = array( 'hook' => $hook, 'cb' => $cb );
+		$GLOBALS['__removed'][] = array( 'hook' => $hook, 'cb' => $cb, 'pri' => $pri );
 		return true;
 	}
 }
@@ -141,6 +141,20 @@ ok( removed_has( 'wp_head', 'rsd_link' ), 'A4: rsd_link (EditURI/RSD) removed fr
 // 2026.10: core stopped hooking wlwmanifest_link in WP 6.3 (and deprecated it);
 // the theme requires 7.0, so removing it was dead code with a false comment.
 ok( ! removed_has( 'wp_head', 'wlwmanifest_link' ), 'no dead remove_action for wlwmanifest_link (core dropped the hook in WP 6.3)' );
+
+// CSP prep (2026-10-16): core's inline emoji loader is unhooked, page and
+// oEmbed frame alike, at the priorities core registers them (a remove_action
+// at the wrong priority is a silent no-op).
+$emoji_removed = static function ( $hook, $cb, $pri ) {
+	foreach ( $GLOBALS['__removed'] as $r ) {
+		if ( $r['hook'] === $hook && $r['cb'] === $cb && (int) $r['pri'] === $pri ) { return true; }
+	}
+	return false;
+};
+ok( $emoji_removed( 'wp_head', 'print_emoji_detection_script', 7 ), 'CSP: emoji loader removed from wp_head at core priority 7' );
+ok( $emoji_removed( 'embed_head', 'print_emoji_detection_script', 10 ), 'CSP: emoji loader removed from embed_head' );
+ok( $emoji_removed( 'wp_enqueue_scripts', 'wp_enqueue_emoji_styles', 10 ), 'CSP: emoji styles dequeued on the front end' );
+ok( $emoji_removed( 'enqueue_embed_scripts', 'wp_enqueue_emoji_styles', 10 ), 'CSP: emoji styles dequeued in embeds' );
 
 // ── 2. theme-color meta (inc/assets-frontend.php) ──
 require __DIR__ . '/../inc/assets-frontend.php';
