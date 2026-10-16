@@ -12,6 +12,7 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+## [2026.10.9] - 2026-10-16 — security prep for a stricter CSP, and whole excerpts on /notes
 
 ### Fixed
 - **A note's excerpt on /notes is whole.** The row reveal clamped it to three lines, so a sentence could end mid-thought ("stop being..."). The clamp is gone; the reveal takes the excerpt's own height.
@@ -27,9 +28,4 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ### Removed
 - **WordPress's emoji loader no longer prints on pages or in oEmbed frames.** It was an inline `<script type="module">` the theme does not own, which would need `'unsafe-inline'` or a hash that changes with core. Every current browser draws emoji itself, and nothing in the theme styles the `img.emoji` it swapped in, so emoji now show as the system's glyphs. The feed and email emoji filters are untouched.
-
-## [2026.10.8] - 2026-10-16 — owner devices send their views, and the cookie line says readers
-
-### Changed
-- **Owner-device views are sent, so the analytics Worker can lane them (traffic lanes, Phase 1).** The beacon no longer skips a page view when the unsigned `sn_owner=1` cookie is present and no longer reads any cookie; the Worker files those views in an owner lane instead of losing them. The DNT/GPC skip and the Claude desktop pane (`Claude/<n>` user agent) skip stay. The beacon still sets no cookie and no storage. `/llms.txt` now says the site sets no cookies on readers and the owner's own enrolled devices carry an owner-only marker; the `gpc.json` comment matches. Deploy after the Workers and device enrollment.
 
