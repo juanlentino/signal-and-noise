@@ -92,6 +92,9 @@ ok( strpos( $body, 'append `.md` to a note URL (https://juanlentino.com/notes/<s
 ok( 1 === preg_match( '/\[Abilities API\]\([^)]*\): [^\n]*authenticat/', $body ) && false === strpos( $body, 'discover and run site abilities' ), 'the Abilities API line says it requires authentication, not "discover and run"' );
 // The Spotify players on /music/ set their own cookies by the owner's choice;
 // the line matches the Privacy Policy instead of claiming no tracking cookies.
+// 2026-10-15 (owner-approved wording): the owner's enrolled devices carry an
+// owner-only marker, so the line no longer says "no cookies of its own".
+ok( false !== strpos( $body, "the site sets no cookies on readers; the owner's own enrolled devices carry an owner-only marker, and embedded third-party players (such as Spotify) may set their own cookies" ) && false === strpos( $body, 'no cookies of its own' ), 'the cookie sentence says none on readers and names the owner-only marker' );
 ok( false === strpos( $body, 'sets no advertising or cross-site tracking cookies' ) && false !== strpos( $body, 'may set their own cookies' ), 'the cookie sentence says the site sets none of its own and third-party players may set theirs' );
 // American English and no em dashes in the copy this file writes. Tag
 // descriptions and note summaries are the owner's content and come from the

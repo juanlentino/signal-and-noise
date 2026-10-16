@@ -74,7 +74,9 @@ function sn_llms_txt_body( $full = false, $notes = array(), $pillars = array(), 
 		// 2026.10: the cookie clause follows the Privacy Policy. The Spotify
 		// players on /music/ load with the page by the owner's choice and set
 		// their own cookies, so "no cross-site tracking cookies" was not true.
-		'Content is hand-written. Analytics are first-party and cookieless; the site sets no cookies of its own, and embedded third-party players (such as Spotify) may set their own cookies, governed by that provider\'s privacy policy.',
+		// 2026-10-15: the owner's enrolled devices carry an owner-only marker
+		// (traffic lanes), so "no cookies of its own" became "none on readers".
+		'Content is hand-written. Analytics are first-party and cookieless; the site sets no cookies on readers; the owner\'s own enrolled devices carry an owner-only marker, and embedded third-party players (such as Spotify) may set their own cookies, governed by that provider\'s privacy policy.',
 		'',
 		'## Key pages',
 		'',

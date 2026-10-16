@@ -188,6 +188,11 @@ ok( strpos( $js, 'sessionStorage' ) === false && strpos( $js, 'localStorage' ) =
 ok( strpos( $js, '{ k: cfg.k, pid: pid, sg:' ) !== false, 'pid rides every event through send()' );
 ok( (bool) preg_match( '/function pageview\(\) \{\s+newPid\(\);/', $js ), 'each pageview (bfcache restore included) draws a new pid' );
 ok( 1 === substr_count( $js, 'newPid();' ), 'the pid is drawn in pageview() only' );
+// 2026-10-15 traffic lanes: the beacon no longer reads any cookie. Owner-device
+// views are sent and the analytics Worker lanes them; DNT/GPC and the Claude
+// desktop pane skip stay.
+ok( strpos( $js, 'document.cookie' ) === false && strpos( $js, 'isOwnerDevice' ) === false, 'the beacon reads no cookie (no sn_owner send gate)' );
+ok( strpos( $js, '/\\bClaude\\/\\d/' ) !== false, 'the beacon still skips the Claude desktop pane user agent' );
 ok( strpos( $js, 'document.cookie =' ) === false && strpos( $js, 'indexedDB' ) === false, 'the beacon writes no cookie and no database (the pid stays in memory)' );
 // No raw-query leak: the pv path stays location.pathname; the query is consumed only
 // through URLSearchParams to extract the named params, never sent wholesale.

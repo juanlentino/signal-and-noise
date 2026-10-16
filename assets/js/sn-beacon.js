@@ -1,6 +1,6 @@
 /**
  * Signal & Noise — first-party edge analytics beacon.
- * Cookieless (sets none; reads only the owner-device sn_owner flag). No-ops entirely under DNT/GPC. Posts same-origin to the
+ * Cookieless: it sets no cookie and no storage, and reads none. No-ops entirely under DNT/GPC. Posts same-origin to the
  * Cloudflare Worker route (window.SN_BEACON.endpoint). See P1 plan + spec
  * docs/superpowers/specs/2026-06-11-first-party-edge-analytics-design.md.
  * v10.4.0: adds window.SN_BEACON.event(name, props) for named custom events
@@ -30,14 +30,13 @@
     var dnt = navigator.doNotTrack === '1' || window.doNotTrack === '1' || navigator.msDoNotTrack === '1';
     if (dnt || navigator.globalPrivacyControl === true) return;
 
-    // Owner-device gate: the plugin sets sn_owner=1 on the owner's browsers at
-    // login and never clears it on logout, so logged-out (edge-cached) visits on
-    // those devices are not counted. Exact cookie name match; fail open on error.
-    // The Claude app's built-in browser pane (UA token "Claude/<n>") is the
-    // owner's agent browser, on a cookie jar without that flag; while hidden it
-    // reports visible but paints nothing until shown, so its loads were landing
-    // as minutes-long desktop LCP samples (2026-10-13). It counts as owner too.
-    if (isOwnerDevice() || /\bClaude\/\d/.test(String(navigator.userAgent || ''))) return;
+    // Owner-device views are sent (2026-10-15 traffic lanes): the analytics
+    // Worker reads the owner's device marker and files them in an owner lane,
+    // so nothing silently disappears. The Claude app's built-in browser pane
+    // (UA token "Claude/<n>") still sends nothing: while hidden it reports
+    // visible but paints nothing until shown, so its loads were landing as
+    // minutes-long desktop LCP samples (2026-10-13).
+    if (/\bClaude\/\d/.test(String(navigator.userAgent || ''))) return;
 
     // 0) Bot signals (observe-only, theme 14.6): four booleans and the raw UTC
     // offset ride on EVERY event as `sg`; the worker packs them into one number.
@@ -263,11 +262,6 @@
       out.tz = isFinite(tz) ? tz : null;
     } catch (e) { /* a signal that cannot be read stays false */ }
     return out;
-  }
-  function isOwnerDevice() {
-    try {
-      return document.cookie.split(';').some(function (c) { return c.trim() === 'sn_owner=1'; });
-    } catch (e) { return false; }
   }
   if (document.prerendering) {
     document.addEventListener('prerenderingchange', init, { once: true });
