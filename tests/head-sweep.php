@@ -142,19 +142,13 @@ ok( removed_has( 'wp_head', 'rsd_link' ), 'A4: rsd_link (EditURI/RSD) removed fr
 // the theme requires 7.0, so removing it was dead code with a false comment.
 ok( ! removed_has( 'wp_head', 'wlwmanifest_link' ), 'no dead remove_action for wlwmanifest_link (core dropped the hook in WP 6.3)' );
 
-// CSP prep (2026-10-16): core's inline emoji loader is unhooked, page and
-// oEmbed frame alike, at the priorities core registers them (a remove_action
-// at the wrong priority is a silent no-op).
-$emoji_removed = static function ( $hook, $cb, $pri ) {
-	foreach ( $GLOBALS['__removed'] as $r ) {
-		if ( $r['hook'] === $hook && $r['cb'] === $cb && (int) $r['pri'] === $pri ) { return true; }
-	}
-	return false;
-};
-ok( $emoji_removed( 'wp_head', 'print_emoji_detection_script', 7 ), 'CSP: emoji loader removed from wp_head at core priority 7' );
-ok( $emoji_removed( 'embed_head', 'print_emoji_detection_script', 10 ), 'CSP: emoji loader removed from embed_head' );
-ok( $emoji_removed( 'wp_enqueue_scripts', 'wp_enqueue_emoji_styles', 10 ), 'CSP: emoji styles dequeued on the front end' );
-ok( $emoji_removed( 'enqueue_embed_scripts', 'wp_enqueue_emoji_styles', 10 ), 'CSP: emoji styles dequeued in embeds' );
+// Emoji stays for readers (owner, 2026-09-29): the theme never unhooks core's
+// emoji loader or styles, on pages or in oEmbed frames. 2026.10.9 did, for CSP
+// prep, against that decision; this pin keeps it from happening a third time.
+foreach ( array( 'print_emoji_detection_script', 'wp_enqueue_emoji_styles' ) as $emoji_cb ) {
+	$emoji_hit = array_filter( $GLOBALS['__removed'], static fn( $r ) => $r['cb'] === $emoji_cb );
+	ok( array() === $emoji_hit, "emoji stays: the theme never removes $emoji_cb" );
+}
 
 // ── 2. theme-color meta (inc/assets-frontend.php) ──
 require __DIR__ . '/../inc/assets-frontend.php';
