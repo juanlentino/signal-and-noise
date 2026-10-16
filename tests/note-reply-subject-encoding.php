@@ -65,7 +65,7 @@ $row20  = sn_note_reply_markup( 20 );
 $esj20  = attr_of( $row20, 'data-esj' );
 $subject20 = rawurldecode( (string) base64_decode( $esj20 ) );
 ok( 'Re: Signal & Noise' === $subject20,
-	"the mail subject reads the literal '&', not the entity — got: \"$subject20\"" );
+	"the mail subject reads the literal '&', not the entity: got: \"$subject20\"" );
 
 echo "\nGroup 2: non-ASCII survives base64(rawurlencode()) byte-exact\n";
 
@@ -74,7 +74,7 @@ $row21     = sn_note_reply_markup( 21 );
 $esj21     = attr_of( $row21, 'data-esj' );
 $subject21 = rawurldecode( (string) base64_decode( $esj21 ) );
 ok( 'Re: Two kinds of provenance — a follow-up' === $subject21,
-	"the em dash round-trips byte-exact through base64(rawurlencode()) — got: \"$subject21\"" );
+	"the em dash round-trips byte-exact through base64(rawurlencode()): got: \"$subject21\"" );
 ok( false !== strpos( (string) base64_decode( $esj21 ), '%E2%80%94' ),
 	'the base64 payload itself is percent-encoded UTF-8 (rawurlencode), not raw bytes' );
 
@@ -94,7 +94,7 @@ $node = 'node -e ' . escapeshellarg(
 ) . ' ' . escapeshellarg( $esj21 );
 $node_out = shell_exec( $node );
 ok( 'Re: Two kinds of provenance — a follow-up' === $node_out,
-	"decodeURIComponent(atob()) in JS reproduces the exact subject — got: " . var_export( $node_out, true ) );
+	"decodeURIComponent(atob()) in JS reproduces the exact subject: got: " . var_export( $node_out, true ) );
 
 echo "\nGroup 4: user/domain parts are untouched by the new decode step\n";
 
@@ -109,12 +109,12 @@ $GLOBALS['__titles'][22] = "Hello\r\nBcc: x@evil.test\x00\x7F\tend";
 $row22     = sn_note_reply_markup( 22 );
 $subject22 = rawurldecode( (string) base64_decode( attr_of( $row22, 'data-esj' ) ) );
 ok( 0 === preg_match( '/[\x00-\x1F\x7F]/', $subject22 ),
-	'no C0 control or DEL survives into the subject — got: ' . var_export( $subject22, true ) );
+	'no C0 control or DEL survives into the subject: got: ' . var_export( $subject22, true ) );
 ok( 'Re: Hello Bcc: x@evil.test end' === $subject22,
-	'each run of controls collapses to one space — got: ' . var_export( $subject22, true ) );
+	'each run of controls collapses to one space: got: ' . var_export( $subject22, true ) );
 $GLOBALS['__titles'][23] = "\r\n";
 ok( '' === attr_of( sn_note_reply_markup( 23 ), 'data-esj' ),
-	'a title made only of controls gives no subject, not "Re: " — got: ' . var_export( attr_of( sn_note_reply_markup( 23 ), 'data-esj' ), true ) );
+	'a title made only of controls gives no subject, not "Re: ": got: ' . var_export( attr_of( sn_note_reply_markup( 23 ), 'data-esj' ), true ) );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

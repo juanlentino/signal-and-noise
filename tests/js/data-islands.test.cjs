@@ -101,3 +101,36 @@ test('palette: the island wins over a stale global', () => {
 test('palette: falls back to window.SN_CMDK on a cached page with no island', () => {
   assert.match(openPalette({}, recent('From the global')), /From the global/);
 });
+
+test('palette: a javascript: URL from the island is never navigated to', () => {
+  const navigations = [];
+  const nodes = [];
+  let document;
+  function node(tagName) {
+    const el = { tagName: tagName.toUpperCase(), children: [], attributes: {}, handlers: {}, textContent: '',
+      classList: { add() {}, remove() {} },
+      appendChild(child) { this.children.push(child); child.parentNode = this; },
+      setAttribute(k, v) { this.attributes[k] = v; }, getAttribute(k) { return this.attributes[k] || null; },
+      removeAttribute(k) { delete this.attributes[k]; },
+      addEventListener(type, fn) { (this.handlers[type] ||= []).push(fn); },
+      focus() { document.activeElement = this; }, scrollIntoView() {},
+    };
+    nodes.push(el);
+    return el;
+  }
+  const trigger = node('button');
+  const keys = [];
+  const bad = { notesUrl: 'javascript:alert(1)//', recent: [{ t: 'Evil', u: 'javascript:alert(2)' }], pillars: [], notes: [] };
+  document = { readyState: 'complete', body: node('body'), createElement: node,
+    querySelector(sel) { return sel === '.sn-cmdk-trigger' ? trigger : null; },
+    getElementById(id) { return id === 'sn-cmdk-data' ? { textContent: JSON.stringify(bad) } : null; },
+    addEventListener(type, fn) { if (type === 'keydown') keys.push(fn); }, removeEventListener() {},
+  };
+  document.activeElement = document.body;
+  vm.runInNewContext(JS('command-palette.js'), { document, window: { setTimeout(fn) { fn(); }, location: { assign(u) { navigations.push(u); } } } });
+  trigger.handlers.click[0]();
+  const input = nodes.find((n) => n.tagName === 'INPUT');
+  const press = (key) => { const e = { key, keyCode: 0, preventDefault() {} }; for (const fn of input.handlers.keydown || []) fn(e); };
+  for (let i = 0; i < 6; i++) { press('Enter'); press('ArrowDown'); }
+  assert.ok(navigations.every((u) => !/^\s*javascript:/i.test(u)), JSON.stringify(navigations));
+});

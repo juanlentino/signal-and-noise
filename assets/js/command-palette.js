@@ -237,13 +237,21 @@
 		}
 		if ( item.type === 'search' ) {
 			var q = item.query || input.value.replace( /^\s+|\s+$/g, '' );
-			var url = data.notesUrl + ( q ? '?s=' + encodeURIComponent( q ) : '' );
+			var url = ( safeUrl( data.notesUrl ) || '/notes/' ) + ( q ? '?s=' + encodeURIComponent( q ) : '' );
 			window.location.assign( url );
 			return;
 		}
-		if ( item.url ) {
-			window.location.assign( item.url );
+		var to = safeUrl( item.url );
+		if ( to ) {
+			window.location.assign( to );
 		}
+	}
+
+	// The island is DOM text, so a URL from it is checked before navigation:
+	// http(s) or root-relative only, never javascript: or data:. Defense in
+	// depth against an injected element that shadows #sn-cmdk-data.
+	function safeUrl( u ) {
+		return ( typeof u === 'string' && /^(?:https?:\/\/|\/(?!\/))/i.test( u ) ) ? u : '';
 	}
 
 	// ── Open / close ───────────────────────────────────────────────────────

@@ -49,8 +49,8 @@ ok( 1 === preg_match_all( '#<script id="sn-theme-init">(.*?)</script>#s', $head,
 $inner    = $m[1][0] ?? '';
 $computed = 'sha256-' . base64_encode( hash( 'sha256', $inner, true ) );
 ok( false !== strpos( $inner, "localStorage.getItem('sn-theme')" ), 'the script reads the storage key (sanity: the right script was hashed)' );
-ok( $computed === SN_THEME_INIT_SHA256, "SN_THEME_INIT_SHA256 matches the script's bytes — computed $computed" );
-ok( 2 === substr_count( $src, $computed ), "the hash appears twice in inc/dark-mode.php: the doc comment and the constant — computed $computed" );
+ok( $computed === SN_THEME_INIT_SHA256, "SN_THEME_INIT_SHA256 matches the script's bytes: computed $computed" );
+ok( 2 === substr_count( $src, $computed ), "the hash appears twice in inc/dark-mode.php: the doc comment and the constant: computed $computed" );
 ok( 1 === preg_match( '/<script id="sn-theme-init">/', $head ) && false === strpos( $head, 'nonce=' ), 'the tag stays static: no nonce, nothing per request' );
 
 echo "Result: $pass passed, $fail failed.\n";
