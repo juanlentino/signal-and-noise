@@ -13,6 +13,7 @@ adds a bullet below. A release is a separate, deliberate act:
 ## [Unreleased]
 
 ### Security
+- The command palette's URL guard refuses any backslash, so `/\host` (which browsers read as `//host`) can no longer leave the site.
 - **A note title can no longer add a line to the reply email.** The Reply row's `mailto:` subject now turns every control character (CR, LF, NUL, DEL and the rest of C0) into one space before it is encoded, so a title cannot start a new mail header such as `Bcc:` in a reader's mail client.
 - **A Spanish page URL is copied into the header link literally.** The Spanish header nav swaps a link's `href` with a callback instead of a regex replacement string, so a `$1` or `\1` in a URL is never read as a backreference.
 

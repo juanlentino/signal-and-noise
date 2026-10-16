@@ -120,7 +120,7 @@ test('palette: a javascript: URL from the island is never navigated to', () => {
   }
   const trigger = node('button');
   const keys = [];
-  const bad = { notesUrl: 'javascript:alert(1)//', recent: [{ t: 'Evil', u: 'javascript:alert(2)' }], pillars: [], notes: [] };
+  const bad = { notesUrl: 'javascript:alert(1)//', recent: [{ t: 'Evil', u: 'javascript:alert(2)' }, { t: 'Slash', u: '/\\evil.example' }, { t: 'Proto', u: '//evil.example/x' }, { t: 'Mixed', u: '/a\\b' }], pillars: [], notes: [] };
   document = { readyState: 'complete', body: node('body'), createElement: node,
     querySelector(sel) { return sel === '.sn-cmdk-trigger' ? trigger : null; },
     getElementById(id) { return id === 'sn-cmdk-data' ? { textContent: JSON.stringify(bad) } : null; },
@@ -133,4 +133,5 @@ test('palette: a javascript: URL from the island is never navigated to', () => {
   const press = (key) => { const e = { key, keyCode: 0, preventDefault() {} }; for (const fn of input.handlers.keydown || []) fn(e); };
   for (let i = 0; i < 6; i++) { press('Enter'); press('ArrowDown'); }
   assert.ok(navigations.every((u) => !/^\s*javascript:/i.test(u)), JSON.stringify(navigations));
+  assert.ok(navigations.every((u) => /^\/(?![\/\\])/.test(u) && !u.includes('\\')), JSON.stringify(navigations));
 });

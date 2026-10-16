@@ -249,11 +249,12 @@
 
 	// The island is DOM text, so a URL from it is reduced to a same-site path
 	// before navigation: an http(s) URL or a root-relative path keeps its path,
-	// query and hash; anything else (javascript:, data:, //host) gives ''. The
+	// query and hash; anything else (javascript:, data:, //host, /\host,
+	// any backslash, which browsers read as a slash) gives ''. The
 	// result always starts with a constant "/", so no scheme can ride along.
 	// Defense in depth against an injected element shadowing #sn-cmdk-data.
 	function safeUrl( u ) {
-		var m = typeof u === 'string' ? /^(?:https?:\/\/[^\/?#\s]+)?\/(?!\/)([^\s]*)$/i.exec( u ) : null;
+		var m = typeof u === 'string' ? /^(?:https?:\/\/[^\/\\?#\s]+)?\/(?![\/\\])([^\s\\]*)$/i.exec( u ) : null;
 		return m ? '/' + m[ 1 ] : '';
 	}
 
