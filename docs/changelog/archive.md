@@ -16,6 +16,11 @@ nothing here is edited by hand again.
 
 All notable changes to Signal & Noise are documented here.
 
+## [2026.10.7] - 2026-10-15 — /cv/ renders like /resume; the Spanish nav reads Curriculum vitae
+
+### Added
+- **/cv/, the Spanish résumé, renders like /resume.** On Spanish pages the header nav label reads "Curriculum vitae" (owner, 2026-10-15). The résumé stylesheet now loads on /cv/ as well: it was gated on the slug `resume`, so the Spanish page would have rendered unstyled. The page itself is paired to /resume by the companion plugin's Spanish pages list.
+
 ## [2026.10.6] - 2026-10-15 — One EN | ES switch in the header on every page
 
 ### Changed
