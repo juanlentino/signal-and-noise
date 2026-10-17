@@ -519,6 +519,46 @@ body.page main .entry-content > .is-layout-constrained > :where(:not(.alignleft)
 	margin-top: 0 !important;
 }
 
+/* The hero's pulse (2026.10): the last 24 hours of the site's own traffic as
+   a hairline waveform, from inc/hero-pulse.php. This is the static half and
+   carries no `content`: the inline rule that file prints in <head> adds the
+   content and the waveform mask only when there is real data, so a missing
+   series never paints a solid block. It sits inside the hero's bottom padding
+   (54px desktop, 64px tablet, 48px phone), so on no viewport can it reach the
+   buttons, and it is absolute, so the hero's flex column never moves. Left and
+   right match the hero column. The concrete token recalibrates it in dark
+   mode. It writes itself in once, left to right, in sixteen steps, for readers
+   who have not asked for less motion; forced colors drop it. */
+.sn-hero::after {
+	position: absolute;
+	left: max(var(--wp--preset--spacing--40), calc((100% - var(--wp--custom--page-track)) / 2));
+	right: max(var(--wp--preset--spacing--40), calc((100% - var(--wp--custom--page-track)) / 2));
+	bottom: var(--wp--preset--spacing--30);
+	height: 2.25rem;
+	pointer-events: none;
+	background-color: var(--wp--preset--color--concrete);
+	-webkit-mask-size: 100% 100%;
+	mask-size: 100% 100%;
+	-webkit-mask-repeat: no-repeat;
+	mask-repeat: no-repeat;
+}
+@media (prefers-reduced-motion: no-preference) {
+	.sn-hero::after { animation: sn-pulse-draw 1.6s steps(16, end) 1s both; }
+}
+@keyframes sn-pulse-draw {
+	from { clip-path: inset(0 100% 0 0); }
+	to   { clip-path: inset(0 0 0 0); }
+}
+@media (forced-colors: active) {
+	.sn-hero::after { display: none; }
+}
+@media (max-width: 781px) {
+	.sn-hero::after { left: 1.5rem; right: 1.5rem; height: 2.5rem; }
+}
+@media (max-width: 480px) {
+	.sn-hero::after { left: 1.25rem; right: 1.25rem; bottom: var(--wp--preset--spacing--20); height: 2rem; }
+}
+
 /* v8.5.6 critical.css pruning: .wp-block-button__link resting + hover
    + outline-style variants lived here. Button hover is not first-paint
    critical; full definitions in assets/css/components.css (deferred).
