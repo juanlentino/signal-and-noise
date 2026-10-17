@@ -299,12 +299,13 @@ function sn_enqueue_discography() {
 add_action( 'wp_enqueue_scripts', 'sn_enqueue_discography', 30 );
 
 /**
- * In-article TOC reading-progress bar + smooth-scroll (single notes).
+ * In-article TOC smooth-scroll and focus (single notes). The reading-progress
+ * indicator is the CSS tuning dial now (inc/article-toc.php); this script no
+ * longer draws a bar.
  *
  * Loaded only on single posts, footer + deferred so it never blocks first
  * paint. The script self-gates on the presence of the server-rendered
- * <nav class="sn-article-toc"> (inc/article-toc.php) — short notes that get
- * no TOC also get no bar. Pure progressive enhancement: the TOC and its anchor
+ * <nav class="sn-article-toc"> (inc/article-toc.php). Pure progressive enhancement: the TOC and its anchor
  * links work with this script absent. Named (not a closure) and mirrors
  * sn_enqueue_discography above.
  */

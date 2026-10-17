@@ -6,7 +6,7 @@
  * The brutalist black-on-white base is already maximal contrast, so the block's
  * job is narrow: keep the keyboard focus ring visible (custom outline colours get
  * remapped under Windows High Contrast Mode — pin a system colour) and preserve
- * the reading-progress fill (it conveys position via colour). This guards that the
+ * the reading-dial needle (it conveys position via colour). This guards that the
  * block ships and targets those exact elements.
  *
  * @since theme v10.20.0
@@ -25,7 +25,7 @@ ok( false !== $pos, 'base.css has a forced-colors: active block (Windows High Co
 $fc = false !== $pos ? substr( $css, $pos ) : '';
 ok( strpos( $fc, ':focus-visible' ) !== false, 'forced-colors block keeps :focus-visible rings (keyboard focus stays visible)' );
 ok( preg_match( '/outline:[^;}]*(Highlight|CanvasText)/', $fc ) === 1, 'focus ring pins to a system colour (Highlight/CanvasText), not a remapped custom colour' );
-ok( strpos( $fc, '.sn-article-progress__fill' ) !== false, 'forced-colors block preserves the reading-progress fill (colour-conveyed UI)' );
+ok( strpos( $fc, '.sn-article-dial__needle' ) !== false, 'forced-colors block preserves the reading-dial needle (colour-conveyed UI; the progress bar it replaced, 2026-10)' );
 
 // --- prefers-contrast: more ---
 ok( strpos( $css, '@media (prefers-contrast: more)' ) !== false, 'base.css has a prefers-contrast: more block' );

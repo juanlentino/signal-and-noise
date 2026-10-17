@@ -356,6 +356,8 @@ p.has-rust-color a:not(.wp-element-button),
 	left: 0;
 	right: 0;
 	z-index: 10000;
+	/* The anchor the reading dial pins to (components.css, .sn-article-dial). */
+	anchor-name: --sn-header;
 	/* Solid, one height, no transition. This was a 72%-alpha veil with
 	   `backdrop-filter: blur(12px) saturate(1.2)` that gained a soft shadow
 	   and eased its own padding on scroll, which is glassmorphism and the
