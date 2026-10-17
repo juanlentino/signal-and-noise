@@ -186,4 +186,5 @@ require_once __DIR__ . '/inc/palettes.php'; // v12.0.0: every palette the site c
 require_once __DIR__ . '/inc/nav-current.php'; // 2026.10: aria-current="page" on the header nav link for the page being viewed (custom links get none from core)
 require_once __DIR__ . '/inc/dark-mode.php'; // v11.13.0: dark palette plumbing — pre-paint data-theme stamp, per-scheme theme-color, the brand icon set (assets/brand/), [sn_theme_toggle]
 require_once __DIR__ . '/inc/lang-toggle.php'; // The EN / ES link on the bilingual storefront pages (pairing lives in the companion plugin's inc/bilingual.php)
+require_once __DIR__ . '/inc/header-lang-menu.php'; // EN | ES inside the menu dialog below 375px
 require_once __DIR__ . '/inc/lang-chrome.php'; // The header and footer in Spanish on the Spanish pages, and the site-wide Español link
