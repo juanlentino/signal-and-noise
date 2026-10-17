@@ -2381,28 +2381,41 @@ img.sn-img-dim {
 	.sn-signal-path li[aria-current]::before { forced-color-adjust: none; background: Highlight; border-color: Highlight; }
 }
 
-/* Essay breakout (2026.10): at 1200px and wider the essay's post content is
-   the grid, with named lines: a margin lane, the 760px reading column, and a
-   right lane. Every "Section N" label sits in the margin lane and holds there
-   while its section scrolls, whether it is wrapped in a section group or loose
-   in the content (a label followed by a heading, as Section 6 of
-   /provenance/over-detection is). Grid auto-placement does the pairing: a
-   loose label starts a row, its heading takes the column beside it, and it
-   spans down until the next rule, which spans the lane and ends it. The prose
-   keeps its full measure; DOM order is unchanged; below 1200px nothing moves.
-   Sticky needs body to clip, not hide: a hidden body is a scroll container
-   that never scrolls. */
+/* Essay breakout (2026.10): the essay's <main> is the grid, with named lines:
+   a margin lane, the 760px reading column, and a right lane (the lanes open at
+   1200px; below that every line sits on the column). The post-content element
+   is unboxed (display: contents) so its children and the tracklist, which is
+   emitted outside the signed element, share one grid: the tracklist shows
+   between the title and Section 1 although its markup comes first, and
+   reading-flow keeps the tab order on what is seen where supported. Every
+   "Section N" label sits in the margin lane and holds while its section
+   scrolls, wrapped in a section group or loose in the content (a label
+   followed by a heading, as Section 6 of /provenance/over-detection is). Grid
+   auto-placement does the pairing: a loose label starts a row, its heading
+   takes the column beside it, and it spans down until the next rule, which
+   spans the lane and ends it. Sticky needs body to clip, not hide: a hidden
+   body is a scroll container that never scrolls. */
 body:has(.sn-provenance-section) { overflow-x: clip; }
+main:has(> .wp-block-post-content > .sn-provenance-section) {
+	display: grid;
+	grid-template-columns: [full-start] minmax(0, 1fr) [margin-start content-start] min(760px, 100%) [content-end margin-end] minmax(0, 1fr) [full-end];
+	align-content: start;
+	reading-flow: grid-order;
+}
+main:has(> .wp-block-post-content > .sn-provenance-section) > .wp-block-post-content { display: contents; }
+main:has(> .wp-block-post-content > .sn-provenance-section) > *,
+.wp-block-post-content:has(> .sn-provenance-section) > * { grid-column: content; max-width: none !important; margin-left: 0 !important; margin-right: 0 !important; } /* not a track: each child fills its grid column */
+.wp-block-post-content:has(> .sn-provenance-section) > :is(.alignwide, .alignfull) { grid-column: full; }
+.wp-block-post-content > hr { grid-column: margin-start / content-end; }
+.wp-block-post-content > .sn-provenance-section { grid-column: margin-start / margin-end; }
+main:has(> .wp-block-post-content > .sn-provenance-hero) > .sn-essay-tracklist { order: 1; }
+main:has(> .wp-block-post-content > .sn-provenance-hero) > .wp-block-post-content > .sn-provenance-hero ~ * { order: 2; }
+main:has(> .wp-block-post-content > .sn-provenance-section) > .wp-block-post-content ~ * { order: 3; }
 @media (min-width: 1200px) {
-	.wp-block-post-content:has(> .sn-provenance-section) {
-		display: grid;
+	main:has(> .wp-block-post-content > .sn-provenance-section) {
 		grid-template-columns: [full-start] minmax(0, 1fr) [margin-start] 9rem 2rem [content-start] min(760px, 100%) [content-end] 2rem 9rem [margin-end] minmax(0, 1fr) [full-end];
-		max-width: none !important; /* not a track: the grid draws the reading track itself, in its content column */
 	}
-	.wp-block-post-content:has(> .sn-provenance-section) > * { grid-column: content; max-width: none !important; margin-left: 0 !important; margin-right: 0 !important; } /* not a track: each child fills its grid column */
-	.wp-block-post-content:has(> .sn-provenance-section) > :is(.alignwide, .alignfull) { grid-column: full; }
-	.wp-block-post-content > hr { grid-column: margin-start / content-end; }
-	.wp-block-post-content > .sn-provenance-section { grid-column: margin-start / margin-end; display: grid !important; grid-template-columns: 9rem 2rem minmax(0, 1fr) 2rem 9rem; }
+	.wp-block-post-content > .sn-provenance-section { display: grid !important; grid-template-columns: 9rem 2rem minmax(0, 1fr) 2rem 9rem; }
 	.wp-block-post-content > .sn-provenance-section > * { grid-column: 3; max-width: none !important; margin-left: 0 !important; } /* not a track: the section's own grid sets the column */
 	.wp-block-post-content > .sn-provenance-section > .sn-provenance-section-eyebrow,
 	.wp-block-post-content > p.has-blood-color:has(+ h2.wp-block-heading) {
@@ -2410,6 +2423,10 @@ body:has(.sn-provenance-section) { overflow-x: clip; }
 		top: calc(var(--sn-chrome-top, 100px) + 3rem); margin: 0.6rem 0 0 !important; text-align: right; container-type: scroll-state;
 	}
 	.wp-block-post-content > .sn-provenance-section > .sn-provenance-section-eyebrow { grid-column: 1; }
+	/* The arrival rule base.css draws beside a jumped-to heading sits 0.6em
+	   out, which at display size lands on the margin label. Here it hugs the
+	   heading inside the gutter instead. */
+	.wp-block-post-content :is(h2, h3, h4)[id]:target::before { inset-inline-start: calc(-1 * (2px + 0.6rem)); }
 	/* Signal lock: only while a label is pinned, a tally lights beside it and a
 	   patch line bridges the gutter to the column. At rest it is plain. */
 	@container scroll-state(stuck: top) {
