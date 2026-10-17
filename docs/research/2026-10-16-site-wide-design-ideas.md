@@ -308,8 +308,8 @@ template, needs no home or chrome approval, and finally gives the orphaned
 Then **3 (channel change)** if the owner wants the motif in motion; it is the
 highest-visibility change for the least code, and it needs both yeses.
 
-Live mockups of 1, 2 and 4 (light and dark, reduced-motion aware): see the
-artifact linked in the hand-over note and the PR description.
+Live mockups of 1, 2 and 4 (light and dark, reduced-motion aware, private
+link): https://claude.ai/artifact/CK7NjCcR2QgMNpH7mT7EyP
 
 ## Sources
 
