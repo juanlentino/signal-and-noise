@@ -140,7 +140,9 @@ function sn_pillar_eyebrow_filter( $block_content, $block, $instance = null ) {
 	$GLOBALS['sn_pillar_eyebrow_emitted'] = true;
 	// The series path rides directly under the brow (inc/essay-signal-path.php).
 	$path = function_exists( 'sn_essay_signal_path_html' ) ? sn_essay_signal_path_html( $page_id ) : '';
-	return $eyebrow . $path . (string) $block_content;
+	// Then the essay's own sections as a tracklist (inc/essay-tracklist.php).
+	$tracks = function_exists( 'sn_essay_tracklist_html' ) ? sn_essay_tracklist_html( $page_id ) : '';
+	return $eyebrow . $path . $tracks . (string) $block_content;
 }
 
 if ( ! defined( 'SN_PILLAR_EYEBROW_TEST' ) || ! SN_PILLAR_EYEBROW_TEST ) {

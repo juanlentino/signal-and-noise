@@ -173,7 +173,7 @@ echo "\nGroup 9: details for the pages that were bare (2026-10-17)\n";
 $comp = $css( 'components.css' );
 ok( 1 === preg_match( '/\.sn-signal-path li\[aria-current\]::before\s*\{[^}]*background:\s*var\(--wp--preset--color--blood\)/s', $comp ), 'signal path: the current essay is lit in blood' );
 ok( 1 === preg_match( '/body:has\(\.sn-provenance-section\)\s*\{\s*overflow-x:\s*clip;/', $comp ), 'margin cue: body clips on the essays, so sticky works (a hidden body is a dead scroll container)' );
-ok( 1 === preg_match( '/@media \(min-width:\s*1200px\)\s*\{[^@]*\.sn-provenance-section > \.sn-provenance-section-eyebrow\s*\{[^}]*position:\s*sticky/s', $comp ), 'margin cue: the section label holds in the gutter at 1200px and wider only' );
+ok( 1 === preg_match( '/@media \(min-width:\s*1200px\)\s*\{[^@]*\.sn-provenance-section > \.sn-provenance-section-eyebrow[^{]*\{[^}]*position:\s*sticky/s', $comp ), 'margin cue: the section label holds in the gutter at 1200px and wider only' );
 ok( 1 === preg_match( '/iframe\[src\^="https:\/\/calendar\.google\.com\/"\]\s*\{[^}]*linear-gradient\(90deg, var\(--wp--preset--color--void\)/s', $comp ) && false !== strpos( $comp, 'CONNECTING %C2%B7 CALENDAR.GOOGLE.COM' ), 'call: a static test strip from the palette tokens, naming the real host' );
 $notes = $css( 'notes.css' );
 ok( 1 === preg_match( '/\.sn-notes-row-excerpt mark\s*\{[^}]*background:\s*none;[^}]*text-decoration:\s*underline 2px var\(--wp--preset--color--blood\)/s', $notes ), 'search: the matched term is underlined in blood (it was not highlighted at all)' );
@@ -183,14 +183,22 @@ ok( 1 === preg_match( '/\.sn-footer a\[title\]:focus-visible::after\s*\{[^}]*con
 ok( 1 === preg_match( '/@media \(hover:\s*hover\)\s*\{\s*\.sn-footer a\[title\]:hover::after/s', $layout ), '...and on hover only where the pointer hovers' );
 ok( 1 === preg_match( '/\.sn-resume-lane i\s*\{[^}]*left:\s*var\(--s\);[^}]*width:\s*var\(--w\)/s', $css( 'resume.css' ) ), 'résumé: each lane is placed on the shared axis' );
 
-echo "\nGroup 10: the margin cue stands down on an essay with a loose section\n";
-// /provenance/over-detection's Section 6 is not wrapped in a section group: its
-// label and heading sit straight in the post content, so the cue moved
-// Sections 1 to 5 into the gutter and left 6 at the column edge (2026-10-17).
-$g = 'body:not(:has(.wp-block-post-content > p.has-blood-color + h2.wp-block-heading))';
+echo "\nGroup 10: the essay breakout grid holds every section label in one gutter lane\n";
+// The first margin cue narrowed the prose to 584px to make room for its label,
+// and left a loose section (label and heading straight in the content, as
+// Section 6 of /provenance/over-detection is) at the column edge. The post
+// content is now the grid: a margin lane, the 760px reading column, a right lane.
 $comp2 = $css( 'components.css' );
-ok( 3 === substr_count( $comp2, $g . ' .sn-provenance-section' ), 'every margin-cue rule carries the guard, so a page with a loose section reads as before, all of a piece' );
-ok( 0 === preg_match( '/(^|[{},])\s*\.sn-provenance-section\s*\{\s*display:\s*grid/', $comp2 ), 'no unguarded grid rule remains' );
+ok( false === strpos( $comp2, 'body:not(:has(.wp-block-post-content > p.has-blood-color' ), 'the stand-down guard is gone: a loose section joins the lane instead' );
+ok( 1 === preg_match( '/\.wp-block-post-content:has\(> \.sn-provenance-section\)\s*\{[^}]*grid-template-columns:[^;]*\[margin-start\][^;]*\[content-start\] min\(760px, 100%\)/', $comp2 ), 'the post content is a named-line grid around the full 760px reading column' );
+ok( 1 === preg_match( '/\.wp-block-post-content > p\.has-blood-color:has\(\+ h2\.wp-block-heading\)[^{]*\{[^}]*position: sticky/', $comp2 ), 'a loose section label pins in the lane like a wrapped one' );
+ok( 1 === preg_match( '/\.wp-block-post-content > hr\s*\{[^}]*grid-column: margin-start/', $comp2 ), 'a rule spans the lane, so the last loose label stops where its section ends' );
+ok( false !== strpos( $comp2, 'container-type: scroll-state' ) && false !== strpos( $comp2, '@container scroll-state(stuck: top)' ), 'signal lock: a pinned label lights only while it is pinned' );
+ok( 1 === preg_match( '/@container scroll-state\(stuck: top\)\s*\{[^@]*::before\s*\{[^}]*border:/', $comp2 ), 'the tally is a border, so forced colors keep it' );
+ok( 1 === preg_match( '/\.sn-provenance-diagram-wrap\s*\{[^}]*grid-column: 3 \/ 6/', $comp2 ) && false !== strpos( $comp2, '.sn-provenance-diagram-wrap::before' ), 'the figure breaks out into the right lane inside crop marks' );
+ok( 1 === preg_match( '/\.sn-essay-tracklist ol\s*\{[^}]*scroll-target-group: auto/', $comp2 ) && false !== strpos( $comp2, ':target-current' ), 'the tracklist lights the section on screen, with no script' );
+ok( false !== strpos( $comp2, '.sn-essay-tracklist ~ .wp-block-post-content > .sn-provenance-toc { display: none; }' ), 'the tracklist stands in for an essay\'s own Jump to line, so the contents never show twice' );
+ok( false !== strpos( $comp2, '.sn-essay-runout' ), 'the runout etching is styled' );
 
 echo "\n$pass passed, $fail failed\n";
 exit( $fail > 0 ? 1 : 0 );

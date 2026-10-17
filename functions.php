@@ -143,6 +143,8 @@ require_once __DIR__ . '/inc/abilities-registration.php';
 require_once __DIR__ . '/inc/post-frontmatter.php';
 require_once __DIR__ . '/inc/pillar-title-eyebrow.php'; // v10.48.0: designation eyebrow ("№ 1.01 · Pillar Essay" → /provenance/) on the flagged essay Page's own title
 require_once __DIR__ . '/inc/essay-signal-path.php'; // 2026.10: the pillar series as a signal path under the brow
+require_once __DIR__ . '/inc/essay-tracklist.php'; // 2026.10: the essay's sections as a tracklist under the signal path
+require_once __DIR__ . '/inc/essay-runout.php'; // 2026.10: the signed record's matrix line after the essay
 require_once __DIR__ . '/inc/search-marker-lane.php'; // 2026.10: where a search term occurs across each result
 require_once __DIR__ . '/inc/resume-lanes.php'; // 2026.10: résumé roles on one shared timeline
 require_once __DIR__ . '/inc/provenance-title-badge.php'; // v11.11.0: the provenance badge joins the BROW on signed Pages (was appended at the content foot by the plugin's the_content filter).
