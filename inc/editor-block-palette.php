@@ -194,6 +194,7 @@ function sn_theme_allowed_blocks( $allowed, $context ) {
 		'signal-noise/meta-nav',
 		'signal-noise/next-essay',
 		'signal-noise/lang-toggle',
+		'signal-noise/print-colophon',
 	);
 
 	return array_values( array_unique( array_merge( $used, $authoring, $contact, $companion, $theme_blocks ) ) );

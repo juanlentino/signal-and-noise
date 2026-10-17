@@ -38,6 +38,7 @@
  *   inc/block-bindings.php       — signal-noise/post-field Block Bindings source (reading_time|pillar|canonical|og_title) (v9.11.0)
  *   inc/post-updated-date.php    — [sn_updated_date] "Updated YYYY.MM.DD" line for materially-revised notes (v9.10.0)
  *   inc/provenance-surface.php   — [sn_prov_chip] byline pill + [sn_prov_panel] record, plugin-guarded (v10.30.0)
+ *   inc/print-colophon.php       — paper-only proof under a note: full hash, status, verify address
  *   inc/related-notes.php        — related-notes footer block on single notes
  *   inc/cited-by.php             — [sn_cited_by] reverse-link footer (v10.21.0)
  *   inc/next-essay.php           : the next pillar after each essay (14.9.0)
@@ -140,6 +141,7 @@ require_once __DIR__ . '/inc/provenance-title-badge.php'; // v11.11.0: the prove
 require_once __DIR__ . '/inc/block-bindings.php';
 require_once __DIR__ . '/inc/post-updated-date.php';
 require_once __DIR__ . '/inc/provenance-surface.php'; // v10.30.0: [sn_prov_chip] byline pill + [sn_prov_panel] record — theme-side placement for the plugin's public provenance rendering (plugin-guarded)
+require_once __DIR__ . '/inc/print-colophon.php'; // the printed note's proof: full hash, status, verify address written out
 require_once __DIR__ . '/inc/related-notes.php';
 require_once __DIR__ . '/inc/cited-by.php'; // v10.21.0: [sn_cited_by] reverse-link footer (complement to deliberately-dead pingbacks)
 require_once __DIR__ . '/inc/next-essay.php'; // 14.9.0: the next pillar, at the end of each essay

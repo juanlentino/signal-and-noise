@@ -1,0 +1,44 @@
+/* signal-noise/print-colophon: paper only.
+
+   Hidden on screen (the provenance panel above it is the screen surface) and
+   shown when printed, under the closing rule. Its own sheet, declared in
+   block.json, so it loads only where the block renders and print.css stays
+   untouched. Text is currentColor, which print.css forces to black. */
+
+.sn-print-colophon {
+	display: none;
+}
+
+@media print {
+	.sn-print-colophon {
+		display: block;
+		margin-top: 1.5rem;
+		padding-top: 0.75rem;
+		border-top: 1px solid currentColor;
+		font-size: 9pt;
+		line-height: 1.45;
+		color: currentColor;
+		break-inside: avoid;
+	}
+
+	.sn-print-colophon p {
+		margin: 0 0 0.35rem 0;
+	}
+
+	.sn-print-colophon__label {
+		font-size: 8pt;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+	}
+
+	/* The full hash must wrap rather than run off the page. */
+	.sn-print-colophon code {
+		word-break: break-all;
+	}
+
+	/* The address is already the link text; print.css's href reveal would
+	   print it twice. */
+	.sn-print-colophon a[href]::after {
+		content: "" !important;
+	}
+}
