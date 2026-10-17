@@ -106,7 +106,10 @@ overlay menu gets the static rule only.
 a real gap: the 2026.10 audit made the current page *announce* itself to screen
 readers, but sighted readers still get no mark. Slide layer, behind
 `@supports (anchor-name: --a)`: give the current link and `:hover`/`:focus-visible`
-links `anchor-name: --sn-tuned` (the hovered one wins by order), hide the per-link
+links `anchor-name: --sn-tuned`, drop it from the current link while the nav
+`:has(a:hover, a:focus-visible)` (anchor resolution picks the last match in tree
+order, so without that, hovering a link before the current one would not move
+the indicator), hide the per-link
 `::after`, and draw one `ul::before` with `position-anchor: --sn-tuned;
 left: anchor(left); width: anchor-size(width); transition: left, width 0.3s`.
 Anchor positioning is Baseline since January 2026 (Firefox 147, Safari 26,
@@ -130,7 +133,8 @@ surface.
 seven vertical bars, the house palette in order (void, asphalt, concrete, rust,
 bone, blood, signal), with a thin PLUGE-style row of near-black steps under it and
 the existing eyebrow "Error · 404 · No Signal" above. On arrival the digits
-flicker once (the `glitchFlicker` keyframes that already exist and nothing uses),
+flicker once (the `glitchFlicker` keyframes that already exist and nothing uses, run in
+reverse so the flicker lands at arrival and then holds),
 then hold. In dark mode the bars follow the inverted tokens, so the card
 recalibrates itself.
 
@@ -138,7 +142,7 @@ recalibrates itself.
 
 **Mechanism.** `background: linear-gradient(90deg, var(--wp--preset--color--void)
 0 14.28%, ...)` on `.sn-404-digits` (already `aria-hidden`, decorative), plus a
-one-shot `animation: glitchFlicker 0.6s steps(6) 1` under
+one-shot `animation: glitchFlicker 1.6s linear reverse 1` under
 `prefers-reduced-motion: no-preference`. No markup change, no new tokens.
 
 **Cost.** XS, one file, no home or chrome exposure.
@@ -239,8 +243,8 @@ fades in under the header, the gate the content passes beneath.
 animation-range: 0 64px;` on `.sn-header`, animating `box-shadow: 0 1px 0
 var(--wp--preset--color--concrete)` from transparent. Height and
 `--sn-chrome-top` never change. `scroll-state(stuck)` does not apply (the header
-is fixed, not sticky). Firefox still keeps `animation-timeline` behind a flag as
-of 152, so Firefox shows no hairline, which is today.
+is fixed, not sticky). Firefox kept `animation-timeline` behind a flag as of 152
+(per a June 2026 secondary report; verify on MDN before build), so Firefox shows no hairline, which is today.
 
 **Cost.** XS, in both `critical.css` and `layout.css`. Coordinate with the
 tuning-dial session, which introduces the theme's first scroll timeline.
@@ -303,7 +307,7 @@ already started (the current page is announced but not shown) using the rule it
 already draws, with the home page already excluded by `nav-current.php`; it still
 needs the owner's site-wide yes. The test card 404 is the fun one, touches one
 template, needs no home or chrome approval, and finally gives the orphaned
-`glitchFlicker` keyframes a consumer. Each is under a day with its tests.
+`glitchFlicker` keyframes a consumer. Estimate, not measured: each is under a day with its tests.
 
 Then **3 (channel change)** if the owner wants the motif in motion; it is the
 highest-visibility change for the least code, and it needs both yeses.
