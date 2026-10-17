@@ -39,6 +39,7 @@
  *   inc/block-bindings.php       — signal-noise/post-field Block Bindings source (reading_time|pillar|canonical|og_title) (v9.11.0)
  *   inc/post-updated-date.php    — [sn_updated_date] "Updated YYYY.MM.DD" line for materially-revised notes (v9.10.0)
  *   inc/provenance-surface.php   — [sn_prov_chip] byline pill + [sn_prov_panel] record, plugin-guarded (v10.30.0)
+ *   inc/hero-pulse.php           — the home hero's pulse: last 24h of traffic as a waveform mask, plugin-guarded
  *   inc/print-colophon.php       — paper-only proof under a note: full hash, status, verify address
  *   inc/related-notes.php        — related-notes footer block on single notes
  *   inc/cited-by.php             — [sn_cited_by] reverse-link footer (v10.21.0)
@@ -184,6 +185,7 @@ require_once __DIR__ . '/inc/feed-websub.php'; // D4 (v10.9.0): WebSub <atom:lin
 require_once __DIR__ . '/inc/reading-path-slot.php'; // v11.9.0: [sn_reading_path] block bridge — the plugin's reading-chain nav resolves on single Notes (empty slot when the plugin is absent)
 require_once __DIR__ . '/inc/palettes.php'; // v12.0.0: every palette the site can present (root + variations + dark), read from the files that define them
 require_once __DIR__ . '/inc/nav-current.php'; // 2026.10: aria-current="page" on the header nav link for the page being viewed (custom links get none from core)
+require_once __DIR__ . '/inc/hero-pulse.php'; // 2026.10: the home hero's pulse, the last 24 hours of traffic as a waveform (plugin-guarded, shape only)
 require_once __DIR__ . '/inc/dark-mode.php'; // v11.13.0: dark palette plumbing — pre-paint data-theme stamp, per-scheme theme-color, the brand icon set (assets/brand/), [sn_theme_toggle]
 require_once __DIR__ . '/inc/lang-toggle.php'; // The EN / ES link on the bilingual storefront pages (pairing lives in the companion plugin's inc/bilingual.php)
 require_once __DIR__ . '/inc/header-lang-menu.php'; // EN | ES inside the menu dialog below 375px
