@@ -15,8 +15,16 @@
    viewport, 260px to its right against the 200px the escape needs; 340px at
    1440. `main` is overflow:visible on both templates. */
 
+/* The class is doubled on purpose: (0,3,0). On a single note the prose rule
+   `.sn-note-single .wp-block-post-content p` (components.css, 0,2,1) matches
+   this <p> too, and at (0,2,0) these rules lost to it, so the margin note
+   rendered at prose size (14.4px measured, 2026-10-16) and prose line-height.
+   A doubled class matches exactly the same elements, editor canvas included
+   (no `main` there to scope by), and wins regardless of which sheet loads
+   last. tests/sidenote-note-size.php resolves it at both breakpoints. */
+
 @media (min-width: 1280px) {
-	.wp-block-post-content .sn-sidenote {
+	.wp-block-post-content .sn-sidenote.sn-sidenote {
 		float: right;
 		clear: right;
 		width: 180px;
@@ -25,7 +33,7 @@
 		   !important. Importance beats specificity, and auto on a float
 		   resolves to 0, so the escape was silently dead (measured
 		   pastColumnEdge: 0 on the v12.7.x harness). Equal importance +
-		   this rule's higher specificity (0,2,0 vs core's 0,1,0) wins. */
+		   this rule's higher specificity (0,3,0 vs core's 0,1,0) wins. */
 		margin-right: -200px !important;
 		margin-top: 0;
 		margin-bottom: 1rem;
@@ -39,7 +47,7 @@
 }
 
 @media (max-width: 1279.98px) {
-	.wp-block-post-content .sn-sidenote {
+	.wp-block-post-content .sn-sidenote.sn-sidenote {
 		float: none;
 		width: auto;
 		margin-top: 0.75rem;

@@ -12,6 +12,7 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+- **The sidenote is margin-note size again on notes.** On a single note the prose rule `.sn-note-single .wp-block-post-content p` (0,2,1) also matched the sidenote's `<p>` and out-ranked its own rules (0,2,0), so the margin note rendered at prose size and line-height (14.4px measured at 1440, where its sheet asks for 12px). The two sidenote rules now double the class, `.wp-block-post-content .sn-sidenote.sn-sidenote` (0,3,0): the same elements, editor canvas included, winning whatever order the sheets load in. Measured after: 12px beside the column at 1440, 13.6px inline at 1024; prose unchanged. `tests/sidenote-note-size.php` resolves the cascade at both breakpoints (red before the fix: 4 failed).
 - **The Spanish header nav writes its links through core's HTML API.** `sn_lang_nav_link_html()` (`inc/lang-chrome.php`) swapped the href with a regex on `href="..."` and added `aria-current` with another; it now uses `WP_HTML_Tag_Processor` (`next_tag`, `get_attribute`, `set_attribute`), so a `>` inside an earlier attribute value, a single-quoted or unquoted href, and `$1` or `\1` in the URL are parsed by core. Output for the rendered navigation-link is byte for byte the same; an odd source tag now comes out with a double-quoted href. `tests/lang-chrome.php` pins three such tags (red against the regex: 21 passed, 3 failed).
 
 ## [2026.10.10] - 2026-10-16 — emoji is back for readers
