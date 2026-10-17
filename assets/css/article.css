@@ -61,6 +61,30 @@ main { view-transition-name: sn-main; }
 	}
 }
 
+/* CHANNEL CHANGE (2026.10). The content area changes like a CRT refresh: the
+   new page is revealed top to bottom in eight hard steps over 240ms, over the
+   old page held still, instead of a crossfade. Header and footer keep their
+   own names above, so they stay put. `main` joins the raster class only off
+   the front page: arriving at the home page keeps today's crossfade (owner
+   rule, Page 383). Named elements inside main (the per-note morph) transition
+   on their own. Only for readers who have not asked for less motion; the
+   reduce block above also turns the transition off entirely. Browsers without
+   view-transition-class keep the crossfade. */
+@media (prefers-reduced-motion: no-preference) {
+	body:not(.home) main { view-transition-class: sn-raster; }
+
+	::view-transition-old(*.sn-raster) { animation: none; }
+
+	::view-transition-new(*.sn-raster) {
+		animation: sn-raster 240ms steps(8, end) both;
+	}
+}
+
+@keyframes sn-raster {
+	from { clip-path: inset(0 0 100% 0); }
+	to { clip-path: inset(0); }
+}
+
 /* ─── v9.2.0: pull-quote pattern (patterns/pull-quote.php) ────────── */
 /* v9.11.0: the signal-noise/pull-quote BLOCK renders .sn-pull-quote (an <aside>);
    the box frame must target it too, not only the pattern wrapper, or the block

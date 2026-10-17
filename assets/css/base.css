@@ -67,6 +67,52 @@ body {
 	color: var(--wp--preset--color--void);
 }
 
+/* SIGNAL ACQUIRED (2026.10). Arriving by a link that points INTO a page:
+   a text fragment (#:~:text=, how search engines deep-link a passage) is
+   highlighted in house red instead of the browser's yellow, the same
+   blood-on-void pair as ::selection above (measured by the contrast sweep in
+   all three palettes); ::target-text is Baseline since December 2024
+   and other browsers keep their default. A heading reached by #fragment gets
+   a 2px blood rule at its left, drawn in the margin by a pseudo-element so
+   the text does not move (core's constrained layout pins headings' inline
+   margins with !important, so a margin trick would shift them), which fades in once per arrival under no-preference (a color fade,
+   nothing moves) and is simply there under reduce. Forced colors keep the
+   rule in CanvasText; the highlight takes the system colors. Never on the front page (owner rule, Page 383). */
+body:not(.home) ::target-text {
+	background-color: var(--wp--preset--color--blood);
+	color: var(--wp--preset--color--void);
+}
+
+body:not(.home) :is(h2, h3, h4)[id]:target {
+	position: relative;
+}
+
+body:not(.home) :is(h2, h3, h4)[id]:target::before {
+	content: "";
+	position: absolute;
+	inset-block: 0;
+	inset-inline-start: calc(-1 * (2px + 0.6em));
+	width: 2px;
+	background-color: var(--wp--preset--color--blood);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	body:not(.home) :is(h2, h3, h4)[id]:target::before {
+		animation: sn-acquire 0.6s ease-out 1;
+	}
+}
+
+@media (forced-colors: active) {
+	body:not(.home) :is(h2, h3, h4)[id]:target::before {
+		forced-color-adjust: none;
+		background-color: CanvasText;
+	}
+}
+
+@keyframes sn-acquire {
+	from { opacity: 0; }
+}
+
 /* --- Film Grain Overlay --- */
 body::before {
 	content: "";
