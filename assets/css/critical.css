@@ -585,7 +585,120 @@ body.page main .entry-content > .is-layout-constrained > :where(:not(.alignleft)
 	to   { clip-path: inset(0 0 0 0); }
 }
 @media (forced-colors: active) {
-	.sn-hero::after { display: none; }
+	.sn-hero::after,
+	.sn-hero::before { display: none; }
+}
+
+/* Home in one screen, with a playhead and a latest line (2026.10, owner: "I
+   don't like a scroll. At all."). The hero's min-height reserved 90px for the
+   footer, but <main> added layout.css's 140px fixed-footer reserve and two
+   block gaps, so home ran 71px past a 1440x900 screen, and on a phone the
+   footer sits in the flow at 123px against a 70px reserve. On home the page
+   column is now a flex column exactly one screen tall, main reserves only the
+   fixed footer (none where the footer is static, at 480px and under), and the
+   hero grows into what is left, never below its content.
+   The pulse's geometry is mirrored here as custom properties (the pulse rules
+   above keep their own values), so the playhead and the latest line sit on it
+   at every breakpoint: the playhead is a blood hairline at the pulse's "now"
+   end, taller than the waveform, and the line names the newest note just above
+   it, positioned over the hero so it adds no height. The playhead has no
+   content here: the pulse's inline rule gives it, so it only shows over a real
+   waveform. */
+body:has(.sn-hero) {
+	--sn-pulse-x: max(var(--wp--preset--spacing--40), calc((100% - var(--wp--custom--page-track)) / 2));
+	--sn-pulse-b: var(--wp--preset--spacing--30);
+	--sn-pulse-h: 2.25rem;
+	--sn-home-reserve: var(--sn-chrome-bottom);
+}
+body:has(.sn-hero) .wp-site-blocks {
+	display: flex;
+	flex-direction: column;
+	min-height: calc(100vh - var(--sn-chrome-top));
+	min-height: calc(100dvh - var(--sn-chrome-top));
+}
+body:has(.sn-hero) .wp-site-blocks > main {
+	flex: 1 0 auto;
+	display: flex;
+	flex-direction: column;
+	position: relative;
+	margin-block: 0 !important;
+	padding-bottom: var(--sn-chrome-bottom) !important;
+	padding-bottom: var(--sn-home-reserve) !important;
+}
+body:has(.sn-hero) .wp-site-blocks > main > .wp-block-post-content {
+	flex: 1 0 auto;
+	display: flex;
+	flex-direction: column;
+}
+body:has(.sn-hero) .sn-hero {
+	flex: 1 0 auto;
+	min-height: 0 !important;
+	/* Room under the buttons for the pulse and the latest line above it, so
+	   on a short screen the line can never sit on the buttons. */
+	padding-bottom: calc(var(--sn-pulse-b) + var(--sn-pulse-h) + 1.1rem + var(--sn-latest-h, 2.5rem)) !important;
+}
+body:has(.sn-hero) .wp-site-blocks > footer {
+	margin-block-start: 0 !important;
+}
+.sn-hero::before {
+	position: absolute;
+	right: calc(var(--sn-pulse-x) - 6px);
+	bottom: calc(var(--sn-pulse-b) - 6px);
+	width: 2px;
+	height: calc(var(--sn-pulse-h) + 12px);
+	pointer-events: none;
+	background-color: var(--wp--preset--color--blood);
+}
+@media (prefers-reduced-motion: no-preference) {
+	.sn-hero::before { animation: sn-playhead-in 0.2s ease-out 2.6s both; }
+}
+@keyframes sn-playhead-in {
+	from { opacity: 0; }
+	to   { opacity: 1; }
+}
+.sn-home-latest {
+	position: absolute;
+	left: var(--sn-pulse-x);
+	right: var(--sn-pulse-x);
+	bottom: calc(var(--sn-home-reserve) + var(--sn-pulse-b) + var(--sn-pulse-h) + 1.1rem);
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	align-items: baseline;
+	gap: 0.2rem 0.9rem;
+	font-family: var(--wp--preset--font-family--body);
+	font-size: 0.75rem;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--rust);
+	text-decoration: none;
+}
+.sn-home-latest__k {
+	color: var(--wp--preset--color--blood);
+}
+.sn-home-latest__t {
+	font-family: var(--wp--preset--font-family--heading);
+	font-size: 1.15rem;
+	letter-spacing: 0.02em;
+	color: var(--wp--preset--color--bone);
+}
+@media (hover: hover) {
+	.sn-home-latest:hover .sn-home-latest__t { text-decoration: underline; text-underline-offset: 0.18em; }
+}
+/* A short screen gets a tighter hero, so home still fits: the headline
+   scales with the screen's height as well as its width, and the top padding
+   and the room for the latest line shrink. */
+@media (max-height: 820px) and (min-width: 782px) {
+	body:has(.sn-hero) { --sn-latest-h: 2.5rem; }
+	body:has(.sn-hero) .sn-hero { padding-top: var(--wp--preset--spacing--20) !important; }
+	body:has(.sn-hero) .sn-hero-title { font-size: min(var(--wp--custom--font-size--display-xxl), 10.5vh) !important; }
+}
+@media (max-height: 700px) and (max-width: 781px) {
+	body:has(.sn-hero) { --sn-latest-h: 4.5rem; }
+	body:has(.sn-hero) .sn-hero { padding-top: var(--wp--preset--spacing--20) !important; }
+	body:has(.sn-hero) .sn-hero-accent { margin-top: 1rem !important; }
+	body:has(.sn-hero) .sn-hero-cta.wp-block-buttons { flex-direction: row !important; width: auto; }
+	body:has(.sn-hero) .sn-hero-cta .wp-block-button { width: auto !important; flex: 1 1 0; }
 }
 
 /* v8.5.6 critical.css pruning: .wp-block-button__link resting + hover
@@ -644,6 +757,9 @@ body.page main .entry-content > .is-layout-constrained > :where(:not(.alignleft)
 		right: 1.5rem;
 		height: 2.5rem;
 	}
+	/* The pulse's geometry for the playhead and the latest line. */
+	body:has(.sn-hero) { --sn-pulse-x: 1.5rem; --sn-pulse-h: 2.5rem; --sn-latest-h: 4.5rem; }
+	.sn-home-latest { justify-content: flex-start; }
 	.sn-hero-cta.wp-block-buttons {
 		flex-direction: row !important;
 		width: auto;
@@ -718,6 +834,8 @@ body.page main .entry-content > .is-layout-constrained > :where(:not(.alignleft)
 		bottom: var(--wp--preset--spacing--20);
 		height: 2rem;
 	}
+	/* The pulse's geometry again; the footer is static here, so no reserve. */
+	body:has(.sn-hero) { --sn-pulse-x: 1.25rem; --sn-pulse-b: var(--wp--preset--spacing--20); --sn-pulse-h: 2rem; --sn-home-reserve: 0px; }
 	.sn-hero-cta.wp-block-buttons {
 		flex-direction: column !important;
 		width: 100%;

@@ -153,7 +153,8 @@ function sn_hero_pulse_css( $svg ) {
 		return '';
 	}
 	$url = 'url("data:image/svg+xml,' . rawurlencode( $svg ) . '")';
-	return '.sn-hero::after{content:"";-webkit-mask-image:' . $url . ';mask-image:' . $url . '}';
+	// The playhead (critical.css) rides on the same rule: no pulse, no playhead.
+	return '.sn-hero::after{content:"";-webkit-mask-image:' . $url . ';mask-image:' . $url . '}.sn-hero::before{content:""}';
 }
 
 /**

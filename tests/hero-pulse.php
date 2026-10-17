@@ -88,6 +88,7 @@ ok( null === sn_hero_pulse_rows( 0 ), 'without the companion plugin the read ret
 echo "\nGroup 4: the inline rule\n";
 $css = sn_hero_pulse_css( $svg );
 ok( 0 === strpos( $css, '.sn-hero::after{content:"";' ), 'the inline rule is what gives the pseudo its content' );
+ok( false !== strpos( $css, '.sn-hero::before{content:""}' ), 'the same rule lights the playhead, so it never shows without a pulse' );
 ok( 2 === substr_count( $css, 'url("data:image/svg+xml,' ), 'mask-image and its -webkit- twin both carry the waveform' );
 ok( false === strpos( $css, '<' ) && false !== strpos( $css, 'data:image/svg+xml,%3Csvg' ), 'the SVG is URL-encoded, so nothing in it can close the style element' );
 ok( false === strpos( $css, '</style' ), 'cannot break out of <style>' );
@@ -104,7 +105,7 @@ ok( 2 === count( $dark[0] ) && 2 === count( preg_grep( '/--sn-pulse:\\s*#565656/
 ok( 0 === preg_match( '/(^|\\})\\s*:root\\s*\\{[^}]*--sn-pulse/', $crit ), 'light mode defines no pulse token, so it stays on concrete' );
 ok( 1 === preg_match( '/@media\s*\(prefers-reduced-motion:\s*no-preference\)\s*\{[^{}]*\.sn-hero::after\s*\{[^}]*animation:\s*sn-pulse-draw[^}]*steps\(/s', $crit ), 'the one-time draw-in is stepped and gated on prefers-reduced-motion: no-preference' );
 ok( 1 === preg_match( '/@keyframes\s+sn-pulse-draw\s*\{[^}]*clip-path/s', $crit ), 'the draw-in animates clip-path only' );
-ok( 1 === preg_match( '/@media\s*\(forced-colors:\s*active\)\s*\{[^{}]*\.sn-hero::after\s*\{[^}]*display:\s*none/s', $crit ), 'forced colors drop it' );
+ok( 1 === preg_match( '/@media\s*\(forced-colors:\s*active\)\s*\{[^{}]*\.sn-hero::after[^{]*\{[^}]*display:\s*none/s', $crit ), 'forced colors drop it' );
 
 echo "\nGroup 6: wiring\n";
 $src = (string) file_get_contents( $root . '/inc/hero-pulse.php' );
