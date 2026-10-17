@@ -104,8 +104,8 @@ body {
 
 /* The page you are on keeps the rule (2026.10). inc/nav-current.php marks
    that link aria-current="page" for screen readers; this shows the same fact
-   on screen, so the hover rule becomes a tuned-channel indicator. The front
-   page is never marked, so the home page is unchanged. Forced colors would
+   on screen, so the hover rule becomes a tuned-channel indicator, Home
+   included on the front page. Forced colors would
    repaint the blood bar to the page background and lose it, so it takes the
    text color there. Mirrored in critical.css and layout.css. */
 .wp-block-navigation a[aria-current="page"]::after {
@@ -291,13 +291,13 @@ body {
 	margin: var(--wp--custom--air--sm) 0; /* the hero rhythm lives in critical.css; this matches it */
 }
 
-/* Hero + header entrance — staggered cascade. Single gate behind
+/* Hero entrance, a staggered cascade (the header's own fadeIn went in
+   2026.10: it showed through the channel change; tests/transmission-motion.php). Single gate behind
    `prefers-reduced-motion: no-preference` so motion-sensitive users
    get the static layout immediately. Mirrors the same block in
    critical.css (CSS architecture has duplication between the two
    files; this fix lives in both for parity). */
 @media (prefers-reduced-motion: no-preference) {
-	.sn-header        { animation: fadeIn 0.8s ease-out; }
 	.sn-hero-title    { animation: fadeInUp 1s ease-out 0.2s both; }
 	.sn-hero-subtitle { animation: fadeInUp 1s ease-out 0.5s both; }
 	.sn-hero-accent   { animation: fadeInUp 1s ease-out 0.65s both; }

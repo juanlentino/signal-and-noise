@@ -38,7 +38,7 @@ foreach ( array( 'critical.css', 'layout.css' ) as $sheet ) {
 	$s = $css( $sheet );
 	ok( 1 === preg_match( $current, $s ), "$sheet: the aria-current link keeps the full-width rule" );
 	ok( 1 === preg_match( $forced, $s ), "$sheet: forced colors paint the rule in CanvasText" );
-	ok( false === strpos( preg_replace( '/\/\*.*?\*\//s', '', $s ), 'body.home .wp-block-navigation' ), "$sheet: no home-page selector (the home page is never marked)" );
+	ok( 0 === preg_match( '/body(\.home|:not\(\.home\))[^{]*\.wp-block-navigation/', preg_replace( '/\/\*.*?\*\//s', '', $s ) ), "$sheet: no selector singles out the front page (Home gets the rule there like any page)" );
 }
 
 // Group 2: the test card.

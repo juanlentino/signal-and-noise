@@ -51,9 +51,10 @@ ok( is_current( nav_link( '/about', '/about/' ) ), '/about link on /about/ is ar
 ok( is_current( nav_link( '/about', '/about/?utm_source=x' ) ), 'a query string does not change which page you are on' );
 ok( ! is_current( nav_link( '/about', '/music/' ) ), '/about link on /music/ is not current' );
 ok( ! is_current( nav_link( '/notes', '/notes/some-note/' ) ), 'a child URL is not "this page": /notes is not current on a single note' );
-ok( ! is_current( nav_link( '/', '/about/' ) ), '"/" is never a prefix of everything' );
-ok( '/' === sn_nav_current_path( '/' ) && nav_link( '/', '/' ) === nav_link( '/', '/about/' ), 'the home page renders untouched: no aria-current on any link there (owner rule: Page 383 is off-limits, even inside a site-wide change)' );
-ok( ! is_current( nav_link( '/about', '/?x=1' ) ), 'nothing is marked on the front page, even with a query string' );
+ok( ! is_current( nav_link( '/', '/about/' ) ), '"/" is never a prefix of everything: Home is not current on /about/' );
+ok( is_current( nav_link( '/', '/' ) ), 'on the front page the Home link is current, like every other page (owner, 2026-10-16)' );
+ok( is_current( nav_link( '/', '/?x=1' ) ), 'a query string on the front page does not change it' );
+ok( ! is_current( nav_link( '/about', '/' ) ) && ! is_current( nav_link( '/about', '/?x=1' ) ), 'on the front page only Home is marked, no other link' );
 ok( ! is_current( nav_link( 'https://example.com/about', '/about/' ) ), 'an off-site link with the same path is never current' );
 ok( is_current( nav_link( 'https://juanlentino.com/about/', '/about/' ) ), 'an absolute on-site link matches like a relative one' );
 ok( 1 === substr_count( nav_link( '/about', '/about/' ), 'aria-current' ), 'set once, on the link only' );

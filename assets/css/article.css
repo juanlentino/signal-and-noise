@@ -52,13 +52,45 @@
 .sn-header { view-transition-name: sn-header; }
 .sn-footer { view-transition-name: sn-footer; }
 
-/* Pin a name on the main content area so future tuning has a hook. */
-main { view-transition-name: sn-main; }
+/* `main` is deliberately NOT named (2026.10). It used to carry
+   `sn-main` "as a hook"; the channel change below needs the content inside
+   the root snapshot instead, because the root image is viewport-sized while a
+   named main's image is the whole page (3000px and more), which made every
+   percentage step of the wipe uncover more than a screen at once. */
 
 @media (prefers-reduced-motion: reduce) {
 	@view-transition {
 		navigation: none;
 	}
+}
+
+/* CHANNEL CHANGE (2026.10). The page changes like a CRT refresh: the new
+   page is revealed top to bottom in eight hard 30ms steps while the old page
+   is wiped away in lockstep from the top, so at every step each band of the
+   screen shows exactly one page, never both. It runs on the root snapshot,
+   which is the viewport whatever the scroll position, so each step is one
+   eighth of a screen. Header and footer keep their own names above, so they
+   stay put; the per-note morph names transition on their own. Only for
+   readers who have not asked for less motion; the reduce block above also
+   turns the transition off entirely. */
+@media (prefers-reduced-motion: no-preference) {
+	::view-transition-old(root) {
+		animation: sn-raster-out 240ms steps(8, end) both;
+	}
+
+	::view-transition-new(root) {
+		animation: sn-raster-in 240ms steps(8, end) both;
+	}
+}
+
+@keyframes sn-raster-in {
+	from { clip-path: inset(0 0 100% 0); }
+	to { clip-path: inset(0); }
+}
+
+@keyframes sn-raster-out {
+	from { clip-path: inset(0); }
+	to { clip-path: inset(100% 0 0 0); }
 }
 
 /* ─── v9.2.0: pull-quote pattern (patterns/pull-quote.php) ────────── */
