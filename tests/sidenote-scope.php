@@ -78,9 +78,12 @@ ok(
 	'the negative margin keeps its !important — without it the escape is silently dead'
 );
 
-// Specificity must stay at two classes, which is what beats core's (0,1,0).
+// Specificity must stay at two classes or more, which is what beats core's
+// (0,1,0). Three since 2026-10-16 (the doubled .sn-sidenote): the notes prose
+// rule `.sn-note-single .wp-block-post-content p` is (0,2,1) and was winning
+// the type size; tests/sidenote-note-size.php owns that half.
 foreach ( $selectors as $sel ) {
-	ok( 2 === substr_count( $sel, '.' ), "selector keeps two-class specificity to outrank core's layout rule — got: $sel" );
+	ok( substr_count( $sel, '.' ) >= 2, "selector keeps at least two-class specificity to outrank core's layout rule — got: $sel" );
 }
 
 
@@ -110,7 +113,11 @@ ok( '' !== $combined, 'VACUITY: the combined sources were read' );
 ok( false === strpos( $combined, '.sn-sidenote' ), 'no source of the combined sheet carries a .sn-sidenote rule (it rode article.css into every page until #391)' );
 
 $main_bytes = "@media (min-width: 1280px){.wp-block-post-content .sn-sidenote{float: right;clear: right;width: 180px;margin-right: -200px !important;margin-top: 0;margin-bottom: 1rem;padding-left: 1rem;font-family: 'DM Mono', 'Courier New', monospace;font-size: max(0.75rem, 11px);line-height: 1.45;color: var(--wp--preset--color--rust);text-align: left}}@media (max-width: 1279.98px){.wp-block-post-content .sn-sidenote{float: none;width: auto;margin-top: 0.75rem;margin-bottom: 1.5rem;padding-top: 0.5rem;padding-left: 0;border-top: 1px solid var(--wp--preset--color--concrete);font-family: 'DM Mono', 'Courier New', monospace;font-size: 0.85rem;line-height: 1.5;color: var(--wp--preset--color--rust)}}";
-ok( sn_css_minify( $raw ) === $main_bytes, 'the block sheet minifies to the exact bytes article.css put in the combined sheet before the move (identical rules)' );
+// The bytes article.css carried before the #391 move, with the one deliberate
+// change since: the doubled class (2026-10-16), so the rules stay identical
+// in every declaration and differ only in winning on notes.
+$main_bytes = str_replace( '.wp-block-post-content .sn-sidenote{', '.wp-block-post-content .sn-sidenote.sn-sidenote{', $main_bytes );
+ok( sn_css_minify( $raw ) === $main_bytes, 'the block sheet minifies to the exact bytes article.css put in the combined sheet before the move, plus only the doubled class (identical declarations)' );
 
 // The pattern inserts the block, never a bare paragraph: a paragraph carrying
 // the class would style on no page now that the sheet loads only where the
