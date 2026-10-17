@@ -41,6 +41,7 @@
  *   inc/provenance-surface.php   — [sn_prov_chip] byline pill + [sn_prov_panel] record, plugin-guarded (v10.30.0)
  *   inc/hero-pulse.php           — the home hero's pulse: last 24h of traffic as a waveform mask, plugin-guarded
  *   inc/print-colophon.php       — paper-only proof under a note: full hash, status, verify address
+ *   inc/print-running-head.php   — the note title as the printed page's running head (print.css margin boxes)
  *   inc/related-notes.php        — related-notes footer block on single notes
  *   inc/cited-by.php             — [sn_cited_by] reverse-link footer (v10.21.0)
  *   inc/next-essay.php           : the next pillar after each essay (14.9.0)
@@ -110,6 +111,7 @@ require_once __DIR__ . '/inc/setup.php';
 require_once __DIR__ . '/inc/editor-block-palette.php';
 require_once __DIR__ . '/inc/asset-combine.php'; // v10.21.6: combined+minified stylesheet delivery (fail-open to per-file enqueues)
 require_once __DIR__ . '/inc/assets-frontend.php';
+require_once __DIR__ . '/inc/print-running-head.php';
 require_once __DIR__ . '/inc/frontend-filters.php';
 require_once __DIR__ . '/inc/table-header-scope.php'; // 2026-10: the comparison table's header cells carry scope="col" on render
 require_once __DIR__ . '/inc/front-page-fallback.php';

@@ -34,7 +34,7 @@ foreach ( $theme['settings']['typography']['fontFamilies'] ?? array() as $family
 }
 ok( count( $registered ) > 0, 'theme.json registers font faces (' . count( $registered ) . ')' );
 
-$shipped = array_map( 'basename', glob( $root . '/assets/fonts/*.woff2' ) );
+$shipped = array_map( 'basename', glob( $root . '/assets/fonts/*.{woff,woff2}', GLOB_BRACE ) );
 foreach ( $shipped as $file ) {
 	ok( in_array( $file, $registered, true ), "assets/fonts/$file is registered in theme.json" );
 }

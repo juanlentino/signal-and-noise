@@ -662,6 +662,7 @@ details.sn-notes-year > summary:focus-visible .sn-notes-year-band {
 	border-bottom-color: var(--wp--preset--color--bone);
 }
 .sn-notes-search input[type="search"] {
+	caret-color: var(--wp--preset--color--blood);
 	flex: 1 1 auto;
 	min-width: 0;
 	border: 0;

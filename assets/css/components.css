@@ -2338,3 +2338,20 @@ img.sn-img-dim {
 	   mask forces the clip without changing a pixel of what is drawn. */
 	-webkit-mask-image: -webkit-radial-gradient(white, black);
 }
+
+/* Red caret (2026.10): the text cursor in the contact form is blood, as it is
+   in /notes search and the command palette. The message box grows with what is
+   typed instead of scrolling inside itself. Under field-sizing its rows
+   attribute stops counting, so the minimum restates today's five lines (190px
+   measured). The form is the AllTerrain Forms plugin's; the theme only adds
+   these two touches. */
+.atf-form .atf-input {
+	caret-color: var(--wp--preset--color--blood);
+}
+@supports (field-sizing: content) {
+	.atf-form .atf-textarea {
+		field-sizing: content;
+		min-height: calc(5lh + 2 * var(--atf-pad-field-y, 7px) + 2 * var(--atf-border-width, 1px));
+	}
+}
+

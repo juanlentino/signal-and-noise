@@ -1131,3 +1131,50 @@
 		text-underline-offset: 3px;
 	}
 }
+
+/* Section numerals (2026.10): a note with three or more sections numbers them
+   01, 02 above each h2, in rust at eyebrow size, and its TOC carries the same
+   numbers. References is not a section and is not numbered. The alt text ""
+   keeps a screen reader from announcing the number before the heading. Shorter
+   notes stay unnumbered: two numbered sections read like a contract. */
+.wp-block-post-content:has(> h2.wp-block-heading:nth-of-type(3)) {
+	counter-reset: sn-sec;
+}
+.wp-block-post-content:has(> h2.wp-block-heading:nth-of-type(3)) > h2.wp-block-heading:not(#references)::before {
+	counter-increment: sn-sec;
+	content: counter(sn-sec, decimal-leading-zero) / "";
+	display: block;
+	margin-bottom: 0.9em;
+	font-family: var(--wp--preset--font-family--body);
+	font-size: 11px;
+	letter-spacing: 0.2em;
+	color: var(--wp--preset--color--rust);
+}
+body:has(.wp-block-post-content > h2.wp-block-heading:nth-of-type(3)) .sn-article-toc__list {
+	counter-reset: sn-toc;
+}
+body:has(.wp-block-post-content > h2.wp-block-heading:nth-of-type(3)) .sn-article-toc__list > li:not(:has(> a[href="#references"]))::before {
+	counter-increment: sn-toc;
+	content: counter(sn-toc, decimal-leading-zero) / "";
+	margin-right: 0.9em;
+	font-family: var(--wp--preset--font-family--body);
+	font-size: 11px;
+	letter-spacing: 0.12em;
+	color: var(--wp--preset--color--rust);
+}
+
+/* Prose list markers (2026.10): a plain list in a note counts 01. and bullets
+   with an en rule, its markers in rust, instead of the browser's black disc and
+   decimal. Styled lists (references, checklist) keep their own. Safari's
+   ::marker honors only color and font, which is all this asks of it. */
+.wp-block-post-content > ol.wp-block-list:not([class*="is-style-"]) {
+	list-style-type: decimal-leading-zero;
+}
+.wp-block-post-content > ul.wp-block-list:not([class*="is-style-"]) {
+	list-style-type: "\2013\00a0\00a0";
+}
+.wp-block-post-content > :is(ol, ul).wp-block-list:not([class*="is-style-"]) > li::marker {
+	color: var(--wp--preset--color--rust);
+	font-family: var(--wp--preset--font-family--body);
+}
+

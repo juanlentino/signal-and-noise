@@ -64,6 +64,14 @@
 							"fontStyle": "normal",
 							"fontDisplay": "swap",
 							"src": ["file:./assets/fonts/bebas-neue-latin.woff2"]
+						},
+						{
+							"fontFamily": "Bebas Neue",
+							"fontWeight": "400",
+							"fontStyle": "normal",
+							"fontDisplay": "swap",
+							"src": ["file:./assets/fonts/sn-glyphs-bebas.woff"],
+							"unicodeRange": "U+2190, U+2192, U+2196-2199"
 						}
 					]
 				},
@@ -92,6 +100,30 @@
 							"fontStyle": "normal",
 							"fontDisplay": "swap",
 							"src": ["file:./assets/fonts/dm-mono-500-latin.woff2"]
+						},
+						{
+							"fontFamily": "DM Mono",
+							"fontWeight": "300",
+							"fontStyle": "normal",
+							"fontDisplay": "swap",
+							"src": ["file:./assets/fonts/sn-glyphs-dm-mono-300.woff"],
+							"unicodeRange": "U+2116, U+2190-2193, U+2196-2199"
+						},
+						{
+							"fontFamily": "DM Mono",
+							"fontWeight": "400",
+							"fontStyle": "normal",
+							"fontDisplay": "swap",
+							"src": ["file:./assets/fonts/sn-glyphs-dm-mono-400.woff"],
+							"unicodeRange": "U+2116, U+2190-2193, U+2196-2199"
+						},
+						{
+							"fontFamily": "DM Mono",
+							"fontWeight": "500",
+							"fontStyle": "normal",
+							"fontDisplay": "swap",
+							"src": ["file:./assets/fonts/sn-glyphs-dm-mono-500.woff"],
+							"unicodeRange": "U+2116, U+2190-2193, U+2196-2199"
 						}
 					]
 				}

@@ -105,6 +105,7 @@
 }
 
 .sn-cmdk-input {
+	caret-color: var(--wp--preset--color--blood);
 	display: block;
 	width: 100%;
 	box-sizing: border-box;
