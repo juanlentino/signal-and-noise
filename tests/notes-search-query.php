@@ -41,6 +41,9 @@ function wp_kses( $s, $allowed ) { $keep = implode( '|', array_map( 'preg_quote'
 class WP_Query { public $args; public $posts = array(); public $found_posts = 0; public $max_num_pages = 0; public function __construct( $a ) { $this->args = $a; } public function have_posts() { return false; } }
 $GLOBALS['__last_query'] = null;
 // The helpers call `new WP_Query( $args )`; capture the args.
+// Rows ask for their catalog number (sn_notes_catalog_number); no published
+// set here, so no number is drawn.
+if ( ! function_exists( 'get_posts' ) ) { function get_posts( $q ) { return array(); } }
 require_once __DIR__ . '/../inc/notes-index-helpers.php';
 require_once __DIR__ . '/../inc/notes-index-row.php';
 

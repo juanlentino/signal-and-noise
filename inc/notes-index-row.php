@@ -55,6 +55,12 @@ function sn_notes_render_row( $p, $args = array() ) {
 	if ( $pinned ) {
 		echo '<span class="sn-notes-row-pin">' . esc_html__( 'Start here', 'signal-and-noise' ) . '</span>';
 	}
+	// The catalog number (2026.10): the note's place among published notes.
+	// Decorative to a screen reader, which already has the list order.
+	$no = $pinned ? 0 : sn_notes_catalog_number( $p->ID );
+	if ( $no > 0 ) {
+		echo '<span class="sn-notes-row-no" aria-hidden="true">' . esc_html( sprintf( '%03d', $no ) ) . '</span>';
+	}
 	echo '<time class="sn-notes-row-date" datetime="' . esc_attr( get_the_date( 'c', $p ) ) . '">'
 		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- helper returns esc_html()'d output; escaping again would double-encode.
 		. sn_notes_render_date( $p )

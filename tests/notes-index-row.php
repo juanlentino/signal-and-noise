@@ -54,6 +54,8 @@ function get_post_type( $p ) { return 'post'; }
 // browse-only fixture stays in browse mode, same as before the search flag.
 function get_query_var( $k, $d = '' ) { return $d; }
 function apply_filters( $h, $v ) { return $v; }
+$GLOBALS['__catalog'] = array(); $GLOBALS['__gp'] = array();
+function get_posts( $q ) { $GLOBALS['__gp'][] = $q; return $GLOBALS['__catalog']; }
 
 require_once __DIR__ . '/../inc/notes-index-helpers.php';
 require_once __DIR__ . '/../inc/notes-index-row.php';
@@ -273,6 +275,24 @@ ok( strpos( $decls_only, 'grid-area: auto' ) === false,
 	'THE `grid-area: auto` WORKAROUND IS GONE — there is no longer a broken state for it to undo' );
 ok( preg_match( '/@media\s*\(\s*max-width:\s*719px\s*\)/', $css_src ) !== 1,
 	'no max-width: 719px counter-rules remain for the row' );
+
+echo "\nGroup: catalog numbers (2026-10-17)\n";
+// The published order, oldest first: note 12 (Start here) is 001, note 11 is 002, note 10 is 003.
+$GLOBALS['__catalog'] = array( 12, 11, 10 );
+sn_notes_catalog_reset();
+$GLOBALS['__gp'] = array();
+ok( 3 === sn_notes_catalog_number( 10 ) && 1 === sn_notes_catalog_number( 12 ), 'a note\'s number is its place among published notes, oldest first, so the newest carries the total' );
+ok( 0 === sn_notes_catalog_number( 99 ), 'a note outside the published set (scheduled, draft) has no number' );
+ok( 1 === count( $GLOBALS['__gp'] ), 'one query per request, however many rows ask' );
+$q = $GLOBALS['__gp'][0];
+ok( 'publish' === $q['post_status'] && 'ids' === $q['fields'] && -1 === $q['posts_per_page'] && array( 'date' => 'ASC', 'ID' => 'ASC' ) === $q['orderby'], 'published posts only, ids only, every one, date then ID ascending' );
+$row_cat = cap( function () { sn_notes_render_row( mk( 10, 'The master never moves', '2026-08-14 14:46:00' ) ); } );
+ok( false !== strpos( $row_cat, '<span class="sn-notes-row-no" aria-hidden="true">003</span><time' ), 'the row shows 003 above its date, hidden from screen readers (the list order already says it)' );
+$row_cat_pin = cap( function () { sn_notes_render_row( mk( 12, 'Start Here', '2026-04-01 00:00:00' ), array( 'pinned' => true ) ); } );
+ok( false === strpos( $row_cat_pin, 'sn-notes-row-no' ), 'the pinned Start-here row keeps its flag instead of a number' );
+$GLOBALS['__catalog'] = array();
+sn_notes_catalog_reset();
+ok( false === strpos( cap( function () { sn_notes_render_row( mk( 10, 'X', '2026-08-14 14:46:00' ) ); } ), 'sn-notes-row-no' ), 'no published set, no number: never a made-up one' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

@@ -575,3 +575,38 @@ function sn_notes_group_by_month( $posts ) {
 function sn_notes_month_dividers_are_useful( $year_count ) {
 	return (int) $year_count >= SN_NOTES_MONTH_DIVIDER_MIN;
 }
+
+/**
+ * A note's catalog number: its place among published notes, oldest first, so
+ * the newest note carries the count of everything published. The number is a
+ * property of the note, the same on the index, a tag archive or a search. One
+ * ids-only query per request; a note outside the published set has none.
+ *
+ * @param int $post_id
+ * @return int 1-based number, or 0.
+ */
+function sn_notes_catalog_number( $post_id ) {
+	if ( ! isset( $GLOBALS['sn_notes_catalog'] ) ) {
+		$ids = get_posts(
+			array(
+				'post_type'      => 'post',
+				'post_status'    => 'publish',
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+				'orderby'        => array( 'date' => 'ASC', 'ID' => 'ASC' ),
+				'no_found_rows'  => true,
+			)
+		);
+		$GLOBALS['sn_notes_catalog'] = array_flip( array_map( 'intval', (array) $ids ) );
+	}
+	$n = $GLOBALS['sn_notes_catalog'][ (int) $post_id ] ?? null;
+	return null === $n ? 0 : $n + 1;
+}
+
+/**
+ * Forget the cached catalog order (tests).
+ */
+function sn_notes_catalog_reset() {
+	unset( $GLOBALS['sn_notes_catalog'] );
+}
+

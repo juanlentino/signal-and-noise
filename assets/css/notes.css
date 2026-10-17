@@ -265,7 +265,6 @@
 	list-style: none;
 	margin: 0;
 	padding: 0;
-	counter-reset: sn-note-counter;
 	/* v11.13.0 — THE ROW ASKS ITS OWN COLUMN HOW WIDE IT IS.
 	   The row layout below switches on this list's inline size, not the
 	   viewport's. That is the honest question: the row is a ledger line
@@ -312,6 +311,12 @@
 	gap: 0.5rem;
 	align-items: baseline;
 	transition: color 0.2s ease;
+}
+/* Catalog number (2026.10): the note's place among published notes, on its
+   own line above the date, in the spec column's rust. */
+.sn-notes-row-no {
+	flex-basis: 100%;
+	letter-spacing: 0.16em;
 }
 .sn-notes-row-date {
 	color: var(--wp--preset--color--bone);
@@ -1033,3 +1038,14 @@ details.sn-notes-year > summary:focus-visible .sn-notes-year-band {
 		font-size: 16px;
 	}
 }
+
+/* Quiet fold (2026.10): opening a collapsed month fades its rows in over
+   120ms, opacity only. The global reduced-motion reset makes it instant. */
+.sn-notes-month::details-content {
+	opacity: 0;
+	transition: opacity 0.12s linear, content-visibility 0.12s allow-discrete;
+}
+.sn-notes-month[open]::details-content {
+	opacity: 1;
+}
+

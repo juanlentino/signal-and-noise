@@ -152,5 +152,11 @@ $comp = $css( 'components.css' );
 ok( 1 === preg_match( '/\.atf-form \.atf-input\s*\{[^}]*caret-color:\s*var\(--wp--preset--color--blood\)/s', $comp ), 'the contact form fields' );
 ok( 1 === preg_match( '/@supports\s*\(field-sizing:\s*content\)\s*\{\s*\.atf-form \.atf-textarea\s*\{[^}]*field-sizing:\s*content;[^}]*min-height:\s*calc\(5lh/s', $comp ), 'the message box grows with its text, from today\'s five-line height (rows stops counting under field-sizing)' );
 
+echo "\nGroup 7: quiet fold\n";
+$notes = $css( 'notes.css' );
+ok( 1 === preg_match( '/\.sn-notes-month::details-content\s*\{[^}]*opacity:\s*0;[^}]*transition:\s*opacity 0\.12s linear,\s*content-visibility 0\.12s allow-discrete/s', $notes ), 'a collapsed month fades its rows in over 120ms, opacity only' );
+ok( 1 === preg_match( '/\.sn-notes-month\[open\]::details-content\s*\{[^}]*opacity:\s*1/s', $notes ), '...to full opacity when open' );
+ok( false === strpos( $notes, 'sn-note-counter' ), 'the orphaned sn-note-counter reset is gone: catalog numbers come from PHP, from the real published order' );
+
 echo "\n$pass passed, $fail failed\n";
 exit( $fail > 0 ? 1 : 0 );
