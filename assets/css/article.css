@@ -1103,3 +1103,31 @@
 	fill-opacity: 1;
 	fill: var(--wp--preset--color--rust);
 }
+
+/* Signal lock (2026.10): a prose link keeps its resting look, color only (the
+   settled design; blood on bone text is 4.2:1). On hover and keyboard focus
+   its underline tunes in: it drops from a loose 8px to the house 3px offset
+   and thickens to 2px in three hard steps. The resting underline is drawn
+   transparent so there is something to tune. Rust paragraphs and sidenotes are
+   underlined at rest already and keep their rules (the sidenote by its block
+   class: .sn-sidenote stays out of this sheet); footnote markers have their
+   own. Hover only where the pointer hovers, so a tap never sticks. The global reduced-motion reset makes it a plain swap. */
+.wp-block-post-content p:not(.has-rust-color, .wp-block-signal-noise-sidenote) a:not(.wp-element-button, sup a) {
+	text-decoration-line: underline;
+	text-decoration-color: transparent;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 8px;
+	transition: text-underline-offset 0.18s steps(3, end), text-decoration-thickness 0.18s steps(3, end);
+}
+.wp-block-post-content p:not(.has-rust-color, .wp-block-signal-noise-sidenote) a:not(.wp-element-button, sup a):focus-visible {
+	text-decoration-color: currentColor;
+	text-decoration-thickness: 2px;
+	text-underline-offset: 3px;
+}
+@media (hover: hover) {
+	.wp-block-post-content p:not(.has-rust-color, .wp-block-signal-noise-sidenote) a:not(.wp-element-button, sup a):hover {
+		text-decoration-color: currentColor;
+		text-decoration-thickness: 2px;
+		text-underline-offset: 3px;
+	}
+}

@@ -180,6 +180,37 @@ body::before {
 	mix-blend-mode: var(--sn-grain-blend, multiply);
 }
 
+/* Noise floor (2026.10): the grain is at full strength at the top of the page
+   and settles to half over the first screen of reading, so the signal gets
+   cleaner the further in you are. filter: opacity() multiplies whatever opacity
+   a breakpoint sets (0.035 here, 0.015 on phones) instead of overwriting it.
+   Scroll timelines only, and only for readers who have not asked for less
+   motion; everyone else keeps the static grain. */
+@supports (animation-timeline: scroll()) {
+	@media (prefers-reduced-motion: no-preference) {
+		body::before {
+			animation: sn-noise-floor linear both;
+			animation-timeline: scroll(root);
+			animation-range: 0 100vh;
+		}
+	}
+}
+@keyframes sn-noise-floor {
+	to { filter: opacity(0.5); }
+}
+
+/* Hairline-true display type (2026.10): Bebas carries tall built-in line
+   boxes, so a display head floated a few pixels off the rule above and below
+   it, by a different amount at each size. Trimmed to cap height and baseline,
+   the letters sit on the rule. The home hero title is settled design and keeps
+   its box. Browsers without text-box keep today's spacing exactly. */
+@supports (text-box: trim-both cap alphabetic) {
+	.sn-note-title,
+	main :is(h1, h2).wp-block-heading:not(.sn-hero-title) {
+		text-box: trim-both cap alphabetic;
+	}
+}
+
 /* --- Scanline effect --- */
 body::after {
 	content: "";

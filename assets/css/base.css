@@ -194,6 +194,32 @@ summary:focus-visible {
 	outline-offset: 3px;
 }
 
+/* Crop-mark focus (2026.10): a focused button also shows four blood corner
+   ticks outside its outline, like print registration marks. They hang on the
+   .wp-block-button wrapper because the link itself clips with overflow:
+   hidden. Additive: the outline above is the focus indicator; forced colors
+   drop the ticks and keep the Highlight outline. */
+.wp-block-button:has(> .wp-block-button__link:focus-visible) {
+	position: relative;
+}
+.wp-block-button:has(> .wp-block-button__link:focus-visible)::before {
+	--sn-crop: var(--wp--preset--color--blood);
+	content: "";
+	position: absolute;
+	inset: -12px;
+	pointer-events: none;
+	background:
+		linear-gradient(var(--sn-crop), var(--sn-crop)) top left / 8px 2px,
+		linear-gradient(var(--sn-crop), var(--sn-crop)) top left / 2px 8px,
+		linear-gradient(var(--sn-crop), var(--sn-crop)) top right / 8px 2px,
+		linear-gradient(var(--sn-crop), var(--sn-crop)) top right / 2px 8px,
+		linear-gradient(var(--sn-crop), var(--sn-crop)) bottom left / 8px 2px,
+		linear-gradient(var(--sn-crop), var(--sn-crop)) bottom left / 2px 8px,
+		linear-gradient(var(--sn-crop), var(--sn-crop)) bottom right / 8px 2px,
+		linear-gradient(var(--sn-crop), var(--sn-crop)) bottom right / 2px 8px;
+	background-repeat: no-repeat;
+}
+
 /* ============================================
    ANIMATIONS
    ============================================ */
@@ -282,6 +308,9 @@ summary:focus-visible {
 	summary:focus-visible {
 		outline: 3px solid Highlight;
 		outline-offset: 2px;
+	}
+	.wp-block-button:has(> .wp-block-button__link:focus-visible)::before {
+		display: none;
 	}
 
 	.sn-article-dial__needle {
