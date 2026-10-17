@@ -110,6 +110,7 @@
 	--wp--preset--color--void: #0a0a0a;
 	--wp--preset--color--asphalt: #171717;
 	--wp--preset--color--concrete: #383838;
+	--sn-pulse: #565656;
 	--wp--preset--color--rust: #9e9e9e;
 	--wp--preset--color--bone: #ffffff;
 	--wp--preset--color--blood: #ff4c47;
@@ -129,6 +130,7 @@
 		--wp--preset--color--void: #0a0a0a;
 		--wp--preset--color--asphalt: #171717;
 		--wp--preset--color--concrete: #383838;
+		--sn-pulse: #565656;
 		--wp--preset--color--rust: #9e9e9e;
 		--wp--preset--color--bone: #ffffff;
 		--wp--preset--color--blood: #ff4c47;
@@ -526,9 +528,11 @@ body.page main .entry-content > .is-layout-constrained > :where(:not(.alignleft)
    series never paints a solid block. It sits inside the hero's bottom padding
    (54px desktop, 64px tablet, 48px phone), so on no viewport can it reach the
    buttons, and it is absolute, so the hero's flex column never moves. Left and
-   right match the hero column. The concrete token recalibrates it in dark
-   mode. It writes itself in once, left to right, in sixteen steps, for readers
-   who have not asked for less motion; forced colors drop it. */
+   right match the hero column. Light mode draws it in concrete. Dark mode's
+   concrete (#383838) is only 1.69:1 on void, so --sn-pulse lifts it to
+   #565656 (2.70:1), the same weight light mode has (#9e9e9e on white,
+   2.68:1). It writes itself in once, left to right, in sixteen steps, for
+   readers who have not asked for less motion; forced colors drop it. */
 .sn-hero::after {
 	position: absolute;
 	left: max(var(--wp--preset--spacing--40), calc((100% - var(--wp--custom--page-track)) / 2));
@@ -536,7 +540,7 @@ body.page main .entry-content > .is-layout-constrained > :where(:not(.alignleft)
 	bottom: var(--wp--preset--spacing--30);
 	height: 2.25rem;
 	pointer-events: none;
-	background-color: var(--wp--preset--color--concrete);
+	background-color: var(--sn-pulse, var(--wp--preset--color--concrete));
 	-webkit-mask-size: 100% 100%;
 	mask-size: 100% 100%;
 	-webkit-mask-repeat: no-repeat;
