@@ -480,6 +480,15 @@
 	text-transform: uppercase;
 }
 
+/* The figure is a focusable region (inc/table-header-scope.php) so a keyboard
+   reader can scroll a wide table where the browser will not focus a scroll
+   box on its own (Safari). base.css rings only links, buttons and their
+   roles, so the region carries the same 2px blood ring itself. */
+.wp-block-table.is-style-sn-table:focus-visible {
+	outline: 2px solid var(--wp--preset--color--blood);
+	outline-offset: 3px;
+}
+
 /* Set like the steps label: small, tracked, uppercase. Sticky at the left
    edge of the figure's scroll box, so on a phone the caption stays put while
    the reader scrolls the table under it (measured: without it, a 60px scroll

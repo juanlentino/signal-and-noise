@@ -149,3 +149,33 @@ other two are not.
 - **Standalone targets are at least 24px (WCAG 2.5.8).** The /notes/ row tag links use `min-height: 24px` (`tests/target-size.php`). Links inside prose are exempt.
 - **The header nav marks the current page** with `aria-current="page"` (`inc/nav-current.php`, `tests/nav-current.php`).
 - **The 11px floor is scanned statically** across every theme stylesheet (`tests/type-floor.php`). em and % sizes cannot be resolved statically, so the em-sized footnote marker is pinned by name.
+
+## Reading aids, motion and decoration (2026-10)
+
+What theme 2026.10.11 added, and how each piece stays usable.
+
+**Semantics**
+
+- **Timeline and checklist** are core lists. The timeline's dates are `<strong>` text and its markers are decoration drawn in CSS. The checklist's boxes are CSS borders, not inputs: nothing is ticked on screen and nothing is stored. Both keep native list semantics, so a screen reader counts the items.
+- **Key term** (`signal-noise/term`) renders a real `<dl>` with one `<dt>` and one `<dd>`. Both are plain text through `esc_html`. A definition without a term renders as a paragraph, never an orphan `<dd>`. Pinned by `tests/term-block.php`.
+- **Comparison table** (`is-style-sn-table`) has a header row. `inc/table-header-scope.php` adds `scope="col"` to its header cells on render, since the block editor never writes it. On a phone the table scrolls sideways inside its figure. Safari does not make a scroll box focusable on its own, so the same file gives the figure `tabindex="0"`, `role="region"` and a name (the caption, or "Comparison table"), and `article.css` gives it the house focus ring (WCAG 2.1.1). Pinned by `tests/table-header-scope.php`.
+- **Current page** in the header nav is `aria-current="page"` and a drawn underline, so it is never color alone. HOME is marked on the home page too (`tests/nav-current.php`).
+- **Decoration stays out of the accessibility tree.** The tuning dial is `aria-hidden`. The home pulse and the 404 test card are pseudo-elements with no text, and the 404 digits are `aria-hidden`. The print colophon is hidden on screen and labeled "Printed record" on paper.
+
+**Motion.** Every new animation runs only under `prefers-reduced-motion: no-preference`, and the `base.css` reset turns all animation off under `reduce`. Pinned by `tests/motion-pairing.php`.
+
+| piece | motion | under reduce |
+|---|---|---|
+| channel change (page to page) | the new page wipes in top to bottom in eight 30ms steps, the old page out in lockstep | no view transition at all |
+| target highlight | a `#heading` target's 2px rule fades in once | the rule is shown, no fade |
+| timeline | each marker fills as its item scrolls into view | markers are drawn filled |
+| tuning dial | the needle tracks scroll position | no dial |
+| home pulse | the waveform draws in once, in steps | drawn at rest |
+| 404 test card | the digits flicker once (two shallow opacity dips, under the three-flash threshold) | no flicker |
+
+The blanket load-in fades (`fadeInUp` on groups, columns, images and covers, `fadeIn` on the header) were removed in 2026.10.11. A page reached directly or reloaded now appears at once. The home hero keeps its own entrance.
+
+**Forced colors.** The timeline markers and the current-page underline take system colors, and so does the tuning dial's needle, so reading position still shows (`tests/forced-colors.php`). The home pulse and the 404 bars drop out, which leaves the content they decorate unchanged.
+
+**Contrast.** Text in all four reading aids is `currentColor` or a palette token, so it inherits the palette's measured pairs above. The blood accent is non-text (the timeline markers, the term's rule, the nav underline): 5.0 : 1 on the light ground and 6.0 : 1 on the dark, against a 3 : 1 floor. A text-fragment highlight reuses the selection pair.
+
