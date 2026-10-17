@@ -13,9 +13,9 @@ layers, why default Cloudflare doesn't cache HTML, and how to opt in.
 2. **Cloudflare edge cache** — global CDN. Caches static assets by
    default; **does not cache HTML by default**. We opt-in via a
    Cache Rule (below).
-3. **Cloudways Varnish / Breeze page cache** — origin-side. Caches
-   rendered HTML at the server before WordPress regenerates it.
-   Already enabled by default on the host.
+3. **Cloudways Varnish**: origin-side. Varnish passes HTML through
+   (see below). The Breeze page cache has been inactive since
+   2026-10-13, so every origin miss renders in WordPress.
 4. **WordPress object cache** — in-memory cache of database queries
    and computed values. Keeps repeat queries fast.
 
@@ -198,14 +198,17 @@ If you keep seeing `MISS` or `DYNAMIC`, check:
 
 `inc/cache-headers.php` (lifetimes, feed list), `inc/cache-headers-rules.php`
 (who gets them) and `inc/cache-headers-hooks.php` (sending) put two headers on
-anonymous GET/HEAD responses, and nothing on anything else (a session,
-post-password or commenter cookie, a POST, a 404, search results, a preview, a
-password form, or a response that already set its own `Cache-Control`):
+anonymous GET/HEAD responses, and nothing on a session, post-password or
+commenter cookie, a POST, a 404, or a response that already set its own
+`Cache-Control`. Core already sends its nocache headers for a logged-in
+request and for a password-protected post (`WP::send_headers()` in
+`wp-includes/class-wp.php`), so those leave with core's `no-cache`:
 
 | Response | `Cache-Control` | `Cloudflare-CDN-Cache-Control` |
 |---|---|---|
 | Public HTML pages | `public, max-age=0` | `max-age=7200, stale-while-revalidate=86400, stale-if-error=604800` |
 | `/llms.txt`, `/llms-full.txt`, `/.well-known/agents.json`, `/opensearch.xml`, the listed feeds | `public, max-age=0` | `max-age=300, stale-while-revalidate=3600, stale-if-error=86400` |
+| Unlisted feeds and page refusals (search results, a preview, a password form, a not-found or non-HTML refusal) that set no header themselves | `no-cache` | `no-store` |
 
 `Cache-Control` is what browsers and Varnish read: revalidate every time,
 store nothing. It never carries `s-maxage`: Varnish would start holding HTML
@@ -231,15 +234,21 @@ update leaves a gap in which pages render without it.
 
 **One cache tag.** Every response that gets the edge lifetime also carries
 `Cache-Tag: sn-render` (15.2.0). The plugin purges that tag on a save, one
-call, and Cloudflare strips the header before the visitor sees it. This only
-works with Breeze's "Cache Full Page HTML" off: a Breeze file hit skips
-WordPress and so carries neither the lifetime nor the tag.
+call, and Cloudflare strips the header before the visitor sees it. The Breeze
+page cache is inactive (since 2026-10-13); if it were ever turned back on, a
+Breeze file hit would skip WordPress and carry neither the lifetime nor the
+tag.
 
 **The listed feeds** are a closed set (`sn_edge_cache_feed_paths()`): the posts
 feed as rss2, rss, rdf, atom and json under `/feed/` and `/notes/feed/`, plus
-`/?feed=json`. The plugin purges exactly that list on a save. Any other feed
-(comments, a tag, another query form) keeps Breeze's `no-cache`, because it
-could not be purged by name.
+`/?feed=json`. The plugin purges exactly that list on a save, and deletes the
+edge-cached feeds outright on a plugin or theme update (plugin #2166): an update
+only marks the zone stale, and an unchanged feed answers the revalidation with
+a 304, so the edge kept the pre-update feed headers. Any other feed (comments,
+a tag, another query form) gets `Cache-Control: no-cache` and
+`Cloudflare-CDN-Cache-Control: no-store` from the theme (#584), because it
+could not be purged by name. Breeze used to send that `no-cache`; with Breeze
+off, those feeds went out with no header and the edge kept them.
 
 **Two routes exit before the hook.** `/notes` (and its tag views) renders at
 `template_redirect` priority 0 and exits, so its handler calls the policy
@@ -261,12 +270,11 @@ What the headers depend on, none of it in this repo:
   the edge lifetime still applies. It is on in the live zone and stays on by
   the owner's choice (2026-10-03), so stale serving is dormant until that
   changes. The plugin's edge posture read shows the setting.
-- **A Breeze page-cache hit carries neither header.** Breeze answers a hit
-  before WordPress loads, and its `breeze_custom_headers_allow` list cannot
-  replay them (it snapshots header values once, from a HEAD of the home page
-  through the edge, where Cloudflare has already dropped the edge header).
-  Stale serving applies to origin misses only; a purge empties Breeze too, so
-  the copy the edge stores after one is a fresh render.
+- **The headers assume Breeze stays off** (inactive since 2026-10-13). A
+  Breeze page-cache hit would carry neither header: Breeze answers before WordPress
+  loads, and its `breeze_custom_headers_allow` list cannot replay them (it
+  snapshots header values once, from a HEAD of the home page through the edge,
+  where Cloudflare has already dropped the edge header).
 
 ## How auto-purge works
 
@@ -301,9 +309,10 @@ hit origin PHP:
   reads `cf-cache-status: BYPASS`. A public REST response without such
   headers should be assumed cacheable at the edge.
 - The listed posts feeds are NOT on this list either: the live edge stores
-  feeds (measured 2026-10-03, `cf-cache-status: REVALIDATED` under Breeze's
-  `no-cache`), and the listed ones now get five minutes at the edge. A post
-  save purges them. Comment, tag and other feeds keep `no-cache`.
+  feeds (measured 2026-10-03, `cf-cache-status: REVALIDATED` under the
+  `no-cache` Breeze sent then), and the listed ones now get five minutes at the
+  edge. A post save purges them and an update deletes them. Comment, tag and
+  other feeds get `no-cache` plus an edge `no-store` from the theme.
 - Any request with a `wordpress_logged_in_*`, `wp-postpass_*`, or
   `comment_author_*` cookie (you, while logged in)
 

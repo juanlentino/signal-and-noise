@@ -7,7 +7,9 @@
  * copy: when the origin returned 503, readers got the 503. The machine files
  * (/llms.txt, /llms-full.txt, /.well-known/agents.json, /opensearch.xml) left
  * with the nocache headers WordPress commits for a postless path, so every
- * read went to PHP (about 0.4 s), and the feeds left with Breeze's `no-cache`.
+ * read went to PHP (about 0.4 s), and the feeds left with the `no-cache` Breeze
+ * sent then (Breeze is inactive since 2026-10-13; unlisted feeds now get the
+ * theme's own no-cache, see the 'nocache' kind in inc/cache-headers-rules.php).
  *
  * TWO HEADERS, because two caches sit in front of WordPress and only one of
  * them should keep the page:

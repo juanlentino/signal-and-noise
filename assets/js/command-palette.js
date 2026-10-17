@@ -25,16 +25,13 @@
 ( function () {
 	'use strict';
 
-	// Data comes from the JSON data island <script type="application/json"
+	// Data comes only from the JSON data island <script type="application/json"
 	// id="sn-cmdk-data"> (inc/command-palette.php, 2026-10-16), which needs no
-	// 'unsafe-inline' in the CSP. window.SN_CMDK is the fallback for a page
-	// cached before that change; drop it one release later.
+	// 'unsafe-inline' in the CSP. No island, or a malformed one: the empty default.
 	function readData() {
 		var el = document.getElementById ? document.getElementById( 'sn-cmdk-data' ) : null;
-		if ( el ) {
-			try { return JSON.parse( el.textContent ); } catch ( e ) { /* fall through */ }
-		}
-		return window.SN_CMDK;
+		if ( ! el ) { return null; }
+		try { return JSON.parse( el.textContent ); } catch ( e ) { return null; }
 	}
 	var data = readData() || { notesUrl: '/notes/', recent: [], pillars: [], notes: [] };
 	if ( ! data.notes ) { data.notes = []; } // Pre-11.2.0 island shape.

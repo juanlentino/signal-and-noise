@@ -21,8 +21,8 @@ function page(nav = {}, winExtra = {}) {
   const sent = [];
   const on = {};
   const add = (t, fn) => { (on[t] = on[t] || []).push(fn); };
-  const doc = { addEventListener: add, prerendering: false, visibilityState: 'visible', referrer: '', cookie: '', documentElement: { scrollHeight: 3000 } };
-  const win = Object.assign({ SN_BEACON: { endpoint: '/_sn/px', k: 'k' }, addEventListener: add, removeEventListener() {}, location: { pathname: '/notes/x/', search: '', hostname: 'juanlentino.com' }, innerHeight: 1000, scrollY: 0, outerWidth: 1200, chrome: {} }, winExtra);
+  const doc = { addEventListener: add, prerendering: false, visibilityState: 'visible', referrer: '', cookie: '', documentElement: { scrollHeight: 3000 }, getElementById: (id) => (id === 'sn-beacon-data' ? { textContent: '{"endpoint":"/_sn/px","k":"k"}' } : null) };
+  const win = Object.assign({ addEventListener: add, removeEventListener() {}, location: { pathname: '/notes/x/', search: '', hostname: 'juanlentino.com' }, innerHeight: 1000, scrollY: 0, outerWidth: 1200, chrome: {} }, winExtra);
   const ctx = {
     window: win, document: doc, location: win.location, URLSearchParams, URL, Blob, JSON, Object, Math, Date, isFinite,
     navigator: Object.assign({ userAgent: CHROME_MAC, userAgentData: UAD, webdriver: false }, nav),
