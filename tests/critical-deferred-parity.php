@@ -218,6 +218,8 @@ $expected_shared = array(
 		// Desktop nav links and their blood underline.
 		'.wp-block-navigation a',
 		'.wp-block-navigation a::after',
+		// The page you are on keeps that underline (tuned channel, 2026.10).
+		'.wp-block-navigation a[aria-current="page"]::after',
 		// The mobile overlay. Not above the fold, but interaction-timing: it
 		// opens on tap and the contract covers that explicitly.
 		'.wp-block-navigation__responsive-container.is-menu-open',
