@@ -422,6 +422,23 @@ body {
 	}
 }
 
+/* The page you are on keeps the rule (2026.10). inc/nav-current.php marks
+   that link aria-current="page" for screen readers; this shows the same fact
+   on screen, so the hover rule becomes a tuned-channel indicator. The front
+   page is never marked, so the home page is unchanged. Forced colors would
+   repaint the blood bar to the page background and lose it, so it takes the
+   text color there. Mirrored in critical.css and layout.css. */
+.wp-block-navigation a[aria-current="page"]::after {
+	width: 100%;
+}
+
+@media (forced-colors: active) {
+	.wp-block-navigation a::after {
+		forced-color-adjust: none;
+		background-color: CanvasText;
+	}
+}
+
 /* ============================================
    PAGE TRACK
    ============================================ */

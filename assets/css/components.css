@@ -1656,6 +1656,63 @@
 	border-color: var(--wp--preset--color--blood);
 }
 
+/* TEST CARD (2026.10). Behind the decorative digits, the house palette as a
+   broadcast calibration strip: the seven swatches in order as bars, a
+   PLUGE-style step row under them. The page already says "No Signal"; this is
+   the image a receiver shows when it has none. Every bar is a token, so dark
+   mode recalibrates the card by itself. The digits (aria-hidden, decorative)
+   switch from concrete to ink with a page-colored outline so they read over
+   every bar; core's has-concrete-color carries !important, hence this one.
+   On arrival the digits flicker once with glitchFlicker (base.css), run in
+   reverse so the flicker lands first and then holds; reduced-motion readers
+   get the still card. Forced colors drop the strip and leave today's 404. */
+.sn-404-digits {
+	position: relative;
+	isolation: isolate;
+	padding: 0.12em 0.08em 0.2em;
+}
+.sn-404-digits.has-concrete-color {
+	color: var(--wp--preset--color--bone) !important;
+	-webkit-text-stroke: 0.04em var(--wp--preset--color--void);
+	paint-order: stroke fill;
+}
+.sn-404-digits::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	border: 1px solid var(--wp--preset--color--concrete);
+	background:
+		linear-gradient(
+			90deg,
+			var(--wp--preset--color--void) 0 14.28%,
+			var(--wp--preset--color--asphalt) 0 28.57%,
+			var(--wp--preset--color--concrete) 0 42.85%,
+			var(--wp--preset--color--rust) 0 57.14%,
+			var(--wp--preset--color--bone) 0 71.42%,
+			var(--wp--preset--color--blood) 0 85.71%,
+			var(--wp--preset--color--signal) 0
+		) top / 100% 78% no-repeat,
+		linear-gradient(
+			90deg,
+			var(--wp--preset--color--bone) 0 20%,
+			var(--wp--preset--color--asphalt) 0 40%,
+			var(--wp--preset--color--void) 0 60%,
+			var(--wp--preset--color--concrete) 0 80%,
+			var(--wp--preset--color--bone) 0
+		) bottom / 100% 16% no-repeat;
+}
+@media (prefers-reduced-motion: no-preference) {
+	.sn-404-digits {
+		animation: glitchFlicker 1.6s linear reverse 1;
+	}
+}
+@media (forced-colors: active) {
+	.sn-404-digits::before {
+		display: none;
+	}
+}
+
 .sn-404-suggestions {
 	max-width: 760px;
 	margin: 0 0 var(--wp--preset--spacing--30);
