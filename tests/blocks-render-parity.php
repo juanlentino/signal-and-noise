@@ -34,6 +34,11 @@ if ( ! function_exists( 'get_block_wrapper_attributes' ) ) {
 		return 'class="' . ( $extra['class'] ?? '' ) . '"';
 	}
 }
+if ( ! function_exists( 'esc_html' ) ) {
+	// The term block escapes rather than kses'ing; the comparison decodes
+	// entities once, so the real escaping round-trips to the same text.
+	function esc_html( $s ) { return htmlspecialchars( (string) $s, ENT_QUOTES, 'UTF-8' ); }
+}
 if ( ! function_exists( 'wp_kses_post' ) ) {
 	// Faithful-enough: kses keeps inline markup and text; the comparison below
 	// strips tags anyway, so only text survival matters here.

@@ -1,0 +1,52 @@
+/* signal-noise/term: a definition set where the term first appears.
+
+   Declared by block.json's `style`, so core enqueues it only where the block
+   renders (the sidenote's arrangement, #391).
+
+   Deliberately NOT the sidenote. The sidenote is an aside: it floats into the
+   margin at >=1280px and drops to a top hairline in muted rust below that.
+   A term is reference material the next paragraph depends on, so it stays in
+   the column at every width, carries a left rule in the one accent, and sets
+   the term itself in tracked uppercase. Text is currentColor, so it follows
+   both palettes; it is quieter than the prose by size, never by contrast.
+
+   margin-block, not the margin shorthand: as a direct child of
+   .is-layout-constrained the block gets core's margin-left/right auto
+   !important, and only the vertical half is ours to set. */
+
+.sn-term {
+	margin-block: 1.75rem;
+	padding: 0.2rem 0 0.2rem 1rem;
+	border-left: 2px solid var(--wp--preset--color--blood);
+	/* One step under the notes prose (max(0.9rem, 11px), components.css). */
+	font-size: max(0.8125rem, 11px);
+	line-height: 1.55;
+	color: currentColor;
+}
+
+/* The <p> in each cell must take the cell's size. Without this the notes
+   prose rule `.sn-note-single .wp-block-post-content p` (0,2,1) reaches it
+   and sets the term and its definition at full prose size, which is how the
+   first build measured (14.4px for both, 2026-10-16). :is(dt, dd) > p is
+   (0,2,2), so it wins whatever order the two sheets load in. */
+.wp-block-post-content .sn-term :is(dt, dd) > p {
+	font-size: inherit;
+	line-height: inherit;
+}
+
+.sn-term dt,
+.sn-term dd,
+.sn-term p {
+	margin: 0;
+}
+
+.sn-term dt {
+	font-size: max(0.75rem, 11px);
+	font-weight: 600;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+}
+
+.sn-term dd {
+	margin-top: 0.3rem;
+}

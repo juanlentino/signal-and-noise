@@ -173,6 +173,10 @@ $variations = array(
 		'literals' => array( 'fontSize' => 'max(0.95rem,14px)', 'elements.cite.fontSize' => 'max(0.7rem,11px)', 'elements.cite.letterSpacing' => '0.08em' ) ),
 	'references' => array( 'title' => 'References',      'block' => 'core/list',
 		'literals' => array( 'fontSize' => 'max(0.85rem,12px)' ) ),
+	// The 2026-10 reading aids: their type lives in the `css` string (boxes,
+	// hairlines, the small-caps header row), so no typography key to govern.
+	'checklist'  => array( 'title' => 'Checklist',       'block' => 'core/list' ),
+	'sn-table'   => array( 'title' => 'Comparison table', 'block' => 'core/table' ),
 );
 
 $variation_files = (array) glob( "$theme_root/styles/blocks/*.json" );

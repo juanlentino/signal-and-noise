@@ -1,0 +1,18 @@
+{
+	"$schema": "https://schemas.wp.org/wp/7.1/theme.json",
+	"version": 3,
+	"title": "Checklist",
+	"slug": "checklist",
+	"blockTypes": ["core/list"],
+	"styles": {
+		"spacing": {
+			"margin": {
+				"left": "0"
+			},
+			"padding": {
+				"left": "0"
+			}
+		},
+		"css": "list-style:none;& li{position:relative;padding-left:1.9rem;margin-bottom:0.75rem}& li::before{content:\"\";position:absolute;left:0;top:0.25em;width:1em;height:1em;box-sizing:border-box;border:1.5px solid currentColor}"
+	}
+}

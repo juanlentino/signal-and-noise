@@ -1,0 +1,18 @@
+{
+	"$schema": "https://schemas.wp.org/wp/7.1/theme.json",
+	"version": 3,
+	"title": "Comparison table",
+	"slug": "sn-table",
+	"blockTypes": [
+		"core/table"
+	],
+	"styles": {
+		"spacing": {
+			"margin": {
+				"top": "2rem",
+				"bottom": "2rem"
+			}
+		},
+		"css": "min-width:30rem"
+	}
+}

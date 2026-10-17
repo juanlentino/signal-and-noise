@@ -34,7 +34,7 @@ function wp_kses_post( $s ) { $GLOBALS['__kses_calls'] = ( $GLOBALS['__kses_call
 $blocks_dir = __DIR__ . '/../blocks';
 
 // block.json validity + fields.
-foreach ( array( 'sidenote', 'pull-quote', 'pillar-essays' ) as $slug ) {
+foreach ( array( 'sidenote', 'pull-quote', 'pillar-essays', 'term' ) as $slug ) {
 	$json = json_decode( file_get_contents( "$blocks_dir/$slug/block.json" ), true );
 	ok( is_array( $json ), "$slug/block.json parses as JSON" );
 	ok( $json['name'] === "signal-noise/$slug", "$slug name is signal-noise/$slug" );
@@ -93,7 +93,7 @@ $deps = $GLOBALS['__reg_scripts']['signal-noise-blocks-editor'];
 foreach ( array( 'wp-blocks', 'wp-element', 'wp-block-editor', 'wp-server-side-render' ) as $d ) {
 	ok( in_array( $d, $deps, true ), "editor script depends on $d" );
 }
-ok( count( $GLOBALS['__reg_blocks'] ) === 3, 'all three block dirs registered' );
+ok( count( $GLOBALS['__reg_blocks'] ) === 4, 'all four block dirs registered' );
 ok( ! empty( array_filter( $GLOBALS['__reg_blocks'], fn( $d ) => false !== strpos( (string) $d, 'pillar-essays' ) ) ), 'pillar-essays block dir registered' );
 $cats = signal_noise_block_category( array() );
 ok( ! empty( array_filter( $cats, fn( $c ) => ( $c['slug'] ?? '' ) === 'signal-noise' ) ), 'block_categories_all adds a signal-noise category' );
