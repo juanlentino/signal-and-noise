@@ -98,7 +98,10 @@ $rule = preg_match( '/\.sn-hero::after\s*\{([^}]*)\}/', $crit, $r ) ? $r[1] : ''
 ok( '' !== $rule, 'critical.css positions the pulse (the hero is above the fold)' );
 ok( false === strpos( $rule, 'content' ), '...without content: only the inline rule, printed when there is data, makes it render' );
 ok( 1 === preg_match( '/position:\s*absolute/', $rule ), '...absolutely, so it never moves the hero (the hero is a flex column)' );
-ok( false !== strpos( $rule, 'var(--wp--preset--color--concrete)' ), '...in the concrete token, so dark mode recalibrates it' );
+ok( false !== strpos( $rule, 'var(--sn-pulse, var(--wp--preset--color--concrete))' ), '...in its own token, falling back to concrete (light keeps concrete)' );
+preg_match_all( '/:root\\[data-theme="dark"\\]\\s*\\{[^}]*\\}|:root:not\\(\\[data-theme="light"\\]\\)\\s*\\{[^}]*\\}/', $crit, $dark );
+ok( 2 === count( $dark[0] ) && 2 === count( preg_grep( '/--sn-pulse:\\s*#565656/', $dark[0] ) ), 'both dark blocks set the pulse to #565656: 2.70:1 on void, matching light (concrete #383838 was 1.69:1)' );
+ok( 0 === preg_match( '/(^|\\})\\s*:root\\s*\\{[^}]*--sn-pulse/', $crit ), 'light mode defines no pulse token, so it stays on concrete' );
 ok( 1 === preg_match( '/@media\s*\(prefers-reduced-motion:\s*no-preference\)\s*\{[^{}]*\.sn-hero::after\s*\{[^}]*animation:\s*sn-pulse-draw[^}]*steps\(/s', $crit ), 'the one-time draw-in is stepped and gated on prefers-reduced-motion: no-preference' );
 ok( 1 === preg_match( '/@keyframes\s+sn-pulse-draw\s*\{[^}]*clip-path/s', $crit ), 'the draw-in animates clip-path only' );
 ok( 1 === preg_match( '/@media\s*\(forced-colors:\s*active\)\s*\{[^{}]*\.sn-hero::after\s*\{[^}]*display:\s*none/s', $crit ), 'forced colors drop it' );
