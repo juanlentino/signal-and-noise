@@ -12,6 +12,7 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+- **A wide comparison table can be scrolled from the keyboard everywhere.** On a phone the table scrolls sideways inside its figure, and Safari does not make a scroll box focusable on its own, so a keyboard reader there could not reach the hidden columns (WCAG 2.1.1). `inc/table-header-scope.php` now gives the figure of an `is-style-sn-table` table `tabindex="0"`, `role="region"` and a name (its caption, or "Comparison table"), and `article.css` gives it the house 2px blood focus ring. A figure that already sets tabindex is left alone. `tests/table-header-scope.php` pins it, including a caption with a quote, which the HTML API escapes. `docs/ACCESSIBILITY.md` gains a section on 2026.10.11's reading aids, motion and decoration, and `readme.txt` lists the new features.
 ## [2026.10.11] - 2026-10-17 — reading aids, a live pulse on home and the channel change
 
 

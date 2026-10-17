@@ -21,7 +21,11 @@ Features:
 * Justified text with hyphenation and hanging punctuation (v9.4.0)
 * Self-hosted Bebas Neue + DM Mono typography (no Google Fonts)
 * Dark mode (v12.0.0) as a token layer: follows prefers-color-scheme, with a persistent reader toggle. Contrast-gated in CI across every palette the site can present
-* View Transitions API for soft cross-page navigation
+* Cross-page navigation is a "channel change": the View Transitions API wipes the new page in, top to bottom in eight steps (2026.10.11)
+* Reading aids for notes: timeline, key term (a <dl> block), checklist and comparison table, each in the editorial-conventions registry (2026.10.11)
+* Reading progress on long notes as an FM tuning dial, CSS scroll-driven with no script (2026.10.11)
+* The home hero draws the last 24 hours of the site's own traffic as a hairline waveform, server-rendered with no script (2026.10.11)
+* A printed note carries its own proof: the signed text's full hash, version and verify address, on paper only (2026.10.11)
 * Fixed, solid, single-height header; under prefers-reduced-motion every animation and transition is off
 * Contrast measured on sampled live pages daily (contrast.yml): text at AA; links in running text underlined or 3:1 against the text around them
 * Inlined critical CSS; the modular stylesheets ship as one combined, minified file the theme builds itself (v10.21.6+), with per-file enqueues as the fail-open fallback

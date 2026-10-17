@@ -1,6 +1,7 @@
 <?php
 /**
- * Signal & Noise: the comparison table's header cells carry scope="col".
+ * Signal & Noise: the comparison table's header cells carry scope="col", and
+ * its scroll box is a named, keyboard-reachable region.
  *
  * The house table (core/table with the "Comparison table" style,
  * styles/blocks/sn-table.json) requires a header row whose cells are
@@ -48,3 +49,42 @@ function sn_table_header_scope( $html, $block ) {
 	return $p->get_updated_html();
 }
 add_filter( 'render_block_core/table', 'sn_table_header_scope', 10, 2 );
+
+/**
+ * Make the comparison table's scroll box reachable from the keyboard.
+ *
+ * On a phone the table scrolls sideways inside its figure (styles/blocks/
+ * sn-table.json sets a 30rem minimum width). Chrome and Firefox make a scroll
+ * container focusable on their own; Safari does not, so a keyboard reader
+ * there could never scroll a wide table (WCAG 2.1.1; axe's
+ * scrollable-region-focusable rule). The figure gets tabindex="0",
+ * role="region" and a name: the caption's text, or "Comparison table".
+ * A figure that already sets tabindex is left as the author made it.
+ * The ring it shows when focused is in assets/css/article.css.
+ *
+ * @param string $html  Rendered block HTML.
+ * @param array  $block Parsed block.
+ * @return string
+ */
+function sn_table_scroll_region( $html, $block ) {
+	$classes = preg_split( '/\s+/', trim( (string) ( $block['attrs']['className'] ?? '' ) ) );
+	if ( ! in_array( 'is-style-sn-table', $classes, true ) ) {
+		return $html;
+	}
+	$name = 'Comparison table';
+	if ( preg_match( '#<figcaption\b[^>]*>(.*?)</figcaption>#is', (string) $html, $m ) ) {
+		$text = trim( preg_replace( '/\s+/', ' ', html_entity_decode( wp_strip_all_tags( $m[1] ), ENT_QUOTES | ENT_HTML5, 'UTF-8' ) ) );
+		if ( '' !== $text ) {
+			$name = $text;
+		}
+	}
+	$p = new WP_HTML_Tag_Processor( (string) $html );
+	if ( ! $p->next_tag( 'figure' ) || null !== $p->get_attribute( 'tabindex' ) ) {
+		return $html;
+	}
+	$p->set_attribute( 'tabindex', '0' );
+	$p->set_attribute( 'role', 'region' );
+	$p->set_attribute( 'aria-label', $name );
+	return $p->get_updated_html();
+}
+add_filter( 'render_block_core/table', 'sn_table_scroll_region', 10, 2 );
