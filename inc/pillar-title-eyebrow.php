@@ -138,7 +138,9 @@ function sn_pillar_eyebrow_filter( $block_content, $block, $instance = null ) {
 		esc_html( $designation )
 	);
 	$GLOBALS['sn_pillar_eyebrow_emitted'] = true;
-	return $eyebrow . (string) $block_content;
+	// The series path rides directly under the brow (inc/essay-signal-path.php).
+	$path = function_exists( 'sn_essay_signal_path_html' ) ? sn_essay_signal_path_html( $page_id ) : '';
+	return $eyebrow . $path . (string) $block_content;
 }
 
 if ( ! defined( 'SN_PILLAR_EYEBROW_TEST' ) || ! SN_PILLAR_EYEBROW_TEST ) {

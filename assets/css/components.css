@@ -2357,3 +2357,53 @@ img.sn-img-dim {
 	}
 }
 
+/* Signal path (2026.10): the pillar series under the brow, in reading order,
+   the current essay lit in blood, the others linked
+   (inc/essay-signal-path.php). */
+.sn-signal-path {
+	margin: 0.6em 0 2.2em;
+	font-family: var(--wp--preset--font-family--body);
+	font-size: 11px;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+}
+.sn-signal-path ol { list-style: none; margin: 0; padding: 0; display: flex; align-items: flex-start; }
+.sn-signal-path li { flex: 1; position: relative; padding: 16px 1em 0 0; color: var(--wp--preset--color--rust); }
+.sn-signal-path li::before { content: ""; position: absolute; top: 4px; left: 0; width: 9px; height: 9px; box-sizing: border-box; border: 1.5px solid currentColor; border-radius: 50%; background: var(--wp--preset--color--void); }
+.sn-signal-path li::after { content: ""; position: absolute; top: 8px; left: 12px; right: 4px; border-top: 1px solid var(--wp--preset--color--concrete); }
+.sn-signal-path li:last-child::after { display: none; }
+.sn-signal-path li[aria-current] { color: var(--wp--preset--color--bone); }
+.sn-signal-path li[aria-current]::before { background: var(--wp--preset--color--blood); border-color: var(--wp--preset--color--blood); }
+.sn-signal-path a { color: inherit; text-decoration: none; }
+.sn-signal-path__no { display: block; font-weight: 500; }
+.sn-signal-path__title { display: block; margin-top: 0.2em; }
+@media (forced-colors: active) {
+	.sn-signal-path li[aria-current]::before { forced-color-adjust: none; background: Highlight; border-color: Highlight; }
+}
+
+/* Margin cue (2026.10): on the essays, at 1200px and wider, each section's
+   "Section N" label moves into the left gutter and holds there while its
+   section scrolls, like a marker lane. DOM order is unchanged; below 1200px
+   nothing moves. Sticky needs body to clip, not hide: a hidden body is a
+   scroll container that never scrolls. */
+body:has(.sn-provenance-section) { overflow-x: clip; }
+@media (min-width: 1200px) {
+	.sn-provenance-section { display: grid !important; grid-template-columns: 9rem minmax(0, 1fr); column-gap: 2rem; }
+	.sn-provenance-section > * { grid-column: 2; margin-left: 0 !important; }
+	.sn-provenance-section > .sn-provenance-section-eyebrow { grid-column: 1; grid-row: 1 / span 99; align-self: start; position: sticky; top: calc(var(--sn-chrome-top, 100px) + 3rem); margin-top: 0.6rem !important; }
+}
+
+/* Acquiring signal (2026.10): until the booking calendar paints, or if a
+   blocker stops it, its box shows a static test strip naming the real host,
+   never a blank. The bars are the palette tokens; Google's page covers the
+   background once it loads. */
+iframe[src^="https://calendar.google.com/"] {
+	background-color: var(--wp--preset--color--asphalt);
+	background-image:
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='24'%3E%3Ctext x='0' y='16' font-family='monospace' font-size='12' letter-spacing='2' fill='gray'%3ECONNECTING %C2%B7 CALENDAR.GOOGLE.COM%3C/text%3E%3C/svg%3E"),
+		linear-gradient(90deg, var(--wp--preset--color--void) 0 14.28%, var(--wp--preset--color--asphalt) 0 28.57%, var(--wp--preset--color--concrete) 0 42.85%, var(--wp--preset--color--rust) 0 57.14%, var(--wp--preset--color--bone) 0 71.42%, var(--wp--preset--color--blood) 0 85.71%, var(--wp--preset--color--signal) 0);
+	background-size: 420px 24px, 420px 40px;
+	background-position: center calc(50% + 32px), center;
+	background-repeat: no-repeat;
+}
+
