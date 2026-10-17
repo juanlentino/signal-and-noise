@@ -12,6 +12,7 @@
  *   inc/asset-combine.php        — combined+minified stylesheet delivery, fail-open to per-file enqueues (v10.21.6)
  *   inc/assets-frontend.php      — frontend CSS/JS/fonts/favicons + defer filters (critical.css inline; article.css rides the combined cascade since v10.49.0)
  *   inc/frontend-filters.php     — skip link, Spotify oEmbed, generator-tag stripping (named callbacks v10.49.0), social-link URL shim
+ *   inc/table-header-scope.php   — scope="col" on the comparison table's header cells
  *   inc/og-fonts.php             — registers sn_og_font_paths filter (theme brand fonts → plugin's OG generator)
  *   inc/notes-og-card.php        — bespoke 1200x630 /notes-index share card + the brand site-default og:image via the plugin's sn_og_image_url seam (v10.39.0, plugin-guarded)
  *   inc/wp-update-integration.php       — registers theme with WP's update transient (version visibility in wp-admin)
@@ -108,6 +109,7 @@ require_once __DIR__ . '/inc/editor-block-palette.php';
 require_once __DIR__ . '/inc/asset-combine.php'; // v10.21.6: combined+minified stylesheet delivery (fail-open to per-file enqueues)
 require_once __DIR__ . '/inc/assets-frontend.php';
 require_once __DIR__ . '/inc/frontend-filters.php';
+require_once __DIR__ . '/inc/table-header-scope.php'; // 2026-10: the comparison table's header cells carry scope="col" on render
 require_once __DIR__ . '/inc/front-page-fallback.php';
 require_once __DIR__ . '/inc/og-fonts.php';
 require_once __DIR__ . '/inc/notes-og-card.php'; // v10.39.0: bespoke 1200x630 /notes-index share card via the plugin's sn_og_image_url seam (plugin-guarded)

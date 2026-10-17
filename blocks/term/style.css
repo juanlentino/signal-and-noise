@@ -18,9 +18,20 @@
 	margin-block: 1.75rem;
 	padding: 0.2rem 0 0.2rem 1rem;
 	border-left: 2px solid var(--wp--preset--color--blood);
-	font-size: 0.9rem;
+	/* One step under the notes prose (max(0.9rem, 11px), components.css). */
+	font-size: max(0.8125rem, 11px);
 	line-height: 1.55;
 	color: currentColor;
+}
+
+/* The <p> in each cell must take the cell's size. Without this the notes
+   prose rule `.sn-note-single .wp-block-post-content p` (0,2,1) reaches it
+   and sets the term and its definition at full prose size, which is how the
+   first build measured (14.4px for both, 2026-10-16). :is(dt, dd) > p is
+   (0,2,2), so it wins whatever order the two sheets load in. */
+.wp-block-post-content .sn-term :is(dt, dd) > p {
+	font-size: inherit;
+	line-height: inherit;
 }
 
 .sn-term dt,

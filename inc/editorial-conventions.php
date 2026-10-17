@@ -266,7 +266,7 @@ function sn_theme_editorial_conventions() {
 			'pattern'          => '',
 			'label'            => 'Comparison table',
 			'exemplar'         => "<!-- wp:table {\"className\":\"is-style-sn-table\"} -->\n<figure class=\"wp-block-table is-style-sn-table\"><table class=\"has-fixed-layout\"><thead><tr><th scope=\"col\">Identifier</th><th scope=\"col\">What it names</th><th scope=\"col\">Who issues it</th></tr></thead><tbody><tr><td>ISRC</td><td>One recording</td><td>A national ISRC agency</td></tr><tr><td>ISWC</td><td>One musical work</td><td>A regional ISWC agency</td></tr><tr><td>IPI</td><td>One rights holder</td><td>SUISA, for CISAC</td></tr></tbody></table><figcaption class=\"wp-element-caption\">Three identifiers, three different things</figcaption></figure>\n<!-- /wp:table -->",
-			'when'             => 'Three or more things compared on the same attributes. Two things are compare columns. Always a header row: a <thead> whose cells are <th scope="col">. The caption says what the table compares.',
+			'when'             => 'Three or more things compared on the same attributes. Two things are compare columns. Always a header row (Table settings, Header section): the style gives its cells scope="col" when it renders, since the editor cannot. The caption says what the table compares.',
 			'placement'        => 'Inside the section that makes the comparison. On a phone the table scrolls sideways inside its figure; the page itself never does.',
 			'anchor_reachable' => true,
 			'unused'           => true,

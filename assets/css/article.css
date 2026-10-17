@@ -405,6 +405,63 @@ main { view-transition-name: sn-main; }
 	margin-block: 2.5rem;
 }
 
+/* ─── comparison table (core/table "Comparison table" style) ─────────── */
+
+/* The style is a partial (styles/blocks/sn-table.json), but only its
+   min-width can live there. core/table declares its style root as
+   `.wp-block-table > table`, so a partial's `&` is the <table>, never the
+   figure or its caption; and a partial's rules are wrapped in
+   `:root :where()`, (0,1,0), which loses to core's own
+   `.wp-block-table td, .wp-block-table th { border: 1px solid }` (0,1,1).
+   Measured on WordPress 7.1: every cell kept core's full box. So the rules
+   that have to beat core sit here, at (0,2,1).
+
+   Hairlines between rows, a solid rule under the header, no fill, no
+   zebra. Strokes are currentColor so both palettes follow. The figure is
+   core's overflow-x:auto scroll box; with the partial's 30rem min-width a
+   phone scrolls the table inside it and the page never moves. */
+/* Prose size, not the figure's larger inherited base (16.8px measured
+   against 14.4px prose on a note). */
+.wp-block-table.is-style-sn-table {
+	font-size: max(0.9rem, 11px);
+}
+
+.wp-block-table.is-style-sn-table th,
+.wp-block-table.is-style-sn-table td {
+	border: 0;
+	border-bottom: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+	padding: 0.6rem 1rem 0.6rem 0;
+	text-align: left;
+	vertical-align: top;
+	background: none;
+}
+
+.wp-block-table.is-style-sn-table thead {
+	border-bottom: 0;
+}
+
+.wp-block-table.is-style-sn-table thead th {
+	border-bottom: 1px solid currentColor;
+	font-size: max(0.7rem, 11px);
+	font-weight: 600;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+}
+
+/* Set like the steps label: small, tracked, uppercase. Sticky at the left
+   edge of the figure's scroll box, so on a phone the caption stays put while
+   the reader scrolls the table under it (measured: without it, a 60px scroll
+   cut the caption's first word in half). */
+.wp-block-table.is-style-sn-table figcaption {
+	position: sticky;
+	left: 0;
+	margin-top: 0.75rem;
+	font-size: max(0.7rem, 11px);
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	text-align: left;
+}
+
 /* ─── v9.2.0: post-closing template part (parts/post-closing.html) ──── */
 
 .sn-post-closing {

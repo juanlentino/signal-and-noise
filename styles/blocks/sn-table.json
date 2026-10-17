@@ -3,7 +3,9 @@
 	"version": 3,
 	"title": "Comparison table",
 	"slug": "sn-table",
-	"blockTypes": ["core/table"],
+	"blockTypes": [
+		"core/table"
+	],
 	"styles": {
 		"spacing": {
 			"margin": {
@@ -11,6 +13,6 @@
 				"bottom": "2rem"
 			}
 		},
-		"css": "overflow-x:auto;max-width:100%;& table{border-collapse:collapse;width:100%;min-width:30rem;table-layout:auto}& th{border:0;border-bottom:1px solid color-mix(in srgb,currentColor 30%,transparent);padding:0.6rem 1rem 0.6rem 0;text-align:left;vertical-align:top;background:none}& td{border:0;border-bottom:1px solid color-mix(in srgb,currentColor 30%,transparent);padding:0.6rem 1rem 0.6rem 0;text-align:left;vertical-align:top;background:none}& thead{border:0}& thead th{border-bottom:1px solid currentColor;font-size:max(0.7rem,11px);font-weight:600;letter-spacing:0.12em;text-transform:uppercase}& tbody tr{background:none}& figcaption{margin-top:0.75rem;font-size:max(0.7rem,11px);letter-spacing:0.12em;text-transform:uppercase;text-align:left}"
+		"css": "min-width:30rem"
 	}
 }
