@@ -12,6 +12,8 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+- **Feeds and searches the theme does not cache now say so, so the edge stops keeping them.** The live audit of 2026-10-17 found Cloudflare holding `/comments/feed/` (HIT, age 43), `/tag/x/feed/` and `/feed/?z=<random>`, all with no Cache-Control and no Cache-Tag, so a new comment or note never cleared them; `/tag/c2pa/?s=x` left the same way. `sn_edge_cache_kind_for()` returned nothing for them on the old assumption that Breeze sends `no-cache`, and Breeze has been inactive since 2026-10-13. A new `nocache` kind covers an anonymous 200 with no Cache-Control set that is an unlisted feed (comment, tag, category, author or search feeds, any query form of a feed) or a page refusal (search, password form, preview, robots and the like): it sends `Cache-Control: no-cache` (browsers and feed readers keep revalidating with ETag and Last-Modified) and `Cloudflare-CDN-Cache-Control: no-store`. A header already set (core's `nocache_headers()`, a 404) stays; logged-in and admin responses, the listed feeds, pages and machine files keep theirs. `/notes/?z=<random>` was not header-less on recheck: it is a cached, tagged HTML page and is unchanged. 7 new assertions in `tests/cache-headers.php` (red before).
+
 ## [2026.10.19] - 2026-10-17 — home in one screen, with a playhead and the latest note
 
 
