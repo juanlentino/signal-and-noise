@@ -6,7 +6,8 @@
  * the Cloudflare-CDN-Cache-Control values and their filter; who counts as
  * anonymous; which front-end response gets which header and which get none
  * (logged in, POST, a 404, search, preview, a password form, a response that
- * already set a Cache-Control); a feed trades Breeze's no-cache for the short
+ * already set a Cache-Control), and an unlisted feed or a search left header-less
+ * gets no-cache plus an edge no-store; a listed feed trades no-cache for the short
  * lifetime but keeps a no-store; a later nocache_headers() or error status
  * takes the edge header back. Source pins: the three machine files call
  * the sender, and the hook sits at template_redirect priority 100.
@@ -93,8 +94,10 @@ $page = array( 'anonymous' => true, 'status' => 200, 'existing' => '', 'feed' =>
 ok( 'html' === sn_edge_cache_kind_for( $page ), 'an anonymous 200 page with no Cache-Control gets the HTML header' );
 ok( '' === sn_edge_cache_kind_for( array( 'anonymous' => false ) + $page ), 'not anonymous: nothing' );
 ok( '' === sn_edge_cache_kind_for( array( 'status' => 404, 'not_found' => true ) + $page ) && '' === sn_edge_cache_kind_for( array( 'status' => 503 ) + $page ), 'a 404 or a 503: nothing' );
-foreach ( array( 'admin', 'preview', 'search', 'not_found', 'password', 'non_html' ) as $refusal ) {
-	ok( '' === sn_edge_cache_kind_for( array( $refusal => true ) + $page ), $refusal . ': nothing' );
+ok( '' === sn_edge_cache_kind_for( array( 'admin' => true ) + $page ), 'admin: nothing' );
+foreach ( array( 'preview', 'search', 'not_found', 'password', 'non_html' ) as $refusal ) {
+	ok( 'nocache' === sn_edge_cache_kind_for( array( $refusal => true ) + $page ), $refusal . ' with no header: an explicit no-cache, so the edge does not keep it (2026-10-17: /tag/x/?s= was cached header-less)' );
+	ok( '' === sn_edge_cache_kind_for( array( $refusal => true, 'existing' => 'no-cache, no-store' ) + $page ), $refusal . ' that already set a header keeps it' );
 }
 foreach ( array( 'no-store', 'private', 'no-cache', 'must-revalidate, max-age=0', 'public, max-age=60' ) as $existing ) {
 	ok( '' === sn_edge_cache_kind_for( array( 'existing' => $existing ) + $page ), 'a page that already set "' . $existing . '" keeps it' );
@@ -105,7 +108,10 @@ ok( 'machine' === sn_edge_cache_kind_for( array( 'existing' => '' ) + $feed ), '
 ok( '' === sn_edge_cache_kind_for( array( 'existing' => 'no-store, private' ) + $feed ) && '' === sn_edge_cache_kind_for( array( 'existing' => 'private' ) + $feed ), 'a feed that set no-store or private keeps it' );
 ok( '' === sn_edge_cache_kind_for( array( 'anonymous' => false ) + $feed ) && '' === sn_edge_cache_kind_for( array( 'status' => 404 ) + $feed ), 'a feed read with a session, or a 404 feed: nothing' );
 
-ok( '' === sn_edge_cache_kind_for( array( 'listed_feed' => false ) + $feed ), 'a feed outside the list (comments, a tag, an odd query form) keeps Breeze\'s no-cache: it could not be purged by name' );
+ok( '' === sn_edge_cache_kind_for( array( 'listed_feed' => false ) + $feed ), 'a feed outside the list that already says no-cache keeps it' );
+ok( 'nocache' === sn_edge_cache_kind_for( array( 'listed_feed' => false, 'existing' => '' ) + $feed ), 'a feed outside the list (comments, a tag, ?z=) with no header gets an explicit no-cache: it could not be purged by name, and Breeze no longer sends one (2026-10-17)' );
+ok( '' === sn_edge_cache_kind_for( array( 'listed_feed' => false, 'existing' => '', 'anonymous' => false ) + $feed ), 'an unlisted feed read with a session: nothing, the theme does not touch it' );
+ok( false !== strpos( $hooks_src, "header( 'Cache-Control: no-cache' );" ) && false !== strpos( $hooks_src, "header( 'Cloudflare-CDN-Cache-Control: no-store' );" ) && false !== strpos( $hooks_src, "} elseif ( 'nocache' === \$kind ) {" ), 'the nocache kind sends Cache-Control: no-cache (validators still work) and Cloudflare-CDN-Cache-Control: no-store (the edge stores nothing)' );
 
 echo "Group: the feed list\n";
 $paths = sn_edge_cache_feed_paths();

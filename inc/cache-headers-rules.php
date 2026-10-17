@@ -65,15 +65,19 @@ function sn_edge_cache_is_listed_feed( $request_uri, array $paths ) {
 
 /**
  * Which header a front-end response gets: 'html', 'machine' (a feed),
- * 'refuse' (an explicit no-store) or ''.
+ * 'refuse' (an explicit no-store), 'nocache' (kept out of the edge) or ''.
  * PURE over the context sn_edge_cache_template_redirect() builds
  * (inc/cache-headers-hooks.php).
  *
- * A LISTED feed (sn_edge_cache_feed_paths()) replaces Breeze's `no-cache`
- * (Breeze sets it on every feed it declines to store) but never a no-store or
- * private; any other feed keeps what it has. HTML is sent only when
- * nothing has set a Cache-Control yet: nocache_headers() callers, and Breeze's
- * `must-revalidate, max-age=0` on a URL with an unknown query var, keep theirs.
+ * A LISTED feed (sn_edge_cache_feed_paths()) replaces a `no-cache` but never
+ * a no-store or private. HTML is sent only when nothing has set a
+ * Cache-Control yet: nocache_headers() callers keep theirs.
+ *
+ * 'nocache' (2026-10-17): an anonymous 200 the theme will not cache (an
+ * unlisted feed, a search, a password form) that left with NO Cache-Control
+ * was stored by the edge's zone rule, with no tag to purge it. The theme used
+ * to count on Breeze's `no-cache` there; Breeze has been inactive since
+ * 2026-10-13. Only when nothing has set a header: anything already there stays.
  *
  * @param array<string,mixed> $ctx anonymous, status, existing, feed, and the refusals.
  * @return string
@@ -85,13 +89,17 @@ function sn_edge_cache_kind_for( array $ctx ) {
 	$existing = (string) ( $ctx['existing'] ?? '' );
 	if ( ! empty( $ctx['feed'] ) ) {
 		if ( empty( $ctx['listed_feed'] ) ) {
-			return ''; // a comment, tag or search feed, or an odd query form: Breeze's no-cache stays.
+			// A comment, tag or search feed, or an odd query form: no tag can purge it.
+			return '' === $existing ? 'nocache' : '';
 		}
 		return ( false !== strpos( $existing, 'no-store' ) || false !== strpos( $existing, 'private' ) ) ? '' : 'machine';
 	}
-	foreach ( array( 'admin', 'preview', 'search', 'not_found', 'password', 'non_html' ) as $refusal ) {
+	if ( ! empty( $ctx['admin'] ) ) {
+		return '';
+	}
+	foreach ( array( 'preview', 'search', 'not_found', 'password', 'non_html' ) as $refusal ) {
 		if ( ! empty( $ctx[ $refusal ] ) ) {
-			return '';
+			return '' === $existing ? 'nocache' : '';
 		}
 	}
 	if ( '' !== $existing ) {

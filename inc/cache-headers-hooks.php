@@ -105,6 +105,22 @@ function sn_edge_cache_refuse() {
 }
 
 /**
+ * Keep a response out of the edge without breaking validators: no-cache for
+ * browsers and feed readers (they still revalidate with ETag/Last-Modified),
+ * no-store for Cloudflare alone. No recheck: the edge header here only ever
+ * says do not store.
+ *
+ * @return void
+ */
+function sn_edge_cache_send_nocache() {
+	if ( headers_sent() ) {
+		return;
+	}
+	header( 'Cache-Control: no-cache' );
+	header( 'Cloudflare-CDN-Cache-Control: no-store' );
+}
+
+/**
  * Runs as PHP is about to send the headers (the rule: sn_edge_cache_still_ours()).
  *
  * @return void
@@ -159,6 +175,8 @@ function sn_edge_cache_template_redirect() {
 	);
 	if ( 'refuse' === $kind ) {
 		sn_edge_cache_refuse();
+	} elseif ( 'nocache' === $kind ) {
+		sn_edge_cache_send_nocache();
 	} elseif ( '' !== $kind ) {
 		sn_edge_cache_emit( $kind );
 	}
