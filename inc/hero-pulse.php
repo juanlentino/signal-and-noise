@@ -135,7 +135,7 @@ function sn_hero_pulse_svg( array $series ) {
 		$y      = round( 50 - $height / 2, 2 );
 		for ( $l = 0; $l < SN_HERO_PULSE_LINES; $l++ ) {
 			$x      = ( $h * SN_HERO_PULSE_LINES + $l ) * $pitch;
-			$rects .= "<rect x='" . $x . "' y='" . $y . "' width='4' height='" . $height . "'/>";
+			$rects .= "<rect x='" . $x . "' y='" . $y . "' width='2' height='" . $height . "'/>";
 		}
 	}
 	$width = 24 * SN_HERO_PULSE_LINES * $pitch;
