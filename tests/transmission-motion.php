@@ -5,8 +5,11 @@
  *
  * 3. CHANNEL CHANGE. Page navigation reveals the new page's content top to
  *    bottom in eight hard steps, a raster refresh, instead of the crossfade.
- *    Header and footer keep their own names and stay still; only `main` joins
- *    the raster class. Only inside prefers-reduced-motion: no-preference.
+ *    The old page is wiped away by the complementary clip in lockstep, so no
+ *    band of the screen ever shows both pages. It runs on the root snapshot,
+ *    which is viewport-sized, so each step is an eighth of a screen whatever
+ *    the page length. Header and footer keep their own names and stay still.
+ *    Only inside prefers-reduced-motion: no-preference.
  *
  * 5. SIGNAL ACQUIRED. A text fragment (#:~:text=) is highlighted in house red,
  *    not the browser's yellow (::target-text, Baseline since December 2024),
@@ -62,11 +65,12 @@ function tm_no_preference_block( $css, $needle ) {
 $a  = $read( 'article.css' );
 $cc = tm_no_preference_block( $a, 'sn-raster' );
 ok( '' !== $cc, '3: the raster transition lives inside prefers-reduced-motion: no-preference' );
-ok( 1 === preg_match( '/(^|[\s}])main\s*\{\s*view-transition-class:\s*sn-raster;\s*\}/', $cc ), '3: main opts in to the raster class' );
-ok( 1 === preg_match( '/::view-transition-new\(\*\.sn-raster\)\s*\{[^}]*animation:\s*sn-raster\s+\d+ms\s+steps\(8[^;]*;/', $cc ), '3: the new page reveals in eight hard steps' );
-ok( 1 === preg_match( '/::view-transition-old\(\*\.sn-raster\)\s*\{\s*animation:\s*none;\s*\}/', $cc ), '3: the old page holds still under the reveal, no crossfade' );
-ok( 1 === preg_match( '/@keyframes sn-raster\s*\{\s*from\s*\{\s*clip-path:\s*inset\(0 0 100% 0\);\s*\}/', $a ), '3: the reveal runs top to bottom (clip-path inset)' );
-ok( 0 === preg_match( '/\.sn-(header|footer)[^{]*\{[^}]*view-transition-class/', $a ), '3: header and footer never join the raster class' );
+ok( 1 === preg_match( '/::view-transition-new\(root\)\s*\{\s*animation:\s*sn-raster-in\s+(\d+)ms\s+steps\(8, end\)\s+both;/', $cc, $in ), '3: the new page reveals in eight hard steps on the root snapshot (viewport-sized)' );
+ok( 1 === preg_match( '/::view-transition-old\(root\)\s*\{\s*animation:\s*sn-raster-out\s+(\d+)ms\s+steps\(8, end\)\s+both;/', $cc, $out ), '3: the old page is wiped away by the same eight steps' );
+ok( isset( $in[1], $out[1] ) && $in[1] === $out[1], '3: both wipes share one duration, so they move in lockstep (no double exposure)' );
+ok( 1 === preg_match( '/@keyframes sn-raster-in\s*\{\s*from\s*\{\s*clip-path:\s*inset\(0 0 100% 0\);\s*\}\s*to\s*\{\s*clip-path:\s*inset\(0\);\s*\}/', $a ), '3: the new page is uncovered from the top down' );
+ok( 1 === preg_match( '/@keyframes sn-raster-out\s*\{\s*from\s*\{\s*clip-path:\s*inset\(0\);\s*\}\s*to\s*\{\s*clip-path:\s*inset\(100% 0 0 0\);\s*\}/', $a ), '3: the old page is covered from the top down, the exact complement' );
+ok( 0 === preg_match( '/(^|[\s}])main\s*\{[^}]*view-transition-name/', $a ), '3: main is not named, so its content rides the viewport-sized root snapshot (a named main is page-tall)' );
 ok( false !== strpos( $a, '.sn-header { view-transition-name: sn-header; }' ) && false !== strpos( $a, '.sn-footer { view-transition-name: sn-footer; }' ), '3: header and footer keep their own names, so they stay still' );
 
 // Group 2: signal acquired (base.css).
