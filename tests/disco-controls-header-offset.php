@@ -1,7 +1,7 @@
 <?php
 /**
- * Test: the sticky discography controls rail sticks under the SCROLLED
- * header height, not the unscrolled one (issue #322).
+ * Test: the sticky discography controls rail sticks under the header, by the
+ * header-footprint token, not a hardcoded height (issue #322, then 2026-10).
  *
  * `.sn-disco-controls { top: 108px }` used the unscrolled desktop header's
  * height (the same 108px that sets `body { padding-top: 108px }`). The
@@ -24,14 +24,11 @@ ok(
 	(bool) preg_match( '/\.sn-disco-controls\s*\{[^}]*top:\s*108px/s', $css ) === false,
 	'#322: .sn-disco-controls no longer sticks at the unscrolled 108px header height'
 );
-ok(
-	(bool) preg_match( '/\.sn-disco-controls\s*\{[^}]*top:\s*61px/s', $css ),
-	'#322: .sn-disco-controls sticks at 61px, the scrolled header height'
-);
-// The two phone/tablet breakpoint overrides are a different, already-correct
-// staircase (issue only flags the desktop value) — leave them alone.
-ok( strpos( $css, '.sn-disco-controls   { top: 80px; }' ) !== false, 'the tablet override is unchanged' );
-ok( strpos( $css, '.sn-disco-controls   { top: 65px; }' ) !== false, 'the mobile override is unchanged' );
-
+// 2026-10: the header no longer shrinks (one height since), so the 61px
+// "scrolled" value and its 80/65px staircase described a header that is gone.
+// The rail now sticks at --sn-chrome-top, the header-footprint token body
+// padding and anchor offsets read (tests/disco-sticky-rail.php owns the rest).
+ok( (bool) preg_match( '/\.sn-disco-controls\s*\{[^}]*top:\s*var\(--sn-chrome-top\)/s', $css ), '.sn-disco-controls sticks at --sn-chrome-top, the header-footprint token' );
+ok( 0 === preg_match( '/\.sn-disco-controls\s*\{[^}]*top:\s*\d+px/', $css ), 'no literal px top remains anywhere for the rail (the 61/80/65 staircase is gone)' );
 echo sprintf( "\nResult: %d passed, %d failed.\n", $pass, $fail );
 exit( $fail > 0 ? 1 : 0 );
