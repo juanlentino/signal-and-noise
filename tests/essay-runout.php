@@ -17,12 +17,16 @@ function add_query_arg( $k, $v, $u ) { return $u . ( false === strpos( $u, '?' )
 function sn_pillar_eyebrow_page_id( $b, $i = null ) { return $GLOBALS['__page']; }
 function sn_pillar_eyebrow_designation( $id ) { return 7 === $id ? '1.00' : ''; }
 function sn_prov_view_data( $id ) { return $GLOBALS['__vm']; }
+// The plugin's own status helpers (inc/provenance-render.php): 'confirmed' is the
+// anchored state, and a genesis commit reads as confirmed once its root is.
+function sn_prov_genesis_root_state() { return array( 'status' => 'confirmed', 'bitcoin_block' => 900001 ); }
+function sn_prov_present_status( $s, $root ) { return 'genesis' === $s ? array( 'state' => 'confirmed' === $root ? 'confirmed' : 'genesis' ) : array( 'state' => $s ); }
 require dirname( __DIR__ ) . '/inc/essay-runout.php';
 
 $pass = 0; $fail = 0;
 function ok( $c, $m ) { global $pass, $fail; if ( $c ) { ++$pass; echo "PASS: $m\n"; } else { ++$fail; echo "FAIL: $m\n"; } }
 
-$vm = array( 'note_uid' => 'c316c35d-f5ea-424a-a752-ef1d5feec74d', 'version' => 2, 'status' => 'anchored', 'bitcoin_block' => 918204, 'versions' => array( array( 'committed_at' => '2026-05-07T14:02:11Z' ), array( 'committed_at' => '2026-09-30T08:00:00Z' ) ), 'verify_url' => 'https://x.test/verify?kind=page' );
+$vm = array( 'note_uid' => 'c316c35d-f5ea-424a-a752-ef1d5feec74d', 'version' => 2, 'status' => 'confirmed', 'bitcoin_block' => 918204, 'versions' => array( array( 'committed_at' => '2026-05-07T14:02:11Z' ), array( 'committed_at' => '2026-09-30T08:00:00Z' ) ), 'verify_url' => 'https://x.test/verify?kind=page' );
 $GLOBALS['__vm'] = $vm;
 $h = sn_essay_runout_html( 7 );
 ok( 0 === strpos( $h, '<p class="sn-essay-runout">' ), 'a runout line' );
@@ -30,6 +34,10 @@ ok( false !== strpos( strip_tags( $h ), 'c316c35d' ) && false === strpos( strip_
 ok( false !== strpos( $h, 'v2' ) && false !== strpos( $h, 'cut 2026-09-30' ), 'the version and the date of the latest cut' );
 ok( false !== strpos( $h, 'block 918204' ), 'the anchoring block when it is anchored' );
 ok( false !== strpos( $h, 'href="https://x.test/verify?kind=page&amp;note=c316c35d-f5ea-424a-a752-ef1d5feec74d"' ), 'it links to verify this record' );
+$GLOBALS['__vm'] = array_merge( $vm, array( 'status' => 'confirmed', 'bitcoin_block' => 0 ) );
+ok( false !== strpos( sn_essay_runout_html( 7 ), 'verified' ) && false === strpos( sn_essay_runout_html( 7 ), 'anchoring' ), 'confirmed with no block on record still reads verified, as the page chip does (live 2026-10-17 read "anchoring" beside "Verified v1")' );
+$GLOBALS['__vm'] = array_merge( $vm, array( 'status' => 'genesis', 'bitcoin_block' => 0 ) );
+ok( false !== strpos( sn_essay_runout_html( 7 ), 'verified' ), 'a genesis commit under a confirmed root reads verified' );
 $GLOBALS['__vm'] = array_merge( $vm, array( 'status' => 'pending', 'bitcoin_block' => 0 ) );
 ok( false === strpos( sn_essay_runout_html( 7 ), 'block' ) && false !== strpos( sn_essay_runout_html( 7 ), 'anchoring' ), 'no block number before there is one' );
 $GLOBALS['__vm'] = array_merge( $vm, array( 'version' => 0 ) );

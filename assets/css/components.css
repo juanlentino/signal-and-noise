@@ -2423,10 +2423,11 @@ main:has(> .wp-block-post-content > .sn-provenance-section) > .wp-block-post-con
 		top: calc(var(--sn-chrome-top, 100px) + 3rem); margin: 0.6rem 0 0 !important; text-align: right; container-type: scroll-state;
 	}
 	.wp-block-post-content > .sn-provenance-section > .sn-provenance-section-eyebrow { grid-column: 1; }
-	/* The arrival rule base.css draws beside a jumped-to heading sits 0.6em
-	   out, which at display size lands on the margin label. Here it hugs the
-	   heading inside the gutter instead. */
-	.wp-block-post-content :is(h2, h3, h4)[id]:target::before { inset-inline-start: calc(-1 * (2px + 0.6rem)); }
+	/* The arrival rule base.css draws beside a jumped-to heading competes with
+	   the margin lane, and only a loose section's heading carries an id (a
+	   wrapped one is reached through its section), so on an essay it marked
+	   Section 6 alone. The lane and the tracklist already say where you are. */
+	.wp-block-post-content :is(h2, h3, h4)[id]:target::before { content: none; }
 	/* Signal lock: only while a label is pinned, a tally lights beside it and a
 	   patch line bridges the gutter to the column. At rest it is plain. */
 	@container scroll-state(stuck: top) {

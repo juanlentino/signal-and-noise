@@ -37,7 +37,20 @@ function sn_essay_runout_html( $page_id ) {
 	if ( 1 === preg_match( '/^\d{4}-\d{2}-\d{2}$/', $cut ) ) {
 		$fields[] = 'cut ' . $cut;
 	}
-	$fields[] = ( 'anchored' === ( $vm['status'] ?? '' ) && $block > 0 ) ? 'block ' . $block : 'anchoring';
+	// The plugin's own reading of the status, the one the page's chip shows:
+	// 'confirmed' is anchored, and a genesis commit counts once its root is.
+	$root  = function_exists( 'sn_prov_genesis_root_state' ) ? (array) sn_prov_genesis_root_state() : array();
+	$state = function_exists( 'sn_prov_present_status' )
+		? (string) ( sn_prov_present_status( (string) ( $vm['status'] ?? '' ), (string) ( $root['status'] ?? '' ) )['state'] ?? '' )
+		: (string) ( $vm['status'] ?? '' );
+	if ( ! empty( $vm['is_genesis_only'] ) ) {
+		$block = (int) ( $root['bitcoin_block'] ?? 0 );
+	}
+	if ( 'confirmed' === $state ) {
+		$fields[] = $block > 0 ? 'block ' . $block : 'verified';
+	} else {
+		$fields[] = 'anchoring';
+	}
 	$verify   = add_query_arg( 'note', $uid, (string) ( $vm['verify_url'] ?? '' ) );
 	return '<p class="sn-essay-runout">' . esc_html( implode( ' · ', $fields ) ) . ' · <a href="' . esc_url( $verify ) . '">verify</a></p>';
 }
