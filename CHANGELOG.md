@@ -12,6 +12,8 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+- **Docs: the site-wide design research is in the repo.** `docs/research/2026-10-16-site-wide-design-ideas.md` ranks nine ideas in the transmission register, with a status block: four shipped in 2026.10.11, one declined, and four open (hairline-true display type, noise floor, crop-mark focus, signal lock links). It also records the owner's narrower home-page rule (no new content; site-wide design may reach home). No code change.
+
 ## [2026.10.12] - 2026-10-17 — keyboard-reachable comparison tables and a dark pulse that reads
 
 
