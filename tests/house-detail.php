@@ -115,7 +115,7 @@ echo "\nGroup 2: section numerals\n";
 $article = $css( 'article.css' );
 ok( 1 === preg_match( '/\.wp-block-post-content:has\(> h2\.wp-block-heading:nth-of-type\(3\)\)\s*>\s*h2\.wp-block-heading:not\(#references\)::before\s*\{[^}]*counter-increment:\s*sn-sec[^}]*content:\s*counter\(sn-sec,\s*decimal-leading-zero\)\s*\/\s*""/s', $article ), 'notes with three or more sections number them 01, 02 (alt text "" so a screen reader does not read the number); References is not numbered' );
 ok( 1 === preg_match( '/h2\.wp-block-heading:not\(#references\)::before\s*\{[^}]*color:\s*var\(--wp--preset--color--rust\)/s', $article ), 'in rust, never blood' );
-ok( 1 === preg_match( '/body:has\(\.wp-block-post-content > h2\.wp-block-heading:nth-of-type\(3\)\)\s*\.sn-article-toc__list > li:not\(:has\(> a\[href="#references"\]\)\)::before\s*\{[^}]*content:\s*counter\(sn-toc,\s*decimal-leading-zero\)\s*\/\s*""/s', $article ), 'the TOC carries the same numbers under the same gate' );
+ok( 1 === preg_match( '/body\.single-post:has\(\.wp-block-post-content > h2\.wp-block-heading:nth-of-type\(3\)\)\s*\.sn-article-toc__list > li:not\(:has\(> a\[href="#references"\]\)\)::before\s*\{[^}]*content:\s*counter\(sn-toc,\s*decimal-leading-zero\)\s*\/\s*""/s', $article ), 'the TOC carries the same numbers under the same gate' );
 
 echo "\nGroup 3: prose list markers\n";
 ok( 1 === preg_match( '/\.wp-block-post-content > ol\.wp-block-list:not\(\[class\*="is-style-"\]\)\s*\{[^}]*list-style-type:\s*decimal-leading-zero/s', $article ), 'plain ordered lists count 01.' );
@@ -157,6 +157,17 @@ $notes = $css( 'notes.css' );
 ok( 1 === preg_match( '/\.sn-notes-month::details-content\s*\{[^}]*opacity:\s*0;[^}]*transition:\s*opacity 0\.12s linear,\s*content-visibility 0\.12s allow-discrete/s', $notes ), 'a collapsed month fades its rows in over 120ms, opacity only' );
 ok( 1 === preg_match( '/\.sn-notes-month\[open\]::details-content\s*\{[^}]*opacity:\s*1/s', $notes ), '...to full opacity when open' );
 ok( false === strpos( $notes, 'sn-note-counter' ), 'the orphaned sn-note-counter reset is gone: catalog numbers come from PHP, from the real published order' );
+
+echo "\nGroup 8: fixes from the 2026-10-17 live sweep\n";
+$article = $css( 'article.css' );
+ok( 0 === preg_match( '/(^|\})\s*\.wp-block-post-content:has\(> h2\.wp-block-heading:nth-of-type\(3\)\)/', $article ), 'section numerals are never unscoped: /provenance (a page with four h2s and no TOC) showed 01 to 04' );
+ok( 2 === preg_match_all( '/body\.single-post \.wp-block-post-content:has\(> h2\.wp-block-heading:nth-of-type\(3\)\)/', $article ), 'notes only, for the counter reset and the numbers' );
+ok( 3 === preg_match_all( '/body\.single-post:has\(\.wp-block-post-content > h2\.wp-block-heading:nth-of-type\(3\)\) \.sn-article-toc__list/', $article ), '...and the TOC (its reset, its slots, its numbers) under the same gate' );
+ok( 1 === preg_match( '/\.sn-article-toc__list > li::before\s*\{[^}]*content:\s*""\s*\/\s*"";[^}]*display:\s*inline-block;[^}]*width:\s*2\.6em/s', $article ), 'every TOC entry gets the same numeral slot, References an empty one, so all entries align (References sat 25px left)' );
+ok( 1 === preg_match( '/\.wp-block-button:has\(> \.wp-block-button__link:focus-visible\)::before\s*\{[^}]*inset:\s*-9px/s', $css( 'base.css' ) ), 'crop marks sit 9px out: clear of the 2px outline and its 3px offset, off a neighbour 11px away' );
+$print = $css( 'print.css' );
+ok( 1 === preg_match( '/@page resume\s*\{\s*@top-left\s*\{\s*content:\s*none;?\s*\}\s*@top-right\s*\{\s*content:\s*none;?\s*\}\s*@bottom-right\s*\{\s*content:\s*none;?\s*\}\s*\}/s', $print ), 'the resume prints without the running head and folio (it printed RESUME / juanlentino.com / 01 / 03)' );
+ok( 1 === preg_match( '/\.atf-form \.atf-textarea\s*\{[^}]*field-sizing:\s*content;[^}]*max-block-size:\s*70svh/s', $css( 'components.css' ) ), 'the contact box stops growing at 70% of the screen and scrolls inside (40 lines made it 1414px tall)' );
 
 echo "\n$pass passed, $fail failed\n";
 exit( $fail > 0 ? 1 : 0 );
