@@ -12,6 +12,8 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+- **Catalog numbers on /notes, and a quiet fold for archive months.** Each row carries the note's catalog number above its date, in the spec column's rust: its place among published notes, oldest first, so the newest carries the count of everything published. `sn_notes_catalog_number()` reads the published order once per request (one ids-only query), so a note has the same number on the index, a tag archive or a search. The pinned Start-here row keeps its flag instead, and a scheduled or draft note has no number. The number is hidden from screen readers, which already have the list order. The orphaned `sn-note-counter` reset in `notes.css` is gone. Opening a collapsed month now fades its rows in over 120ms, opacity only, via `::details-content`; the global reduced-motion reset makes it instant. Approved by the owner from renders. `tests/notes-index-row.php` and `tests/house-detail.php` pin both (red before the change).
+
 ## [2026.10.13] - 2026-10-17 — house glyphs, section numerals and the finer details
 
 
