@@ -1,13 +1,14 @@
 <?php
 /**
- * In-article table of contents + reading-progress bar (front-end).
+ * In-article table of contents + FM tuning-dial reading progress (front-end).
  *
  * On a single note (`post`) with at least SN_ARTICLE_TOC_MIN_HEADINGS H2s,
  * a `the_content` filter (priority 20, after do_blocks) injects stable slug
- * ids into the H2s and prepends a <nav class="sn-article-toc"> card. The
- * companion JS (assets/js/article-toc.js) adds a sticky reading-progress bar
- * and smooth-scrolls TOC clicks; it self-gates on the rendered nav, so short
- * notes get neither. Everything except the bar is server-rendered.
+ * ids into the H2s and prepends a <nav class="sn-article-toc"> card carrying
+ * the tuning dial (sn_article_dial_markup), whose needle is CSS scroll-driven.
+ * The companion JS (assets/js/article-toc.js) only smooth-scrolls TOC clicks
+ * and moves focus; it self-gates on the rendered nav. Everything is
+ * server-rendered; until 2026-10 a script drew and measured a progress bar.
  *
  * Pure helpers (sn_article_toc_apply/markup) take HTML in and return HTML out
  * with no WP query state, so tests exercise them without a WordPress load:
@@ -135,6 +136,42 @@ function sn_article_toc_markup( $items ) {
 }
 
 /**
+ * The FM tuning dial: the reading-progress indicator, drawn as a radio dial
+ * pinned under the header, 88 to 108 with a needle that sweeps as the article
+ * is read. Static markup; the needle is a CSS scroll-driven animation
+ * (assets/css/components.css), so no script measures anything.
+ *
+ * Printed at the end of <body> (wp_footer), only on a request whose content
+ * got a TOC, so short notes get no dial. NOT inside the note: the note's
+ * <main> carries a transform from its entry animation, which makes it the
+ * containing block of any fixed descendant, so a dial in the content scrolled
+ * away with the page and could not anchor to the header (measured 2026-10-16).
+ * Outside the post content it is also outside the provenance verifier's cut,
+ * so the frequency labels can never be read as the note's prose. The CSS
+ * hoists the article's view timeline to <body> with timeline-scope so the
+ * needle can still read it. aria-hidden: the dial restates scroll position,
+ * which a screen reader already has.
+ *
+ * @return string
+ */
+function sn_article_dial_markup() {
+	$ticks = '';
+	for ( $i = 0; $i <= 50; $i++ ) {
+		$x      = $i * 2;
+		$ticks .= '<line x1="' . $x . '" y1="' . ( 0 === $i % 10 ? 0 : 5 ) . '" x2="' . $x . '" y2="10"/>';
+	}
+	$labels = '';
+	foreach ( array( 88, 92, 96, 100, 104, 108 ) as $mhz ) {
+		$labels .= '<span>' . $mhz . '</span>';
+	}
+	return '<span class="sn-article-dial" aria-hidden="true">'
+		. '<span class="sn-article-dial__scale">' . $labels . '</span>'
+		. '<svg class="sn-article-dial__ticks" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true" focusable="false">' . $ticks . '</svg>'
+		. '<span class="sn-article-dial__needle"></span>'
+		. '</span>';
+}
+
+/**
  * `the_content` filter: guard to the main single-post query, then apply.
  * Guarded against secondary the_content calls (related-note excerpts, widgets)
  * so the TOC is never injected into the wrong content.
@@ -146,7 +183,22 @@ function sn_article_toc_the_content( $content ) {
 	if ( ! is_singular( 'post' ) || ! in_the_loop() || ! is_main_query() ) {
 		return $content;
 	}
-	return sn_article_toc_apply( $content );
+	$out = sn_article_toc_apply( $content );
+	if ( $out !== $content && function_exists( 'add_action' ) ) {
+		// The TOC rendered, so this note is long enough for the dial.
+		add_action( 'wp_footer', 'sn_article_dial_print' );
+	}
+	return $out;
+}
+
+/**
+ * wp_footer: print the tuning dial (queued only when a TOC rendered).
+ *
+ * @return void
+ */
+function sn_article_dial_print() {
+	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static markup built from integer literals in sn_article_dial_markup().
+	echo sn_article_dial_markup();
 }
 
 if ( ! defined( 'SN_ARTICLE_TOC_TEST' ) ) {

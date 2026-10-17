@@ -187,7 +187,7 @@ $toc_src = (string) file_get_contents( __DIR__ . '/../inc/article-toc.php' );
 ok( 0 === preg_match( '/preg_(?:replace|replace_callback|match|match_all)\s*\(|substr_replace\s*\(/', $toc_src ), '#383: inc/article-toc.php carries no preg_* call and no substr_replace; the H2s are read and written through WP_HTML_Tag_Processor' );
 ok( false !== strpos( $toc_src, 'new WP_HTML_Tag_Processor(' ) && false !== strpos( $toc_src, "set_attribute( 'id'" ), '#383: the id lands through set_attribute() on the processor' );
 
-// ── JS SOURCE: the progress bar MEASURES the header, it does not assume it ──
+// ── JS SOURCE: the progress indicator no longer needs a script to measure ──
 // #322 added a `transitionend` listener here because the header shrank on
 // scroll over 300ms and `bar.style.top` was only re-read on scroll/resize, so
 // one wheel notch left ~33px of content showing under the bar. The header is
@@ -198,7 +198,10 @@ ok( false !== strpos( $toc_src, 'new WP_HTML_Tag_Processor(' ) && false !== strp
 $toc_js = (string) @file_get_contents( realpath( __DIR__ . '/..' ) . '/assets/js/article-toc.js' );
 ok( '' !== $toc_js, 'article-toc.js is readable' );
 ok( strpos( $toc_js, "addEventListener('transitionend'" ) === false, 'the transitionend listener is gone with the scroll-shrink it waited on' );
-ok( strpos( $toc_js, "header.getBoundingClientRect().bottom" ) !== false, '#322 still holds: the bar reads the header\'s live bottom edge rather than a literal' );
+// 2026-10: the bar is gone; the tuning dial keeps #322's reason without a
+// script, by anchoring to the header's live bottom edge. tests/article-dial.php
+// pins that half (position-anchor + top: anchor(bottom)).
+ok( strpos( $toc_js, 'getBoundingClientRect' ) === false, 'the script measures nothing now: the dial is CSS-anchored to the header (tests/article-dial.php)' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

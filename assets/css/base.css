@@ -242,8 +242,9 @@ summary:focus-visible {
 		outline-offset: 2px;
 	}
 
-	.sn-article-progress__fill {
-		background: Highlight;
+	.sn-article-dial__needle {
+		border-right-color: Highlight;
+		background: transparent;
 	}
 }
 
