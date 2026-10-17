@@ -196,6 +196,7 @@ function sn_theme_allowed_blocks( $allowed, $context ) {
 		'signal-noise/lang-toggle',
 		// The key-term reading aid: a dynamic block, inserted directly.
 		'signal-noise/term',
+		'signal-noise/print-colophon',
 	);
 
 	return array_values( array_unique( array_merge( $used, $authoring, $contact, $companion, $theme_blocks ) ) );

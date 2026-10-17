@@ -80,7 +80,9 @@ ok( count( $block_jsons ) >= 3, 'found the blocks/ directory (' . count( $block_
 // its render derives from site state — it must never appear in a signed
 // subject's content. The pin below fails if it ever GROWS string attributes
 // without joining the contract.
-$derived_render_blocks = array( 'signal-noise/pillar-essays' );
+// print-colophon (2026-10) likewise: no attributes, rendered from the plugin's
+// provenance record, and it sits in the closing footer the verifier never reads.
+$derived_render_blocks = array( 'signal-noise/pillar-essays', 'signal-noise/print-colophon' );
 
 foreach ( $block_jsons as $bj_path ) {
 	$bj   = json_decode( (string) file_get_contents( $bj_path ), true );

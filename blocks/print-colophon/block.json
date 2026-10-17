@@ -1,0 +1,17 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "signal-noise/print-colophon",
+	"title": "Print colophon",
+	"category": "signal-noise",
+	"icon": "media-text",
+	"description": "On paper only: the signed note's full hash, version, status and verify address, written out.",
+	"textdomain": "signal-and-noise",
+	"supports": {
+		"autoRegister": true,
+		"html": false,
+		"multiple": false
+	},
+	"render": "file:./render.php",
+	"style": "file:./style.css"
+}
