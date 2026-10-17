@@ -193,6 +193,7 @@ require_once __DIR__ . '/inc/reading-path-slot.php'; // v11.9.0: [sn_reading_pat
 require_once __DIR__ . '/inc/palettes.php'; // v12.0.0: every palette the site can present (root + variations + dark), read from the files that define them
 require_once __DIR__ . '/inc/nav-current.php'; // 2026.10: aria-current="page" on the header nav link for the page being viewed (custom links get none from core)
 require_once __DIR__ . '/inc/hero-pulse.php'; // 2026.10: the home hero's pulse, the last 24 hours of traffic as a waveform (plugin-guarded, shape only)
+require_once __DIR__ . '/inc/home-latest-line.php'; // 2026.10: the home hero's latest line, the newest note on the pulse
 require_once __DIR__ . '/inc/dark-mode.php'; // v11.13.0: dark palette plumbing — pre-paint data-theme stamp, per-scheme theme-color, the brand icon set (assets/brand/), [sn_theme_toggle]
 require_once __DIR__ . '/inc/lang-toggle.php'; // The EN / ES link on the bilingual storefront pages (pairing lives in the companion plugin's inc/bilingual.php)
 require_once __DIR__ . '/inc/header-lang-menu.php'; // EN | ES inside the menu dialog below 375px
