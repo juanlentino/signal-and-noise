@@ -97,6 +97,8 @@ $expected_patterns = array(
 	'sidenote'            => array( 'Slug' => 'signal-noise/sidenote' ),
 	'epigraph'            => array( 'Slug' => 'signal-noise/epigraph' ),
 	'references'          => array( 'Slug' => 'signal-noise/references' ),
+	'timeline'            => array( 'Slug' => 'signal-noise/timeline' ),
+	'checklist'           => array( 'Slug' => 'signal-noise/checklist' ),
 );
 
 foreach ( $expected_patterns as $basename => $expected ) {

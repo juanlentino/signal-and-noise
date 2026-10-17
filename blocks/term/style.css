@@ -1,0 +1,41 @@
+/* signal-noise/term: a definition set where the term first appears.
+
+   Declared by block.json's `style`, so core enqueues it only where the block
+   renders (the sidenote's arrangement, #391).
+
+   Deliberately NOT the sidenote. The sidenote is an aside: it floats into the
+   margin at >=1280px and drops to a top hairline in muted rust below that.
+   A term is reference material the next paragraph depends on, so it stays in
+   the column at every width, carries a left rule in the one accent, and sets
+   the term itself in tracked uppercase. Text is currentColor, so it follows
+   both palettes; it is quieter than the prose by size, never by contrast.
+
+   margin-block, not the margin shorthand: as a direct child of
+   .is-layout-constrained the block gets core's margin-left/right auto
+   !important, and only the vertical half is ours to set. */
+
+.sn-term {
+	margin-block: 1.75rem;
+	padding: 0.2rem 0 0.2rem 1rem;
+	border-left: 2px solid var(--wp--preset--color--blood);
+	font-size: 0.9rem;
+	line-height: 1.55;
+	color: currentColor;
+}
+
+.sn-term dt,
+.sn-term dd,
+.sn-term p {
+	margin: 0;
+}
+
+.sn-term dt {
+	font-size: max(0.75rem, 11px);
+	font-weight: 600;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+}
+
+.sn-term dd {
+	margin-top: 0.3rem;
+}

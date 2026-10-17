@@ -1,0 +1,25 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "signal-noise/term",
+	"title": "Key term",
+	"category": "signal-noise",
+	"icon": "book-alt",
+	"description": "Defines one term where it first appears: the term, then one or two sentences. Inline, full measure.",
+	"keywords": ["term", "definition", "glossary", "define"],
+	"textdomain": "signal-and-noise",
+	"attributes": {
+		"term": { "type": "string", "default": "" },
+		"definition": { "type": "string", "default": "" }
+	},
+	"supports": { "html": false, "reusable": false },
+	"editorScript": "signal-noise-blocks-editor",
+	"example": {
+		"attributes": {
+			"term": "ISRC",
+			"definition": "International Standard Recording Code. A twelve-character ID for one recording, not for the song it records."
+		}
+	},
+	"render": "file:./render.php",
+	"style": "file:./style.css"
+}
