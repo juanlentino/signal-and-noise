@@ -584,13 +584,17 @@ body.page main .entry-content > .is-layout-constrained > :where(:not(.alignleft)
 }
 
 /* Critical responsive — Mobile */
-/* The hamburger up to 781px, the theme's own mobile breakpoint, not core's
-   600. Between them the full nav shared a row with the header brand, which
-   wrapped the header to two rows at 600px even with the monogram; with the
-   wordmark it wrapped from 601 to 780. Measured on the live site, 14.0.0:
-   one 70px row at every width from 599 to 781. The open overlay is the
-   theme's own (.is-menu-open, below) and is not width-dependent. */
-@media (min-width: 600px) and (max-width: 781px) {
+/* The hamburger up to 899px, not core's 600. Between them the full nav
+   shared a row with the header brand, which wrapped the header to two rows
+   at 600px even with the monogram; with the wordmark it wrapped from 601 to
+   780 (14.0.0 moved the menu button to 781px). The EN | ES switch (#540) then
+   wrapped it again from 782 to 899: measured live 2026-10-16, 141-142px tall
+   at 782-800 against one 104px row from 900. The open overlay is the
+   theme's own (.is-menu-open, below) and is not width-dependent. The 781px
+   boundary the footer and the theme toggle use is unchanged; from 782 to
+   899 the footer's toggle shows and the header carries logo, EN | ES and
+   the menu button. */
+@media (min-width: 600px) and (max-width: 899px) {
 	.sn-header .wp-block-navigation__responsive-container-open:not(.always-shown) {
 		display: flex;
 	}
@@ -610,6 +614,18 @@ body.page main .entry-content > .is-layout-constrained > :where(:not(.alignleft)
 	}
 	.sn-wordmark {
 		height: 36px;
+	}
+	/* The toggle shows its dot only: the word fits nowhere once EN | ES joined
+	   the row (#540; the menu button wrapped to a second row, 123px, at
+	   320-430). Visually hidden, not display:none, so the button keeps the
+	   name it reads out. */
+	.sn-header .sn-theme-toggle__label {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
 	}
 	:root {
 		--sn-chrome-top: 78px;
@@ -633,6 +649,35 @@ body.page main .entry-content > .is-layout-constrained > :where(:not(.alignleft)
 		width: 100%;
 		display: block !important;
 		text-align: center !important;
+	}
+}
+
+/* The header's own gaps tighten under 400px: at 375 the row was 6px short
+   (logo 174, EN | ES 61, toggle dot 38, menu 44, three 10.7px gaps). (0,2,0)
+   to beat the layout's generated gap. */
+@media (max-width: 400px) {
+	.wp-block-group.sn-header {
+		column-gap: 8px;
+	}
+}
+
+/* Below 375px EN | ES moves into the menu (owner, 2026-10-16, "320 to
+   360"; measured, the row fits from 375 and wraps at every width under it,
+   so the cut is 374): the header's switch hides and the copy
+   inc/header-lang-menu.php puts inside the menu dialog shows. Everywhere
+   else the copy is display:none, so one switch is ever in the accessibility
+   tree. */
+.sn-lang-switch--menu {
+	display: none;
+}
+
+@media (max-width: 374px) {
+	.sn-header > .sn-lang-switch {
+		display: none;
+	}
+	.sn-lang-switch--menu {
+		display: inline-flex;
+		margin: 0 0 1.5rem;
 	}
 }
 

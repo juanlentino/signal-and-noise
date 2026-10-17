@@ -147,8 +147,9 @@ ok( 1 === $mark_count, "the header places the wordmark exactly once (got {$mark_
 ok( ! str_contains( $footer, 'sn-wordmark' ), 'the footer carries no wordmark' );
 // The wordmark is ~160px wider than the monogram. Core shows the full nav from
 // 600px; beside it the header wrapped to two rows from 601 to 780. The
-// hamburger runs to the theme's own 781px breakpoint instead.
-ok( 1 === preg_match( '/@media\s*\(min-width:\s*600px\)\s*and\s*\(max-width:\s*781px\)\s*\{\s*\.sn-header \.wp-block-navigation__responsive-container-open[^{]*\{\s*display:\s*flex;\s*\}\s*\.sn-header \.wp-block-navigation__responsive-container:not\(\.hidden-by-default\):not\(\.is-menu-open\)\s*\{\s*display:\s*none;/s', $crit ), 'critical.css shows the hamburger and hides the inline nav from 600 to 781px, so the header stays one row beside the wordmark' );
+// hamburger runs to the theme's own 781px breakpoint instead; to 899px since
+// 2026-10-16, when the EN | ES switch wrapped the header again from 782 to 899.
+ok( 1 === preg_match( '/@media\s*\(min-width:\s*600px\)\s*and\s*\(max-width:\s*899px\)\s*\{\s*\.sn-header \.wp-block-navigation__responsive-container-open[^{]*\{\s*display:\s*flex;\s*\}\s*\.sn-header \.wp-block-navigation__responsive-container:not\(\.hidden-by-default\):not\(\.is-menu-open\)\s*\{\s*display:\s*none;/s', $crit ), 'critical.css shows the hamburger and hides the inline nav from 600 to 899px, so the header stays one row beside the wordmark and EN | ES' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

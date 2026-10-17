@@ -909,17 +909,30 @@
 	margin-top: var(--wp--custom--air--md);
 }
 
-/* Controls rail: count + role chips (sticky). */
+/* Controls rail: count + role chips (sticky).
+
+   It stuck nowhere until 2026-10: html and body both set overflow-x: hidden,
+   html's value goes to the viewport, so body's made BODY a scroll container
+   that never scrolls, and sticky sticks to the nearest scroll container. On
+   the live page its top went 0, -600, -1500 as the reader scrolled. Pages
+   that carry the rail clip instead (clip is not a scroll container), the
+   same way the reading dial's pages do.
+
+   The rail sticks at --sn-chrome-top, the header-footprint token that body
+   padding and anchor offsets already read, so it moves with the header's
+   breakpoints in one place instead of a 61/80/65px staircase written for a
+   header that used to shrink on scroll (#322). The token is the header plus
+   a 10-14px gap; the box-shadow paints that gap in the page color so cards
+   never show between the header and the stuck rail (the part reaching under
+   the header is hidden by it: header z-index 10000, rail 9985, footer 9990). */
+body:has(.sn-disco-controls) {
+	overflow-x: clip;
+}
+
 .sn-disco-controls {
 	position: sticky;
-	/* Stick BELOW the fixed header, not at top:0 where the header (z-index
-	   10000) occluded the rail mid-scroll. z-index sits above page content
-	   but below the footer (9990). 108px was the UNSCROLLED header's height
-	   (body's own padding-top); by the time a sticky rail actually engages,
-	   the header is already shrunk to its scrolled ~61px, leaving a
-	   14-47px band of grid between them (#322). Responsive overrides below
-	   are a separate, already-correct staircase. */
-	top: 61px;
+	top: var(--sn-chrome-top);
+	box-shadow: 0 -24px 0 0 var(--wp--preset--color--void);
 	z-index: 9985;
 	display: flex;
 	flex-wrap: wrap;
@@ -1589,11 +1602,7 @@
 	from { transform: translateX(calc(-100% + 2px)); }
 	to { transform: translateX(0); }
 }
-@media (max-width: 781px) {
-	.sn-disco-controls   { top: 80px; }
-}
 @media (max-width: 480px) {
-	.sn-disco-controls   { top: 65px; }
 	/* TOC: tighten + allow hyphenation so long headings don't overflow the ~240px rail. */
 	.sn-article-toc__list { line-height: 1.6; hyphens: auto; }
 }
