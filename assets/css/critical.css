@@ -480,12 +480,12 @@ body.page main .entry-content > .is-layout-constrained > :where(:not(.alignleft)
 	margin-block: 0 !important;
 }
 
-/* Hero + header entrance — staggered cascade. Gated behind
+/* Hero entrance, a staggered cascade (the header's own fadeIn went in
+   2026.10: it showed through the channel change; tests/transmission-motion.php). Gated behind
    `prefers-reduced-motion: no-preference` so motion-sensitive users
    get the static layout immediately. Same pattern used elsewhere in
    this file for block-level fade-ins. */
 @media (prefers-reduced-motion: no-preference) {
-	.sn-header        { animation: fadeIn 0.8s ease-out; }
 	.sn-hero-title    { animation: fadeInUp 1s ease-out 0.2s both; }
 	.sn-hero-subtitle { animation: fadeInUp 1s ease-out 0.5s both; }
 	.sn-hero-cta      { animation: fadeInUp 1s ease-out 0.8s both; }

@@ -89,5 +89,18 @@ ok( 1 === preg_match( '/:target::before\s*\{\s*animation:\s*sn-acquire\s+[0-9.]+
 ok( 1 === preg_match( '/@keyframes sn-acquire\s*\{\s*from\s*\{\s*opacity:\s*0;\s*\}\s*\}/', $b ), '5: the arrival is an opacity fade, nothing moves' );
 ok( 1 === preg_match( '/@media \(forced-colors: active\)\s*\{\s*:is\(h2, h3, h4\)\[id\]:target::before\s*\{[^}]*CanvasText/', $b ), '5: forced colors keep the rule in CanvasText' );
 
+// Group 3: nothing in the snapshot runs its own entrance. The new page's image
+// is live, so a load-in fade under it showed through the raster: content came
+// in at about a third of its ink, and the logo (a .wp-block-group inside the
+// header) rose 30px under the header crossfade, a doubled ghost. Suppressing it
+// only while :active-view-transition matches was measured to replay the fade
+// from 0.01 the moment the transition finished, so the entrance is gone.
+$entrance = '/(^|[\s},])(\.sn-header|\.wp-block-(group|columns|image|cover))\b[^{}]*\{[^}]*animation:\s*fade/';
+foreach ( array( 'base.css', 'layout.css', 'critical.css' ) as $file ) {
+	ok( 0 === preg_match( $entrance, $read( $file ) ), "3: no load-in fade on the header or on block groups in $file (it showed through the raster)" );
+}
+ok( 0 === preg_match( '/@keyframes fadeIn\s*\{/', $b ), '3: the header-only fadeIn keyframes are gone with their one user' );
+ok( false !== strpos( $read( 'layout.css' ), '.sn-hero-title    { animation: fadeInUp' ), '3: the home hero cascade is out of scope and stays' );
+
 echo sprintf( "\nResult: %d passed, %d failed.\n", $pass, $fail );
 exit( $fail ? 1 : 0 );
