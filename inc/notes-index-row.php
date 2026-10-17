@@ -86,6 +86,12 @@ function sn_notes_render_row( $p, $args = array() ) {
 	}
 	echo '><a href="' . esc_url( get_permalink( $p ) ) . '">'
 		. esc_html( get_the_title( $p ) ) . '</a></h2>';
+	// Search mode: where the term occurs across this note (inc/search-marker-lane.php).
+	if ( '' !== $term && function_exists( 'sn_notes_row_lane_html' ) ) {
+		$plain = wp_strip_all_tags( (string) get_post_field( 'post_content', $p ) );
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- the helper escapes every value it emits.
+		echo sn_notes_row_lane_html( sn_notes_term_positions( $plain, $term ) );
+	}
 	echo '</div>';
 
 	echo '<div class="sn-notes-row-meta">';

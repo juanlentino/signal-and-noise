@@ -1049,3 +1049,41 @@ details.sn-notes-year > summary:focus-visible .sn-notes-year-band {
 	opacity: 1;
 }
 
+/* Search hits (2026.10): the matched term was not highlighted at all; it now
+   carries a 2px blood underline in the text's own color, the same red as
+   ::target-text. And a hairline under each result marks where the term
+   occurs across the note (inc/search-marker-lane.php), first tick in blood. */
+.sn-notes-row-excerpt mark {
+	background: none;
+	color: inherit;
+	text-decoration: underline 2px var(--wp--preset--color--blood);
+	text-underline-offset: 3px;
+}
+.sn-notes-row-lane {
+	position: relative;
+	height: 9px;
+	max-width: 28rem; /* not a track: a fixed-length timeline, so ticks compare across rows */
+	margin-top: 0.5em;
+	border-bottom: 1px solid var(--wp--preset--color--concrete);
+}
+.sn-notes-row-lane i {
+	position: absolute;
+	bottom: 0;
+	left: var(--x);
+	width: 1px;
+	height: 8px;
+	background: var(--wp--preset--color--rust);
+}
+.sn-notes-row-lane i:first-child { width: 2px; background: var(--wp--preset--color--blood); }
+.sn-notes-row-lane-n {
+	display: block;
+	margin-top: 0.35em;
+	font-family: var(--wp--preset--font-family--body);
+	font-size: 11px;
+	letter-spacing: 0.08em;
+	color: var(--wp--preset--color--rust);
+}
+@media (forced-colors: active) {
+	.sn-notes-row-lane i { forced-color-adjust: none; background: CanvasText; }
+}
+

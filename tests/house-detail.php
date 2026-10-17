@@ -169,5 +169,19 @@ $print = $css( 'print.css' );
 ok( 1 === preg_match( '/@page resume\s*\{\s*@top-left\s*\{\s*content:\s*none;?\s*\}\s*@top-right\s*\{\s*content:\s*none;?\s*\}\s*@bottom-right\s*\{\s*content:\s*none;?\s*\}\s*\}/s', $print ), 'the resume prints without the running head and folio (it printed RESUME / juanlentino.com / 01 / 03)' );
 ok( 1 === preg_match( '/\.atf-form \.atf-textarea\s*\{[^}]*field-sizing:\s*content;[^}]*max-block-size:\s*70svh/s', $css( 'components.css' ) ), 'the contact box stops growing at 70% of the screen and scrolls inside (40 lines made it 1414px tall)' );
 
+echo "\nGroup 9: details for the pages that were bare (2026-10-17)\n";
+$comp = $css( 'components.css' );
+ok( 1 === preg_match( '/\.sn-signal-path li\[aria-current\]::before\s*\{[^}]*background:\s*var\(--wp--preset--color--blood\)/s', $comp ), 'signal path: the current essay is lit in blood' );
+ok( 1 === preg_match( '/body:has\(\.sn-provenance-section\)\s*\{\s*overflow-x:\s*clip;/', $comp ), 'margin cue: body clips on the essays, so sticky works (a hidden body is a dead scroll container)' );
+ok( 1 === preg_match( '/@media \(min-width:\s*1200px\)\s*\{[^@]*\.sn-provenance-section > \.sn-provenance-section-eyebrow\s*\{[^}]*position:\s*sticky/s', $comp ), 'margin cue: the section label holds in the gutter at 1200px and wider only' );
+ok( 1 === preg_match( '/iframe\[src\^="https:\/\/calendar\.google\.com\/"\]\s*\{[^}]*linear-gradient\(90deg, var\(--wp--preset--color--void\)/s', $comp ) && false !== strpos( $comp, 'CONNECTING %C2%B7 CALENDAR.GOOGLE.COM' ), 'call: a static test strip from the palette tokens, naming the real host' );
+$notes = $css( 'notes.css' );
+ok( 1 === preg_match( '/\.sn-notes-row-excerpt mark\s*\{[^}]*background:\s*none;[^}]*text-decoration:\s*underline 2px var\(--wp--preset--color--blood\)/s', $notes ), 'search: the matched term is underlined in blood (it was not highlighted at all)' );
+ok( 1 === preg_match( '/\.sn-notes-row-lane i\s*\{[^}]*left:\s*var\(--x\)/s', $notes ), 'search: ticks sit at their real positions' );
+$layout = $css( 'layout.css' );
+ok( 1 === preg_match( '/\.sn-footer a\[title\]:focus-visible::after\s*\{[^}]*content:\s*attr\(title\)/s', $layout ), 'footer icons name themselves on keyboard focus' );
+ok( 1 === preg_match( '/@media \(hover:\s*hover\)\s*\{\s*\.sn-footer a\[title\]:hover::after/s', $layout ), '...and on hover only where the pointer hovers' );
+ok( 1 === preg_match( '/\.sn-resume-lane i\s*\{[^}]*left:\s*var\(--s\);[^}]*width:\s*var\(--w\)/s', $css( 'resume.css' ) ), 'résumé: each lane is placed on the shared axis' );
+
 echo "\n$pass passed, $fail failed\n";
 exit( $fail > 0 ? 1 : 0 );

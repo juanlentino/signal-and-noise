@@ -389,3 +389,30 @@ body div.wp-block-group:not(:has(h1)) > .sn-catalog-eyebrow {
 		transition: none;
 	}
 }
+
+/* Arrangement lanes (2026.10): under each role's dates, the role on one shared
+   axis from the earliest role to today (inc/resume-lanes.php). Open roles run
+   to now and end in blood. */
+.sn-resume-lane {
+	position: relative;
+	height: 3px;
+	margin: 0.7em 0 0.2em;
+	background: var(--wp--preset--color--concrete);
+}
+.sn-resume-lane i {
+	position: absolute;
+	top: 0;
+	left: var(--s);
+	width: var(--w);
+	height: 3px;
+	color: var(--wp--preset--color--bone);
+	background: currentColor;
+}
+.sn-resume-lane i.is-open {
+	background: linear-gradient(90deg, currentColor 70%, var(--wp--preset--color--blood));
+}
+@media (forced-colors: active) {
+	.sn-resume-lane { forced-color-adjust: none; background: GrayText; }
+	.sn-resume-lane i, .sn-resume-lane i.is-open { background: CanvasText; }
+}
+
