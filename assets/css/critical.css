@@ -552,12 +552,6 @@ body.page main .entry-content > .is-layout-constrained > :where(:not(.alignleft)
 @media (forced-colors: active) {
 	.sn-hero::after { display: none; }
 }
-@media (max-width: 781px) {
-	.sn-hero::after { left: 1.5rem; right: 1.5rem; height: 2.5rem; }
-}
-@media (max-width: 480px) {
-	.sn-hero::after { left: 1.25rem; right: 1.25rem; bottom: var(--wp--preset--spacing--20); height: 2rem; }
-}
 
 /* v8.5.6 critical.css pruning: .wp-block-button__link resting + hover
    + outline-style variants lived here. Button hover is not first-paint
@@ -609,6 +603,11 @@ body.page main .entry-content > .is-layout-constrained > :where(:not(.alignleft)
 		padding-bottom: 4rem !important;
 		padding-left: 1.5rem !important;
 		padding-right: 1.5rem !important;
+	}
+	.sn-hero::after {
+		left: 1.5rem;
+		right: 1.5rem;
+		height: 2.5rem;
 	}
 	.sn-hero-cta.wp-block-buttons {
 		flex-direction: row !important;
@@ -677,6 +676,12 @@ body.page main .entry-content > .is-layout-constrained > :where(:not(.alignleft)
 		padding-bottom: 3rem !important;
 		padding-left: 1.25rem !important;
 		padding-right: 1.25rem !important;
+	}
+	.sn-hero::after {
+		left: 1.25rem;
+		right: 1.25rem;
+		bottom: var(--wp--preset--spacing--20);
+		height: 2rem;
 	}
 	.sn-hero-cta.wp-block-buttons {
 		flex-direction: column !important;
