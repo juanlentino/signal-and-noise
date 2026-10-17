@@ -10,6 +10,37 @@
 	margin: 2cm;
 }
 
+/* Running head and folio (2026.10): on paper a note carries its title in the
+   top-left margin, the site in the top-right and "01 / 05" in the bottom-right,
+   in the house mono at 8pt. inc/print-running-head.php sets the title as
+   --sn-print-title. Page-margin boxes print in Chrome; other browsers print
+   the page as before. Paragraphs never strand one line across a break. */
+@page {
+	@top-left {
+		content: var(--sn-print-title, "");
+		font: 8pt "DM Mono", "Courier New", monospace;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: #666;
+	}
+	@top-right {
+		content: "juanlentino.com";
+		font: 8pt "DM Mono", "Courier New", monospace;
+		letter-spacing: 0.08em;
+		color: #666;
+	}
+	@bottom-right {
+		content: counter(page, decimal-leading-zero) " / " counter(pages, decimal-leading-zero);
+		font: 8pt "DM Mono", "Courier New", monospace;
+		letter-spacing: 0.08em;
+		color: #666;
+	}
+}
+.wp-block-post-content :is(p, li) {
+	orphans: 3; widows: 3;
+}
+
+
 /* ── `:root[data-theme="dark"]` is an attribute selector, not a media query,
    so it stays active in print. Without this, a bone-colored element (the
    steps-list numerals, .sn-correction strong) prints white on the forced-
