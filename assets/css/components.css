@@ -2381,19 +2381,81 @@ img.sn-img-dim {
 	.sn-signal-path li[aria-current]::before { forced-color-adjust: none; background: Highlight; border-color: Highlight; }
 }
 
-/* Margin cue (2026.10): on the essays, at 1200px and wider, each section's
-   "Section N" label moves into the left gutter and holds there while its
-   section scrolls, like a marker lane. DOM order is unchanged; below 1200px
-   nothing moves. An essay with a loose section (a label and heading sitting
-   straight in the content, not wrapped in a section group, as Section 6 of
-   /provenance/over-detection is) keeps the plain layout throughout, so no
-   section sits out of line with the others. Sticky needs body to clip, not hide: a hidden body is a
-   scroll container that never scrolls. */
+/* Essay breakout (2026.10): at 1200px and wider the essay's post content is
+   the grid, with named lines: a margin lane, the 760px reading column, and a
+   right lane. Every "Section N" label sits in the margin lane and holds there
+   while its section scrolls, whether it is wrapped in a section group or loose
+   in the content (a label followed by a heading, as Section 6 of
+   /provenance/over-detection is). Grid auto-placement does the pairing: a
+   loose label starts a row, its heading takes the column beside it, and it
+   spans down until the next rule, which spans the lane and ends it. The prose
+   keeps its full measure; DOM order is unchanged; below 1200px nothing moves.
+   Sticky needs body to clip, not hide: a hidden body is a scroll container
+   that never scrolls. */
 body:has(.sn-provenance-section) { overflow-x: clip; }
 @media (min-width: 1200px) {
-	body:not(:has(.wp-block-post-content > p.has-blood-color + h2.wp-block-heading)) .sn-provenance-section { display: grid !important; grid-template-columns: 9rem minmax(0, 1fr); column-gap: 2rem; }
-	body:not(:has(.wp-block-post-content > p.has-blood-color + h2.wp-block-heading)) .sn-provenance-section > * { grid-column: 2; margin-left: 0 !important; }
-	body:not(:has(.wp-block-post-content > p.has-blood-color + h2.wp-block-heading)) .sn-provenance-section > .sn-provenance-section-eyebrow { grid-column: 1; grid-row: 1 / span 99; align-self: start; position: sticky; top: calc(var(--sn-chrome-top, 100px) + 3rem); margin-top: 0.6rem !important; }
+	.wp-block-post-content:has(> .sn-provenance-section) {
+		display: grid;
+		grid-template-columns: [full-start] minmax(0, 1fr) [margin-start] 9rem 2rem [content-start] min(760px, 100%) [content-end] 2rem 9rem [margin-end] minmax(0, 1fr) [full-end];
+		max-width: none !important; /* not a track: the grid draws the reading track itself, in its content column */
+	}
+	.wp-block-post-content:has(> .sn-provenance-section) > * { grid-column: content; max-width: none !important; margin-left: 0 !important; margin-right: 0 !important; } /* not a track: each child fills its grid column */
+	.wp-block-post-content:has(> .sn-provenance-section) > :is(.alignwide, .alignfull) { grid-column: full; }
+	.wp-block-post-content > hr { grid-column: margin-start / content-end; }
+	.wp-block-post-content > .sn-provenance-section { grid-column: margin-start / margin-end; display: grid !important; grid-template-columns: 9rem 2rem minmax(0, 1fr) 2rem 9rem; }
+	.wp-block-post-content > .sn-provenance-section > * { grid-column: 3; max-width: none !important; margin-left: 0 !important; } /* not a track: the section's own grid sets the column */
+	.wp-block-post-content > .sn-provenance-section > .sn-provenance-section-eyebrow,
+	.wp-block-post-content > p.has-blood-color:has(+ h2.wp-block-heading) {
+		grid-column: margin-start / span 1; grid-row: span 99; align-self: start; position: sticky;
+		top: calc(var(--sn-chrome-top, 100px) + 3rem); margin: 0.6rem 0 0 !important; text-align: right; container-type: scroll-state;
+	}
+	.wp-block-post-content > .sn-provenance-section > .sn-provenance-section-eyebrow { grid-column: 1; }
+	/* Signal lock: only while a label is pinned, a tally lights beside it and a
+	   patch line bridges the gutter to the column. At rest it is plain. */
+	@container scroll-state(stuck: top) {
+		.sn-provenance-section-eyebrow::before, p.has-blood-color::before { content: ""; display: inline-block; width: 0; height: 0; border: 3px solid var(--wp--preset--color--blood); border-radius: 50%; margin-right: 0.6em; vertical-align: 0.15em; }
+		.sn-provenance-section-eyebrow::after, p.has-blood-color::after { content: ""; position: absolute; left: calc(100% + 0.5rem); top: 50%; width: 1.25rem; border-top: 1px solid var(--wp--preset--color--blood); }
+	}
+	/* A figure breaks out across the column and the right lane, inside crop
+	   marks, like a proof on the cutting table. */
+	.wp-block-post-content > .sn-provenance-section > .sn-provenance-diagram-wrap { grid-column: 3 / 6; position: relative; padding: 1.5rem; }
+	.sn-provenance-diagram-wrap::before {
+		--sn-crop: var(--wp--preset--color--concrete);
+		content: ""; position: absolute; inset: 0; pointer-events: none; background-repeat: no-repeat;
+		background-image: linear-gradient(var(--sn-crop), var(--sn-crop)), linear-gradient(var(--sn-crop), var(--sn-crop)), linear-gradient(var(--sn-crop), var(--sn-crop)), linear-gradient(var(--sn-crop), var(--sn-crop)), linear-gradient(var(--sn-crop), var(--sn-crop)), linear-gradient(var(--sn-crop), var(--sn-crop)), linear-gradient(var(--sn-crop), var(--sn-crop)), linear-gradient(var(--sn-crop), var(--sn-crop));
+		background-position: 0 0, 0 0, 100% 0, 100% 0, 0 100%, 0 100%, 100% 100%, 100% 100%;
+		background-size: 14px 1px, 1px 14px, 14px 1px, 1px 14px, 14px 1px, 1px 14px, 14px 1px, 1px 14px;
+	}
+}
+
+/* Tracklist (2026.10): an essay's sections as the back of a sleeve, each with
+   its length at the byline's reading rate. Where the browser supports scroll
+   target groups, the section on screen lights, with no script. */
+.sn-essay-tracklist { font-family: var(--wp--preset--font-family--body, 'DM Mono', monospace); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--wp--preset--color--rust); border-block: 1px solid var(--wp--preset--color--concrete); padding: 0.9rem 0; margin: 0 0 var(--wp--preset--spacing--50); }
+/* Where the tracklist renders, it stands in for an essay's own "Jump to" line:
+   same links, plus lengths. Hidden on screen only; the signed text is unchanged,
+   and the verifier reads the served HTML, not the painted page. */
+.sn-essay-tracklist ~ .wp-block-post-content > .sn-provenance-toc { display: none; }
+.sn-essay-tracklist__head { display: flex; justify-content: space-between; margin: 0 0 0.6rem; color: var(--wp--preset--color--blood); }
+.sn-essay-tracklist ol { list-style: none; margin: 0; padding: 0; columns: 2 18rem; column-gap: 3rem; scroll-target-group: auto; }
+.sn-essay-tracklist li { break-inside: avoid; }
+.sn-essay-tracklist a { display: grid; grid-template-columns: 2.4rem 1fr auto; gap: 0.6rem; padding: 0.22rem 0; color: inherit; text-decoration: none; }
+.sn-essay-tracklist__title { color: var(--wp--preset--color--bone); }
+.sn-essay-tracklist__len { font-variant-numeric: tabular-nums; }
+.sn-essay-tracklist a:target-current .sn-essay-tracklist__no::before { content: ""; position: absolute; margin: 0.4em 0 0 -1em; border: 3px solid var(--wp--preset--color--blood); border-radius: 50%; }
+.sn-essay-tracklist a:target-current .sn-essay-tracklist__title { color: var(--wp--preset--color--blood); }
+@media (hover: hover) {
+	.sn-essay-tracklist a:hover .sn-essay-tracklist__title { text-decoration: underline; text-underline-offset: 0.2em; }
+}
+
+/* Runout (2026.10): the essay ends like a record's dead wax: a locked-groove
+   ring, then the signed record's own matrix line, real fields only. */
+.sn-essay-runout { display: flex; align-items: center; gap: 1rem; margin: var(--wp--preset--spacing--40) 0 0; font-family: var(--wp--preset--font-family--body, 'DM Mono', monospace); font-size: 0.72rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--wp--preset--color--rust); }
+.sn-essay-runout::before { content: ""; flex: none; width: 20px; height: 20px; border-radius: 50%; border: 1px solid currentColor; outline: 1px solid currentColor; outline-offset: -6px; }
+.sn-essay-runout::after { content: ""; flex: 1; border-top: 1px solid var(--wp--preset--color--concrete); }
+.sn-essay-runout a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--wp--preset--color--concrete); }
+@media (hover: hover) {
+	.sn-essay-runout a:hover { border-bottom-color: currentColor; }
 }
 
 /* Acquiring signal (2026.10): until the booking calendar paints, or if a
