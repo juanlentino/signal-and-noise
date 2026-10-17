@@ -77,17 +77,17 @@ body {
    the text does not move (core's constrained layout pins headings' inline
    margins with !important, so a margin trick would shift them), which fades in once per arrival under no-preference (a color fade,
    nothing moves) and is simply there under reduce. Forced colors keep the
-   rule in CanvasText; the highlight takes the system colors. Never on the front page (owner rule, Page 383). */
-body:not(.home) ::target-text {
+   rule in CanvasText; the highlight takes the system colors. */
+::target-text {
 	background-color: var(--wp--preset--color--blood);
 	color: var(--wp--preset--color--void);
 }
 
-body:not(.home) :is(h2, h3, h4)[id]:target {
+:is(h2, h3, h4)[id]:target {
 	position: relative;
 }
 
-body:not(.home) :is(h2, h3, h4)[id]:target::before {
+:is(h2, h3, h4)[id]:target::before {
 	content: "";
 	position: absolute;
 	inset-block: 0;
@@ -97,13 +97,13 @@ body:not(.home) :is(h2, h3, h4)[id]:target::before {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-	body:not(.home) :is(h2, h3, h4)[id]:target::before {
+	:is(h2, h3, h4)[id]:target::before {
 		animation: sn-acquire 0.6s ease-out 1;
 	}
 }
 
 @media (forced-colors: active) {
-	body:not(.home) :is(h2, h3, h4)[id]:target::before {
+	:is(h2, h3, h4)[id]:target::before {
 		forced-color-adjust: none;
 		background-color: CanvasText;
 	}
