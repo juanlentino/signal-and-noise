@@ -24,6 +24,10 @@
 # Usage:  bash tests/run.sh            # sweep everything
 #         bash tests/run.sh foo.php    # sweep one suite by basename
 #
+# The rewrite and directive pins need WordPress core's HTML and Interactivity
+# APIs. Fetch them once with tools/fetch-wp-test-core.sh <dir> and export
+# SNT_WP_HTML_API=<dir>/html-api; without it those suites end RED, not skipped.
+#
 set -uo pipefail
 
 cd "$(dirname "$0")/.." || exit 2

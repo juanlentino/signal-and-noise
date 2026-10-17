@@ -16,10 +16,10 @@ const SRC = fs.readFileSync(path.join(__dirname, '../../assets/js/sn-beacon.js')
 
 function run(cookie, ua, nav) {
   const sent = [];
-  const doc = { addEventListener() {}, prerendering: false, visibilityState: 'visible', referrer: '', documentElement: { scrollHeight: 0 }, body: { scrollHeight: 0 } };
+  const doc = { addEventListener() {}, prerendering: false, visibilityState: 'visible', referrer: '', documentElement: { scrollHeight: 0 }, body: { scrollHeight: 0 }, getElementById: (id) => (id === 'sn-beacon-data' ? { textContent: '{"endpoint":"/_sn/px","k":"k"}' } : null) };
   if (typeof cookie === 'function') Object.defineProperty(doc, 'cookie', { get: cookie });
   else doc.cookie = cookie;
-  const win = { SN_BEACON: { endpoint: '/_sn/px', k: 'k' }, addEventListener() {}, removeEventListener() {}, location: { pathname: '/', search: '', hostname: 'x' }, innerHeight: 0, scrollY: 0 };
+  const win = { addEventListener() {}, removeEventListener() {}, location: { pathname: '/', search: '', hostname: 'x' }, innerHeight: 0, scrollY: 0 };
   const ctx = {
     window: win, document: doc, location: win.location, URLSearchParams, URL, Blob, JSON, Object, Math, Date, setTimeout, clearTimeout,
     navigator: Object.assign({ userAgent: ua || '', sendBeacon(url, body) { sent.push(url); return true; } }, nav),

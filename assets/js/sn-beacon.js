@@ -16,17 +16,13 @@
  * until the page is actually shown — document.prerendering + prerenderingchange.
  */
 (function () {
-  // Config comes from the JSON data island <script type="application/json"
+  // Config comes only from the JSON data island <script type="application/json"
   // id="sn-beacon-data"> (inc/beacon.php, 2026-10-16), which needs no
-  // 'unsafe-inline' in the CSP. The window.SN_BEACON fallback is for a page
-  // cached before that change, which still assigns the global inline; drop it
-  // one release later.
+  // 'unsafe-inline' in the CSP. No island, or a malformed one: no beacon.
   function readConfig() {
     var el = document.getElementById ? document.getElementById('sn-beacon-data') : null;
-    if (el) {
-      try { return JSON.parse(el.textContent); } catch (e) { /* fall through */ }
-    }
-    return window.SN_BEACON;
+    if (!el) return null;
+    try { return JSON.parse(el.textContent); } catch (e) { return null; }
   }
 
   function init() {

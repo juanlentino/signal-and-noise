@@ -103,7 +103,7 @@ foreach ( array( 'no-store', 'private', 'no-cache', 'must-revalidate, max-age=0'
 	ok( '' === sn_edge_cache_kind_for( array( 'existing' => $existing ) + $page ), 'a page that already set "' . $existing . '" keeps it' );
 }
 $feed = array( 'feed' => true, 'listed_feed' => true, 'existing' => 'no-cache' ) + $page;
-ok( 'machine' === sn_edge_cache_kind_for( $feed ), 'a feed trades Breeze\'s no-cache for the short lifetime' );
+ok( 'machine' === sn_edge_cache_kind_for( $feed ), 'a listed feed trades an existing no-cache for the short lifetime' );
 ok( 'machine' === sn_edge_cache_kind_for( array( 'existing' => '' ) + $feed ), 'a feed with no header gets it too' );
 ok( '' === sn_edge_cache_kind_for( array( 'existing' => 'no-store, private' ) + $feed ) && '' === sn_edge_cache_kind_for( array( 'existing' => 'private' ) + $feed ), 'a feed that set no-store or private keeps it' );
 ok( '' === sn_edge_cache_kind_for( array( 'anonymous' => false ) + $feed ) && '' === sn_edge_cache_kind_for( array( 'status' => 404 ) + $feed ), 'a feed read with a session, or a 404 feed: nothing' );

@@ -1,9 +1,9 @@
 /**
  * The beacon and the command palette read their data from JSON data islands
  * (<script type="application/json" id="...">, 2026-10-16 CSP prep), which a
- * script-src without 'unsafe-inline' does not block. For one release each
- * still falls back to the old window global, for pages cached before then.
- * The beacon also keeps window.SN_BEACON as its public event() API.
+ * script-src without 'unsafe-inline' does not block. The one-release fallback
+ * to the old window globals is gone (2026-10-17): no island, no data. The
+ * beacon still keeps window.SN_BEACON as its public event() API.
  */
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -47,13 +47,13 @@ test('beacon: the island wins over a stale global', () => {
   assert.equal(r.sent[0], '/_sn/island');
 });
 
-test('beacon: falls back to window.SN_BEACON on a cached page with no island', () => {
-  const r = runBeacon({}, { endpoint: '/_sn/global', k: 'k' });
-  assert.equal(r.sent[0], '/_sn/global');
+test('beacon: no island sends nothing, even with a stale window.SN_BEACON', () => {
+  assert.equal(runBeacon({}, { endpoint: '/_sn/global', k: 'k' }).sent.length, 0);
+  assert.equal(runBeacon({}).sent.length, 0);
 });
 
-test('beacon: a malformed island falls back to the global, and with neither sends nothing', () => {
-  assert.equal(runBeacon({ 'sn-beacon-data': '{oops' }, { endpoint: '/_sn/global', k: 'k' }).sent[0], '/_sn/global');
+test('beacon: a malformed island sends nothing, with or without the old global', () => {
+  assert.equal(runBeacon({ 'sn-beacon-data': '{oops' }, { endpoint: '/_sn/global', k: 'k' }).sent.length, 0);
   assert.equal(runBeacon({ 'sn-beacon-data': '{oops' }).sent.length, 0);
 });
 
@@ -98,8 +98,11 @@ test('palette: the island wins over a stale global', () => {
   assert.doesNotMatch(text, /From the global/);
 });
 
-test('palette: falls back to window.SN_CMDK on a cached page with no island', () => {
-  assert.match(openPalette({}, recent('From the global')), /From the global/);
+test('palette: no island, no data: opens without throwing and ignores a stale window.SN_CMDK', () => {
+  let text;
+  assert.doesNotThrow(() => { text = openPalette({}, recent('From the global')); });
+  assert.doesNotMatch(text, /From the global/);
+  assert.doesNotThrow(() => openPalette({}));
 });
 
 test('palette: a javascript: URL from the island is never navigated to', () => {

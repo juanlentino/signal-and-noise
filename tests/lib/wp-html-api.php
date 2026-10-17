@@ -9,8 +9,8 @@
  * core's own HTML API, and a suite that stubs its own WordPress has no
  * WordPress to load that class from. This resolves wp-includes/html-api the way
  * the plugin's tests/openstation-host.php does: SNT_WP_HTML_API=<dir> first
- * (.github/workflows/ci.yml fetches the seven files from the wordpress-develop
- * 7.1 branch and exports it), then a normally installed theme
+ * (tools/fetch-wp-test-core.sh fetches the files from wordpress-develop at
+ * the branch the theme runs against; ci.yml runs it and exports this), then a normally installed theme
  * (wp-content/themes/<theme>/tests is four levels below the WordPress root).
  *
  * A suite that cannot load the API MUST NOT be green over an empty group:
@@ -78,7 +78,7 @@ function snt_require_wp_html_api() {
 	$dir = snt_wp_html_api_dir();
 	if ( '' === $dir ) {
 		echo "FAIL: WordPress's wp-includes/html-api is not on this machine, so every rewrite pin below would assert nothing.\n";
-		echo "      Fetch it and export SNT_WP_HTML_API=<dir>/html-api; .github/workflows/ci.yml ('Fetch WordPress's HTML API') shows the seven files.\n";
+		echo "      Fetch it: bash tools/fetch-wp-test-core.sh <dir>, then export SNT_WP_HTML_API=<dir>/html-api.\n";
 		echo "\nResult: 0 passed, 1 failed.\n";
 		exit( 1 );
 	}
@@ -138,7 +138,7 @@ function snt_require_wp_interactivity_api() {
 	$dir = dirname( snt_wp_html_api_dir() ) . '/interactivity-api';
 	if ( ! is_file( $dir . '/class-wp-interactivity-api.php' ) ) {
 		echo "FAIL: WordPress's wp-includes/interactivity-api is not beside the html-api on this machine, so the directive pins below would assert nothing.\n";
-		echo "      Fetch its three files next to html-api; .github/workflows/ci.yml ('Fetch WordPress's HTML API') lists them.\n";
+		echo "      Fetch them next to html-api: bash tools/fetch-wp-test-core.sh <dir>.\n";
 		echo "\nResult: 0 passed, 1 failed.\n";
 		exit( 1 );
 	}
