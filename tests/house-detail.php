@@ -194,7 +194,7 @@ ok( 1 === preg_match( '/main:has\(> \.wp-block-post-content > \.sn-provenance-se
 ok( false !== strpos( $comp2, '> .wp-block-post-content { display: contents; }' ), 'the signed element is unboxed, not rewritten, so the tracklist can join its grid' );
 ok( false !== strpos( $comp2, '> .sn-essay-tracklist { order: 1; }' ) && false !== strpos( $comp2, '> .sn-provenance-hero ~ * { order: 2; }' ), 'the tracklist shows between the title and Section 1 (owner, 2026-10-17)' );
 ok( false !== strpos( $comp2, 'reading-flow: grid-order' ), 'tab order follows what is seen where the browser supports it' );
-ok( false !== strpos( $comp2, '.wp-block-post-content :is(h2, h3, h4)[id]:target::before { inset-inline-start: calc(-1 * (2px + 0.6rem)); }' ), 'the arrival rule hugs the heading instead of striking through the margin label' );
+ok( false !== strpos( $comp2, '.wp-block-post-content :is(h2, h3, h4)[id]:target::before { content: none; }' ), 'no arrival rule beside an essay heading: it marked only the loose Section 6 and sat on the margin lane (owner, 2026-10-17)' );
 ok( 1 === preg_match( '/\.wp-block-post-content > p\.has-blood-color:has\(\+ h2\.wp-block-heading\)[^{]*\{[^}]*position: sticky/', $comp2 ), 'a loose section label pins in the lane like a wrapped one' );
 ok( 1 === preg_match( '/\.wp-block-post-content > hr\s*\{[^}]*grid-column: margin-start/', $comp2 ), 'a rule spans the lane, so the last loose label stops where its section ends' );
 ok( false !== strpos( $comp2, 'container-type: scroll-state' ) && false !== strpos( $comp2, '@container scroll-state(stuck: top)' ), 'signal lock: a pinned label lights only while it is pinned' );
