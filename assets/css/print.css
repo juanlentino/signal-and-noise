@@ -131,6 +131,37 @@ a {
 	word-break: break-all;
 }
 
+/* ── The four reading aids on paper. Each item stays whole across a page
+   break, like a references entry. Lives here, not in the partials, for the
+   same reason as the references rules above (core drops a partial's at-rules).
+
+   Timeline: a browser drops backgrounds when printing unless told not to, which
+   would leave each marker as an empty ring; print-color-adjust keeps the fill
+   and the rail. Checklist: the boxes are borders, which always print, in
+   currentColor (black here). Table: the scroll container opens up and the
+   min-width comes off, so the paper table fits the page width with its rules
+   intact instead of being clipped at the figure's edge. ── */
+.sn-timeline__list li,
+.wp-block-list.is-style-checklist li,
+.sn-term,
+.wp-block-table.is-style-sn-table tr {
+	break-inside: avoid;
+}
+
+.sn-timeline__list li::after {
+	-webkit-print-color-adjust: exact;
+	print-color-adjust: exact;
+	animation: none;
+}
+
+.wp-block-table.is-style-sn-table {
+	overflow: visible;
+}
+
+.wp-block-table.is-style-sn-table table {
+	min-width: 0;
+}
+
 /* ── Don't orphan images / blockquotes across a page break. ── */
 img,
 figure,
