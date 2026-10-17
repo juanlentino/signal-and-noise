@@ -22,6 +22,19 @@ site-wide change*. Every idea carries a **bucket**:
   the site-wide change AND a separate yes for the home page, or a scope that
   excludes `body.home`.
 
+## Status (2026-10-17)
+
+- **Shipped in 2026.10.11:** 1 (tuned channel), 2 (test card 404), 3 (channel
+  change) and 5 (signal acquired). The home hero pulse and the FM dial shipped
+  beside them.
+- **Declined by the owner:** 6 (header gate).
+- **Open, being built next:** 4 (hairline-true display type), 7 (noise floor),
+  8 (crop-mark focus) and 9 (signal lock links).
+- **The home-page rule has since been narrowed.** The owner (2026-10-16): the home
+  page is off-limits for new *content* (a notes list, a new section), not for
+  site-wide *design*. Bucket B no longer needs a separate home-page yes;
+  site-wide design may reach `body.home`.
+
 ## What the theme already does (so nothing below re-proposes it)
 
 Inventory of `assets/css/*.css` (16 sheets, ~7,650 lines), `styles/`, `templates/`,
