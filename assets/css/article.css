@@ -1134,13 +1134,15 @@
 
 /* Section numerals (2026.10): a note with three or more sections numbers them
    01, 02 above each h2, in rust at eyebrow size, and its TOC carries the same
-   numbers. References is not a section and is not numbered. The alt text ""
+   numbers. Notes only: a page such as /provenance has sections but no TOC to
+   match. References is not a section and is not numbered, but keeps an empty
+   slot of the same width so every TOC entry starts on one line. The alt text ""
    keeps a screen reader from announcing the number before the heading. Shorter
    notes stay unnumbered: two numbered sections read like a contract. */
-.wp-block-post-content:has(> h2.wp-block-heading:nth-of-type(3)) {
+body.single-post .wp-block-post-content:has(> h2.wp-block-heading:nth-of-type(3)) {
 	counter-reset: sn-sec;
 }
-.wp-block-post-content:has(> h2.wp-block-heading:nth-of-type(3)) > h2.wp-block-heading:not(#references)::before {
+body.single-post .wp-block-post-content:has(> h2.wp-block-heading:nth-of-type(3)) > h2.wp-block-heading:not(#references)::before {
 	counter-increment: sn-sec;
 	content: counter(sn-sec, decimal-leading-zero) / "";
 	display: block;
@@ -1150,13 +1152,19 @@
 	letter-spacing: 0.2em;
 	color: var(--wp--preset--color--rust);
 }
-body:has(.wp-block-post-content > h2.wp-block-heading:nth-of-type(3)) .sn-article-toc__list {
+body.single-post:has(.wp-block-post-content > h2.wp-block-heading:nth-of-type(3)) .sn-article-toc__list {
 	counter-reset: sn-toc;
 }
-body:has(.wp-block-post-content > h2.wp-block-heading:nth-of-type(3)) .sn-article-toc__list > li:not(:has(> a[href="#references"]))::before {
+body.single-post:has(.wp-block-post-content > h2.wp-block-heading:nth-of-type(3)) .sn-article-toc__list > li::before {
+	content: "" / "";
+	display: inline-block;
+	width: 2.6em;
+	font-family: var(--wp--preset--font-family--body);
+	font-size: 11px;
+}
+body.single-post:has(.wp-block-post-content > h2.wp-block-heading:nth-of-type(3)) .sn-article-toc__list > li:not(:has(> a[href="#references"]))::before {
 	counter-increment: sn-toc;
 	content: counter(sn-toc, decimal-leading-zero) / "";
-	margin-right: 0.9em;
 	font-family: var(--wp--preset--font-family--body);
 	font-size: 11px;
 	letter-spacing: 0.12em;

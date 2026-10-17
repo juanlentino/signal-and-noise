@@ -2343,7 +2343,8 @@ img.sn-img-dim {
    in /notes search and the command palette. The message box grows with what is
    typed instead of scrolling inside itself. Under field-sizing its rows
    attribute stops counting, so the minimum restates today's five lines (190px
-   measured). The form is the AllTerrain Forms plugin's; the theme only adds
+   measured), and it stops at 70% of the screen and scrolls inside, so the
+   send button stays in reach. The form is the AllTerrain Forms plugin's; the theme only adds
    these two touches. */
 .atf-form .atf-input {
 	caret-color: var(--wp--preset--color--blood);
@@ -2351,6 +2352,7 @@ img.sn-img-dim {
 @supports (field-sizing: content) {
 	.atf-form .atf-textarea {
 		field-sizing: content;
+		max-block-size: 70svh;
 		min-height: calc(5lh + 2 * var(--atf-pad-field-y, 7px) + 2 * var(--atf-border-width, 1px));
 	}
 }

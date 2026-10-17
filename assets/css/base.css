@@ -206,7 +206,7 @@ summary:focus-visible {
 	--sn-crop: var(--wp--preset--color--blood);
 	content: "";
 	position: absolute;
-	inset: -12px;
+	inset: -9px;
 	pointer-events: none;
 	background:
 		linear-gradient(var(--sn-crop), var(--sn-crop)) top left / 8px 2px,

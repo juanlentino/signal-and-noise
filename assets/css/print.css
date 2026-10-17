@@ -36,6 +36,12 @@
 		color: #666;
 	}
 }
+/* The resume is a document of its own: no running head or folio on it. */
+@page resume {
+	@top-left { content: none; }
+	@top-right { content: none; }
+	@bottom-right { content: none; }
+}
 .wp-block-post-content :is(p, li) {
 	orphans: 3; widows: 3;
 }
