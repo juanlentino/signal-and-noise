@@ -183,5 +183,14 @@ ok( 1 === preg_match( '/\.sn-footer a\[title\]:focus-visible::after\s*\{[^}]*con
 ok( 1 === preg_match( '/@media \(hover:\s*hover\)\s*\{\s*\.sn-footer a\[title\]:hover::after/s', $layout ), '...and on hover only where the pointer hovers' );
 ok( 1 === preg_match( '/\.sn-resume-lane i\s*\{[^}]*left:\s*var\(--s\);[^}]*width:\s*var\(--w\)/s', $css( 'resume.css' ) ), 'résumé: each lane is placed on the shared axis' );
 
+echo "\nGroup 10: the margin cue stands down on an essay with a loose section\n";
+// /provenance/over-detection's Section 6 is not wrapped in a section group: its
+// label and heading sit straight in the post content, so the cue moved
+// Sections 1 to 5 into the gutter and left 6 at the column edge (2026-10-17).
+$g = 'body:not(:has(.wp-block-post-content > p.has-blood-color + h2.wp-block-heading))';
+$comp2 = $css( 'components.css' );
+ok( 3 === substr_count( $comp2, $g . ' .sn-provenance-section' ), 'every margin-cue rule carries the guard, so a page with a loose section reads as before, all of a piece' );
+ok( 0 === preg_match( '/(^|[{},])\s*\.sn-provenance-section\s*\{\s*display:\s*grid/', $comp2 ), 'no unguarded grid rule remains' );
+
 echo "\n$pass passed, $fail failed\n";
 exit( $fail > 0 ? 1 : 0 );

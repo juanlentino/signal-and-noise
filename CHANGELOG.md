@@ -12,6 +12,8 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+- **The essays' margin cue no longer splits /provenance/over-detection.** That essay's Section 6 was never wrapped in a section group: its label and heading sit straight in the page content. So the cue moved Sections 1 to 5 into the gutter and left 6 at the column edge, which the owner flagged. The cue's rules now stand down on any essay with a loose section label (a blood paragraph followed directly by a heading at the top of the content), so that page reads as one piece, as it did before. The other two essays keep the cue. Checked live: the guard is false on over-detection and true on as-substrate and without-institutions. Wrapping Section 6 in the editor would bring the cue back there, but that is a content edit and mints a new signed version, so it is the owner's call. `tests/house-detail.php` pins the guard (red before: 2 failed).
+
 ## [2026.10.15] - 2026-10-17 — a signal path for the essays, search that shows its work, and lanes for the résumé
 
 

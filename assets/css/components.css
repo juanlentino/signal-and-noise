@@ -2384,13 +2384,16 @@ img.sn-img-dim {
 /* Margin cue (2026.10): on the essays, at 1200px and wider, each section's
    "Section N" label moves into the left gutter and holds there while its
    section scrolls, like a marker lane. DOM order is unchanged; below 1200px
-   nothing moves. Sticky needs body to clip, not hide: a hidden body is a
+   nothing moves. An essay with a loose section (a label and heading sitting
+   straight in the content, not wrapped in a section group, as Section 6 of
+   /provenance/over-detection is) keeps the plain layout throughout, so no
+   section sits out of line with the others. Sticky needs body to clip, not hide: a hidden body is a
    scroll container that never scrolls. */
 body:has(.sn-provenance-section) { overflow-x: clip; }
 @media (min-width: 1200px) {
-	.sn-provenance-section { display: grid !important; grid-template-columns: 9rem minmax(0, 1fr); column-gap: 2rem; }
-	.sn-provenance-section > * { grid-column: 2; margin-left: 0 !important; }
-	.sn-provenance-section > .sn-provenance-section-eyebrow { grid-column: 1; grid-row: 1 / span 99; align-self: start; position: sticky; top: calc(var(--sn-chrome-top, 100px) + 3rem); margin-top: 0.6rem !important; }
+	body:not(:has(.wp-block-post-content > p.has-blood-color + h2.wp-block-heading)) .sn-provenance-section { display: grid !important; grid-template-columns: 9rem minmax(0, 1fr); column-gap: 2rem; }
+	body:not(:has(.wp-block-post-content > p.has-blood-color + h2.wp-block-heading)) .sn-provenance-section > * { grid-column: 2; margin-left: 0 !important; }
+	body:not(:has(.wp-block-post-content > p.has-blood-color + h2.wp-block-heading)) .sn-provenance-section > .sn-provenance-section-eyebrow { grid-column: 1; grid-row: 1 / span 99; align-self: start; position: sticky; top: calc(var(--sn-chrome-top, 100px) + 3rem); margin-top: 0.6rem !important; }
 }
 
 /* Acquiring signal (2026.10): until the booking calendar paints, or if a
