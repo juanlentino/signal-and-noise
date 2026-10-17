@@ -149,7 +149,7 @@ ha_true( in_array( 'signal-noise/scheduled', $result, true ), 'allowlist include
 // /provenance/ hub Page (a DB CMS page edited in the curated post editor) or
 // the owner-placeable rail is dead on arrival; sidenote + pull-quote appear
 // in patterns/*.php, which the $used enumeration mandate already covers.
-foreach ( array( 'signal-noise/sidenote', 'signal-noise/pull-quote', 'signal-noise/pillar-essays' ) as $sn_theme_block ) {
+foreach ( array( 'signal-noise/sidenote', 'signal-noise/pull-quote', 'signal-noise/pillar-essays', 'signal-noise/term' ) as $sn_theme_block ) {
 	ha_true( in_array( $sn_theme_block, $result, true ), "allowlist includes the theme block: {$sn_theme_block}" );
 }
 

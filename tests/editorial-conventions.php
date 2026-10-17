@@ -102,7 +102,15 @@ ok( isset( $by['svg-figure'] ) && false !== strpos( $by['svg-figure']['exemplar'
 ok( isset( $by['sidenote'] ) && false === $by['sidenote']['anchor_reachable'] && false === $by['svg-figure']['anchor_reachable'], 'sidenote and svg-figure are the two anchor-unreachable conventions' );
 $unused = array_keys( array_filter( $by, static function ( $r ) { return ! empty( $r['unused'] ); } ) );
 sort( $unused );
-ok( array( 'epigraph', 'hairline', 'hero-dossier', 'pull-quote', 'section-constrained', 'signal-quote' ) === $unused, 'the six registered-but-unused forms are in, flagged unused (' . implode( ', ', $unused ) . ')' );
+ok( array( 'checklist', 'epigraph', 'hairline', 'hero-dossier', 'pull-quote', 'section-constrained', 'signal-quote', 'table', 'term', 'timeline' ) === $unused, 'the ten registered-but-unused forms are in, flagged unused (' . implode( ', ', $unused ) . ')' );
+// The four reading aids (2026-10): each has a when, a placement, and the
+// anchor answer its mechanism dictates; none ships with an em dash.
+foreach ( array( 'timeline' => true, 'term' => false, 'checklist' => true, 'table' => true ) as $aid => $reachable ) {
+	ok( isset( $by[ $aid ] ) && '' !== $by[ $aid ]['when'] && '' !== $by[ $aid ]['placement'] && '' !== $by[ $aid ]['exemplar'] && $reachable === $by[ $aid ]['anchor_reachable'], "$aid: when, placement, exemplar, anchor_reachable " . ( $reachable ? 'true' : 'false' ) );
+}
+ok( isset( $by['term'] ) && 'dynamic_block' === $by['term']['kind'] && 'signal-noise/term' === $by['term']['block'] && file_exists( $root . '/blocks/term/block.json' ), 'term: a dynamic block the theme ships' );
+ok( isset( $by['table'] ) && false !== strpos( $by['table']['exemplar'], '<thead>' ) && 3 === substr_count( $by['table']['exemplar'], '<th scope="col">' ), 'table: the exemplar carries a header row of scope="col" cells' );
+ok( isset( $by['timeline'] ) && 2 === preg_match_all( '#<li><strong>(?:[A-Z][a-z]{2} )?\d{4}\.</strong>#', $by['timeline']['exemplar'] ), 'timeline: every exemplar item opens with a <strong>date.</strong>' );
 ok( 'references' === $rows[0]['id'] && 'correction' === $rows[1]['id'], 'ordered by corpus frequency: references (10 notes) first, correction (3) second' );
 ok( false === strpos( wp_json_encode_stub( $rows ), "\u{2014}" ), 'no em dash anywhere in the registry copy' );
 function wp_json_encode_stub( $v ) { return json_encode( $v, JSON_UNESCAPED_UNICODE ); }
@@ -112,7 +120,7 @@ sn_theme_register_editorial_conventions_ability();
 $reg = $GLOBALS['__registered']['signal-and-noise/get-editorial-conventions'] ?? null;
 ok( is_array( $reg ) && 'sn_theme_perm_read' === $reg['permission_callback'] && true === $reg['meta']['annotations']['readonly'], 'get-editorial-conventions registered, read permission, readonly' );
 $out = sn_theme_ability_get_editorial_conventions();
-ok( $out['count'] === count( $rows ) && $out['in_use'] === count( $rows ) - 6 && false !== strpos( $out['note'], 'BEFORE composing' ), 'the ability returns the registry, the counts, and a note that says when to call it' );
+ok( $out['count'] === count( $rows ) && $out['in_use'] === count( $rows ) - 10 && false !== strpos( $out['note'], 'BEFORE composing' ), 'the ability returns the registry, the counts, and a note that says when to call it' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

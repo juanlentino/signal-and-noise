@@ -25,6 +25,23 @@
 		save: function () { return null; }
 	} );
 
+	// A term and its definition. PlainText, not RichText: render.php esc_html()s
+	// both, so a bold or a link typed here would show up as literal tags. What
+	// the author types is exactly what the reader sees, and what the ledger signs.
+	blocks.registerBlockType( 'signal-noise/term', {
+		edit: function ( props ) {
+			var bp = useBlockProps( { className: 'sn-term' } );
+			var PlainText = blockEditor.PlainText;
+			return el( 'div', bp,
+				el( PlainText, { className: 'sn-term__term-input', value: props.attributes.term,
+					onChange: function ( v ) { props.setAttributes( { term: v } ); }, placeholder: 'Term', 'aria-label': 'Term' } ),
+				el( PlainText, { className: 'sn-term__definition-input', value: props.attributes.definition,
+					onChange: function ( v ) { props.setAttributes( { definition: v } ); }, placeholder: 'One or two sentences that define it.', 'aria-label': 'Definition' } )
+			);
+		},
+		save: function () { return null; }
+	} );
+
 	blocks.registerBlockType( 'signal-noise/pull-quote', {
 		edit: function ( props ) {
 			var bp = useBlockProps( { className: 'sn-pull-quote' } );
@@ -86,7 +103,7 @@
 		save: function () { return null; }
 	} );
 
-	// ── v12.4.0: the four block STYLES, surfaced as inserter VARIATIONS ──────
+	// ── v12.4.0: the block STYLES, surfaced as inserter VARIATIONS ───────────
 	// A style only appears once a block is already inserted, in the sidebar
 	// Styles panel. A variation appears in the inserter and answers the `/`
 	// slash menu, which is where a writer actually is. Measured across the 25
@@ -104,7 +121,9 @@
 		{ block: 'core/separator', style: 'hairline', title: 'Hairline', description: 'A sharp 1px concrete rule.' },
 		{ block: 'core/quote', style: 'signal', title: 'Signal', description: 'Brutalist quote with the blood accent.' },
 		{ block: 'core/quote', style: 'epigraph', title: 'Epigraph', description: 'An opening quotation, set above the argument.' },
-		{ block: 'core/list', style: 'references', title: 'References', description: 'A source list set in mono.' }
+		{ block: 'core/list', style: 'references', title: 'References', description: 'A source list set in mono.' },
+		{ block: 'core/list', style: 'checklist', title: 'Checklist', description: 'Steps the reader acts on, each with an empty box.' },
+		{ block: 'core/table', style: 'sn-table', title: 'Comparison table', description: 'Hairline rules and a small-caps header row.' }
 	];
 
 	SN_STYLE_VARIATIONS.forEach( function ( v ) {

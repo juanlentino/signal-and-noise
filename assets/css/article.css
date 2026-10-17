@@ -287,6 +287,181 @@ main { view-transition-name: sn-main; }
 	color: var(--wp--preset--color--rust);
 }
 
+/* ─── timeline pattern (patterns/timeline.php) ───────────────────────── */
+
+/* The steps pattern's dated sibling, built so the two can never be mistaken
+   for each other: steps sit on the asphalt panel with 1.5rem 01/02/03
+   numerals; a timeline sits on the page with no panel, a vertical hairline,
+   a blood marker per item, and the date set ABOVE its sentence in small
+   tracked uppercase. Text and the hairline are currentColor, so both
+   palettes follow; the marker is the one accent.
+
+   No bleed and no panel, so none of the pull-quote recipe applies. Margins
+   are block-only for the same core margin-auto !important reason. */
+.wp-block-post-content .sn-pattern-timeline {
+	margin-block: 2.5rem;
+}
+
+.sn-timeline__label,
+.sn-checklist__label {
+	font-size: max(0.7rem, 11px);
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	margin: 0 0 1.25rem 0;
+	color: currentColor;
+}
+
+.sn-timeline__list {
+	list-style: none;
+	padding-left: 0;
+	margin: 0;
+}
+
+/* The rail is drawn per item (::before) rather than once on the list, so it
+   starts at the first marker and stops at the last one with no arithmetic
+   about how tall the list is. 0.3125rem = half the 0.625rem marker. */
+.sn-timeline__list li {
+	position: relative;
+	padding-left: 1.75rem;
+	padding-bottom: 1.25rem;
+	margin: 0;
+	line-height: 1.5;
+}
+
+.sn-timeline__list li::before {
+	content: "";
+	position: absolute;
+	left: calc(0.3125rem - 0.5px);
+	top: 0.35em;
+	bottom: -0.35em;
+	border-left: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+}
+
+.sn-timeline__list li:last-child::before {
+	display: none;
+}
+
+.sn-timeline__list li::after {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: 0.35em;
+	width: 0.625rem;
+	height: 0.625rem;
+	box-sizing: border-box;
+	border: 2px solid var(--wp--preset--color--blood);
+	border-radius: 50%;
+	background: var(--wp--preset--color--blood);
+}
+
+/* The date: its own line, small and tracked. Not the steps numeral's
+   1.5rem/600, and not a counter, so a reader scanning either list knows at
+   a glance which kind of sequence it is. */
+.sn-timeline__list li strong {
+	display: block;
+	font-size: max(0.75rem, 11px);
+	font-weight: 600;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	font-variant-numeric: tabular-nums;
+	margin-bottom: 0.15rem;
+}
+
+/* The one flourish: each marker starts as a ring and fills as its item
+   scrolls into reading position. CSS only (a scroll-driven animation), no
+   script, nothing stored. Opt-in by both gates: a browser without
+   view timelines and a reader who asked for less motion both get the filled
+   marker, which is also what print and an inactive timeline fall back to. */
+@supports (animation-timeline: view()) {
+	@media (prefers-reduced-motion: no-preference) {
+		.sn-timeline__list li::after {
+			animation: sn-timeline-mark linear both;
+			animation-timeline: view();
+			animation-range: entry 10% cover 45%;
+		}
+	}
+}
+
+@keyframes sn-timeline-mark {
+	from { background: transparent; }
+	to { background: var(--wp--preset--color--blood); }
+}
+
+/* Windows High Contrast remaps the blood token away; pin the marker to a
+   system colour so the rail keeps its points. */
+@media (forced-colors: active) {
+	.sn-timeline__list li::after {
+		border-color: CanvasText;
+		background: CanvasText;
+		animation: none;
+	}
+}
+
+/* ─── checklist pattern (patterns/checklist.php) ─────────────────────── */
+
+/* The list and its boxes are the core/list "Checklist" block style
+   (styles/blocks/checklist.json); only the wrapper and its label live here. */
+.wp-block-post-content .sn-pattern-checklist {
+	margin-block: 2.5rem;
+}
+
+/* ─── comparison table (core/table "Comparison table" style) ─────────── */
+
+/* The style is a partial (styles/blocks/sn-table.json), but only its
+   min-width can live there. core/table declares its style root as
+   `.wp-block-table > table`, so a partial's `&` is the <table>, never the
+   figure or its caption; and a partial's rules are wrapped in
+   `:root :where()`, (0,1,0), which loses to core's own
+   `.wp-block-table td, .wp-block-table th { border: 1px solid }` (0,1,1).
+   Measured on WordPress 7.1: every cell kept core's full box. So the rules
+   that have to beat core sit here, at (0,2,1).
+
+   Hairlines between rows, a solid rule under the header, no fill, no
+   zebra. Strokes are currentColor so both palettes follow. The figure is
+   core's overflow-x:auto scroll box; with the partial's 30rem min-width a
+   phone scrolls the table inside it and the page never moves. */
+/* Prose size, not the figure's larger inherited base (16.8px measured
+   against 14.4px prose on a note). */
+.wp-block-table.is-style-sn-table {
+	font-size: max(0.9rem, 11px);
+}
+
+.wp-block-table.is-style-sn-table th,
+.wp-block-table.is-style-sn-table td {
+	border: 0;
+	border-bottom: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+	padding: 0.6rem 1rem 0.6rem 0;
+	text-align: left;
+	vertical-align: top;
+	background: none;
+}
+
+.wp-block-table.is-style-sn-table thead {
+	border-bottom: 0;
+}
+
+.wp-block-table.is-style-sn-table thead th {
+	border-bottom: 1px solid currentColor;
+	font-size: max(0.7rem, 11px);
+	font-weight: 600;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+}
+
+/* Set like the steps label: small, tracked, uppercase. Sticky at the left
+   edge of the figure's scroll box, so on a phone the caption stays put while
+   the reader scrolls the table under it (measured: without it, a 60px scroll
+   cut the caption's first word in half). */
+.wp-block-table.is-style-sn-table figcaption {
+	position: sticky;
+	left: 0;
+	margin-top: 0.75rem;
+	font-size: max(0.7rem, 11px);
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	text-align: left;
+}
+
 /* ─── v9.2.0: post-closing template part (parts/post-closing.html) ──── */
 
 .sn-post-closing {
