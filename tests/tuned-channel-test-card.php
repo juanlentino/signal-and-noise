@@ -56,6 +56,8 @@ ok(
 ok( 1 === preg_match( '/@keyframes glitchFlicker\s*\{/', $css( 'base.css' ) ), 'the glitchFlicker keyframes it reuses still exist in base.css' );
 ok( 1 === preg_match( '/@media \(forced-colors: active\)\s*\{\s*\.sn-404-digits::before\s*\{\s*display:\s*none;/', $c ), 'forced colors drop the strip' );
 
+ok( 1 === preg_match( '/\.sn-404-digits\.has-concrete-color\s*\{[^}]*margin-block-end:\s*var\(--wp--preset--spacing--\d+\);/', $c ), 'the card keeps a token gap above "SIGNAL LOST"' );
+
 $tpl = (string) file_get_contents( dirname( __DIR__ ) . '/templates/404.html' );
 ok( false !== strpos( $tpl, 'class="sn-404-digits has-concrete-color' ), 'the template still carries the classes the card selects on' );
 

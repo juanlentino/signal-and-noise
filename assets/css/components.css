@@ -1672,6 +1672,11 @@
 	padding: 0.12em 0.08em 0.2em;
 }
 .sn-404-digits.has-concrete-color {
+	/* Clears the card from "SIGNAL LOST" below. Core's layout rule for
+	   children, `:root :where(.is-layout-constrained) > *`, is (0,1,0) and
+	   zeroes margin-block-end; the doubled class (0,2,0) wins whatever order
+	   the sheets load in. A spacing token, not a hand-typed size. */
+	margin-block-end: var(--wp--preset--spacing--50);
 	color: var(--wp--preset--color--bone) !important;
 	-webkit-text-stroke: 0.04em var(--wp--preset--color--void);
 	paint-order: stroke fill;
