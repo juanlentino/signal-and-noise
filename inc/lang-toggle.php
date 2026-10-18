@@ -23,34 +23,40 @@ if ( ! defined( 'ABSPATH' ) ) {
  * 2026-10-15: one switch, one place; the footer link is gone). The current
  * language is filled and marked aria-current; the other is a plain link
  * carrying hreflang and lang, so a screen reader announces it in its own
- * language, and its accessible name keeps the visible "ES"/"EN" (WCAG 2.5.3).
- * On an English page with no translation, ES goes to the Spanish home and its
- * name says so. No cookie, no storage, no redirect by browser language.
+ * language. Every accessible name starts with the visible "EN"/"ES" (WCAG
+ * 2.5.3, axe label-content-name-mismatch).
+ *
+ * An English page with no Spanish version (every note) does not send the
+ * reader anywhere (owner, 2026-10-18: Spanish readers stay on the note, a
+ * translator covers it). ES is then a disabled link: role="link",
+ * aria-disabled, focusable so its hint reaches a keyboard, and a title the
+ * CSS shows on hover and focus. A Spanish page with no English version
+ * renders nothing, as before. No cookie, no storage, no redirect.
  *
  * @param array{en?:string,es?:string} $pair    This page's pair, or [].
  * @param string                       $current 'en' or 'es'.
- * @param string                       $es_home The published Spanish home, or ''.
  * @return string HTML, or '' when there is nowhere to switch to.
  */
-function sn_lang_toggle_html( $pair, $current, $es_home = '' ) {
-	$to_home = false;
-	if ( empty( $pair['en'] ) || empty( $pair['es'] ) ) {
-		if ( 'en' !== $current || '' === $es_home ) {
-			return '';
-		}
-		$pair    = array( 'en' => '', 'es' => $es_home );
-		$to_home = true;
+function sn_lang_toggle_html( $pair, $current ) {
+	$paired = ! empty( $pair['en'] ) && ! empty( $pair['es'] );
+	if ( ! $paired && 'en' !== $current ) {
+		return '';
 	}
 	$langs = array(
 		// Visible text, accessible name, lang (the Spanish pages are es-AR).
-		'en' => array( 'EN', 'English (EN)', 'en' ),
-		'es' => array( 'ES', $to_home ? 'Español (ES): página de inicio' : 'Español (ES)', 'es-AR' ),
+		'en' => array( 'EN', 'EN, English', 'en' ),
+		'es' => array( 'ES', 'ES, Español', 'es-AR' ),
 	);
+	$hint  = 'Solo en inglés. Podés leerla con el traductor del navegador.';
 	$items = array();
 	foreach ( $langs as $code => $text ) {
-		$items[] = $code === $current
-			? '<span class="sn-lang-switch__seg is-current" aria-current="true">' . esc_html( $text[0] ) . '</span>'
-			: '<a class="sn-lang-switch__seg" href="' . esc_url( $pair[ $code ] ) . '" hreflang="' . esc_attr( $code ) . '" lang="' . esc_attr( $text[2] ) . '" aria-label="' . esc_attr( $text[1] ) . '">' . esc_html( $text[0] ) . '</a>';
+		if ( $code === $current ) {
+			$items[] = '<span class="sn-lang-switch__seg is-current" aria-current="true">' . esc_html( $text[0] ) . '</span>';
+		} elseif ( ! $paired ) {
+			$items[] = '<span class="sn-lang-switch__seg is-unavailable" role="link" aria-disabled="true" tabindex="0" lang="es-AR" aria-label="' . esc_attr( 'ES, no disponible: solo en inglés. Podés leerla con el traductor del navegador.' ) . '" title="' . esc_attr( $hint ) . '">ES</span>';
+		} else {
+			$items[] = '<a class="sn-lang-switch__seg" href="' . esc_url( $pair[ $code ] ) . '" hreflang="' . esc_attr( $code ) . '" lang="' . esc_attr( $text[2] ) . '" aria-label="' . esc_attr( $text[1] ) . '">' . esc_html( $text[0] ) . '</a>';
+		}
 	}
 	return '<nav class="sn-lang-switch" aria-label="' . esc_attr( 'es' === $current ? 'Idioma' : 'Language' ) . '">' . implode( '', $items ) . '</nav>';
 }
@@ -64,8 +70,7 @@ function sn_lang_toggle_markup() {
 	if ( ! function_exists( 'sn_lang_pair_urls' ) || ! function_exists( 'sn_lang_current' ) ) {
 		return '';
 	}
-	$es_home = function_exists( 'sn_lang_spanish_url_for' ) ? sn_lang_spanish_url_for( '/' ) : '';
-	return sn_lang_toggle_html( sn_lang_pair_urls(), sn_lang_current(), $es_home );
+	return sn_lang_toggle_html( sn_lang_pair_urls(), sn_lang_current() );
 }
 
 /**

@@ -55,7 +55,27 @@ function sn_music_featured_shortcode() {
 		. ' title="' . esc_attr( 'Featured Spotify player' ) . '"></iframe>';
 	$out .= '</div>';
 
+	// The player's keyboard focus ring needs a script (assets/js/frame-focus.js).
+	if ( function_exists( 'wp_enqueue_script' ) ) {
+		wp_enqueue_script( 'sn-frame-focus' );
+	}
+
 	return $out;
 }
+
+/**
+ * Register the featured player's focus-ring script; the shortcode enqueues it
+ * only when the player renders. Footer, no dependencies.
+ */
+function sn_register_frame_focus() {
+	wp_register_script(
+		'sn-frame-focus',
+		get_theme_file_uri( 'assets/js/frame-focus.js' ),
+		array(),
+		sn_asset_ver( 'assets/js/frame-focus.js' ),
+		true
+	);
+}
+add_action( 'init', 'sn_register_frame_focus' );
 
 add_shortcode( 'sn_music_featured', 'sn_music_featured_shortcode' );

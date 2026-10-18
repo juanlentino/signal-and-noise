@@ -7,6 +7,8 @@
  * Spanish page where one is published (Música → /musica/) and at the English
  * page otherwise (Notas → /notes/, which stays English); the logo link goes to
  * /inicio/; the menu, search, theme-toggle and footer meta-nav labels switch.
+ * A link that stays English carries hreflang="en" (owner, 2026-10-18: Spanish
+ * readers go to the notes anyway; a translator covers them).
  * The pages those footer links reach stay English, and their names say so.
  * English pages render byte for byte as before. Owner, 2026-10-15.
  *
@@ -80,7 +82,13 @@ function sn_lang_nav_link_html( $html, $label, $path, $es_url, $request ) {
 	}
 	$html = str_replace( '>' . esc_html( $label ) . '</span>', '>' . esc_html( $labels[ $path ] ) . '</span>', $html );
 	if ( '' === $es_url ) {
-		return $html;
+		// The English page under a Spanish label (Notas -> /notes/, there is no
+		// /notas/): say the language changes, like the footer's English links.
+		$tags = new WP_HTML_Tag_Processor( $html );
+		if ( $tags->next_tag( 'A' ) && null !== $tags->get_attribute( 'href' ) && null === $tags->get_attribute( 'hreflang' ) ) {
+			$tags->set_attribute( 'hreflang', 'en' );
+		}
+		return $tags->get_updated_html();
 	}
 	// Core's HTML API, not a regex: the href is found and written as an
 	// attribute, so quoting, entities, a ">" inside a value, and "$1" or "\\1"

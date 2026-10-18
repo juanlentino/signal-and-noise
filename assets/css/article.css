@@ -480,7 +480,7 @@
 	text-transform: uppercase;
 }
 
-/* The figure is a focusable region (inc/table-header-scope.php) so a keyboard
+/* The figure is focusable and named (inc/table-header-scope.php) so a keyboard
    reader can scroll a wide table where the browser will not focus a scroll
    box on its own (Safari). base.css rings only links, buttons and their
    roles, so the region carries the same 2px blood ring itself. */

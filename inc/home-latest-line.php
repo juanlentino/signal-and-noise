@@ -34,11 +34,13 @@ function sn_home_latest_line_html() {
 		return '';
 	}
 	$no    = function_exists( 'sn_notes_catalog_number' ) ? (int) sn_notes_catalog_number( $note->ID ) : 0;
-	$label = ( function_exists( 'sn_theme_is_spanish' ) && sn_theme_is_spanish() ) ? 'Lo último' : 'Latest';
-	return '<a class="sn-home-latest" href="' . esc_url( get_permalink( $note ) ) . '">'
+	$es    = function_exists( 'sn_theme_is_spanish' ) && sn_theme_is_spanish();
+	$label = $es ? 'Lo último' : 'Latest';
+	// On the Spanish home the note is still English: say so (hreflang, lang).
+	return '<a class="sn-home-latest" href="' . esc_url( get_permalink( $note ) ) . '"' . ( $es ? ' hreflang="en"' : '' ) . '>'
 		. '<span class="sn-home-latest__k">' . esc_html( $label ) . '</span>'
 		. ( $no > 0 ? '<span>&#8470; ' . sprintf( '%03d', $no ) . '</span>' : '' )
-		. '<span class="sn-home-latest__t">' . esc_html( get_the_title( $note ) ) . '</span>'
+		. '<span class="sn-home-latest__t"' . ( $es ? ' lang="en"' : '' ) . '>' . esc_html( get_the_title( $note ) ) . '</span>'
 		. '<span>' . esc_html( get_post_time( 'Y.m.d', false, $note ) ) . ' <span aria-hidden="true">&rarr;</span></span></a>';
 }
 

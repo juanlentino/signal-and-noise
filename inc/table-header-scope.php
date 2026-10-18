@@ -1,7 +1,7 @@
 <?php
 /**
  * Signal & Noise: the comparison table's header cells carry scope="col", and
- * its scroll box is a named, keyboard-reachable region.
+ * its scroll box is named and keyboard reachable.
  *
  * The house table (core/table with the "Comparison table" style,
  * styles/blocks/sn-table.json) requires a header row whose cells are
@@ -57,9 +57,12 @@ add_filter( 'render_block_core/table', 'sn_table_header_scope', 10, 2 );
  * sn-table.json sets a 30rem minimum width). Chrome and Firefox make a scroll
  * container focusable on their own; Safari does not, so a keyboard reader
  * there could never scroll a wide table (WCAG 2.1.1; axe's
- * scrollable-region-focusable rule). The figure gets tabindex="0",
- * role="region" and a name: the caption's text, or "Comparison table".
- * A figure that already sets tabindex is left as the author made it.
+ * scrollable-region-focusable rule). The figure gets tabindex="0" and a
+ * name: the caption's text, or "Comparison table". No role="region": ARIA in
+ * HTML allows no such role on a figure that has a figcaption (axe's
+ * aria-allowed-role, live sweep 2026-10-18); the figure's own role carries the
+ * name, and tabindex alone makes the box reachable. A figure that already sets
+ * tabindex is left as the author made it.
  * The ring it shows when focused is in assets/css/article.css.
  *
  * @param string $html  Rendered block HTML.
@@ -83,7 +86,6 @@ function sn_table_scroll_region( $html, $block ) {
 		return $html;
 	}
 	$p->set_attribute( 'tabindex', '0' );
-	$p->set_attribute( 'role', 'region' );
 	$p->set_attribute( 'aria-label', $name );
 	return $p->get_updated_html();
 }

@@ -32,8 +32,10 @@ html {
 /* v9.5.1: honor prefers-reduced-motion. Smooth scrolling is a motion effect
    (fires on skip-link activation + every in-page anchor jump) — the one motion
    vector not already gated (the theme disables all keyframe animations, hover
-   transitions, and View Transitions under reduce). Loaded after the inline
-   critical.css `html { scroll-behavior: smooth }`, so this override wins. */
+   transitions, and View Transitions under reduce). This covers the smooth
+   rule above. The inline critical.css copy prints AFTER this sheet, so it
+   carries its own reduce override right after its smooth rule; this one
+   cannot beat it (2026-10-18 sweep, tests/critical-reduced-motion.php). */
 @media (prefers-reduced-motion: reduce) {
 	html {
 		scroll-behavior: auto;

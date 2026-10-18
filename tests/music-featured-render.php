@@ -48,6 +48,7 @@ if ( ! function_exists( 'esc_html__' ) ) {
 	function esc_html__( $s, $d = 'default' ) { return htmlspecialchars( (string) $s, ENT_QUOTES ); }
 }
 
+if ( ! function_exists( 'add_action' ) ) { function add_action() {} }
 require __DIR__ . '/../inc/music-featured-render.php';
 
 $pass = 0; $fail = 0;
@@ -99,6 +100,28 @@ $GLOBALS['__test_filters']['sn_music_featured'] = array( function () {
 $evil = sn_music_featured_shortcode();
 ok( strpos( $evil, '<script' ) === false, 'hostile embed_url: no injected <script tag' );
 ok( substr_count( $evil, '<iframe' ) === 1, 'hostile embed_url cannot inject a SECOND iframe (esc_url stripped the breakout)' );
+
+echo "\nGroup: a keyboard focus ring for the player (WCAG 2.4.7)\n";
+// Measured 2026-10-18 in Chromium: Tab into a cross-origin iframe moves focus
+// INSIDE it, and the <iframe> then matches none of :focus, :focus-visible or
+// :focus-within, so no CSS rule can ring it. A programmatic iframe.focus()
+// does match :focus-within. The ring is on the wrapper (the iframe's mask
+// would clip an outline of its own), set by :focus-within in CSS and, for
+// real keyboard entry, by a class from assets/js/frame-focus.js.
+$GLOBALS['__enq'] = array();
+if ( ! function_exists( 'wp_enqueue_script' ) ) { function wp_enqueue_script( $h ) { $GLOBALS['__enq'][] = $h; } }
+$GLOBALS['__test_filters']['sn_music_featured'] = array( function () { return array( 'embed_url' => 'https://open.spotify.com/embed/track/x', 'type' => 'track' ); } );
+sn_music_featured_shortcode();
+ok( in_array( 'sn-frame-focus', $GLOBALS['__enq'], true ), 'the player enqueues sn-frame-focus, only when it renders' );
+$GLOBALS['__enq'] = array();
+$GLOBALS['__test_filters']['sn_music_featured'] = array( function () { return array(); } );
+sn_music_featured_shortcode();
+ok( array() === $GLOBALS['__enq'], 'no player, no script' );
+ok( function_exists( 'sn_register_frame_focus' ), 'the handle is registered by a named function' );
+$css = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( __DIR__ . '/../assets/css/components.css' ) );
+$ring = '/\.sn-music-featured:has\(> \.sn-music-featured__player:focus-within\),\s*\.sn-music-featured\.is-frame-focus\s*\{[^}]*outline:\s*2px solid var\(--wp--preset--color--blood\);[^}]*outline-offset:\s*3px/';
+ok( 1 === preg_match( $ring, $css ), 'the wrapper wears the house ring (2px blood, 3px offset) on :focus-within and on .is-frame-focus' );
+ok( is_file( __DIR__ . '/../assets/js/frame-focus.js' ), 'assets/js/frame-focus.js exists' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

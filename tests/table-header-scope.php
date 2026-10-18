@@ -43,20 +43,24 @@ echo "\nGroup 2: the scroll box is keyboard reachable (WCAG 2.1.1)\n";
 // On a phone the comparison table scrolls sideways inside its figure. Chrome
 // and Firefox make a scroll container focusable on their own; Safari does not,
 // so a keyboard reader there could never scroll a wide table. The figure gets
-// tabindex="0", role="region" and a name, the pattern axe's
-// scrollable-region-focusable rule asks for.
+// tabindex="0" and a name, which is what axe's scrollable-region-focusable
+// rule asks for. No role="region": ARIA in HTML allows no role but a few doc
+// roles on a <figure> that has a <figcaption>, and axe's aria-allowed-role
+// flagged it on the live sweep (2026-10-18). The figure's own role carries the
+// name; the keyboard reach comes from tabindex, not from the role.
 ok( in_array( 'sn_table_scroll_region', $GLOBALS['__filters']['render_block_core/table'] ?? array(), true ), 'the region filter is hooked on render_block_core/table' );
 $cap = '<figure class="wp-block-table is-style-sn-table"><table><thead><tr><th>A</th></tr></thead><tbody><tr><td>1</td></tr></tbody></table><figcaption class="wp-element-caption">Three identifiers, <em>three</em> things &amp; more</figcaption></figure>';
 $out = sn_table_scroll_region( $cap, $styled );
 $p = new WP_HTML_Tag_Processor( $out ); $p->next_tag( 'figure' );
-ok( '0' === $p->get_attribute( 'tabindex' ) && 'region' === $p->get_attribute( 'role' ), 'the styled figure gets tabindex="0" and role="region"' );
+ok( '0' === $p->get_attribute( 'tabindex' ), 'the styled figure gets tabindex="0"' );
+ok( null === $p->get_attribute( 'role' ), 'and no role: role="region" is not allowed on a figure with a figcaption (axe aria-allowed-role)' );
 ok( 'Three identifiers, three things & more' === $p->get_attribute( 'aria-label' ), 'named by its caption, tags stripped and entities decoded once (' . $p->get_attribute( 'aria-label' ) . ')' );
 ok( strip_tags( $out ) === strip_tags( $cap ), 'the text is untouched (attributes only)' );
 $nocap = sn_table_scroll_region( '<figure class="wp-block-table is-style-sn-table"><table><tbody><tr><td>1</td></tr></tbody></table></figure>', $styled );
 $p = new WP_HTML_Tag_Processor( $nocap ); $p->next_tag( 'figure' );
-ok( 'Comparison table' === $p->get_attribute( 'aria-label' ), 'with no caption the region still has a name' );
+ok( 'Comparison table' === $p->get_attribute( 'aria-label' ) && null === $p->get_attribute( 'role' ), 'with no caption the focusable figure still has a name, and still no role' );
 $own = sn_table_scroll_region( '<figure class="wp-block-table is-style-sn-table" tabindex="-1"><table></table></figure>', $styled );
-ok( false !== strpos( $own, 'tabindex="-1"' ) && false === strpos( $own, 'role="region"' ), 'a figure that already sets tabindex is left as the author made it' );
+ok( false !== strpos( $own, 'tabindex="-1"' ) && false === strpos( $own, 'aria-label' ), 'a figure that already sets tabindex is left as the author made it' );
 ok( $editor_made !== sn_table_scroll_region( $editor_made, $styled ) && $cap === sn_table_scroll_region( $cap, array( 'blockName' => 'core/table', 'attrs' => array() ) ), 'only the comparison style is changed; an unstyled table is left exactly as stored' );
 $hostile = sn_table_scroll_region( '<figure class="wp-block-table is-style-sn-table"><table></table><figcaption>x" onfocus="alert(1)</figcaption></figure>', $styled );
 preg_match( '/<figure[^>]*>/', $hostile, $fig );

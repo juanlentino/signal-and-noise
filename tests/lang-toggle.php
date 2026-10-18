@@ -30,17 +30,45 @@ function sn_discography_shortcode_bridge_probe() {
 $pair = array( 'en' => 'https://x.test/music/', 'es' => 'https://x.test/musica/' );
 
 echo "Group: the switch\n";
-ok( '' === sn_lang_toggle_html( array(), 'en' ), 'no pair and no Spanish home: nothing (the site before /inicio/ is published)' );
-ok( '' === sn_lang_toggle_html( array( 'en' => 'https://x.test/music/' ), 'en' ), 'half a pair, no Spanish home: nothing' );
-$en = sn_lang_toggle_html( $pair, 'en', 'https://x.test/inicio/' );
+ok( '' === sn_lang_toggle_html( array(), 'es' ), 'a Spanish page with no English counterpart: nothing, as before' );
+ok( '' === sn_lang_toggle_html( array( 'es' => 'https://x.test/musica/' ), 'es' ), 'half a pair on a Spanish page: nothing' );
+$en = sn_lang_toggle_html( $pair, 'en' );
 ok( 0 === strpos( $en, '<nav class="sn-lang-switch" aria-label="Language">' ), 'an English page labels the switch in English' );
-ok( false !== strpos( $en, '<span class="sn-lang-switch__seg is-current" aria-current="true">EN</span><a class="sn-lang-switch__seg" href="https://x.test/musica/" hreflang="es" lang="es-AR" aria-label="Español (ES)">ES</a>' ), 'EN is the filled current segment, ES links to the translation; EN | ES order, no separator glyph' );
+ok( false !== strpos( $en, '<span class="sn-lang-switch__seg is-current" aria-current="true">EN</span><a class="sn-lang-switch__seg" href="https://x.test/musica/" hreflang="es" lang="es-AR" aria-label="ES, Español">ES</a>' ), 'EN is the filled current segment, ES links to the translation; EN | ES order, no separator glyph' );
 ok( 1 === substr_count( $en, '<a ' ), 'exactly one link (no link to the page you are on)' );
-$es = sn_lang_toggle_html( $pair, 'es', 'https://x.test/inicio/' );
-ok( false !== strpos( $es, 'aria-label="Idioma"' ) && false !== strpos( $es, '<a class="sn-lang-switch__seg" href="https://x.test/music/" hreflang="en" lang="en" aria-label="English (EN)">EN</a><span class="sn-lang-switch__seg is-current" aria-current="true">ES</span>' ), 'Spanish page: labelled Idioma, EN links back, ES is current' );
-$home = sn_lang_toggle_html( array(), 'en', 'https://x.test/inicio/' );
-ok( false !== strpos( $home, 'href="https://x.test/inicio/"' ) && false !== strpos( $home, 'aria-label="Español (ES): página de inicio"' ), 'an English page with no translation: ES goes to the Spanish home and its name says so' );
-ok( false === strpos( $en . $es . $home, 'cookie' ) && false === strpos( $en . $es . $home, 'localStorage' ), 'plain links: no storage' );
+$es = sn_lang_toggle_html( $pair, 'es' );
+ok( false !== strpos( $es, 'aria-label="Idioma"' ) && false !== strpos( $es, '<a class="sn-lang-switch__seg" href="https://x.test/music/" hreflang="en" lang="en" aria-label="EN, English">EN</a><span class="sn-lang-switch__seg is-current" aria-current="true">ES</span>' ), 'Spanish page: labelled Idioma, EN links back, ES is current' );
+
+echo "\nGroup: an English page with no Spanish version (every note)\n";
+// Owner, 2026-10-18: no more sending a Spanish reader to the Spanish home. The
+// reader stays on the note; ES says it is only in English and points at the
+// browser's translator.
+$solo = sn_lang_toggle_html( array(), 'en' );
+$half = sn_lang_toggle_html( array( 'en' => 'https://x.test/notes/x/' ), 'en' );
+ok( $solo === $half, 'half a pair reads the same as none' );
+ok( false === strpos( $solo, 'href' ) && false === strpos( $solo, '<a ' ), 'no link anywhere in the switch: nothing sends the reader away' );
+ok( 1 === preg_match( '#<span class="sn-lang-switch__seg is-unavailable" role="link" aria-disabled="true" tabindex="0" lang="es-AR" aria-label="([^"]*)" title="([^"]*)">ES</span>#', $solo, $u ), 'ES is a disabled link: role="link", aria-disabled, focusable, Spanish, visible text ES (' . $solo . ')' );
+ok( 0 === strpos( $u[1] ?? '', 'ES, no disponible: ' ), 'its name starts with the visible text and says it is unavailable' );
+ok( false !== strpos( $u[2] ?? '', 'Solo en inglés.' ) && false !== strpos( $u[2] ?? '', 'traductor del navegador' ) && false !== strpos( $u[1] ?? '', 'solo en inglés. Podés leerla con el traductor del navegador.' ), 'the hint says only in English and suggests the browser translator; the name carries the same words' );
+ok( false !== strpos( $solo, 'Podés' ), 'Argentine voseo, like the rest of the Spanish chrome' );
+ok( false !== strpos( $solo, '<span class="sn-lang-switch__seg is-current" aria-current="true">EN</span>' ), 'EN stays the filled current segment' );
+
+echo "\nGroup: WCAG 2.5.3, the name starts with the visible text in every state\n";
+$states = 0;
+foreach ( array( $en, $es, $solo ) as $html ) {
+	preg_match_all( '#aria-label="([^"]*)"[^>]*>(EN|ES)</(?:a|span)>#', $html, $mm, PREG_SET_ORDER );
+	foreach ( $mm as $x ) {
+		++$states;
+		ok( 0 === strpos( html_entity_decode( $x[1] ), $x[2] ), 'name "' . $x[1] . '" starts with "' . $x[2] . '"' );
+	}
+}
+ok( 3 === $states, 'the scan saw a named segment in all three states (a silent zero is not a pass)' );
+$css = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( __DIR__ . '/../assets/css/components.css' ) );
+ok( 1 === preg_match( '/\.sn-lang-switch__seg\.is-unavailable\s*\{[^}]*color:\s*var\(--wp--preset--color--rust\)/', $css ), 'the unavailable segment is muted (rust, the muted text token, in both palettes), not filled' );
+ok( 1 === preg_match( '/\.sn-lang-switch__seg\.is-unavailable:focus-visible::after\s*\{[^}]*content:\s*attr\(title\)/', $css ), 'the hint shows on keyboard focus (a title tooltip never reaches a keyboard)' );
+ok( 1 === preg_match( '/@media \(hover: hover\)\s*\{[^@]*\.sn-lang-switch__seg\.is-unavailable:hover::after/', $css ), '...and on hover where the pointer hovers' );
+ok( 0 === preg_match( '/\.sn-lang-switch__seg\.is-unavailable(?::focus-visible)?\s*\{[^}]*(padding|min-height|border|margin)\s*:/', $css ), 'no box change: same padding and height as the other segment, so no layout shift' );
+ok( false === strpos( $en . $es . $solo, 'cookie' ) && false === strpos( $en . $es . $solo, 'localStorage' ), 'plain links: no storage' );
 ok( '' === sn_lang_toggle_markup(), 'without the companion plugin, the block renders nothing' );
 ok( false === sn_theme_is_spanish(), 'without the plugin, no page is Spanish' );
 

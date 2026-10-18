@@ -39,6 +39,8 @@ ok( false !== strpos( $h, '>Latest<' ), 'labelled Latest' );
 ok( 'post' === ( $GLOBALS['__q']['post_type'] ?? '' ) && 'publish' === ( $GLOBALS['__q']['post_status'] ?? '' ) && 1 === ( $GLOBALS['__q']['posts_per_page'] ?? 0 ), 'the newest published note, one row' );
 $GLOBALS['__es'] = true;
 ok( false !== strpos( sn_home_latest_line_html(), '>Lo último<' ), 'the Spanish home says Lo último' );
+$es_line = sn_home_latest_line_html();
+ok( 0 === strpos( $es_line, '<a class="sn-home-latest" href="https://x.test/notes/the-credit/" hreflang="en">' ) && false !== strpos( $es_line, '<span class="sn-home-latest__t" lang="en">' ), 'on the Spanish home the note link says hreflang="en" and its English title is marked lang="en"' );
 $GLOBALS['__es'] = false;
 $GLOBALS['__latest'] = array();
 ok( '' === sn_home_latest_line_html(), 'no notes, no line' );

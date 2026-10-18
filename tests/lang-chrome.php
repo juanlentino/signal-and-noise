@@ -33,6 +33,11 @@ ok( false !== strpos( $es, '<a aria-current="page"' ), 'aria-current marks the S
 $notes = sn_lang_nav_link_html( str_replace( array( '/music', 'Music' ), array( '/notes', 'Notes' ), $li ), 'Notes', '/notes', '', '/musica' );
 ok( false !== strpos( $notes, '>Notas</span>' ) && false !== strpos( $notes, 'href="/notes"' ), 'a page with no Spanish version keeps its English href under a Spanish label' );
 ok( false === strpos( $notes, 'aria-current' ), 'not current: no aria-current' );
+// Owner, 2026-10-18: Spanish readers go to the notes anyway (a translator
+// covers the English). /notas/ is a 404, so Notas keeps /notes/ and says the
+// language changes, the way the footer's English links already do.
+ok( 1 === preg_match( '#<a [^>]*hreflang="en"[^>]*href="/notes"|<a [^>]*href="/notes"[^>]*hreflang="en"#', $notes ), 'Notas points at the English /notes/ and carries hreflang="en" (' . $notes . ')' );
+ok( false === strpos( $es, 'hreflang' ), 'a link to a published Spanish page carries no hreflang="en"' );
 ok( $li === sn_lang_nav_link_html( $li, 'Gallery', '/gallery', '', '/musica' ), 'an unknown link is left alone' );
 // A URL is a replacement string for preg_replace(): "$1" or "\\1" in it would be
 // read as a backreference and splice in the matched "<a ... href=" prefix
