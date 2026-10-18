@@ -7,7 +7,7 @@
  * labels become mono stroke ICONS (clock / accessibility figure / pilcrow),
  * middot separators kept. v10.41.0 (owner request): a fourth icon, a shield
  * (Privacy policy, /privacy-policy), joins the line. Icon-only links MUST
- * each carry an aria-label (and a title tooltip): none of these have a
+ * each carry an aria-label (and a data-hint the CSS shows): none of these have a
  * universal glyph, so the accessible name is the only discoverable label.
  *
  * #388: the nav is the signal-noise/meta-nav PHP-only block, no longer a
@@ -40,7 +40,7 @@ ob_start(); include $render_file; $rendered = (string) ob_get_clean();
 
 // ── THE PARITY PIN: the block renders the captured wp:html inner content, byte for byte ──
 $fixture = (string) file_get_contents( __DIR__ . '/fixtures/footer-meta-nav.html' );
-ok( '1abe1bc83921d6dba050022121d51479d1fe0fc6774e6d54281dfaab44f64098' === hash( 'sha256', $fixture ), 'the fixture is the 13.4.0 capture (sha256 pinned; a deliberate change to the nav changes both, in one PR)' );
+ok( 'bf499148af303d4d75c988449462c7ebbf80ab44d22bcbd89e0a1f830b008489' === hash( 'sha256', $fixture ), 'the fixture is the 13.4.0 capture with title moved to data-hint (2026-10-18) (sha256 pinned; a deliberate change to the nav changes both, in one PR)' );
 ok( $rendered === $fixture, 'the block renders the wp:html block\'s inner content byte for byte (' . strlen( $fixture ) . ' bytes, newline and indentation included)' );
 
 // ── ONE meta-nav <nav> carries all three icon links, middot-separated ──
@@ -74,7 +74,14 @@ ok( ( $links - 1 ) === substr_count( $nav, 'aria-hidden="true">&middot;' ), 'eve
 
 // ── icon-only links carry accessible names + tooltips ──
 ok( $links === substr_count( $nav, 'aria-label="' ) - substr_count( $nav, 'aria-label="Site meta"' ), 'every icon link has an aria-label' );
-ok( $links === substr_count( $nav, 'title="' ), 'every icon link has a hover tooltip' );
+ok( $links === substr_count( $nav, 'data-hint="' ), 'every icon link has a hint (data-hint, drawn by layout.css on hover and focus)' );
+// Owner, 2026-10-18: a title draws the browser's own tooltip on top of the CSS
+// box, so the hint lives in data-hint and nothing in the footer carries title.
+ok( 0 === substr_count( $nav, 'title="' ), 'no title attribute: one tooltip, not two' );
+$layout = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( __DIR__ . '/../assets/css/layout.css' ) );
+ok( 1 === preg_match( '/\.sn-footer a\[data-hint\]:focus-visible::after\s*\{[^}]*content:\s*attr\(data-hint\)/', $layout ), 'the footer hint reads data-hint on keyboard focus' );
+ok( 1 === preg_match( '/\.sn-footer a\[data-hint\]:hover::after\s*\{[^}]*content:\s*attr\(data-hint\)/', $layout ), '...and on hover' );
+ok( false === strpos( $layout, 'attr(title)' ), 'no CSS hint in layout.css reads title' );
 ok( $links === substr_count( $nav, 'aria-hidden="true" focusable="false"' ), 'every svg is decorative (aria-hidden + unfocusable)' );
 ok( substr_count( $nav, 'currentColor' ) >= $links, 'icons draw with currentColor (inherit rust, hover blood)' );
 

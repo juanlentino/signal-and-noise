@@ -47,10 +47,13 @@ $solo = sn_lang_toggle_html( array(), 'en' );
 $half = sn_lang_toggle_html( array( 'en' => 'https://x.test/notes/x/' ), 'en' );
 ok( $solo === $half, 'half a pair reads the same as none' );
 ok( false === strpos( $solo, 'href' ) && false === strpos( $solo, '<a ' ), 'no link anywhere in the switch: nothing sends the reader away' );
-ok( 1 === preg_match( '#<span class="sn-lang-switch__seg is-unavailable" role="link" aria-disabled="true" tabindex="0" lang="es-AR" aria-label="([^"]*)" title="([^"]*)">ES</span>#', $solo, $u ), 'ES is a disabled link: role="link", aria-disabled, focusable, Spanish, visible text ES (' . $solo . ')' );
-ok( 0 === strpos( $u[1] ?? '', 'ES, no disponible: ' ), 'its name starts with the visible text and says it is unavailable' );
-ok( false !== strpos( $u[2] ?? '', 'Solo en inglés.' ) && false !== strpos( $u[2] ?? '', 'traductor del navegador' ) && false !== strpos( $u[1] ?? '', 'solo en inglés. Podés leerla con el traductor del navegador.' ), 'the hint says only in English and suggests the browser translator; the name carries the same words' );
-ok( false !== strpos( $solo, 'Podés' ), 'Argentine voseo, like the rest of the Spanish chrome' );
+ok( 1 === preg_match( '#<span class="sn-lang-switch__seg is-unavailable" role="link" aria-disabled="true" tabindex="0" lang="es-AR" aria-label="([^"]*)" data-hint="([^"]*)">ES</span>#', $solo, $u ), 'ES is a disabled link: role="link", aria-disabled, focusable, Spanish, visible text ES, hint in data-hint (' . $solo . ')' );
+ok( 'ES, no disponible: solo en inglés.' === ( $u[1] ?? '' ), 'its name starts with the visible text and says it is unavailable, nothing more' );
+// Owner, 2026-10-18 (live v2026.10.21): the translator line belongs under Notas,
+// not on ES. ES keeps its state and a short hint.
+ok( 'Solo en inglés.' === ( $u[2] ?? '' ), 'the hint is just "Solo en inglés."' );
+ok( false === strpos( $solo, 'traductor' ), 'no translator sentence on ES' );
+ok( false === strpos( $solo, 'title=' ), 'no title attribute: the browser would draw its own tooltip over the CSS hint' );
 ok( false !== strpos( $solo, '<span class="sn-lang-switch__seg is-current" aria-current="true">EN</span>' ), 'EN stays the filled current segment' );
 
 echo "\nGroup: WCAG 2.5.3, the name starts with the visible text in every state\n";
@@ -65,7 +68,8 @@ foreach ( array( $en, $es, $solo ) as $html ) {
 ok( 3 === $states, 'the scan saw a named segment in all three states (a silent zero is not a pass)' );
 $css = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( __DIR__ . '/../assets/css/components.css' ) );
 ok( 1 === preg_match( '/\.sn-lang-switch__seg\.is-unavailable\s*\{[^}]*color:\s*var\(--wp--preset--color--rust\)/', $css ), 'the unavailable segment is muted (rust, the muted text token, in both palettes), not filled' );
-ok( 1 === preg_match( '/\.sn-lang-switch__seg\.is-unavailable:focus-visible::after\s*\{[^}]*content:\s*attr\(title\)/', $css ), 'the hint shows on keyboard focus (a title tooltip never reaches a keyboard)' );
+ok( 1 === preg_match( '/\.sn-lang-switch__seg\.is-unavailable:focus-visible::after\s*\{[^}]*content:\s*attr\(data-hint\)/', $css ), 'the hint shows on keyboard focus (a title tooltip never reaches a keyboard)' );
+ok( false === strpos( $css, 'attr(title)' ), 'no CSS hint reads title: a title draws a second, native tooltip on hover' );
 ok( 1 === preg_match( '/@media \(hover: hover\)\s*\{[^@]*\.sn-lang-switch__seg\.is-unavailable:hover::after/', $css ), '...and on hover where the pointer hovers' );
 ok( 0 === preg_match( '/\.sn-lang-switch__seg\.is-unavailable(?::focus-visible)?\s*\{[^}]*(padding|min-height|border|margin)\s*:/', $css ), 'no box change: same padding and height as the other segment, so no layout shift' );
 ok( false === strpos( $en . $es . $solo, 'cookie' ) && false === strpos( $en . $es . $solo, 'localStorage' ), 'plain links: no storage' );

@@ -179,8 +179,8 @@ $notes = $css( 'notes.css' );
 ok( 1 === preg_match( '/\.sn-notes-row-excerpt mark\s*\{[^}]*background:\s*none;[^}]*text-decoration:\s*underline 2px var\(--wp--preset--color--blood\)/s', $notes ), 'search: the matched term is underlined in blood (it was not highlighted at all)' );
 ok( 1 === preg_match( '/\.sn-notes-row-lane i\s*\{[^}]*left:\s*var\(--x\)/s', $notes ), 'search: ticks sit at their real positions' );
 $layout = $css( 'layout.css' );
-ok( 1 === preg_match( '/\.sn-footer a\[title\]:focus-visible::after\s*\{[^}]*content:\s*attr\(title\)/s', $layout ), 'footer icons name themselves on keyboard focus' );
-ok( 1 === preg_match( '/@media \(hover:\s*hover\)\s*\{\s*\.sn-footer a\[title\]:hover::after/s', $layout ), '...and on hover only where the pointer hovers' );
+ok( 1 === preg_match( '/\.sn-footer a\[data-hint\]:focus-visible::after\s*\{[^}]*content:\s*attr\(data-hint\)/s', $layout ), 'footer icons name themselves on keyboard focus' );
+ok( 1 === preg_match( '/@media \(hover:\s*hover\)\s*\{\s*\.sn-footer a\[data-hint\]:hover::after/s', $layout ), '...and on hover only where the pointer hovers' );
 ok( 1 === preg_match( '/\.sn-resume-lane i\s*\{[^}]*left:\s*var\(--s\);[^}]*width:\s*var\(--w\)/s', $css( 'resume.css' ) ), 'résumé: each lane is placed on the shared axis' );
 
 echo "\nGroup 10: the essay breakout grid holds every section label in one gutter lane\n";

@@ -421,10 +421,12 @@ main.wp-block-group {
 
 /* Footer icon labels (2026.10): the meta icons (Now, Accessibility, Colophon,
    Stats, Privacy) name themselves on keyboard focus, and on hover where the
-   pointer hovers. A title tooltip never reaches a keyboard. Never at rest. */
-.sn-footer a[title] { position: relative; }
-.sn-footer a[title]:focus-visible::after {
-	content: attr(title);
+   pointer hovers. A title tooltip never reaches a keyboard. Never at rest.
+   The text is data-hint, not title: a title draws the browser's own tooltip
+   over this one (owner, 2026-10-18). */
+.sn-footer a[data-hint] { position: relative; }
+.sn-footer a[data-hint]:focus-visible::after {
+	content: attr(data-hint);
 	position: absolute;
 	bottom: calc(100% + 8px);
 	left: 50%;
@@ -440,8 +442,8 @@ main.wp-block-group {
 	border: 1px solid var(--wp--preset--color--bone);
 }
 @media (hover: hover) {
-	.sn-footer a[title]:hover::after {
-		content: attr(title);
+	.sn-footer a[data-hint]:hover::after {
+		content: attr(data-hint);
 		position: absolute;
 		bottom: calc(100% + 8px);
 		left: 50%;
