@@ -2239,6 +2239,67 @@ img.sn-img-dim {
 	}
 }
 
+/* ES on an English page with no Spanish version (every note): a disabled
+   link, not a way out (inc/lang-toggle.php, owner 2026-10-18). Rust, the
+   muted text token; no fill, no hover; same box as the other segment, so
+   nothing shifts. Its
+   title is the hint, shown on keyboard focus and on hover like the footer's
+   icon labels (layout.css); a title tooltip alone never reaches a keyboard. */
+.sn-lang-switch__seg.is-unavailable {
+	position: relative;
+	color: var(--wp--preset--color--rust);
+	cursor: default;
+}
+.sn-lang-switch__seg.is-unavailable:focus-visible {
+	background: none;
+	color: var(--wp--preset--color--bone);
+	outline: 2px solid var(--wp--preset--color--blood);
+	outline-offset: 3px;
+}
+.sn-lang-switch__seg.is-unavailable:focus-visible::after {
+	content: attr(title);
+	position: absolute;
+	top: calc(100% + 8px);
+	right: 0;
+	z-index: 2;
+	width: max-content;
+	max-width: min(16rem, 80vw); /* not a track: a hint's line length, capped to the phone */
+	padding: 4px 8px;
+	font-family: var(--wp--preset--font-family--body);
+	font-size: 11px;
+	line-height: 1.4;
+	letter-spacing: 0.04em;
+	text-transform: none;
+	color: var(--wp--preset--color--bone);
+	background: var(--wp--preset--color--void);
+	border: 1px solid var(--wp--preset--color--bone);
+}
+@media (hover: hover) {
+	.sn-lang-switch__seg.is-unavailable:hover::after {
+		content: attr(title);
+		position: absolute;
+		top: calc(100% + 8px);
+		right: 0;
+		z-index: 2;
+		width: max-content;
+		max-width: min(16rem, 80vw); /* not a track: a hint's line length, capped to the phone */
+		padding: 4px 8px;
+		font-family: var(--wp--preset--font-family--body);
+		font-size: 11px;
+		line-height: 1.4;
+		letter-spacing: 0.04em;
+		text-transform: none;
+		color: var(--wp--preset--color--bone);
+		background: var(--wp--preset--color--void);
+		border: 1px solid var(--wp--preset--color--bone);
+	}
+}
+/* The menu copy sits at the left edge of the dialog: open the hint rightward. */
+.sn-lang-switch--menu .sn-lang-switch__seg.is-unavailable::after {
+	right: auto;
+	left: 0;
+}
+
 @media (max-width: 781px) {
 	.sn-theme-toggle--footer {
 		display: none;
@@ -2337,6 +2398,19 @@ img.sn-img-dim {
 	   of this bug, so the clip has to hold there specifically. An opaque
 	   mask forces the clip without changing a pixel of what is drawn. */
 	-webkit-mask-image: -webkit-radial-gradient(white, black);
+}
+
+/* Keyboard focus on the featured player (WCAG 2.4.7). The ring sits on the
+   wrapper, the base.css button idiom: the mask above would clip an outline
+   on the iframe itself. And CSS cannot see the iframe focused: measured in
+   Chromium 2026-10-18, Tab moves focus INTO the cross-origin document and
+   the <iframe> then matches none of :focus, :focus-visible, :focus-within.
+   A scripted iframe.focus() does match :focus-within; real keyboard entry
+   gets .is-frame-focus from assets/js/frame-focus.js. */
+.sn-music-featured:has(> .sn-music-featured__player:focus-within),
+.sn-music-featured.is-frame-focus {
+	outline: 2px solid var(--wp--preset--color--blood);
+	outline-offset: 3px;
 }
 
 /* Red caret (2026.10): the text cursor in the contact form is blood, as it is

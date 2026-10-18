@@ -150,6 +150,15 @@ html {
 	overflow-x: hidden;
 }
 
+/* Smooth scrolling is motion. This inline copy prints after the combined
+   sheet, so base.css's reduce override loses to the rule above; the
+   override has to live here, after it (tests/critical-reduced-motion.php). */
+@media (prefers-reduced-motion: reduce) {
+	html {
+		scroll-behavior: auto;
+	}
+}
+
 body {
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
