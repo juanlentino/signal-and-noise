@@ -2243,8 +2243,11 @@ img.sn-img-dim {
    link, not a way out (inc/lang-toggle.php, owner 2026-10-18). Rust, the
    muted text token; no fill, no hover; same box as the other segment, so
    nothing shifts. Its
-   title is the hint, shown on keyboard focus and on hover like the footer's
-   icon labels (layout.css); a title tooltip alone never reaches a keyboard. */
+   data-hint is the hint, shown on keyboard focus and on hover like the footer's
+   icon labels (layout.css); a title tooltip alone never reaches a keyboard, and
+   a title would draw the browser's tooltip over this box. The Spanish header's
+   Notas link (inc/lang-chrome.php) carries the same box for its translator
+   line. */
 .sn-lang-switch__seg.is-unavailable {
 	position: relative;
 	color: var(--wp--preset--color--rust);
@@ -2256,8 +2259,9 @@ img.sn-img-dim {
 	outline: 2px solid var(--wp--preset--color--blood);
 	outline-offset: 3px;
 }
+.wp-block-navigation-item__content[data-hint]:focus-visible::before,
 .sn-lang-switch__seg.is-unavailable:focus-visible::after {
-	content: attr(title);
+	content: attr(data-hint);
 	position: absolute;
 	top: calc(100% + 8px);
 	right: 0;
@@ -2275,8 +2279,9 @@ img.sn-img-dim {
 	border: 1px solid var(--wp--preset--color--bone);
 }
 @media (hover: hover) {
+	.wp-block-navigation-item__content[data-hint]:hover::before,
 	.sn-lang-switch__seg.is-unavailable:hover::after {
-		content: attr(title);
+		content: attr(data-hint);
 		position: absolute;
 		top: calc(100% + 8px);
 		right: 0;
@@ -2295,9 +2300,17 @@ img.sn-img-dim {
 	}
 }
 /* The menu copy sits at the left edge of the dialog: open the hint rightward. */
-.sn-lang-switch--menu .sn-lang-switch__seg.is-unavailable::after {
+.sn-lang-switch--menu .sn-lang-switch__seg.is-unavailable::after,
+.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation-item__content[data-hint]::before {
 	right: auto;
 	left: 0;
+}
+/* Notas on a Spanish page: the hint hangs from the link (right-aligned, as
+   Notas sits toward the right of the header row). It draws on ::before because
+   a nav link's ::after is its blood underline (layout.css, critical.css), which
+   the open menu hides with !important. */
+.wp-block-navigation-item__content[data-hint] {
+	position: relative;
 }
 
 @media (max-width: 781px) {

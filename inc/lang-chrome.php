@@ -84,9 +84,19 @@ function sn_lang_nav_link_html( $html, $label, $path, $es_url, $request ) {
 	if ( '' === $es_url ) {
 		// The English page under a Spanish label (Notas -> /notes/, there is no
 		// /notas/): say the language changes, like the footer's English links.
+		// Notas also says how to read them: a hint on hover and focus (data-hint,
+		// drawn by components.css; not a title, which the browser would draw a
+		// second time) and a name that starts with the visible text (WCAG 2.5.3).
+		// Owner, 2026-10-18: the translator line belongs here, not on ES.
 		$tags = new WP_HTML_Tag_Processor( $html );
-		if ( $tags->next_tag( 'A' ) && null !== $tags->get_attribute( 'href' ) && null === $tags->get_attribute( 'hreflang' ) ) {
-			$tags->set_attribute( 'hreflang', 'en' );
+		if ( $tags->next_tag( 'A' ) && null !== $tags->get_attribute( 'href' ) ) {
+			if ( null === $tags->get_attribute( 'hreflang' ) ) {
+				$tags->set_attribute( 'hreflang', 'en' );
+			}
+			if ( '/notes' === $path ) {
+				$tags->set_attribute( 'data-hint', 'En inglés. Podés leerlas con el traductor del navegador.' );
+				$tags->set_attribute( 'aria-label', 'Notas, en inglés: podés leerlas con el traductor del navegador.' );
+			}
 		}
 		return $tags->get_updated_html();
 	}

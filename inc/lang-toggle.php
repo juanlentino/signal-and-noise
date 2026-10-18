@@ -29,8 +29,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  * An English page with no Spanish version (every note) does not send the
  * reader anywhere (owner, 2026-10-18: Spanish readers stay on the note, a
  * translator covers it). ES is then a disabled link: role="link",
- * aria-disabled, focusable so its hint reaches a keyboard, and a title the
- * CSS shows on hover and focus. A Spanish page with no English version
+ * aria-disabled, focusable so its hint reaches a keyboard, and a data-hint
+ * the CSS shows on hover and focus ("Solo en inglés."). Not a title: the
+ * browser would draw its own tooltip over the box. The translator line sits
+ * on the Spanish header's Notas link (inc/lang-chrome.php), the link that
+ * actually leads to English notes (owner, 2026-10-18). A Spanish page with no English version
  * renders nothing, as before. No cookie, no storage, no redirect.
  *
  * @param array{en?:string,es?:string} $pair    This page's pair, or [].
@@ -47,13 +50,12 @@ function sn_lang_toggle_html( $pair, $current ) {
 		'en' => array( 'EN', 'EN, English', 'en' ),
 		'es' => array( 'ES', 'ES, Español', 'es-AR' ),
 	);
-	$hint  = 'Solo en inglés. Podés leerla con el traductor del navegador.';
 	$items = array();
 	foreach ( $langs as $code => $text ) {
 		if ( $code === $current ) {
 			$items[] = '<span class="sn-lang-switch__seg is-current" aria-current="true">' . esc_html( $text[0] ) . '</span>';
 		} elseif ( ! $paired ) {
-			$items[] = '<span class="sn-lang-switch__seg is-unavailable" role="link" aria-disabled="true" tabindex="0" lang="es-AR" aria-label="' . esc_attr( 'ES, no disponible: solo en inglés. Podés leerla con el traductor del navegador.' ) . '" title="' . esc_attr( $hint ) . '">ES</span>';
+			$items[] = '<span class="sn-lang-switch__seg is-unavailable" role="link" aria-disabled="true" tabindex="0" lang="es-AR" aria-label="' . esc_attr( 'ES, no disponible: solo en inglés.' ) . '" data-hint="' . esc_attr( 'Solo en inglés.' ) . '">ES</span>';
 		} else {
 			$items[] = '<a class="sn-lang-switch__seg" href="' . esc_url( $pair[ $code ] ) . '" hreflang="' . esc_attr( $code ) . '" lang="' . esc_attr( $text[2] ) . '" aria-label="' . esc_attr( $text[1] ) . '">' . esc_html( $text[0] ) . '</a>';
 		}

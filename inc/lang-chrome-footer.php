@@ -24,11 +24,11 @@ function sn_lang_meta_nav( $html ) {
 		$html,
 		array(
 			'aria-label="Site meta"'                                   => 'aria-label="Información del sitio"',
-			'<a href="/now" aria-label="Now: what I&#8217;m focused on" title="Now">' => '<a href="/now" hreflang="en" aria-label="Ahora: en qué estoy (en inglés)" title="Ahora">',
-			'<a href="/accessibility" aria-label="Accessibility statement" title="Accessibility">' => '<a href="/accessibility" hreflang="en" aria-label="Declaración de accesibilidad (en inglés)" title="Accesibilidad">',
-			'<a href="/colophon/" aria-label="Colophon: how this site is made" title="Colophon">' => '<a href="/colophon/" hreflang="en" aria-label="Colofón: cómo está hecho este sitio (en inglés)" title="Colofón">',
-			'<a href="/stats" aria-label="Stats: what gets read here" title="Stats">' => '<a href="/stats" hreflang="en" aria-label="Estadísticas: qué se lee acá (en inglés)" title="Estadísticas">',
-			'<a href="/privacy-policy" aria-label="Privacy policy" title="Privacy">' => '<a href="/privacy-policy" hreflang="en" aria-label="Política de privacidad (en inglés)" title="Privacidad">',
+			'<a href="/now" aria-label="Now: what I&#8217;m focused on" data-hint="Now">' => '<a href="/now" hreflang="en" aria-label="Ahora: en qué estoy (en inglés)" data-hint="Ahora">',
+			'<a href="/accessibility" aria-label="Accessibility statement" data-hint="Accessibility">' => '<a href="/accessibility" hreflang="en" aria-label="Declaración de accesibilidad (en inglés)" data-hint="Accesibilidad">',
+			'<a href="/colophon/" aria-label="Colophon: how this site is made" data-hint="Colophon">' => '<a href="/colophon/" hreflang="en" aria-label="Colofón: cómo está hecho este sitio (en inglés)" data-hint="Colofón">',
+			'<a href="/stats" aria-label="Stats: what gets read here" data-hint="Stats">' => '<a href="/stats" hreflang="en" aria-label="Estadísticas: qué se lee acá (en inglés)" data-hint="Estadísticas">',
+			'<a href="/privacy-policy" aria-label="Privacy policy" data-hint="Privacy">' => '<a href="/privacy-policy" hreflang="en" aria-label="Política de privacidad (en inglés)" data-hint="Privacidad">',
 		)
 	);
 }

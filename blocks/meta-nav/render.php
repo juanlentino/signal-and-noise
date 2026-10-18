@@ -16,7 +16,9 @@
  * The glyphs: mono stroke marks in the brutalist vocabulary. A clock is
  * Now, the standard accessibility figure, a pilcrow (the printer mark) is
  * Colophon, three bars are Stats, a shield is Privacy. None has a universal
- * reading, so every link carries an aria-label and a title, and each svg
+ * reading, so every link carries an aria-label and a data-hint (the label
+ * layout.css draws on hover and focus; not a title, which the browser would
+ * draw a second time), and each svg
  * is decorative (aria-hidden, unfocusable). The nav is rust and the marks
  * draw with currentColor; hover brings blood (.sn-footer__meta-nav in
  * assets/css/layout.css). The hrefs are path-relative and resolve against
@@ -36,15 +38,15 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 $sn_meta_nav = <<<'HTML'
 
 		<nav class="sn-footer__meta-nav" aria-label="Site meta">
-			<a href="/now" aria-label="Now: what I&#8217;m focused on" title="Now"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="6.25"/><path d="M8 4.75V8l2.25 1.5"/></svg></a>
+			<a href="/now" aria-label="Now: what I&#8217;m focused on" data-hint="Now"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="6.25"/><path d="M8 4.75V8l2.25 1.5"/></svg></a>
 			<span class="sn-footer__meta-sep" aria-hidden="true">&middot;</span>
-			<a href="/accessibility" aria-label="Accessibility statement" title="Accessibility"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="2.9" r="1.4" fill="currentColor" stroke="none"/><path d="M2.9 5.6c3.4 1 6.8 1 10.2 0"/><path d="M8 6.4v3.4"/><path d="M8 9.8 5.9 13.6"/><path d="M8 9.8l2.1 3.8"/></svg></a>
+			<a href="/accessibility" aria-label="Accessibility statement" data-hint="Accessibility"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="2.9" r="1.4" fill="currentColor" stroke="none"/><path d="M2.9 5.6c3.4 1 6.8 1 10.2 0"/><path d="M8 6.4v3.4"/><path d="M8 9.8 5.9 13.6"/><path d="M8 9.8l2.1 3.8"/></svg></a>
 			<span class="sn-footer__meta-sep" aria-hidden="true">&middot;</span>
-			<a href="/colophon/" aria-label="Colophon: how this site is made" title="Colophon"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><path d="M12.7 2.9H6.4a3 3 0 0 0 0 6h2.3"/><path d="M8.7 2.9v10.2"/><path d="M11.3 2.9v10.2"/></svg></a>
+			<a href="/colophon/" aria-label="Colophon: how this site is made" data-hint="Colophon"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><path d="M12.7 2.9H6.4a3 3 0 0 0 0 6h2.3"/><path d="M8.7 2.9v10.2"/><path d="M11.3 2.9v10.2"/></svg></a>
 			<span class="sn-footer__meta-sep" aria-hidden="true">&middot;</span>
-<a href="/stats" aria-label="Stats: what gets read here" title="Stats"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><path d="M4 13.2V9.4"/><path d="M8 13.2V6.2"/><path d="M12 13.2V3.4"/></svg></a>
+<a href="/stats" aria-label="Stats: what gets read here" data-hint="Stats"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><path d="M4 13.2V9.4"/><path d="M8 13.2V6.2"/><path d="M12 13.2V3.4"/></svg></a>
 <span class="sn-footer__meta-sep" aria-hidden="true">&middot;</span>
-			<a href="/privacy-policy" aria-label="Privacy policy" title="Privacy"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><path d="M8 2 3 3.9v4c0 3 2.1 5.2 5 6.2 2.9-1 5-3.2 5-6.2v-4L8 2Z"/><path d="M6 7.9 7.4 9.3 10.2 6.3"/></svg></a>
+			<a href="/privacy-policy" aria-label="Privacy policy" data-hint="Privacy"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><path d="M8 2 3 3.9v4c0 3 2.1 5.2 5 6.2 2.9-1 5-3.2 5-6.2v-4L8 2Z"/><path d="M6 7.9 7.4 9.3 10.2 6.3"/></svg></a>
 		</nav>
 HTML . "\n\t\t";
 // On a Spanish page the labels switch (inc/lang-chrome-footer.php); English

@@ -37,6 +37,18 @@ ok( false === strpos( $notes, 'aria-current' ), 'not current: no aria-current' )
 // covers the English). /notas/ is a 404, so Notas keeps /notes/ and says the
 // language changes, the way the footer's English links already do.
 ok( 1 === preg_match( '#<a [^>]*hreflang="en"[^>]*href="/notes"|<a [^>]*href="/notes"[^>]*hreflang="en"#', $notes ), 'Notas points at the English /notes/ and carries hreflang="en" (' . $notes . ')' );
+// Owner, 2026-10-18 (live v2026.10.21): the translator sentence belongs under
+// Notas, the link that actually leads to English notes, not on ES.
+$nt = new WP_HTML_Tag_Processor( $notes );
+$nt->next_tag( 'A' );
+ok( 'En inglés. Podés leerlas con el traductor del navegador.' === $nt->get_attribute( 'data-hint' ), 'Notas carries the translator hint in data-hint (' . $notes . ')' );
+ok( 'Notas, en inglés: podés leerlas con el traductor del navegador.' === $nt->get_attribute( 'aria-label' ), 'its name starts with the visible "Notas" and carries the same words (WCAG 2.5.3)' );
+ok( null === $nt->get_attribute( 'title' ), 'no title on Notas: the browser would draw a second tooltip over the CSS hint' );
+ok( false === strpos( $es, 'data-hint' ) && false === strpos( $es, 'aria-label' ), 'a link to a published Spanish page gets no hint and no extra name' );
+$css = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( __DIR__ . '/../assets/css/components.css' ) );
+ok( 1 === preg_match( '/\.wp-block-navigation-item__content\[data-hint\]:focus-visible::before[^{]*\{[^}]*content:\s*attr\(data-hint\)/', $css ), 'the Notas hint shows on keyboard focus, from data-hint' );
+ok( 1 === preg_match( '/@media \(hover: hover\)\s*\{[^@]*\.wp-block-navigation-item__content\[data-hint\]:hover::before/', $css ), '...and on hover where the pointer hovers' );
+ok( 0 === preg_match( '/navigation-item__content\[data-hint\][^{,]*::after/', $css ), 'the hint never takes ::after, the nav link\'s underline (hidden with !important in the open menu)' );
 ok( false === strpos( $es, 'hreflang' ), 'a link to a published Spanish page carries no hreflang="en"' );
 ok( $li === sn_lang_nav_link_html( $li, 'Gallery', '/gallery', '', '/musica' ), 'an unknown link is left alone' );
 // A URL is a replacement string for preg_replace(): "$1" or "\\1" in it would be
@@ -73,7 +85,8 @@ echo "\nGroup: the footer\n";
 $nav = (string) shell_exec( 'php -r ' . escapeshellarg( 'define("ABSPATH","/"); require "' . __DIR__ . '/../blocks/meta-nav/render.php";' ) );
 $es_nav = sn_lang_meta_nav( $nav );
 ok( '' !== $nav && 5 === substr_count( $es_nav, 'hreflang="en"' ), 'all five meta links switch, each marked hreflang="en"' );
-ok( false !== strpos( $es_nav, 'title="Colofón"' ) && false !== strpos( $es_nav, '(en inglés)' ), 'labels are Spanish and say the page is English' );
+ok( false === strpos( $es_nav, 'title=' ), 'the Spanish footer carries no title either' );
+ok( false !== strpos( $es_nav, 'data-hint="Colofón"' ) && false !== strpos( $es_nav, '(en inglés)' ), 'labels are Spanish and say the page is English' );
 ok( false === strpos( $nav, 'Colofón' ), 'the English meta-nav is untouched (the pinned bytes render without the plugin)' );
 $footer = (string) file_get_contents( __DIR__ . '/../parts/footer.html' );
 ok( false === strpos( $footer, 'lang-toggle' ) && false === strpos( $footer, 'sn-lang-footer' ), 'the footer carries no language link: the header switch is the one place' );
