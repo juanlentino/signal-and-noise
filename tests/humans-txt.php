@@ -35,7 +35,7 @@ function home_url( $p = '' ) { return 'https://juanlentino.com' . $p; }
 function wp_get_theme() {
 	return new class {
 		public function get( $key ) {
-			$map = array( 'Author' => 'Juan Lentino', 'Name' => 'Signal & Noise', 'Version' => '10.5.0' );
+			$map = array( 'Author' => 'Juan Lentino', 'Name' => 'Signal &amp; Noise', 'Version' => '10.5.0' );
 			return $map[ $key ] ?? '';
 		}
 	};
@@ -60,6 +60,8 @@ ok( strpos( $body, 'Juan Lentino' ) !== false, 'body references the owner (Juan 
 ok( strpos( $body, 'juanlentino.com' ) !== false, 'body references the site URL' );
 ok( strpos( $body, 'WordPress' ) !== false, 'body references the platform (WordPress)' );
 ok( strpos( $body, 'Signal & Noise' ) !== false, 'body references the theme name' );
+ok( strpos( $body, '&amp;' ) === false, 'plain text: the theme header entity is decoded, never printed as &amp;' );
+ok( strpos( $body, 'https://orcid.org/0009-0006-8151-5920' ) !== false, 'PROFILES lists the ORCID iD' );
 ok( strpos( $body, '10.5.0' ) !== false, 'body carries the theme version (read from wp_get_theme, no drift)' );
 ok( strpos( $body, 'open.spotify.com' ) !== false, 'body lists the Spotify profile (lockstep with footer)' );
 ok( strpos( $body, 'x.com/juan_lentino' ) !== false, 'body lists the X profile (v10.13.4, lockstep with footer)' );

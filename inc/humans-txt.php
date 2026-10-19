@@ -48,7 +48,9 @@ function sn_humans_txt_is_request( $uri ) {
 function sn_humans_txt_body() {
 	$theme   = wp_get_theme();
 	$author  = (string) $theme->get( 'Author' );
-	$name    = (string) $theme->get( 'Name' );
+	// The theme header comes back HTML-escaped ("Signal &amp; Noise"); this
+	// file is plain text.
+	$name    = html_entity_decode( (string) $theme->get( 'Name' ), ENT_QUOTES, 'UTF-8' );
 	$version = (string) $theme->get( 'Version' );
 
 	$lines = array(
@@ -62,6 +64,7 @@ function sn_humans_txt_body() {
 		'https://www.linkedin.com/in/juanlentino/',
 		'https://www.instagram.com/juan_lentino/',
 		'https://x.com/juan_lentino',
+		'https://orcid.org/0009-0006-8151-5920',
 		'',
 		'/* TECHNOLOGY */',
 		'Standards - HTML5, CSS3, WordPress Full Site Editing, PHP 8.0+',

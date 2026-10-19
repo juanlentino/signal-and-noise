@@ -46,6 +46,10 @@ function sn_identity_rels_urls() {
 	) {
 		$urls = $settings['social']['same_as'];
 	}
+	// The ORCID iD is the author's scholarly identity, already in the plugin's
+	// Person.sameAs and in llms.txt; it is not a social profile, so it is not
+	// in the settings list. Added before the filter, which still governs.
+	$urls[] = 'https://orcid.org/0009-0006-8151-5920';
 
 	// Honor the plugin's documented sn_schema_same_as filter as an override hook
 	// (parity with how the plugin builds its Person.sameAs schema list).
