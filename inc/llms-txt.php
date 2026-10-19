@@ -137,6 +137,14 @@ function sn_llms_txt_body( $full = false, $notes = array(), $pillars = array(), 
 		// 2026.10: the endpoint answers 401 without a signed-in user; say so.
 		'- [Abilities API](' . $home . '/wp-json/wp-abilities/v1/abilities): the agent and automation surface. It requires an authenticated WordPress user; an anonymous request gets 401.',
 		'- Notes as Markdown: append `.md` to a note URL (' . $home . '/notes/<slug>.md) for the note as Markdown.',
+	) );
+	// The résumé's formats come from the plugin (sn_resume_formats()); no plugin
+	// or no published résumé, no line.
+	$resume_line = sn_llms_txt_resume_line( function_exists( 'sn_resume_formats' ) ? (array) sn_resume_formats( 'resume' ) : array() );
+	if ( '' !== $resume_line ) {
+		$lines[] = $resume_line;
+	}
+	$lines = array_merge( $lines, array(
 		'',
 		'## Rights',
 		'',
@@ -214,6 +222,26 @@ function sn_llms_txt_body( $full = false, $notes = array(), $pillars = array(), 
 	}
 
 	return implode( "\n", $lines ) . "\n";
+}
+
+/**
+ * The Machine surfaces line for the résumé's formats, or '' when there are none.
+ *
+ * @param array<string,string> $f Format name => URL (signal-and-noise-tools sn_resume_formats()).
+ * @return string
+ */
+function sn_llms_txt_resume_line( array $f ) {
+	$names = array( 'markdown' => 'Markdown', 'json_resume' => 'JSON Resume', 'pdf' => 'PDF', 'vcard' => 'vCard' );
+	$links = array();
+	foreach ( $names as $k => $label ) {
+		if ( ! empty( $f[ $k ] ) ) {
+			$links[] = '[' . $label . '](' . $f[ $k ] . ')';
+		}
+	}
+	if ( array() === $links ) {
+		return '';
+	}
+	return '- Résumé formats: ' . implode( ', ', $links ) . '. One source, the same facts as the page; the Markdown front matter and the JSON Resume meta link the page\'s Bitcoin-anchored authorship proof.';
 }
 
 /**
