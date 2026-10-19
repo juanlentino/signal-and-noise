@@ -245,5 +245,17 @@ ok( false !== strpos( (string) file_get_contents( __DIR__ . '/../inc/abilities-d
 ok( 51 === sn_llms_txt_note_count() && 'post' === WP_Query::$args['post_type'] && 'publish' === WP_Query::$args['post_status'] && false === WP_Query::$args['has_password'] && ! isset( WP_Query::$args['category_name'] ) && true === WP_Query::$args['suppress_filters'], 'the note count is the published, non-password posts /notes/ lists: no category filter, filters suppressed' );
 ok( false !== strpos( sn_llms_txt_body( false, array(), array( $px[0] ), array(), 1 ), '1 note, one SSRN paper' ), 'one note and one paper read in the singular' );
 
+// The résumé's formats (signal-and-noise-tools sn_resume_formats()), one line
+// under Machine surfaces, only when the plugin publishes them.
+function sn_resume_formats( $slug ) {
+	return 'resume' === $slug ? array( 'html' => 'https://juanlentino.com/resume/', 'markdown' => 'https://juanlentino.com/resume.md', 'pdf' => 'https://juanlentino.com/r.pdf', 'json_resume' => 'https://juanlentino.com/resume/json-resume.json', 'vcard' => 'https://juanlentino.com/resume/contact.vcf' ) : array();
+}
+$rl = sn_llms_txt_resume_line( sn_resume_formats( 'resume' ) );
+ok( 0 === strpos( $rl, '- Résumé formats: [Markdown](https://juanlentino.com/resume.md), [JSON Resume](https://juanlentino.com/resume/json-resume.json), [PDF](https://juanlentino.com/r.pdf), [vCard](https://juanlentino.com/resume/contact.vcf)' ), 'the résumé formats line names each format' );
+ok( false !== strpos( $rl, 'authorship proof' ), 'and says they carry the authorship proof' );
+ok( '' === sn_llms_txt_resume_line( array() ), 'no formats, no line' );
+$mbody = sn_llms_txt_body( false );
+ok( false !== strpos( $mbody, $rl ) && strpos( $mbody, '## Machine surfaces' ) < strpos( $mbody, $rl ) && strpos( $mbody, $rl ) < strpos( $mbody, '## Rights' ), 'the line sits under Machine surfaces' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

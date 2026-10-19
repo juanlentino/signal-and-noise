@@ -12,6 +12,9 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Added
+- **`/llms.txt` lists the résumé's formats.** A line under Machine surfaces links the résumé as Markdown, JSON Resume, PDF and vCard, and says the Markdown and JSON Resume carry the link to the page's authorship proof. The URLs come from the plugin, so the line appears only while the plugin publishes them and the résumé page is published.
+
 ## [2026.10.22] - 2026-10-18 — the translator hint sits on Notas, and every hint shows once
 
 
