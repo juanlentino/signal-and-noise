@@ -16,6 +16,11 @@ nothing here is edited by hand again.
 
 All notable changes to Signal & Noise are documented here.
 
+## [2026.10.24] - 2026-10-19 — the résumé no longer claims a proof it does not have
+
+### Fixed
+- **A page claims an authorship proof only when it has one.** The page's `.json` twin said "This page carries a Bitcoin-anchored authorship proof" for any page holding a provenance uid, and older plugin releases gave uids to pages that never opted in to signing. `/resume.json` made that claim while `/verify` found no credential and the public ledger had no record. The claim now needs an anchored version, the same test the plugin applies to the résumé's JSON Resume. The six signed pages keep theirs. The `/llms.txt` résumé line names the proof only on the same condition.
+
 ## [2026.10.23] - 2026-10-19 — llms.txt lists the résumé formats
 
 ### Added
