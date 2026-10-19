@@ -128,6 +128,10 @@ if ( ! defined( 'SN_FRONTEND_FILTERS_TEST' ) || ! SN_FRONTEND_FILTERS_TEST ) {
 	 */
 	remove_action( 'wp_head', 'rsd_link' );
 
+	// The site has no comments by design, so core's "Comments Feed" head link
+	// advertised an empty channel on every page. The posts feed link stays.
+	add_filter( 'feed_links_show_comments_feed', '__return_false' );
+
 	// Emoji stays for readers (owner, 2026-09-29; plugin 19.7.1, #1800): core's
 	// loader runs on pages, feeds and email, off in wp-admin only. Theme
 	// 2026.10.9 removed it for CSP prep and was reverted (2026.10.10). A strict

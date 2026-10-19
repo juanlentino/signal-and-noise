@@ -37,5 +37,16 @@ ok(
 	'#324: the digits are no longer inside a wp:paragraph block'
 );
 
+// The notes search is a native <search> landmark (2026-10-19), not a form with
+// role="search": same box, the element says it, still inside one wp:html block.
+ok(
+	(bool) preg_match( '/<!--\s*wp:html\s*-->\s*<search>\s*<form class="sn-404-search" method="get" action="\/notes\/">.*?<\/form>\s*<\/search>\s*<!--\s*\/wp:html\s*-->/s', $html ),
+	'the 404 notes search is a <search> landmark wrapping the form, inside one wp:html block'
+);
+ok( false === strpos( $html, 'role="search"' ), 'no role="search" left on the form (the element carries the landmark)' );
+
+$comp = (string) file_get_contents( dirname( __DIR__ ) . '/assets/css/components.css' );
+ok( 1 === preg_match( '/search:has\(> \.sn-404-search\)\s*\{\s*margin:\s*0;\s*\}/', $comp ), 'the <search> wrapper takes no block gap, so the form sits exactly where it did' );
+
 echo sprintf( "\nResult: %d passed, %d failed.\n", $pass, $fail );
 exit( $fail > 0 ? 1 : 0 );

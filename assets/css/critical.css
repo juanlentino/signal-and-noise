@@ -992,6 +992,18 @@ body:has(.sn-hero) .wp-site-blocks > footer {
 	display: none !important;
 }
 
+/* More contrast asked for: drop the two textures (grain and scanline), which
+   also stops the grain's noise-floor animation. Nothing else changes. Here,
+   after every body::before/::after rule, because this inline sheet prints
+   last (tests/critical-prefers-contrast.php). */
+@media (prefers-contrast: more) {
+	body::before,
+	body::after {
+		display: none;
+		animation: none;
+	}
+}
+
 /* v8.5.6 critical.css pruning: CF7 form label + submit button rules were
    here but forms are never above-the-fold. The full CF7 stylesheet
    (assets/css/forms.css) was later removed wholesale in v10.12.2 when the

@@ -43,7 +43,10 @@ if ( ! function_exists( 'add_action' ) ) {
 	}
 }
 if ( ! function_exists( 'add_filter' ) ) {
-	function add_filter() { return true; }
+	function add_filter( $hook = '', $cb = null ) {
+		$GLOBALS['__filters'][] = array( 'hook' => $hook, 'cb' => $cb );
+		return true;
+	}
 }
 if ( ! function_exists( 'remove_action' ) ) {
 	function remove_action( $hook, $cb, $pri = 10 ) {
@@ -141,6 +144,13 @@ ok( removed_has( 'wp_head', 'rsd_link' ), 'A4: rsd_link (EditURI/RSD) removed fr
 // 2026.10: core stopped hooking wlwmanifest_link in WP 6.3 (and deprecated it);
 // the theme requires 7.0, so removing it was dead code with a false comment.
 ok( ! removed_has( 'wp_head', 'wlwmanifest_link' ), 'no dead remove_action for wlwmanifest_link (core dropped the hook in WP 6.3)' );
+
+// The site has no comments by design, so core's "Comments Feed" head link
+// advertised an empty channel on every page. The posts feed link stays.
+$comments_feed_off = array_filter( $GLOBALS['__filters'] ?? array(), static fn( $f ) => 'feed_links_show_comments_feed' === $f['hook'] && '__return_false' === $f['cb'] );
+ok( array() !== $comments_feed_off, 'the empty comments feed is not advertised in <head> (feed_links_show_comments_feed => __return_false)' );
+$posts_feed_off = array_filter( $GLOBALS['__filters'] ?? array(), static fn( $f ) => 'feed_links_show_posts_feed' === $f['hook'] );
+ok( array() === $posts_feed_off && ! removed_has( 'wp_head', 'feed_links' ), 'the posts feed link stays' );
 
 // Emoji stays for readers (owner, 2026-09-29): the theme never unhooks core's
 // emoji loader or styles, on pages or in oEmbed frames. 2026.10.9 did, for CSP
