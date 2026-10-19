@@ -252,7 +252,8 @@ function sn_resume_formats( $slug ) {
 }
 $rl = sn_llms_txt_resume_line( sn_resume_formats( 'resume' ) );
 ok( 0 === strpos( $rl, '- Résumé formats: [Markdown](https://juanlentino.com/resume.md), [JSON Resume](https://juanlentino.com/resume/json-resume.json), [PDF](https://juanlentino.com/r.pdf), [vCard](https://juanlentino.com/resume/contact.vcf)' ), 'the résumé formats line names each format' );
-ok( false !== strpos( $rl, 'authorship proof' ), 'and says they carry the authorship proof' );
+ok( false === strpos( $rl, 'authorship proof' ), 'no proof claim unless the page is anchored (live 2026-10-18: /resume has none)' );
+ok( false !== strpos( sn_llms_txt_resume_line( sn_resume_formats( 'resume' ), true ), 'authorship proof' ), 'an anchored résumé says its formats link the authorship proof' );
 ok( '' === sn_llms_txt_resume_line( array() ), 'no formats, no line' );
 $mbody = sn_llms_txt_body( false );
 ok( false !== strpos( $mbody, $rl ) && strpos( $mbody, '## Machine surfaces' ) < strpos( $mbody, $rl ) && strpos( $mbody, $rl ) < strpos( $mbody, '## Rights' ), 'the line sits under Machine surfaces' );
