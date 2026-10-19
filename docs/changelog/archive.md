@@ -16,6 +16,11 @@ nothing here is edited by hand again.
 
 All notable changes to Signal & Noise are documented here.
 
+## [2026.10.25] - 2026-10-19 — the ORCID iD joins the identity links
+
+
+- **The ORCID iD joins the identity links, and humans.txt prints the theme's name as text.** Every page's `<head>` now carries `<link rel="me" href="https://orcid.org/0009-0006-8151-5920">` beside the social profiles, and humans.txt lists it under PROFILES, matching the plugin's Person.sameAs and llms.txt. It is added before the `sn_schema_same_as` filter, so the filter still governs the final list, and it is never doubled if the settings list it too. humans.txt printed `Signal &amp; Noise` because the theme header comes back HTML-escaped; it is decoded, since the file is plain text.
+
 ## [2026.10.24] - 2026-10-19 — the résumé no longer claims a proof it does not have
 
 ### Fixed
