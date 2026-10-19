@@ -1155,12 +1155,20 @@ body.single-post .wp-block-post-content:has(> h2.wp-block-heading:nth-of-type(3)
 body.single-post:has(.wp-block-post-content > h2.wp-block-heading:nth-of-type(3)) .sn-article-toc__list {
 	counter-reset: sn-toc;
 }
+/* A wrapped entry hangs under its text, not under the numeral: the li pads by
+   the slot (2.6em of the slot's 11px) and pulls its first line back by it. The
+   slot itself must not inherit that outdent. */
+body.single-post:has(.wp-block-post-content > h2.wp-block-heading:nth-of-type(3)) .sn-article-toc__list > li {
+	padding-left: calc(11px * 2.6);
+	text-indent: calc(-11px * 2.6);
+}
 body.single-post:has(.wp-block-post-content > h2.wp-block-heading:nth-of-type(3)) .sn-article-toc__list > li::before {
 	content: "" / "";
 	display: inline-block;
 	width: 2.6em;
 	font-family: var(--wp--preset--font-family--body);
 	font-size: 11px;
+	text-indent: 0;
 }
 body.single-post:has(.wp-block-post-content > h2.wp-block-heading:nth-of-type(3)) .sn-article-toc__list > li:not(:has(> a[href="#references"]))::before {
 	counter-increment: sn-toc;

@@ -12,6 +12,11 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+- **A wrapped Contents entry hangs under its text, not under its numeral.** On a phone, a long entry in a note's numbered table of contents ("02 The record is not / the announcement") wrapped back to the left edge, under the 02. Each entry now pads by the numeral's slot and pulls its first line back by the same, so the second line starts where the words do. Wide screens, where entries fit on one line, are unchanged, and References still lines up with the numbered entries.
+- **Asking for more contrast drops the page textures.** With `prefers-contrast: more`, the film grain and the scanline are hidden, which also stops the grain's noise-floor scroll animation. Nothing else changes for those readers. The rule sits at the end of the inline critical sheet so it wins the cascade.
+- **The empty comments feed is no longer advertised.** Every page's `<head>` linked a "Comments Feed" at /comments/feed/, a channel with nothing in it, since the site has no comments by design. The link is gone; the posts feed link stays, and the feed address itself is untouched.
+- **The 404 notes search is a native `<search>` landmark.** The form drops `role="search"` and sits inside a `<search>` element, which says the same thing in markup. It renders in exactly the same place at 375px and 1440px.
+
 ## [2026.10.25] - 2026-10-19 — the ORCID iD joins the identity links
 
 

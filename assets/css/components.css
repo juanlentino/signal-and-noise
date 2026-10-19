@@ -1610,6 +1610,11 @@ body:has(.sn-disco-controls) {
 /* ── 404 recovery — search + recent-notes suggestions ──────────────────
  * Beneath the "SIGNAL LOST" hero. Suggestions reuse .sn-notes-row; this adds
  * the search form + section spacing. Blood-red accents, brutalist tokens. */
+/* The <search> landmark stands where the form stood: no block gap of its own,
+   since the form's own margin below zeroes the one it used to get. */
+search:has(> .sn-404-search) {
+	margin: 0;
+}
 .sn-404-search {
 	display: flex;
 	gap: var(--wp--preset--spacing--20);

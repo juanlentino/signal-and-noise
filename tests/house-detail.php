@@ -116,6 +116,10 @@ $article = $css( 'article.css' );
 ok( 1 === preg_match( '/\.wp-block-post-content:has\(> h2\.wp-block-heading:nth-of-type\(3\)\)\s*>\s*h2\.wp-block-heading:not\(#references\)::before\s*\{[^}]*counter-increment:\s*sn-sec[^}]*content:\s*counter\(sn-sec,\s*decimal-leading-zero\)\s*\/\s*""/s', $article ), 'notes with three or more sections number them 01, 02 (alt text "" so a screen reader does not read the number); References is not numbered' );
 ok( 1 === preg_match( '/h2\.wp-block-heading:not\(#references\)::before\s*\{[^}]*color:\s*var\(--wp--preset--color--rust\)/s', $article ), 'in rust, never blood' );
 ok( 1 === preg_match( '/body\.single-post:has\(\.wp-block-post-content > h2\.wp-block-heading:nth-of-type\(3\)\)\s*\.sn-article-toc__list > li:not\(:has\(> a\[href="#references"\]\)\)::before\s*\{[^}]*content:\s*counter\(sn-toc,\s*decimal-leading-zero\)\s*\/\s*""/s', $article ), 'the TOC carries the same numbers under the same gate' );
+// A wrapped TOC entry hangs under its text, not under the numeral (375px,
+// 2026-10-19): the li pads by the slot and pulls its first line back by it.
+ok( 1 === preg_match( '/nth-of-type\(3\)\)\s*\.sn-article-toc__list > li\s*\{[^}]*padding-left:\s*calc\(11px \* 2\.6\)[^}]*text-indent:\s*calc\(-11px \* 2\.6\)/s', $article ), 'a wrapped TOC entry hangs under its text: the li pads by the 2.6em slot and outdents its first line by the same' );
+ok( 1 === preg_match( '/\.sn-article-toc__list > li::before\s*\{[^}]*width:\s*2\.6em[^}]*font-size:\s*11px[^}]*text-indent:\s*0/s', $article ), 'the slot is 2.6em of 11px (the same calc) and does not inherit the outdent' );
 
 echo "\nGroup 3: prose list markers\n";
 ok( 1 === preg_match( '/\.wp-block-post-content > ol\.wp-block-list:not\(\[class\*="is-style-"\]\)\s*\{[^}]*list-style-type:\s*decimal-leading-zero/s', $article ), 'plain ordered lists count 01.' );
@@ -162,7 +166,7 @@ echo "\nGroup 8: fixes from the 2026-10-17 live sweep\n";
 $article = $css( 'article.css' );
 ok( 0 === preg_match( '/(^|\})\s*\.wp-block-post-content:has\(> h2\.wp-block-heading:nth-of-type\(3\)\)/', $article ), 'section numerals are never unscoped: /provenance (a page with four h2s and no TOC) showed 01 to 04' );
 ok( 2 === preg_match_all( '/body\.single-post \.wp-block-post-content:has\(> h2\.wp-block-heading:nth-of-type\(3\)\)/', $article ), 'notes only, for the counter reset and the numbers' );
-ok( 3 === preg_match_all( '/body\.single-post:has\(\.wp-block-post-content > h2\.wp-block-heading:nth-of-type\(3\)\) \.sn-article-toc__list/', $article ), '...and the TOC (its reset, its slots, its numbers) under the same gate' );
+ok( 4 === preg_match_all( '/body\.single-post:has\(\.wp-block-post-content > h2\.wp-block-heading:nth-of-type\(3\)\) \.sn-article-toc__list/', $article ), '...and the TOC (its reset, its hanging indent, its slots, its numbers) under the same gate' );
 ok( 1 === preg_match( '/\.sn-article-toc__list > li::before\s*\{[^}]*content:\s*""\s*\/\s*"";[^}]*display:\s*inline-block;[^}]*width:\s*2\.6em/s', $article ), 'every TOC entry gets the same numeral slot, References an empty one, so all entries align (References sat 25px left)' );
 ok( 1 === preg_match( '/\.wp-block-button:has\(> \.wp-block-button__link:focus-visible\)::before\s*\{[^}]*inset:\s*-9px/s', $css( 'base.css' ) ), 'crop marks sit 9px out: clear of the 2px outline and its 3px offset, off a neighbour 11px away' );
 $print = $css( 'print.css' );

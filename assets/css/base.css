@@ -322,8 +322,9 @@ summary:focus-visible {
 }
 
 /* prefers-contrast: more — the base is already maximal black-on-white, so the
- * one meaningful lever is a heavier keyboard focus ring for users who ask for
- * more contrast without forcing system colors. */
+ * levers are a heavier keyboard focus ring here for users who ask for more
+ * contrast without forcing system colors, and dropping the grain and scanline
+ * textures (critical.css, which prints last). */
 @media (prefers-contrast: more) {
 	a:focus-visible,
 	button:focus-visible,
