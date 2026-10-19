@@ -55,7 +55,8 @@ ok( function_exists( 'sn_identity_rels_head_link' ), 'sn_identity_rels_head_link
 // T1 — plugin/option ABSENT → no output, no fatal (graceful degrade).
 $GLOBALS['__options'] = array();
 $GLOBALS['__filters'] = array();
-ok( rels_output() === '', 'T1 degrade: no <link rel=me> when sn_settings option is absent' );
+$out = rels_output();
+ok( count_substr( $out, '<link rel="me"' ) === 1 && strpos( $out, 'href="https://orcid.org/0009-0006-8151-5920"' ) !== false, 'T1 degrade: with sn_settings absent, only the ORCID iD is emitted' );
 
 // T2 — populated OPTION, NO filter callback → links emitted (the contract test).
 $GLOBALS['__options'] = array( 'sn_settings' => array( 'social' => array( 'same_as' => array(
@@ -64,7 +65,7 @@ $GLOBALS['__options'] = array( 'sn_settings' => array( 'social' => array( 'same_
 ) ) ) );
 $GLOBALS['__filters'] = array();
 $out = rels_output();
-ok( count_substr( $out, '<link rel="me"' ) === 2, 'T2 contract: populated option yields one rel=me per profile (no filter callback needed)' );
+ok( count_substr( $out, '<link rel="me"' ) === 3, 'T2 contract: populated option yields one rel=me per profile (no filter callback needed)' );
 ok( strpos( $out, 'href="https://mastodon.social/@juanlentino"' ) !== false, 'T2: mastodon profile present' );
 ok( strpos( $out, 'href="https://github.com/juanlentino"' ) !== false, 'T2: github profile present' );
 
@@ -91,7 +92,11 @@ ok( strpos( $out, 'from-filter.test' ) !== false && strpos( $out, 'from-option.t
 // T6 — malformed subtree (not an array) → degrade, no fatal.
 $GLOBALS['__options'] = array( 'sn_settings' => array( 'social' => array( 'same_as' => 'not-an-array' ) ) );
 $GLOBALS['__filters'] = array();
-ok( rels_output() === '', 'T6 robustness: non-array same_as degrades to no output' );
+ok( count_substr( rels_output(), '<link rel="me"' ) === 1, 'T6 robustness: non-array same_as degrades to the ORCID iD alone' );
+
+// T7 — the ORCID iD is never doubled when the option already lists it.
+$GLOBALS['__options'] = array( 'sn_settings' => array( 'social' => array( 'same_as' => array( 'https://orcid.org/0009-0006-8151-5920' ) ) ) );
+ok( count_substr( rels_output(), 'orcid.org' ) === 1, 'T7 dedupe: the ORCID iD appears once when the option already has it' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
