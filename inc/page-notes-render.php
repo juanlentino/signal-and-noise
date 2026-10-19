@@ -312,11 +312,13 @@ echo $sn_header_html;
 
 	<section class="sn-notes-index-section" aria-labelledby="sn-index-heading">
 
-		<form class="sn-notes-search" role="search" method="get" action="<?php echo esc_url( home_url( '/notes/' ) ); ?>">
+		<search>
+		<form class="sn-notes-search" method="get" action="<?php echo esc_url( home_url( '/notes/' ) ); ?>">
 			<label class="screen-reader-text" for="sn-notes-q">Search notes</label>
 			<input type="search" id="sn-notes-q" name="s" value="<?php echo esc_attr( $sn_term ); ?>" placeholder="Search notes" autocomplete="off" />
 			<button type="submit" aria-label="Search"><span aria-hidden="true">&rarr;</span></button>
 		</form>
+		</search>
 
 		<div class="sn-notes-section-wrap">
 			<?php if ( $sn_searching ) : ?>

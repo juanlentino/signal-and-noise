@@ -134,6 +134,8 @@ preg_match( '/<p class="sn-notes-empty">Nothing matches.*?<\/p>/s', $sn_render_s
 ok( ! empty( $sn_empty[0] ), 'the empty-search state is present' );
 ok( false === strpos( $sn_empty[0] ?? '', '&mdash;' ), 'empty-search state emits no &mdash;' );
 ok( false !== strpos( $sn_render_src, '&rdquo;. Notes, essays, and pages all searched.' ), 'empty-search state reads as two sentences' );
+// 2026-10-19: the notes search is a native <search> landmark, like the 404's.
+ok( 1 === preg_match( '#<search>\s*<form class="sn-notes-search" method="get"#', $sn_render_src ) && false === strpos( $sn_render_src, 'role="search"' ), 'the notes search form sits in a <search> landmark, no role="search"' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
