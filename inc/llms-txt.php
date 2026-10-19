@@ -140,7 +140,11 @@ function sn_llms_txt_body( $full = false, $notes = array(), $pillars = array(), 
 	) );
 	// The résumé's formats come from the plugin (sn_resume_formats()); no plugin
 	// or no published résumé, no line.
-	$resume_line = sn_llms_txt_resume_line( function_exists( 'sn_resume_formats' ) ? (array) sn_resume_formats( 'resume' ) : array() );
+	$resume_page = function_exists( 'get_page_by_path' ) ? get_page_by_path( 'resume' ) : null;
+	$resume_line = sn_llms_txt_resume_line(
+		function_exists( 'sn_resume_formats' ) ? (array) sn_resume_formats( 'resume' ) : array(),
+		$resume_page && function_exists( 'sn_prov_machine_pointers_manifest' ) && null !== sn_prov_machine_pointers_manifest( (int) $resume_page->ID )
+	);
 	if ( '' !== $resume_line ) {
 		$lines[] = $resume_line;
 	}
@@ -227,10 +231,11 @@ function sn_llms_txt_body( $full = false, $notes = array(), $pillars = array(), 
 /**
  * The Machine surfaces line for the résumé's formats, or '' when there are none.
  *
- * @param array<string,string> $f Format name => URL (signal-and-noise-tools sn_resume_formats()).
+ * @param array<string,string> $f      Format name => URL (signal-and-noise-tools sn_resume_formats()).
+ * @param bool                 $signed Whether /resume has an anchored version; only then is the proof named.
  * @return string
  */
-function sn_llms_txt_resume_line( array $f ) {
+function sn_llms_txt_resume_line( array $f, $signed = false ) {
 	$names = array( 'markdown' => 'Markdown', 'json_resume' => 'JSON Resume', 'pdf' => 'PDF', 'vcard' => 'vCard' );
 	$links = array();
 	foreach ( $names as $k => $label ) {
@@ -241,7 +246,8 @@ function sn_llms_txt_resume_line( array $f ) {
 	if ( array() === $links ) {
 		return '';
 	}
-	return '- Résumé formats: ' . implode( ', ', $links ) . '. One source, the same facts as the page; the Markdown front matter and the JSON Resume meta link the page\'s Bitcoin-anchored authorship proof.';
+	return '- Résumé formats: ' . implode( ', ', $links ) . '. One source, the same facts as the page'
+		. ( $signed ? '; the Markdown front matter and the JSON Resume meta link the page\'s Bitcoin-anchored authorship proof.' : '.' );
 }
 
 /**

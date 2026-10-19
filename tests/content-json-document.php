@@ -22,6 +22,7 @@ if ( ! function_exists( 'get_the_date' ) ) { function get_the_date( $f, $p ) { r
 if ( ! function_exists( 'get_the_modified_date' ) ) { function get_the_modified_date( $f, $p ) { return '2026-07-05T09:10:00-04:00'; } }
 if ( ! function_exists( 'get_post_ancestors' ) ) { function get_post_ancestors( $p ) { $o = is_object( $p ) ? $p : ( $GLOBALS['__posts'][ $p ] ?? null ); return ( $o && $o->post_parent ) ? array( $o->post_parent ) : array(); } }
 $GLOBALS['__meta'] = array();
+$GLOBALS['__anchored'] = array(); // ids with an anchored version (sn_prov_machine_pointers_manifest stub below)
 if ( ! function_exists( 'get_post_meta' ) ) { function get_post_meta( $id, $key, $single = false ) { return $GLOBALS['__meta'][ $id ][ $key ] ?? ''; } }
 
 require __DIR__ . '/../inc/note-uid.php'; // v10.49.0: canonical uid read the module now calls
@@ -54,6 +55,14 @@ ok( ! isset( $dp['provenance'] ), 'no provenance key for a uid-less Page (no fab
 // carries the same provenance reference a Note does, keyed note_uid because
 // that is the /verify docket's query parameter, whatever the subject kind.
 $GLOBALS['__meta'][99] = array( '_sn_prov_uid' => 'CAFEBABE-cafe-4abe-8abe-cafebabecafe' );
+// A uid alone is not a proof: the plugin minted uids for pages that never opted
+// in (live 2026-10-18: /resume.json claimed "a Bitcoin-anchored authorship
+// proof" for a page with no ledger record, and /verify said NOT PROVEN). The
+// claim follows the plugin's own manifest predicate (an anchored version >= 1).
+function sn_prov_machine_pointers_manifest( $id ) { return in_array( $id, $GLOBALS['__anchored'], true ) ? array( 'subject' => array( 'uid' => 'x' ) ) : null; }
+$dup = sn_content_json_document( $page );
+ok( ! isset( $dup['provenance'] ), 'a Page with a uid but no anchored version makes no proof claim' );
+$GLOBALS['__anchored'] = array( 99 );
 $dsp = sn_content_json_document( $page );
 ok( ( $dsp['provenance']['note_uid'] ?? '' ) === 'cafebabe-cafe-4abe-8abe-cafebabecafe', 'a Page with a plugin uid republishes it under provenance.note_uid' );
 ok( ( $dsp['provenance']['verify_url'] ?? '' ) === 'https://juanlentino.com/verify?note=cafebabe-cafe-4abe-8abe-cafebabecafe', 'a signed Page points verify_url at its own docket' );

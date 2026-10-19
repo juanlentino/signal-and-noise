@@ -77,10 +77,15 @@ function sn_content_json_document( $post ) {
 	);
 
 	// Provenance: Notes always carry the reference (their proof is the
-	// program); a Page carries it once the plugin has minted it a uid (pages
-	// opt in per subject, plugin 13.69+). A uid-less Page stays silent: no
-	// fabricated proof claim.
+	// program); a Page carries it only once it has an anchored version, the
+	// plugin's own manifest predicate (the one /resume/json-resume.json uses).
+	// A uid alone is not enough: older plugins minted uids for pages that never
+	// opted in, and /resume.json claimed a proof /verify could not find
+	// (2026-10-18). No plugin, no anchored version: no proof claim.
 	$uid = function_exists( 'sn_theme_note_uid' ) ? sn_theme_note_uid( $post->ID ) : '';
+	if ( ! $is_post && ! ( function_exists( 'sn_prov_machine_pointers_manifest' ) && null !== sn_prov_machine_pointers_manifest( (int) $post->ID ) ) ) {
+		$uid = '';
+	}
 	if ( $is_post || '' !== $uid ) {
 		$doc['provenance'] = array(
 			// v11.5.1: was '/provenance/verify/', which 404s live. This is the
