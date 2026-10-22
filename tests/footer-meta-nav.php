@@ -40,7 +40,7 @@ ob_start(); include $render_file; $rendered = (string) ob_get_clean();
 
 // ── THE PARITY PIN: the block renders the captured wp:html inner content, byte for byte ──
 $fixture = (string) file_get_contents( __DIR__ . '/fixtures/footer-meta-nav.html' );
-ok( 'bf499148af303d4d75c988449462c7ebbf80ab44d22bcbd89e0a1f830b008489' === hash( 'sha256', $fixture ), 'the fixture is the 13.4.0 capture with title moved to data-hint (2026-10-18) (sha256 pinned; a deliberate change to the nav changes both, in one PR)' );
+ok( 'b55526b509df5bc2d57ff52e092cb3c175600970727b8020ea2d011250442ce6' === hash( 'sha256', $fixture ), 'the fixture is the 13.4.0 capture with title moved to data-hint (2026-10-18) and trailing-slash hrefs (2026-10-22) (sha256 pinned; a deliberate change to the nav changes both, in one PR)' );
 ok( $rendered === $fixture, 'the block renders the wp:html block\'s inner content byte for byte (' . strlen( $fixture ) . ' bytes, newline and indentation included)' );
 
 // ── ONE meta-nav <nav> carries all three icon links, middot-separated ──
@@ -49,16 +49,16 @@ ok( false !== $nav_start, 'meta-nav is a real <nav> element' );
 $nav_end = false !== $nav_start ? strpos( $rendered, '</nav>', $nav_start ) : false;
 $nav     = ( false !== $nav_start && false !== $nav_end ) ? substr( $rendered, $nav_start, $nav_end - $nav_start ) : '';
 ok( false !== strpos( $nav, 'aria-label="Site meta"' ), 'nav landmark is labelled' );
-ok( false !== strpos( $nav, 'href="/now"' ), 'meta-nav links /now' );
-ok( false !== strpos( $nav, 'href="/accessibility"' ), 'meta-nav links /accessibility' );
+ok( false !== strpos( $nav, 'href="/now/"' ), 'meta-nav links /now' );
+ok( false !== strpos( $nav, 'href="/accessibility/"' ), 'meta-nav links /accessibility' );
 ok( false !== strpos( $nav, 'href="/colophon/"' ), 'meta-nav links /colophon/' );
-ok( false !== strpos( $nav, 'href="/privacy-policy"' ), 'meta-nav links /privacy-policy' );
+ok( false !== strpos( $nav, 'href="/privacy-policy/"' ), 'meta-nav links /privacy-policy' );
 // v11.5.0: /stats was live but reachable only by typing the URL — nothing linked it.
-ok( false !== strpos( $nav, 'href="/stats"' ), 'meta-nav links /stats' );
-ok( strpos( $nav, 'href="/colophon/"' ) < strpos( $nav, 'href="/stats"' ), 'stats sits AFTER colophon (how it is made, then how it is read)' );
-ok( strpos( $nav, 'href="/stats"' ) < strpos( $nav, 'href="/privacy-policy"' ), 'privacy stays last, as the legal anchor' );
+ok( false !== strpos( $nav, 'href="/stats/"' ), 'meta-nav links /stats' );
+ok( strpos( $nav, 'href="/colophon/"' ) < strpos( $nav, 'href="/stats/"' ), 'stats sits AFTER colophon (how it is made, then how it is read)' );
+ok( strpos( $nav, 'href="/stats/"' ) < strpos( $nav, 'href="/privacy-policy/"' ), 'privacy stays last, as the legal anchor' );
 // The icon must speak the row's grammar: 16-grid, 1.5 stroke, no fill.
-$stats_a = substr( $nav, strpos( $nav, 'href="/stats"' ), 700 );
+$stats_a = substr( $nav, strpos( $nav, 'href="/stats/"' ), 700 );
 ok( false !== strpos( $stats_a, 'viewBox="0 0 16 16"' ), 'stats icon uses the shared 16 grid' );
 ok( false !== strpos( $stats_a, 'stroke-width="1.5"' ), 'stats icon uses the shared 1.5 stroke' );
 ok( false !== strpos( $stats_a, 'fill="none"' ), 'stats icon is stroke-only like its neighbours' );

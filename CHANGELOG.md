@@ -12,6 +12,8 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+- **Header and footer links go straight to the page, not through a redirect.** The header nav (About, Resume, Music, Services, Notes, Contact), the footer meta-nav (Now, Accessibility, Stats, Privacy), the single note's "All Notes" link and the posts index's provenance link pointed at paths without the trailing slash, so each click and crawl took a 301 to the canonical `/about/`-style URL first. They now link the canonical URL directly, Spanish pages included. A new guard, `tests/chrome-trailing-slash.php`, fails on any slashless internal link in the parts, templates, block renders and Spanish chrome.
+
 ## [2026.10.26] - 2026-10-19 — the reading fixes: contents on phones, more contrast, search landmarks
 
 

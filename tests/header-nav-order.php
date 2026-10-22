@@ -12,7 +12,7 @@ function ok( $c, $m ) { global $pass, $fail; if ( $c ) { $pass++; echo "PASS: $m
 
 preg_match_all( '/wp:navigation-link \{"label":"([^"]+)","url":"([^"]+)"/', (string) file_get_contents( __DIR__ . '/../parts/header.html' ), $m );
 ok( array( 'Home', 'About', 'Resume', 'Music', 'Services', 'Notes', 'Contact' ) === $m[1], 'header order: Home, About, Resume, Music, Services, Notes, Contact (' . implode( ', ', $m[1] ) . ')' );
-ok( array( '/', '/about', '/resume', '/music', '/services', '/notes', '/contact' ) === $m[2], 'each item keeps its URL' );
+ok( array( '/', '/about/', '/resume/', '/music/', '/services/', '/notes/', '/contact/' ) === $m[2], 'each item keeps its URL' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
