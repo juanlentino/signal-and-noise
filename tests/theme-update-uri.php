@@ -2,10 +2,10 @@
 /**
  * Tests: the theme declares its own update source.
  *
- * Core (6.1+) reads a theme's `Update URI` header: with it, the theme is not
- * matched against WordPress.org by slug, and `update_themes_{$hostname}` is
- * where its updates come from. Without it, core sent this theme to the .org
- * check by its slug, which a same-named .org theme could answer.
+ * Core (6.1+) sends a theme's `Update URI` with the update check, and the
+ * WordPress.org server then skips it instead of matching it by slug;
+ * `update_themes_{$hostname}` is where its updates could come from. Without
+ * it, a same-named .org theme could answer.
  *
  * Run: php tests/theme-update-uri.php
  */
