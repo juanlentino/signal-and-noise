@@ -12,6 +12,9 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Changed
+- **The theme declares its own update source** (`Update URI: https://github.com/juanlentino/signal-and-noise`, core 6.1+). Core sends it in the update check, and WordPress.org then skips the theme instead of matching it by slug (without it, a same-named WordPress.org theme could answer); the plugin already declares one. The GitHub-tag updater is unchanged.
+
 ## [2026.10.28] - 2026-10-24 — dates on one clock; the override clear keeps menus and other themes
 
 ### Fixed
