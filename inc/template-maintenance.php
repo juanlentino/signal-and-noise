@@ -193,10 +193,14 @@ function sn_purge_all_caches( $args = array() ) {
  * Called on theme activation, via admin button, and from
  * sn_purge_all_caches().
  *
- * Scoped the way the Site Editor reads and resets them: wp_template and
- * wp_template_part rows whose wp_theme term is get_stylesheet() (core's
- * get_block_templates() query). Another theme's overrides stay, and so do
- * wp_navigation posts: they hold menu content, not template overrides.
+ * Scoped to the active theme the way core scopes its template reads:
+ * wp_template and wp_template_part rows whose wp_theme term is
+ * get_stylesheet() (the tax_query in core's get_block_templates()). Every
+ * status is listed, because 'any' skips auto-draft and trash, and core
+ * still renders both: the regular editor creates auto-draft template parts,
+ * and get_block_template() reads trashed rows. Another theme's overrides
+ * stay, and so do wp_navigation posts: they hold menu content, not template
+ * overrides.
  *
  * @return int Count of overrides deleted.
  */
@@ -204,7 +208,7 @@ function sn_clear_template_overrides() {
 	$ids = get_posts( array(
 		'post_type'      => array( 'wp_template', 'wp_template_part' ),
 		'posts_per_page' => -1,
-		'post_status'    => 'any',
+		'post_status'    => array( 'auto-draft', 'draft', 'publish', 'pending', 'private', 'future', 'trash' ),
 		'fields'         => 'ids',
 		'no_found_rows'  => true,
 		'tax_query'      => array(
