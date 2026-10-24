@@ -107,6 +107,24 @@ $bad = sn_feed_json_build_item( (object) array( 'ID' => 8, 'post_content' => 'x'
 ok( ! isset( $bad['date_published'] ) && ! isset( $bad['date_modified'] ), 'non-string dates are omitted, not serialized as false (JF-2)' );
 unset( $GLOBALS['__pubdate'], $GLOBALS['__moddate'] );
 
+// date_modified reads the same clock as the .json twin, the JSON-LD
+// dateModified and the sitemap lastmod: the plugin's provenance commit, via
+// sn_schema_date_modified(). post_modified alone is untouched by a scheduled
+// publish, so a Note read as modified before it was published (live
+// 2026-10-24). Without the plugin, post_modified is the only clock there is.
+ok( '2026-06-07T13:00:00+00:00' === ( $item['date_modified'] ?? null ), 'without the plugin, date_modified falls back to post_modified' );
+$GLOBALS['__sn_mod'] = '2026-06-14T09:30:00+00:00';
+if ( ! function_exists( 'sn_schema_date_modified' ) ) { function sn_schema_date_modified( $p ) { return $GLOBALS['__sn_mod'] ?? ''; } }
+$pm = sn_feed_json_build_item( (object) array( 'ID' => 9, 'post_content' => 'x' ) );
+ok( '2026-06-14T09:30:00+00:00' === ( $pm['date_modified'] ?? null ), 'date_modified is the plugin\'s dateModified (the JSON-LD and sitemap clock), got: ' . var_export( $pm['date_modified'] ?? null, true ) );
+$GLOBALS['__sn_mod'] = '';
+ok( '2026-06-07T13:00:00+00:00' === ( sn_feed_json_build_item( (object) array( 'ID' => 9, 'post_content' => 'x' ) )['date_modified'] ?? null ), 'an empty plugin read falls back to post_modified' );
+$GLOBALS['__sn_mod'] = false;
+ok( '2026-06-07T13:00:00+00:00' === ( sn_feed_json_build_item( (object) array( 'ID' => 9, 'post_content' => 'x' ) )['date_modified'] ?? null ), 'a false plugin read falls back to post_modified' );
+$GLOBALS['__moddate'] = false;
+ok( ! isset( sn_feed_json_build_item( (object) array( 'ID' => 9, 'post_content' => 'x' ) )['date_modified'] ), 'no plugin time and no post_modified: still omitted (JF-2)' );
+unset( $GLOBALS['__moddate'], $GLOBALS['__sn_mod'] );
+
 // v10.48.0: the _signal_noise extension (feed-level provenance). JSON Feed 1.1
 // custom extensions MUST be underscore-prefixed — this one is. An item whose
 // Note carries a plugin-owned _sn_prov_uid republishes it so feed subscribers

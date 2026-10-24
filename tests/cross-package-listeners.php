@@ -125,6 +125,10 @@ if ( ! function_exists( 'get_posts' ) ) {
 if ( ! function_exists( 'wp_delete_post' ) ) {
 	function wp_delete_post( $id, $force = false ) { return true; }
 }
+if ( ! function_exists( 'get_stylesheet' ) ) {
+	// The override clear scopes to the active theme's wp_theme term.
+	function get_stylesheet() { return 'signal-and-noise'; }
+}
 if ( ! function_exists( 'wp_cache_flush' ) ) {
 	function wp_cache_flush() { return true; }
 }

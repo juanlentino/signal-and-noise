@@ -125,6 +125,22 @@ ok( '' !== $fallback_path, 'a uid-less Note still advertises a verify_url' );
 ok( rtrim( $fallback_path, '/' ) === rtrim( $uidful_path, '/' ), 'the uid-less fallback points at the SAME docket as the uid-ful URL (never the 404 /provenance/verify)' );
 ok( false === strpos( $fallback_path, '/provenance/verify' ), 'the fallback is never the unrelated /provenance/verify Page' );
 
+// date_modified reads the same clock as the JSON-LD dateModified and the
+// sitemap lastmod: the plugin's provenance commit, via sn_schema_date_modified().
+// A scheduled publish does not touch post_modified, so the old read said a Note
+// was modified a week BEFORE it was published (live 2026-10-24,
+// /notes/a-remix-inherits-nothing/). Without the plugin, post_modified is the
+// only clock there is.
+ok( '2026-07-05T09:10:00-04:00' === $d['date_modified'], 'without the plugin, date_modified falls back to post_modified' );
+$GLOBALS['__sn_mod'] = '2026-07-08T15:00:00+00:00';
+if ( ! function_exists( 'sn_schema_date_modified' ) ) { function sn_schema_date_modified( $p ) { return $GLOBALS['__sn_mod']; } }
+$dm = sn_content_json_document( $note );
+ok( '2026-07-08T15:00:00+00:00' === $dm['date_modified'], 'date_modified is the plugin\'s dateModified (the JSON-LD and sitemap clock), got: ' . var_export( $dm['date_modified'], true ) );
+$GLOBALS['__sn_mod'] = '';
+ok( '2026-07-05T09:10:00-04:00' === sn_content_json_document( $note )['date_modified'], 'an empty plugin read falls back to post_modified' );
+$GLOBALS['__sn_mod'] = false;
+ok( '2026-07-05T09:10:00-04:00' === sn_content_json_document( $note )['date_modified'], 'a false plugin read falls back to post_modified' );
+
 // valid JSON
 ok( json_decode( json_encode( $d ), true ) !== null, 'document round-trips through JSON' );
 

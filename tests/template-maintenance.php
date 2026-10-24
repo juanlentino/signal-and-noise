@@ -99,14 +99,41 @@ if ( ! function_exists( 'wp_update_themes' ) ) {
 		$GLOBALS['__theme_updates']++;
 	}
 }
+// A tiny posts table for the override clear. get_posts() honors post_type
+// (string or array), post_status and a wp_theme tax_query the way WP_Query
+// does: 'any' skips the exclude_from_search statuses (auto-draft, trash), and
+// with no tax_query it returns every row of the type, which is how the
+// unscoped clear reached other themes' rows.
+$GLOBALS['__db']          = array();
+$GLOBALS['__deleted_ids'] = array();
 if ( ! function_exists( 'get_posts' ) ) {
 	function get_posts( $args = array() ) {
-		return array();
+		$types = (array) ( $args['post_type'] ?? 'post' );
+		$out   = array();
+		foreach ( $GLOBALS['__db'] as $row ) {
+			if ( ! in_array( $row->post_type, $types, true ) ) {
+				continue;
+			}
+			$status = $args['post_status'] ?? 'publish';
+			if ( 'any' === $status ? in_array( $row->post_status, array( 'auto-draft', 'trash' ), true ) : ! in_array( $row->post_status, (array) $status, true ) ) {
+				continue;
+			}
+			foreach ( (array) ( $args['tax_query'] ?? array() ) as $tq ) {
+				if ( 'wp_theme' !== ( $tq['taxonomy'] ?? '' ) || ! in_array( $tq['field'] ?? 'term_id', array( 'name', 'slug' ), true )
+					|| ! in_array( $row->theme, (array) $tq['terms'], true ) ) {
+					continue 2;
+				}
+			}
+			$out[] = ( 'ids' === ( $args['fields'] ?? '' ) ) ? $row->ID : $row;
+		}
+		return $out;
 	}
 }
 if ( ! function_exists( 'wp_delete_post' ) ) {
 	function wp_delete_post( $id, $force = false ) {
 		$GLOBALS['__posts_deleted']++;
+		$GLOBALS['__deleted_ids'][] = $id;
+		unset( $GLOBALS['__db'][ $id ] );
 	}
 }
 if ( ! function_exists( 'get_stylesheet' ) ) {
@@ -159,6 +186,7 @@ function reset_counters() {
 	$GLOBALS['__cf_verified']   = 0;
 	$GLOBALS['__theme_updates'] = 0;
 	$GLOBALS['__posts_deleted'] = 0;
+	$GLOBALS['__deleted_ids']   = array();
 	$GLOBALS['__breeze_files']  = 0;
 	$GLOBALS['__flush_groups']  = array();
 	unset( $GLOBALS['sn_auto_purge_done'] );
@@ -332,6 +360,49 @@ ok( 1 === purge_counts()['cf'], 'no header (an older release): purges, as before
 unlink( $GLOBALS['sn_plugin_main_file'] ); reset_counters(); fire_upgrader( $ours );
 ok( 1 === purge_counts()['cf'], 'unreadable file: purges (when in doubt, purge)' );
 unset( $GLOBALS['sn_plugin_main_file'], $GLOBALS['sn_plugin_prior_version'] );
+
+// ── 10. The override clear is scoped like the Site Editor reset ──
+// It runs on after_switch_theme and from the plugin's purge ability with
+// include_template_overrides. It deleted wp_template and wp_template_part rows
+// for EVERY theme and force-deleted wp_navigation posts, which hold menus, not
+// template overrides. Core's own template reads scope by the wp_theme term
+// (get_block_templates(): field name, terms get_stylesheet()).
+echo "\nScenario 10: the override clear deletes only the active theme's templates\n";
+function seed_db() {
+	$GLOBALS['__db'] = array();
+	foreach ( array(
+		array( 11, 'wp_template', 'signal-and-noise' ),
+		array( 12, 'wp_template_part', 'signal-and-noise' ),
+		array( 13, 'wp_template', 'twentytwentyfive' ),
+		array( 14, 'wp_template_part', 'twentytwentyfive' ),
+		array( 15, 'wp_navigation', '' ),
+		array( 16, 'page', '' ),
+		// Core creates auto-draft template parts from the regular editor, and
+		// get_block_template() reads trashed rows too: both still render.
+		array( 17, 'wp_template_part', 'signal-and-noise', 'auto-draft' ),
+		array( 18, 'wp_template', 'signal-and-noise', 'trash' ),
+	) as $r ) {
+		$GLOBALS['__db'][ $r[0] ] = (object) array( 'ID' => $r[0], 'post_type' => $r[1], 'theme' => $r[2], 'post_status' => $r[3] ?? 'publish' );
+	}
+}
+reset_counters(); seed_db();
+$n = sn_clear_template_overrides();
+sort( $GLOBALS['__deleted_ids'] );
+ok( array( 11, 12, 17, 18 ) === $GLOBALS['__deleted_ids'], 'only the active theme\'s wp_template and wp_template_part rows are deleted, auto-draft and trash included, got: ' . json_encode( $GLOBALS['__deleted_ids'] ) );
+ok( ! isset( $GLOBALS['__db'][17] ), 'an auto-draft template part override of this theme is deleted (\'any\' skips auto-draft)' );
+ok( 4 === $n, 'the count is the rows it deleted (the plugin\'s int contract), got: ' . var_export( $n, true ) );
+ok( isset( $GLOBALS['__db'][13], $GLOBALS['__db'][14] ), 'another theme\'s template and part survive' );
+ok( isset( $GLOBALS['__db'][15] ), 'wp_navigation (menu content, not a template override) survives' );
+reset_counters(); seed_db();
+foreach ( $GLOBALS['__actions']['after_switch_theme'] ?? array() as $cb ) {
+	call_user_func( $cb );
+}
+sort( $GLOBALS['__deleted_ids'] );
+ok( array( 11, 12, 17, 18 ) === $GLOBALS['__deleted_ids'], 'after_switch_theme clears with the same scope' );
+reset_counters(); seed_db();
+ok( 4 === sn_purge_all_caches( array( 'template_overrides' => true ) ), 'a full reset through sn_purge_all_caches returns the scoped count' );
+ok( isset( $GLOBALS['__db'][15] ) && isset( $GLOBALS['__db'][13] ), 'a full reset leaves the menu and the other theme alone' );
+$GLOBALS['__db'] = array();
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
