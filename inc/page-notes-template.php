@@ -478,8 +478,9 @@ function sn_notes_search_redirect_target( $term ) {
 }
 
 // v10.51.1: search-mode renders are noindexed. This answers the PLUGIN's
-// sn_seo_robots_directives seam (plugin v9.88.0) — NOT core's wp_robots, which
-// the plugin removes in inc/seo.php so it can emit the tag itself. v10.51.0
+// sn_seo_robots_directives seam (plugin v9.88.0). Since plugin 2026.10.64 the
+// plugin feeds that list into core's wp_robots (it no longer removes it), so
+// this seam still lands in the one robots tag core prints. v10.51.0
 // hooked wp_robots and was live-verified inert; the pure logic in
 // sn_notes_search_robots() (tests/notes-index-helpers.php) was always correct,
 // only its wiring was wrong. Cross-package listener #9 (WORDPRESS-REFERENCE §10.0).
