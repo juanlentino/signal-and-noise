@@ -181,7 +181,14 @@ function sn_feed_json_build_item( $post ) {
 	if ( is_string( $pub ) && '' !== $pub ) {
 		$item['date_published'] = $pub;
 	}
-	$mod = get_post_modified_time( 'c', true, $post );
+	// The plugin's dateModified (the provenance commit), the clock the .json
+	// twin, the JSON-LD and the sitemap lastmod read: a scheduled publish does
+	// not touch post_modified. Without the plugin, or when it has no time,
+	// post_modified.
+	$mod = function_exists( 'sn_schema_date_modified' ) ? sn_schema_date_modified( $post ) : '';
+	if ( ! is_string( $mod ) || '' === $mod ) {
+		$mod = get_post_modified_time( 'c', true, $post );
+	}
 	if ( is_string( $mod ) && '' !== $mod ) {
 		$item['date_modified'] = $mod;
 	}
