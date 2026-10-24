@@ -12,6 +12,9 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Docs
+- **docs/CSP.md says what is live (2026-10-24).** The strict `script-src` is enforced by two Cloudflare rules (loose first, "CSP enforce (strict)" after, skipped on `X-SN-CSP: lax` and on `/provhub`), the Report-Only copy is gone, and `/provhub/*` is listed as exempt: those pages are static files outside WordPress, and the enforced policy had blocked the verifier.
+
 ## [2026.10.27] - 2026-10-22 — nav and footer links point straight at their pages
 
 
