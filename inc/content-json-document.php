@@ -55,13 +55,18 @@ function sn_content_json_document( $post ) {
 	$permalink = get_permalink( $post );
 	$html      = (string) apply_filters( 'the_content', $post->post_content );
 	$text      = trim( (string) preg_replace( '/\s+/', ' ', wp_strip_all_tags( $html ) ) );
+	// The plugin's dateModified (the provenance commit), the clock the JSON-LD
+	// and the sitemap lastmod read. post_modified alone disagreed with them: a
+	// scheduled publish does not touch it, so a Note read as modified before it
+	// was published. Without the plugin, or when it has no time, post_modified.
+	$modified  = function_exists( 'sn_schema_date_modified' ) ? (string) sn_schema_date_modified( $post ) : '';
 
 	$doc = array(
 		'url'            => $permalink,
 		'type'           => $is_post ? 'note' : 'page',
 		'title'          => wp_strip_all_tags( html_entity_decode( get_the_title( $post ), ENT_QUOTES, 'UTF-8' ) ),
 		'date_published' => get_the_date( 'c', $post ),
-		'date_modified'  => get_the_modified_date( 'c', $post ),
+		'date_modified'  => '' !== $modified ? $modified : get_the_modified_date( 'c', $post ),
 		'author'         => array(
 			'name' => 'Juan Lentino',
 			'url'  => home_url( '/about/' ),

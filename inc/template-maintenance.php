@@ -9,7 +9,7 @@
  *
  * This module:
  *   - Provides sn_clear_template_overrides() for manual + admin-button use.
- *   - Auto-clears on theme activation (after_switch_theme).
+ *   - Auto-clears on theme activation (after_switch_theme), active theme only.
  *   - Exposes cross-package filter contracts for the companion plugin.
  *
  * @package SignalNoise
@@ -189,27 +189,37 @@ function sn_purge_all_caches( $args = array() ) {
 }
 
 /**
- * Delete all database-stored template overrides.
+ * Delete the active theme's database-stored template overrides.
  * Called on theme activation, via admin button, and from
  * sn_purge_all_caches().
+ *
+ * Scoped the way the Site Editor reads and resets them: wp_template and
+ * wp_template_part rows whose wp_theme term is get_stylesheet() (core's
+ * get_block_templates() query). Another theme's overrides stay, and so do
+ * wp_navigation posts: they hold menu content, not template overrides.
+ *
+ * @return int Count of overrides deleted.
  */
 function sn_clear_template_overrides() {
-	$post_types = array( 'wp_template', 'wp_template_part', 'wp_navigation' );
-	$count      = 0;
-
-	foreach ( $post_types as $post_type ) {
-		$posts = get_posts( array(
-			'post_type'      => $post_type,
-			'posts_per_page' => -1,
-			'post_status'    => 'any',
-		) );
-		foreach ( $posts as $post ) {
-			wp_delete_post( $post->ID, true );
-			$count++;
-		}
+	$ids = get_posts( array(
+		'post_type'      => array( 'wp_template', 'wp_template_part' ),
+		'posts_per_page' => -1,
+		'post_status'    => 'any',
+		'fields'         => 'ids',
+		'no_found_rows'  => true,
+		'tax_query'      => array(
+			array(
+				'taxonomy' => 'wp_theme',
+				'field'    => 'name',
+				'terms'    => get_stylesheet(),
+			),
+		),
+	) );
+	foreach ( $ids as $id ) {
+		wp_delete_post( $id, true );
 	}
 
-	return $count;
+	return count( $ids );
 }
 
 /**
