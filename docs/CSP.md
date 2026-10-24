@@ -1,9 +1,23 @@
-# A strict script-src (plan, not enforceable yet)
+# A strict script-src
 
-**Status, 2026-10-17: NOT ENFORCEABLE YET.** This is the plan for dropping
-`'unsafe-inline'` from `script-src`. Nothing here is live. The policy is set at
-Cloudflare, not in this repo, and it ships as `Content-Security-Policy-Report-Only`
-first. `/contact/` blocks enforcement (see below).
+**Status, 2026-10-24: ENFORCED.** `'unsafe-inline'` is gone from `script-src` on
+the public WordPress pages. Two Cloudflare Transform Rules carry it, and the
+Report-Only copy used for the rollout was removed on 2026-10-24.
+
+- **The loose rule** sets `script-src 'self' 'unsafe-inline' ...` on every
+  request outside `/wp-admin` and the MCP hosts.
+- **"CSP enforce (strict)"** runs after it and overrides it with the hashed
+  policy, except when the response carries `X-SN-CSP: lax` (the plugin marks
+  per-request pages: logged-in views, login screens, any page with the
+  AllTerrain form, see `inc/csp-lax-marker.php` in signal-and-noise-tools) or
+  the path starts with `/provhub` (see below):
+
+```
+(not starts_with(http.request.uri.path, "/wp-admin")) and not (http.host in {"mcp.juanlentino.com" "mcp-portal.juanlentino.com"}) and not any(http.response.headers["x-sn-csp"][*] eq "lax") and not starts_with(http.request.uri.path, "/provhub")
+```
+
+The plugin's daily check (`inc/csp-hash-check.php`) reads the pages as a
+stranger and raises a watch when an inline script is not pinned.
 
 ## Where the policy lives
 
@@ -68,6 +82,13 @@ navigation view module and `/webmcp/bridge.js` are `'self'`.
   `window.allTerrainForms` with per-request values, so it cannot be hashed and
   the theme does not own it. Until it moves to a data island or a file, keep
   `'unsafe-inline'` on `/contact/`, or the form breaks.
+- **`/provhub/*`** (the hub, `/present/`, `/verify/`, `/resources/`) are
+  standalone HTML files on the server, outside WordPress, so the plugin cannot
+  mark them `X-SN-CSP: lax`. Their inline scripts (the verifier's crypto, the
+  QR overlay, the copy button, the beacon config) were blocked once the strict
+  policy was enforced, and the verifier hung on "Fetching sample files" until
+  the strict rule excluded the path (2026-10-24). Any new static page outside
+  WordPress needs the same path clause, or its scripts moved to files.
 - **`/wp-admin/*`, `/wp-login.php`, `/sn-login*`** keep the existing policy.
   The editor and the login screen run inline scripts by design.
 
