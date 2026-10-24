@@ -400,7 +400,8 @@ function sn_notes_result_type_label( $post ) {
  * noindex + follow.
  *
  * v10.51.1: answers the PLUGIN's `sn_seo_robots_directives` seam — a directive
- * LIST — because the plugin removes core's wp_robots and emits the tag itself.
+ * LIST. The plugin turns that list into core's wp_robots (since plugin
+ * 2026.10.64; before that it removed core's emitter and printed its own).
  * v10.51.0 filtered `wp_robots` with a map and was live-verified inert: the
  * array it mutated was never printed. Pure: input never mutated, list-shaped
  * result, browse mode returns the input unchanged.

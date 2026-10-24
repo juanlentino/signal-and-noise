@@ -524,10 +524,11 @@ cpl_eq( '', apply_filters( 'sn_gh_latest_theme_tag_error_result', '' ), 'Test 10
 // v11.4.5: renumbered from "Contract 9", which collided with the
 // sn_cf_purge_urls_for_post section above — two sections carried the same
 // number, so the labels in the output were ambiguous.
-// The listener that v10.51.0 got WRONG: it hooked core's wp_robots, which the
-// plugin removes (inc/seo.php) so it can emit the tag itself — the filter was
-// live-verified inert. This contract pins the RIGHT seam, and pins it by
-// driving the filter the way the plugin's emitter does.
+// The listener that v10.51.0 got WRONG: it hooked core's wp_robots while the
+// plugin removed that emitter, so the filter was live-verified inert. Since
+// plugin 2026.10.64 the plugin feeds this seam into core's wp_robots instead;
+// the seam is still the contract. This pins it by driving the filter the way
+// the plugin does.
 echo "\nContract 11: sn_seo_robots_directives (search-mode noindex)\n";
 // page-notes-template.php cannot be required here (this fixture already defines
 // several of its helpers), so the contract is pinned at source level plus a
