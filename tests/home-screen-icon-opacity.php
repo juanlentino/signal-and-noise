@@ -58,6 +58,11 @@ echo "\nGroup 2: the control — the tab icon is the SVG tile, not a raster with
 $svg = (string) @file_get_contents( $root . '/assets/brand/favicon.svg' );
 ok( false !== strpos( $svg, 'prefers-color-scheme: dark' ), 'favicon.svg carries its own dark rule — that is why no PNG pair is needed' );
 ok( 1 === preg_match( '/<rect class="bg" width="200" height="200"/', $svg ), 'favicon.svg is the full-bleed TILE (opaque ground), not the bare mark' );
+// Google's search-result favicon kept only the top half of the mark (two
+// bars, the J's hook and the L's foot gone; read from its favicon cache
+// 2026-10-25): a viewBox with no width/height leaves the canvas to the
+// renderer's default. The root states its own square size.
+ok( 1 === preg_match( '/<svg\b[^>]*\swidth="(\d+)"[^>]*\sheight="(\d+)"/', $svg, $wh ) && $wh[1] === $wh[2] && (int) $wh[1] >= 48, 'favicon.svg states its own square size, at least 48 (Google cropped it without one)' );
 // Chrome's favicon renderer does not resolve var() in presentation attributes:
 // the first cut coloured the strokes with `stroke="var(--fg)"` and the tab
 // showed a solid black square (owner, 2026-09-21). Colours live in class
