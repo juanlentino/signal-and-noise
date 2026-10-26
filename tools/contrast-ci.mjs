@@ -75,7 +75,11 @@ async function main() {
 	const browser = await chromium.launch();
 	let context;
 	try {
-		context = await browser.newContext({ userAgent: headers['User-Agent'], viewport: { width: 1440, height: 900 } });
+		// bypassCSP: the measuring tool is injected as an inline script, and the
+		// site's script-src allows only listed hashes, so the live CSP blocked
+		// it and every run since 2026-10-18 died before measuring. This lifts
+		// the CSP in this browser only; the site's own header is unchanged.
+		context = await browser.newContext({ userAgent: headers['User-Agent'], viewport: { width: 1440, height: 900 }, bypassCSP: true });
 		// The allow-list token goes to the site's own origin only, and only to
 		// the hop it was sent on: a same-origin request is fetched with
 		// redirects off, so a redirect returns to the browser and its next hop
