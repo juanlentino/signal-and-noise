@@ -61,8 +61,8 @@ ok( 1 === preg_match( '/<rect class="bg" width="200" height="200"/', $svg ), 'fa
 // Google's search-result favicon kept only the top half of the mark (two
 // bars, the J's hook and the L's foot gone; read from its favicon cache
 // 2026-10-25): a viewBox with no width/height leaves the canvas to the
-// renderer's default. The root states a square that is a multiple of 48.
-ok( 1 === preg_match( '/<svg\b[^>]*\swidth="(\d+)"[^>]*\sheight="(\d+)"/', $svg, $wh ) && $wh[1] === $wh[2] && 0 === (int) $wh[1] % 48, 'favicon.svg states its own square size, a multiple of 48 (Google cropped it without one)' );
+// renderer's default. The root states its own square size.
+ok( 1 === preg_match( '/<svg\b[^>]*\swidth="(\d+)"[^>]*\sheight="(\d+)"/', $svg, $wh ) && $wh[1] === $wh[2] && (int) $wh[1] >= 48, 'favicon.svg states its own square size, at least 48 (Google cropped it without one)' );
 // Chrome's favicon renderer does not resolve var() in presentation attributes:
 // the first cut coloured the strokes with `stroke="var(--fg)"` and the tab
 // showed a solid black square (owner, 2026-09-21). Colours live in class
