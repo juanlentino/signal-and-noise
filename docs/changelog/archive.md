@@ -16,6 +16,14 @@ nothing here is edited by hand again.
 
 All notable changes to Signal & Noise are documented here.
 
+## [2026.10.29] - 2026-10-25 — declares its update source; the robots seam feeds core
+
+### Docs
+- Three comments no longer say the plugin removes core's `wp_robots`: since plugin 2026.10.64 it feeds the `sn_seo_robots_directives` seam into core's robots tag. The seam and the search-mode noindex are unchanged.
+
+### Changed
+- **The theme declares its own update source** (`Update URI: https://github.com/juanlentino/signal-and-noise`, core 6.1+). Core sends it in the update check, and WordPress.org then skips the theme instead of matching it by slug (without it, a same-named WordPress.org theme could answer); the plugin already declares one. The GitHub-tag updater is unchanged.
+
 ## [2026.10.28] - 2026-10-24 — dates on one clock; the override clear keeps menus and other themes
 
 ### Fixed
