@@ -75,11 +75,7 @@ async function main() {
 	const browser = await chromium.launch();
 	let context;
 	try {
-		// bypassCSP: the measuring tool is injected as an inline script, and the
-		// site's script-src allows only listed hashes, so the live CSP blocked
-		// it and every run since 2026-10-18 died before measuring. This lifts
-		// the CSP in this browser only; the site's own header is unchanged.
-		context = await browser.newContext({ userAgent: headers['User-Agent'], viewport: { width: 1440, height: 900 }, bypassCSP: true });
+		context = await browser.newContext({ userAgent: headers['User-Agent'], viewport: { width: 1440, height: 900 } });
 		// The allow-list token goes to the site's own origin only, and only to
 		// the hop it was sent on: a same-origin request is fetched with
 		// redirects off, so a redirect returns to the browser and its next hop
@@ -167,7 +163,11 @@ async function main() {
 			return 2;
 		}
 		await page.evaluate(p => { window.__snContrastPages = p; }, list);
-		await page.addScriptTag({ content: tool });
+		// Evaluated, not injected: the site's script-src allows only listed
+		// hashes, so an inline <script> tag was blocked and every run from
+		// 2026-10-18 died before measuring. Evaluation is not subject to
+		// script-src, and the measured pages keep the CSP readers get.
+		await page.evaluate(tool);
 		const out = await page.evaluate(() => window.__snContrastDone, null, { timeout: 0 });
 		measured = true;
 

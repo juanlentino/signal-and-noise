@@ -136,6 +136,19 @@ jobs:
             O_BYTES=${O_BYTES:-0}
           }
 
+          # fetch_retry <url> <body_file> <hdr_file>: fetch, retrying a non-200
+          # with the same backoff every probe uses.
+          fetch_retry() {
+            local a=1
+            while : ; do
+              fetch "$@"
+              [ "$O_CODE" = "200" ] && break
+              [ "$a" -ge "$MAX_ATTEMPTS" ] && break
+              sleep $(( a * 8 ))
+              a=$(( a + 1 ))
+            done
+          }
+
           # classify <body_file> <marker>  -> sets O_OUTCOME
           classify() {
             local body_file="$1" marker="$2"
@@ -268,7 +281,7 @@ jobs:
           #     archive, HTML; the twins are /notes/<slug>.md). The newest
           #     note's own advertised .md twin is probed instead: the feed
           #     names the note, its head names the twin. Probing the archive
-          #     failed every run, 300 in a row to 2026-10-26.
+          #     failed every run, about 400 in a row from 2026-10-12.
           #   - /wp-json/ REST surfaces may be auth- or method-gated for an
           #     anonymous GET, so any JSON-speaking response (200/401/404
           #     with an application/json content-type) proves the surface is
@@ -297,28 +310,34 @@ jobs:
             if [ "$type" = "note-markdown" ]; then
               local nb nh note=''
               nb=$(mktemp); nh=$(mktemp)
-              fetch 'https://juanlentino.com/notes/feed/' "$nb" "$nh"
+              fetch_retry 'https://juanlentino.com/notes/feed/' "$nb" "$nh"
               [ "$O_CODE" = "200" ] && note=$(grep -oE '<link>https://juanlentino\.com/notes/[^<?#]+' "$nb" | head -1 | sed 's/^<link>//')
               url=''
               if [ -n "$note" ]; then
-                fetch "$note" "$nb" "$nh"
-                [ "$O_CODE" = "200" ] && url=$(grep -oE '<link[^>]*type="text/markdown"[^>]*>' "$nb" | grep -oE 'href="[^"]+\.md"' | head -1 | cut -d'"' -f2)
+                fetch_retry "$note" "$nb" "$nh"
+                [ "$O_CODE" = "200" ] && url=$(grep -oE '<link[^>]*type="text/markdown"[^>]*>' "$nb" | grep -oE 'href="https://juanlentino\.com/[^"]+\.md"' | head -1 | cut -d'"' -f2)
               fi
-              rm -f "$nb" "$nh"
               if [ -z "$url" ]; then
                 echo ""
                 echo "=== agents.json surface: $type ==="
+                excerpt "$nb" "$nh"
                 case "$O_CODE" in
                   403|415|429)
                     echo "::warning::agents.json surface '$type' — edge block (HTTP ${O_CODE}) reading ${note:-the notes feed}; inconclusive."
                     warn=1 ;;
+                  200)
+                    echo "::error::agents.json surface '$type' — ${note:-the notes feed} names no .md twin to probe."
+                    echo "Result: FAIL"
+                    fail=1 ;;
                   *)
-                    echo "::error::agents.json surface '$type' — ${note:-the notes feed} (HTTP ${O_CODE}) names no .md twin to probe."
+                    echo "::error::agents.json surface '$type' — ${note:-the notes feed} answered HTTP ${O_CODE} after ${MAX_ATTEMPTS} tries."
                     echo "Result: FAIL"
                     fail=1 ;;
                 esac
+                rm -f "$nb" "$nh"
                 return
               fi
+              rm -f "$nb" "$nh"
             fi
 
             local body_file hdr_file attempt=1
