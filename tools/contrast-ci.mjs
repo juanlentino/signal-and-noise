@@ -163,7 +163,11 @@ async function main() {
 			return 2;
 		}
 		await page.evaluate(p => { window.__snContrastPages = p; }, list);
-		await page.addScriptTag({ content: tool });
+		// Evaluated, not injected: the site's script-src allows only listed
+		// hashes, so an inline <script> tag was blocked and every run from
+		// 2026-10-18 died before measuring. Evaluation is not subject to
+		// script-src, and the measured pages keep the CSP readers get.
+		await page.evaluate(tool);
 		const out = await page.evaluate(() => window.__snContrastDone, null, { timeout: 0 });
 		measured = true;
 
