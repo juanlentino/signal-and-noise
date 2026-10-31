@@ -17,8 +17,9 @@
  * delegates to sn_gh_latest_theme_tag() in inc/wp-update-integration.php.
  *
  * Cross-file note: sn_theme_ability_design_system_summary() internally
- * calls sn_theme_ability_design_tokens() (also in this file — same-file
- * call). No other diagnostics ability has external dependencies.
+ * calls sn_theme_ability_design_tokens() (in
+ * inc/abilities-diagnostics-design-tokens.php, a part this loader requires).
+ * No other diagnostics ability has external dependencies.
  *
  * v10.42.x: sn_theme_ability_design_tokens() unwraps wp_get_global_settings()'s
  * per-origin ('default'/'theme'/'custom') preset buckets into flat entries
