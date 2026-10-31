@@ -53,10 +53,14 @@
   // heading list does not also read "Copy link to section".
   var copy = window.snCopy; // sn-copy.js, this script's dependency.
   if (!copy || !toc.querySelectorAll) { return; }
+  // The canonical address drops tracking parameters; one on another host (a
+  // republished note) is not this page, and its section ids are this page's.
   var canon = document.querySelector('link[rel="canonical"]');
-  var base = ((canon && canon.href) || (window.location.origin + window.location.pathname)).split('#')[0];
-  var live = null;
+  var here = window.location.origin + window.location.pathname;
+  var base = (canon && canon.href && canon.href.indexOf(window.location.origin + '/') === 0 ? canon.href : here).split('#')[0];
   var tocLinks = toc.querySelectorAll('a[href^="#"]');
+  // In place before the first message: a region added along with its text may say nothing.
+  var live = tocLinks.length ? copy.liveRegion(document.body, 'sn-section-link__status') : null;
   for (var i = 0; i < tocLinks.length; i++) { addSectionLink(tocLinks[i]); }
 
   function addSectionLink(tocLink) {
@@ -74,17 +78,18 @@
     heading.appendChild(btn);
     btn.addEventListener('click', function () {
       copy.text(base + '#' + sid).then(
-        function () { show('COPIED', 'Link to section copied'); },
-        function () { show('COPY FAILED', 'Copy failed'); }
+        function () { show('copied', 'Link to section copied'); },
+        function () { show('failed', 'Copy failed'); }
       );
     });
-    function show(text, msg) {
-      if (!live) { live = copy.liveRegion(document.body, 'sn-section-link__status'); }
+    // The label stays "#": the state shows as a CSS label above it, out of
+    // flow, so a copy never reflows the heading (review of #621).
+    function show(state, msg) {
       live.textContent = ''; // cleared first, so the same message is announced again.
       live.textContent = msg;
-      btn.textContent = text;
+      btn.setAttribute('data-sn-state', state);
       if (timer) { clearTimeout(timer); }
-      timer = setTimeout(function () { btn.textContent = '#'; }, 1600);
+      timer = setTimeout(function () { btn.removeAttribute('data-sn-state'); }, 1600);
     }
   }
 })();

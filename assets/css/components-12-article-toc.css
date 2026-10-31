@@ -174,9 +174,11 @@
 
 /* ── SECTION LINKS (2026-10-31) ─────────────────────────────────────────
    The copy-link button article-toc.js draws inside each H2 the contents list
-   names: a quiet "#" after the heading text, "COPIED" for 1.6 s after a
-   copy. Its own small label type, whatever the heading's size; 24px target
-   (WCAG 2.5.8); never selected along with the heading's text. */
+   names: a quiet "#" after the heading text. After a copy, COPIED (or COPY
+   FAILED) shows for 1.6 s as a label above it, out of flow, so the heading
+   never reflows. Its own small label type, whatever the heading's size; 24px
+   target (WCAG 2.5.8); never selected along with the heading's text (Safari
+   reads only the prefixed property). */
 .sn-section-link {
 	font-family: 'DM Mono', 'Courier New', monospace;
 	font-size: max(0.7rem, 11px);
@@ -194,7 +196,29 @@
 	border: 1px solid transparent;
 	border-radius: 0;
 	cursor: pointer;
+	-webkit-user-select: none;
 	user-select: none;
+	position: relative;
+}
+.sn-section-link[data-sn-state]::after {
+	position: absolute;
+	right: 0;
+	bottom: 100%;
+	margin-bottom: 0.25rem;
+	padding: 0.2rem 0.4rem;
+	white-space: nowrap;
+	text-transform: uppercase;
+	letter-spacing: 0.14em;
+	font-size: max(0.7rem, 11px);
+	color: var(--wp--preset--color--void);
+	background: var(--wp--preset--color--blood);
+	pointer-events: none;
+}
+.sn-section-link[data-sn-state="copied"]::after {
+	content: "Copied";
+}
+.sn-section-link[data-sn-state="failed"]::after {
+	content: "Copy failed";
 }
 @media (hover: hover) {
 	.sn-section-link:hover {
