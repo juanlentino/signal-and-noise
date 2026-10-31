@@ -54,12 +54,17 @@ foreach ( $parts as $p ) {
 	$css   = (string) file_get_contents( "$root/$p" );
 	$plain = (string) preg_replace( '~/\*.*?\*/~s', '', $css );
 	$plain = (string) preg_replace( '~"[^"]*"|\'[^\']*\'~', '""', $plain );
-	if ( substr_count( $plain, '{' ) !== substr_count( $plain, '}' ) ) {
+	// Balanced blocks, no comment left open, and the last thing in the part
+	// (comments aside) closes a rule: a cut inside a comment, or between a
+	// selector and its brace, breaks the per-file fallback even when the
+	// bundle (which joins the parts first) still reads right (review 2026-10-31).
+	$open_comments = substr_count( $css, '/*' ) !== substr_count( $css, '*/' );
+	if ( $open_comments || substr_count( $plain, '{' ) !== substr_count( $plain, '}' ) || '}' !== substr( rtrim( $plain ), -1 ) ) {
 		$bad[] = basename( $p );
 	}
 	$joined .= $css;
 }
-ok( array() === $bad, 'each part opens and closes its own blocks' . ( $bad ? ': ' . implode( ', ', $bad ) : '' ) );
+ok( array() === $bad, 'each part closes its own blocks and comments and ends on a closed rule' . ( $bad ? ': ' . implode( ', ', $bad ) : '' ) );
 ok( $joined === snt_components_source(), 'the joined source is the parts with nothing between them' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
