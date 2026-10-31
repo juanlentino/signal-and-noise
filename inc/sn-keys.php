@@ -14,14 +14,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Register the helper; a dependent's enqueue then prints it first. Idempotent.
+ * Register the helper; a dependent's enqueue then prints it first. Calling it
+ * twice is harmless: core refuses a duplicate handle.
  *
  * @return void
  */
 function sn_keys_register() {
-	if ( function_exists( 'wp_script_is' ) && wp_script_is( 'sn-keys', 'registered' ) ) {
-		return;
-	}
 	wp_register_script(
 		'sn-keys',
 		get_theme_file_uri( 'assets/js/sn-keys.js' ),
