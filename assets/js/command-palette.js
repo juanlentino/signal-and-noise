@@ -274,9 +274,8 @@
 		document.addEventListener( 'keydown', onTrapKeydown, true );
 	}
 
-	// Also the dialog's close listener: a close the browser makes itself
-	// (Escape's cancel, Android back) lands here too, and the second call
-	// from our own close() is a no-op.
+	// Also run by the dialog's close event (see ensureBuilt): a close the
+	// browser makes itself (Escape's cancel, Android back) lands here too.
 	function close() {
 		if ( ! isOpen ) { return; }
 		isOpen = false;
@@ -314,7 +313,9 @@
 		root.id = 'sn-cmdk';
 		root.className = 'sn-cmdk';
 		root.setAttribute( 'aria-label', 'Search and navigate' );
-		root.addEventListener( 'close', close );
+		// The close event is queued: after close() and a quick reopen it would
+		// arrive for a dialog that is open again, so it acts only on a closed one.
+		root.addEventListener( 'close', function () { if ( ! root.open ) { close(); } } );
 
 		backdrop = document.createElement( 'div' );
 		backdrop.className = 'sn-cmdk-backdrop';
@@ -418,7 +419,9 @@
 			return;
 		}
 		// "/" — only when not typing into a form field, and the palette is closed.
-		if ( ! isOpen && ( e.key === '/' || e.keyCode === 191 ) && ! e.metaKey && ! e.ctrlKey && ! e.altKey ) {
+		// keyCode only where e.key is missing: on a US layout ? is Shift+/ and
+		// also arrives as keyCode 191, and it belongs to the shortcut sheet.
+		if ( ! isOpen && ( e.key ? e.key === '/' : e.keyCode === 191 ) && ! e.metaKey && ! e.ctrlKey && ! e.altKey ) {
 			if ( ! singleKeysOn() ) { return; }
 			if ( isFormField( document.activeElement ) ) { return; }
 			e.preventDefault();

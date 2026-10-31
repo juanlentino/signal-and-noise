@@ -80,3 +80,55 @@ for (const [file, cls, openKey] of [['command-palette.js', 'sn-cmdk', '/'], ['ke
     assert.equal(d.modalCalls, 2);
   });
 }
+
+// Review of #620: both scripts in ONE document, with a close event that is
+// QUEUED as browsers queue it (the HTML "close the dialog" steps fire it in a
+// later task), and real key events.
+function combined() {
+  const nodes = []; const queue = []; let document;
+  function node(tagName) {
+    const el = { tagName: tagName.toUpperCase(), children: [], attributes: {}, handlers: {}, open: false,
+      classList: { add() {}, remove() {} },
+      appendChild(c) { this.children.push(c); c.parentNode = this; },
+      setAttribute(k, v) { this.attributes[k] = v; }, getAttribute(k) { return this.attributes[k] || null; }, removeAttribute(k) { delete this.attributes[k]; },
+      addEventListener(t, fn) { (this.handlers[t] ||= []).push(fn); },
+      focus() { document.activeElement = this; }, scrollIntoView() {} };
+    if (el.tagName === 'DIALOG') {
+      el.showModal = function () { this.open = true; };
+      el.close = function () { if (!this.open) return; this.open = false; queue.push(() => { for (const fn of this.handlers.close || []) fn({ type: 'close' }); }); };
+    }
+    nodes.push(el); return el;
+  }
+  const handlers = [];
+  document = { readyState: 'complete', body: node('body'), createElement: node, querySelector() { return null; }, getElementById() { return null; },
+    addEventListener(t, fn) { if (t === 'keydown') handlers.push(fn); }, removeEventListener(t, fn) { const i = handlers.indexOf(fn); if (i >= 0) handlers.splice(i, 1); } };
+  document.activeElement = document.body;
+  const ctx = { document, window: { setTimeout(fn) { fn(); }, location: { assign() {} } } };
+  for (const f of ['sn-keys.js', 'command-palette.js', 'keyboard-nav.js']) vm.runInNewContext(readFileSync(path.join(__dirname, '../../assets/js', f), 'utf8'), ctx);
+  const key = (init) => { const e = Object.assign({ keyCode: 0, preventDefault() { this.prevented = true; } }, init); for (const fn of [...handlers]) fn(e); return e; };
+  const flush = () => { while (queue.length) queue.shift()(); };
+  const find = (cls) => nodes.find(n => n.className === cls);
+  return { key, flush, find };
+}
+
+test('a real ? (Shift+/, keyCode 191) opens the shortcut sheet, not the palette', () => {
+  const p = combined();
+  p.key({ key: '?', keyCode: 191, shiftKey: true });
+  assert.ok(p.find('sn-kbdn') && p.find('sn-kbdn').open, 'the sheet, which holds the WCAG 2.1.4 switch');
+  assert.ok(!p.find('sn-cmdk') || !p.find('sn-cmdk').open, 'not the palette');
+  const q = combined();
+  q.key({ key: '/', keyCode: 191 });
+  assert.ok(q.find('sn-cmdk').open, '/ still opens the palette');
+});
+
+test('a close event that arrives after a reopen does not close the new session', () => {
+  const p = combined();
+  p.key({ key: '/', keyCode: 191 });
+  p.key({ key: 'Escape', keyCode: 27 });
+  p.key({ key: '/', keyCode: 191 });
+  p.flush();
+  assert.equal(p.find('sn-cmdk').open, true, 'still open');
+  p.key({ key: 'Escape', keyCode: 27 });
+  p.flush();
+  assert.equal(p.find('sn-cmdk').open, false, 'and a real close still closes');
+});
