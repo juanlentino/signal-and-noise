@@ -129,7 +129,12 @@ foreach ( $expected as $handle => list( $slug, $path, $args ) ) {
 	ok( is_array( $reg ), "$handle is registered after init (core's wp_enqueue_script() at block render needs it)" );
 	ok( ( $reg['src'] ?? '' ) === get_theme_file_uri( $path ), "$handle src is $path" );
 	ok( file_exists( "$theme_root/$path" ), "$path exists on disk" );
-	ok( array() === ( $reg['deps'] ?? null ), "$handle has no dependencies" );
+	// sn-note-share copies through the shared clipboard helper (2026-10-31).
+	$deps = 'sn-note-share' === $handle ? array( 'sn-copy' ) : array();
+	ok( $deps === ( $reg['deps'] ?? null ), "$handle depends on exactly: " . ( $deps ? implode( ', ', $deps ) : 'nothing' ) );
+	foreach ( $deps as $dep ) {
+		ok( isset( $GLOBALS['__reg_js'][ $dep ] ), "$handle's dependency $dep is registered too (a missing one drops the script)" );
+	}
 	ok( ( $reg['ver'] ?? null ) === sn_asset_ver( $path ), "$handle ver is sn_asset_ver( $path ), the same cache-bust token as before" );
 	ok( ( $reg['args'] ?? null ) === $args, "$handle footer/strategy args match origin/main's enqueue: " . json_encode( $args ) );
 }
@@ -151,6 +156,7 @@ foreach ( $expected as $handle => list( $slug ) ) {
 	ok( ! isset( $GLOBALS['__enq_js'][ $handle ] ), "on a single note no wp_enqueue_scripts callback enqueues $handle (the $slug block does)" );
 }
 ok( isset( $GLOBALS['__enq_js']['sn-article-toc'] ), 'control: a sibling singular-gated handle (sn-article-toc) IS enqueued on the same request, so the absence above is a reading, not a blind harness' );
+ok( array( 'sn-copy' ) === ( $GLOBALS['__enq_js']['sn-article-toc']['deps'] ?? null ) && isset( $GLOBALS['__reg_js']['sn-copy'] ), 'sn-article-toc depends on sn-copy, registered on the same request (the section links copy through it; without it they are never drawn)' );
 
 $GLOBALS['__singular'] = false; $GLOBALS['__page'] = 'contact'; $GLOBALS['__enq_js'] = array();
 fire( 'wp_enqueue_scripts' );
