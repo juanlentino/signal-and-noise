@@ -58,7 +58,7 @@ if ( ! function_exists( 'wp_remote_get' ) ) {
     function wp_remote_get( $url, $args = array() ) {
         $GLOBALS['__captured_requests'][] = array( 'url' => $url, 'args' => $args );
         // Return one matching tag so the function completes its happy path.
-        return array( 'response' => array( 'code' => 200 ), 'body' => json_encode( array( array( 'name' => 'v9.9.9' ) ) ) );
+        return array( 'response' => array( 'code' => $GLOBALS['__tag_code'] ?? 200 ), 'body' => json_encode( array( array( 'name' => 'v9.9.9' ) ) ) );
     }
 }
 if ( ! function_exists( 'wp_remote_retrieve_response_code' ) ) {
@@ -89,6 +89,7 @@ if ( ! function_exists( 'wp_remote_retrieve_header' ) ) {
     function wp_remote_retrieve_header( $r, $h ) { return $r['headers'][ strtolower( $h ) ] ?? ''; }
 }
 $GLOBALS['__caps'] = array(); // cap => bool, controllable
+if ( ! function_exists( '__' ) ) { function __( $t ) { return $t; } } // the failure reason is a translated string.
 if ( ! function_exists( 'current_user_can' ) ) {
     function current_user_can( $cap ) { return ! empty( $GLOBALS['__caps'][ $cap ] ); }
 }
@@ -219,15 +220,50 @@ $GLOBALS['__caps'] = array();
 ok( sn_gh_theme_force_refresh_requested() === false, 'force-refresh: WP_FORCE_UPDATE_CHECK (not a core constant) does not force (#332)' );
 ok( strpos( $src, 'WP_FORCE_UPDATE_CHECK' ) === false, 'the dead WP_FORCE_UPDATE_CHECK branch and its comments are gone from the source (#332)' );
 
-// #332: wp_update_themes() writes the transient twice per run, so the
-// pre_set_site_transient_update_themes filter runs twice; a forced check must
-// fetch ONCE per request, not once per write.
+// #332: one request can ask for a forced tag more than once (the update offer,
+// the get-latest-theme-tag ability, the plugin's seam); it must fetch ONCE.
 unset( $GLOBALS['sn_gh_theme_forced_tag_memo'] );
 $GLOBALS['__captured_requests'] = array();
 $first  = sn_gh_latest_theme_tag( true );
 $second = sn_gh_latest_theme_tag( true );
 ok( 'v9.9.9' === $first && $first === $second, 'two forced calls in one request agree' );
 ok( 1 === count( $GLOBALS['__captured_requests'] ), 'two forced calls in one request make ONE tag fetch (#332)' );
+
+// ── The update offer rides core's Update URI hook (2026-10-31) ──
+// wp_update_themes() asks update_themes_{host of style.css's Update URI} once per
+// check and places the answer itself; the old pre_set_site_transient rebuild is gone.
+ok( in_array( 'sn_gh_theme_update_offer', $GLOBALS['__filters']['update_themes_github.com'] ?? array(), true ), 'offer: registered on core\'s update_themes_github.com hook' );
+preg_match( '/^Update URI:\s*(\S+)/mi', (string) file_get_contents( __DIR__ . '/../style.css', false, null, 0, 8192 ), $uri );
+ok( 'github.com' === parse_url( $uri[1] ?? '', PHP_URL_HOST ), 'offer: the hook\'s host is the host style.css\'s Update URI names' );
+ok( empty( $GLOBALS['__filters']['pre_set_site_transient_update_themes'] ), 'offer: nothing rebuilds update_themes on write any more' );
+
+unset( $GLOBALS['sn_gh_theme_forced_tag_memo'] );
+$GLOBALS['__transients'] = array();
+$offer = sn_gh_theme_update_offer( false, array(), SN_GH_THEME_STYLESHEET );
+ok( is_array( $offer ) && '9.9.9' === ( $offer['version'] ?? '' ) && SN_GH_THEME_STYLESHEET === ( $offer['theme'] ?? '' ), 'offer: this theme gets the latest tag as its version (core adds new_version and id)' );
+ok( sn_gh_theme_package_url( 'v9.9.9' ) === ( $offer['package'] ?? '' ) && 'https://github.com/juanlentino/signal-and-noise' === ( $offer['url'] ?? '' ), 'offer: package and details URL as before' );
+
+$GLOBALS['__captured_requests'] = array();
+ok( false === sn_gh_theme_update_offer( false, array(), 'someone-elses-theme' ), 'offer: another theme on a github.com Update URI passes through untouched' );
+ok( 0 === count( $GLOBALS['__captured_requests'] ), 'offer: and spends no GitHub request on it' );
+
+$_GET['force-check'] = '1';
+$GLOBALS['__caps']   = array( 'update_themes' => true );
+unset( $GLOBALS['sn_gh_theme_forced_tag_memo'] );
+$GLOBALS['__captured_requests'] = array();
+sn_gh_theme_update_offer( false, array(), SN_GH_THEME_STYLESHEET );
+ok( 1 === count( $GLOBALS['__captured_requests'] ), 'offer: Check Again (force-check, with the cap) bypasses the cached tag' );
+unset( $_GET['force-check'] );
+$GLOBALS['__caps'] = array();
+
+$GLOBALS['__tag_code'] = 500;
+$GLOBALS['__transients'] = array();
+unset( $GLOBALS['sn_gh_theme_forced_tag_memo'] );
+$_GET['force-check'] = '1';
+$GLOBALS['__caps']   = array( 'update_themes' => true );
+ok( false === sn_gh_theme_update_offer( false, array(), SN_GH_THEME_STYLESHEET ), 'offer: no tag (GitHub failed) offers nothing, so core keeps no stale entry for it' );
+unset( $_GET['force-check'], $GLOBALS['__tag_code'] );
+$GLOBALS['__caps'] = array();
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

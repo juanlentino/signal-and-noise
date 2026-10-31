@@ -452,7 +452,7 @@ The `/notes` route lives off normal FSE template resolution. [inc/page-notes-tem
 - Honors the `?force-check=1` query arg — clicking "Check Again" in wp-admin re-fetches once per request (#332; `WP_FORCE_UPDATE_CHECK` never existed in core and was removed).
 - `admin_init` version-change detection: compares on-disk Version against `sn_last_seen_*_version` option; on mismatch, clears both `sn_gh_latest_*` and WP's own `update_themes` / `update_plugins` site transient. Handles the "upgrade just happened, why does WP still say update available?" case for both install paths.
 
-**Theme update transient shape ≠ plugin update transient shape** — themes register via `pre_set_site_transient_update_themes` with **arrays** keyed by stylesheet; plugins use `pre_set_site_transient_update_plugins` with **stdClass objects** keyed by basename. Subtle WP core quirk; copy-adapting code between the two needs the shape conversion.
+**Theme update transient shape ≠ plugin update transient shape** — theme entries are **arrays** keyed by stylesheet (since 2026-10-31 the theme offers its update through core's `update_themes_{$hostname}` hook, [`inc/wp-update-integration-update-transient.php`](../inc/wp-update-integration-update-transient.php), and core files it); plugins use `pre_set_site_transient_update_plugins` with **stdClass objects** keyed by basename. Subtle WP core quirk; copy-adapting code between the two needs the shape conversion.
 
 **Verification recipe** for the .git preservation (the only thing in §10.5 that hasn't been exercised end-to-end yet on this install):
 1. Push a v8.5.4+ tag without running `gh workflow run`.

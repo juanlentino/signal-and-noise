@@ -4,8 +4,9 @@
  *
  * Core (6.1+) sends a theme's `Update URI` with the update check, and the
  * WordPress.org server then skips it instead of matching it by slug;
- * `update_themes_{$hostname}` is where its updates could come from. Without
- * it, a same-named .org theme could answer.
+ * `update_themes_{$hostname}` is where its updates come from
+ * (sn_gh_theme_update_offer(), pinned in tests/updater-github-auth.php).
+ * Without it, a same-named .org theme could answer.
  *
  * Run: php tests/theme-update-uri.php
  */
