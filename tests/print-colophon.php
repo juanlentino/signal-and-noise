@@ -22,7 +22,8 @@ function esc_html( $s ) { return htmlspecialchars( (string) $s, ENT_QUOTES, 'UTF
 function esc_url( $s ) { $s = (string) $s; return preg_match( '#^https?://#', $s ) ? str_replace( array( '"', '<', '>' ), array( '%22', '%3C', '%3E' ), $s ) : ''; }
 function get_the_ID() { return 5; }
 function get_permalink( $id = 0 ) { return 'https://juanlentino.com/notes/market-harm/'; }
-function wp_date( $f, $ts ) { return gmdate( $f, (int) $ts ); }
+// Like the live site (America/New_York, -4h in October): wp_date() is SITE time.
+function wp_date( $f, $ts ) { return gmdate( $f, (int) $ts - 4 * 3600 ); }
 function __( $s, $d = null ) { return $s; }
 
 require_once __DIR__ . '/../inc/print-colophon.php';
@@ -64,7 +65,7 @@ $GLOBALS['__vm'] = $vm;
 $out = sn_print_colophon_html();
 ok( 0 === strpos( $out, '<aside class="sn-print-colophon"' ), 'renders an <aside class="sn-print-colophon">' );
 ok( false !== strpos( $out, '<code>' . $hash . '</code>' ), 'the FULL 64-character hash, not the panel\'s 12-character prefix' );
-ok( false !== strpos( $out, 'version 3' ) && false !== strpos( $out, 'October 16, 2026' ), 'the version and the date it was recorded' );
+ok( false !== strpos( $out, 'version 3' ) && false !== strpos( $out, 'recorded October 16, 2026 UTC' ), 'the version and the date it was recorded, in UTC and labeled: committed 02:15 UTC on October 16, which is still October 15 in site time (the provenance panel dates it the 16th, in UTC)' );
 ok( false !== strpos( $out, 'Verified' ) && false !== strpos( $out, 'block 912,345' ), 'the status label and the Bitcoin block' );
 ok( false !== strpos( $out, 'https://juanlentino.com/verify?note=3f2b8c1e-0000-4000-8000-000000000001&amp;v=3' ), 'the verify address is written out with note= and v=, as text a reader can type' );
 ok( false !== strpos( $out, '>https://github.com/juanlentino/signal-and-noise-provenance/tree/main/notes/3f2b8c1e-0000-4000-8000-000000000001<' ), 'the ledger address is written out' );

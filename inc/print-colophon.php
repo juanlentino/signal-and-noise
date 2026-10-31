@@ -58,11 +58,14 @@ function sn_print_colophon_html() {
 	}
 	$status = 'Status: ' . (string) ( $pres['label'] ?? '' ) . ( $block > 0 ? ', anchored in Bitcoin block ' . number_format( $block ) : '' ) . '.';
 
-	// The date the shown version was recorded.
+	// The date the shown version was recorded, in UTC and labeled so (2026-10-31):
+	// the provenance panel prints the same instant in UTC, while the post date
+	// and the Updated line are site time, so an evening commit can fall on
+	// different days and the label says which clock this one reads.
 	$versions = (array) ( $vm['versions'] ?? array() );
 	$last     = $versions ? (array) end( $versions ) : array();
 	$ts       = '' !== (string) ( $last['committed_at'] ?? '' ) ? strtotime( (string) $last['committed_at'] ) : false;
-	$when     = $ts ? ', recorded ' . wp_date( 'F j, Y', $ts ) : '';
+	$when     = $ts ? ', recorded ' . gmdate( 'F j, Y', $ts ) . ' UTC' : '';
 
 	// The verify address the chip links, written out: note= always, v= unless
 	// the note has only its founding snapshot. A signed page's base already
