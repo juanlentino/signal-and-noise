@@ -52,7 +52,6 @@
 		iframe.setAttribute( 'frameborder', '0' );
 		iframe.setAttribute( 'loading', 'lazy' );
 		iframe.setAttribute( 'allow', 'encrypted-media; clipboard-write; fullscreen; picture-in-picture' );
-		iframe.setAttribute( 'allowfullscreen', '' );
 		iframe.setAttribute( 'title', 'Spotify player' );
 
 		// Clear the cover + play badge, then mount the embed in place.
