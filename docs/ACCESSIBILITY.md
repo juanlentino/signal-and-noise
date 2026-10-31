@@ -179,3 +179,7 @@ The blanket load-in fades (`fadeInUp` on groups, columns, images and covers, `fa
 
 **Contrast.** Text in all four reading aids is `currentColor` or a palette token, so it inherits the palette's measured pairs above. The blood accent is non-text (the timeline markers, the term's rule, the nav underline): 5.0 : 1 on the light ground and 6.0 : 1 on the dark, against a 3 : 1 floor. A text-fragment highlight reuses the selection pair.
 
+
+## Text spacing (WCAG 1.4.12), audited 2026-10-31
+
+Passed on nine live pages (home, the notes index, a note, /stats, /resume, /music, /contact, /services, /about) at 1280px and 375px, with the criterion's overrides applied to every element: line height 1.5, letter spacing 0.12em, word spacing 0.16em, paragraph spacing 2em. No text was clipped by an `overflow: hidden` or `clip` box, none was cut to an ellipsis, and no page scrolled sideways. The pages were served as local copies (the site's own fonts and stylesheet, the analytics beacon removed so the audit counted no visits), and the detector was seen to fire on a deliberately clipped control box before its zero was trusted. Not covered: text overlapping text without clipping (checked by eye on /stats, the densest page, only), Safari Reader and Chrome Reading Mode.

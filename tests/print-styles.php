@@ -143,6 +143,7 @@ ok( ! isset( $GLOBALS['__enqueued']['sn-print'] ), 'sn-print NOT enqueued on non
 $print_css = (string) @file_get_contents( realpath( __DIR__ . '/..' ) . '/assets/css/print.css' );
 ok( '' !== $print_css, 'print.css is readable' );
 ok( strpos( $print_css, '.sn-note-share' ) !== false, 'print.css hides the share row' );
+ok( strpos( $print_css, '.sn-section-link' ) !== false, 'print.css hides the section copy-link buttons (2026-10-31)' );
 // FIX 7 — the Related Notes footer is nav-like; the CHANGELOG claims print
 // strips it, so the selector must actually be in the hide list.
 ok( strpos( $print_css, '.sn-related-notes' ) !== false, 'FIX 7: print.css hides the Related Notes footer (.sn-related-notes)' );

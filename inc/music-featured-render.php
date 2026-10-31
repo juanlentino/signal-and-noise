@@ -51,7 +51,7 @@ function sn_music_featured_shortcode() {
 			: esc_html__( 'Featured', 'signal-and-noise' ) . ' &middot; ' . esc_html__( 'Press play', 'signal-and-noise' ) ) . '</p>';
 	$out .= '<iframe class="sn-music-featured__player" src="' . esc_url( $embed )
 		. '" width="100%" height="' . (int) $height . '" loading="lazy"'
-		. ' allow="encrypted-media; clipboard-write; fullscreen; picture-in-picture" allowfullscreen'
+		. ' allow="encrypted-media; clipboard-write; fullscreen; picture-in-picture"'
 		. ' title="' . esc_attr( 'Featured Spotify player' ) . '"></iframe>';
 	$out .= '</div>';
 
