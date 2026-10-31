@@ -20,6 +20,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+require_once __DIR__ . '/sn-keys.php'; // the shared keyboard helper this script depends on.
+
 /**
  * Whether keyboard navigation is active. Default true; a host can disable it
  * via the sn_keyboard_nav_enabled filter (e.g. the companion plugin mapping a
@@ -52,10 +54,11 @@ function sn_keyboard_nav_enqueue() {
 		array( 'sn-components' ),
 		sn_asset_ver( 'assets/css/keyboard-nav.css' )
 	);
+	sn_keys_register();
 	wp_enqueue_script(
 		'sn-keyboard-nav',
 		get_theme_file_uri( 'assets/js/keyboard-nav.js' ),
-		array(),
+		array( 'sn-keys' ),
 		sn_asset_ver( 'assets/js/keyboard-nav.js' ),
 		array(
 			'in_footer' => true,

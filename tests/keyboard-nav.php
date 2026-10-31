@@ -31,7 +31,8 @@ function is_singular( $t = '' ) { return (bool) $GLOBALS['__is_singular']; }
 function get_theme_file_uri( $p = '' ) { return 'https://x.test/wp-content/themes/sn/' . $p; }
 function sn_asset_ver( $p = '' ) { return '123'; }
 $GLOBALS['__enq'] = array();
-function wp_enqueue_script( $handle, $src = '', $deps = array(), $ver = false, $args = array() ) { $GLOBALS['__enq'][] = $handle; }
+function wp_enqueue_script( $handle, $src = '', $deps = array(), $ver = false, $args = array() ) { $GLOBALS['__enq'][] = $handle; $GLOBALS['__deps'][ $handle ] = $deps; }
+function wp_register_script( $handle, $src = '', $deps = array(), $ver = false, $args = array() ) { $GLOBALS['__reg'][ $handle ] = $src; }
 function wp_enqueue_style( $handle, $src = '', $deps = array(), $ver = false, $media = 'all' ) { $GLOBALS['__enq'][] = $handle; }
 
 require __DIR__ . '/../inc/keyboard-nav.php';
@@ -68,15 +69,19 @@ $GLOBALS['__filters'] = array();
 // ── JS contract (static source checks) ────────────────────────────────
 $js = file_get_contents( __DIR__ . '/../assets/js/keyboard-nav.js' );
 ok( is_string( $js ) && '' !== $js, 'keyboard-nav.js exists + non-empty' );
-ok( strpos( $js, 'function isFormField' ) !== false, 'JS defines the isFormField guard' );
-
-// isFormField must match command-palette.js verbatim (so both skip while typing).
-$pal = file_get_contents( __DIR__ . '/../assets/js/command-palette.js' );
-function sn_extract_isformfield( $src ) {
-	if ( ! preg_match( '/function isFormField\([^)]*\)\s*\{(.*?)\n\t\}/s', $src, $m ) ) { return null; }
-	return preg_replace( '/\s+/', ' ', trim( $m[1] ) );
+// 2026-10-31: the isFormField guard and the single-key switch live ONCE, in
+// sn-keys.js; both scripts take them from window.snKeys, so they cannot drift
+// (before, this pinned two verbatim copies against each other).
+$pal  = file_get_contents( __DIR__ . '/../assets/js/command-palette.js' );
+$keys = (string) file_get_contents( __DIR__ . '/../assets/js/sn-keys.js' );
+ok( 1 === preg_match( "/isFormField:\\s*function\\s*\\(\\s*el\\s*\\)/", $keys ) && false !== strpos( $keys, "'INPUT'" ) && false !== strpos( $keys, 'isContentEditable' ), 'sn-keys.js defines the isFormField guard (inputs, textareas, selects, contenteditable)' );
+foreach ( array( 'keyboard-nav.js' => $js, 'command-palette.js' => $pal ) as $file => $src ) {
+	ok( false === strpos( $src, 'function isFormField' ) && false === strpos( $src, 'function singleKeysOn' ) && false === strpos( $src, 'SHORTCUT_KEY' ), "$file keeps no copy of the guard or the switch" );
+	ok( false !== strpos( $src, 'window.snKeys.isFormField' ) && false !== strpos( $src, 'window.snKeys.singleKeysOn' ), "$file takes them from window.snKeys" );
 }
-ok( sn_extract_isformfield( $js ) !== null && sn_extract_isformfield( $js ) === sn_extract_isformfield( $pal ), 'isFormField guard body matches command-palette.js verbatim' );
+$GLOBALS['__enq'] = array(); $GLOBALS['__deps'] = array(); $GLOBALS['__reg'] = array(); $GLOBALS['__is_singular'] = true;
+sn_keyboard_nav_enqueue();
+ok( array( 'sn-keys' ) === ( $GLOBALS['__deps']['sn-keyboard-nav'] ?? null ) && isset( $GLOBALS['__reg']['sn-keys'] ), 'the note shortcuts depend on the registered sn-keys helper' );
 
 ok( preg_match( "/===\s*'j'/", $js ) === 1, 'JS handles the j key' );
 ok( preg_match( "/===\s*'k'/", $js ) === 1, 'JS handles the k key' );
