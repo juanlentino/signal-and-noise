@@ -176,7 +176,8 @@ ok( false === ( $nq['has_password'] ?? null ), 'notes: query excludes password-p
 // 'unsafe-inline' does not block it. The JS reads #sn-cmdk-data.
 $GLOBALS['__scripts'] = array(); $GLOBALS['__inline'] = array();
 function wp_enqueue_style() {}
-function wp_enqueue_script( $h ) { $GLOBALS['__scripts'][] = $h; }
+function wp_enqueue_script( $h, $src = '', $deps = array() ) { $GLOBALS['__scripts'][] = $h; $GLOBALS['__script_deps'][ $h ] = $deps; }
+function wp_register_script( $h, $src = '' ) { $GLOBALS['__registered_scripts'][ $h ] = $src; }
 function wp_add_inline_script( $h, $d, $pos = 'after' ) { $GLOBALS['__inline'][ $h ] = $d; }
 function get_theme_file_uri( $p = '' ) { return 'https://x.test/' . $p; }
 function sn_asset_ver( $p ) { return '1'; }
@@ -189,6 +190,7 @@ $GLOBALS['__filters'] = array();
 reset_qargs();
 sn_cmdk_enqueue();
 ok( in_array( 'sn-command-palette', $GLOBALS['__scripts'], true ), 'enqueue: the palette script is enqueued' );
+ok( array( 'sn-keys' ) === ( $GLOBALS['__script_deps']['sn-command-palette'] ?? null ) && isset( $GLOBALS['__registered_scripts']['sn-keys'] ), 'enqueue: the palette depends on the registered sn-keys helper (2026-10-31)' );
 ok( ! isset( $GLOBALS['__inline']['sn-command-palette'] ), 'enqueue: no executable inline script (window.SN_CMDK=) is attached any more' );
 ok( 1 === count( $GLOBALS['__footer'] ) && 1 === (int) $GLOBALS['__footer'][0]['pri'], 'enqueue: the island prints from ONE wp_footer callback at priority 1' );
 $cb = $GLOBALS['__footer'][0]['cb'] ?? null;

@@ -239,7 +239,7 @@ foreach ( array( $lv, sn_llms_txt_body( false ) ) as $variant_body ) {
 $fullx = sn_llms_txt_body( true, array(), $px, array(), 51 );
 ok( false !== strpos( $fullx, '/notes/start-here/' ) && false !== strpos( $fullx, '/provenance/objections/' ) && false !== strpos( $fullx, '51 notes, three SSRN papers' ), 'the full variant carries the same key pages and summary' );
 ok( false !== strpos( (string) file_get_contents( __DIR__ . '/../inc/llms-txt.php' ), 'sn_llms_txt_body( $full, $notes, $pillars, $topics, sn_llms_txt_note_count() )' ), 'the route passes the derived note count' );
-ok( false !== strpos( (string) file_get_contents( __DIR__ . '/../inc/abilities-diagnostics.php' ), 'sn_llms_txt_body( $full, $notes, $pillars, $topics, $count )' ), 'the get-llms-txt ability passes the same inputs as the route (count, and Topics for full)' );
+ok( false !== strpos( (string) file_get_contents( __DIR__ . '/../inc/abilities-diagnostics-seo-llms.php' ), 'sn_llms_txt_body( $full, $notes, $pillars, $topics, $count )' ), 'the get-llms-txt ability passes the same inputs as the route (count, and Topics for full)' );
 
 // The count's corpus: every published, non-password post (what /notes/ lists), filters off.
 ok( 51 === sn_llms_txt_note_count() && 'post' === WP_Query::$args['post_type'] && 'publish' === WP_Query::$args['post_status'] && false === WP_Query::$args['has_password'] && ! isset( WP_Query::$args['category_name'] ) && true === WP_Query::$args['suppress_filters'], 'the note count is the published, non-password posts /notes/ lists: no category filter, filters suppressed' );

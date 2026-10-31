@@ -391,42 +391,19 @@
 	// ── Global key + trigger wiring ──────────────────────────────────────────
 
 	// ── Single-key shortcut preference (WCAG 2.1.4, 2026.10) ───────────────
-	// Mirrors keyboard-nav.js verbatim. "/" is the palette's single-key
-	// shortcut; the palette row below is the off (and back on) switch on every
-	// page, since the ? cheat-sheet only exists on notes.
-	var SHORTCUT_KEY = 'sn-single-key-shortcuts';
-	var shortcutMemo = null;
-	function singleKeysOn() {
-		try {
-			return window.localStorage.getItem( SHORTCUT_KEY ) !== 'off';
-		} catch ( err ) {
-			return shortcutMemo !== 'off';
-		}
-	}
-	function setSingleKeys( on ) {
-		shortcutMemo = on ? null : 'off';
-		try {
-			if ( on ) {
-				window.localStorage.removeItem( SHORTCUT_KEY );
-			} else {
-				window.localStorage.setItem( SHORTCUT_KEY, 'off' );
-			}
-		} catch ( err ) {}
-	}
+	// "/" is the palette's single-key shortcut; the palette row below is the
+	// off (and back on) switch on every page, since the ? cheat-sheet only
+	// exists on notes. The preference, and isFormField, live in sn-keys.js,
+	// shared with keyboard-nav.js (2026-10-31).
+	var singleKeysOn = window.snKeys.singleKeysOn;
+	var setSingleKeys = window.snKeys.setSingleKeys;
+	var isFormField = window.snKeys.isFormField;
 
 	// The trigger advertises "/" only while it works.
 	function syncTriggerKeys() {
 		if ( trigger ) {
 			trigger.setAttribute( 'aria-keyshortcuts', singleKeysOn() ? 'Control+K Meta+K /' : 'Control+K Meta+K' );
 		}
-	}
-
-	function isFormField( el ) {
-		if ( ! el ) { return false; }
-		var tag = el.tagName;
-		if ( tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' ) { return true; }
-		if ( el.isContentEditable ) { return true; }
-		return false;
 	}
 
 	function onGlobalKeydown( e ) {
