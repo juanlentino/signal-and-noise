@@ -12,6 +12,9 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Fixed
+- **The command palette and the keyboard shortcuts no longer throw on the first view after an install.** Seen live on 2026-10-31: a page the edge had not revalidated since the install served its old HTML, which loads no `sn-keys.js`, while its old `?ver=` URL for `command-palette.js` already returned the new file. That file read `window.snKeys` unguarded and threw (`Cannot read properties of undefined (reading 'singleKeysOn')`), so that view had no palette and no shortcuts. `command-palette.js` and `keyboard-nav.js` now return before doing anything when the helper is missing, as the `sn-copy.js` callers already do. `tests/js/single-key-shortcuts.test.cjs` pins both, seen red with the live TypeError first.
+
 ## [2026.10.31] - 2026-10-31 — Section links, Cite this note, a what-changed link, and /stats on the split hero
 
 ### Added

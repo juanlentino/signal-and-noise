@@ -26,6 +26,13 @@
 ( function () {
 	'use strict';
 
+	// sn-keys.js is this script's dependency. A page the edge has not revalidated
+	// since an install can pair its old HTML (no sn-keys.js) with this file under
+	// the old ?ver URL: do nothing then, rather than throw half-built (2026-10-31).
+	if ( ! window.snKeys ) {
+		return;
+	}
+
 	// Data comes only from the JSON data island <script type="application/json"
 	// id="sn-cmdk-data"> (inc/command-palette.php, 2026-10-16), which needs no
 	// 'unsafe-inline' in the CSP. No island, or a malformed one: the empty default.
