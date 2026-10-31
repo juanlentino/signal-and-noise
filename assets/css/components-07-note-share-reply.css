@@ -1,17 +1,20 @@
 /* ── Copy-permalink + native Web Share row (v9.10.0) ──────────────────
+   The cite line below shares its row, label and button rules.
    Rendered by [sn_note_share] into the single-note footer
    (parts/post-closing.html). Brutalist: mono uppercase tracked labels,
    sharp outline buttons, blood accent on hover / copied. The .__native
    SHARE button ships `hidden` and is revealed by note-share.js only when
    navigator.share exists. */
-.sn-note-share {
+.sn-note-share,
+.sn-note-cite {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
 	gap: 0.75rem;
 	margin-top: var(--wp--custom--air--sm);
 }
-.sn-note-share__label {
+.sn-note-share__label,
+.sn-note-cite__label {
 	font-family: 'DM Mono', 'Courier New', monospace;
 	font-size: max(0.7rem, 11px);
 	font-weight: 500;
@@ -21,7 +24,8 @@
 	margin-right: 0.25rem;
 }
 .sn-note-share__copy,
-.sn-note-share__native {
+.sn-note-share__native,
+.sn-note-cite__copy {
 	font-family: 'DM Mono', 'Courier New', monospace;
 	font-size: max(0.7rem, 11px);
 	font-weight: 500;
@@ -41,18 +45,21 @@
 }
 @media (hover: hover) {
 	.sn-note-share__copy:hover,
-	.sn-note-share__native:hover {
+	.sn-note-share__native:hover,
+	.sn-note-cite__copy:hover {
 		color: var(--wp--preset--color--blood);
 		border-color: var(--wp--preset--color--blood);
 	}
 }
 
 .sn-note-share__copy:focus-visible,
-.sn-note-share__native:focus-visible {
+.sn-note-share__native:focus-visible,
+.sn-note-cite__copy:focus-visible {
 	color: var(--wp--preset--color--blood);
 	border-color: var(--wp--preset--color--blood);
 }
-.sn-note-share__copy.is-copied {
+.sn-note-share__copy.is-copied,
+.sn-note-cite__copy.is-copied {
 	color: var(--wp--preset--color--void);
 	background-color: var(--wp--preset--color--blood);
 	border-color: var(--wp--preset--color--blood);
@@ -62,9 +69,47 @@
 }
 @media (prefers-reduced-motion: reduce) {
 	.sn-note-share__copy,
-	.sn-note-share__native {
+	.sn-note-share__native,
+	.sn-note-cite__copy,
+	.sn-note-cite__text a {
 		transition: none;
 	}
+}
+
+/* ── CITE THIS NOTE ──────────────────────────────────────────────────
+   Rendered by inc/note-cite.php right under the share row: the plugin's
+   APA line as text, its DOI a link, then the two copy buttons above (wired
+   by note-share.js). The text takes the room it needs; the buttons wrap
+   under it on a narrow screen. The text and its link inherit the page's ink
+   rather than naming bone, so print.css's black reaches them in print under
+   either dark mode (the toggle's attribute or the OS media query). */
+.sn-note-cite__text {
+	flex: 1 1 24rem;
+	min-width: 0;
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.7rem, 11px);
+	line-height: 1.6;
+	letter-spacing: 0.02em;
+	overflow-wrap: anywhere;
+}
+/* As wide as its longest label (COPY BIBTEX, COPY FAILED) in DM Mono, so the
+   COPIED / COPY FAILED swap never reflows the citation beside it. */
+.sn-note-cite__copy {
+	min-width: 10.75em;
+}
+.sn-note-cite__text a {
+	color: inherit;
+	text-decoration: underline;
+	text-underline-offset: 0.2em;
+	transition: color 0.2s ease;
+}
+@media (hover: hover) {
+	.sn-note-cite__text a:hover {
+		color: var(--wp--preset--color--blood);
+	}
+}
+.sn-note-cite__text a:focus-visible {
+	color: var(--wp--preset--color--blood);
 }
 
 /* ── NOTE REPLY ROW ──────────────────────────────────────────────────

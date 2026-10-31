@@ -13,6 +13,10 @@
  *   data-sn-share-url    — the canonical permalink
  *   data-sn-share-title  — the note title
  *
+ * The cite line under it (inc/note-cite.php) is wired the same way: each
+ * .sn-note-cite__copy button copies its data-sn-copy-text (the APA line or
+ * the BibTeX entry) and announces its own data-sn-copied message.
+ *
  * @since theme v9.10.0
  */
 ( function () {
@@ -87,7 +91,8 @@
 		}
 
 		btn.addEventListener( 'click', function () {
-			var url = btn.getAttribute( 'data-sn-share-url' );
+			// The share row copies a permalink, the cite line its text.
+			var url = btn.getAttribute( 'data-sn-share-url' ) || btn.getAttribute( 'data-sn-copy-text' );
 			if ( ! url ) {
 				return;
 			}
@@ -95,7 +100,7 @@
 				function () {
 					btn.textContent = 'COPIED';
 					btn.classList.add( 'is-copied' );
-					announce( 'Link copied to clipboard' );
+					announce( btn.getAttribute( 'data-sn-copied' ) || 'Link copied to clipboard' );
 					if ( timer ) {
 						clearTimeout( timer );
 					}
@@ -138,9 +143,6 @@
 
 	function init() {
 		var rows = document.querySelectorAll( '.sn-note-share' );
-		if ( ! rows.length ) {
-			return;
-		}
 		for ( var i = 0; i < rows.length; i++ ) {
 			var row = rows[ i ];
 			var copyBtn = row.querySelector( '.sn-note-share__copy' );
@@ -150,6 +152,15 @@
 			}
 			if ( nativeBtn ) {
 				wireNativeShare( nativeBtn );
+			}
+		}
+		// One polite region per cite line, shared by its two buttons.
+		var cites = document.querySelectorAll( '.sn-note-cite' );
+		for ( var j = 0; j < cites.length; j++ ) {
+			var buttons = cites[ j ].querySelectorAll( '.sn-note-cite__copy' );
+			var live = buttons.length ? makeLiveRegion( cites[ j ] ) : null;
+			for ( var k = 0; k < buttons.length; k++ ) {
+				wireCopy( buttons[ k ], live );
 			}
 		}
 	}

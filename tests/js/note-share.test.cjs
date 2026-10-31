@@ -160,3 +160,60 @@ test('negative control: no Web Share keeps SHARE hidden and unwired; no URL make
   assert.deepEqual(p.log.writes, []);
   assert.equal(p.copy.textContent, 'COPY LINK');
 });
+
+// The cite line (inc/note-cite.php) rides the same wiring: each
+// .sn-note-cite__copy button copies its data-sn-copy-text, swaps its label the
+// same way and announces its own data-sn-copied message in one polite region.
+const APA = 'Lentino, J. (2026, October 17). A note (Version 2). Signal & Noise. https://doi.org/10.5281/zenodo.1';
+const BIB = '@online{lentino2026note,\n  author = {Lentino, Juan},\n  doi = {10.5281/zenodo.1}\n}';
+function citePage({ clipboard = 'ok' } = {}) {
+  const apa = el('BUTTON', { 'data-sn-copy-text': APA, 'data-sn-copied': 'APA citation copied to clipboard' });
+  apa.textContent = 'COPY APA';
+  const bib = el('BUTTON', { 'data-sn-copy-text': BIB, 'data-sn-copied': 'BibTeX copied to clipboard' });
+  bib.textContent = 'COPY BIBTEX';
+  const row = el('DIV');
+  row.querySelectorAll = (sel) => (sel === '.sn-note-cite__copy' ? [apa, bib] : []);
+  const log = { writes: [] };
+  const document = {
+    readyState: 'complete', body: el('BODY'),
+    querySelectorAll: (sel) => (sel === '.sn-note-cite' ? [row] : []),
+    createElement: (tag) => el(tag.toUpperCase()),
+  };
+  const navigator = { clipboard: { writeText: (t) => { log.writes.push(t); return clipboard === 'ok' ? Promise.resolve() : Promise.reject(new Error('denied')); } } };
+  vm.runInNewContext(SRC, {
+    window: { document, navigator }, document, navigator,
+    setTimeout: (fn, ms) => setTimeout(fn, ms), clearTimeout: (id) => clearTimeout(id),
+  });
+  const lives = row.children.filter((c) => c.attrs.role === 'status');
+  return { apa, bib, row, lives, log };
+}
+
+test('cite: COPY BIBTEX writes the whole entry, shows COPIED, announces its own message, and reverts', () => withTimers(async () => {
+  const p = citePage();
+  assert.equal(p.lives.length, 1, 'one polite region for the line, shared by both buttons');
+  assert.equal(p.lives[0].attrs['aria-live'], 'polite');
+  p.bib.listeners.click();
+  await flush();
+  assert.deepEqual(p.log.writes, [BIB], 'the multi-line entry, byte for byte');
+  assert.equal(p.bib.textContent, 'COPIED');
+  assert.ok(p.bib.classList.contains('is-copied'));
+  assert.equal(p.lives[0].textContent, 'BibTeX copied to clipboard');
+  assert.equal(p.apa.textContent, 'COPY APA', 'the other button is untouched');
+  mock.timers.tick(1600);
+  assert.equal(p.bib.textContent, 'COPY BIBTEX');
+  p.apa.listeners.click();
+  await flush();
+  assert.deepEqual(p.log.writes, [BIB, APA]);
+  assert.equal(p.lives[0].textContent, 'APA citation copied to clipboard');
+}));
+
+test('cite: a refused clipboard shows COPY FAILED, drops the copied style, and announces it', () => withTimers(async () => {
+  const p = citePage({ clipboard: 'fail' });
+  p.apa.listeners.click();
+  await flush();
+  assert.equal(p.apa.textContent, 'COPY FAILED');
+  assert.ok(!p.apa.classList.contains('is-copied'));
+  assert.equal(p.lives[0].textContent, 'Copy failed');
+  mock.timers.tick(1600);
+  assert.equal(p.apa.textContent, 'COPY APA');
+}));
