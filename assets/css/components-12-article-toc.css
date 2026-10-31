@@ -171,3 +171,38 @@
 	.sn-article-toc__list { line-height: 1.6; hyphens: auto; }
 }
 
+
+/* ── SECTION LINKS (2026-10-31) ─────────────────────────────────────────
+   The copy-link button article-toc.js draws inside each H2 the contents list
+   names: a quiet "#" after the heading text, "COPIED" for 1.6 s after a
+   copy. Its own small label type, whatever the heading's size; 24px target
+   (WCAG 2.5.8); never selected along with the heading's text. */
+.sn-section-link {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.7rem, 11px);
+	font-weight: 500;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	line-height: 1;
+	vertical-align: middle;
+	min-width: 24px;
+	min-height: 24px;
+	margin-left: 0.6em;
+	padding: 0.3rem 0.4rem;
+	color: var(--wp--preset--color--rust);
+	background: transparent;
+	border: 1px solid transparent;
+	border-radius: 0;
+	cursor: pointer;
+	user-select: none;
+}
+@media (hover: hover) {
+	.sn-section-link:hover {
+		color: var(--wp--preset--color--blood);
+		border-color: var(--wp--preset--color--blood);
+	}
+}
+.sn-section-link:focus-visible {
+	color: var(--wp--preset--color--blood);
+	border-color: var(--wp--preset--color--blood);
+}

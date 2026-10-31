@@ -54,10 +54,13 @@ function page({ clipboard = 'ok', execCommand = true, share = null, url = true }
     navigator.clipboard = { writeText: (t) => { log.writes.push(t); return ctl.clipboard === 'ok' ? Promise.resolve() : Promise.reject(new Error('denied')); } };
   }
   if (share) navigator.share = (data) => { log.shares.push({ ...data }); return share === 'ok' ? Promise.resolve() : Promise.reject(new Error('AbortError')); };
-  vm.runInNewContext(SRC, {
+  const ctx = {
     window: { document, navigator }, document, navigator,
     setTimeout: (fn, ms) => setTimeout(fn, ms), clearTimeout: (id) => clearTimeout(id),
-  });
+  };
+  // sn-copy.js (the shared clipboard helper, 2026-10-31) first, as the script declares.
+  vm.runInNewContext(readFileSync(path.join(__dirname, '..', '..', 'assets', 'js', 'sn-copy.js'), 'utf8'), ctx);
+  vm.runInNewContext(SRC, ctx);
   const live = row.children.find((c) => c.attrs.role === 'status') || null;
   return { copy, native, row, body, live, log, ctl };
 }
