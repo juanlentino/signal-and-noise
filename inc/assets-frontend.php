@@ -28,6 +28,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+require_once __DIR__ . '/sn-copy.php'; // sn_copy_register(): the clipboard helper the share row and section links depend on.
 require_once __DIR__ . '/components-css.php'; // sn_components_css_parts(): the per-file fallback loads the component layer in cascade order.
 
 /**
@@ -255,10 +256,11 @@ add_action( 'wp_enqueue_scripts', 'sn_enqueue_print_styles', 30 );
  * absence of any page gate).
  */
 function sn_register_note_share() {
+	sn_copy_register();
 	wp_register_script(
 		'sn-note-share',
 		get_theme_file_uri( 'assets/js/note-share.js' ),
-		array(),
+		array( 'sn-copy' ),
 		sn_asset_ver( 'assets/js/note-share.js' ),
 		true
 	);
@@ -305,10 +307,11 @@ add_action( 'wp_enqueue_scripts', 'sn_enqueue_discography', 30 );
  */
 function sn_enqueue_article_toc() {
 	if ( is_singular( 'post' ) ) {
+		sn_copy_register(); // the section links copy (2026-10-31).
 		wp_enqueue_script(
 			'sn-article-toc',
 			get_theme_file_uri( 'assets/js/article-toc.js' ),
-			array(),
+			array( 'sn-copy' ),
 			sn_asset_ver( 'assets/js/article-toc.js' ),
 			array( 'in_footer' => true, 'strategy' => 'defer' )
 		);
