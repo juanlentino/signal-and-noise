@@ -13,7 +13,8 @@
  * @wordpress/commands palette — these never coexist on one document.
  *
  * Accessibility = APG dialog + combobox:
- *   - role="dialog" aria-modal="true", focus trap, Escape restores trigger focus.
+ *   - a native <dialog> opened with showModal(), so the page behind is inert
+ *     (2026-10-31); focus trap, Escape restores trigger focus.
  *   - input is role="combobox" with aria-activedescendant tracking the active
  *     option — REAL DOM focus stays on the input; options are never focused.
  *
@@ -266,18 +267,20 @@
 		if ( isOpen ) { return; }
 		lastFocus = fromTrigger || document.activeElement;
 		isOpen = true;
-		root.hidden = false;
+		root.showModal();
 		input.value = '';
 		render( '' );
-		// Defer focus so the unhide has applied (Safari focus-on-hidden quirk).
-		window.setTimeout( function () { input.focus(); }, 0 );
+		input.focus();
 		document.addEventListener( 'keydown', onTrapKeydown, true );
 	}
 
+	// Also the dialog's close listener: a close the browser makes itself
+	// (Escape's cancel, Android back) lands here too, and the second call
+	// from our own close() is a no-op.
 	function close() {
 		if ( ! isOpen ) { return; }
 		isOpen = false;
-		root.hidden = true;
+		if ( root.open ) { root.close(); }
 		document.removeEventListener( 'keydown', onTrapKeydown, true );
 		if ( lastFocus && lastFocus.focus ) {
 			lastFocus.focus();
@@ -307,13 +310,11 @@
 		if ( built ) { return; }
 		built = true;
 
-		root = document.createElement( 'div' );
+		root = document.createElement( 'dialog' );
 		root.id = 'sn-cmdk';
 		root.className = 'sn-cmdk';
-		root.setAttribute( 'role', 'dialog' );
-		root.setAttribute( 'aria-modal', 'true' );
 		root.setAttribute( 'aria-label', 'Search and navigate' );
-		root.hidden = true;
+		root.addEventListener( 'close', close );
 
 		backdrop = document.createElement( 'div' );
 		backdrop.className = 'sn-cmdk-backdrop';

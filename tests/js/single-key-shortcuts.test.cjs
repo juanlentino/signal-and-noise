@@ -24,6 +24,7 @@ function fixture(file, store, opts = {}) {
       removeAttribute(k) { delete this.attributes[k]; },
       addEventListener(type, fn) { (this.handlers[type] ||= []).push(fn); },
       focus() { document.activeElement = this; }, scrollIntoView() {},
+      open: false, showModal() { this.open = true; }, close() { this.open = false; }, // <dialog> (2026-10-31)
     };
     nodes.push(el);
     return el;
@@ -61,10 +62,10 @@ test('on by default: j navigates, ? opens the sheet, / opens the palette', () =>
   nav.key('j');
   assert.deepEqual(nav.navigations, ['/next']);
   nav.key('?');
-  assert.equal(dialog(nav).hidden, false);
+  assert.equal(dialog(nav).open, true);
   const pal = fixture('command-palette.js', {});
   assert.equal(pal.key('/').prevented, true);
-  assert.equal(dialog(pal, 'sn-cmdk').hidden, false);
+  assert.equal(dialog(pal, 'sn-cmdk').open, true);
 });
 
 test('off: j, k and ? do nothing on a note, and / does nothing anywhere', () => {
@@ -81,7 +82,7 @@ test('off: j, k and ? do nothing on a note, and / does nothing anywhere', () => 
 test('off: Cmd/Ctrl-K still opens the palette (a modifier chord is not a single-key shortcut)', () => {
   const pal = fixture('command-palette.js', { [KEY]: 'off' });
   assert.equal(pal.key('k', { metaKey: true }).prevented, true);
-  assert.equal(dialog(pal, 'sn-cmdk').hidden, false);
+  assert.equal(dialog(pal, 'sn-cmdk').open, true);
 });
 
 test('the ? sheet carries the switch, checked by default; unchecking it turns them off', () => {

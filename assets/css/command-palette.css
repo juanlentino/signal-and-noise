@@ -85,8 +85,25 @@
 	padding: 12vh 1rem 1rem;
 }
 
-.sn-cmdk[hidden] {
+.sn-cmdk:not([open]) {
 	display: none;
+}
+
+/* A native <dialog> since 2026-10-31: undo the UA box so it is the same
+   full-viewport overlay, and leave the dimming to the backdrop div. */
+.sn-cmdk {
+	width: auto;
+	height: auto;
+	max-width: none;
+	max-height: none;
+	margin: 0;
+	border: 0;
+	background: transparent;
+	color: inherit;
+}
+
+.sn-cmdk::backdrop {
+	background: transparent;
 }
 
 .sn-cmdk-backdrop {
@@ -187,7 +204,7 @@
 /* Open animation only when motion is welcome; overlay still appears instantly
    under reduced motion (no @keyframes gating the display). */
 @media (prefers-reduced-motion: no-preference) {
-	.sn-cmdk:not([hidden]) .sn-cmdk-panel {
+	.sn-cmdk[open] .sn-cmdk-panel {
 		animation: sn-cmdk-in 120ms ease-out both;
 	}
 
