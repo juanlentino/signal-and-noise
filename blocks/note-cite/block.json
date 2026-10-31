@@ -1,0 +1,17 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "signal-noise/note-cite",
+	"title": "Cite this note",
+	"category": "signal-noise",
+	"icon": "editor-quote",
+	"description": "The APA citation of a note, its DOI, and copy buttons for APA and BibTeX.",
+	"textdomain": "signal-and-noise",
+	"supports": {
+		"autoRegister": true,
+		"html": false,
+		"multiple": false
+	},
+	"viewScript": "sn-note-share",
+	"render": "file:./render.php"
+}

@@ -159,6 +159,7 @@ require_once __DIR__ . '/inc/cited-by.php'; // v10.21.0: [sn_cited_by] reverse-l
 require_once __DIR__ . '/inc/next-essay.php'; // 14.9.0: the next pillar, at the end of each essay
 require_once __DIR__ . '/inc/404-recovery.php';
 require_once __DIR__ . '/inc/post-share.php';
+require_once __DIR__ . '/inc/note-cite.php'; // Cite this note: the plugin's APA line and DOI under the share row, with APA and BibTeX copy buttons (plugin-guarded)
 require_once __DIR__ . '/inc/note-reply.php'; // v12.9.0: [sn_note_reply] reply-by-correspondence row (reuses the contact-alias machinery)
 require_once __DIR__ . '/inc/note-link-previews.php'; // v12.10.0: internal note-link hover previews (server-stamped data, no reader-side fetch)
 require_once __DIR__ . '/inc/article-toc.php';
