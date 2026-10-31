@@ -132,3 +132,15 @@ test('a close event that arrives after a reopen does not close the new session',
   p.flush();
   assert.equal(p.find('sn-cmdk').open, false, 'and a real close still closes');
 });
+
+test('the sheet too: a late close event after a quick reopen leaves it open; its panel autofocuses', () => {
+  const p = combined();
+  p.key({ key: '?', keyCode: 191, shiftKey: true });
+  const sheet = p.find('sn-kbdn');
+  const panel = sheet.children.find((c) => c.className === 'sn-kbdn-panel');
+  assert.ok('autofocus' in panel.attributes, 'showModal() focuses the panel first (Firefox would pass through the switch)');
+  p.key({ key: 'Escape', keyCode: 27 });
+  p.key({ key: '?', keyCode: 191, shiftKey: true });
+  p.flush();
+  assert.equal(sheet.open, true, 'still open');
+});
