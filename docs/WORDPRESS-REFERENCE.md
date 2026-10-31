@@ -419,7 +419,7 @@ The `/notes` route lives off normal FSE template resolution. [inc/page-notes-tem
 
 **Lives in:** [inc/wp-update-integration.php](../inc/wp-update-integration.php) and the parts it requires (registration + visibility; the update filters are in `wp-update-integration-update-transient.php`) and [inc/wp-update-git-preservation.php](../inc/wp-update-git-preservation.php) (`.git` survives WP UI installs). Plugin has identical pair at `signal-and-noise-tools/inc/`.
 
-**Why it exists:** the legacy updater (§10.1) shipped its own polling, SHA tracking, self-heal, and synthetic update label — ~683 LOC for what WP Core already does natively for plugins and themes via the `pre_set_site_transient_update_themes` filter. The Phase 2b cleanup deleted all of that. v8.5.0 reintroduced ~120 LOC of native-WP integration to restore the version-visibility surface in wp-admin without bringing back the polling-heavy machinery.
+**Why it exists:** the legacy updater (§10.1) shipped its own polling, SHA tracking, self-heal, and synthetic update label — ~683 LOC for what WP Core already does natively for plugins and themes (then via the `pre_set_site_transient_update_themes` filter; since 2026-10-31 via core's `update_themes_{$hostname}` hook). The Phase 2b cleanup deleted all of that. v8.5.0 reintroduced ~120 LOC of native-WP integration to restore the version-visibility surface in wp-admin without bringing back the polling-heavy machinery.
 
 **Both install paths now coexist:**
 
@@ -452,7 +452,7 @@ The `/notes` route lives off normal FSE template resolution. [inc/page-notes-tem
 - Honors the `?force-check=1` query arg — clicking "Check Again" in wp-admin re-fetches once per request (#332; `WP_FORCE_UPDATE_CHECK` never existed in core and was removed).
 - `admin_init` version-change detection: compares on-disk Version against `sn_last_seen_*_version` option; on mismatch, clears both `sn_gh_latest_*` and WP's own `update_themes` / `update_plugins` site transient. Handles the "upgrade just happened, why does WP still say update available?" case for both install paths.
 
-**Theme update transient shape ≠ plugin update transient shape** — themes register via `pre_set_site_transient_update_themes` with **arrays** keyed by stylesheet; plugins use `pre_set_site_transient_update_plugins` with **stdClass objects** keyed by basename. Subtle WP core quirk; copy-adapting code between the two needs the shape conversion.
+**Theme update transient shape ≠ plugin update transient shape** — theme entries are **arrays** keyed by stylesheet (since 2026-10-31 the theme offers its update through core's `update_themes_{$hostname}` hook, [`inc/wp-update-integration-update-transient.php`](../inc/wp-update-integration-update-transient.php), and core files it); plugins use `pre_set_site_transient_update_plugins` with **stdClass objects** keyed by basename. Subtle WP core quirk; copy-adapting code between the two needs the shape conversion.
 
 **Verification recipe** for the .git preservation (the only thing in §10.5 that hasn't been exercised end-to-end yet on this install):
 1. Push a v8.5.4+ tag without running `gh workflow run`.

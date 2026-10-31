@@ -22,6 +22,8 @@
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   toc.addEventListener('click', function (e) {
+    // A modified click means a new tab, window or download: the browser's.
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) { return; }
     var link = e.target && e.target.closest ? e.target.closest('a[href^="#"]') : null;
     if (!link || !toc.contains(link)) { return; }
     var id = link.getAttribute('href').slice(1);

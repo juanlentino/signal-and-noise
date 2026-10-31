@@ -106,6 +106,7 @@
 				},
 				function () {
 					btn.textContent = 'COPY FAILED';
+					btn.classList.remove( 'is-copied' ); // a failure right after a success is not drawn as one.
 					announce( 'Copy failed' );
 					if ( timer ) {
 						clearTimeout( timer );

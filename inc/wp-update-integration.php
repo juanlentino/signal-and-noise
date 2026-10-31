@@ -5,7 +5,8 @@
  * Hooks into WordPress's standard update system so this theme appears
  * in wp-admin/update-core.php and Appearance → Themes alongside other
  * themes. Polls the GitHub Tags API every 12h (cached in a site
- * transient) to compare local version against the latest tagged release.
+ * transient) to compare local version against the latest tagged release,
+ * and offers it through core's Update URI hook (`update_themes_github.com`).
  *
  * Both install paths now coexist (since v8.5.2):
  *   - **Canonical:** `gh workflow run deploy.yml --ref vX.Y.Z --repo juanlentino/signal-and-noise`

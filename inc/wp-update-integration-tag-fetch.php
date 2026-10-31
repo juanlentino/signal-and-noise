@@ -19,9 +19,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @param bool $force_refresh When true, bypass the cache and re-fetch.
  *                            Used when WP's "Check Again" button is
  *                            clicked (`?force-check=1`). Added v8.5.3.
- *                            Memoized per request (#332): wp_update_themes()
- *                            writes the transient twice per run, so the
- *                            filter runs twice; one click is one fetch.
+ *                            Memoized per request (#332): one request can
+ *                            ask more than once (the update offer, the
+ *                            get-latest-theme-tag ability, the plugin's
+ *                            seam); one click is one fetch.
  */
 function sn_gh_latest_theme_tag( $force_refresh = false ) {
 	if ( ! $force_refresh ) {
