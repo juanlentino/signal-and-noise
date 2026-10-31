@@ -33,7 +33,9 @@ $GLOBALS['__transients']        = array();
 // Stateful hook stubs: the download step attaches the token filter around ONE
 // request, and the pins below read which requests saw it attached.
 $GLOBALS['__filters'] = array();
-if ( ! function_exists( 'add_filter' ) )  { function add_filter( $tag, $cb = null ) { $GLOBALS['__filters'][ $tag ][] = $cb; } }
+// Records accepted_args too: a callback registered for fewer args than it reads
+// gets its defaults from core, and the offer then answers no theme (review of #619).
+if ( ! function_exists( 'add_filter' ) )  { function add_filter( $tag, $cb = null, $prio = 10, $args = 1 ) { $GLOBALS['__filters'][ $tag ][] = $cb; if ( is_string( $cb ) ) { $GLOBALS['__filter_args'][ $tag ][ $cb ] = $args; } } }
 if ( ! function_exists( 'remove_filter' ) ) {
     function remove_filter( $tag, $cb = null ) {
         $GLOBALS['__filters'][ $tag ] = array_values( array_filter( $GLOBALS['__filters'][ $tag ] ?? array(), function ( $c ) use ( $cb ) { return $c !== $cb; } ) );
@@ -233,6 +235,7 @@ ok( 1 === count( $GLOBALS['__captured_requests'] ), 'two forced calls in one req
 // wp_update_themes() asks update_themes_{host of style.css's Update URI} once per
 // check and places the answer itself; the old pre_set_site_transient rebuild is gone.
 ok( in_array( 'sn_gh_theme_update_offer', $GLOBALS['__filters']['update_themes_github.com'] ?? array(), true ), 'offer: registered on core\'s update_themes_github.com hook' );
+ok( 3 === ( $GLOBALS['__filter_args']['update_themes_github.com']['sn_gh_theme_update_offer'] ?? 0 ), 'offer: registered to receive $stylesheet (accepted_args 3), or it answers no theme' );
 preg_match( '/^Update URI:\s*(\S+)/mi', (string) file_get_contents( __DIR__ . '/../style.css', false, null, 0, 8192 ), $uri );
 ok( 'github.com' === parse_url( $uri[1] ?? '', PHP_URL_HOST ), 'offer: the hook\'s host is the host style.css\'s Update URI names' );
 ok( empty( $GLOBALS['__filters']['pre_set_site_transient_update_themes'] ), 'offer: nothing rebuilds update_themes on write any more' );
@@ -244,6 +247,10 @@ ok( is_array( $offer ) && '9.9.9' === ( $offer['version'] ?? '' ) && SN_GH_THEME
 ok( sn_gh_theme_package_url( 'v9.9.9' ) === ( $offer['package'] ?? '' ) && 'https://github.com/juanlentino/signal-and-noise' === ( $offer['url'] ?? '' ), 'offer: package and details URL as before' );
 
 $GLOBALS['__captured_requests'] = array();
+unset( $GLOBALS['sn_gh_theme_forced_tag_memo'] );
+sn_gh_theme_update_offer( false, array(), SN_GH_THEME_STYLESHEET );
+ok( 0 === count( $GLOBALS['__captured_requests'] ), 'offer: an ordinary check reads the cached tag (no GitHub request)' );
+
 ok( false === sn_gh_theme_update_offer( false, array(), 'someone-elses-theme' ), 'offer: another theme on a github.com Update URI passes through untouched' );
 ok( 0 === count( $GLOBALS['__captured_requests'] ), 'offer: and spends no GitHub request on it' );
 

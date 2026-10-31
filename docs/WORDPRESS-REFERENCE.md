@@ -419,7 +419,7 @@ The `/notes` route lives off normal FSE template resolution. [inc/page-notes-tem
 
 **Lives in:** [inc/wp-update-integration.php](../inc/wp-update-integration.php) and the parts it requires (registration + visibility; the update filters are in `wp-update-integration-update-transient.php`) and [inc/wp-update-git-preservation.php](../inc/wp-update-git-preservation.php) (`.git` survives WP UI installs). Plugin has identical pair at `signal-and-noise-tools/inc/`.
 
-**Why it exists:** the legacy updater (§10.1) shipped its own polling, SHA tracking, self-heal, and synthetic update label — ~683 LOC for what WP Core already does natively for plugins and themes via the `pre_set_site_transient_update_themes` filter. The Phase 2b cleanup deleted all of that. v8.5.0 reintroduced ~120 LOC of native-WP integration to restore the version-visibility surface in wp-admin without bringing back the polling-heavy machinery.
+**Why it exists:** the legacy updater (§10.1) shipped its own polling, SHA tracking, self-heal, and synthetic update label — ~683 LOC for what WP Core already does natively for plugins and themes (then via the `pre_set_site_transient_update_themes` filter; since 2026-10-31 via core's `update_themes_{$hostname}` hook). The Phase 2b cleanup deleted all of that. v8.5.0 reintroduced ~120 LOC of native-WP integration to restore the version-visibility surface in wp-admin without bringing back the polling-heavy machinery.
 
 **Both install paths now coexist:**
 
