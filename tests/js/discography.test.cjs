@@ -95,6 +95,8 @@ test('a role that matches no card shows the empty state', () => {
   assert.equal(p.count.textContent, '0');
   assert.equal(p.empty.getAttribute('hidden'), null);
   assert.ok(p.years.every((y) => y.style.display === 'none'));
+  p.chips.all.click();
+  assert.equal(p.empty.getAttribute('hidden'), '', 'and All hides it again');
 });
 
 test('?role= deep-links on load without a push; an unknown role falls back to All; Back re-applies', () => {
@@ -106,6 +108,7 @@ test('?role= deep-links on load without a push; an unknown role falls back to Al
   p.winListeners.popstate();
   assert.deepEqual(p.visible(), ['a', 'b', 'c']);
   assert.deepEqual(pressed(p), ['all']);
+  assert.deepEqual(p.pushed, [], 'Back re-applies without pushing (or Back could never leave)');
 });
 
 test('no iframe ships; a click mounts only that release, at the album or track path, once', () => {
@@ -117,11 +120,15 @@ test('no iframe ships; a click mounts only that release, at the album or track p
   assert.equal(iframes(p.root).length, 1, 'only the chosen release');
   assert.equal(f.parentNode, wrapA);
   assert.equal(f.src, 'https://open.spotify.com/embed/album/ALB1');
+  assert.equal(f.className, 'sn-disco-embed', 'the class that sizes it');
+  assert.equal(f.getAttribute('title'), 'Spotify player', 'an accessible name');
+  assert.match(f.getAttribute('allow'), /encrypted-media/, 'Spotify needs it to play');
   assert.equal(all(wrapA, 'img').length, 0, 'the cover is replaced in place');
   assert.ok(wrapA.classList.contains('is-playing'));
   for (const a of ['role', 'tabindex', 'aria-label']) assert.equal(wrapA.getAttribute(a), null, a + ' removed: no longer a button');
   wrapA.click();
   assert.equal(iframes(p.root).length, 1, 'a second click mounts nothing new');
+  assert.equal(iframes(p.root)[0], f, 'and keeps the playing frame (no restart)');
 });
 
 test('Enter and Space play a cover (default prevented); other keys and static covers do nothing', () => {
@@ -149,13 +156,17 @@ test('liner-notes previews: one shared audio, toggle off, switch, end, and a dea
   const audio = p.audios[0];
   assert.equal(audio.src, 'https://p.scdn.co/1.mp3');
   assert.equal(one.getAttribute('aria-pressed'), 'true');
+  assert.ok(one.classList.contains('is-playing'), 'the pause bars show');
   two.click();
   assert.equal(p.audios.length, 1, 'the same element is reused');
   assert.equal(one.getAttribute('aria-pressed'), 'false');
+  assert.ok(!one.classList.contains('is-playing'));
   assert.equal(two.getAttribute('aria-pressed'), 'true');
+  assert.ok(two.classList.contains('is-playing'));
   two.click();
   assert.equal(audio.paused, true);
   assert.equal(two.getAttribute('aria-pressed'), 'false', 'a second click stops it');
+  assert.ok(!two.classList.contains('is-playing'));
   one.click();
   audio.listeners.ended();
   assert.equal(one.getAttribute('aria-pressed'), 'false');

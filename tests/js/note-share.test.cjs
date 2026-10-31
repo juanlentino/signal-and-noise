@@ -26,7 +26,7 @@ function el(tag, attrs = {}) {
     appendChild(c) { this.children.push(c); return c; },
     removeChild(c) { this.children = this.children.filter((x) => x !== c); },
     addEventListener(type, cb) { this.listeners[type] = cb; },
-    select() {},
+    select() { this.selected = true; },
   };
 }
 
@@ -45,11 +45,13 @@ function page({ clipboard = 'ok', execCommand = true, share = null, url = true }
     readyState: 'complete', body,
     querySelectorAll: (sel) => (sel === '.sn-note-share' ? [row] : []),
     createElement: (tag) => el(tag.toUpperCase()),
-    execCommand: (cmd) => { log.exec.push([cmd, body.children[0] && body.children[0].value]); return execCommand; },
+    // Like a browser, execCommand copies the SELECTION: no select(), nothing copied.
+    execCommand: (cmd) => { const ta = body.children[0]; log.exec.push([cmd, ta && ta.value]); return execCommand && !!(ta && ta.selected); },
   };
   const navigator = {};
+  const ctl = { clipboard };
   if (clipboard) {
-    navigator.clipboard = { writeText: (t) => { log.writes.push(t); return clipboard === 'ok' ? Promise.resolve() : Promise.reject(new Error('denied')); } };
+    navigator.clipboard = { writeText: (t) => { log.writes.push(t); return ctl.clipboard === 'ok' ? Promise.resolve() : Promise.reject(new Error('denied')); } };
   }
   if (share) navigator.share = (data) => { log.shares.push({ ...data }); return share === 'ok' ? Promise.resolve() : Promise.reject(new Error('AbortError')); };
   vm.runInNewContext(SRC, {
@@ -57,7 +59,7 @@ function page({ clipboard = 'ok', execCommand = true, share = null, url = true }
     setTimeout: (fn, ms) => setTimeout(fn, ms), clearTimeout: (id) => clearTimeout(id),
   });
   const live = row.children.find((c) => c.attrs.role === 'status') || null;
-  return { copy, native, row, body, live, log };
+  return { copy, native, row, body, live, log, ctl };
 }
 
 const flush = () => new Promise((r) => setImmediate(r));
@@ -119,6 +121,23 @@ test('a second copy inside the window restarts the 1.6 s', () => withTimers(asyn
   assert.equal(p.copy.textContent, 'COPIED', 'the first timer no longer reverts it');
   mock.timers.tick(600);
   assert.equal(p.copy.textContent, 'COPY LINK');
+}));
+
+test('a failure right after a success drops the COPIED style and restarts the 1.6 s', () => withTimers(async () => {
+  const p = page();
+  p.copy.listeners.click();
+  await flush();
+  mock.timers.tick(1000);
+  p.ctl.clipboard = 'fail';
+  p.copy.listeners.click();
+  await flush();
+  assert.equal(p.copy.textContent, 'COPY FAILED');
+  assert.ok(!p.copy.classList.contains('is-copied'), 'a failure is not drawn as a success');
+  mock.timers.tick(1000);
+  assert.equal(p.copy.textContent, 'COPY FAILED', 'the failure gets its own 1.6 s');
+  mock.timers.tick(600);
+  assert.equal(p.copy.textContent, 'COPY LINK');
+  assert.ok(!p.copy.classList.contains('is-copied'));
 }));
 
 test('SHARE is revealed where Web Share exists and shares the native permalink', async () => {

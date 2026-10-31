@@ -50,8 +50,8 @@ function page({ toc = true, reduce = false, matchMedia = true, history = true } 
   if (matchMedia) window.matchMedia = (q) => ({ matches: reduce && q === '(prefers-reduced-motion: reduce)' });
   if (history) window.history = { replaceState: (...a) => replaced.push([...a]) };
   vm.runInNewContext(SRC, { window, document });
-  const click = (target) => {
-    const e = { target, defaultPrevented: false, preventDefault() { this.defaultPrevented = true; } };
+  const click = (target, extra = {}) => {
+    const e = { target, defaultPrevented: false, preventDefault() { this.defaultPrevented = true; }, ...extra };
     nav.listeners.click(e);
     return e;
   };
@@ -94,6 +94,14 @@ test('no matchMedia and no history.replaceState: the click still scrolls and foc
   const p = page({ matchMedia: false, history: false });
   assert.equal(p.click(p.links.intro).defaultPrevented, true);
   assert.deepEqual(p.headings.intro.calls[0], ['scrollIntoView', { behavior: 'smooth', block: 'start' }]);
+});
+
+test('Cmd, Ctrl, Shift or Alt on a contents link is left to the browser (new tab, window, download)', () => {
+  for (const mod of ['metaKey', 'ctrlKey', 'shiftKey', 'altKey']) {
+    const p = page();
+    assert.equal(p.click(p.links.intro, { [mod]: true }).defaultPrevented, false, mod);
+    assert.deepEqual(p.headings.intro.calls || [], [], mod + ': no scroll or focus on this page');
+  }
 });
 
 test('a note without a TOC: the script does nothing and does not throw', () => {
