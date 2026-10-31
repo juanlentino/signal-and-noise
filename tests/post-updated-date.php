@@ -238,6 +238,8 @@ $link = preg_match( '/\.sn-post-frontmatter__updated-link\s*\{([^}]*)\}/', $css,
 ok( 1 === preg_match( '/text-decoration:\s*underline/', $link ), 'the underline: the one cue besides color (rust barely differs from the text in light mode)' );
 ok( 1 === preg_match( '/padding:\s*0\.35rem/', $link ) && 1 === preg_match( '/margin:\s*-0\.35rem/', $link ), 'the hit area grows without moving the row (the tags\' trick)' );
 ok( 1 === preg_match( '/\.sn-post-frontmatter__updated-link:focus-visible\s*\{[^}]*color:\s*var\(--wp--preset--color--blood\)/', $css ), 'a designed keyboard focus' );
+ok( 1 === preg_match( '/\.sn-post-frontmatter__updated-link \.sn-post-frontmatter__updated\s*\{[^}]*color:\s*inherit/', $css ), 'the date inside takes the link\'s color, so hover and focus turn the text, not only its underline' );
+ok( 1 === preg_match( '/@media \(hover: hover\)\s*\{\s*\.sn-post-frontmatter__updated-link:hover\s*\{[^}]*color:\s*var\(--wp--preset--color--blood\)/', $css ), 'hover only where there is hover, in blood' );
 
 $GLOBALS['__vm'] = $vm( array( 1, 2, 3, 4, 5 ) );
 $GLOBALS['__timestamps'] = array( 'date' => $published, 'modified' => $published + DAY_IN_SECONDS );
