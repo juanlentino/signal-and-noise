@@ -945,6 +945,32 @@
 	color: var(--wp--preset--color--rust);
 	font-weight: 500;
 }
+/* 2026.10: with two or more signed versions the Updated line links to the
+   /verify compare (inc/post-updated-date.php). Same colors as the tags beside
+   it, rust then blood, plus an underline, since the visible text is unchanged
+   and color alone would not say "link". The tags' 24px hit-area trick keeps
+   the row from moving. */
+.sn-post-frontmatter__updated-link {
+	display: inline-block;
+	padding: 0.35rem 0.15rem;
+	margin: -0.35rem -0.15rem;
+	color: var(--wp--preset--color--rust);
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+.sn-post-frontmatter__updated-link .sn-post-frontmatter__updated {
+	color: inherit;
+}
+.sn-post-frontmatter__updated-link:focus-visible {
+	color: var(--wp--preset--color--blood);
+	text-decoration-thickness: 2px;
+}
+@media (hover: hover) {
+	.sn-post-frontmatter__updated-link:hover {
+		color: var(--wp--preset--color--blood);
+		text-decoration-thickness: 2px;
+	}
+}
 .sn-post-frontmatter__tags,
 .sn-post-frontmatter__tags a {
 	color: var(--wp--preset--color--rust);
