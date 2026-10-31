@@ -44,7 +44,7 @@ function fixture(file, store, opts = {}) {
   // sn-keys.js (the shared helper, 2026-10-31) loads first, as its dependents
   // declare; the page's scripts share its one window.snKeys.
   const ctx = { document, window: { localStorage, setTimeout(fn) { fn(); }, location: { assign(url) { navigations.push(url); } } } };
-  vm.runInNewContext(readFileSync(path.join(__dirname, '../../assets/js/sn-keys.js'), 'utf8'), ctx);
+  if (!opts.noKeys) vm.runInNewContext(readFileSync(path.join(__dirname, '../../assets/js/sn-keys.js'), 'utf8'), ctx);
   if (opts.preOff) ctx.window.snKeys.setSingleKeys(false);
   vm.runInNewContext(readFileSync(path.join(__dirname, '../../assets/js', file), 'utf8'), ctx);
   function key(k, extra = {}) {
@@ -130,3 +130,17 @@ test('one switch for both scripts: off through the shared helper stops j even wh
   nav.key('j');
   assert.deepEqual(nav.navigations, [], 'the notes script reads the same in-page memo the palette writes');
 });
+
+// Live 2026-10-31: the first view of a page the edge had not revalidated paired
+// the old HTML (no sn-keys.js) with the new script under the old ?ver URL, and
+// the script threw on window.snKeys. Without the helper each script now does
+// nothing, as the sn-copy.js callers do, instead of throwing half-built.
+for (const file of ['command-palette.js', 'keyboard-nav.js']) {
+  test(`${file}: without sn-keys.js it stays out of the way instead of throwing`, () => {
+    let f;
+    assert.doesNotThrow(() => { f = fixture(file, {}, { noKeys: true }); });
+    assert.equal(f.key('/').prevented, false, 'no key is taken');
+    assert.equal(f.key('k', { metaKey: true }).prevented, false, 'not even Cmd-K');
+    assert.equal(f.nodes.filter(n => n.tagName === 'DIALOG').length, 0, 'nothing half-built');
+  });
+}
