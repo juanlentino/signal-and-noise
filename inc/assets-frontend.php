@@ -28,6 +28,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+require_once __DIR__ . '/components-css.php'; // sn_components_css_parts(): the per-file fallback loads the component layer in cascade order.
+
 /**
  * Asset cache-busting via file mtime.
  *
@@ -40,7 +42,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Falls back to the theme Version if the file is missing or filemtime()
  * fails, so we never emit a versionless URL.
  *
- * @param string $relative_path Path relative to theme root, e.g. 'assets/css/components.css'.
+ * @param string $relative_path Path relative to theme root, e.g. 'assets/css/base.css'.
  * @return string Cache-bust token.
  */
 function sn_asset_ver( $relative_path ) {
@@ -128,7 +130,16 @@ add_action( 'wp_enqueue_scripts', function() {
 	}
 	wp_enqueue_style( 'sn-base',       get_theme_file_uri( 'assets/css/base.css' ),       array(),                  sn_asset_ver( 'assets/css/base.css' ) );
 	wp_enqueue_style( 'sn-layout',     get_theme_file_uri( 'assets/css/layout.css' ),     array( 'sn-base' ),       sn_asset_ver( 'assets/css/layout.css' ) );
-	wp_enqueue_style( 'sn-components', get_theme_file_uri( 'assets/css/components.css' ), array( 'sn-layout' ),     sn_asset_ver( 'assets/css/components.css' ) );
+	// The component layer is its ordered parts (inc/components-css.php), each
+	// depending on the one before. The LAST part is 'sn-components', the
+	// handle every other sheet depends on, so the whole layer loads first.
+	$sn_parts = sn_components_css_parts();
+	$sn_prev  = 'sn-layout';
+	foreach ( $sn_parts as $sn_i => $sn_rel ) {
+		$sn_handle = count( $sn_parts ) - 1 === $sn_i ? 'sn-components' : 'sn-components-' . ( $sn_i + 1 );
+		wp_enqueue_style( $sn_handle, get_theme_file_uri( $sn_rel ), array( $sn_prev ), sn_asset_ver( $sn_rel ) );
+		$sn_prev = $sn_handle;
+	}
 	wp_enqueue_style( 'sn-responsive', get_theme_file_uri( 'assets/css/responsive.css' ), array( 'sn-components' ), sn_asset_ver( 'assets/css/responsive.css' ) );
 	wp_enqueue_style( 'sn-article',    get_theme_file_uri( 'assets/css/article.css' ),    array( 'sn-responsive' ), sn_asset_ver( 'assets/css/article.css' ) );
 }, 10 );

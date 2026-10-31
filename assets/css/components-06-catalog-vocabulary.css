@@ -1,0 +1,118 @@
+/* ============================================
+   CATALOG VOCABULARY — shared components
+   ============================================
+   Patterns extracted from inc/page-notes-render.php for reuse
+   on other index/listing surfaces (/services, /provenance,
+   /resume, /music, /about). The /notes page itself doesn't
+   use these classes — its CSS is inlined alongside its render
+   for atomic deploys — but the visual language is identical.
+
+   Usage:
+     - .sn-catalog-eyebrow: replace ad-hoc hero "blood mono caps"
+       eyebrows with a standardized treatment.
+     - .sn-catalog-meta: optional meta line under the dek
+       (entry counts, date stamps, status indicators).
+     - .sn-catalog-section: replace ad-hoc blood h2 section
+       headings with a label + hairline + count counter.
+     - .sn-catalog-number: small mono-blood number marker
+       prefix for items in a catalog (e.g. service cards).
+*/
+
+/* margin-block only — never margin-inline. WP's constrained-layout
+   CSS centers children via `margin-left: auto !important; margin-right:
+   auto !important;` and using `!important` on a margin shorthand here
+   would override that and push the eyebrow against the parent's left
+   padding. Specifying only top/bottom margins keeps the inline auto-
+   centering intact. */
+.sn-catalog-eyebrow {
+	font-family: var(--wp--preset--font-family--body);
+	font-size: max(0.7rem, 11px);
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--blood);
+	margin-top: 0;
+	margin-bottom: 1rem;
+}
+
+/* v11.11.0 — the provenance badge as a BROW SEGMENT, not a pill.
+   Lives inside .sn-catalog-eyebrow's <p>, so family, 11px floor, 0.18em
+   tracking and uppercase all inherit; only colour is decided here.
+
+   Rust, not blood, and that is the whole hierarchy: the designation says what
+   this page IS and keeps the accent; the provenance says how you can CHECK it
+   and sits one step back. Two blood items on one line would read as one loud
+   line rather than a statement and its footing. The link earns blood back on
+   hover, where the reader has asked for it. */
+.sn-prov-brow {
+	color: var(--wp--preset--color--rust);
+}
+.sn-prov-brow-sep {
+	margin: 0 0.5em;
+	opacity: 0.6;
+}
+.sn-prov-brow-link {
+	color: inherit;
+	text-decoration: none;
+	/* The rule shows at rest, in the link's own rust (2026-10-06). Transparent,
+	   the rust link sat in a blood line at 2.5:1 light, 1.2:1 dark, marked by
+	   color alone (WCAG 1.4.1, the live contrast check). Hover still turns it
+	   blood. */
+	border-bottom: 1px solid currentColor;
+	transition: color 0.2s ease, border-color 0.2s ease;
+}
+@media (hover: hover) {
+	.sn-prov-brow-link:hover {
+		color: var(--wp--preset--color--blood);
+		border-bottom-color: currentColor;
+	}
+}
+
+.sn-prov-brow-link:focus-visible {
+	color: var(--wp--preset--color--blood);
+	border-bottom-color: currentColor;
+}
+.sn-prov-brow-ext {
+	margin-left: 0.35em;
+}
+
+.sn-catalog-meta {
+	font-family: var(--wp--preset--font-family--body);
+	font-size: max(0.7rem, 11px);
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--rust);
+	margin-top: var(--wp--custom--air--xs);
+	margin-bottom: 0;
+}
+
+.sn-catalog-section {
+	display: grid;
+	grid-template-columns: 1fr auto;
+	align-items: end;
+	gap: 1rem;
+	margin-bottom: var(--wp--custom--air--md);
+	padding-bottom: 0.5rem;
+	border-bottom: 1px solid var(--wp--preset--color--concrete);
+}
+.sn-catalog-section-label,
+.sn-catalog-section-count {
+	font-family: var(--wp--preset--font-family--body);
+	font-size: max(0.7rem, 11px);
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--rust);
+	/* Inside a grid container — margins don't affect grid placement,
+	   so this is safe without the inline-margin caveat above. */
+	margin: 0;
+}
+
+.sn-catalog-number {
+	display: block;
+	font-family: var(--wp--preset--font-family--body);
+	font-size: 0.85rem;
+	letter-spacing: 0.05em;
+	color: var(--wp--preset--color--blood);
+	margin: 0 0 0.5rem;
+}
+
+

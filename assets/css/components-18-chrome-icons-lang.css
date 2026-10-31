@@ -1,0 +1,177 @@
+/* ── SOCIAL ICONS FOLLOW THE PALETTE (v12.0.1) ─────────────────────────
+   WordPress's social-links block saves the slug AND its resolved hex,
+   then renders the hex inline — so `rust` was frozen at #666666 and the
+   footer icons stayed a dim grey in dark mode instead of following the
+   token to #9e9e9e. parts/footer.html drops the stored value; this rule
+   is the backstop, because re-saving the block in the editor will write
+   it back. !important because an inline style outranks a class. */
+.wp-block-social-links.has-icon-color .wp-block-social-link-anchor,
+.wp-block-social-links.has-icon-color .wp-block-social-link-anchor svg {
+	color: var(--wp--preset--color--rust) !important;
+	fill: currentColor !important;
+}
+@media (hover: hover) {
+	.wp-block-social-links .wp-block-social-link-anchor:hover {
+		color: var(--wp--preset--color--blood) !important;
+	}
+}
+
+.wp-block-social-links .wp-block-social-link-anchor:focus-visible {
+	color: var(--wp--preset--color--blood) !important;
+}
+
+/* ── ONE TOGGLE, TWO HOMES (v12.0.2) ───────────────────────────────────
+   The control follows whichever bar is PERSISTENT at that width.
+
+   >= 782px: the footer is fixed, so the footer instance shows.
+   <= 781px: the footer is static (v11.12.2 — a fixed footer cost 23.5%
+             of a phone screen), so it is below the fold on every page and
+             the header instance takes over.
+
+   The 781px figure is not chosen here; it is the SAME boundary that makes
+   the footer static in responsive.css. Tying both to it is what stops the
+   two from ever disagreeing about which bar a reader can actually see.
+
+   Both instances render and both are wired, so a resize or an orientation
+   change reveals an already-correct control rather than a stale one. */
+
+.sn-theme-toggle--header {
+	display: none;
+}
+
+/* The logo holds the left edge; the toggle and the menu button cluster on
+   the right. This is what lets the header carry a third child without
+   repeating v12.0.0's mistake, where a third child of a space-between
+   group became a third distribution point and stranded itself in the
+   middle of the gap, competing with the logo. */
+.sn-header .sn-site-title {
+	margin-right: auto;
+}
+
+/* The EN | ES switch (inc/lang-toggle.php): drawn like the theme toggle,
+   one hairline box split in two. The current language is filled (bone on
+   void, inverting with the palette); the other is the link and takes the
+   toggle's blood hover and focus. 24px tall minimum (WCAG 2.5.8). */
+.sn-lang-switch {
+	display: inline-flex;
+	flex-shrink: 0;
+	border: 1px solid color-mix( in srgb, var(--wp--preset--color--bone) 38%, transparent );
+	font-family: var(--wp--preset--font-family--heading);
+	font-size: 0.7rem;
+	line-height: 1;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+.sn-lang-switch__seg {
+	display: inline-flex;
+	align-items: center;
+	min-height: 24px;
+	padding: 0.4rem 0.6rem;
+	color: var(--wp--preset--color--bone);
+	text-decoration: none;
+	transition: color 0.2s ease, background-color 0.2s ease;
+}
+.sn-lang-switch__seg.is-current {
+	background: var(--wp--preset--color--bone);
+	color: var(--wp--preset--color--void);
+}
+.sn-lang-switch__seg:focus-visible {
+	background: var(--wp--preset--color--blood);
+	color: var(--wp--preset--color--void);
+	outline: none;
+}
+@media (hover: hover) {
+	a.sn-lang-switch__seg:hover {
+		background: var(--wp--preset--color--blood);
+		color: var(--wp--preset--color--void);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.sn-lang-switch__seg {
+		transition: none;
+	}
+}
+
+/* ES on an English page with no Spanish version (every note): a disabled
+   link, not a way out (inc/lang-toggle.php, owner 2026-10-18). Rust, the
+   muted text token; no fill, no hover; same box as the other segment, so
+   nothing shifts. Its
+   data-hint is the hint, shown on keyboard focus and on hover like the footer's
+   icon labels (layout.css); a title tooltip alone never reaches a keyboard, and
+   a title would draw the browser's tooltip over this box. The Spanish header's
+   Notas link (inc/lang-chrome.php) carries the same box for its translator
+   line. */
+.sn-lang-switch__seg.is-unavailable {
+	position: relative;
+	color: var(--wp--preset--color--rust);
+	cursor: default;
+}
+.sn-lang-switch__seg.is-unavailable:focus-visible {
+	background: none;
+	color: var(--wp--preset--color--bone);
+	outline: 2px solid var(--wp--preset--color--blood);
+	outline-offset: 3px;
+}
+.wp-block-navigation-item__content[data-hint]:focus-visible::before,
+.sn-lang-switch__seg.is-unavailable:focus-visible::after {
+	content: attr(data-hint);
+	position: absolute;
+	top: calc(100% + 8px);
+	right: 0;
+	z-index: 2;
+	width: max-content;
+	max-width: min(16rem, 80vw); /* not a track: a hint's line length, capped to the phone */
+	padding: 4px 8px;
+	font-family: var(--wp--preset--font-family--body);
+	font-size: 11px;
+	line-height: 1.4;
+	letter-spacing: 0.04em;
+	text-transform: none;
+	color: var(--wp--preset--color--bone);
+	background: var(--wp--preset--color--void);
+	border: 1px solid var(--wp--preset--color--bone);
+}
+@media (hover: hover) {
+	.wp-block-navigation-item__content[data-hint]:hover::before,
+	.sn-lang-switch__seg.is-unavailable:hover::after {
+		content: attr(data-hint);
+		position: absolute;
+		top: calc(100% + 8px);
+		right: 0;
+		z-index: 2;
+		width: max-content;
+		max-width: min(16rem, 80vw); /* not a track: a hint's line length, capped to the phone */
+		padding: 4px 8px;
+		font-family: var(--wp--preset--font-family--body);
+		font-size: 11px;
+		line-height: 1.4;
+		letter-spacing: 0.04em;
+		text-transform: none;
+		color: var(--wp--preset--color--bone);
+		background: var(--wp--preset--color--void);
+		border: 1px solid var(--wp--preset--color--bone);
+	}
+}
+/* The menu copy sits at the left edge of the dialog: open the hint rightward. */
+.sn-lang-switch--menu .sn-lang-switch__seg.is-unavailable::after,
+.wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation-item__content[data-hint]::before {
+	right: auto;
+	left: 0;
+}
+/* Notas on a Spanish page: the hint hangs from the link (right-aligned, as
+   Notas sits toward the right of the header row). It draws on ::before because
+   a nav link's ::after is its blood underline (layout.css, critical.css), which
+   the open menu hides with !important. */
+.wp-block-navigation-item__content[data-hint] {
+	position: relative;
+}
+
+@media (max-width: 781px) {
+	.sn-theme-toggle--footer {
+		display: none;
+	}
+	.sn-theme-toggle--header {
+		display: inline-flex;
+	}
+}
+

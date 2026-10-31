@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/lib/components-source.php'; // the component layer, joined (2026-10-31 split)
 /**
  * Static-guard tests for the dark palette (theme v11.13.0).
  *
@@ -182,7 +183,7 @@ ok( strpos( $header, '<!-- wp:signal-noise/theme-toggle {"placement":"header"} /
 ok( strpos( $footer, '<!-- wp:signal-noise/theme-toggle /-->' ) !== false,
 	'the footer utility bar carries the desktop instance' );
 
-$comp_pre = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( $root . '/assets/css/components.css' ) );
+$comp_pre = (string) preg_replace( '#/\*.*?\*/#s', '', snt_components_source() );
 ok( preg_match( '/\.sn-header \.sn-site-title\s*\{[^}]*margin-right:\s*auto/s', $comp_pre ) === 1,
 	'THE LOGO HOLDS THE LEFT EDGE (margin-right: auto) — the only reason a third header child does not strand mid-gap' );
 
@@ -235,7 +236,7 @@ ok( $toggle_at > $cmdk_at && $toggle_at < $nav_at,
 // literals. A literal list would freeze today's values as correct and keep
 // passing after the trigger was restyled — leaving the toggle quietly mismatched
 // with the neighbour it is supposed to match. Assert the relationship.
-$comp = (string) file_get_contents( $root . '/assets/css/components.css' );
+$comp = snt_components_source();
 $cmdk = (string) file_get_contents( $root . '/assets/css/command-palette.css' );
 
 $toggle_rule  = dm_decls( dm_block( $comp, '.sn-theme-toggle {' ) );
@@ -290,13 +291,18 @@ $ALLOWED = array(
 );
 
 $offenders = array();
+$bone      = array();
 foreach ( glob( $root . '/assets/css/*.css' ) as $file ) {
 	if ( basename( $file ) === 'print.css' ) {
 		continue; // Print is always light by definition.
 	}
 	$css = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( $file ) );
 	$n   = preg_match_all( '/background(-color)?:\s*var\(\s*--wp--preset--color--bone\s*\)/', $css );
-	$rel = 'assets/css/' . basename( $file );
+	// The component layer's parts share one cap, as the file they were cut from.
+	$rel            = 0 === strpos( basename( $file ), 'components-' ) ? 'assets/css/components.css' : 'assets/css/' . basename( $file );
+	$bone[ $rel ]   = ( $bone[ $rel ] ?? 0 ) + $n;
+}
+foreach ( $bone as $rel => $n ) {
 	$cap = $ALLOWED[ $rel ] ?? 0;
 	if ( $n > $cap ) {
 		$offenders[] = "$rel has $n (allowed $cap)";
@@ -317,7 +323,7 @@ foreach ( array(
 }
 
 // Third-party chrome must NOT invert — it is matching somebody else's card.
-$comp = (string) file_get_contents( $root . '/assets/css/components.css' );
+$comp = snt_components_source();
 ok( substr_count( $comp, 'var(--sn-embed-backdrop)' ) >= 3,
 	'all three embed backdrop rules use the fixed token' );
 ok( strpos( $crit, '--sn-embed-backdrop' ) !== false, 'the embed backdrop is defined' );
@@ -366,7 +372,8 @@ foreach ( array(
 	'assets/css/components.css'      => '.sn-theme-toggle',
 	'assets/css/command-palette.css' => '.sn-cmdk-trigger',
 ) as $rel => $sel ) {
-	$css = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( $root . '/' . $rel ) );
+	$src = 'assets/css/components.css' === $rel ? snt_components_source() : (string) file_get_contents( $root . '/' . $rel );
+	$css = (string) preg_replace( '#/\*.*?\*/#s', '', $src );
 	ok( preg_match( '/@media\s*\(\s*hover:\s*hover\s*\)\s*\{\s*' . preg_quote( $sel, '/' ) . ':hover/', $css ) === 1,
 		"$sel puts its :hover behind (hover: hover)" );
 	// The keyboard affordance must NOT be inside the guard.

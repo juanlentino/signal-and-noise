@@ -1,0 +1,173 @@
+/* ── In-article TOC + reading-progress bar ─────────────────────────────
+ * Card at the article top + a thin fixed progress bar under the header.
+ * Tokens mirror .sn-provenance-toc; blood-red active state. JS injects the
+ * progress bar element (assets/js/article-toc.js). */
+.sn-article-toc {
+	margin: 0 0 var(--wp--preset--spacing--40);
+	padding: var(--wp--preset--spacing--20) var(--wp--preset--spacing--30);
+	border: 1px solid var(--wp--preset--color--bone);
+}
+.sn-article-toc__label {
+	margin: 0 0 0.5rem;
+	font-family: var(--wp--preset--font-family--heading), sans-serif;
+	text-transform: uppercase;
+	letter-spacing: var(--wp--custom--letter-spacing--wide);
+	font-size: var(--wp--preset--font-size--small);
+	color: var(--wp--preset--color--rust);
+}
+.sn-article-toc__list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	font-family: var(--wp--preset--font-family--body), monospace;
+	font-size: var(--wp--preset--font-size--small);
+	line-height: 1.9;
+}
+.sn-article-toc__list a {
+	color: var(--wp--preset--color--bone);
+	text-decoration: underline;
+	text-decoration-color: var(--wp--preset--color--concrete);
+	text-underline-offset: 0.2em;
+}
+@media (hover: hover) {
+	.sn-article-toc__list a:hover {
+		color: var(--wp--preset--color--blood);
+		text-decoration-color: var(--wp--preset--color--blood);
+	}
+}
+
+.sn-article-toc__list a:focus-visible {
+	color: var(--wp--preset--color--blood);
+	text-decoration-color: var(--wp--preset--color--blood);
+}
+
+/* ── FM tuning dial: the reading progress (inc/article-toc.php prints it at
+   the end of <body> on notes with a TOC) ───────────────────────────────
+   A radio dial pinned under the header, 88 to 108, with a blood needle that
+   sweeps as the article is read. It replaced a 3px bar a script drew and
+   re-measured on every scroll frame (2026-10). Now nothing measures:
+
+   - the needle is a scroll-driven animation on the ARTICLE's view timeline,
+     ranged `contain`, so it reads 88 when the first line reaches the top and
+     108 when the last line reaches the bottom, never counting the masthead or
+     the footer (the 2026-08-18 measurement that made the bar honest);
+   - the dial sits on the header's LIVE bottom edge by anchor positioning, so
+     it follows the header's two breakpoints and the reader's font size, the
+     reason the script measured the header (#322).
+
+   Both features or neither: a browser missing either gets no dial at all,
+   never a needle frozen at 88. A reader who asked for less motion gets no
+   dial either (the house motion policy, tests/motion-pairing.php). The markup
+   is aria-hidden; it restates the scroll position. */
+.sn-article-dial {
+	display: none;
+}
+
+@supports (animation-timeline: view()) and (anchor-name: --sn-header) {
+	@media (prefers-reduced-motion: no-preference) {
+		/* The dial is printed at the end of <body>, outside the article, so the
+		   article's timeline is hoisted to <body> where the dial can see it.
+
+		   overflow-x: clip, on these pages only. html and body both set
+		   overflow-x: hidden (critical.css); html's value goes to the viewport,
+		   so body's makes BODY a scroll container that never scrolls, and a view
+		   timeline binds to the nearest scroll container: the needle sat still
+		   (measured 2026-10-16, body scrollHeight == clientHeight). clip clips
+		   the same way without being a scroll container. Scoped by :has() so
+		   no other page changes: the same trap holds the /music controls rail's
+		   position: sticky dead, and that is its own fix. */
+		body:has(.sn-article-dial) {
+			timeline-scope: --sn-article;
+			overflow-x: clip;
+		}
+
+		.wp-block-post-content {
+			view-timeline: --sn-article block;
+		}
+
+		/* TOC jumps land below the dial as well as the header (base.css sets
+		   the header-only offset). */
+		html:has(.sn-article-dial) {
+			scroll-padding-top: calc(var(--sn-chrome-top) + 26px + 16px);
+		}
+
+		.sn-article-dial {
+			display: block;
+			position: fixed;
+			position-anchor: --sn-header;
+			top: anchor(bottom);
+			left: 0;
+			right: 0;
+			height: 26px;
+			z-index: 9999; /* below the fixed header (10000), above content */
+			padding: 0 var(--wp--preset--spacing--30);
+			overflow: hidden;
+			background: var(--wp--preset--color--void);
+			border-bottom: 1px solid var(--wp--preset--color--concrete);
+			color: var(--wp--preset--color--rust);
+			pointer-events: none;
+		}
+
+		/* Each label sits ON its major tick (every fifth of the scale), centred,
+		   with the two end labels kept inside the dial. space-between drifted
+		   them up to 11px off their ticks at 1440. */
+		.sn-article-dial__scale {
+			display: block;
+			position: relative;
+			height: 14px;
+			font-family: var(--wp--preset--font-family--body);
+			font-size: 11px;
+			line-height: 14px;
+			letter-spacing: 0.04em;
+		}
+
+		.sn-article-dial__scale span {
+			position: absolute;
+			top: 0;
+			transform: translateX(-50%);
+		}
+
+		.sn-article-dial__scale span:nth-child(1) { left: 0; transform: none; }
+		.sn-article-dial__scale span:nth-child(2) { left: 20%; }
+		.sn-article-dial__scale span:nth-child(3) { left: 40%; }
+		.sn-article-dial__scale span:nth-child(4) { left: 60%; }
+		.sn-article-dial__scale span:nth-child(5) { left: 80%; }
+		.sn-article-dial__scale span:nth-child(6) { left: 100%; transform: translateX(-100%); }
+
+		.sn-article-dial__ticks {
+			display: block;
+			width: 100%;
+			height: 10px;
+			stroke: currentColor;
+			stroke-width: 1px;
+			vector-effect: non-scaling-stroke;
+		}
+
+		.sn-article-dial__ticks line {
+			vector-effect: non-scaling-stroke;
+		}
+
+		/* The tuned span: a faint wash up to a 2px blood needle at its right
+		   edge. transform only, so the sweep stays on the compositor. */
+		.sn-article-dial__needle {
+			position: absolute;
+			inset: 0;
+			border-right: 2px solid var(--wp--preset--color--blood);
+			background: color-mix(in srgb, var(--wp--preset--color--blood) 6%, transparent);
+			transform: translateX(-100%);
+			animation: sn-dial-sweep linear both;
+			animation-timeline: --sn-article;
+			animation-range: contain 0% contain 100%;
+		}
+	}
+}
+
+@keyframes sn-dial-sweep {
+	from { transform: translateX(calc(-100% + 2px)); }
+	to { transform: translateX(0); }
+}
+@media (max-width: 480px) {
+	/* TOC: tighten + allow hyphenation so long headings don't overflow the ~240px rail. */
+	.sn-article-toc__list { line-height: 1.6; hyphens: auto; }
+}
+

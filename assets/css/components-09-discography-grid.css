@@ -1,0 +1,163 @@
+/* Cover grid. */
+.sn-disco-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(min(100%, 232px), 1fr));
+	gap: clamp(1.1rem, 2.6vw, 2rem); /* not a step: clamp(1.1rem, 2.6vw, 2rem) is its own value; the nearest air step, air--sm, would move it 6px */
+}
+.sn-disco-card {
+	display: flex;
+	flex-direction: column;
+	transition: transform 0.28s ease;
+}
+.sn-disco-card.is-hidden {
+	display: none;
+}
+@media (hover: hover) {
+	.sn-disco-card:hover {
+		transform: translateY(-5px);
+	}
+}
+.sn-disco-cover-wrap {
+	position: relative;
+	aspect-ratio: 1;
+	overflow: hidden;
+	background-color: var(--wp--preset--color--concrete);
+	border: 1px solid var(--wp--preset--color--concrete);
+	cursor: pointer;
+}
+.sn-disco-cover-wrap--static {
+	cursor: default;
+}
+.sn-disco-art {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	transition: transform 0.5s ease, filter 0.3s ease;
+}
+.sn-disco-art--none {
+	background-color: var(--wp--preset--color--concrete);
+}
+@media (hover: hover) {
+	.sn-disco-cover-wrap:not(.sn-disco-cover-wrap--static):hover .sn-disco-art {
+		transform: scale(1.05);
+		filter: brightness(0.82);
+	}
+}
+.sn-disco-play-badge {
+	position: absolute;
+	inset: 0;
+	display: grid;
+	place-items: center;
+	opacity: 0;
+	transition: opacity 0.25s ease;
+}
+@media (hover: hover) {
+	.sn-disco-cover-wrap:hover .sn-disco-play-badge {
+		opacity: 1;
+	}
+}
+
+.sn-disco-cover-wrap:focus-visible .sn-disco-play-badge {
+	opacity: 1;
+}
+.sn-disco-play-circle {
+	position: relative;
+	width: 58px;
+	height: 58px;
+	border-radius: 50%;
+	background: var(--wp--preset--color--blood);
+	/* The fill was already the token; the halo was still the light-mode literal,
+	   so in dark this circle turned #ff4c47 and kept a #e00404 shadow. */
+	box-shadow: 0 6px 22px color-mix( in srgb, var(--wp--preset--color--blood) 40%, transparent );
+}
+.sn-disco-play-circle::after {
+	content: "";
+	position: absolute;
+	top: 50%;
+	left: 53%;
+	transform: translate(-50%, -50%);
+	border-left: 17px solid var(--wp--preset--color--void);
+	border-top: 10px solid transparent;
+	border-bottom: 10px solid transparent;
+}
+/* Lazy-mounted Spotify embed (swapped in on play). */
+.sn-disco-cover-wrap.is-playing {
+	aspect-ratio: auto;
+	cursor: default;
+	background: transparent;
+	border: 0;
+}
+.sn-disco-embed {
+	display: block;
+	width: 100%;
+	height: 152px;
+	border: 0;
+}
+.sn-disco-meta {
+	min-width: 0;
+	padding: 0.85rem 0 0;
+}
+.sn-disco-title {
+	font-family: 'Bebas Neue', Impact, sans-serif;
+	font-weight: 400;
+	font-size: clamp(1.45rem, 2.4vw, 1.9rem); /* not a step: clamp(1.45rem, 2.4vw, 1.9rem) is its own value; the nearest type token, font-size--page-section-label, would move it 6px */
+	line-height: 1.0;
+	letter-spacing: -0.005em;
+	color: var(--wp--preset--color--bone);
+	margin: 0;
+}
+.sn-disco-artist {
+	font-family: var(--wp--preset--font-family--body);
+	font-size: max(0.78rem, 12px);
+	color: var(--wp--preset--color--bone);
+	margin: 0.3rem 0 0;
+}
+.sn-disco-roles {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.66rem, 11px);
+	letter-spacing: 0.13em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--rust);
+	margin: 0.45rem 0 0;
+}
+.sn-disco-note {
+	font-family: var(--wp--preset--font-family--body);
+	font-size: max(0.74rem, 12px);
+	font-style: italic;
+	color: var(--wp--preset--color--bone);
+	margin: 0.35rem 0 0;
+}
+.sn-disco-credits {
+	display: inline-block;
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.66rem, 11px);
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--rust);
+	text-decoration: none;
+	/* Hit-area, not layout: the bare 11px line measured ~19px tall — under the
+	   24px standalone-target minimum. Padding grows the clickable box; the
+	   margins keep the card's visual rhythm exactly where it was. */
+	padding: 0.45rem 0.25rem;
+	margin: 0.1rem 0 -0.45rem -0.25rem;
+	transition: color 0.2s ease;
+}
+@media (hover: hover) {
+	.sn-disco-credits:hover {
+		color: var(--wp--preset--color--blood);
+	}
+}
+
+.sn-disco-credits:focus-visible {
+	color: var(--wp--preset--color--blood);
+}
+.sn-disco-empty {
+	padding: 3rem 0;
+	text-align: center;
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.78rem, 12px);
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--rust);
+}

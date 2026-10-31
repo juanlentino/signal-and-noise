@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/lib/components-source.php'; // the component layer, joined (2026-10-31 split)
 /**
  * The four block style variations are theme.json partials, and they paint what
  * the PHP strings painted (#390).
@@ -458,7 +459,7 @@ ok( ( $sep['border']['color'] ?? '' ) === 'var(--wp--preset--color--concrete)', 
 ok( ( $sep['border']['width'] ?? '' ) === '1px' && ( $sep['color']['text'] ?? '' ) === 'var(--wp--preset--color--concrete)', 'theme.json core/separator: the pre-existing width and text color are untouched' );
 ok( isset( $sep['css'] ) && 1 === preg_match( '/^opacity:\s*0?\.6;?$/', $sep['css'] ), 'theme.json core/separator: css carries the 0.6 opacity the old base rule set' );
 ok( false === strpos( json_encode( $sep ), '!important' ), 'theme.json core/separator: no !important' );
-$components = preg_replace( '~/\*.*?\*/~s', '', (string) file_get_contents( "$root/assets/css/components.css" ) );
+$components = preg_replace( '~/\*.*?\*/~s', '', snt_components_source() );
 ok( 0 === preg_match( '/(^|[\s,}])\.wp-block-separator\s*[{,]/m', $components ), 'components.css has no .wp-block-separator rule' );
 $article = (string) file_get_contents( "$root/assets/css/article.css" );
 preg_match( '/\.sn-post-closing__rule\s*\{([^}]*)\}/s', $article, $cm );

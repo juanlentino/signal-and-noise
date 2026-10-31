@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/lib/components-source.php'; // the component layer, joined (2026-10-31 split)
 /**
  * Tests: the EN / ES toggle (inc/lang-toggle.php) and the Spanish discography
  * strings and release note (inc/discography-render.php).
@@ -66,7 +67,7 @@ foreach ( array( $en, $es, $solo ) as $html ) {
 	}
 }
 ok( 3 === $states, 'the scan saw a named segment in all three states (a silent zero is not a pass)' );
-$css = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( __DIR__ . '/../assets/css/components.css' ) );
+$css = (string) preg_replace( '#/\*.*?\*/#s', '', snt_components_source() );
 ok( 1 === preg_match( '/\.sn-lang-switch__seg\.is-unavailable\s*\{[^}]*color:\s*var\(--wp--preset--color--rust\)/', $css ), 'the unavailable segment is muted (rust, the muted text token, in both palettes), not filled' );
 ok( 1 === preg_match( '/\.sn-lang-switch__seg\.is-unavailable:focus-visible::after\s*\{[^}]*content:\s*attr\(data-hint\)/', $css ), 'the hint shows on keyboard focus (a title tooltip never reaches a keyboard)' );
 ok( false === strpos( $css, 'attr(title)' ), 'no CSS hint reads title: a title draws a second, native tooltip on hover' );

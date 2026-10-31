@@ -20,6 +20,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+require_once __DIR__ . '/components-css.php'; // sn_components_css_parts(): the editor loads the component layer in cascade order.
+
 /**
  * Theme setup: register editor styles to match the frontend cascade.
  *
@@ -33,10 +35,10 @@ function signal_noise_after_setup_theme() {
 	// Editor styles — same modular stylesheets used on the public side, in
 	// the same cascade order. Keep this list in sync with the wp_enqueue
 	// chain in inc/assets-frontend.php and sn_css_combine_sources().
-	add_editor_style( array(
+	add_editor_style( array_merge( array(
 		'assets/css/base.css',
 		'assets/css/layout.css',
-		'assets/css/components.css',
+	), sn_components_css_parts(), array(
 		'assets/css/critical.css',
 		'assets/css/responsive.css',
 		// v10.49.0: the article back half moved from critical.css to
@@ -46,7 +48,7 @@ function signal_noise_after_setup_theme() {
 		// core enqueues in the canvas on enqueue_block_assets). Last, matching
 		// its combined-cascade position.
 		'assets/css/article.css',
-	) );
+	) ) );
 
 	// Title tag emission — required by WP core's _wp_render_title_tag()
 	// to take over <title> rendering after The SEO Framework is

@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/lib/components-source.php'; // the component layer, joined (2026-10-31 split)
 /**
  * Two transmission-register details (2026.10, docs/research/2026-10-16-site-wide-design-ideas.md):
  *
@@ -28,7 +29,8 @@ function ok( $c, $m ) {
 }
 
 $css = static function ( $file ) {
-	return (string) file_get_contents( dirname( __DIR__ ) . '/assets/css/' . $file );
+	// components.css is the component layer's joined parts since 2026-10-31.
+	return 'components.css' === $file ? snt_components_source() : (string) file_get_contents( dirname( __DIR__ ) . '/assets/css/' . $file );
 };
 
 // Group 1: the tuned channel, in both sheets.

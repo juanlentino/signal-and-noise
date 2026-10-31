@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/lib/components-source.php'; // the component layer, joined (2026-10-31 split)
 /**
  * Standalone test: the /music controls rail (.sn-disco-controls) sticks.
  *
@@ -22,7 +23,7 @@ if ( PHP_SAPI !== 'cli' && ! defined( 'WP_CLI' ) ) { http_response_code( 404 ); 
 $pass = 0; $fail = 0;
 function ok( $c, $m ) { global $pass, $fail; if ( $c ) { ++$pass; echo "PASS: $m\n"; } else { ++$fail; echo "FAIL: $m\n"; } }
 
-$css = preg_replace( '~/\*.*?\*/~s', '', (string) file_get_contents( __DIR__ . '/../assets/css/components.css' ) );
+$css = preg_replace( '~/\*.*?\*/~s', '', snt_components_source() );
 
 ok( 1 === preg_match( '/body:has\(\.sn-disco-controls\)\s*\{[^}]*overflow-x:\s*clip/', $css ), 'body clips instead of hiding where the rail is, so body is not a scroll container the rail could stick to' );
 

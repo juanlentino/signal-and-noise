@@ -85,7 +85,7 @@ function sn_lang_nav_link_html( $html, $label, $path, $es_url, $request ) {
 		// The English page under a Spanish label (Notas -> /notes/, there is no
 		// /notas/): say the language changes, like the footer's English links.
 		// Notas also says how to read them: a hint on hover and focus (data-hint,
-		// drawn by components.css; not a title, which the browser would draw a
+		// drawn by components-18-chrome-icons-lang.css; not a title, which the browser would draw a
 		// second time) and a name that starts with the visible text (WCAG 2.5.3).
 		// Owner, 2026-10-18: the translator line belongs here, not on ES.
 		$tags = new WP_HTML_Tag_Processor( $html );

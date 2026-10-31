@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/lib/components-source.php'; // the component layer, joined (2026-10-31 split)
 /**
  * Standalone fixture tests for the availability line (D5, theme v10.9.0).
  *
@@ -65,7 +66,7 @@ ok( sn_availability_text() === '' && sn_availability_shortcode() === '', 'T6 rob
 // inline-flex .sn-availability is never centered — it falls to the full-width
 // group's left edge (the page gutter) instead of aligning with the hero column.
 // It MUST be block-level flex so the constrained layout centers it.
-$css = file_get_contents( __DIR__ . '/../assets/css/components.css' );
+$css = snt_components_source();
 ok( is_string( $css ) && '' !== $css, 'T7: components.css readable' );
 if ( preg_match( '/\.sn-availability\s*\{([^}]*)\}/', (string) $css, $m ) ) {
 	$rule = $m[1];

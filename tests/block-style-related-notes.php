@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/lib/components-source.php'; // the component layer, joined (2026-10-31 split)
 /**
  * The related-notes / cited-by rules ship as a block stylesheet, not in the
  * combined sheet.
@@ -75,7 +76,7 @@ echo "\nGroup 2: the rules left the shared sheets\n";
 // Comments stripped first: components.css legitimately REFERS to these classes
 // in prose (the 404 fallback note at :1548 explains why its headings are not
 // scoped to them), and a raw substring search reads that reference as a rule.
-$components = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( $root . '/assets/css/components.css' ) );
+$components = (string) preg_replace( '#/\*.*?\*/#s', '', snt_components_source() );
 ok( ! str_contains( $components, '.sn-related-notes' ), 'components.css declares no .sn-related-notes rule' );
 ok( ! str_contains( $components, '.sn-cited-by' ), 'components.css declares no .sn-cited-by rule' );
 
@@ -88,7 +89,7 @@ ok( str_contains( $print, '.sn-related-notes' ) && str_contains( $print, '.sn-ci
 // cannot be swept back into the combined payload. Assert that it is not listed.
 $combine = (string) file_get_contents( $root . '/inc/asset-combine.php' );
 ok( ! str_contains( $combine, 'assets/css/blocks/' ), 'the combiner does not list the block sheet (it would defeat the on-demand load)' );
-ok( str_contains( $combine, "'assets/css/components.css'" ), 'control: the combiner does still list components.css, so the assertion above is reading a real list' );
+ok( str_contains( $combine, 'sn_components_css_parts()' ), 'control: the combiner does still list the component layer, so the assertion above is reading a real list' );
 
 echo "\nGroup 3: both blocks register the same handle, with a path so core inlines it\n";
 

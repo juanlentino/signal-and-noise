@@ -16,7 +16,7 @@
    1440. `main` is overflow:visible on both templates. */
 
 /* The class is doubled on purpose: (0,3,0). On a single note the prose rule
-   `.sn-note-single .wp-block-post-content p` (components.css, 0,2,1) matches
+   `.sn-note-single .wp-block-post-content p` (components-04-notes.css, 0,2,1) matches
    this <p> too, and at (0,2,0) these rules lost to it, so the margin note
    rendered at prose size (14.4px measured, 2026-10-16) and prose line-height.
    A doubled class matches exactly the same elements, editor canvas included

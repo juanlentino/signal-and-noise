@@ -31,7 +31,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * shortcode is inert on pages, archives, and the home/list views even if the
  * token ever leaks into a shared template part.
  *
- * Text-only labels (no icons), brutalist styling lives in components.css.
+ * Text-only labels (no icons), brutalist styling lives in components-07-note-share-reply.css.
  *
  * @return string Row HTML, or '' off single notes.
  */

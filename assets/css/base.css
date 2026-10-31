@@ -6,7 +6,7 @@
    Global resets, body-level effects (film grain + scanline), the
    accessibility skip-link, keyframes, and the custom scrollbar.
    No component or layout rules here — those live in layout.css and
-   components.css.
+   the component layer (components-*.css).
 
    Fonts: Bebas Neue + DM Mono are declared in inc/assets-frontend.php
    (inline critical) and theme.json (fontFace). Do NOT add @font-face
@@ -249,7 +249,7 @@ summary:focus-visible {
    Hardcoded, this halo stayed the LIGHT red around an element that had already
    turned — the same half-migration as converting a surface and leaving its ink.
    color-mix on the token is the pattern this repo already uses for a token at
-   partial alpha (command-palette.css, components.css). */
+   partial alpha (command-palette.css, components-*.css). */
 @keyframes pulseGlow {
 	0%, 100% { text-shadow: 0 0 8px color-mix( in srgb, var(--wp--preset--color--blood) 20%, transparent ); }
 	50% { text-shadow: 0 0 20px color-mix( in srgb, var(--wp--preset--color--blood) 40%, transparent ), 0 0 40px color-mix( in srgb, var(--wp--preset--color--blood) 10%, transparent ); }

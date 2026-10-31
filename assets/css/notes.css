@@ -640,7 +640,7 @@ details.sn-notes-year > summary:focus-visible .sn-notes-year-band {
 }
 
 /* Scoped to .sn-notes-page so this inline rule deterministically wins over
-   the global components.css .sn-notes-empty (specificity 0,2,0 > 0,1,0),
+   the global components-04-notes.css .sn-notes-empty (specificity 0,2,0 > 0,1,0),
    not by source order alone. */
 .sn-notes-page .sn-notes-empty {
 	font-family: 'DM Mono', 'Courier New', monospace;

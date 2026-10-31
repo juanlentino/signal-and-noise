@@ -1,0 +1,64 @@
+/* ── FEATURED RELEASE (/music hero, v9.15.0) ─────────────────────────
+   The [sn_music_featured] shortcode (inc/music-featured-render.php, from the
+   plugin-supplied sn_music_featured filter) emits the single "press play"
+   Spotify embed at the top of /music — the ONE eager iframe on the page; the
+   cover grid below stays click-to-play. */
+.sn-music-featured {
+	margin: clamp(1.5rem, 4vw, 2.75rem) 0; /* not a step: clamp(1.5rem, 4vw, 2.75rem) is its own value; the nearest air step, air--lg, would move it 8px */
+	border: 1px solid var(--wp--preset--color--bone);
+	background: var(--wp--preset--color--asphalt);
+	padding: clamp(1rem, 2.5vw, 1.6rem); /* not a step: clamp(1rem, 2.5vw, 1.6rem) is its own value; the nearest air step, air--xs, would move it 5px */
+}
+.sn-music-featured__label {
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.7rem, 11px);
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--rust);
+	margin: 0 0 0.9rem;
+}
+.sn-music-featured__dot {
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: var(--wp--preset--color--signal);
+	flex: 0 0 auto;
+}
+.sn-music-featured__player {
+	display: block;
+	width: 100%;
+	border: 0;
+}
+
+/* ── Availability line (D5) — Contact/Services hero status ──────────────
+ * Mirrors the .sn-music-featured__label + dot idiom: a small uppercase
+ * status line with a leading signal dot. Rendered by [sn_availability]
+ * (inc/availability.php) from the plugin's identity.availability setting;
+ * absent/empty → the shortcode emits nothing, so no rule ever applies to
+ * an empty element. */
+.sn-availability {
+	/* Block-level flex (NOT inline-flex): the Contact/Services hero is a
+	 * constrained group that centers children via margin-inline:auto, which is a
+	 * no-op on inline-level boxes — inline-flex would fall to the page gutter
+	 * instead of aligning with the hero column. (v10.10.1) */
+	display: flex;
+	align-items: center;
+	gap: 0.55rem;
+	margin: 1.2rem 0 0;
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.72rem, 11px);
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--bone);
+}
+.sn-availability__dot {
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: var(--wp--preset--color--signal);
+	flex: 0 0 auto;
+}
+

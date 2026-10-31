@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/lib/components-source.php'; // the component layer, joined (2026-10-31 split)
 /**
  * Test: the touch hover-reset for plain links no longer outranks a link's
  * own deliberate color (issue #321).
@@ -26,7 +27,7 @@ if ( PHP_SAPI !== 'cli' && ! defined( 'WP_CLI' ) ) { http_response_code( 404 ); 
 $pass = 0; $fail = 0;
 function ok( $c, $m ) { global $pass, $fail; if ( $c ) { $pass++; echo "PASS: $m\n"; } else { $fail++; echo "FAIL: $m\n"; } }
 
-$css = (string) file_get_contents( dirname( __DIR__ ) . '/assets/css/components.css' );
+$css = snt_components_source();
 ok( '' !== $css, 'components.css is readable' );
 
 // #321: the link reset selector must be wrapped in :where() so it carries

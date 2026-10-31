@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/lib/components-source.php'; // the component layer, joined (2026-10-31 split)
 /**
  * Test: the closing rule (`.sn-post-closing__rule`) keeps its own color
  * against the separator base rule (issue #320, re-pinned in #390).
@@ -25,7 +26,7 @@ function ok( $c, $m ) { global $pass, $fail; if ( $c ) { $pass++; echo "PASS: $m
 
 $root       = dirname( __DIR__ );
 $article    = (string) file_get_contents( $root . '/assets/css/article.css' );
-$components = preg_replace( '~/\*.*?\*/~s', '', (string) file_get_contents( $root . '/assets/css/components.css' ) );
+$components = preg_replace( '~/\*.*?\*/~s', '', snt_components_source() );
 $theme      = json_decode( (string) file_get_contents( $root . '/theme.json' ), true );
 
 ok( '' !== $article && '' !== $components && is_array( $theme ), 'article.css, components.css and theme.json are readable' );
