@@ -46,19 +46,25 @@
 		}
 	}
 
+	// The grace removes the card only: a pending show for the next link must
+	// survive it (leave A, reach B inside the grace, B still shows).
 	function scheduleHide() {
 		clearHide();
-		hideTimer = window.setTimeout( removeActive, HIDE_GRACE_MS );
+		hideTimer = window.setTimeout( removeCard, HIDE_GRACE_MS );
 	}
 
-	function removeActive() {
-		clearTimer();
+	function removeCard() {
 		clearHide();
 		if ( activeCard && activeCard.parentNode ) {
 			activeCard.parentNode.removeChild( activeCard );
 		}
 		activeCard = null;
 		activeLink = null;
+	}
+
+	function removeActive() {
+		clearTimer();
+		removeCard();
 	}
 
 	function buildCard( link ) {
@@ -125,16 +131,20 @@
 		positionCard( card, link.getBoundingClientRect() );
 	}
 
+	// pointerenter/pointerleave fire on EVERY element the pointer crosses, and
+	// the document captures them all: only the link itself and the card itself
+	// count. Moving from a card's line onto its padding, or from a link's <em>
+	// back onto its text, is not leaving (review 2026-10-31).
 	function onEnter( event ) {
 		if ( ! event.target || 1 !== event.target.nodeType ) {
 			return;
 		}
-		if ( activeCard && event.target.closest( '.sn-link-preview' ) === activeCard ) {
+		if ( activeCard && event.target === activeCard ) {
 			clearHide(); // the pointer reached the card: keep it.
 			return;
 		}
 		var link = event.target.closest( 'a[data-sn-preview-title]' );
-		if ( ! link ) {
+		if ( ! link || link !== event.target ) {
 			return;
 		}
 		if ( link === activeLink ) {
@@ -153,11 +163,12 @@
 		if ( ! event.target || 1 !== event.target.nodeType ) {
 			return;
 		}
-		if ( activeCard && event.target.closest( '.sn-link-preview' ) === activeCard ) {
+		if ( activeCard && event.target === activeCard ) {
 			scheduleHide();
 			return;
 		}
-		if ( event.target.closest( 'a[data-sn-preview-title]' ) ) {
+		var link = event.target.closest( 'a[data-sn-preview-title]' );
+		if ( link && link === event.target ) {
 			clearTimer(); // a sweep that left before the intent delay shows nothing.
 			if ( activeCard ) {
 				scheduleHide();

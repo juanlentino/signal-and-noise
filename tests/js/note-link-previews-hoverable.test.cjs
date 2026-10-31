@@ -46,12 +46,14 @@ function page() {
     clearTimeout: (id) => clearTimeout(id),
   };
   vm.runInNewContext(SRC, { window, document, console });
-  const link = el('A');
-  link.setAttribute('data-sn-preview-title', 'A note');
-  body.appendChild(link);
+  const mk = (title) => { const a = el('A'); a.setAttribute('data-sn-preview-title', title); body.appendChild(a); return a; };
+  const link = mk('A note');
+  const link2 = mk('B note');
+  const em = el('EM');
+  link2.appendChild(em); // <a>text <em>emphasis</em> text</a>
   const card = () => body.children.find((c) => matches(c, '.sn-link-preview')) || null;
   const fire = (type, target, extra = {}) => listeners[type](Object.assign({ target }, extra));
-  return { link, card, fire };
+  return { link, link2, em, card, fire };
 }
 
 test('hovering the link shows the card after the intent delay', () => {
@@ -137,4 +139,57 @@ test('the card takes the pointer (no pointer-events: none on .sn-link-preview)',
   const rule = CSS.slice(CSS.indexOf('.sn-link-preview {'), CSS.indexOf('}', CSS.indexOf('.sn-link-preview {')));
   assert.ok(rule.length > 0);
   assert.ok(!/pointer-events:\s*none/.test(rule), rule);
+});
+
+// Review 2026-10-31: pointerleave fires on every element the pointer leaves,
+// not only the link or the card. A move from a card's child onto its padding,
+// or from a link's <em> back onto the link's own text, is not leaving.
+test('moving between the card and its own children never closes it', () => {
+  mock.timers.enable({ apis: ['setTimeout'] });
+  try {
+    const p = page();
+    p.fire('pointerenter', p.link);
+    mock.timers.tick(150);
+    const card = p.card();
+    p.fire('pointerleave', p.link);
+    p.fire('pointerenter', card);
+    const child = card.children[0];
+    p.fire('pointerenter', child);
+    p.fire('pointerleave', child); // onto the card's padding
+    mock.timers.tick(2000);
+    assert.equal(p.card(), card, 'still open on the padding');
+  } finally { mock.timers.reset(); }
+});
+
+test('a link with a child element: moving within it keeps (or still shows) its card', () => {
+  mock.timers.enable({ apis: ['setTimeout'] });
+  try {
+    const p = page();
+    p.fire('pointerenter', p.link2);
+    p.fire('pointerenter', p.em);
+    mock.timers.tick(60);
+    p.fire('pointerleave', p.em); // back onto the link's text, inside the intent window
+    mock.timers.tick(200);
+    const card = p.card();
+    assert.ok(card, 'shown despite the move inside the link');
+    p.fire('pointerenter', p.em);
+    p.fire('pointerleave', p.em);
+    mock.timers.tick(2000);
+    assert.equal(p.card(), card, 'kept while the pointer stays inside the link');
+  } finally { mock.timers.reset(); }
+});
+
+test('leaving link A, then reaching link B after the grace began, still shows B', () => {
+  mock.timers.enable({ apis: ['setTimeout'] });
+  try {
+    const p = page();
+    p.fire('pointerenter', p.link);
+    mock.timers.tick(150);
+    p.fire('pointerleave', p.link);
+    mock.timers.tick(220); // A's hide fires at 300, before B's 120 ms intent ends
+    p.fire('pointerenter', p.link2);
+    mock.timers.tick(200);
+    const card = p.card();
+    assert.ok(card && card.children[0].textContent === 'B note', 'B shows its card');
+  } finally { mock.timers.reset(); }
 });

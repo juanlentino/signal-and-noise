@@ -17,7 +17,9 @@
  *   - core's per-block CSS inlined by core itself, with the budget raised to
  *     64 KB (styles_inline_size_limit) so the navigation sheet lands in the
  *     same inline block instead of a separate render-blocking request
- *   - Script modules from @wordpress/* tagged fetchpriority="low"
+ *   - Script modules from @wordpress/* load at fetchpriority="low": core
+ *     sets that itself (script-modules.php); the theme's own filter for it
+ *     hooked a filter core never applies and was removed 2026-10-31
  *
  * @package SignalNoise
  */

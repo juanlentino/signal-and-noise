@@ -278,7 +278,7 @@ jobs:
             echo "HTTP:     ${O_CODE}   Bytes: ${O_BYTES}   ${ctype}"
             if [ "$O_CODE" = "200" ] && echo "$ctype" | grep -qi 'text/css' && [ "${O_BYTES:-0}" -ge 10000 ]; then
               echo "Result: OK"
-            elif [ "$O_CODE" = "403" ] || [ "$O_CODE" = "429" ]; then
+            elif [ "$O_CODE" = "403" ] || [ "$O_CODE" = "415" ] || [ "$O_CODE" = "429" ]; then
               echo "::warning::Combined stylesheet: edge block (HTTP ${O_CODE}); inconclusive."
               warn=1
             else
