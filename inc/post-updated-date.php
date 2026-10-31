@@ -101,17 +101,23 @@ function sn_post_updated_compare_url( $post ) {
 	$vm   = sn_prov_view_data( $post->ID );
 	$uid  = is_array( $vm ) ? (string) ( $vm['note_uid'] ?? '' ) : '';
 	$base = is_array( $vm ) ? (string) ( $vm['verify_url'] ?? '' ) : '';
-	$nums = array();
+	$rows = array();
 	foreach ( is_array( $vm ) ? (array) ( $vm['versions'] ?? array() ) : array() as $v ) {
-		$n = (int) ( $v['version'] ?? 0 );
-		if ( $n >= 1 ) {
-			$nums[] = $n;
+		if ( (int) ( $v['version'] ?? 0 ) >= 1 ) {
+			$rows[] = $v;
 		}
 	}
-	if ( '' === $uid || '' === $base || count( $nums ) < 2 ) {
+	if ( '' === $uid || '' === $base || count( $rows ) < 2 ) {
 		return '';
 	}
-	list( $from, $to ) = array_slice( $nums, -2 );
+	list( $a, $b ) = array_slice( $rows, -2 );
+	// A version is unanchored from its save until the signer answers, and its
+	// credential does not exist until then: no link until both are signed.
+	if ( 'unanchored' === ( $a['status'] ?? '' ) || 'unanchored' === ( $b['status'] ?? '' ) ) {
+		return '';
+	}
+	$from = (int) $a['version'];
+	$to   = (int) $b['version'];
 	return $base . ( false === strpos( $base, '?' ) ? '?' : '&' ) . 'note=' . rawurlencode( $uid ) . '&compare_a=' . $from . '&compare_b=' . $to . '#compare';
 }
 

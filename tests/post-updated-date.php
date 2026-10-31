@@ -192,10 +192,10 @@ if ( ! function_exists( 'esc_url' ) ) {
 	function esc_url( $u ) { return str_replace( '&', '&#038;', (string) $u ); } // core encodes & the same way
 }
 $uid = '9f0abe29-71ed-4b6d-b3a3-ad00f06b2fc3';
-$vm  = static function ( array $nums, $uid = '9f0abe29-71ed-4b6d-b3a3-ad00f06b2fc3', $base = 'https://example.test/verify' ) {
+$vm  = static function ( array $nums, $uid = '9f0abe29-71ed-4b6d-b3a3-ad00f06b2fc3', $base = 'https://example.test/verify', array $status = array() ) {
 	return array(
 		'note_uid'   => $uid,
-		'versions'   => array_map( static function ( $n ) { return array( 'version' => $n ); }, $nums ),
+		'versions'   => array_map( static function ( $n ) use ( $status ) { return array( 'version' => $n, 'status' => $status[ $n ] ?? 'confirmed' ); }, $nums ),
 		'verify_url' => $base,
 	);
 };
@@ -223,6 +223,21 @@ $GLOBALS['__vm'] = $vm( array( 2, 3 ), $uid, 'https://example.test/verify?kind=p
 ok( false !== strpos( sn_post_updated_display( $post ), 'verify?kind=page&#038;note=' ), 'a base that already carries ?kind= joins with &' );
 $GLOBALS['__vm'] = $vm( array( 1, 2 ), 'a"b<c' );
 ok( false !== strpos( sn_post_updated_display( $post ), 'note=a%22b%3Cc&#038;' ), 'the note id is URL-encoded into the href' );
+
+// Review of #622: a version is `unanchored` from its save until the signer
+// answers, and the credential route serves nothing for it until then.
+$GLOBALS['__vm'] = $vm( array( 1, 2, 3 ), $uid, 'https://example.test/verify', array( 3 => 'unanchored' ) );
+ok( sn_post_updated_display( $post ) === $plain, 'the newest version not signed yet -> plain line (not a compare of the two before it under its date)' );
+$GLOBALS['__vm'] = $vm( array( 1, 2, 3 ), $uid, 'https://example.test/verify', array( 2 => 'unanchored' ) );
+ok( sn_post_updated_display( $post ) === $plain, 'the version it would compare from not signed -> plain line' );
+$GLOBALS['__vm'] = $vm( array( 1, 2, 3 ), $uid, 'https://example.test/verify', array( 3 => 'pending' ) );
+ok( false !== strpos( sn_post_updated_display( $post ), 'compare_a=2&#038;compare_b=3' ), 'signed and awaiting its block (pending) is linkable' );
+
+$css = (string) file_get_contents( dirname( __DIR__ ) . '/assets/css/article.css' );
+$link = preg_match( '/\.sn-post-frontmatter__updated-link\s*\{([^}]*)\}/', $css, $lm ) ? $lm[1] : '';
+ok( 1 === preg_match( '/text-decoration:\s*underline/', $link ), 'the underline: the one cue besides color (rust barely differs from the text in light mode)' );
+ok( 1 === preg_match( '/padding:\s*0\.35rem/', $link ) && 1 === preg_match( '/margin:\s*-0\.35rem/', $link ), 'the hit area grows without moving the row (the tags\' trick)' );
+ok( 1 === preg_match( '/\.sn-post-frontmatter__updated-link:focus-visible\s*\{[^}]*color:\s*var\(--wp--preset--color--blood\)/', $css ), 'a designed keyboard focus' );
 
 $GLOBALS['__vm'] = $vm( array( 1, 2, 3, 4, 5 ) );
 $GLOBALS['__timestamps'] = array( 'date' => $published, 'modified' => $published + DAY_IN_SECONDS );
