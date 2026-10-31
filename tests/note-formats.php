@@ -14,10 +14,10 @@ if ( PHP_SAPI !== 'cli' && ! defined( 'WP_CLI' ) ) { http_response_code( 404 ); 
 define( 'ABSPATH', '/' );
 $pass = 0; $fail = 0;
 function ok( $c, $m ) { global $pass, $fail; if ( $c ) { ++$pass; echo "PASS: $m\n"; } else { ++$fail; echo "FAIL: $m\n"; } }
-$GLOBALS['__singular'] = true; $GLOBALS['__front'] = false; $GLOBALS['__protected'] = false; $GLOBALS['__status'] = 'publish';
+$GLOBALS['__singular'] = true; $GLOBALS['__front'] = false; $GLOBALS['__password'] = ''; $GLOBALS['__status'] = 'publish';
 function is_singular( $t = '' ) { return 'post' === $t && $GLOBALS['__singular']; }
 function is_front_page() { return $GLOBALS['__front']; }
-function post_password_required() { return $GLOBALS['__protected']; }
+function get_post_field( $f ) { return 'post_password' === $f ? $GLOBALS['__password'] : ''; }
 function get_post_status() { return $GLOBALS['__status']; }
 function get_permalink() { return 'https://juanlentino.com/notes/a-note/'; }
 function esc_html( $s ) { return htmlspecialchars( (string) $s, ENT_QUOTES, 'UTF-8' ); }
@@ -39,7 +39,7 @@ ok( false !== strpos( $out, '<a href="https://juanlentino.com/notes/a-note.json"
 ok( 1 === substr_count( $out, 'aria-hidden="true">' ) && false !== strpos( $out, '·' ), 'the dot between them is decoration, hidden from screen readers' );
 ok( false === strpos( $out, '<button' ) && false === strpos( $out, 'Print' ), 'no Print in the markup: the script draws it, so a reader without script never meets a dead button' );
 ok( false === strpos( $out, "\u{2014}" ), 'no em dash' );
-foreach ( array( '__singular' => false, '__front' => true, '__protected' => true, '__status' => 'draft' ) as $k => $v ) {
+foreach ( array( '__singular' => false, '__front' => true, '__password' => 'pw', '__status' => 'draft' ) as $k => $v ) {
 	$keep = $GLOBALS[ $k ]; $GLOBALS[ $k ] = $v;
 	ok( '' === sn_note_formats_html(), "nothing where the head advertises no Markdown twin ($k)" );
 	$GLOBALS[ $k ] = $keep;
@@ -48,6 +48,15 @@ $render = (string) file_get_contents( $root . '/blocks/note-cite/render.php' );
 ok( false !== strpos( $render, 'sn_note_cite_html() . sn_note_formats_html()' ), 'printed by the Cite block, right under the citation, and on its own when the plugin gives no citation' );
 $print = (string) file_get_contents( $root . '/assets/css/print.css' );
 ok( false !== strpos( $print, '.sn-note-formats,' ), 'not printed: links and a Print button mean nothing on paper' );
+
+$fn = (string) file_get_contents( $root . '/functions.php' );
+ok( 1 === preg_match( "#require_once[^;]*'/inc/note-formats\.php'#", $fn ), 'functions.php requires inc/note-formats.php (the Cite block calls it unguarded)' );
+$css = (string) file_get_contents( $root . '/assets/css/components-07-note-share-reply.css' );
+$hit = preg_match( '/\.sn-note-formats a,\s*\.sn-note-formats__print\s*\{([^}]*)\}/', $css, $hm ) ? $hm[1] : '';
+ok( 1 === preg_match( '/padding:\s*0\.35rem/', $hit ) && 1 === preg_match( '/margin:\s*-0\.35rem 0/', $hit ), 'a 32px hit area that does not move the line' );
+ok( 1 === preg_match( '/text-decoration:\s*underline/', $hit ), 'underlined: the cue that they are links, not more label' );
+ok( 1 === preg_match( '/\.sn-note-formats__print:focus-visible\s*\{[^}]*color:\s*var\(--wp--preset--color--blood\)/', $css ), 'a designed keyboard focus, in blood' );
+ok( 1 === preg_match( '/@media \(hover: hover\)\s*\{\s*\.sn-note-formats a:hover,\s*\.sn-note-formats__print:hover\s*\{[^}]*color:\s*var\(--wp--preset--color--blood\)/', $css ), 'hover only where there is hover, in blood' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

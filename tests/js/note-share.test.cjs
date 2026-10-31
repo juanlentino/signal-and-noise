@@ -239,12 +239,14 @@ test('cite: without the copy helper the buttons stay unwired and nothing throws'
 });
 
 // 2026-10-31: the formats line's Print is drawn here, so it never ships dead.
-function formatsPage({ print = true } = {}) {
+function formatsPage({ print = true, readyState = 'complete' } = {}) {
   const line = el('P');
   line.className = 'sn-note-formats';
   const calls = [];
+  const ready = [];
   const document = {
-    readyState: 'complete', body: el('BODY'),
+    readyState, body: el('BODY'),
+    addEventListener: (type, cb) => { if (type === 'DOMContentLoaded') ready.push(cb); },
     querySelectorAll: (sel) => (sel === '.sn-note-formats' ? [line] : []),
     createElement: (tag) => el(tag.toUpperCase()),
   };
@@ -253,7 +255,7 @@ function formatsPage({ print = true } = {}) {
   const ctx = { window, document, navigator: {}, setTimeout, clearTimeout };
   vm.runInNewContext(readFileSync(path.join(__dirname, '..', '..', 'assets', 'js', 'sn-copy.js'), 'utf8'), ctx);
   vm.runInNewContext(SRC, ctx);
-  return { line, calls };
+  return { line, calls, ready };
 }
 
 test('formats: Print is drawn after a hidden dot and prints the page', () => {
@@ -270,4 +272,11 @@ test('formats: Print is drawn after a hidden dot and prints the page', () => {
 test('formats: no window.print, no Print button', () => {
   const p = formatsPage({ print: false });
   assert.equal(p.line.children.length, 0);
+});
+
+test('formats: loaded as the page loads (the live path), Print is drawn once on DOMContentLoaded', () => {
+  const p = formatsPage({ readyState: 'loading' });
+  assert.equal(p.line.children.length, 0, 'nothing before the document is parsed');
+  p.ready.forEach((cb) => cb());
+  assert.equal(p.line.children.filter((c) => c.tagName === 'BUTTON').length, 1);
 });

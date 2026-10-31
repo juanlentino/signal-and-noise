@@ -9,7 +9,8 @@
  * and date being read. The theme only decides where it appears, the way the
  * print colophon reads the provenance view-model (inc/print-colophon.php):
  * function_exists()-guarded, so without the plugin, off a single note, or
- * for a post with no citation, nothing renders.
+ * for a post with no citation, the citation does not render (the block still
+ * prints the formats line under it, inc/note-formats.php, which needs no plugin).
  *
  * The buttons are wired by assets/js/note-share.js, the share row's script
  * (blocks/note-cite/block.json names its handle): one copy of the clipboard

@@ -21,7 +21,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return string
  */
 function sn_note_formats_html() {
-	if ( ! is_singular( 'post' ) || is_front_page() || post_password_required() || 'publish' !== get_post_status() ) {
+	// The field, not post_password_required(): a reader who unlocked a protected note
+	// would see two links that 404 (the JSON route and the Markdown converter refuse any
+	// post with a password, unlocked or not).
+	if ( ! is_singular( 'post' ) || is_front_page() || '' !== (string) get_post_field( 'post_password' ) || 'publish' !== get_post_status() ) {
 		return '';
 	}
 	$permalink = (string) get_permalink();

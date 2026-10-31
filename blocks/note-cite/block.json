@@ -5,7 +5,7 @@
 	"title": "Cite this note",
 	"category": "signal-noise",
 	"icon": "editor-quote",
-	"description": "The APA citation of a note, its DOI, and copy buttons for APA and BibTeX.",
+	"description": "The APA citation of a note, its DOI, copy buttons for APA and BibTeX, and the line naming its other formats (Markdown, JSON, print).",
 	"textdomain": "signal-and-noise",
 	"supports": {
 		"autoRegister": true,
