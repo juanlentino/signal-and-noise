@@ -115,9 +115,33 @@
 		}
 	}
 
+	// The formats line (inc/note-formats.php): Print is drawn here, after a
+	// decorative dot, so a reader without script never meets a dead button.
+	function wireFormats() {
+		if ( typeof window.print !== 'function' ) {
+			return;
+		}
+		var lines = document.querySelectorAll( '.sn-note-formats' );
+		for ( var i = 0; i < lines.length; i++ ) {
+			var dot = document.createElement( 'span' );
+			dot.className = 'sn-note-formats__sep';
+			dot.setAttribute( 'aria-hidden', 'true' );
+			dot.textContent = ' · ';
+			var btn = document.createElement( 'button' );
+			btn.setAttribute( 'type', 'button' );
+			btn.className = 'sn-note-formats__print';
+			btn.textContent = 'Print';
+			btn.addEventListener( 'click', function () { window.print(); } );
+			lines[ i ].appendChild( dot );
+			lines[ i ].appendChild( btn );
+		}
+	}
+
 	if ( document.readyState === 'loading' ) {
 		document.addEventListener( 'DOMContentLoaded', init );
+		document.addEventListener( 'DOMContentLoaded', wireFormats );
 	} else {
 		init();
+		wireFormats();
 	}
 } )();
