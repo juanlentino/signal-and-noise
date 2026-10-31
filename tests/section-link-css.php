@@ -17,5 +17,9 @@ ok( 1 === preg_match( '/\.sn-section-link\[data-sn-state\]::after\s*\{[^}]*posit
 ok( 1 === preg_match( '/\.sn-section-link\[data-sn-state\]::after\s*\{[^}]*text-transform:\s*uppercase[^}]*\}/', $css ) && false !== strpos( $css, '[data-sn-state="copied"]::after' ) && false !== strpos( $css, '[data-sn-state="failed"]::after' ), 'COPIED and COPY FAILED, in the label type' );
 ok( 1 === preg_match( '/\.sn-section-link:focus-visible\s*\{[^}]*(?<![-\w])color:\s*var\(--wp--preset--color--blood\)[^}]*border-color:\s*var\(--wp--preset--color--blood\)/', $css ), 'a designed focus state: blood text and border' );
 ok( 1 === preg_match( '/@media \(hover: hover\)\s*\{\s*\.sn-section-link:hover/', $css ), 'hover only where there is hover (no sticky state on touch)' );
+$label = preg_match( '/\.sn-section-link\[data-sn-state\]::after\s*\{([^}]*)\}/', $css, $lm ) ? $lm[1] : '';
+ok( 1 === preg_match( '/right:\s*0/', $label ) && 1 === preg_match( '/bottom:\s*100%/', $label ), 'the label sits above the button, right-aligned to it, so it never runs off the right edge of a phone' );
+ok( 1 === preg_match( '/white-space:\s*nowrap/', $label ) && 1 === preg_match( '/pointer-events:\s*none/', $label ), 'one line, and it never takes a tap meant for the text under it' );
+ok( 1 === preg_match( '/\[data-sn-state="copied"\]::after\s*\{\s*content:\s*"Copied";/', $css ) && 1 === preg_match( '/\[data-sn-state="failed"\]::after\s*\{\s*content:\s*"Copy failed";/', $css ), 'the label says what happened (never a blank box)' );
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
