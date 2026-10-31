@@ -44,8 +44,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  *   4. CDN cache (Cloudflare) via our own purge module — gated on
  *      having a configured token.
  *   5. DB template overrides via sn_clear_template_overrides().
- *   6. Repopulate update_themes by running our filter once, so the
- *      Updates page renders correct state instead of empty.
+ *   6. Repopulate update_themes by running core's check once (which asks
+ *      our update offer), so the Updates page renders correct state.
  *   7. Extension hook for future modules (sn_after_full_cache_flush).
  *
  * @param array $args {
@@ -177,7 +177,7 @@ function sn_purge_all_caches( $args = array() ) {
 	}
 
 	if ( $args['repopulate'] ) {
-		// Re-run the update_themes filter so subsequent admin pageloads
+		// Re-run core's update check (it asks our offer) so later admin pageloads
 		// see correct state instead of the empty-transient false-positive
 		// "all up to date".
 		wp_update_themes();

@@ -1,8 +1,7 @@
 <?php
 /**
- * WP update integration: the update-transient filters.
- *
- * Moved verbatim out of inc/wp-update-integration.php, which loads it.
+ * WP update integration: the update offer (core's Update URI hook) and the
+ * read-time stale guard on `update_themes`. Loaded by inc/wp-update-integration.php.
  *
  * @package SignalNoise
  */
@@ -11,14 +10,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-/**
- * Register the theme with WP's update transient. WP renders it on
- * wp-admin/update-core.php and Appearance → Themes from this data.
- *
- * Theme update transient shape: `->response` and `->no_update` arrays
- * keyed by stylesheet, values are associative arrays (not stdClass as
- * the plugin transient uses). See WP core's _maybe_update_themes().
- */
 /**
  * Whether a forced (cache-bypassing) update check was requested.
  *
@@ -37,45 +28,42 @@ function sn_gh_theme_force_refresh_requested() {
 	return ! empty( $_GET['force-check'] ) && current_user_can( 'update_themes' );
 }
 
-add_filter( 'pre_set_site_transient_update_themes', function( $transient ) {
-	if ( empty( $transient ) || ! is_object( $transient ) ) {
-		$transient = new stdClass();
+/**
+ * Offer this theme's update through core's own Update URI hook (2026-10-31).
+ *
+ * style.css names the repository in `Update URI:`, so core's
+ * wp_update_themes() (6.1+) asks `update_themes_github.com` for this theme
+ * once per check, then places the answer in `response` or `no_update` itself
+ * and sets `id` and `new_version`. Before, a pre_set_site_transient filter
+ * rebuilt the entry on every write of `update_themes` (core writes it twice
+ * per check). One difference: core skips the hook when its WordPress.org
+ * request fails, so a release published during an outage shows on the next
+ * check (or Check Again), not that one; the previous entry stays meanwhile.
+ *
+ * The hook fires for every theme whose Update URI is on github.com, so any
+ * other stylesheet passes through untouched.
+ *
+ * @param array|false $update     The update so far (core passes false).
+ * @param array       $theme_data Theme headers (unused).
+ * @param string      $stylesheet The theme being checked.
+ * @return array|false
+ */
+function sn_gh_theme_update_offer( $update, $theme_data = array(), $stylesheet = '' ) {
+	if ( SN_GH_THEME_STYLESHEET !== $stylesheet ) {
+		return $update;
 	}
-
-	// v8.5.3: honor WP's "Check Again" button (a capability-gated
-	// ?force-check= cache-bust). Without this, our cached value persists even
-	// when the user explicitly asks for a fresh check.
-	$force_refresh = sn_gh_theme_force_refresh_requested();
-
-	$latest_tag = sn_gh_latest_theme_tag( $force_refresh );
-	if ( $latest_tag === null ) {
-		return $transient;
+	$latest_tag = sn_gh_latest_theme_tag( sn_gh_theme_force_refresh_requested() );
+	if ( null === $latest_tag ) {
+		return $update;
 	}
-
-	$latest_version  = ltrim( $latest_tag, 'v' );
-	$current_version = (string) wp_get_theme( SN_GH_THEME_STYLESHEET )->get( 'Version' );
-
-	$theme_data = array(
-		'theme'       => SN_GH_THEME_STYLESHEET,
-		'new_version' => $latest_version,
-		'url'         => 'https://github.com/' . SN_GH_THEME_OWNER . '/' . SN_GH_THEME_REPO,
-		'package'     => sn_gh_theme_package_url( $latest_tag ),
+	return array(
+		'theme'   => SN_GH_THEME_STYLESHEET,
+		'version' => ltrim( $latest_tag, 'v' ),
+		'url'     => 'https://github.com/' . SN_GH_THEME_OWNER . '/' . SN_GH_THEME_REPO,
+		'package' => sn_gh_theme_package_url( $latest_tag ),
 	);
-
-	if ( version_compare( $latest_version, $current_version, '>' ) ) {
-		if ( ! isset( $transient->response ) || ! is_array( $transient->response ) ) {
-			$transient->response = array();
-		}
-		$transient->response[ SN_GH_THEME_STYLESHEET ] = $theme_data;
-	} else {
-		if ( ! isset( $transient->no_update ) || ! is_array( $transient->no_update ) ) {
-			$transient->no_update = array();
-		}
-		$transient->no_update[ SN_GH_THEME_STYLESHEET ] = $theme_data;
-	}
-
-	return $transient;
-} );
+}
+add_filter( 'update_themes_github.com', 'sn_gh_theme_update_offer', 10, 3 );
 
 /**
  * Read-time guard: never report the theme as updatable to the version that
