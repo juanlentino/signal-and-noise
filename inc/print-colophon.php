@@ -58,11 +58,12 @@ function sn_print_colophon_html() {
 	}
 	$status = 'Status: ' . (string) ( $pres['label'] ?? '' ) . ( $block > 0 ? ', anchored in Bitcoin block ' . number_format( $block ) : '' ) . '.';
 
-	// The date the shown version was recorded.
+	// The date the shown version was recorded, in UTC like the citation, the
+	// provenance panel and Zenodo (2026-10-31: site time could print the day before).
 	$versions = (array) ( $vm['versions'] ?? array() );
 	$last     = $versions ? (array) end( $versions ) : array();
 	$ts       = '' !== (string) ( $last['committed_at'] ?? '' ) ? strtotime( (string) $last['committed_at'] ) : false;
-	$when     = $ts ? ', recorded ' . wp_date( 'F j, Y', $ts ) : '';
+	$when     = $ts ? ', recorded ' . gmdate( 'F j, Y', $ts ) : '';
 
 	// The verify address the chip links, written out: note= always, v= unless
 	// the note has only its founding snapshot. A signed page's base already
