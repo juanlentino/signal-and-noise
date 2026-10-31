@@ -202,5 +202,9 @@ $island = json_decode( $m[1] ?? '', true );
 ok( 'https://x.test/notes/' === ( $island['notesUrl'] ?? null ) && isset( $island['recent'], $island['pillars'], $island['notes'] ), 'enqueue: the island carries the built data' );
 ok( false === strpos( $foot, 'window.SN_CMDK' ), 'enqueue: the island assigns no global' );
 
+// The overlay is display:flex, which beats the UA's dialog:not([open]) rule
+// (author origin wins), so without this rule a CLOSED dialog covers the page (review of #620).
+ok( 1 === preg_match( '/\.sn-cmdk:not\(\[open\]\)\s*\{\s*display:\s*none/', (string) file_get_contents( __DIR__ . '/../assets/css/command-palette.css' ) ), 'a closed sn-cmdk dialog is display:none' );
+
 echo "Result: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

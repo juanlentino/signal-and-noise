@@ -16,6 +16,7 @@ function fixture(file) {
       removeAttribute(k) { delete this.attributes[k]; },
       addEventListener(type, fn) { (this.handlers[type] ||= []).push(fn); },
       focus() { document.activeElement = this; }, scrollIntoView() {},
+      open: false, showModal() { this.open = true; }, close() { this.open = false; }, // <dialog> (2026-10-31)
     };
     nodes.push(el);
     return el;
@@ -59,10 +60,10 @@ for (const flags of [{ isComposing: true }, { keyCode: 229 }]) {
     const dialog = f.nodes.find(n => n.id === 'sn-cmdk');
     for (const k of ['Enter', 'Escape', 'ArrowDown', 'ArrowUp']) {
       assert.equal(f.key(k, flags, input).prevented, false);
-      assert.equal(dialog.hidden, false);
+      assert.equal(dialog.open, true);
     }
     assert.deepEqual(f.navigations, []);
     f.key('Escape');
-    assert.equal(dialog.hidden, true, 'ordinary Escape still closes');
+    assert.equal(dialog.open, false, 'ordinary Escape still closes');
   });
 }

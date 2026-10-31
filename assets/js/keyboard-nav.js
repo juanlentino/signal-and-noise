@@ -58,12 +58,12 @@
 	function build() {
 		if ( sheet ) { return; }
 
-		sheet = document.createElement( 'div' );
+		// A native modal dialog (2026-10-31): the page behind is inert.
+		sheet = document.createElement( 'dialog' );
 		sheet.className = 'sn-kbdn';
-		sheet.setAttribute( 'role', 'dialog' );
-		sheet.setAttribute( 'aria-modal', 'true' );
 		sheet.setAttribute( 'aria-label', 'Keyboard shortcuts' );
-		sheet.hidden = true;
+		// Queued, so it can arrive after a quick reopen: act only on a closed one.
+		sheet.addEventListener( 'close', function () { if ( ! sheet.open ) { close(); } } );
 
 		var backdrop = document.createElement( 'div' );
 		backdrop.className = 'sn-kbdn-backdrop';
@@ -73,6 +73,7 @@
 		panel = document.createElement( 'div' );
 		panel.className = 'sn-kbdn-panel';
 		panel.setAttribute( 'tabindex', '-1' );
+		panel.setAttribute( 'autofocus', '' ); // showModal() focuses it first (Firefox would pass through the switch).
 
 		var title = document.createElement( 'p' );
 		title.className = 'sn-kbdn-title';
@@ -119,15 +120,16 @@
 		lastFocus = document.activeElement;
 		isOpen = true;
 		toggle.checked = singleKeysOn();
-		sheet.hidden = false;
-		// Defer focus so the unhide has applied (Safari focus-on-hidden quirk).
-		window.setTimeout( function () { panel.focus(); }, 0 );
+		sheet.showModal();
+		panel.focus();
 	}
 
+	// Also run by the dialog's close event (see build): a close the browser
+	// makes itself (Escape's cancel, Android back) lands here too.
 	function close() {
 		if ( ! isOpen ) { return; }
 		isOpen = false;
-		sheet.hidden = true;
+		if ( sheet.open ) { sheet.close(); }
 		if ( lastFocus && lastFocus.focus ) {
 			lastFocus.focus();
 		}

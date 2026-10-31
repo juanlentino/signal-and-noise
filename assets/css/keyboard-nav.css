@@ -21,8 +21,25 @@
 	padding: 1rem;
 }
 
-.sn-kbdn[hidden] {
+.sn-kbdn:not([open]) {
 	display: none;
+}
+
+/* A native <dialog> since 2026-10-31: undo the UA box so it is the same
+   full-viewport overlay, and leave the dimming to the backdrop div. */
+.sn-kbdn {
+	width: auto;
+	height: auto;
+	max-width: none;
+	max-height: none;
+	margin: 0;
+	border: 0;
+	background: transparent;
+	color: inherit;
+}
+
+.sn-kbdn::backdrop {
+	background: transparent;
 }
 
 .sn-kbdn-backdrop {
@@ -100,7 +117,7 @@
 /* Fade only when motion is welcome; the overlay still appears instantly under
    reduced motion (no @keyframes gating the display). */
 @media (prefers-reduced-motion: no-preference) {
-	.sn-kbdn:not([hidden]) .sn-kbdn-panel {
+	.sn-kbdn[open] .sn-kbdn-panel {
 		animation: sn-kbdn-in 120ms ease-out both;
 	}
 
