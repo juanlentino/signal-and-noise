@@ -29,9 +29,10 @@ function fixture(file) {
     removeEventListener(type, fn) { const i = handlers.indexOf(fn); if (i >= 0) handlers.splice(i, 1); },
   };
   document.activeElement = document.body;
-  vm.runInNewContext(readFileSync(path.join(__dirname, '../../assets/js', file), 'utf8'), {
-    document, window: { setTimeout(fn) { fn(); }, location: { assign(url) { navigations.push(url); } } },
-  });
+  // sn-keys.js (shared helper, 2026-10-31) first, as the scripts declare.
+  const ctx = { document, window: { setTimeout(fn) { fn(); }, location: { assign(url) { navigations.push(url); } } } };
+  vm.runInNewContext(readFileSync(path.join(__dirname, '../../assets/js/sn-keys.js'), 'utf8'), ctx);
+  vm.runInNewContext(readFileSync(path.join(__dirname, '../../assets/js', file), 'utf8'), ctx);
   function key(key, extra = {}, target) {
     const event = { key, keyCode: 0, prevented: false, preventDefault() { this.prevented = true; }, ...extra };
     for (const fn of [...handlers]) fn(event);

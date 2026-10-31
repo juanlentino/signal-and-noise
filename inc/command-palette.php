@@ -13,6 +13,8 @@
  */
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
+require_once __DIR__ . '/sn-keys.php'; // the shared keyboard helper this script depends on.
+
 /** The id of the JSON data island assets/js/command-palette.js reads. */
 const SN_CMDK_ISLAND_ID = 'sn-cmdk-data';
 
@@ -145,10 +147,11 @@ function sn_cmdk_enqueue() {
 			sn_asset_ver( 'assets/css/command-palette.css' )
 		);
 	}
+	sn_keys_register();
 	wp_enqueue_script(
 		'sn-command-palette',
 		get_theme_file_uri( 'assets/js/command-palette.js' ),
-		array(),
+		array( 'sn-keys' ),
 		sn_asset_ver( 'assets/js/command-palette.js' ),
 		array( 'in_footer' => true, 'strategy' => 'defer' )
 	);

@@ -81,7 +81,9 @@ function openPalette(islands, globalData) {
   document.activeElement = document.body;
   const win = { setTimeout(fn) { fn(); }, location: { assign() {} } };
   if (globalData) win.SN_CMDK = globalData;
-  vm.runInNewContext(JS('command-palette.js'), { document, window: win });
+  const ctx = { document, window: win };
+  vm.runInNewContext(JS('sn-keys.js'), ctx); // the shared helper loads first (2026-10-31)
+  vm.runInNewContext(JS('command-palette.js'), ctx);
   trigger.handlers.click[0]();
   return nodes.map((n) => n.textContent).join('|');
 }
@@ -130,7 +132,9 @@ test('palette: a javascript: URL from the island is never navigated to', () => {
     addEventListener(type, fn) { if (type === 'keydown') keys.push(fn); }, removeEventListener() {},
   };
   document.activeElement = document.body;
-  vm.runInNewContext(JS('command-palette.js'), { document, window: { setTimeout(fn) { fn(); }, location: { origin: 'https://site.test', assign(u) { navigations.push(u.replace('https://site.test', '')); } } } });
+  const ctx = { document, window: { setTimeout(fn) { fn(); }, location: { origin: 'https://site.test', assign(u) { navigations.push(u.replace('https://site.test', '')); } } } };
+  vm.runInNewContext(JS('sn-keys.js'), ctx); // the shared helper loads first (2026-10-31)
+  vm.runInNewContext(JS('command-palette.js'), ctx);
   trigger.handlers.click[0]();
   const input = nodes.find((n) => n.tagName === 'INPUT');
   const press = (key) => { const e = { key, keyCode: 0, preventDefault() {} }; for (const fn of input.handlers.keydown || []) fn(e); };

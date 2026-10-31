@@ -40,9 +40,12 @@ function fixture(file, store, opts = {}) {
   const localStorage = opts.throwing
     ? { getItem() { throw new Error('denied'); }, setItem() { throw new Error('denied'); }, removeItem() { throw new Error('denied'); } }
     : { getItem(k) { return k in store ? store[k] : null; }, setItem(k, v) { store[k] = String(v); }, removeItem(k) { delete store[k]; } };
-  vm.runInNewContext(readFileSync(path.join(__dirname, '../../assets/js', file), 'utf8'), {
-    document, window: { localStorage, setTimeout(fn) { fn(); }, location: { assign(url) { navigations.push(url); } } },
-  });
+  // sn-keys.js (the shared helper, 2026-10-31) loads first, as its dependents
+  // declare; the page's scripts share its one window.snKeys.
+  const ctx = { document, window: { localStorage, setTimeout(fn) { fn(); }, location: { assign(url) { navigations.push(url); } } } };
+  vm.runInNewContext(readFileSync(path.join(__dirname, '../../assets/js/sn-keys.js'), 'utf8'), ctx);
+  if (opts.preOff) ctx.window.snKeys.setSingleKeys(false);
+  vm.runInNewContext(readFileSync(path.join(__dirname, '../../assets/js', file), 'utf8'), ctx);
   function key(k, extra = {}) {
     const event = { key: k, keyCode: 0, prevented: false, preventDefault() { this.prevented = true; }, ...extra };
     for (const fn of [...handlers]) fn(event);
@@ -119,4 +122,10 @@ test('blocked storage fails safe: shortcuts stay on and nothing throws', () => {
   assert.deepEqual(nav.navigations, ['/next']);
   const pal = fixture('command-palette.js', {}, { throwing: true });
   assert.equal(pal.key('/').prevented, true);
+});
+
+test('one switch for both scripts: off through the shared helper stops j even when storage throws', () => {
+  const nav = fixture('keyboard-nav.js', {}, { throwing: true, preOff: true });
+  nav.key('j');
+  assert.deepEqual(nav.navigations, [], 'the notes script reads the same in-page memo the palette writes');
 });

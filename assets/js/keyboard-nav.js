@@ -3,8 +3,8 @@
  *
  * j = next note, k = previous note (following the post-closing prev/next
  * links), ? = a keyboard cheat-sheet overlay. All skipped while typing in a
- * form field (the same isFormField guard as the command palette — kept in
- * lockstep so both behave identically). Pure progressive enhancement: the
+ * form field (the same isFormField guard as the command palette, from
+ * sn-keys.js). Pure progressive enhancement: the
  * prev/next links and the palette work with this script absent. On the first
  * or last note a missing prev/next link simply makes j or k a no-op.
  *
@@ -16,9 +16,8 @@
  * can be turned off with the checkbox in the cheat-sheet (or the row in the
  * palette, reachable on every page with Cmd/Ctrl-K or the Search button).
  * The choice is one localStorage key per browser, no cookie, no identifier;
- * on is the default. singleKeysOn()/setSingleKeys() are kept verbatim in
- * command-palette.js, like isFormField, because the two files load on
- * different pages.
+ * on is the default. singleKeysOn()/setSingleKeys() and isFormField live in
+ * sn-keys.js, which both this file and command-palette.js depend on.
  *
  * @since theme v10.7.0
  */
@@ -28,40 +27,12 @@
 	var sheet, panel, toggle, lastFocus;
 	var isOpen = false;
 
-	// Mirrors command-palette.js isFormField verbatim — both must skip while
-	// the reader is typing (inputs, textareas, selects, contenteditable).
-	function isFormField( el ) {
-		if ( ! el ) { return false; }
-		var tag = el.tagName;
-		if ( tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' ) { return true; }
-		if ( el.isContentEditable ) { return true; }
-		return false;
-	}
-
-	// ── Single-key shortcut preference (WCAG 2.1.4) ─────────────────────────
-	// Mirrors command-palette.js verbatim. Read at keydown time, never cached,
-	// so a switch in one place is honored by every handler at once. Storage
-	// that throws (private mode, blocked site data) fails safe: shortcuts on,
-	// and the switch still works for the rest of this page view.
-	var SHORTCUT_KEY = 'sn-single-key-shortcuts';
-	var shortcutMemo = null;
-	function singleKeysOn() {
-		try {
-			return window.localStorage.getItem( SHORTCUT_KEY ) !== 'off';
-		} catch ( err ) {
-			return shortcutMemo !== 'off';
-		}
-	}
-	function setSingleKeys( on ) {
-		shortcutMemo = on ? null : 'off';
-		try {
-			if ( on ) {
-				window.localStorage.removeItem( SHORTCUT_KEY );
-			} else {
-				window.localStorage.setItem( SHORTCUT_KEY, 'off' );
-			}
-		} catch ( err ) {}
-	}
+	// The form-field test and the single-key shortcut preference (WCAG 2.1.4)
+	// live in sn-keys.js, shared with command-palette.js (2026-10-31): one
+	// switch for both, read at keydown time, failing safe to on.
+	var isFormField = window.snKeys.isFormField;
+	var singleKeysOn = window.snKeys.singleKeysOn;
+	var setSingleKeys = window.snKeys.setSingleKeys;
 
 	// ── j / k navigation ─────────────────────────────────────────────────────
 
