@@ -256,6 +256,39 @@ jobs:
             'https://juanlentino.com/notes/feed/' \
             '<rss'
 
+          # ── The combined stylesheet the pages actually link (2026-10-31) ──
+          # A page can answer 200 while the sn-styles-<hash>.css it names
+          # 404s (2026-09-17): the HTML checks above pass and every page
+          # renders unstyled. Read the href the home page links and fetch it.
+          echo ""
+          echo "=== Combined stylesheet ==="
+          hb=$(mktemp); hh=$(mktemp)
+          fetch_retry 'https://juanlentino.com/' "$hb" "$hh"
+          css=$(grep -oE "https://juanlentino\.com/wp-content/uploads/sn-css/sn-styles-[a-f0-9]+\.css[^'\" ]*" "$hb" | head -1)
+          if [ "$O_CODE" != "200" ]; then
+            echo "::warning::Combined stylesheet: the home page answered HTTP ${O_CODE}; not checked."
+            warn=1
+          elif [ -z "$css" ]; then
+            echo "::warning::Combined stylesheet: the home page links no sn-styles sheet (the per-file fallback is serving)."
+            warn=1
+          else
+            echo "URL:      $css"
+            fetch_retry "$css" "$hb" "$hh"
+            ctype=$(grep -i '^content-type:' "$hh" | tail -1 | tr -d '\r')
+            echo "HTTP:     ${O_CODE}   Bytes: ${O_BYTES}   ${ctype}"
+            if [ "$O_CODE" = "200" ] && echo "$ctype" | grep -qi 'text/css' && [ "${O_BYTES:-0}" -ge 10000 ]; then
+              echo "Result: OK"
+            elif [ "$O_CODE" = "403" ] || [ "$O_CODE" = "415" ] || [ "$O_CODE" = "429" ]; then
+              echo "::warning::Combined stylesheet: edge block (HTTP ${O_CODE}); inconclusive."
+              warn=1
+            else
+              echo "::error::Combined stylesheet: the sheet every page links answered HTTP ${O_CODE} (${ctype:-no content type}, ${O_BYTES} B): pages render unstyled."
+              echo "Result: FAIL"
+              fail=1
+            fi
+          fi
+          rm -f "$hb" "$hh"
+
           # ── Machine-readability surfaces (v10.49.0) ──────────────────
           # The site's advertised machine surfaces are enumerated by the
           # live /.well-known/agents.json discovery manifest

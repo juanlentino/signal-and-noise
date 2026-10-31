@@ -9,10 +9,12 @@
  * links are just links.
  *
  * Mobile / coarse pointer: skipped entirely (tap navigates). The card is
- * pointer-events: none and aria-hidden — a visual supplement; screen
- * readers already have the link text and the destination. Mirrors
- * assets/js/footnotes-popover.js (v9.3.0), including its focusin/focusout
- * keyboard parity.
+ * aria-hidden, a visual supplement: screen readers already have the link
+ * text and the destination. It is hoverable (WCAG 1.4.13, 2026-10-31):
+ * leaving the link starts a short grace, moving onto the card cancels it,
+ * leaving the card starts it again, so a reader can magnify or re-read it.
+ * Mirrors assets/js/footnotes-popover.js (v9.3.0), including its
+ * focusin/focusout keyboard parity.
  *
  * @since theme v12.10.0
  */
@@ -24,8 +26,11 @@
 	}
 
 	var HOVER_INTENT_MS = 120;
+	var HIDE_GRACE_MS = 300; // time to cross from the link onto the card.
 	var activeCard = null;
+	var activeLink = null;
 	var showTimer = null;
+	var hideTimer = null;
 
 	function clearTimer() {
 		if ( showTimer ) {
@@ -34,12 +39,32 @@
 		}
 	}
 
-	function removeActive() {
-		clearTimer();
+	function clearHide() {
+		if ( hideTimer ) {
+			window.clearTimeout( hideTimer );
+			hideTimer = null;
+		}
+	}
+
+	// The grace removes the card only: a pending show for the next link must
+	// survive it (leave A, reach B inside the grace, B still shows).
+	function scheduleHide() {
+		clearHide();
+		hideTimer = window.setTimeout( removeCard, HIDE_GRACE_MS );
+	}
+
+	function removeCard() {
+		clearHide();
 		if ( activeCard && activeCard.parentNode ) {
 			activeCard.parentNode.removeChild( activeCard );
 		}
 		activeCard = null;
+		activeLink = null;
+	}
+
+	function removeActive() {
+		clearTimer();
+		removeCard();
 	}
 
 	function buildCard( link ) {
@@ -102,15 +127,28 @@
 			return;
 		}
 		activeCard = card;
+		activeLink = link;
 		positionCard( card, link.getBoundingClientRect() );
 	}
 
+	// pointerenter/pointerleave fire on EVERY element the pointer crosses, and
+	// the document captures them all: only the link itself and the card itself
+	// count. Moving from a card's line onto its padding, or from a link's <em>
+	// back onto its text, is not leaving (review 2026-10-31).
 	function onEnter( event ) {
 		if ( ! event.target || 1 !== event.target.nodeType ) {
 			return;
 		}
+		if ( activeCard && event.target === activeCard ) {
+			clearHide(); // the pointer reached the card: keep it.
+			return;
+		}
 		var link = event.target.closest( 'a[data-sn-preview-title]' );
-		if ( ! link ) {
+		if ( ! link || link !== event.target ) {
+			return;
+		}
+		if ( link === activeLink ) {
+			clearHide(); // back onto the same link: same card, no rebuild.
 			return;
 		}
 		// Intent delay: sweeping the pointer across a paragraph should not
@@ -125,8 +163,16 @@
 		if ( ! event.target || 1 !== event.target.nodeType ) {
 			return;
 		}
-		if ( event.target.closest( 'a[data-sn-preview-title]' ) ) {
-			removeActive();
+		if ( activeCard && event.target === activeCard ) {
+			scheduleHide();
+			return;
+		}
+		var link = event.target.closest( 'a[data-sn-preview-title]' );
+		if ( link && link === event.target ) {
+			clearTimer(); // a sweep that left before the intent delay shows nothing.
+			if ( activeCard ) {
+				scheduleHide();
+			}
 		}
 	}
 

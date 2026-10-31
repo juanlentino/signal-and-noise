@@ -780,7 +780,8 @@
 /* Internal note-link preview card (injected by assets/js/note-link-previews.js).
    Same raised-over-void surface identity as the footnote popover; no
    animation at all, so there is nothing for prefers-reduced-motion to
-   guard. pointer-events: none — the card is a glance, never a target. */
+   guard. It takes the pointer (WCAG 1.4.13 hoverable, 2026-10-31): the
+   script keeps it open while the pointer is on the link or the card. */
 .sn-link-preview {
 	position: absolute;
 	z-index: 1000;
@@ -798,7 +799,6 @@
 	   reads as a printed offset rather than a soft drop shadow. 4px, not 8:
 	   this is a 340px glance card, not a 36rem panel. */
 	box-shadow: 4px 4px 0 var(--wp--preset--color--concrete);
-	pointer-events: none;
 }
 .sn-link-preview__title {
 	display: block;

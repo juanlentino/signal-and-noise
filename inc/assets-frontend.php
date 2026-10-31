@@ -17,7 +17,9 @@
  *   - core's per-block CSS inlined by core itself, with the budget raised to
  *     64 KB (styles_inline_size_limit) so the navigation sheet lands in the
  *     same inline block instead of a separate render-blocking request
- *   - Script modules from @wordpress/* tagged fetchpriority="low"
+ *   - Script modules from @wordpress/* load at fetchpriority="low": core
+ *     sets that itself (script-modules.php); the theme's own filter for it
+ *     hooked a filter core never applies and was removed 2026-10-31
  *
  * @package SignalNoise
  */
@@ -172,25 +174,6 @@ add_action( 'wp_head', function() {
  * request left to drop, and the copy is gone.
  */
 add_filter( 'styles_inline_size_limit', static fn() => 65536 );
-
-/**
- * Performance: Add fetchpriority=low to Interactivity API script modules.
- * Reduces network contention with LCP resources on mobile.
- */
-add_filter( 'script_module_loader_tag', function( $tag, $id ) {
-	$low_priority = array(
-		'@wordpress/interactivity',
-		'@wordpress/interactivity-router',
-		'@wordpress/block-library/navigation',
-	);
-	foreach ( $low_priority as $module_id ) {
-		if ( str_contains( $id, $module_id ) ) {
-			$tag = str_replace( '<script ', '<script fetchpriority="low" ', $tag );
-			break;
-		}
-	}
-	return $tag;
-}, 10, 2 );
 
 /**
  * v9.3.0: footnote hover-popover progressive enhancement.

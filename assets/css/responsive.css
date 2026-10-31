@@ -107,23 +107,6 @@
 		padding: 0.25rem 0 !important;
 	}
 
-	/* Process strip stacks on tablet */
-	.sn-process-strip {
-		flex-direction: column !important;
-		gap: 2rem !important;
-	}
-
-	.sn-process-strip .wp-block-column {
-		border-right: none !important;
-		border-bottom: 1px solid var(--wp--preset--color--concrete);
-		padding: 0 0 1.5rem 0 !important;
-	}
-
-	.sn-process-strip .wp-block-column:last-child {
-		border-bottom: none;
-		padding-bottom: 0 !important;
-	}
-
 	/* PDF viewer shorter on tablet */
 	.wp-block-file .wp-block-file__embed {
 		min-height: 60vh;

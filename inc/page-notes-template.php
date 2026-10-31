@@ -45,16 +45,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Build marker — surfaces in an HTML comment via wp_footer so the
- * deployed version of THIS file can be verified from the live site
- * with a curl. Bumped manually on each commit that touches /notes
- * routing. Without a marker like this, "did the deploy actually take
- * effect?" was answered by behavioral inference, which has lied to
- * us across multiple incidents on this exact page.
- */
-const SN_NOTES_OVERRIDE_BUILD = '2026-06-05-notes-search-v12';
-
-/**
  * Detect whether the current request is the /notes index page.
  *
  * Two-layer detection because incidents have shown is_page('notes')
@@ -375,18 +365,6 @@ add_filter( 'template_include', function( $template ) {
 	}
 	$render = sn_notes_render_file();
 	return '' !== $render ? $render : $template;
-}, 999 );
-
-/**
- * Emit the build marker in wp_footer on every page so we can
- * verify what version of this file is actually on the server.
- *
- *   curl -s https://juanlentino.com/ | grep sn-notes-build
- *
- * Cheap (one extra comment per page), high diagnostic value.
- */
-add_action( 'wp_footer', function() {
-	echo "\n<!-- sn-notes-build: " . esc_html( SN_NOTES_OVERRIDE_BUILD ) . " -->\n";
 }, 999 );
 
 /**
