@@ -6,5 +6,6 @@
  * @package SignalNoise
  */
 if ( ! defined( 'ABSPATH' ) ) { exit; }
-// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- sn_note_cite_html() escapes every value it prints (esc_html / esc_attr / esc_url).
-echo sn_php_block_output( sn_note_cite_html(), __( 'Cite this note', 'signal-and-noise' ) );
+// The formats line (inc/note-formats.php) follows the citation, and stands on its own without the plugin.
+// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- both renderers escape every value they print (esc_html / esc_attr / esc_url).
+echo sn_php_block_output( sn_note_cite_html() . sn_note_formats_html(), __( 'Cite this note', 'signal-and-noise' ) );

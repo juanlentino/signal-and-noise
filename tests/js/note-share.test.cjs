@@ -237,3 +237,37 @@ test('cite: without the copy helper the buttons stay unwired and nothing throws'
   assert.equal(p.apa.listeners.click, undefined);
   assert.equal(p.lives.length, 0);
 });
+
+// 2026-10-31: the formats line's Print is drawn here, so it never ships dead.
+function formatsPage({ print = true } = {}) {
+  const line = el('P');
+  line.className = 'sn-note-formats';
+  const calls = [];
+  const document = {
+    readyState: 'complete', body: el('BODY'),
+    querySelectorAll: (sel) => (sel === '.sn-note-formats' ? [line] : []),
+    createElement: (tag) => el(tag.toUpperCase()),
+  };
+  const window = { document, navigator: {} };
+  if (print) window.print = () => calls.push('print');
+  const ctx = { window, document, navigator: {}, setTimeout, clearTimeout };
+  vm.runInNewContext(readFileSync(path.join(__dirname, '..', '..', 'assets', 'js', 'sn-copy.js'), 'utf8'), ctx);
+  vm.runInNewContext(SRC, ctx);
+  return { line, calls };
+}
+
+test('formats: Print is drawn after a hidden dot and prints the page', () => {
+  const p = formatsPage();
+  const btn = p.line.children.find((c) => c.tagName === 'BUTTON');
+  const dot = p.line.children.find((c) => c.attrs['aria-hidden'] === 'true');
+  assert.ok(dot && btn && p.line.children.indexOf(dot) < p.line.children.indexOf(btn), 'a decorative dot, then the button');
+  assert.equal(btn.textContent, 'Print');
+  assert.equal(btn.attrs.type, 'button');
+  btn.listeners.click();
+  assert.deepEqual(p.calls, ['print']);
+});
+
+test('formats: no window.print, no Print button', () => {
+  const p = formatsPage({ print: false });
+  assert.equal(p.line.children.length, 0);
+});

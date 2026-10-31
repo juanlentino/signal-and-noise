@@ -112,6 +112,49 @@
 	color: var(--wp--preset--color--blood);
 }
 
+/* ── FORMATS LINE (2026-10-31) ────────────────────────────────────────
+   "Also as Markdown · JSON · Print" under the Cite line (inc/note-formats.php;
+   Print is drawn by note-share.js). The share row's label voice; the links and
+   the button read as text links, underlined, blood on hover and focus. */
+.sn-note-formats {
+	margin-top: var(--wp--custom--air--sm);
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.75rem, 12px);
+	color: var(--wp--preset--color--rust);
+}
+.sn-note-formats__label {
+	font-size: max(0.7rem, 11px);
+	font-weight: 500;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	margin-right: 0.5rem;
+}
+.sn-note-formats a,
+.sn-note-formats__print {
+	display: inline-block;
+	padding: 0.35rem 0.15rem;
+	margin: -0.35rem 0;
+	color: inherit;
+	font: inherit;
+	text-decoration: underline;
+	text-underline-offset: 3px;
+	background: none;
+	border: 0;
+	cursor: pointer;
+}
+.sn-note-formats a:focus-visible,
+.sn-note-formats__print:focus-visible {
+	color: var(--wp--preset--color--blood);
+	text-decoration-thickness: 2px;
+}
+@media (hover: hover) {
+	.sn-note-formats a:hover,
+	.sn-note-formats__print:hover {
+		color: var(--wp--preset--color--blood);
+		text-decoration-thickness: 2px;
+	}
+}
+
 /* ── NOTE REPLY ROW ──────────────────────────────────────────────────
    Rendered by [sn_note_reply] (inc/note-reply.php) directly under the
    share row in the single-note footer. Same label voice as Share; the
