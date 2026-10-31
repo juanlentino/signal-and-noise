@@ -57,20 +57,6 @@
 }
 
 /* ============================================
-   PROCESS STRIP (How It Works)
-   ============================================ */
-
-.sn-process-strip .wp-block-column {
-	padding: 0 1rem 0 0;
-	border-right: 1px solid var(--wp--preset--color--concrete);
-}
-
-.sn-process-strip .wp-block-column:last-child {
-	border-right: none;
-	padding-right: 0;
-}
-
-/* ============================================
    BUTTONS
    ============================================ */
 
@@ -455,10 +441,6 @@
    NOTE — SINGLE
    ============================================ */
 
-.sn-note-single .sn-note-meta-divider {
-	opacity: 0.6;
-}
-
 .sn-note-single .sn-note-back a,
 .sn-note-single .sn-note-pillar-link a {
 	border-bottom: 1px solid transparent;
@@ -548,45 +530,6 @@
 
 .sn-provenance-byline {
 	font-style: italic;
-}
-
-/* ============================================
-   PROVENANCE — "Extended by" backlink (v10.21.0)
-   The sub-pillar launch-kit markup closes each extension note with
-   <p class="sn-provenance-extended-by" style="…font-size:0.85rem">
-     Extended by <a href="/provenance/…">title →</a></p>
-   The kit's INLINE style owns font-size + margins (inline wins the
-   cascade — do not restate them here). This rule supplies the rest:
-   mono uppercase tracked lead-in in rust, blood link with the
-   pillar-link hover, thin top rule against the note body.
-   ============================================ */
-
-.sn-provenance-extended-by {
-	font-family: 'DM Mono', 'Courier New', monospace;
-	letter-spacing: 0.14em;
-	text-transform: uppercase;
-	color: var(--wp--preset--color--rust);
-	border-top: 1px solid var(--wp--preset--color--concrete);
-	padding-top: var(--wp--preset--spacing--20);
-}
-
-.sn-provenance-extended-by a {
-	color: var(--wp--preset--color--blood);
-	text-decoration: none;
-	border-bottom: 1px solid transparent;
-	transition: border-color 0.2s ease;
-}
-
-@media (hover: hover) {
-	.sn-provenance-extended-by a:hover {
-		border-bottom-color: currentColor;
-	}
-}
-
-@media (prefers-reduced-motion: reduce) {
-	.sn-provenance-extended-by a {
-		transition: none;
-	}
 }
 
 /* ============================================
@@ -741,10 +684,6 @@
 	color: var(--wp--preset--color--rust);
 	margin-top: var(--wp--custom--air--xs);
 	margin-bottom: 0;
-}
-.sn-catalog-meta-bullet {
-	color: var(--wp--preset--color--blood);
-	margin: 0 0.5em;
 }
 
 .sn-catalog-section {

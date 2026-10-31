@@ -3,11 +3,6 @@
  * Tests the /notes document <title> single-owner: the theme's
  * pre_get_document_title filter appends "— Page N" for N>1 (and nothing for
  * page 1). The paged read is inlined (no render-file dependency).
- *
- * NOTE: SN_NOTES_OVERRIDE_BUILD is NOT pre-defined here because the file uses
- * a bare `const` (unguarded), so pre-defining it would cause a fatal
- * "Constant already defined" error. The constant is not used by
- * sn_notes_index_title(), so the test doesn't need it.
  */
 if ( PHP_SAPI !== 'cli' && ! defined( 'WP_CLI' ) ) {
 	http_response_code( 404 );

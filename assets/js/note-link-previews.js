@@ -9,10 +9,12 @@
  * links are just links.
  *
  * Mobile / coarse pointer: skipped entirely (tap navigates). The card is
- * pointer-events: none and aria-hidden — a visual supplement; screen
- * readers already have the link text and the destination. Mirrors
- * assets/js/footnotes-popover.js (v9.3.0), including its focusin/focusout
- * keyboard parity.
+ * aria-hidden, a visual supplement: screen readers already have the link
+ * text and the destination. It is hoverable (WCAG 1.4.13, 2026-10-31):
+ * leaving the link starts a short grace, moving onto the card cancels it,
+ * leaving the card starts it again, so a reader can magnify or re-read it.
+ * Mirrors assets/js/footnotes-popover.js (v9.3.0), including its
+ * focusin/focusout keyboard parity.
  *
  * @since theme v12.10.0
  */
@@ -24,8 +26,11 @@
 	}
 
 	var HOVER_INTENT_MS = 120;
+	var HIDE_GRACE_MS = 300; // time to cross from the link onto the card.
 	var activeCard = null;
+	var activeLink = null;
 	var showTimer = null;
+	var hideTimer = null;
 
 	function clearTimer() {
 		if ( showTimer ) {
@@ -34,12 +39,26 @@
 		}
 	}
 
+	function clearHide() {
+		if ( hideTimer ) {
+			window.clearTimeout( hideTimer );
+			hideTimer = null;
+		}
+	}
+
+	function scheduleHide() {
+		clearHide();
+		hideTimer = window.setTimeout( removeActive, HIDE_GRACE_MS );
+	}
+
 	function removeActive() {
 		clearTimer();
+		clearHide();
 		if ( activeCard && activeCard.parentNode ) {
 			activeCard.parentNode.removeChild( activeCard );
 		}
 		activeCard = null;
+		activeLink = null;
 	}
 
 	function buildCard( link ) {
@@ -102,6 +121,7 @@
 			return;
 		}
 		activeCard = card;
+		activeLink = link;
 		positionCard( card, link.getBoundingClientRect() );
 	}
 
@@ -109,8 +129,16 @@
 		if ( ! event.target || 1 !== event.target.nodeType ) {
 			return;
 		}
+		if ( activeCard && event.target.closest( '.sn-link-preview' ) === activeCard ) {
+			clearHide(); // the pointer reached the card: keep it.
+			return;
+		}
 		var link = event.target.closest( 'a[data-sn-preview-title]' );
 		if ( ! link ) {
+			return;
+		}
+		if ( link === activeLink ) {
+			clearHide(); // back onto the same link: same card, no rebuild.
 			return;
 		}
 		// Intent delay: sweeping the pointer across a paragraph should not
@@ -125,8 +153,15 @@
 		if ( ! event.target || 1 !== event.target.nodeType ) {
 			return;
 		}
+		if ( activeCard && event.target.closest( '.sn-link-preview' ) === activeCard ) {
+			scheduleHide();
+			return;
+		}
 		if ( event.target.closest( 'a[data-sn-preview-title]' ) ) {
-			removeActive();
+			clearTimer(); // a sweep that left before the intent delay shows nothing.
+			if ( activeCard ) {
+				scheduleHide();
+			}
 		}
 	}
 

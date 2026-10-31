@@ -174,25 +174,6 @@ add_action( 'wp_head', function() {
 add_filter( 'styles_inline_size_limit', static fn() => 65536 );
 
 /**
- * Performance: Add fetchpriority=low to Interactivity API script modules.
- * Reduces network contention with LCP resources on mobile.
- */
-add_filter( 'script_module_loader_tag', function( $tag, $id ) {
-	$low_priority = array(
-		'@wordpress/interactivity',
-		'@wordpress/interactivity-router',
-		'@wordpress/block-library/navigation',
-	);
-	foreach ( $low_priority as $module_id ) {
-		if ( str_contains( $id, $module_id ) ) {
-			$tag = str_replace( '<script ', '<script fetchpriority="low" ', $tag );
-			break;
-		}
-	}
-	return $tag;
-}, 10, 2 );
-
-/**
  * v9.3.0: footnote hover-popover progressive enhancement.
  *
  * Only loads on single-note posts where core/footnotes might appear.
