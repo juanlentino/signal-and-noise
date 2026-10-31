@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/lib/components-source.php'; // the component layer, joined (2026-10-31 split)
 /**
  * Test: the decorative "404" digits render as a `wp:html` block, not
  * `wp:paragraph` (issue #324).
@@ -45,7 +46,7 @@ ok(
 );
 ok( false === strpos( $html, 'role="search"' ), 'no role="search" left on the form (the element carries the landmark)' );
 
-$comp = (string) file_get_contents( dirname( __DIR__ ) . '/assets/css/components.css' );
+$comp = (string) snt_components_source();
 ok( 1 === preg_match( '/search:has\(> \.sn-404-search\)\s*\{\s*margin:\s*0;\s*\}/', $comp ), 'the <search> wrapper takes no block gap, so the form sits exactly where it did' );
 
 echo sprintf( "\nResult: %d passed, %d failed.\n", $pass, $fail );

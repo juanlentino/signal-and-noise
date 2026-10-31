@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/lib/components-source.php'; // the component layer, joined (2026-10-31 split)
 /**
  * Standalone test: the second round of design details (2026-10-17), built after
  * the owner approved the rendered mockups.
@@ -21,7 +22,9 @@ define( 'SN_PRINT_HEAD_TEST', true );
 
 $root = dirname( __DIR__ );
 $css  = static function ( $f ) use ( $root ) {
-	return (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( $root . '/assets/css/' . $f ) );
+	// components.css is the component layer's joined parts since 2026-10-31.
+	$src = 'components.css' === $f ? snt_components_source() : (string) file_get_contents( $root . '/assets/css/' . $f );
+	return (string) preg_replace( '#/\*.*?\*/#s', '', $src );
 };
 
 $pass = 0; $fail = 0;

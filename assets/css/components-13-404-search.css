@@ -1,0 +1,63 @@
+/* ── 404 recovery — search + recent-notes suggestions ──────────────────
+ * Beneath the "SIGNAL LOST" hero. Suggestions reuse .sn-notes-row; this adds
+ * the search form + section spacing. Blood-red accents, brutalist tokens. */
+/* The <search> landmark stands where the form stood: no block gap of its own,
+   since the form's own margin below zeroes the one it used to get. */
+search:has(> .sn-404-search) {
+	margin: 0;
+}
+.sn-404-search {
+	display: flex;
+	gap: var(--wp--preset--spacing--20);
+	align-items: baseline;
+	max-width: 760px;
+	margin: 0 0 var(--wp--preset--spacing--40);
+}
+.sn-404-search__input {
+	flex: 1 1 auto;
+	min-width: 0;
+	padding: 0.4rem 0;
+	border: 0;
+	border-bottom: 1px solid var(--wp--preset--color--concrete);
+	background: transparent;
+	font-family: var(--wp--preset--font-family--body), monospace;
+	font-size: var(--wp--preset--font-size--medium);
+	color: var(--wp--preset--color--bone);
+}
+.sn-404-search__input:focus-visible {
+	outline: 2px solid var(--wp--preset--color--blood);
+	outline-offset: 2px;
+	border-bottom-color: var(--wp--preset--color--blood);
+}
+/* `medium` is a fluid preset and clamps to 14–14.6px at phone width, under
+ * WebKit's 16px zoom threshold (issue #317). */
+@media screen and (max-width: 782px) {
+	.sn-404-search__input {
+		font-size: 16px;
+	}
+}
+.sn-404-search__submit {
+	flex: 0 0 auto;
+	padding: 0.4rem 1rem;
+	border: 1px solid var(--wp--preset--color--bone);
+	background: transparent;
+	font-family: var(--wp--preset--font-family--heading), sans-serif;
+	text-transform: uppercase;
+	letter-spacing: var(--wp--custom--letter-spacing--wide);
+	color: var(--wp--preset--color--bone);
+	cursor: pointer;
+}
+@media (hover: hover) {
+	.sn-404-search__submit:hover {
+		color: var(--wp--preset--color--void);
+		background: var(--wp--preset--color--blood);
+		border-color: var(--wp--preset--color--blood);
+	}
+}
+
+.sn-404-search__submit:focus-visible {
+	color: var(--wp--preset--color--void);
+	background: var(--wp--preset--color--blood);
+	border-color: var(--wp--preset--color--blood);
+}
+

@@ -18,7 +18,7 @@
 	margin-block: 1.75rem;
 	padding: 0.2rem 0 0.2rem 1rem;
 	border-left: 2px solid var(--wp--preset--color--blood);
-	/* One step under the notes prose (max(0.9rem, 11px), components.css). */
+	/* One step under the notes prose (max(0.9rem, 11px), components-04-notes.css). */
 	font-size: max(0.8125rem, 11px);
 	line-height: 1.55;
 	color: currentColor;

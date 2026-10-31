@@ -139,7 +139,7 @@ function sn_article_toc_markup( $items ) {
  * The FM tuning dial: the reading-progress indicator, drawn as a radio dial
  * pinned under the header, 88 to 108 with a needle that sweeps as the article
  * is read. Static markup; the needle is a CSS scroll-driven animation
- * (assets/css/components.css), so no script measures anything.
+ * (assets/css/components-12-article-toc.css), so no script measures anything.
  *
  * Printed at the end of <body> (wp_footer), only on a request whose content
  * got a TOC, so short notes get no dial. NOT inside the note: the note's

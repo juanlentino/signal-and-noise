@@ -63,6 +63,16 @@ $fixtures = array(
 	// exercises the actual shipped rules, not a stand-in.
 	'article.css'         => (string) file_get_contents( __DIR__ . '/../assets/css/article.css' ),
 );
+// 2026-10-31: the component layer is its ordered parts. The old components.css
+// fixture goes into the FIRST part; the second carries one rule so the test can
+// see two parts minified as one unit; the rest are empty files.
+$sn_parts = sn_components_css_parts();
+$fixtures[ basename( $sn_parts[0] ) ] = $fixtures['components.css'];
+$fixtures[ basename( $sn_parts[1] ) ] = ".part-two { color : blue ; }\n";
+unset( $fixtures['components.css'] );
+foreach ( array_slice( $sn_parts, 2 ) as $sn_rel ) {
+	$fixtures[ basename( $sn_rel ) ] = '';
+}
 foreach ( $fixtures as $name => $css ) {
 	file_put_contents( $css_dir . '/' . $name, $css );
 }
@@ -114,6 +124,9 @@ foreach ( array( 'body{', '.grid{', '.card{', '@media (max-width: 600px)', '.sn-
 }
 ac_true( $order_ok, 'all six sources present in cascade order (base → layout → components → responsive → palette → article LAST)' );
 ac_true( false === strpos( $built, 'base comment' ), 'sources are minified in the combined file' );
+ac_eq( 1, substr_count( $built, '/* assets/css/components-* */' ), 'the component parts are labeled ONCE, as one unit (2026-10-31)' );
+ac_true( false === strpos( $built, '/* ' . $sn_parts[1] . ' */' ), 'no part carries its own label' );
+ac_true( false !== strpos( $built, '.part-two{' ) && strpos( $built, '.card{' ) < strpos( $built, '.part-two{' ), 'the parts are in cascade order inside the one unit' );
 
 // ─── Test 4: idempotency (existing target never rewritten) ────────────
 echo "\nTest 4: existing target is not rebuilt\n";

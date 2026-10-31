@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/lib/components-source.php'; // the component layer, joined (2026-10-31 split)
 /**
  * Standalone test: on a single note, the sidenote keeps its own type size.
  *
@@ -57,7 +58,11 @@ function sns_rules( $file ) {
 }
 
 $root  = dirname( __DIR__ );
-$rules = array_merge( sns_rules( $root . '/assets/css/components.css' ), sns_rules( $root . '/assets/css/article.css' ), sns_rules( $root . '/blocks/sidenote/style.css' ) );
+$rules = array();
+foreach ( snt_components_parts() as $rel ) { // the component layer, in cascade order
+	$rules = array_merge( $rules, sns_rules( $root . '/' . $rel ) );
+}
+$rules = array_merge( $rules, sns_rules( $root . '/assets/css/article.css' ), sns_rules( $root . '/blocks/sidenote/style.css' ) );
 ok( count( $rules ) > 100, count( $rules ) . ' rules parsed (a parser that read nothing would find no competitor and pass)' );
 
 // <main class="sn-note-single"> ... <div class="wp-block-post-content"> <p class="sn-sidenote">

@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/lib/components-source.php'; // the component layer, joined (2026-10-31 split)
 /**
  * Tests: the hand-authored SVG figures follow the palette into dark.
  *
@@ -48,7 +49,7 @@ function svg_ratio( $a, $b ) {
 }
 
 $root = dirname( __DIR__ );
-$css  = (string) file_get_contents( $root . '/assets/css/components.css' );
+$css  = snt_components_source();
 $crit = (string) file_get_contents( $root . '/assets/css/critical.css' );
 ok( '' !== $css && '' !== $crit, 'both stylesheets load (a missing file must never read as "no findings")' );
 

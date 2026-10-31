@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/lib/components-source.php'; // the component layer, joined (2026-10-31 split)
 /**
  * Standalone fixture tests for the [sn_music_featured] shortcode (theme v9.15.0).
  *
@@ -118,7 +119,7 @@ $GLOBALS['__test_filters']['sn_music_featured'] = array( function () { return ar
 sn_music_featured_shortcode();
 ok( array() === $GLOBALS['__enq'], 'no player, no script' );
 ok( function_exists( 'sn_register_frame_focus' ), 'the handle is registered by a named function' );
-$css = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( __DIR__ . '/../assets/css/components.css' ) );
+$css = (string) preg_replace( '#/\*.*?\*/#s', '', snt_components_source() );
 $ring = '/\.sn-music-featured:has\(> \.sn-music-featured__player:focus-within\),\s*\.sn-music-featured\.is-frame-focus\s*\{[^}]*outline:\s*2px solid var\(--wp--preset--color--blood\);[^}]*outline-offset:\s*3px/';
 ok( 1 === preg_match( $ring, $css ), 'the wrapper wears the house ring (2px blood, 3px offset) on :focus-within and on .is-frame-focus' );
 ok( is_file( __DIR__ . '/../assets/js/frame-focus.js' ), 'assets/js/frame-focus.js exists' );

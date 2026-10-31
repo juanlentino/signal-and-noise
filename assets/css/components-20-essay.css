@@ -1,0 +1,151 @@
+/* Red caret (2026.10): the text cursor in the contact form is blood, as it is
+   in /notes search and the command palette. The message box grows with what is
+   typed instead of scrolling inside itself. Under field-sizing its rows
+   attribute stops counting, so the minimum restates today's five lines (190px
+   measured), and it stops at 70% of the screen and scrolls inside, so the
+   send button stays in reach. The form is the AllTerrain Forms plugin's; the theme only adds
+   these two touches. */
+.atf-form .atf-input {
+	caret-color: var(--wp--preset--color--blood);
+}
+@supports (field-sizing: content) {
+	.atf-form .atf-textarea {
+		field-sizing: content;
+		max-block-size: 70svh;
+		min-height: calc(5lh + 2 * var(--atf-pad-field-y, 7px) + 2 * var(--atf-border-width, 1px));
+	}
+}
+
+/* Signal path (2026.10): the pillar series under the brow, in reading order,
+   the current essay lit in blood, the others linked
+   (inc/essay-signal-path.php). */
+.sn-signal-path {
+	margin: 0.6em 0 2.2em;
+	font-family: var(--wp--preset--font-family--body);
+	font-size: 11px;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+}
+.sn-signal-path ol { list-style: none; margin: 0; padding: 0; display: flex; align-items: flex-start; }
+.sn-signal-path li { flex: 1; position: relative; padding: 16px 1em 0 0; color: var(--wp--preset--color--rust); }
+.sn-signal-path li::before { content: ""; position: absolute; top: 4px; left: 0; width: 9px; height: 9px; box-sizing: border-box; border: 1.5px solid currentColor; border-radius: 50%; background: var(--wp--preset--color--void); }
+.sn-signal-path li::after { content: ""; position: absolute; top: 8px; left: 12px; right: 4px; border-top: 1px solid var(--wp--preset--color--concrete); }
+.sn-signal-path li:last-child::after { display: none; }
+.sn-signal-path li[aria-current] { color: var(--wp--preset--color--bone); }
+.sn-signal-path li[aria-current]::before { background: var(--wp--preset--color--blood); border-color: var(--wp--preset--color--blood); }
+.sn-signal-path a { color: inherit; text-decoration: none; }
+.sn-signal-path__no { display: block; font-weight: 500; }
+.sn-signal-path__title { display: block; margin-top: 0.2em; }
+@media (forced-colors: active) {
+	.sn-signal-path li[aria-current]::before { forced-color-adjust: none; background: Highlight; border-color: Highlight; }
+}
+
+/* Essay breakout (2026.10): the essay's <main> is the grid, with named lines:
+   a margin lane, the 760px reading column, and a right lane (the lanes open at
+   1200px; below that every line sits on the column). The post-content element
+   is unboxed (display: contents) so its children and the tracklist, which is
+   emitted outside the signed element, share one grid: the tracklist shows
+   between the title and Section 1 although its markup comes first, and
+   reading-flow keeps the tab order on what is seen where supported. Every
+   "Section N" label sits in the margin lane and holds while its section
+   scrolls, wrapped in a section group or loose in the content (a label
+   followed by a heading, as Section 6 of /provenance/over-detection is). Grid
+   auto-placement does the pairing: a loose label starts a row, its heading
+   takes the column beside it, and it spans down until the next rule, which
+   spans the lane and ends it. Sticky needs body to clip, not hide: a hidden
+   body is a scroll container that never scrolls. */
+body:has(.sn-provenance-section) { overflow-x: clip; }
+main:has(> .wp-block-post-content > .sn-provenance-section) {
+	display: grid;
+	grid-template-columns: [full-start] minmax(0, 1fr) [margin-start content-start] min(760px, 100%) [content-end margin-end] minmax(0, 1fr) [full-end];
+	align-content: start;
+	reading-flow: grid-order;
+}
+main:has(> .wp-block-post-content > .sn-provenance-section) > .wp-block-post-content { display: contents; }
+main:has(> .wp-block-post-content > .sn-provenance-section) > *,
+.wp-block-post-content:has(> .sn-provenance-section) > * { grid-column: content; max-width: none !important; margin-left: 0 !important; margin-right: 0 !important; } /* not a track: each child fills its grid column */
+.wp-block-post-content:has(> .sn-provenance-section) > :is(.alignwide, .alignfull) { grid-column: full; }
+.wp-block-post-content > hr { grid-column: margin-start / content-end; }
+.wp-block-post-content > .sn-provenance-section { grid-column: margin-start / margin-end; }
+main:has(> .wp-block-post-content > .sn-provenance-hero) > .sn-essay-tracklist { order: 1; }
+main:has(> .wp-block-post-content > .sn-provenance-hero) > .wp-block-post-content > .sn-provenance-hero ~ * { order: 2; }
+main:has(> .wp-block-post-content > .sn-provenance-section) > .wp-block-post-content ~ * { order: 3; }
+@media (min-width: 1200px) {
+	main:has(> .wp-block-post-content > .sn-provenance-section) {
+		grid-template-columns: [full-start] minmax(0, 1fr) [margin-start] 9rem 2rem [content-start] min(760px, 100%) [content-end] 2rem 9rem [margin-end] minmax(0, 1fr) [full-end];
+	}
+	.wp-block-post-content > .sn-provenance-section { display: grid !important; grid-template-columns: 9rem 2rem minmax(0, 1fr) 2rem 9rem; }
+	.wp-block-post-content > .sn-provenance-section > * { grid-column: 3; max-width: none !important; margin-left: 0 !important; } /* not a track: the section's own grid sets the column */
+	.wp-block-post-content > .sn-provenance-section > .sn-provenance-section-eyebrow,
+	.wp-block-post-content > p.has-blood-color:has(+ h2.wp-block-heading) {
+		grid-column: margin-start / span 1; grid-row: span 99; align-self: start; position: sticky;
+		top: calc(var(--sn-chrome-top, 100px) + 3rem); margin: 0.6rem 0 0 !important; text-align: right; container-type: scroll-state;
+	}
+	.wp-block-post-content > .sn-provenance-section > .sn-provenance-section-eyebrow { grid-column: 1; }
+	/* The arrival rule base.css draws beside a jumped-to heading competes with
+	   the margin lane, and only a loose section's heading carries an id (a
+	   wrapped one is reached through its section), so on an essay it marked
+	   Section 6 alone. The lane and the tracklist already say where you are. */
+	.wp-block-post-content :is(h2, h3, h4)[id]:target::before { content: none; }
+	/* Signal lock: only while a label is pinned, a tally lights beside it and a
+	   patch line bridges the gutter to the column. At rest it is plain. */
+	@container scroll-state(stuck: top) {
+		.sn-provenance-section-eyebrow::before, p.has-blood-color::before { content: ""; display: inline-block; width: 0; height: 0; border: 3px solid var(--wp--preset--color--blood); border-radius: 50%; margin-right: 0.6em; vertical-align: 0.15em; }
+		.sn-provenance-section-eyebrow::after, p.has-blood-color::after { content: ""; position: absolute; left: calc(100% + 0.5rem); top: 50%; width: 1.25rem; border-top: 1px solid var(--wp--preset--color--blood); }
+	}
+	/* A figure breaks out across the column and the right lane, inside crop
+	   marks, like a proof on the cutting table. */
+	.wp-block-post-content > .sn-provenance-section > .sn-provenance-diagram-wrap { grid-column: 3 / 6; position: relative; padding: 1.5rem; }
+	.sn-provenance-diagram-wrap::before {
+		--sn-crop: var(--wp--preset--color--concrete);
+		content: ""; position: absolute; inset: 0; pointer-events: none; background-repeat: no-repeat;
+		background-image: linear-gradient(var(--sn-crop), var(--sn-crop)), linear-gradient(var(--sn-crop), var(--sn-crop)), linear-gradient(var(--sn-crop), var(--sn-crop)), linear-gradient(var(--sn-crop), var(--sn-crop)), linear-gradient(var(--sn-crop), var(--sn-crop)), linear-gradient(var(--sn-crop), var(--sn-crop)), linear-gradient(var(--sn-crop), var(--sn-crop)), linear-gradient(var(--sn-crop), var(--sn-crop));
+		background-position: 0 0, 0 0, 100% 0, 100% 0, 0 100%, 0 100%, 100% 100%, 100% 100%;
+		background-size: 14px 1px, 1px 14px, 14px 1px, 1px 14px, 14px 1px, 1px 14px, 14px 1px, 1px 14px;
+	}
+}
+
+/* Tracklist (2026.10): an essay's sections as the back of a sleeve, each with
+   its length at the byline's reading rate. Where the browser supports scroll
+   target groups, the section on screen lights, with no script. */
+.sn-essay-tracklist { font-family: var(--wp--preset--font-family--body, 'DM Mono', monospace); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--wp--preset--color--rust); border-block: 1px solid var(--wp--preset--color--concrete); padding: 0.9rem 0; margin: 0 0 var(--wp--preset--spacing--50); }
+/* Where the tracklist renders, it stands in for an essay's own "Jump to" line:
+   same links, plus lengths. Hidden on screen only; the signed text is unchanged,
+   and the verifier reads the served HTML, not the painted page. */
+.sn-essay-tracklist ~ .wp-block-post-content > .sn-provenance-toc { display: none; }
+.sn-essay-tracklist__head { display: flex; justify-content: space-between; margin: 0 0 0.6rem; color: var(--wp--preset--color--blood); }
+.sn-essay-tracklist ol { list-style: none; margin: 0; padding: 0; columns: 2 18rem; column-gap: 3rem; scroll-target-group: auto; }
+.sn-essay-tracklist li { break-inside: avoid; }
+.sn-essay-tracklist a { display: grid; grid-template-columns: 2.4rem 1fr auto; gap: 0.6rem; padding: 0.22rem 0; color: inherit; text-decoration: none; }
+.sn-essay-tracklist__title { color: var(--wp--preset--color--bone); }
+.sn-essay-tracklist__len { font-variant-numeric: tabular-nums; }
+.sn-essay-tracklist a:target-current .sn-essay-tracklist__no::before { content: ""; position: absolute; margin: 0.4em 0 0 -1em; border: 3px solid var(--wp--preset--color--blood); border-radius: 50%; }
+.sn-essay-tracklist a:target-current .sn-essay-tracklist__title { color: var(--wp--preset--color--blood); }
+@media (hover: hover) {
+	.sn-essay-tracklist a:hover .sn-essay-tracklist__title { text-decoration: underline; text-underline-offset: 0.2em; }
+}
+
+/* Runout (2026.10): the essay ends like a record's dead wax: a locked-groove
+   ring, then the signed record's own matrix line, real fields only. */
+.sn-essay-runout { display: flex; align-items: center; gap: 1rem; margin: var(--wp--preset--spacing--40) 0 0; font-family: var(--wp--preset--font-family--body, 'DM Mono', monospace); font-size: 0.72rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--wp--preset--color--rust); }
+.sn-essay-runout::before { content: ""; flex: none; width: 20px; height: 20px; border-radius: 50%; border: 1px solid currentColor; outline: 1px solid currentColor; outline-offset: -6px; }
+.sn-essay-runout::after { content: ""; flex: 1; border-top: 1px solid var(--wp--preset--color--concrete); }
+.sn-essay-runout a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--wp--preset--color--concrete); }
+@media (hover: hover) {
+	.sn-essay-runout a:hover { border-bottom-color: currentColor; }
+}
+
+/* Acquiring signal (2026.10): until the booking calendar paints, or if a
+   blocker stops it, its box shows a static test strip naming the real host,
+   never a blank. The bars are the palette tokens; Google's page covers the
+   background once it loads. */
+iframe[src^="https://calendar.google.com/"] {
+	background-color: var(--wp--preset--color--asphalt);
+	background-image:
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='24'%3E%3Ctext x='0' y='16' font-family='monospace' font-size='12' letter-spacing='2' fill='gray'%3ECONNECTING %C2%B7 CALENDAR.GOOGLE.COM%3C/text%3E%3C/svg%3E"),
+		linear-gradient(90deg, var(--wp--preset--color--void) 0 14.28%, var(--wp--preset--color--asphalt) 0 28.57%, var(--wp--preset--color--concrete) 0 42.85%, var(--wp--preset--color--rust) 0 57.14%, var(--wp--preset--color--bone) 0 71.42%, var(--wp--preset--color--blood) 0 85.71%, var(--wp--preset--color--signal) 0);
+	background-size: 420px 24px, 420px 40px;
+	background-position: center calc(50% + 32px), center;
+	background-repeat: no-repeat;
+}
+

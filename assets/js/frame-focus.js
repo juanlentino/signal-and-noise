@@ -5,7 +5,7 @@
  * and the <iframe> then matches no focus pseudo-class (measured in Chromium,
  * 2026-10-18), so CSS alone cannot ring it. When the page loses focus to the
  * player right after a Tab, the wrapper gets .is-frame-focus
- * (components.css draws the ring); it clears when focus comes back. A mouse
+ * (components-19-touch-player.css draws the ring); it clears when focus comes back. A mouse
  * click into the player draws nothing, as :focus-visible would.
  *
  * Enqueued by [sn_music_featured] (inc/music-featured-render.php).

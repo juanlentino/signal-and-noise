@@ -14,7 +14,7 @@
  * (which covers the editor's ServerSideRender path), wp-admin, unflagged
  * Pages — it degrades to literally the unchanged input.
  *
- * Styling reuses .sn-catalog-eyebrow (assets/css/components.css — part of the
+ * Styling reuses .sn-catalog-eyebrow (assets/css/components-06-catalog-vocabulary.css — part of the
  * combined stylesheet, so it is loadable on every singular page) plus the
  * minimal .sn-pillar-designation link rules added beside it.
  *

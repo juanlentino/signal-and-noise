@@ -9,7 +9,7 @@
  * The reading-progress bar this file used to draw and re-measure on every
  * scroll frame is gone (2026-10): the progress indicator is now the FM tuning
  * dial, server-rendered in the nav (inc/article-toc.php) and moved by a CSS
- * scroll-driven animation (assets/css/components.css).
+ * scroll-driven animation (assets/css/components-12-article-toc.css).
  */
 (function () {
   'use strict';

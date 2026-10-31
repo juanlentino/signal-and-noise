@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/lib/components-source.php'; // the component layer, joined (2026-10-31 split)
 /**
  * Tests: the header and footer in Spanish on Spanish pages (inc/lang-chrome.php,
  * inc/lang-chrome-footer.php), and English pages untouched.
@@ -45,7 +46,7 @@ ok( 'En inglés. Podés leerlas con el traductor del navegador.' === $nt->get_at
 ok( 'Notas, en inglés: podés leerlas con el traductor del navegador.' === $nt->get_attribute( 'aria-label' ), 'its name starts with the visible "Notas" and carries the same words (WCAG 2.5.3)' );
 ok( null === $nt->get_attribute( 'title' ), 'no title on Notas: the browser would draw a second tooltip over the CSS hint' );
 ok( false === strpos( $es, 'data-hint' ) && false === strpos( $es, 'aria-label' ), 'a link to a published Spanish page gets no hint and no extra name' );
-$css = (string) preg_replace( '#/\*.*?\*/#s', '', (string) file_get_contents( __DIR__ . '/../assets/css/components.css' ) );
+$css = (string) preg_replace( '#/\*.*?\*/#s', '', snt_components_source() );
 ok( 1 === preg_match( '/\.wp-block-navigation-item__content\[data-hint\]:focus-visible::before[^{]*\{[^}]*content:\s*attr\(data-hint\)/', $css ), 'the Notas hint shows on keyboard focus, from data-hint' );
 ok( 1 === preg_match( '/@media \(hover: hover\)\s*\{[^@]*\.wp-block-navigation-item__content\[data-hint\]:hover::before/', $css ), '...and on hover where the pointer hovers' );
 ok( 0 === preg_match( '/navigation-item__content\[data-hint\][^{,]*::after/', $css ), 'the hint never takes ::after, the nav link\'s underline (hidden with !important in the open menu)' );

@@ -33,6 +33,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+require_once __DIR__ . '/components-css.php'; // sn_components_css_parts(): the component layer, in cascade order.
+
 /**
  * Bump when sn_css_minify()'s transforms change, so already-built combined
  * files regenerate under a new hash.
@@ -66,19 +68,37 @@ define( 'SN_CSS_COMBINE_GRACE_SECS', 8 * 24 * 3600 );
  * previously-later rules start losing source-order ties).
  * print.css is NOT here — it loads with media="print" and never blocks.
  * Keep in sync with the fallback enqueues in inc/assets-frontend.php and
- * the editor list in inc/setup.php.
+ * the editor list in inc/setup.php. The component layer is its ordered parts
+ * (inc/components-css.php, 2026-10-31), in components.css's old position.
  *
  * @return string[] Theme-relative paths.
  */
 function sn_css_combine_sources() {
-	return array(
-		'assets/css/base.css',
-		'assets/css/layout.css',
-		'assets/css/components.css',
-		'assets/css/responsive.css',
-		'assets/css/command-palette.css',
-		'assets/css/article.css',
+	return array_merge(
+		array(
+			'assets/css/base.css',
+			'assets/css/layout.css',
+		),
+		sn_components_css_parts(),
+		array(
+			'assets/css/responsive.css',
+			'assets/css/command-palette.css',
+			'assets/css/article.css',
+		)
 	);
+}
+
+/**
+ * The label a source is combined under. The component parts were cut from
+ * one file at rule boundaries, so they are minified as ONE unit under one
+ * label: the bundle is the one components.css produced, but for that label.
+ * PURE.
+ *
+ * @param string $rel Theme-relative source path.
+ * @return string
+ */
+function sn_css_combine_label( $rel ) {
+	return 0 === strpos( (string) $rel, 'assets/css/components-' ) ? 'assets/css/components-*' : (string) $rel;
 }
 
 /**
@@ -156,7 +176,8 @@ function sn_css_ensure_combined() {
 		if ( ! wp_mkdir_p( $dir ) ) {
 			return null;
 		}
-		$css = '';
+		$css   = '';
+		$units = array();
 		foreach ( sn_css_combine_sources() as $rel ) {
 			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- repo-shipped theme CSS, same trust model as the critical.css inliner in inc/assets-frontend.php.
 			$raw = file_get_contents( get_theme_file_path( $rel ) );
@@ -184,7 +205,11 @@ function sn_css_ensure_combined() {
 				// guard false-positives on every quoted url().
 				return null;
 			}
-			$css .= '/* ' . $rel . " */\n" . sn_css_minify( $raw ) . "\n";
+			$label           = sn_css_combine_label( $rel );
+			$units[ $label ] = ( $units[ $label ] ?? '' ) . $raw;
+		}
+		foreach ( $units as $label => $raw ) {
+			$css .= '/* ' . $label . " */\n" . sn_css_minify( $raw ) . "\n";
 		}
 		// PID-suffixed so two concurrent cold-cache builders never share a
 		// temp path (identical bytes either way, but interleaved writes to

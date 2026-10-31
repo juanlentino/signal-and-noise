@@ -35,10 +35,10 @@ function snt_component_css() {
 	}
 
 	$root  = dirname( __DIR__, 2 );
-	$files = array(
-		'assets/css/components.css',
+	require_once __DIR__ . '/components-source.php';
+	$files = array_merge( snt_components_parts(), array(
 		'assets/css/blocks/related-notes.css',
-	);
+	) );
 
 	$out = '';
 	foreach ( $files as $rel ) {

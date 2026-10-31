@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/lib/components-source.php'; // the component layer, joined (2026-10-31 split)
 /**
  * Standalone test: the FM tuning dial that replaced the reading-progress bar.
  *
@@ -42,7 +43,7 @@ $src = (string) file_get_contents( $root . '/inc/article-toc.php' );
 ok( 1 === preg_match( "/add_action\\(\\s*'wp_footer',\\s*'sn_article_dial_print'\\s*\\)/", $src ) && false !== strpos( $src, '$out !== $content' ), 'printed at wp_footer, queued only when the TOC actually rendered (short notes get no dial)' );
 
 echo "\nGroup 2: the scroll-driven needle\n";
-$css = $strip( 'assets/css/components.css' );
+$css = preg_replace( '~/\*.*?\*/~s', '', snt_components_source() );
 ok( 1 === preg_match( '/^\.sn-article-dial\s*\{[^}]*display:\s*none/m', $css ), 'hidden by default: a browser without view timelines or anchor positioning shows no dial rather than a frozen needle' );
 $sup = preg_match( '/@supports\s*\(animation-timeline:\s*view\(\)\)\s*and\s*\(anchor-name:\s*--sn-header\)\s*\{(.*?)\n\}/s', $css, $m ) ? $m[1] : '';
 ok( '' !== $sup, 'everything that shows the dial sits behind @supports for BOTH view timelines and anchor positioning' );

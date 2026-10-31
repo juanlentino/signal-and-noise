@@ -1,0 +1,113 @@
+/* ============================================
+   NOTES INDEX
+   ============================================ */
+
+.sn-notes-index .sn-notes-heading {
+	letter-spacing: var(--wp--custom--letter-spacing--tight);
+}
+
+/* Pillar essay card — promoted from a one-liner link to a featured
+   module above the Notes list. Reuses the asphalt+concrete panel
+   treatment from .sn-provenance-panel — no new tokens. */
+.sn-pillar-card {
+	border-color: var(--wp--preset--color--concrete);
+}
+
+.sn-pillar-card-title {
+	letter-spacing: -0.01em;
+}
+
+.sn-pillar-card-cta a {
+	color: var(--wp--preset--color--blood);
+	text-decoration: none;
+	transition: color 0.2s ease;
+}
+
+@media (hover: hover) {
+	.sn-pillar-card-cta a:hover {
+		color: var(--wp--preset--color--bone);
+		text-decoration: underline;
+	}
+}
+
+.sn-notes-list .sn-note-card {
+	border-bottom: 1px solid var(--wp--preset--color--concrete);
+}
+
+.sn-notes-list .sn-note-card:last-child {
+	border-bottom: 0;
+}
+
+.sn-notes-list .sn-note-card-title a {
+	transition: color 0.2s ease;
+}
+
+/* RSS footer line — caption-size, muted. The "RSS" word inherits the
+   theme link color by default; opacity dims the whole line so it
+   reads as a quiet footnote. */
+.sn-notes-rss {
+	opacity: 0.55;
+}
+
+.sn-notes-empty {
+	padding: var(--wp--preset--spacing--40) 0;
+}
+
+/* ============================================
+   NOTE — SINGLE
+   ============================================ */
+
+.sn-note-single .sn-note-back a,
+.sn-note-single .sn-note-pillar-link a {
+	border-bottom: 1px solid transparent;
+	transition: border-color 0.2s ease;
+}
+
+@media (hover: hover) {
+	.sn-note-single .sn-note-back a:hover,
+	.sn-note-single .sn-note-pillar-link a:hover {
+		border-bottom-color: currentColor;
+		text-decoration: none;
+	}
+}
+
+/* 14.9.0: the next pillar, after an essay's signed content. */
+.sn-next-essay {
+	margin-top: var(--wp--preset--spacing--60);
+	padding-top: var(--wp--preset--spacing--30);
+	border-top: 1px solid var(--wp--preset--color--concrete);
+	font-family: var(--wp--preset--font-family--heading);
+}
+
+.sn-next-essay__link {
+	display: inline-flex;
+	flex-direction: column;
+	gap: var(--wp--preset--spacing--10);
+	text-decoration: none;
+}
+
+.sn-next-essay__dir {
+	font-size: var(--wp--preset--font-size--eyebrow-lg);
+	letter-spacing: var(--wp--custom--letter-spacing--wide);
+	text-transform: uppercase;
+}
+
+.sn-next-essay__title {
+	font-size: var(--wp--preset--font-size--medium);
+	border-bottom: 1px solid transparent;
+	transition: border-color 0.2s ease;
+}
+
+@media (hover: hover) {
+	.sn-next-essay__link:hover .sn-next-essay__title {
+		border-bottom-color: currentColor;
+	}
+}
+
+/* Ensure prose body text inside a Note never falls below the 11px floor. */
+.sn-note-single .wp-block-post-content p,
+.sn-note-single .wp-block-post-content li {
+	font-size: max(0.9rem, 11px);
+	line-height: var(--wp--custom--line-height--normal);
+}
+

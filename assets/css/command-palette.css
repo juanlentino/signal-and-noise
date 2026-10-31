@@ -37,7 +37,7 @@
    bone on blood is 4.19:1, under the 4.5 floor at 11px. void on blood is
    5.01:1 and matches theme.json's own text-on-blood convention. */
 /* v12.0.1: hover split out and guarded for touch — see the note on
-   .sn-theme-toggle in components.css. These two sit shoulder to shoulder in the
+   .sn-theme-toggle in components-16-theme-toggle.css. These two sit shoulder to shoulder in the
    footer bar and are styled identically, so they have to behave identically:
    guarding one and not the other would make the pair disagree on a phone. */
 @media (hover: hover) {

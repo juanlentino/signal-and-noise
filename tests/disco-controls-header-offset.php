@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/lib/components-source.php'; // the component layer, joined (2026-10-31 split)
 /**
  * Test: the sticky discography controls rail sticks under the header, by the
  * header-footprint token, not a hardcoded height (issue #322, then 2026-10).
@@ -17,7 +18,7 @@ if ( PHP_SAPI !== 'cli' && ! defined( 'WP_CLI' ) ) { http_response_code( 404 ); 
 $pass = 0; $fail = 0;
 function ok( $c, $m ) { global $pass, $fail; if ( $c ) { $pass++; echo "PASS: $m\n"; } else { $fail++; echo "FAIL: $m\n"; } }
 
-$css = (string) file_get_contents( dirname( __DIR__ ) . '/assets/css/components.css' );
+$css = snt_components_source();
 ok( '' !== $css, 'components.css is readable' );
 
 ok(

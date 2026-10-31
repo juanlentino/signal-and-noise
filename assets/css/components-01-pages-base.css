@@ -1,0 +1,178 @@
+/* ============================================
+   SIGNAL & NOISE — Components
+   About portrait, service cards, process strip, buttons, separators,
+   images, embeds, PDF viewer. Discrete UI components.
+   ============================================ */
+
+/* ============================================
+   ABOUT PORTRAIT
+   ============================================ */
+
+.sn-about-portrait img {
+	filter: grayscale(20%) contrast(1.1);
+	transition: filter 0.6s ease;
+}
+
+@media (hover: hover) {
+	.sn-about-portrait:hover img {
+		filter: grayscale(0%) contrast(1);
+	}
+}
+
+/* ============================================
+   SERVICE CARDS
+   ============================================ */
+
+/* Service columns act as cards — target wp-block-column inside services sections.
+   The transform TRANSITIONS live inside the PA-12 no-preference gate below,
+   beside the transforms they animate — a transition for motion that reduced-
+   motion users never receive is inert, but pairing them keeps the motion
+   scan (tests/motion-pairing.php) honest without HTML knowledge. */
+
+.sn-service-image img {
+	filter: grayscale(40%) contrast(1.1);
+	transition: filter 0.5s ease; /* non-vestibular; stays ungated */
+}
+
+@media (hover: hover) {
+	.wp-block-column:hover .sn-service-image img {
+		filter: grayscale(0%) contrast(1.05);
+	}
+}
+
+/* Motion-only enhancement: gate transform on reduced-motion preference. Audit D PA-12.
+   v12.8.0: the transform TRANSITIONS moved in here beside their transforms. */
+@media (prefers-reduced-motion: no-preference) {
+	.wp-block-columns .wp-block-column:has(.sn-service-image) {
+		transition: transform 0.3s ease;
+	}
+	.sn-service-image img {
+		transition: filter 0.5s ease, transform 0.5s ease;
+	}
+	@media (hover: hover) {
+		.wp-block-column:hover .sn-service-image img {
+			transform: scale(1.02);
+		}
+	}
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+
+.wp-block-button__link {
+	position: relative;
+	overflow: hidden;
+	transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease; /* was `all` — narrowed v12.8.0: `all` includes transform, and nothing here moves */
+	border: 1px solid transparent;
+}
+
+@media (hover: hover) {
+	.wp-block-button__link:hover {
+		box-shadow: 0 4px 20px color-mix( in srgb, var(--wp--preset--color--blood) 20%, transparent );
+	}
+}
+
+/* Motion-only enhancement: gate transform on reduced-motion preference. Audit D PA-12. */
+@media (prefers-reduced-motion: no-preference) {
+	@media (hover: hover) {
+		.wp-block-button__link:hover {
+			transform: translateY(-1px);
+
+		}
+	}
+}
+
+.is-style-outline .wp-block-button__link {
+	background: transparent !important;
+	border: 1px solid var(--wp--preset--color--bone);
+	color: var(--wp--preset--color--bone) !important;
+}
+
+@media (hover: hover) {
+	.is-style-outline .wp-block-button__link:hover {
+		background: var(--wp--preset--color--bone) !important;
+		color: var(--wp--preset--color--void) !important;
+	}
+}
+
+/* ============================================
+   IMAGES
+   ============================================ */
+
+.wp-block-image img {
+	filter: contrast(1.02);
+	transition: filter 0.4s ease;
+	max-width: 100%;
+	height: auto;
+}
+
+@media (hover: hover) {
+	.wp-block-image:hover img {
+		filter: contrast(1.06) brightness(1.01);
+	}
+}
+
+/* ============================================
+   EMBEDS (Spotify, etc.)
+   ============================================ */
+
+.wp-block-embed,
+.wp-block-embed .wp-block-embed__wrapper {
+	background: var(--sn-embed-backdrop);
+}
+
+.wp-block-embed-spotify,
+.wp-block-embed-spotify .wp-block-embed__wrapper {
+	background: var(--sn-embed-backdrop) !important;
+}
+
+/* The theme squares off Spotify's rounded card on purpose (brutalist: no
+   radius). That only works if what shows through the four corners matches
+   the player. Built from `bone` it was black in light and WHITE in dark,
+   which is where the white corners came from. */
+.wp-block-embed-spotify iframe {
+	border-radius: 0 !important;
+	background: var(--sn-embed-backdrop);
+}
+
+.wp-block-embed-spotify.wp-has-aspect-ratio .wp-block-embed__wrapper::before {
+	padding-top: 0 !important;
+}
+
+.wp-block-embed-spotify.wp-has-aspect-ratio .wp-block-embed__wrapper {
+	position: relative;
+	padding-bottom: 0 !important;
+}
+
+.wp-block-embed-spotify.wp-has-aspect-ratio .wp-block-embed__wrapper iframe {
+	position: relative !important;
+	height: 600px;
+}
+
+/* ============================================
+   PDF VIEWER
+   ============================================ */
+
+.wp-block-file .wp-block-file__embed {
+	min-height: 80vh;
+	border: 1px solid var(--wp--preset--color--concrete);
+}
+
+.wp-block-file a.wp-block-file__button {
+	background: var(--wp--preset--color--bone);
+	color: var(--wp--preset--color--void);
+	font-family: var(--wp--preset--font-family--heading);
+	text-transform: uppercase;
+	letter-spacing: 0.15em;
+	border-radius: 0;
+	padding: 0.9rem 2rem;
+	transition: background-color 0.3s ease, color 0.3s ease; /* was `all` — narrowed v12.8.0 */
+}
+
+@media (hover: hover) {
+	.wp-block-file a.wp-block-file__button:hover {
+		background: var(--wp--preset--color--blood);
+	}
+}
+

@@ -1,0 +1,116 @@
+/* ── Copy-permalink + native Web Share row (v9.10.0) ──────────────────
+   Rendered by [sn_note_share] into the single-note footer
+   (parts/post-closing.html). Brutalist: mono uppercase tracked labels,
+   sharp outline buttons, blood accent on hover / copied. The .__native
+   SHARE button ships `hidden` and is revealed by note-share.js only when
+   navigator.share exists. */
+.sn-note-share {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.75rem;
+	margin-top: var(--wp--custom--air--sm);
+}
+.sn-note-share__label {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.7rem, 11px);
+	font-weight: 500;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--rust);
+	margin-right: 0.25rem;
+}
+.sn-note-share__copy,
+.sn-note-share__native {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.7rem, 11px);
+	font-weight: 500;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--bone);
+	background: transparent;
+	border: 1px solid var(--wp--preset--color--concrete);
+	border-radius: 0;
+	padding: 0.5rem 0.85rem;
+	min-height: 44px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+@media (hover: hover) {
+	.sn-note-share__copy:hover,
+	.sn-note-share__native:hover {
+		color: var(--wp--preset--color--blood);
+		border-color: var(--wp--preset--color--blood);
+	}
+}
+
+.sn-note-share__copy:focus-visible,
+.sn-note-share__native:focus-visible {
+	color: var(--wp--preset--color--blood);
+	border-color: var(--wp--preset--color--blood);
+}
+.sn-note-share__copy.is-copied {
+	color: var(--wp--preset--color--void);
+	background-color: var(--wp--preset--color--blood);
+	border-color: var(--wp--preset--color--blood);
+}
+.sn-note-share__native[hidden] {
+	display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+	.sn-note-share__copy,
+	.sn-note-share__native {
+		transition: none;
+	}
+}
+
+/* ── NOTE REPLY ROW ──────────────────────────────────────────────────
+   Rendered by [sn_note_reply] (inc/note-reply.php) directly under the
+   share row in the single-note footer. Same label voice as Share; the
+   .sn-email span holds the [at]/[dot] fallback until contact-aliases.js
+   swaps in the runtime mailto anchor. */
+.sn-note-reply {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.75rem;
+	margin-top: clamp(0.75rem, 1.5vw, 1.25rem); /* not a step: clamp(0.75rem, 1.5vw, 1.25rem) is its own value; the nearest air step, air--xxs, would move it 2px */
+}
+.sn-note-reply__label {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.7rem, 11px);
+	font-weight: 500;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--rust);
+	margin-right: 0.25rem;
+}
+.sn-note-reply .sn-email {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.7rem, 11px);
+	letter-spacing: 0.06em;
+	color: var(--wp--preset--color--bone);
+}
+.sn-note-reply .sn-email a {
+	color: var(--wp--preset--color--bone);
+	text-decoration: underline;
+	text-underline-offset: 0.2em;
+	transition: color 0.2s ease;
+}
+@media (hover: hover) {
+	.sn-note-reply .sn-email a:hover {
+		color: var(--wp--preset--color--blood);
+	}
+}
+.sn-note-reply .sn-email a:focus-visible {
+	color: var(--wp--preset--color--blood);
+}
+@media (prefers-reduced-motion: reduce) {
+	.sn-note-reply .sn-email a {
+		transition: none;
+	}
+}
+

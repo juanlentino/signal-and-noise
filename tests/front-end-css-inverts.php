@@ -80,7 +80,7 @@ $print   = sn_print_media_sheets( $enqueue );
 echo "Group: the print exemption is derived from the enqueue\n";
 ok( in_array( 'print.css', $print, true ), 'print.css is discovered as a print-media stylesheet (' . implode( ', ', $print ) . ')' );
 ok( 1 === count( $print ), 'exactly ONE stylesheet is print-media — if this grows, a screen sheet may have slipped into the exemption' );
-ok( ! in_array( 'critical.css', $print, true ) && ! in_array( 'components.css', $print, true ), 'screen stylesheets are NOT exempt' );
+ok( ! in_array( 'critical.css', $print, true ) && array() === preg_grep( '/^components-/', $print ), 'screen stylesheets are NOT exempt' );
 ok( array() === sn_print_media_sheets( "wp_enqueue_style( 'x', get_theme_file_uri( 'assets/css/screen.css' ), array(), '1', 'all' );" ), 'NEGATIVE CONTROL: a media="all" enqueue grants no exemption' );
 ok( array( 'p.css' ) === sn_print_media_sheets( "wp_enqueue_style( 'x', get_theme_file_uri( 'assets/css/p.css' ), array(), '1', 'print' );" ), 'and a genuine print enqueue IS discovered' );
 // The async trick must never be read as a print stylesheet.

@@ -160,6 +160,22 @@ foreach ( array( 'sn-base', 'sn-layout', 'sn-components', 'sn-responsive' ) as $
 }
 ok( in_array( 'sn-components', $GLOBALS['__enqueued']['sn-responsive']['deps'] ?? array(), true ), 'fallback cascade intact: sn-responsive depends on sn-components' );
 ok( ! isset( $GLOBALS['__registered']['sn-components'] ), 'fallback mode registers no alias (sn-components is the real stylesheet there)' );
+// 2026-10-31: the component layer is its ordered parts, each depending on the
+// one before; the last part IS sn-components, so its dependents wait for all.
+$parts = sn_components_css_parts();
+$chain = true;
+$prev  = 'sn-layout';
+foreach ( $parts as $i => $rel ) {
+	$h   = count( $parts ) - 1 === $i ? 'sn-components' : 'sn-components-' . ( $i + 1 );
+	$got = $GLOBALS['__enqueued'][ $h ] ?? null;
+	if ( ! $got || false === strpos( (string) $got['src'], $rel ) || array( $prev ) !== $got['deps'] ) {
+		$chain = false;
+		echo "  chain broke at $h ($rel)\n";
+		break;
+	}
+	$prev = $h;
+}
+ok( $chain, 'fallback enqueues all ' . count( $parts ) . ' component parts in cascade order, each on the one before, the last as sn-components' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

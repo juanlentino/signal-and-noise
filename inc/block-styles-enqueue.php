@@ -25,7 +25,7 @@
  * handle. Core's dependency machinery dedupes by handle, so a page rendering
  * both blocks still enqueues the file once.
  *
- * This module is the migration surface for the rest of the components.css
+ * This module is the migration surface for the rest of the component layer (components-*.css, cut from components.css on 2026-10-31)
  * split: each future move adds a sheet under assets/css/blocks/ and one
  * registration here. Anything registered here must NOT also appear in
  * inc/asset-combine.php's file list, or it ships to every page again and the
