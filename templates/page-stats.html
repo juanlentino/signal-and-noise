@@ -1,0 +1,37 @@
+<!-- wp:template-part {"slug":"header","area":"header"} /-->
+
+<!-- wp:group {"tagName":"main","style":{"spacing":{"padding":{"top":"var:preset|spacing|60","bottom":"var:preset|spacing|60","left":"var:preset|spacing|40","right":"var:preset|spacing|40"}}},"layout":{"type":"constrained"}} -->
+<main class="wp-block-group" style="padding-top:var(--wp--preset--spacing--60);padding-right:var(--wp--preset--spacing--40);padding-bottom:var(--wp--preset--spacing--60);padding-left:var(--wp--preset--spacing--40)">
+
+	<!-- wp:columns {"verticalAlignment":"bottom","className":"sn-cms-hero-split"} -->
+	<div class="wp-block-columns are-vertically-aligned-bottom sn-cms-hero-split">
+		<!-- wp:column {"verticalAlignment":"bottom","width":"55%"} -->
+		<div class="wp-block-column is-vertically-aligned-bottom" style="flex-basis:55%">
+			<!-- wp:post-title {"level":1,"style":{"typography":{"fontSize":"var(--wp--custom--font-size--page-headline)","lineHeight":"var(--wp--custom--line-height--flat)"}}} /-->
+		</div>
+		<!-- /wp:column -->
+
+		<!-- wp:column {"verticalAlignment":"bottom","width":"45%"} -->
+		<div class="wp-block-column is-vertically-aligned-bottom" style="flex-basis:45%">
+			<!-- wp:paragraph {"style":{"typography":{"lineHeight":"var(--wp--custom--line-height--loose)"}},"textColor":"rust","fontSize":"prose","fontFamily":"body"} -->
+			<p class="has-rust-color has-text-color has-body-font-family has-prose-font-size" style="line-height:var(--wp--custom--line-height--loose)">What gets read here, counted at the edge without cookies.</p>
+			<!-- /wp:paragraph -->
+
+			<!-- wp:paragraph {"style":{"typography":{"lineHeight":"var(--wp--custom--line-height--loose)"}},"fontSize":"prose","fontFamily":"body"} -->
+			<p class="has-body-font-family has-prose-font-size" style="line-height:var(--wp--custom--line-height--loose)"><a href="#sn-public-stats-method">How it&#8217;s measured</a></p>
+			<!-- /wp:paragraph -->
+		</div>
+		<!-- /wp:column -->
+	</div>
+	<!-- /wp:columns -->
+
+	<!-- wp:spacer {"height":"var:preset|spacing|30"} -->
+	<div style="height:var(--wp--preset--spacing--30)" aria-hidden="true" class="wp-block-spacer"></div>
+	<!-- /wp:spacer -->
+
+	<!-- wp:post-content {"layout":{"type":"constrained"}} /-->
+
+</main>
+<!-- /wp:group -->
+
+<!-- wp:template-part {"slug":"footer","area":"footer"} /-->
