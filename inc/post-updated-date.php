@@ -7,7 +7,9 @@
  * substantive-change timestamp (the provenance commit, 13.2.7; post_modified
  * before that and as the fallback) is at least $threshold_days (default 14)
  * after its publish timestamp — so tiny same-week typo fixes don't earn a badge,
- * but a real substantive update does.
+ * but a real substantive update does. Since 2026.10 the line links to the
+ * /verify compare of the last edit when the record holds two or more signed
+ * versions (sn_post_updated_compare_url()).
  *
  * Registers [sn_updated_date]. Placed in parts/post-frontmatter.html by the
  * signal-noise/updated-date PHP-only block since 13.1.0; the shortcode stays
@@ -59,11 +61,58 @@ function sn_post_updated_display( $post = null, $threshold_days = 14 ) {
 		return '';
 	}
 
-	return sprintf(
+	$label = 'Updated ' . wp_date( 'Y.m.d', $modified );
+	$time  = sprintf(
 		'<time class="sn-post-frontmatter__updated" datetime="%s">%s</time>',
 		esc_attr( wp_date( 'c', $modified ) ),
-		esc_html( 'Updated ' . wp_date( 'Y.m.d', $modified ) )
+		esc_html( $label )
 	);
+	$compare = sn_post_updated_compare_url( $post );
+	if ( '' === $compare ) {
+		return $time;
+	}
+	// The visible text stays the date; the name says where the link goes, and
+	// starts with the visible text so a voice command can still say it.
+	return sprintf(
+		'<a class="sn-post-frontmatter__updated-link" href="%s" aria-label="%s">%s</a>',
+		esc_url( $compare ),
+		esc_attr( $label . ': see what changed' ),
+		$time
+	);
+}
+
+/**
+ * The /verify compare of a note's last edit, or '' (2026.10).
+ *
+ * The note's two latest signed versions, preselected: compare_a and compare_b
+ * are the compare form's own field names, and #compare opens its tab. The
+ * versions are the plugin's public view-model, the list the provenance panel
+ * draws its edit rows from, read the way the print colophon reads it. Version
+ * 0 is the founding snapshot, which the compare form does not take, so it
+ * never counts. Fewer than two versions, or no plugin, and the line stays plain.
+ *
+ * @param WP_Post $post Post object.
+ * @return string Raw URL, or ''.
+ */
+function sn_post_updated_compare_url( $post ) {
+	if ( ! function_exists( 'sn_prov_view_data' ) ) {
+		return '';
+	}
+	$vm   = sn_prov_view_data( $post->ID );
+	$uid  = is_array( $vm ) ? (string) ( $vm['note_uid'] ?? '' ) : '';
+	$base = is_array( $vm ) ? (string) ( $vm['verify_url'] ?? '' ) : '';
+	$nums = array();
+	foreach ( is_array( $vm ) ? (array) ( $vm['versions'] ?? array() ) : array() as $v ) {
+		$n = (int) ( $v['version'] ?? 0 );
+		if ( $n >= 1 ) {
+			$nums[] = $n;
+		}
+	}
+	if ( '' === $uid || '' === $base || count( $nums ) < 2 ) {
+		return '';
+	}
+	list( $from, $to ) = array_slice( $nums, -2 );
+	return $base . ( false === strpos( $base, '?' ) ? '?' : '&' ) . 'note=' . rawurlencode( $uid ) . '&compare_a=' . $from . '&compare_b=' . $to . '#compare';
 }
 
 /**

@@ -12,6 +12,9 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Added
+- **A note's "Updated" line links to what changed.** On a single note whose provenance record holds two or more signed versions, the Updated line (`inc/post-updated-date.php`) now links to `/verify?note=<uid>&compare_a=N&compare_b=M#compare`, the note's last two versions preselected in the Compare tab. The versions are the plugin's own view-model (`sn_prov_view_data()`, the list the provenance panel draws its rows from), taken as the chain numbers themselves, never "latest minus one"; version 0, the founding snapshot, never counts. With one version, no record or no plugin, the line is byte-identical to before. The visible text is unchanged; the link's name reads "Updated 2026.10.25: see what changed". Rust like the tags beside it, underlined, blood with a thicker underline on hover and keyboard focus, 24px hit area with the row unmoved. The auto-filled compare needs the companion plugin's next release; until then the link opens /verify on the Compare tab with the note id filled and versions 1 and 2 in the fields. 13 new assertions in `tests/post-updated-date.php`.
+
 ### Fixed
 - **One single-key shortcut switch for the palette and the note shortcuts.** The search palette (`command-palette.js`, every page) and the note shortcuts (`keyboard-nav.js`, j, k and ?) each kept a verbatim copy of the form-field guard and of the WCAG 2.1.4 switch, including a separate in-page memo. With browser storage blocked, turning the keys off in the palette left j and k on. Both now take the guard and the switch from one helper, `assets/js/sn-keys.js` (`window.snKeys`), registered once (`inc/sn-keys.php`) as a dependency of both scripts: one small deferred file. `tests/js/single-key-shortcuts.test.cjs` pins the shared switch with storage throwing (it failed on the old copies); the PHP suites pin that neither script keeps a copy and that both depend on `sn-keys`.
 

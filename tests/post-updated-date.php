@@ -175,5 +175,59 @@ ok( strpos( $sc, 'Updated ' ) !== false, 'shortcode renders the helper output fo
 // that an empty updated-date stays '' through wpautop.
 ok( ! function_exists( 'sn_updated_date_render_block_bridge' ), 'the global render_block bridge is gone (#389)' );
 
+// ── 2026.10: "see what changed". With two or more signed versions the line
+// links to /verify with the last two preselected; otherwise it is exactly the
+// plain <time> above. The versions are the plugin's view-model, the list the
+// provenance panel draws its rows from.
+$GLOBALS['__timestamps'] = array( 'date' => $published, 'modified' => $modified );
+$plain = sprintf( '<time class="sn-post-frontmatter__updated" datetime="%s">%s</time>', gmdate( 'c', $modified ), 'Updated ' . gmdate( 'Y.m.d', $modified ) );
+// Plugin absent: asserted BEFORE the stub below exists (a PHP function cannot be undefined).
+ok( sn_post_updated_display( $post ) === $plain, 'plugin absent -> the plain line, byte-identical' );
+
+$GLOBALS['__vm'] = null;
+if ( ! function_exists( 'sn_prov_view_data' ) ) {
+	function sn_prov_view_data( $id ) { return $GLOBALS['__vm']; }
+}
+if ( ! function_exists( 'esc_url' ) ) {
+	function esc_url( $u ) { return str_replace( '&', '&#038;', (string) $u ); } // core encodes & the same way
+}
+$uid = '9f0abe29-71ed-4b6d-b3a3-ad00f06b2fc3';
+$vm  = static function ( array $nums, $uid = '9f0abe29-71ed-4b6d-b3a3-ad00f06b2fc3', $base = 'https://example.test/verify' ) {
+	return array(
+		'note_uid'   => $uid,
+		'versions'   => array_map( static function ( $n ) { return array( 'version' => $n ); }, $nums ),
+		'verify_url' => $base,
+	);
+};
+
+ok( sn_post_updated_display( $post ) === $plain, 'no record (view-model null) -> plain line' );
+$GLOBALS['__vm'] = $vm( array( 1 ) );
+ok( sn_post_updated_display( $post ) === $plain, 'one signed version -> plain line (nothing to compare)' );
+$GLOBALS['__vm'] = $vm( array( 0, 1 ) );
+ok( sn_post_updated_display( $post ) === $plain, 'founding snapshot (v0) + v1 -> plain line: v0 never counts, the compare form starts at 1' );
+$GLOBALS['__vm'] = $vm( array( 1, 2 ), '' );
+ok( sn_post_updated_display( $post ) === $plain, 'no note id -> plain line' );
+
+$GLOBALS['__vm'] = $vm( array( 1, 2, 3, 4, 5 ) );
+$out  = sn_post_updated_display( $post );
+$href = preg_match( '/<a [^>]*href="([^"]*)"/', $out, $m ) ? html_entity_decode( $m[1] ) : '';
+ok( 0 === strpos( $out, '<a class="sn-post-frontmatter__updated-link" ' ), 'five versions -> the line is a link' );
+ok( 'https://example.test/verify?note=' . $uid . '&compare_a=4&compare_b=5#compare' === $href, 'href: /verify, the note, its last two versions, the Compare tab: ' . $href );
+ok( false !== strpos( $out, '>' . $plain . '</a>' ), 'the visible <time> inside the link is byte-identical to the plain line' );
+ok( false !== strpos( $out, 'aria-label="Updated ' . gmdate( 'Y.m.d', $modified ) . ': see what changed"' ), 'accessible name starts with the visible text, then says what the link does' );
+
+$GLOBALS['__vm'] = $vm( array( 0, 1, 3, 7 ) );
+$out = sn_post_updated_display( $post );
+ok( false !== strpos( $out, '&#038;compare_a=3&#038;compare_b=7#compare' ), 'the chain\'s own last two numbers (3 and 7), never "latest minus one"' );
+$GLOBALS['__vm'] = $vm( array( 2, 3 ), $uid, 'https://example.test/verify?kind=page' );
+ok( false !== strpos( sn_post_updated_display( $post ), 'verify?kind=page&#038;note=' ), 'a base that already carries ?kind= joins with &' );
+$GLOBALS['__vm'] = $vm( array( 1, 2 ), 'a"b<c' );
+ok( false !== strpos( sn_post_updated_display( $post ), 'note=a%22b%3Cc&#038;' ), 'the note id is URL-encoded into the href' );
+
+$GLOBALS['__vm'] = $vm( array( 1, 2, 3, 4, 5 ) );
+$GLOBALS['__timestamps'] = array( 'date' => $published, 'modified' => $published + DAY_IN_SECONDS );
+ok( sn_post_updated_display( $post ) === '', 'below the threshold there is no line, so no link either' );
+$GLOBALS['__vm'] = null;
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
