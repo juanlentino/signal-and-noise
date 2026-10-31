@@ -3,5 +3,25 @@ parameters:
 		-
 			message: '#^Function snt_ai_generate_with_constraints not found\.$#'
 			identifier: function.notFound
-			count: 5
-			path: inc/abilities-ai-generation.php
+			count: 1
+			path: inc/abilities-ai-generation-generate-pattern-content.php
+		-
+			message: '#^Function snt_ai_generate_with_constraints not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: inc/abilities-ai-generation-page-note-summary.php
+		-
+			message: '#^Function snt_ai_generate_with_constraints not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: inc/abilities-ai-generation-rewrite-in-brand-voice.php
+		-
+			message: '#^Function snt_ai_generate_with_constraints not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: inc/abilities-ai-generation-suggest-block-pattern.php
+		-
+			message: '#^Function snt_ai_generate_with_constraints not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: inc/abilities-ai-generation-validate-brand-alignment.php

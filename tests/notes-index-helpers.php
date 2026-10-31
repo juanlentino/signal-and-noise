@@ -185,7 +185,7 @@ ok( -1 === ( $args['posts_per_page'] ?? null ), 'browse is unchanged' );
 
 // The reason, pinned at the source: a comment that still called a tag unbounded
 // would be the conflation growing back in prose after being removed in code.
-$sn_src = (string) file_get_contents( __DIR__ . '/../inc/notes-index-helpers.php' );
+$sn_src = (string) file_get_contents( __DIR__ . '/../inc/notes-index-helpers-query.php' );
 ok( false !== strpos( $sn_src, 'A TAG ARCHIVE BROWSES, IT DOES NOT SEARCH' ), 'the query builder states WHY a tag is not a search' );
 $sn_render = (string) file_get_contents( __DIR__ . '/../inc/page-notes-render.php' );
 ok( 1 === preg_match( '/if \( \$sn_searching \) \{/', $sn_render ), 'the render branch keys on $sn_searching, so the year spine folds a tag archive too' );

@@ -59,8 +59,8 @@ ok( ! function_exists( 'sn_seo_route_meta_for_accessibility' ), 'sn_seo_route_me
 // drift is silent. Assert every live-map slug is named in that ability's
 // registration block, so adding/removing a route without updating the copy
 // fails loudly here.
-$abilities_src = @file_get_contents( __DIR__ . '/../inc/abilities-diagnostics.php' );
-ok( is_string( $abilities_src ) && '' !== $abilities_src, 'read inc/abilities-diagnostics.php for the description-sync guard' );
+$abilities_src = @file_get_contents( __DIR__ . '/../inc/abilities-diagnostics-register.php' );
+ok( is_string( $abilities_src ) && '' !== $abilities_src, 'read inc/abilities-diagnostics-register.php for the description-sync guard' );
 $block_start = is_string( $abilities_src ) ? strpos( $abilities_src, "'signal-and-noise/get-seo-route-meta'" ) : false;
 $block_end   = ( false !== $block_start ) ? strpos( $abilities_src, "'signal-and-noise/get-llms-txt'", $block_start ) : false;
 ok( false !== $block_start && false !== $block_end, 'located the get-seo-route-meta registration block in source' );
