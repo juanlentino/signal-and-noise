@@ -107,5 +107,9 @@ $closing = file_get_contents( __DIR__ . '/../parts/post-closing.html' );
 ok( strpos( $closing, 'sn-post-closing__prev' ) !== false, 'post-closing part renders the prev container (k target)' );
 ok( strpos( $closing, 'sn-post-closing__next' ) !== false, 'post-closing part renders the next container (j target)' );
 
+// The overlay is display:flex, which beats the UA's dialog:not([open]) rule
+// (author origin wins), so without this rule a CLOSED dialog covers the page (review of #620).
+ok( 1 === preg_match( '/\.sn-kbdn:not\(\[open\]\)\s*\{\s*display:\s*none/', (string) file_get_contents( __DIR__ . '/../assets/css/keyboard-nav.css' ) ), 'a closed sn-kbdn dialog is display:none' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

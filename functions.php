@@ -83,6 +83,7 @@
  *   (inc/page-index-render.php   — full PHP render of /index; loaded by page-index-template.php, not here)
  *   (inc/abilities-*.php          — helpers/categories/content/diagnostics/ai-generation; loaded by abilities-registration.php)
  *   (inc/sn-keys.php             : the shared keyboard helper; loaded by command-palette.php and keyboard-nav.php)
+ *   (inc/sn-copy.php             : the shared clipboard helper; loaded by assets-frontend.php)
  *
  * Operational tooling lives in the
  * [signal-and-noise-tools companion plugin](https://github.com/juanlentino/signal-and-noise-tools);

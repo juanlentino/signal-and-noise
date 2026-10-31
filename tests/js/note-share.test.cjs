@@ -31,7 +31,7 @@ function el(tag, attrs = {}) {
 }
 
 // The row exactly as sn_note_share_shortcode() prints it.
-function page({ clipboard = 'ok', execCommand = true, share = null, url = true } = {}) {
+function page({ clipboard = 'ok', execCommand = true, share = null, url = true, helper = true } = {}) {
   const copy = el('BUTTON', url ? { 'data-sn-share-url': COPY_URL, 'data-sn-share-title': 'A note' } : {});
   copy.textContent = 'COPY LINK';
   const native = el('BUTTON', { 'data-sn-share-url': NATIVE_URL, 'data-sn-share-title': 'A note' });
@@ -54,10 +54,13 @@ function page({ clipboard = 'ok', execCommand = true, share = null, url = true }
     navigator.clipboard = { writeText: (t) => { log.writes.push(t); return ctl.clipboard === 'ok' ? Promise.resolve() : Promise.reject(new Error('denied')); } };
   }
   if (share) navigator.share = (data) => { log.shares.push({ ...data }); return share === 'ok' ? Promise.resolve() : Promise.reject(new Error('AbortError')); };
-  vm.runInNewContext(SRC, {
+  const ctx = {
     window: { document, navigator }, document, navigator,
     setTimeout: (fn, ms) => setTimeout(fn, ms), clearTimeout: (id) => clearTimeout(id),
-  });
+  };
+  // sn-copy.js (the shared clipboard helper, 2026-10-31) first, as the script declares.
+  if (helper) vm.runInNewContext(readFileSync(path.join(__dirname, '..', '..', 'assets', 'js', 'sn-copy.js'), 'utf8'), ctx);
+  vm.runInNewContext(SRC, ctx);
   const live = row.children.find((c) => c.attrs.role === 'status') || null;
   return { copy, native, row, body, live, log, ctl };
 }
@@ -166,7 +169,7 @@ test('negative control: no Web Share keeps SHARE hidden and unwired; no URL make
 // same way and announces its own data-sn-copied message in one polite region.
 const APA = 'Lentino, J. (2026, October 17). A note (Version 2). Signal & Noise. https://doi.org/10.5281/zenodo.1';
 const BIB = '@online{lentino2026note,\n  author = {Lentino, Juan},\n  doi = {10.5281/zenodo.1}\n}';
-function citePage({ clipboard = 'ok' } = {}) {
+function citePage({ clipboard = 'ok', helper = true } = {}) {
   const apa = el('BUTTON', { 'data-sn-copy-text': APA, 'data-sn-copied': 'APA citation copied to clipboard' });
   apa.textContent = 'COPY APA';
   const bib = el('BUTTON', { 'data-sn-copy-text': BIB, 'data-sn-copied': 'BibTeX copied to clipboard' });
@@ -180,10 +183,13 @@ function citePage({ clipboard = 'ok' } = {}) {
     createElement: (tag) => el(tag.toUpperCase()),
   };
   const navigator = { clipboard: { writeText: (t) => { log.writes.push(t); return clipboard === 'ok' ? Promise.resolve() : Promise.reject(new Error('denied')); } } };
-  vm.runInNewContext(SRC, {
+  const ctx = {
     window: { document, navigator }, document, navigator,
     setTimeout: (fn, ms) => setTimeout(fn, ms), clearTimeout: (id) => clearTimeout(id),
-  });
+  };
+  // sn-copy.js first, as the script declares (#621): the cite line copies through it too.
+  if (helper) vm.runInNewContext(readFileSync(path.join(__dirname, '..', '..', 'assets', 'js', 'sn-copy.js'), 'utf8'), ctx);
+  vm.runInNewContext(SRC, ctx);
   const lives = row.children.filter((c) => c.attrs.role === 'status');
   return { apa, bib, row, lives, log };
 }
@@ -217,3 +223,17 @@ test('cite: a refused clipboard shows COPY FAILED, drops the copied style, and a
   mock.timers.tick(1600);
   assert.equal(p.apa.textContent, 'COPY APA');
 }));
+
+test('without the copy helper COPY stays unwired and SHARE still works (no throw)', () => {
+  const p = page({ helper: false, share: 'ok' });
+  assert.equal(p.copy.listeners.click, undefined);
+  assert.equal(p.native.hidden, false);
+  p.native.listeners.click();
+  assert.equal(p.log.shares.length, 1);
+});
+
+test('cite: without the copy helper the buttons stay unwired and nothing throws', () => {
+  const p = citePage({ helper: false });
+  assert.equal(p.apa.listeners.click, undefined);
+  assert.equal(p.lives.length, 0);
+});

@@ -68,6 +68,7 @@ function openPalette(islands, globalData) {
       removeAttribute(k) { delete this.attributes[k]; },
       addEventListener(type, fn) { (this.handlers[type] ||= []).push(fn); },
       focus() { document.activeElement = this; }, scrollIntoView() {},
+      open: false, showModal() { this.open = true; }, close() { this.open = false; }, // <dialog> (2026-10-31)
     };
     nodes.push(el);
     return el;
@@ -119,6 +120,7 @@ test('palette: a javascript: URL from the island is never navigated to', () => {
       removeAttribute(k) { delete this.attributes[k]; },
       addEventListener(type, fn) { (this.handlers[type] ||= []).push(fn); },
       focus() { document.activeElement = this; }, scrollIntoView() {},
+      open: false, showModal() { this.open = true; }, close() { this.open = false; }, // <dialog> (2026-10-31)
     };
     nodes.push(el);
     return el;
