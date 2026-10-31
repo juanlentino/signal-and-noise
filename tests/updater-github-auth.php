@@ -186,7 +186,9 @@ ok( ! token_filter_attached(), 'download: the filter is not left attached after 
 // Can't undefine a constant mid-process, so this is asserted structurally:
 // the source guards the header with `if ( defined( 'SNT_GITHUB_TOKEN' ) && ... )`,
 // proven by Case 1 + the source-grep assertion below.
-$src = file_get_contents( __DIR__ . '/../inc/wp-update-integration.php' );
+// The whole module: the loader and every part it requires (the absence pin below
+// must see all of it, not one part).
+$src = implode( "\n", array_map( 'file_get_contents', glob( __DIR__ . '/../inc/wp-update-integration*.php' ) ) );
 ok( strpos( $src, "defined( 'SNT_GITHUB_TOKEN' )" ) !== false, 'token application is guarded by defined() (graceful unauth fallback)' );
 ok( preg_match( '/Authorization.*Bearer.*SNT_GITHUB_TOKEN/s', $src ) === 1, 'Authorization built from SNT_GITHUB_TOKEN' );
 
