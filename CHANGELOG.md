@@ -12,6 +12,15 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Added
+- **/resume's lane switch: Music and Operations & AI Strategy.** Owner brief 2026-11-01 #2. The plugin stores both résumés in the page and hides the one not asked for at render time (`?lane=operations`); the theme draws and drives the switch. `assets/css/resume-switch.css`, English /resume only: the switch is drawn like the EN | ES switch (one hairline box split in two, the current lane filled, blood on hover and focus, 44px targets, underlined in forced colors), each lane's headline and subhead, the receipt marks (`verify`, `paper`, `code`), and "What I've Built" as publication cards. `.sn-resume-variant[hidden]` stays hidden over any group display rule. `assets/js/resume-switch.js`, deferred, English /resume only: a click shows the other lane in place, keeps `?lane=operations` (or the bare /resume/) in the address, and Back and Forward follow; a modified or middle click opens the link as a link, and every link works without the script. Each lane carries its own Download, so the download follows the lane with nothing rewritten.
+- **llms.txt names both résumés' files.** The résumé formats line adds "JSON Resume, operations" and "PDF, operations" when the plugin lists them.
+
+### Changed
+- **Paper prints the lane that shows,** with the bands inside a lane flattened as the top-level ones were, and without the switch or the receipt marks.
+
+  Tests: `tests/resume-switch.php` (15), `tests/llms-txt.php` (+1), `tests/dark-mode.php` (the switch's current-lane fill is allowed, the same case as the EN | ES switch).
+
 ## [2026.11.1] - 2026-11-01 — The palette and shortcuts stay out of the way when sn-keys.js is missing
 
 ### Fixed
