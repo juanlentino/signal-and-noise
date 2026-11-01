@@ -48,4 +48,7 @@
 	window.addEventListener( 'popstate', function () {
 		show( fromUrl() );
 	} );
+	// The server already chose; this only matters if a cached copy ever
+	// answered for the wrong address. The address is the authority.
+	show( fromUrl() );
 }() );

@@ -21,6 +21,7 @@ $cms   = (string) file_get_contents( "$root/inc/cms-page-styles.php" );
 $fe    = (string) file_get_contents( "$root/inc/assets-frontend.php" );
 
 ok( 1 === preg_match( '/\.sn-resume-variant\[hidden\]\s*\{\s*display:\s*none\s*!important/', $css ), 'a hidden lane stays hidden, whatever display a group carries' );
+ok( false !== strpos( $css, 'body.page main .entry-content > .sn-resume-variant > .is-layout-constrained > :where(:not(.alignleft):not(.alignright):not(.alignfull)) {' ), 'the bands inside a lane keep the page track, as the top-level bands do (critical.css)' );
 ok( 1 === preg_match( '/\.sn-resume-switch-list a\[aria-current\]\s*\{[^}]*background/', $css ), 'the current lane is the filled segment (aria-current, set by the server and the script)' );
 ok( 1 === preg_match( '/\.sn-resume-switch-list a\s*\{[^}]*min-height:\s*44px/', $css ), 'each lane link is a 44px target' );
 ok( 1 === preg_match( '/\.sn-resume-switch-list a:focus-visible\s*\{[^}]*outline:/', $css ), 'focus is visible on the switch' );
@@ -33,6 +34,7 @@ ok( 1 === preg_match( "/is_page\( 'resume' \) \) \{ \/\/ the two lanes, English 
 ok( 1 === preg_match( "/function sn_enqueue_resume_switch\(\) \{\s*if \( is_page\( 'resume' \) \) \{\s*wp_enqueue_script\(\s*'sn-resume-switch'/", $fe ) && false !== strpos( $fe, "'strategy' => 'defer'" ), 'the script loads on the English /resume only, deferred' );
 ok( false !== strpos( $js, 'ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey' ) && false !== strpos( $js, 'ev.button !== 0' ), 'a modified or middle click opens the link as a link' );
 ok( false !== strpos( $js, "window.history.pushState( { snLane: lane }, '', a.href )" ) && false !== strpos( $js, "addEventListener( 'popstate'" ), 'the address follows the lane, and Back and Forward follow the address' );
+ok( 1 === preg_match( '/show\( fromUrl\(\) \);\s*\}\(\) \);\s*$/', $js ), 'on load the address decides the lane, whatever copy answered' );
 ok( 1 === preg_match( "/'operations' === new URLSearchParams\( window\.location\.search \)\.get\( 'lane' \) \? 'operations' : 'music'/", $js ), 'the script reads the lane as the server does: operations, else music' );
 ok( false === strpos( $js, 'innerHTML' ) && false === strpos( $js, 'fetch(' ), 'it only toggles what is on the page: no markup written, nothing fetched' );
 

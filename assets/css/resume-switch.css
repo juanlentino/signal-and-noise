@@ -14,6 +14,11 @@
 .sn-resume-variant[hidden] {
 	display: none !important;
 }
+/* The bands sit one level down, inside a lane: they keep the page track that
+   critical.css gives the post content's direct children. */
+body.page main .entry-content > .sn-resume-variant > .is-layout-constrained > :where(:not(.alignleft):not(.alignright):not(.alignfull)) {
+	max-width: var(--wp--custom--page-track) !important;
+}
 .sn-resume-switch {
 	display: flex;
 	flex-wrap: wrap;
@@ -32,12 +37,16 @@
 	border: 1px solid color-mix( in srgb, var(--wp--preset--color--bone) 38%, transparent );
 }
 .sn-resume-switch-list li {
+	display: flex;
+	flex: 1 1 auto; /* wrapped on a narrow phone, each lane fills its row */
 	margin: 0;
 	padding: 0;
 }
 .sn-resume-switch-list a {
 	display: inline-flex;
+	flex: 1 1 auto;
 	align-items: center;
+	justify-content: center;
 	min-height: 44px;
 	padding: 0 1.1rem;
 	font-family: 'DM Mono', 'Courier New', monospace;
@@ -132,7 +141,7 @@
 	line-height: 1.6;
 	max-width: 80ch;
 	color: var(--wp--preset--color--rust);
-	margin: 0 0 0.5rem;
+	margin: 1rem 0 0.5rem;
 }
 .sn-resume-built p {
 	font-size: 0.95rem;
