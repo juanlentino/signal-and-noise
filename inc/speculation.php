@@ -22,6 +22,10 @@
  * unescaped `?` is the optional modifier, not a literal, so a hand-rolled
  * `/notes/page/*` or `/notes/?s=*` entry would be either redundant or wrong.
  *
+ * One page adds a rule of its own: /resume prerenders its other lane
+ * (sn_speculation_resume_lanes() below), so a lane switch is a full page that
+ * is already there when it is clicked.
+ *
  * @package SignalNoise
  * @since 13.1.0
  */
@@ -47,3 +51,34 @@ function sn_speculation_config( $config ) {
 	return $config;
 }
 add_filter( 'wp_speculation_rules_configuration', 'sn_speculation_config' );
+
+/**
+ * wp_load_speculation_rules: on the English /resume (the only page with two
+ * lanes, the condition inc/cms-page-styles.php loads resume-switch.css under),
+ * prerender the lane not on screen, from the switch or a lane link in a hunk.
+ *
+ * A rule of its own, beside core's 'main': core's query-string exclusion
+ * (`/*\?(.+)`) sits inside main's own `where`, so it does not reach this rule
+ * and /resume/?lane=operations is prerendered. The current lane's link carries
+ * aria-current (the plugin's render filter), so the page never prerenders
+ * itself. Only fires when speculative loading is on at all (logged out,
+ * pretty permalinks, not disabled by the plugin's setting).
+ *
+ * @param WP_Speculation_Rules $rules The rules core will print.
+ * @return void
+ */
+function sn_speculation_resume_lanes( $rules ) {
+	if ( ! is_page( 'resume' ) ) {
+		return;
+	}
+	$rules->add_rule(
+		'prerender',
+		'sn-resume-lanes',
+		array(
+			'source'    => 'document',
+			'where'     => array( 'selector_matches' => '.sn-resume-switch a[data-lane]:not([aria-current]), .sn-resume-hunk a[data-lane]' ),
+			'eagerness' => 'moderate',
+		)
+	);
+}
+add_action( 'wp_load_speculation_rules', 'sn_speculation_resume_lanes' );
