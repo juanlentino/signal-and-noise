@@ -129,6 +129,10 @@ body div.wp-block-group:not(:has(h1)) > .sn-catalog-eyebrow {
 	margin: 0.4rem 0 0;
 	transition: color 0.15s ease;
 }
+/* A contact rail's link is one address: it wraps whole, never inside itself. */
+.sn-resume-rail a {
+	white-space: nowrap;
+}
 /* Scan affordance: hovering an experience row lifts its date rail to ink. */
 @media (hover: hover) {
 	body .wp-block-columns:has(.sn-resume-rail):hover .sn-resume-rail {
