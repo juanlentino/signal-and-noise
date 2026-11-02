@@ -41,7 +41,8 @@ function snm_spec( $sel ) {
 
 $root  = dirname( __DIR__ );
 $strip = static fn( $s ) => (string) preg_replace( '#/\*.*?\*/#s', '', (string) $s );
-$css   = $strip( file_get_contents( "$root/assets/css/resume-switch.css" ) );
+$css   = $strip( file_get_contents( "$root/assets/css/resume-marks.css" ) );
+$sw    = $strip( file_get_contents( "$root/assets/css/resume-switch.css" ) );
 $print = $strip( file_get_contents( "$root/assets/css/print.css" ) );
 
 // The body of the rule whose selector list is exactly $sel (any spacing after
@@ -62,7 +63,12 @@ $block = static function ( $src, $head ) {
 	return '';
 };
 
-echo "The bar\n";
+echo "The file\n";
+ok( '' !== $css && 0 === preg_match( '/\.sn-resume-(only|legend|hunk|formats)\b/', $sw ), 'the edition marks live in resume-marks.css alone; resume-switch.css carries none of them' );
+$cms = (string) file_get_contents( "$root/inc/cms-page-styles.php" );
+ok( 1 === preg_match( "/wp_enqueue_style\(\s*'sn-resume-marks',\s*get_theme_file_uri\( 'assets\/css\/resume-marks\.css' \),\s*array\( 'sn-resume-switch' \),/", $cms ), 'resume-marks.css loads after resume-switch.css (its dependency), so the receipt\'s base rules sit beneath its resets; tests/cms-page-styles.php drives the enqueue' );
+
+echo "\nThe bar\n";
 $entry = $rule( $css, '.sn-resume-variant .sn-resume-only' );
 $bar   = $rule( $css, '.sn-resume-variant .sn-resume-only::before' );
 ok( null !== $entry && 1 === preg_match( '/position:\s*relative/', $entry ) && 0 === preg_match( '/padding|margin/', $entry ), 'a marked entry is the bar\'s containing block and nothing more: no padding or margin, so no entry indents' );
@@ -106,8 +112,13 @@ $rail     = 1 === preg_match( '/(?:^|\})\s*([^{}]*\.sn-resume-rail a[^{}]*)\{[^}
 $rail_max = array( 0, 0, 0 );
 foreach ( $rail as $sel ) { $rail_max = max( $rail_max, snm_spec( $sel ) ); }
 ok( count( $rail ) > 0 && snm_spec( $receipt_sel ) > $rail_max, 'a receipt on a contact or employer rail outranks critical.css\'s dim-text underline, so none shows at rest' );
+$rail_sel = '.sn-resume-rail a.sn-resume-receipt:not(.wp-element-button)';
+$rail_r   = $rule( $css, $rail_sel );
+$rail_own = array( 0, 0, 0 );
+foreach ( $rail as $sel ) { if ( false !== strpos( $sel, '.sn-resume-rail' ) ) { $rail_own = max( $rail_own, snm_spec( $sel ) ); } }
+ok( null !== $rail_r && 1 === preg_match( '/text-decoration:\s*none/', $rail_r ) && 0 === preg_match( '/(^|;)\s*color:/', $rail_r ) && array( 0, 0, 0 ) !== $rail_own && snm_spec( $rail_sel ) > $rail_own, 'a receipt in a rail that is not a <p> keeps the line off too: the rail reset (' . implode( ',', snm_spec( $rail_sel ) ) . ') outranks critical.css\'s rail underline (' . implode( ',', $rail_own ) . ') and leaves color alone' );
 $reduce = preg_match( '/([^{}]*)\{\s*transition:\s*none;?\s*\}/', $block( $css, '@media (prefers-reduced-motion: reduce)' ), $rm ) ? array_map( 'trim', explode( ",\n", trim( $rm[1] ) ) ) : array();
-ok( in_array( $receipt_sel, $reduce, true ) && in_array( $hunk_sel, $reduce, true ), 'both restated fades stop under reduced motion, in the switch\'s own pairing at their own specificity' );
+ok( in_array( $receipt_sel, $reduce, true ) && in_array( $hunk_sel, $reduce, true ), 'both restated fades stop under reduced motion, in resume-marks.css\'s own pairing at their own specificity' );
 
 echo "\nForced colors\n";
 $fc = (string) $rule( $block( $css, '@media (forced-colors: active)' ), '.sn-resume-variant .sn-resume-only::before,.sn-resume-legend::before' );
@@ -123,7 +134,7 @@ $paper_sel  = null;
 if ( preg_match_all( '/(?:^|[{}])\s*([^{}]*\.sn-resume-only::before)\s*\{\s*content:\s*none;?\s*\}/', $print, $pm ) ) {
 	$paper_sel = trim( end( $pm[1] ) );
 }
-ok( null !== $paper_sel && snm_spec( $paper_sel ) > snm_spec( $screen_sel ), 'paper drops the bar with a selector that outranks the screen one: resume-switch.css loads after print.css, so a tie would print the bar' );
+ok( null !== $paper_sel && snm_spec( $paper_sel ) > snm_spec( $screen_sel ), 'paper drops the bar with a selector that outranks the screen one: resume-marks.css loads after print.css, so a tie would print the bar' );
 
 echo "\nThe arrival rule, on every page but an essay\n";
 require_once __DIR__ . '/lib/components-source.php';

@@ -266,7 +266,7 @@ body:has(.sn-resume-hero-split) main h3,
 body:has(.sn-resume-hero-split) .sn-resume-role { font-size: 10pt !important; margin: 6pt 0 1pt !important; line-height: 1.25 !important; letter-spacing: 0.02em; }
 body:has(.sn-resume-hero-split) .sn-catalog-eyebrow { display: none !important; }
 /* The edition bar is a screen mark; its legend and the hidden "Only in this
-   version." are off paper above. resume-switch.css loads after this sheet, so
+   version." are off paper above. resume-marks.css loads after this sheet, so
    the body:has() scope is what outranks its (0,2,1) bar. */
 body:has(.sn-resume-hero-split) .sn-resume-variant .sn-resume-only::before { content: none; }
 body:has(.sn-resume-hero-split) main p,
