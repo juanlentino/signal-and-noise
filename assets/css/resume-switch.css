@@ -15,9 +15,12 @@
 	display: none !important;
 }
 /* The bands sit one level down, inside a lane: they keep the page track that
-   critical.css gives the post content's direct children. */
-body.page main .entry-content > .sn-resume-variant > .is-layout-constrained > :where(:not(.alignleft):not(.alignright):not(.alignfull)) {
-	max-width: var(--wp--custom--page-track) !important;
+   critical.css gives the post content's direct children. Screen only: on
+   paper this outranked print.css's max-width: none. */
+@media screen {
+	body.page main .entry-content > .sn-resume-variant > .is-layout-constrained > :where(:not(.alignleft):not(.alignright):not(.alignfull)) {
+		max-width: var(--wp--custom--page-track) !important;
+	}
 }
 .sn-resume-switch {
 	display: flex;
@@ -98,6 +101,42 @@ body.page main .entry-content > .sn-resume-variant > .is-layout-constrained > :w
 	color: var(--wp--preset--color--rust);
 	margin: 0;
 }
+/* The head split (the plugin's columns block around eyebrow + H1 and the
+   switch): from 900px the switch sits bottom-right, its caption above it,
+   which keeps Download above the fold on a laptop. Below 900px the columns
+   stack and the switch keeps its margin, so the phone layout is as it was.
+   Core sets flex-wrap: nowrap !important from 782px, hence the (0,2,0)
+   !important wrap, and zeroes a column's first child at (0,2,0), hence the
+   (0,3,0) margin restated. */
+.wp-block-columns.sn-resume-head-split {
+	column-gap: var(--wp--custom--air--xl) !important;
+	margin-bottom: 0;
+}
+@media (min-width: 900px) {
+	.wp-block-columns.sn-resume-head-split {
+		margin-bottom: var(--wp--preset--spacing--50);
+	}
+	.sn-resume-head-split .sn-resume-switch {
+		margin-top: 0;
+		row-gap: 0.75rem;
+	}
+	.sn-resume-head-split .sn-resume-switch-caption {
+		order: -1;
+		flex-basis: 100%;
+	}
+}
+@media (max-width: 899.98px) {
+	.wp-block-columns.sn-resume-head-split {
+		flex-wrap: wrap !important;
+		row-gap: 0 !important;
+	}
+	.sn-resume-head-split > .wp-block-column {
+		flex-basis: 100% !important;
+	}
+	.wp-block-columns.sn-resume-head-split .sn-resume-switch {
+		margin-top: var(--wp--custom--air--md);
+	}
+}
 
 /* Each lane's hero opens with its headline and subhead over the summary. */
 .sn-resume-headline {
@@ -108,6 +147,11 @@ body.page main .entry-content > .sn-resume-variant > .is-layout-constrained > :w
 	line-height: 1;
 	color: var(--wp--preset--color--bone);
 	margin: 0;
+}
+/* As an h2 it keeps this box: critical.css trims h2.wp-block-heading to cap
+   height at (0,2,2). */
+.sn-resume-variant .sn-resume-headline.wp-block-heading {
+	text-box: normal;
 }
 .sn-resume-tagline {
 	font-family: 'DM Mono', 'Courier New', monospace;
@@ -123,8 +167,8 @@ body.page main .entry-content > .sn-resume-variant > .is-layout-constrained > :w
 .sn-resume-pub-title a.sn-resume-receipt {
 	display: inline-block;
 	margin-left: 0.4em;
-	padding: 0.05em 0.45em;
-	border: 1px solid var(--wp--preset--color--concrete);
+	padding: 0.3em 0.45em; /* about 24px tall: a target, not only a mark */
+	border: 1px solid color-mix( in srgb, var(--wp--preset--color--rust) 50%, transparent );
 	font-family: 'DM Mono', 'Courier New', monospace;
 	font-size: max(0.7rem, 11px);
 	font-weight: 400;
@@ -166,6 +210,21 @@ body.page main .entry-content > .sn-resume-variant > .is-layout-constrained > :w
 	max-width: 80ch;
 	color: var(--wp--preset--color--bone);
 	margin: 0.5rem 0 0;
+}
+.sn-resume-built-grid {
+	margin-top: 1rem;
+}
+/* Three across where the track is wide enough (the plugin wraps the cards in
+   .sn-resume-built-grid); publications stay stacked. */
+@media (min-width: 1280px) {
+	.sn-resume-built-grid {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: var(--wp--custom--air--sm);
+	}
+	.sn-resume-built-grid > .sn-resume-built {
+		margin: 0;
+	}
 }
 @media (prefers-reduced-motion: reduce) {
 	.sn-resume-switch-list a,
