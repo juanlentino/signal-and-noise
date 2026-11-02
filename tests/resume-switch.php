@@ -34,9 +34,10 @@ ok( false !== strpos( $print, 'main .sn-resume-variant > .wp-block-group {' ) ||
 ok( 1 === preg_match( "/is_page\( 'resume' \) \) \{ \/\/ the two lanes, English only\.\s*wp_enqueue_style\(\s*'sn-resume-switch'/", $cms ), 'the lane stylesheet loads on the English /resume only' );
 ok( 1 === preg_match( "/function sn_enqueue_resume_switch\(\) \{\s*if \( is_page\( 'resume' \) \) \{\s*wp_enqueue_script\(\s*'sn-resume-switch'/", $fe ) && false !== strpos( $fe, "'strategy' => 'defer'" ), 'the script loads on the English /resume only, deferred' );
 ok( false !== strpos( $js, 'ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey' ) && false !== strpos( $js, 'ev.button !== 0' ), 'a modified or middle click opens the link as a link' );
-ok( false !== strpos( $js, "window.history.pushState( { snLane: lane }, '', a.href )" ) && false !== strpos( $js, "addEventListener( 'popstate'" ), 'the address follows the lane, and Back and Forward follow the address' );
+ok( false !== strpos( $js, "window.history.pushState( { snLane: lane }, '', urlFor( lane ) )" ) && false !== strpos( $js, "addEventListener( 'popstate'" ), 'the address follows the lane, and Back and Forward follow the address' );
+ok( 1 === preg_match( "/function urlFor\( lane \) \{\s*var url = new URL\( window\.location\.href \);\s*if \( 'music' === lane \) \{\s*url\.searchParams\.delete\( 'lane' \);\s*\} else \{\s*url\.searchParams\.set\( 'lane', lane \);/", $js ), 'only lane changes in the address: a draft preview keeps its preview query' );
 ok( 1 === preg_match( '/show\( fromUrl\(\) \);\s*\}\(\) \);\s*$/', $js ), 'on load the address decides the lane, whatever copy answered' );
-ok( 1 === preg_match( "/'operations' === new URLSearchParams\( window\.location\.search \)\.get\( 'lane' \) \? 'operations' : 'music'/", $js ), 'the script reads the lane as the server does: operations, else music' );
+ok( false !== strpos( $js, "return 'operations' === raw.toLowerCase().replace( /[^a-z0-9_\\-]/g, '' ) ? 'operations' : 'music';" ), 'the script reads the lane as the server does (sanitize_key, then operations, else music)' );
 ok( false === strpos( $js, 'innerHTML' ) && false === strpos( $js, 'fetch(' ), 'it only toggles what is on the page: no markup written, nothing fetched' );
 
 echo "\nResult: $pass passed, $fail failed.\n";

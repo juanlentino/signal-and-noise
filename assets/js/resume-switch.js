@@ -28,8 +28,23 @@
 		} );
 	}
 
+	// As the server reads it (sanitize_key, then operations or music), so
+	// ?lane=Operations shows the same lane the page was rendered with.
 	function fromUrl() {
-		return 'operations' === new URLSearchParams( window.location.search ).get( 'lane' ) ? 'operations' : 'music';
+		var raw = String( new URLSearchParams( window.location.search ).get( 'lane' ) || '' );
+		return 'operations' === raw.toLowerCase().replace( /[^a-z0-9_\-]/g, '' ) ? 'operations' : 'music';
+	}
+
+	// The current address with only `lane` changed: a draft preview keeps its
+	// preview_id and nonce, and music is the bare address.
+	function urlFor( lane ) {
+		var url = new URL( window.location.href );
+		if ( 'music' === lane ) {
+			url.searchParams.delete( 'lane' );
+		} else {
+			url.searchParams.set( 'lane', lane );
+		}
+		return url.toString();
 	}
 
 	links.forEach( function ( a ) {
@@ -40,7 +55,7 @@
 			var lane = a.getAttribute( 'data-lane' );
 			ev.preventDefault();
 			if ( lane !== fromUrl() ) {
-				window.history.pushState( { snLane: lane }, '', a.href );
+				window.history.pushState( { snLane: lane }, '', urlFor( lane ) );
 			}
 			show( lane );
 		} );
