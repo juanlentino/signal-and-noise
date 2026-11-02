@@ -248,8 +248,10 @@ body div.wp-block-group:not(:has(h1)) > .sn-catalog-eyebrow {
 	margin-top: 1rem;
 	transition: border-color 0.15s ease;
 }
+/* A "What I've Built" card is not a link (its receipt is), so only a
+   publication card answers the pointer. */
 @media (hover: hover) {
-	.sn-resume-pub:hover {
+	.sn-resume-pub:not(.sn-resume-built):hover {
 		border-color: var(--wp--preset--color--bone);
 	}
 }

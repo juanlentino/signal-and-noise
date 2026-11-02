@@ -170,6 +170,19 @@
 	color: var(--wp--preset--color--bone);
 	margin: 0.5rem 0 0;
 }
+/* Three across where the track is wide enough (the plugin wraps the cards in
+   .sn-resume-built-grid); publications stay stacked. */
+@media (min-width: 1280px) {
+	.sn-resume-built-grid {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: var(--wp--custom--air--sm);
+		margin-top: 1rem;
+	}
+	.sn-resume-built-grid > .sn-resume-built {
+		margin: 0;
+	}
+}
 @media (prefers-reduced-motion: reduce) {
 	.sn-resume-switch-list a,
 	.sn-resume-receipt {
