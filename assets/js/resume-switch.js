@@ -57,6 +57,24 @@
 		return url.toString();
 	}
 
+	// The lane on screen. A real switch, by click or by Back and Forward, is
+	// spoken from a polite status region that starts empty, so a screen reader
+	// hears the change and never the page load.
+	var current = fromUrl();
+	var live = document.createElement( 'p' );
+	live.setAttribute( 'class', 'screen-reader-text' );
+	live.setAttribute( 'role', 'status' );
+	nav.appendChild( live );
+
+	function change( lane ) {
+		show( lane );
+		if ( lane === current ) {
+			return;
+		}
+		current = lane;
+		live.textContent = 'Showing the ' + nav.querySelector( 'a[aria-current]' ).textContent.trim() + ' résumé';
+	}
+
 	links.forEach( function ( a ) {
 		a.addEventListener( 'click', function ( ev ) {
 			if ( ev.defaultPrevented || ev.button !== 0 || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey ) {
@@ -67,11 +85,17 @@
 			if ( lane !== fromUrl() ) {
 				window.history.pushState( { snLane: lane }, '', withLane( window.location.href, lane ) );
 			}
-			show( lane );
+			change( lane );
 		} );
 	} );
 	window.addEventListener( 'popstate', function () {
-		show( fromUrl() );
+		var from = document.activeElement && document.activeElement.closest( '.sn-resume-variant' );
+		change( fromUrl() );
+		// Back or Forward can hide the lane that held focus: hand focus to
+		// the switch, not to the top of the page.
+		if ( from && from.hidden ) {
+			nav.querySelector( 'a[aria-current]' ).focus();
+		}
 	} );
 	// The server already chose; this only matters if a cached copy ever
 	// answered for the wrong address. The address is the authority.

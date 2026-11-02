@@ -130,3 +130,54 @@ test('switching away from a #resume-<lane> address drops that hash, so Back and 
   g.click('operations');
   assert.equal(g.pushed[0], SITE + '/resume/?lane=operations#experience', 'any other anchor stays');
 });
+
+test('a polite status region sits in the nav, empty at load, even when the load corrects the lane', () => {
+  for (const at of ['/resume/', '/resume/?lane=operations']) {
+    const live = fixture({ at }).live();
+    assert.ok(live, at);
+    assert.equal(live.getAttribute('class'), 'screen-reader-text');
+    assert.equal(live.parentNode.getAttribute('aria-label'), 'Résumé version');
+    assert.equal(live.textContent, '', at);
+  }
+});
+
+test('a real switch is announced with the link\'s own label; a no-op or a modified click is not', () => {
+  const f = fixture();
+  f.click('music');
+  f.click('operations', { ctrlKey: true });
+  assert.equal(f.live().textContent, '');
+  f.click('operations');
+  assert.equal(f.live().textContent, 'Showing the Operations & AI Strategy résumé');
+  f.live().textContent = 'x';
+  f.click('operations');
+  assert.equal(f.live().textContent, 'x', 'the current lane says nothing again');
+  f.pop('/resume/');
+  assert.equal(f.live().textContent, 'Showing the Music résumé');
+  f.live().textContent = 'x';
+  f.pop('/resume/#experience');
+  assert.equal(f.live().textContent, 'x', 'a popstate that keeps the lane says nothing');
+});
+
+test('Back into the other lane moves focus out of the lane it hid, to the current switch link', () => {
+  const f = fixture();
+  f.click('operations');
+  f.click('music');
+  f.downloads.music.focus();
+  f.pop('/resume/?lane=operations');
+  assert.deepEqual(f.shown(), ['operations']);
+  assert.equal(f.doc.activeElement, f.a.operations);
+});
+
+test('focus outside a hidden lane stays where it is', () => {
+  const f = fixture();
+  f.a.music.focus();
+  f.pop('/resume/?lane=operations');
+  assert.equal(f.doc.activeElement, f.a.music, 'on the switch');
+  const g = fixture();
+  g.downloads.music.focus();
+  g.pop('/resume/#experience');
+  assert.equal(g.doc.activeElement, g.downloads.music, 'in the lane that stays');
+  const h = fixture();
+  h.pop('/resume/?lane=operations');
+  assert.equal(h.doc.activeElement.tagName, 'BODY', 'nothing focused, nothing moved');
+});
