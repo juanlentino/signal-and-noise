@@ -154,3 +154,20 @@ test('the load-time correction leaves the alternates as the server wrote them', 
   const f = fixture({ at: '/resume/?lane=operations', server: 'music' });
   assert.equal(f.links.md.getAttribute('href'), SITE + '/resume.md');
 });
+
+test('a real switch moves the canonical and og:url to the lane, so a share sheet copies the lane shown', () => {
+  const f = fixture({ at: '/resume/?utm_source=x' });
+  f.click('operations');
+  assert.equal(f.canon.getAttribute('href'), SITE + '/resume/?lane=operations');
+  assert.equal(f.og.getAttribute('content'), SITE + '/resume/?lane=operations');
+  assert.equal(f.pushed[0], SITE + '/resume/?utm_source=x&lane=operations', 'the address keeps its query; the canonical does not take it');
+  f.pop('/resume/');
+  assert.equal(f.canon.getAttribute('href'), SITE + '/resume/');
+  assert.equal(f.og.getAttribute('content'), SITE + '/resume/');
+});
+
+test('the load leaves the canonical and og:url as the server wrote them, for crawlers', () => {
+  const f = fixture({ at: '/resume/?lane=operations', server: 'music' });
+  assert.equal(f.canon.getAttribute('href'), SITE + '/resume/');
+  assert.equal(f.og.getAttribute('content'), SITE + '/resume/');
+});

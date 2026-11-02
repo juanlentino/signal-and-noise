@@ -17,6 +17,8 @@ function fixture({ at = '/resume/', server = 'music', history = true } = {}) {
   const alt = (type, href) => head.appendChild(el('link', { rel: 'alternate', type, href }));
   const links = { md: alt('text/markdown', SITE + '/resume.md' + opsQ), json: alt('application/json', SITE + '/resume/json-resume.json' + opsQ),
     page: alt('application/json', SITE + '/resume.json'), output: alt('text/markdown', SITE + '/resume/?output_format=markdown') };
+  const canon = head.appendChild(el('link', { rel: 'canonical', href: SITE + '/resume/' + opsQ }));
+  const og = head.appendChild(el('meta', { property: 'og:url', content: SITE + '/resume/' + opsQ }));
   const focusable = (n) => { n.focus = () => { doc.activeElement = n; }; return n; };
   const nav = body.appendChild(el('nav', { class: 'wp-block-group sn-resume-switch', 'aria-label': 'Résumé version' }));
   const ul = nav.appendChild(el('ul', { class: 'wp-block-list sn-resume-switch-list' }));
@@ -47,7 +49,7 @@ function fixture({ at = '/resume/', server = 'music', history = true } = {}) {
   const shown = () => Object.keys(lanes).filter((l) => !lanes[l].hidden);
   const current = () => Object.keys(a).filter((l) => a[l].getAttribute('aria-current') === 'page');
   const live = () => nav.querySelector('p[role="status"]');
-  return { doc, a, lanes, downloads, links, pushed, click, pop, shown, current, live, url: () => url.href };
+  return { doc, a, lanes, downloads, links, canon, og, pushed, click, pop, shown, current, live, url: () => url.href };
 }
 
 module.exports = { fixture, SITE };

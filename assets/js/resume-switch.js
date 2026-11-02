@@ -80,6 +80,16 @@
 				link.setAttribute( 'href', withLane( href, lane ) );
 			}
 		} );
+		// So do the canonical and og:url, which a share sheet copies; the load
+		// leaves them as the server wrote them for crawlers.
+		var canonical = document.querySelector( 'link[rel="canonical"]' );
+		var og = document.querySelector( 'meta[property="og:url"]' );
+		if ( canonical ) {
+			canonical.setAttribute( 'href', withLane( canonical.getAttribute( 'href' ), lane ) );
+		}
+		if ( og ) {
+			og.setAttribute( 'content', withLane( og.getAttribute( 'content' ), lane ) );
+		}
 		live.textContent = 'Showing the ' + nav.querySelector( 'a[aria-current]' ).textContent.trim() + ' résumé';
 	}
 
