@@ -72,6 +72,14 @@
 			return;
 		}
 		current = lane;
+		// The head's Markdown and JSON Resume alternates follow the lane; the
+		// other alternates stay as the server wrote them.
+		document.querySelectorAll( 'link[rel="alternate"]' ).forEach( function ( link ) {
+			var href = link.getAttribute( 'href' ) || '';
+			if ( /^\/resume(\.md|\/json-resume\.json)$/.test( new URL( href, window.location.href ).pathname ) ) {
+				link.setAttribute( 'href', withLane( href, lane ) );
+			}
+		} );
 		live.textContent = 'Showing the ' + nav.querySelector( 'a[aria-current]' ).textContent.trim() + ' résumé';
 	}
 
