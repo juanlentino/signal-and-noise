@@ -107,3 +107,26 @@ test('without history.pushState the script does nothing: the links work as links
   assert.deepEqual(f.shown(), ['music']);
   assert.equal(f.live(), null);
 });
+
+test('the last lane wins, as PHP\'s $_GET reads a repeated key', () => {
+  assert.deepEqual(fixture({ at: '/resume/?lane=music&lane=operations', server: 'operations' }).shown(), ['operations']);
+  assert.deepEqual(fixture({ at: '/resume/?lane=operations&lane=music', server: 'music' }).shown(), ['music']);
+});
+
+test('with no ?lane, a #resume-<lane> address names its lane; ?lane outranks it', () => {
+  assert.deepEqual(fixture({ at: '/resume/#resume-operations' }).shown(), ['operations']);
+  assert.deepEqual(fixture({ at: '/resume/?lane=music#resume-operations' }).shown(), ['music']);
+  assert.deepEqual(fixture({ at: '/resume/#operations' }).shown(), ['music']);
+});
+
+test('switching away from a #resume-<lane> address drops that hash, so Back and reload agree', () => {
+  const f = fixture({ at: '/resume/#resume-operations' });
+  f.click('music');
+  assert.deepEqual(f.pushed, [SITE + '/resume/']);
+  assert.deepEqual(f.shown(), ['music']);
+  f.click('operations');
+  assert.equal(f.pushed[1], SITE + '/resume/?lane=operations');
+  const g = fixture({ at: '/resume/#experience' });
+  g.click('operations');
+  assert.equal(g.pushed[0], SITE + '/resume/?lane=operations#experience', 'any other anchor stays');
+});

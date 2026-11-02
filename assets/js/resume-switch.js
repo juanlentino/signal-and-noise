@@ -28,21 +28,31 @@
 		} );
 	}
 
-	// As the server reads it (sanitize_key, then operations or music), so
-	// ?lane=Operations shows the same lane the page was rendered with.
+	var laneHash = /^#resume-(music|operations)$/;
+
+	// As the server reads it (the last `lane` wins, as in $_GET; sanitize_key,
+	// then operations or music), so ?lane=Operations shows the same lane the
+	// page was rendered with. With no ?lane, a #resume-operations link names
+	// its lane: the server never sees the hash.
 	function fromUrl() {
-		var raw = String( new URLSearchParams( window.location.search ).get( 'lane' ) || '' );
+		var lanes = new URLSearchParams( window.location.search ).getAll( 'lane' );
+		var hash = laneHash.exec( window.location.hash );
+		var raw = lanes.length ? lanes[ lanes.length - 1 ] : ( hash ? hash[ 1 ] : '' );
 		return 'operations' === raw.toLowerCase().replace( /[^a-z0-9_\-]/g, '' ) ? 'operations' : 'music';
 	}
 
-	// The current address with only `lane` changed: a draft preview keeps its
-	// preview_id and nonce, and music is the bare address.
-	function urlFor( lane ) {
-		var url = new URL( window.location.href );
+	// An address with only `lane` changed: a draft preview keeps its
+	// preview_id and nonce, music is the bare address, and a #resume-<lane>
+	// anchor gives way to the lane chosen.
+	function withLane( href, lane ) {
+		var url = new URL( href, window.location.href );
 		if ( 'music' === lane ) {
 			url.searchParams.delete( 'lane' );
 		} else {
 			url.searchParams.set( 'lane', lane );
+		}
+		if ( laneHash.test( url.hash ) ) {
+			url.hash = '';
 		}
 		return url.toString();
 	}
@@ -55,7 +65,7 @@
 			var lane = a.getAttribute( 'data-lane' );
 			ev.preventDefault();
 			if ( lane !== fromUrl() ) {
-				window.history.pushState( { snLane: lane }, '', urlFor( lane ) );
+				window.history.pushState( { snLane: lane }, '', withLane( window.location.href, lane ) );
 			}
 			show( lane );
 		} );

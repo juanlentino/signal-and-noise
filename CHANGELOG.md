@@ -12,6 +12,9 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Fixed
+- **The lane switch reads a repeated `?lane=` the way the server does: the last one wins.** `?lane=operations&lane=music` rendered music (PHP's `$_GET` keeps the last value) and then the script, reading the first, flipped to operations after paint (PERF-1). With no `?lane`, a `#resume-operations` or `#resume-music` link now names its lane, where before it showed music with its target hidden; switching away from such an address drops that anchor, so Back and a reload land on the lane chosen. `assets/js/resume-switch.js`. Tests: `tests/js/resume-switch.test.cjs` (new, drives the script under node:vm: an inverted `show()` passed the source pins 19 of 19 and fails here), `tests/resume-switch.php` (+1).
+
 ## [2026.11.2] - 2026-11-02 — The résumé's lane switch: Music and Operations & AI Strategy
 
 ### Added
