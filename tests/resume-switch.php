@@ -24,6 +24,7 @@ ok( 1 === preg_match( '/\.sn-resume-variant\[hidden\]\s*\{\s*display:\s*none\s*!
 ok( false !== strpos( $css, 'body.page main .entry-content > .sn-resume-variant > .is-layout-constrained > :where(:not(.alignleft):not(.alignright):not(.alignfull)) {' ), 'the bands inside a lane keep the page track, as the top-level bands do (critical.css)' );
 ok( 1 === preg_match( '/\.sn-resume-switch-list a\[aria-current\]\s*\{[^}]*background/', $css ), 'the current lane is the filled segment (aria-current, set by the server and the script)' );
 ok( 1 === preg_match( '/\.sn-resume-switch-list a\s*\{[^}]*min-height:\s*44px/', $css ), 'each lane link is a 44px target' );
+ok( 1 === preg_match( '/@media \(max-width: 599\.98px\)\s*\{\s*\.sn-resume-switch-list\s*\{[^}]*width:\s*100%[^}]*\}\s*\.sn-resume-switch-list li\s*\{\s*flex:\s*1 1 0;/', $css ), 'on a phone the switch is one full-width button with equal halves' );
 ok( 1 === preg_match( '/\.sn-resume-switch-list a:focus-visible\s*\{[^}]*outline:/', $css ), 'focus is visible on the switch' );
 ok( 1 === preg_match( '/\.sn-resume-pub-title a\.sn-resume-receipt::after\s*\{\s*content:\s*none/', $css ), 'a receipt inside a card title drops the title link\'s arrow' );
 ok( 1 === preg_match( '/@media \(forced-colors: active\)\s*\{\s*\.sn-resume-switch-list a\[aria-current\]\s*\{[^}]*text-decoration:\s*underline/', $css ), 'forced colors drop the fill, so the current lane is underlined' );

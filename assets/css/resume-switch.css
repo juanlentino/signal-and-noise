@@ -73,6 +73,23 @@ body.page main .entry-content > .sn-resume-variant > .is-layout-constrained > :w
 		color: var(--wp--preset--color--void);
 	}
 }
+/* On a phone the switch is one full-width button, two equal halves; the
+   longer label wraps inside its half instead of the halves wrapping. */
+@media (max-width: 599.98px) {
+	.sn-resume-switch-list {
+		display: flex;
+		flex-wrap: nowrap;
+		width: 100%;
+	}
+	.sn-resume-switch-list li {
+		flex: 1 1 0;
+	}
+	.sn-resume-switch-list a {
+		padding: 0.55rem 0.75rem;
+		line-height: 1.5;
+		text-align: center;
+	}
+}
 .sn-resume-switch-caption {
 	font-family: 'DM Mono', 'Courier New', monospace;
 	font-size: max(0.7rem, 11px);
