@@ -9,6 +9,9 @@
 #   class-wp-token-map.php   needed by the HTML API's decoder.
 #   interactivity-api/ core's server-side directives processor (#384), for
 #                      tests/theme-toggle-directives.php.
+#   speculative-loading.php, class-wp-speculation-rules.php,
+#   class-wp-url-pattern-prefixer.php   core's speculation rules, for
+#                      tests/speculation.php (the rules core prints).
 #
 # The files come from the wordpress-develop branch the theme runs against.
 # Bump WP_REF here when the site moves to a new core branch.
@@ -27,7 +30,9 @@ mkdir -p "$dest/html-api" "$dest/interactivity-api"
 for f in class-wp-html-tag-processor.php class-wp-html-attribute-token.php class-wp-html-span.php class-wp-html-text-replacement.php class-wp-html-decoder.php html5-named-character-references.php; do
 	curl -sSfL "$base/html-api/$f" -o "$dest/html-api/$f"
 done
-curl -sSfL "$base/class-wp-token-map.php" -o "$dest/class-wp-token-map.php"
+for f in class-wp-token-map.php speculative-loading.php class-wp-speculation-rules.php class-wp-url-pattern-prefixer.php; do
+	curl -sSfL "$base/$f" -o "$dest/$f"
+done
 for f in class-wp-interactivity-api.php class-wp-interactivity-api-directives-processor.php interactivity-api.php; do
 	curl -sSfL "$base/interactivity-api/$f" -o "$dest/interactivity-api/$f"
 done

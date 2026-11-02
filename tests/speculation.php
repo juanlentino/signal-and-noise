@@ -8,6 +8,10 @@
  * `wp_speculation_rules_configuration`: it receives the array|null config
  * and returns the same shape (null disables the feature and must be
  * respected, never overridden).
+ *
+ * /resume's lane rule (2026-11-02) is pinned on what core itself prints: the
+ * suite loads core's speculative-loading.php and WP_Speculation_Rules (fetched
+ * beside html-api/ by tools/fetch-wp-test-core.sh) and ends RED without them.
  * @since theme v13.1.0
  */
 if ( PHP_SAPI !== 'cli' && ! defined( 'WP_CLI' ) ) { http_response_code( 404 ); exit; }
@@ -21,6 +25,42 @@ function add_filter( $hook, $cb, $priority = 10, $accepted_args = 1 ) {
 	$GLOBALS['__filters'][ $hook ][] = array( $cb, $priority, $accepted_args );
 	return true;
 }
+function add_action( $hook, $cb, $priority = 10, $accepted_args = 1 ) {
+	return add_filter( $hook, $cb, $priority, $accepted_args );
+}
+function apply_filters( $hook, $value, ...$args ) {
+	foreach ( $GLOBALS['__filters'][ $hook ] ?? array() as $entry ) {
+		$value = $entry[0]( $value, ...$args );
+	}
+	return $value;
+}
+function do_action( $hook, ...$args ) {
+	foreach ( $GLOBALS['__filters'][ $hook ] ?? array() as $entry ) {
+		$entry[0]( ...$args );
+	}
+}
+// The request: which page, and whether speculative loading is on at all.
+$GLOBALS['__page']      = 'resume';
+$GLOBALS['__logged_in'] = false;
+function is_page( $slug = '' ) { return $slug === $GLOBALS['__page']; }
+function is_user_logged_in() { return $GLOBALS['__logged_in']; }
+function get_option( $name ) { return 'permalink_structure' === $name ? '/%postname%/' : false; }
+function home_url( $path = '' ) { return 'https://juanlentino.com' . $path; }
+function site_url( $path = '' ) { return 'https://juanlentino.com' . $path; }
+function content_url() { return 'https://juanlentino.com/wp-content'; }
+function plugins_url() { return 'https://juanlentino.com/wp-content/plugins'; }
+function wp_upload_dir( $time = null, $create = true ) { return array( 'baseurl' => 'https://juanlentino.com/wp-content/uploads' ); }
+function get_template_directory_uri() { return 'https://juanlentino.com/wp-content/themes/signal-and-noise'; }
+function get_stylesheet_directory_uri() { return get_template_directory_uri(); }
+function trailingslashit( $s ) { return rtrim( (string) $s, '/\\' ) . '/'; }
+function wp_parse_url( $url, $component = -1 ) { return parse_url( $url, $component ); }
+function esc_html( $s ) { return (string) $s; }
+function wp_json_encode( $data, $flags = 0 ) { return json_encode( $data, $flags ); }
+// What core prints: wp_print_speculation_rules() hands its JSON here.
+function wp_print_inline_script_tag( $data, $attributes = array() ) { $GLOBALS['__printed'][] = array( $data, $attributes ); }
+
+require_once __DIR__ . '/lib/wp-html-api.php';
+snt_require_wp_speculation_rules();
 
 require_once __DIR__ . '/../inc/speculation.php';
 
@@ -49,6 +89,43 @@ ok( 'nonsense' === $config_cb( 'nonsense' ), "a stray non-array, non-null value 
 echo "\nGroup: negative control — the module registers no href-exclude filter at all\n";
 $src = (string) file_get_contents( __DIR__ . '/../inc/speculation.php' );
 ok( false === strpos( $src, 'href_exclude_paths' ), 'the module source does not reference wp_speculation_rules_href_exclude_paths' );
+
+// /resume prerenders its other lane (2026-11-02). Run through core itself:
+// wp_print_speculation_rules() builds the rules, fires wp_load_speculation_rules,
+// and prints the JSON; these pins read what it printed.
+function sn_test_printed_rules( $page ) {
+	$GLOBALS['__page']    = $page;
+	$GLOBALS['__printed'] = array();
+	wp_print_speculation_rules();
+	$printed = $GLOBALS['__printed'][0] ?? null;
+	return null === $printed ? null : array( 'json' => $printed[0], 'type' => $printed[1]['type'] ?? '', 'rules' => json_decode( $printed[0], true ) );
+}
+$lane_rule = array(
+	'source'    => 'document',
+	'where'     => array( 'selector_matches' => '.sn-resume-switch a[data-lane]:not([aria-current]), .sn-resume-hunk a[data-lane]' ),
+	'eagerness' => 'moderate',
+);
+
+echo "\nGroup: /resume prerenders its other lane, and only there\n";
+$resume = sn_test_printed_rules( 'resume' );
+$pre    = $resume['rules']['prerender'] ?? array();
+ok( 'speculationrules' === ( $resume['type'] ?? '' ) && 2 === count( $pre ) && array( 'prerender' ) === array_keys( (array) $resume['rules'] ), 'on /resume core prints two prerender rules: its own and the lane rule' );
+ok( ( $pre[1] ?? null ) === $lane_rule, 'the lane rule is exactly a moderate document rule on the switch\'s other link and a hunk\'s lane link' );
+ok( false !== strpos( (string) $resume['json'], '{"source":"document","where":{"selector_matches":".sn-resume-switch a[data-lane]:not([aria-current]), .sn-resume-hunk a[data-lane]"},"eagerness":"moderate"}' ), 'the printed JSON carries the lane rule byte for byte' );
+$notes = sn_test_printed_rules( 'notes' );
+ok( is_array( $notes ) && 1 === count( $notes['rules']['prerender'] ?? array() ) && false === strpos( $notes['json'], 'sn-resume' ), 'on any other page (here /notes) only core\'s rule is printed: no lane rule' );
+$cv = sn_test_printed_rules( 'cv' );
+ok( is_array( $cv ) && false === strpos( $cv['json'], 'sn-resume' ), 'the Spanish /cv has one lane, so no lane rule' );
+
+echo "\nGroup: core's query-string exclusion does not reach ?lane=operations\n";
+$main = $pre[0] ?? array();
+ok( in_array( '/*\\?(.+)', (array) ( $main['where']['and'][1]['not']['href_matches'] ?? array() ), true ), 'core\'s own rule still excludes every query-string URL, inside its own where' );
+ok( false === strpos( (string) wp_json_encode( $pre[1] ?? array() ), 'href_matches' ) && array( 'selector_matches' ) === array_keys( (array) ( $pre[1]['where'] ?? array() ) ), 'the lane rule is a separate rule with no URL condition at all, so /resume/?lane=operations is a candidate (a browser speculates a link any rule matches)' );
+
+echo "\nGroup: speculative loading off means no rules at all\n";
+$GLOBALS['__logged_in'] = true;
+ok( null === sn_test_printed_rules( 'resume' ), 'a signed-in visitor gets no rules, the lane rule included' );
+$GLOBALS['__logged_in'] = false;
 
 $total = $pass + $fail;
 echo "\n$pass passed, $fail failed\n";

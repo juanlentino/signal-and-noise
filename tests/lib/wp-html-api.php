@@ -172,3 +172,26 @@ function snt_require_wp_interactivity_api() {
 	require_once $dir . '/class-wp-interactivity-api.php';
 	require_once $dir . '/interactivity-api.php';
 }
+
+/**
+ * Load core's speculative loading (WP_Speculation_Rules, its URL pattern
+ * prefixer and wp_get_speculation_rules()), or end the suite RED. These sit in
+ * wp-includes itself, beside html-api/, in a WordPress checkout and in the CI
+ * fetch. The suite stubs the WordPress functions they call.
+ */
+function snt_require_wp_speculation_rules() {
+	if ( class_exists( 'WP_Speculation_Rules', false ) ) {
+		return;
+	}
+	$dir = snt_wp_html_api_dir();
+	$dir = '' === $dir ? '' : dirname( $dir );
+	if ( '' === $dir || ! is_file( $dir . '/class-wp-speculation-rules.php' ) ) {
+		echo "FAIL: WordPress's wp-includes/class-wp-speculation-rules.php is not on this machine, so the emitted rules below would assert nothing.\n";
+		echo "      Fetch it: bash tools/fetch-wp-test-core.sh <dir>, then export SNT_WP_HTML_API=<dir>/html-api.\n";
+		echo "\nResult: 0 passed, 1 failed.\n";
+		exit( 1 );
+	}
+	require_once $dir . '/class-wp-speculation-rules.php';
+	require_once $dir . '/class-wp-url-pattern-prefixer.php';
+	require_once $dir . '/speculative-loading.php';
+}
