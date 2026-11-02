@@ -65,7 +65,9 @@ ok( strpos( $body, '[Accessibility](https://juanlentino.com/accessibility/)' ) !
 // pages' own titles; the other Spanish twins are not listed, so neither is /servicios/.
 $sn_key = substr( $body, strpos( $body, '## Key pages' ), strpos( $body, "\n## ", strpos( $body, '## Key pages' ) + 1 ) - strpos( $body, '## Key pages' ) );
 ok( false !== strpos( $sn_key, "- [Services](https://juanlentino.com/services/): " ) && false !== strpos( $sn_key, "- [Curriculum vitae](https://juanlentino.com/cv/): " ), 'Key pages list Services and the Spanish CV (Curriculum vitae)' );
-ok( strpos( $sn_key, '/resume/)' ) < strpos( $sn_key, '/cv/)' ), 'the CV follows the Résumé it translates' );
+$sn_key_lines = explode( "\n", $sn_key );
+$sn_resume_at = array_search( true, array_map( static function ( $l ) { return 0 === strpos( $l, '- [Résumé](' ); }, $sn_key_lines ), true );
+ok( false !== $sn_resume_at && 0 === strpos( (string) ( $sn_key_lines[ $sn_resume_at + 1 ] ?? '' ), '- [Curriculum vitae](' ), 'the CV line comes directly after the Résumé it translates' );
 
 // ── Rights section (v10.50.0) ──
 ok( strpos( $body, '## Rights' ) !== false, 'Rights section present' );
