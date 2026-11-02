@@ -343,6 +343,10 @@ body div.wp-block-group:not(:has(h1)) > .sn-catalog-eyebrow {
 /* Outranks the combined sheet's `.wp-block-file a.wp-block-file__button`
    (0,2,1) — hence the qualified (0,3,1) selector, not vanity nesting. */
 .wp-block-file.sn-resume-download a.wp-block-file__button {
+	display: inline-flex;
+	align-items: center;
+	box-sizing: border-box; /* the padding sits inside the 44px */
+	min-height: 44px;
 	background: transparent;
 	color: var(--wp--preset--color--bone);
 	border: 1px solid var(--wp--preset--color--bone);
