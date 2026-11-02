@@ -274,7 +274,8 @@ body:has(.sn-resume-hero-split) .sn-resume-skills tr { break-inside: avoid; }
 body:has(.sn-resume-hero-split) .sn-resume-skills td { padding: 1pt 4pt 1pt 0 !important; border: 0 !important; vertical-align: top; }
 body:has(.sn-resume-hero-split) .sn-resume-skills td:first-child { font-weight: 700; white-space: nowrap; }
 body:has(.sn-resume-hero-split) main .wp-block-post-content a[href^="http"]::after { font-size: 8pt; }
-body:has(.sn-resume-hero-split) main a[href*="linkedin"]::after { content: ""; }
+/* A contact rail's links already read as their address. */
+body:has(.sn-resume-hero-split) .sn-resume-rail a::after { content: ""; }
 
 body:has(.sn-resume-hero-split) .sn-resume-role { break-after: avoid; }
 /* The fold ships closed; Chrome hides a closed <details> in ::details-content,

@@ -22,6 +22,11 @@ $fe    = (string) file_get_contents( "$root/inc/assets-frontend.php" );
 
 ok( 1 === preg_match( '/\.sn-resume-variant\[hidden\]\s*\{\s*display:\s*none\s*!important/', $css ), 'a hidden lane stays hidden, whatever display a group carries' );
 ok( false !== strpos( $css, 'body.page main .entry-content > .sn-resume-variant > .is-layout-constrained > :where(:not(.alignleft):not(.alignright):not(.alignfull)) {' ), 'the bands inside a lane keep the page track, as the top-level bands do (critical.css)' );
+$track = 'body.page main .entry-content > .sn-resume-variant > .is-layout-constrained > :where(:not(.alignleft):not(.alignright):not(.alignfull)) {';
+ok( 1 === substr_count( $css, $track ) && 1 === preg_match( '/@media screen\s*\{\s*' . preg_quote( $track, '/' ) . '/', $css ), 'the lane bands\' page track is screen-only: its (0,4,2) !important outranked print.css\'s max-width: none on paper (A11Y-7)' );
+$at = strpos( $css, '.sn-resume-variant[hidden]' );
+ok( false !== $at && substr_count( substr( $css, 0, $at ), '{' ) === substr_count( substr( $css, 0, $at ), '}' ), 'the hidden-lane rule stays outside every @media block, so paper prints only the lane that shows' );
+ok( 1 === preg_match( '/body:has\(\.sn-resume-hero-split\) \.sn-resume-rail a::after\s*\{\s*content:\s*""/', $print ), 'paper does not spell a contact-rail link\'s URL after its text: the ops rail printed "github.com/juanlentino (https://github.com/juanlentino)"' );
 ok( 1 === preg_match( '/\.sn-resume-switch-list a\[aria-current\]\s*\{[^}]*background/', $css ), 'the current lane is the filled segment (aria-current, set by the server and the script)' );
 ok( 1 === preg_match( '/\.sn-resume-switch-list a\s*\{[^}]*min-height:\s*44px/', $css ), 'each lane link is a 44px target' );
 ok( 1 === preg_match( '/@media \(max-width: 599\.98px\)\s*\{\s*\.sn-resume-switch-list\s*\{[^}]*width:\s*100%[^}]*\}\s*\.sn-resume-switch-list li\s*\{\s*flex:\s*1 1 0;/', $css ), 'on a phone the switch is one full-width button with equal halves' );

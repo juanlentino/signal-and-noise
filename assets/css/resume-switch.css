@@ -15,9 +15,12 @@
 	display: none !important;
 }
 /* The bands sit one level down, inside a lane: they keep the page track that
-   critical.css gives the post content's direct children. */
-body.page main .entry-content > .sn-resume-variant > .is-layout-constrained > :where(:not(.alignleft):not(.alignright):not(.alignfull)) {
-	max-width: var(--wp--custom--page-track) !important;
+   critical.css gives the post content's direct children. Screen only: on
+   paper this outranked print.css's max-width: none. */
+@media screen {
+	body.page main .entry-content > .sn-resume-variant > .is-layout-constrained > :where(:not(.alignleft):not(.alignright):not(.alignfull)) {
+		max-width: var(--wp--custom--page-track) !important;
+	}
 }
 .sn-resume-switch {
 	display: flex;
