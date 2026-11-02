@@ -288,6 +288,9 @@ $ALLOWED = array(
 	// (.sn-lang-switch__seg.is-current), the same block-of-ink case: it reads
 	// as a filled key in either palette, bone on void inverting together.
 	'assets/css/components.css' => 4,
+	// /resume's lane switch (2026-11-01): its current lane, drawn like the
+	// EN | ES switch above, the same filled key in either palette.
+	'assets/css/resume-switch.css' => 1,
 );
 
 $offenders = array();

@@ -93,6 +93,8 @@ header.wp-block-template-part,
 .sn-cited-by,
 .sn-cmdk-trigger,
 .sn-cmdk,
+.sn-resume-switch,
+.sn-resume-receipt,
 .sn-resume-download {
 	display: none !important;
 }
@@ -236,12 +238,15 @@ body:has(.sn-resume-hero-split) main * {
 	font-variant-ligatures: none; /* a ligature glyph drops out of the PDF text layer: "workflow" extracted as "workow" */
 	letter-spacing: 0.01em !important; /* wide tracking splits words in the text layer ("VOT ING") */
 }
-body:has(.sn-resume-hero-split) main .entry-content > .wp-block-group {
+body:has(.sn-resume-hero-split) main .entry-content > .wp-block-group,
+body:has(.sn-resume-hero-split) main .sn-resume-variant > .wp-block-group {
 	padding: 0 !important;
 	margin: 0 !important;
 	max-width: none !important;
 }
-body:has(.sn-resume-hero-split) main .entry-content > .is-layout-constrained > * { max-width: none !important; }
+/* Two lanes (2026-11-01): the bands sit one level down, inside the lane that shows. */
+body:has(.sn-resume-hero-split) main .entry-content > .is-layout-constrained > *,
+body:has(.sn-resume-hero-split) main .sn-resume-variant > .is-layout-constrained > * { max-width: none !important; }
 body:has(.sn-resume-hero-split) main .wp-block-columns.sn-resume-stats,
 body:has(.sn-resume-hero-split) .sn-resume-stats,
 body:has(.sn-resume-hero-split) .wp-block-spacer,

@@ -1,0 +1,183 @@
+/**
+ * Signal & Noise — /resume's two lanes (2026-11-01).
+ *
+ * The lane switch (Music / Operations & AI Strategy), each lane's headline and
+ * subhead, receipts, and the "What I've Built" cards, for the English /resume
+ * only (the plugin's inc/resume-page-lanes.php emits them; /cv has none). Same
+ * idiom as resume.css: Bebas heads, mono labels, hairlines, blood on hover,
+ * preset tokens only, an 11px floor, motion off under reduced motion.
+ */
+/* ── Two lanes (2026-11-01): the switch, each lane's headline, receipts ──
+   The plugin stores both résumés in the page and hides the one not asked
+   for at render time (inc/resume-page-lane-render.php there); a display rule
+   on a group would defeat the hidden attribute, so it is restated here. */
+.sn-resume-variant[hidden] {
+	display: none !important;
+}
+/* The bands sit one level down, inside a lane: they keep the page track that
+   critical.css gives the post content's direct children. */
+body.page main .entry-content > .sn-resume-variant > .is-layout-constrained > :where(:not(.alignleft):not(.alignright):not(.alignfull)) {
+	max-width: var(--wp--custom--page-track) !important;
+}
+.sn-resume-switch {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--wp--custom--air--xs) var(--wp--custom--air--md);
+	margin-top: var(--wp--custom--air--md);
+}
+/* Drawn like the EN | ES switch: one hairline box split in two, the current
+   lane filled bone on void, the other the link with blood hover and focus. */
+.sn-resume-switch-list {
+	display: inline-flex;
+	flex-wrap: wrap;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	border: 1px solid color-mix( in srgb, var(--wp--preset--color--bone) 38%, transparent );
+}
+.sn-resume-switch-list li {
+	display: flex;
+	flex: 1 1 auto; /* wrapped on a narrow phone, each lane fills its row */
+	margin: 0;
+	padding: 0;
+}
+.sn-resume-switch-list a {
+	display: inline-flex;
+	flex: 1 1 auto;
+	align-items: center;
+	justify-content: center;
+	min-height: 44px;
+	padding: 0 1.1rem;
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.75rem, 12px);
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--bone);
+	text-decoration: none;
+	transition: color 0.15s ease, background-color 0.15s ease;
+}
+.sn-resume-switch-list a[aria-current] {
+	background: var(--wp--preset--color--bone);
+	color: var(--wp--preset--color--void);
+}
+.sn-resume-switch-list a:focus-visible {
+	background: var(--wp--preset--color--blood);
+	color: var(--wp--preset--color--void);
+	outline: 2px solid var(--wp--preset--color--bone);
+	outline-offset: 2px;
+}
+@media (hover: hover) {
+	.sn-resume-switch-list a:not([aria-current]):hover {
+		background: var(--wp--preset--color--blood);
+		color: var(--wp--preset--color--void);
+	}
+}
+/* On a phone the switch is one full-width button, two equal halves; the
+   longer label wraps inside its half instead of the halves wrapping. */
+@media (max-width: 599.98px) {
+	.sn-resume-switch-list {
+		display: flex;
+		flex-wrap: nowrap;
+		width: 100%;
+	}
+	.sn-resume-switch-list li {
+		flex: 1 1 0;
+	}
+	.sn-resume-switch-list a {
+		padding: 0.55rem 0.75rem;
+		line-height: 1.5;
+		text-align: center;
+	}
+}
+.sn-resume-switch-caption {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.7rem, 11px);
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--rust);
+	margin: 0;
+}
+
+/* Each lane's hero opens with its headline and subhead over the summary. */
+.sn-resume-headline {
+	font-family: 'Bebas Neue', Impact, sans-serif;
+	font-weight: 400;
+	font-size: clamp(1.75rem, 3.5vw, 2.6rem); /* not a step: between the role heads and the section h2s */
+	letter-spacing: 0.02em;
+	line-height: 1;
+	color: var(--wp--preset--color--bone);
+	margin: 0;
+}
+.sn-resume-tagline {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.7rem, 11px);
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--rust);
+	margin: 0.6rem 0 0;
+}
+
+/* A receipt: the quiet mark beside a claim that links the page backing it. */
+.sn-resume-receipt,
+.sn-resume-pub-title a.sn-resume-receipt {
+	display: inline-block;
+	margin-left: 0.4em;
+	padding: 0.05em 0.45em;
+	border: 1px solid var(--wp--preset--color--concrete);
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.7rem, 11px);
+	font-weight: 400;
+	letter-spacing: 0.12em;
+	line-height: 1.4;
+	text-transform: lowercase;
+	vertical-align: 0.1em;
+	white-space: nowrap;
+	color: var(--wp--preset--color--rust);
+	text-decoration: none;
+	transition: color 0.15s ease, border-color 0.15s ease;
+}
+.sn-resume-pub-title a.sn-resume-receipt::after {
+	content: none;
+}
+.sn-resume-receipt:focus-visible {
+	outline: 2px solid var(--wp--preset--color--blood);
+	outline-offset: 2px;
+}
+@media (hover: hover) {
+	.sn-resume-receipt:hover,
+	.sn-resume-pub-title a.sn-resume-receipt:hover {
+		color: var(--wp--preset--color--blood);
+		border-color: var(--wp--preset--color--blood);
+		text-decoration: none;
+	}
+}
+/* "What I've Built" cards are publication cards; the intro reads as their kicker. */
+.sn-resume-built-intro {
+	font-size: 0.95rem;
+	line-height: 1.6;
+	max-width: 80ch;
+	color: var(--wp--preset--color--rust);
+	margin: 1rem 0 0.5rem;
+}
+.sn-resume-built p {
+	font-size: 0.95rem;
+	line-height: 1.6;
+	max-width: 80ch;
+	color: var(--wp--preset--color--bone);
+	margin: 0.5rem 0 0;
+}
+@media (prefers-reduced-motion: reduce) {
+	.sn-resume-switch-list a,
+	.sn-resume-receipt {
+		transition: none;
+	}
+}
+/* Forced colors drop the fill, so the current lane keeps an underline. */
+@media (forced-colors: active) {
+	.sn-resume-switch-list a[aria-current] {
+		text-decoration: underline;
+		text-decoration-thickness: 2px;
+		text-underline-offset: 4px;
+	}
+}

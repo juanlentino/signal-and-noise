@@ -295,6 +295,24 @@ function sn_enqueue_discography() {
 add_action( 'wp_enqueue_scripts', 'sn_enqueue_discography', 30 );
 
 /**
+ * /resume's lane switch: shows the other lane in place, keeps ?lane= in the
+ * address, and follows Back and Forward. English /resume only (/cv has one
+ * lane); the switch's links work without it.
+ */
+function sn_enqueue_resume_switch() {
+	if ( is_page( 'resume' ) ) {
+		wp_enqueue_script(
+			'sn-resume-switch',
+			get_theme_file_uri( 'assets/js/resume-switch.js' ),
+			array(),
+			sn_asset_ver( 'assets/js/resume-switch.js' ),
+			array( 'in_footer' => true, 'strategy' => 'defer' )
+		);
+	}
+}
+add_action( 'wp_enqueue_scripts', 'sn_enqueue_resume_switch', 30 );
+
+/**
  * In-article TOC smooth-scroll and focus (single notes). The reading-progress
  * indicator is the CSS tuning dial now (inc/article-toc.php); this script no
  * longer draws a bar.

@@ -255,6 +255,8 @@ ok( 0 === strpos( $rl, '- Résumé formats: [Markdown](https://juanlentino.com/r
 ok( false === strpos( $rl, 'authorship proof' ), 'no proof claim unless the page is anchored (live 2026-10-18: /resume has none)' );
 ok( false !== strpos( sn_llms_txt_resume_line( sn_resume_formats( 'resume' ), true ), 'authorship proof' ), 'an anchored résumé says its formats link the authorship proof' );
 ok( '' === sn_llms_txt_resume_line( array() ), 'no formats, no line' );
+$lanes = sn_llms_txt_resume_line( sn_resume_formats( 'resume' ) + array( 'pdf_operations' => 'https://juanlentino.com/resume/JuanLentino_Resume_Operations.pdf', 'json_resume_operations' => 'https://juanlentino.com/resume/json-resume.json?lane=operations' ) );
+ok( false !== strpos( $lanes, '[PDF](https://juanlentino.com/r.pdf), [JSON Resume, operations](https://juanlentino.com/resume/json-resume.json?lane=operations), [PDF, operations](https://juanlentino.com/resume/JuanLentino_Resume_Operations.pdf), [vCard]' ), 'two lanes (2026-11-01): the operations JSON Resume and PDF are named beside the music ones' );
 $mbody = sn_llms_txt_body( false );
 ok( false !== strpos( $mbody, $rl ) && strpos( $mbody, '## Machine surfaces' ) < strpos( $mbody, $rl ) && strpos( $mbody, $rl ) < strpos( $mbody, '## Rights' ), 'the line sits under Machine surfaces' );
 

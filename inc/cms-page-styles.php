@@ -60,6 +60,14 @@ function sn_enqueue_cms_page_styles() {
 			array( 'sn-components' ),
 			sn_asset_ver( 'assets/css/resume.css' )
 		);
+		if ( is_page( 'resume' ) ) { // the two lanes, English only.
+			wp_enqueue_style(
+				'sn-resume-switch',
+				get_theme_file_uri( 'assets/css/resume-switch.css' ),
+				array( 'sn-resume' ),
+				sn_asset_ver( 'assets/css/resume-switch.css' )
+			);
+		}
 	}
 }
 add_action( 'wp_enqueue_scripts', 'sn_enqueue_cms_page_styles', 30 );
