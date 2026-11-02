@@ -53,6 +53,10 @@ if ( ! function_exists( 'add_action' ) ) {
 	}
 }
 
+if ( ! function_exists( 'sn_lang_is_page' ) ) {
+	// /cv/ is the Spanish twin of /resume (the language layer's pairing).
+	function sn_lang_is_page( $slug ) { return 'resume' === $slug && 'cv' === $GLOBALS['__page']; }
+}
 require __DIR__ . '/../inc/cms-page-styles.php';
 
 $pass = 0; $fail = 0;
@@ -115,6 +119,18 @@ ok( strpos( (string) ( $resume['src'] ?? '' ), 'assets/css/resume.css' ) !== fal
 ok( in_array( 'sn-components', (array) ( $resume['deps'] ?? array() ), true ), 'sn-resume DEPENDS on sn-components' );
 ok( ( $resume['ver'] ?? false ) !== false, 'sn-resume carries a cache-bust version' );
 ok( ! isset( $GLOBALS['__enqueued']['sn-now'] ) && ! isset( $GLOBALS['__enqueued']['sn-uses'] ) && ! isset( $GLOBALS['__enqueued']['sn-a11y'] ), 'only sn-resume enqueued on /resume' );
+$marks = $GLOBALS['__enqueued']['sn-resume-marks'] ?? null;
+ok( isset( $GLOBALS['__enqueued']['sn-resume-switch'] ) && $marks !== null && strpos( (string) $marks['src'], 'assets/css/resume-marks.css' ) !== false && array( 'sn-resume-switch' ) === $marks['deps'] && false !== $marks['ver'], 'sn-resume-marks enqueued on /resume with sn-resume-switch, which it DEPENDS on, so it loads after the receipt rules it resets' );
+reset_enqueue();
+$GLOBALS['__page'] = 'cv';
+sn_enqueue_cms_page_styles();
+ok( isset( $GLOBALS['__enqueued']['sn-resume'] ), 'the stub reaches the résumé branch on /cv (or the next check would pass on nothing)' );
+foreach ( array( 'now', 'about/uses', 'accessibility', 'workflow', 'cv', 'about' ) as $other ) {
+	reset_enqueue();
+	$GLOBALS['__page'] = $other;
+	sn_enqueue_cms_page_styles();
+	ok( ! isset( $GLOBALS['__enqueued']['sn-resume-marks'] ) && ! isset( $GLOBALS['__enqueued']['sn-resume-switch'] ), "neither lane stylesheet (switch, marks) loads on /$other" );
+}
 
 // ── /workflow → sn-workflow only ──
 reset_enqueue();
@@ -166,6 +182,11 @@ ok( strpos( $resume_css, '.sn-resume-skills' ) !== false, 'resume.css restyles t
 ok( strpos( $resume_css, '--wp--preset--color--' ) !== false, 'resume.css uses theme preset color tokens (no bespoke palette)' );
 ok( strpos( $resume_css, 'max(0.7rem, 11px)' ) !== false, 'resume.css honours the 11px type floor idiom' );
 ok( strpos( $resume_css, 'prefers-reduced-motion' ) !== false, 'resume.css neutralizes motion under reduced-motion' );
+ok( false !== strpos( $resume_css, '.sn-resume-pub:not(.sn-resume-built):hover {' ) && false === strpos( $resume_css, '.sn-resume-pub:hover' ), 'a "What I\'ve Built" card is not a link, so it has no card hover; its receipt keeps its own' );
+ok( 1 === preg_match( '/\.sn-resume-rail a \{\s*white-space: nowrap;\s*\}/', $resume_css ), 'a contact-rail link never breaks inside its address (UX proposal 7)' );
+// 2026-11-01 (owner yes, UX proposal 5): Download PDF is a 44px target; border-box keeps
+// the padding inside the 44px (without it the button measured 64px).
+ok( 1 === preg_match( '/\.wp-block-file\.sn-resume-download a\.wp-block-file__button \{[^}]*display: inline-flex;[^}]*align-items: center;[^}]*box-sizing: border-box;[^}]*min-height: 44px;/', $resume_css ), 'Download PDF is a 44px target, padding inside it' );
 
 // /workflow: the plugin writes the Page with page_template => 'page-workflow'.
 $wf_tpl = (string) @file_get_contents( __DIR__ . '/../templates/page-workflow.html' );

@@ -71,6 +71,20 @@ ok( json_decode( $out, true )['type'] === 'note', 'send() emits the JSON documen
 if ( ! function_exists( 'is_singular' ) ) { function is_singular( $t = '' ) { return true; } }
 ob_start(); sn_content_json_head_link(); $link = ob_get_clean();
 ok( strpos( $link, 'type="application/json"' ) !== false && strpos( $link, '/notes/some-note.json' ) !== false, 'head link points at the .json twin (no trailing slash)' );
+// /resume/?lane=operations renders the operations lane, so its JSON alternate names it too.
+if ( ! function_exists( 'is_page' ) ) { function is_page( $p = '' ) { return 'resume' === $p && ! empty( $GLOBALS['__resume'] ); } }
+if ( ! function_exists( 'sanitize_key' ) ) { function sanitize_key( $k ) { return preg_replace( '/[^a-z0-9_\-]/', '', strtolower( (string) $k ) ); } }
+if ( ! function_exists( 'wp_unslash' ) ) { function wp_unslash( $v ) { return $v; } }
+$sn_lane_link = function ( $resume, $lane ) {
+	$GLOBALS['__resume'] = $resume;
+	$_GET = null === $lane ? array() : array( 'lane' => $lane );
+	ob_start(); sn_content_json_head_link(); $l = ob_get_clean();
+	$_GET = array(); $GLOBALS['__resume'] = false;
+	return $l;
+};
+ok( false !== strpos( $sn_lane_link( true, 'Operations' ), '/notes/some-note.json?lane=operations"' ), 'on /resume/?lane=operations the JSON alternate carries the lane (read as sanitize_key reads it)' );
+ok( false !== strpos( $sn_lane_link( true, null ), '/notes/some-note.json"' ) && false !== strpos( $sn_lane_link( true, 'music' ), '/notes/some-note.json"' ) && false !== strpos( $sn_lane_link( true, 'x"><script>' ), '/notes/some-note.json"' ), 'music, no lane, or junk: the alternate stays bare (only operations is ever added)' );
+ok( false !== strpos( $sn_lane_link( false, 'operations' ), '/notes/some-note.json"' ), 'off /resume a ?lane= query adds nothing' );
 
 // --- manifest advertisement ---
 $s = sn_content_json_advertise_surface( array() );

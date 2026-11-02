@@ -61,6 +61,13 @@ ok( strpos( $body, 'https://juanlentino.com/about/uses/' ) !== false, 'Uses line
 ok( strpos( $body, '](https://juanlentino.com/uses/)' ) === false, 'stale bare /uses/ link is gone' );
 ok( strpos( $body, '[Now](https://juanlentino.com/now/)' ) !== false, 'Now surface listed' );
 ok( strpos( $body, '[Accessibility](https://juanlentino.com/accessibility/)' ) !== false, 'Accessibility surface listed' );
+// 2026-11-01 (owner yes): Key pages name /services/ and the Spanish CV, by the
+// pages' own titles; the other Spanish twins are not listed, so neither is /servicios/.
+$sn_key = substr( $body, strpos( $body, '## Key pages' ), strpos( $body, "\n## ", strpos( $body, '## Key pages' ) + 1 ) - strpos( $body, '## Key pages' ) );
+ok( false !== strpos( $sn_key, "- [Services](https://juanlentino.com/services/): " ) && false !== strpos( $sn_key, "- [Curriculum vitae](https://juanlentino.com/cv/): " ), 'Key pages list Services and the Spanish CV (Curriculum vitae)' );
+$sn_key_lines = explode( "\n", $sn_key );
+$sn_resume_at = array_search( true, array_map( static function ( $l ) { return 0 === strpos( $l, '- [Résumé](' ); }, $sn_key_lines ), true );
+ok( false !== $sn_resume_at && 0 === strpos( (string) ( $sn_key_lines[ $sn_resume_at + 1 ] ?? '' ), '- [Curriculum vitae](' ), 'the CV line comes directly after the Résumé it translates' );
 
 // ── Rights section (v10.50.0) ──
 ok( strpos( $body, '## Rights' ) !== false, 'Rights section present' );
@@ -255,8 +262,8 @@ ok( 0 === strpos( $rl, '- Résumé formats: [Markdown](https://juanlentino.com/r
 ok( false === strpos( $rl, 'authorship proof' ), 'no proof claim unless the page is anchored (live 2026-10-18: /resume has none)' );
 ok( false !== strpos( sn_llms_txt_resume_line( sn_resume_formats( 'resume' ), true ), 'authorship proof' ), 'an anchored résumé says its formats link the authorship proof' );
 ok( '' === sn_llms_txt_resume_line( array() ), 'no formats, no line' );
-$lanes = sn_llms_txt_resume_line( sn_resume_formats( 'resume' ) + array( 'pdf_operations' => 'https://juanlentino.com/resume/JuanLentino_Resume_Operations.pdf', 'json_resume_operations' => 'https://juanlentino.com/resume/json-resume.json?lane=operations' ) );
-ok( false !== strpos( $lanes, '[PDF](https://juanlentino.com/r.pdf), [JSON Resume, operations](https://juanlentino.com/resume/json-resume.json?lane=operations), [PDF, operations](https://juanlentino.com/resume/JuanLentino_Resume_Operations.pdf), [vCard]' ), 'two lanes (2026-11-01): the operations JSON Resume and PDF are named beside the music ones' );
+$lanes = sn_llms_txt_resume_line( sn_resume_formats( 'resume' ) + array( 'markdown_operations' => 'https://juanlentino.com/resume.md?lane=operations', 'pdf_operations' => 'https://juanlentino.com/resume/JuanLentino_Resume_Operations.pdf', 'json_resume_operations' => 'https://juanlentino.com/resume/json-resume.json?lane=operations' ) );
+ok( false !== strpos( $lanes, '[PDF](https://juanlentino.com/r.pdf), [Markdown, operations](https://juanlentino.com/resume.md?lane=operations), [JSON Resume, operations](https://juanlentino.com/resume/json-resume.json?lane=operations), [PDF, operations](https://juanlentino.com/resume/JuanLentino_Resume_Operations.pdf), [vCard]' ), 'two lanes (2026-11-01): the operations Markdown, JSON Resume and PDF are named beside the music ones (the Markdown 2026-11-02)' );
 $mbody = sn_llms_txt_body( false );
 ok( false !== strpos( $mbody, $rl ) && strpos( $mbody, '## Machine surfaces' ) < strpos( $mbody, $rl ) && strpos( $mbody, $rl ) < strpos( $mbody, '## Rights' ), 'the line sits under Machine surfaces' );
 

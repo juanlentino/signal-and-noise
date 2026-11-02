@@ -88,6 +88,8 @@ function sn_llms_txt_body( $full = false, $notes = array(), $pillars = array(), 
 		'- [Start Here](' . $home . '/notes/start-here/): the map of what a note is, how to verify one, and where to begin.',
 		'- [About](' . $home . '/about/): who Juan Lentino is: background and identity.',
 		'- [Résumé](' . $home . '/resume/): professional experience and credentials.',
+		'- [Curriculum vitae](' . $home . '/cv/): the résumé in Spanish.',
+		'- [Services](' . $home . '/services/): production, mixing, songwriting, mastering, operations, AI strategy, and artist development.',
 		'- [Music](' . $home . '/music/): discography and featured work.',
 		'- [Uses](' . $home . '/about/uses/): tools, gear, and software.',
 		'- [Now](' . $home . '/now/): what Juan is focused on right now.',
@@ -236,7 +238,7 @@ function sn_llms_txt_body( $full = false, $notes = array(), $pillars = array(), 
  * @return string
  */
 function sn_llms_txt_resume_line( array $f, $signed = false ) {
-	$names = array( 'markdown' => 'Markdown', 'json_resume' => 'JSON Resume', 'pdf' => 'PDF', 'json_resume_operations' => 'JSON Resume, operations', 'pdf_operations' => 'PDF, operations', 'vcard' => 'vCard' );
+	$names = array( 'markdown' => 'Markdown', 'json_resume' => 'JSON Resume', 'pdf' => 'PDF', 'markdown_operations' => 'Markdown, operations', 'json_resume_operations' => 'JSON Resume, operations', 'pdf_operations' => 'PDF, operations', 'vcard' => 'vCard' );
 	$links = array();
 	foreach ( $names as $k => $label ) {
 		if ( ! empty( $f[ $k ] ) ) {
