@@ -229,7 +229,11 @@ body div.wp-block-group:not(:has(h1)) > .sn-catalog-eyebrow {
 		color: var(--wp--preset--color--blood);
 	}
 }
-.sn-resume-fold > :last-child {
+/* A fold that ends on an edition-marked entry (resume-marks.css) ends on its
+   wrapper group, whose own last block core's flow layout zeroes (0,2,0): the
+   closing air reaches that block too. */
+.sn-resume-fold > :last-child,
+.sn-resume-fold > .sn-resume-only:last-child > :last-child {
 	margin-bottom: var(--wp--custom--air--xs);
 }
 .sn-resume-fold-co {
