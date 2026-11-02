@@ -148,6 +148,11 @@
 	color: var(--wp--preset--color--bone);
 	margin: 0;
 }
+/* As an h2 it keeps this box: critical.css trims h2.wp-block-heading to cap
+   height at (0,2,2). */
+.sn-resume-variant .sn-resume-headline.wp-block-heading {
+	text-box: normal;
+}
 .sn-resume-tagline {
 	font-family: 'DM Mono', 'Courier New', monospace;
 	font-size: max(0.7rem, 11px);
