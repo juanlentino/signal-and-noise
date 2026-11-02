@@ -31,6 +31,7 @@ ok( 1 === preg_match( '/\.sn-resume-switch-list a\[aria-current\]\s*\{[^}]*backg
 ok( 1 === preg_match( '/\.sn-resume-switch-list a\s*\{[^}]*min-height:\s*44px/', $css ), 'each lane link is a 44px target' );
 ok( 1 === preg_match( '/@media \(max-width: 599\.98px\)\s*\{\s*\.sn-resume-switch-list\s*\{[^}]*width:\s*100%[^}]*\}\s*\.sn-resume-switch-list li\s*\{\s*flex:\s*1 1 0;/', $css ), 'on a phone the switch is one full-width button with equal halves' );
 ok( 1 === preg_match( '/\.sn-resume-switch-list a:focus-visible\s*\{[^}]*outline:/', $css ), 'focus is visible on the switch' );
+ok( 1 === preg_match( '/\.sn-resume-receipt,\s*\.sn-resume-pub-title a\.sn-resume-receipt\s*\{[^}]*padding:\s*0\.3em 0\.45em;/', $css ), 'a receipt is about a 24px target (A11Y-6: 0.05em of padding left it near 19px)' );
 ok( 1 === preg_match( '/\.sn-resume-pub-title a\.sn-resume-receipt::after\s*\{\s*content:\s*none/', $css ), 'a receipt inside a card title drops the title link\'s arrow' );
 ok( 1 === preg_match( '/@media \(forced-colors: active\)\s*\{\s*\.sn-resume-switch-list a\[aria-current\]\s*\{[^}]*text-decoration:\s*underline/', $css ), 'forced colors drop the fill, so the current lane is underlined' );
 ok( 1 === preg_match( '/@media \(prefers-reduced-motion: reduce\)\s*\{\s*\.sn-resume-switch-list a,\s*\.sn-resume-receipt\s*\{\s*transition:\s*none/', $css ), 'no transitions under reduced motion' );

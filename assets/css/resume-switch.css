@@ -126,7 +126,7 @@
 .sn-resume-pub-title a.sn-resume-receipt {
 	display: inline-block;
 	margin-left: 0.4em;
-	padding: 0.05em 0.45em;
+	padding: 0.3em 0.45em; /* about 24px tall: a target, not only a mark */
 	border: 1px solid var(--wp--preset--color--concrete);
 	font-family: 'DM Mono', 'Courier New', monospace;
 	font-size: max(0.7rem, 11px);
