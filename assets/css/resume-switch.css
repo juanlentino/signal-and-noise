@@ -288,8 +288,6 @@
 	margin-inline-start: -0.4rem;
 	padding: 0.35rem 0.4rem;
 	color: var(--wp--preset--color--bone);
-	text-decoration: none;
-	transition: color 0.15s ease, background-color 0.15s ease;
 }
 .sn-resume-hunk a:focus-visible {
 	background: var(--wp--preset--color--blood);
@@ -306,11 +304,27 @@
 .sn-resume-formats a {
 	color: var(--wp--preset--color--bone);
 }
+/* A receipt and a hunk link sit inside a <p>, where article.css's prose link
+   (0,3,2; 0,4,2 on hover and focus) would draw its 2px underline inside the
+   receipt's box or under the blood fill, and trade their fades for its own;
+   on a contact or employer rail, critical.css's dim-text underline (0,2,1)
+   would show at rest. At (0,4,2) these keep the line off in every state and
+   restate their own fades. Color stays in the rules above, so hover and
+   focus still recolor. */
+.wp-block-post-content .sn-resume-variant p a.sn-resume-receipt:not(.wp-element-button) {
+	text-decoration: none;
+	transition: color 0.15s ease, border-color 0.15s ease;
+}
+.wp-block-post-content .sn-resume-variant p.sn-resume-hunk a:not(.wp-element-button) {
+	text-decoration: none;
+	transition: color 0.15s ease, background-color 0.15s ease;
+}
 
 @media (prefers-reduced-motion: reduce) {
 	.sn-resume-switch-list a,
 	.sn-resume-receipt,
-	.sn-resume-hunk a {
+	.wp-block-post-content .sn-resume-variant p a.sn-resume-receipt:not(.wp-element-button),
+	.wp-block-post-content .sn-resume-variant p.sn-resume-hunk a:not(.wp-element-button) {
 		transition: none;
 	}
 }

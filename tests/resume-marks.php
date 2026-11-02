@@ -15,7 +15,29 @@ if ( PHP_SAPI !== 'cli' && ! defined( 'WP_CLI' ) ) { http_response_code( 404 ); 
 $pass = 0; $fail = 0;
 function ok( $c, $m ) { global $pass, $fail; if ( $c ) { $pass++; echo "PASS: $m\n"; } else { $fail++; echo "FAIL: $m\n"; } }
 
-require_once __DIR__ . '/lib/css-cascade.php'; // sn_css_specificity()
+// Specificity as (ids, classes, elements), per Selectors 4: :is, :not and :has
+// count their most specific argument, :where counts nothing, a pseudo-element
+// is an element. tests/lib/css-cascade.php counts :not(...) and its argument
+// both, which misranks the rules compared here.
+function snm_spec( $sel ) {
+	$s = array( 0, 0, 0 );
+	while ( preg_match( '/:(is|not|has|where)\(/', $sel, $m, PREG_OFFSET_CAPTURE ) ) {
+		$open = $m[0][1] + strlen( $m[0][0] );
+		for ( $i = $open, $d = 1; $d > 0; $i++ ) { $d += ( '(' === $sel[ $i ] ) - ( ')' === $sel[ $i ] ); }
+		if ( 'where' !== $m[1][0] ) {
+			$best = array( 0, 0, 0 );
+			foreach ( preg_split( '/,(?![^(]*\))/', substr( $sel, $open, $i - 1 - $open ) ) as $arg ) { $best = max( $best, snm_spec( $arg ) ); }
+			$s = array( $s[0] + $best[0], $s[1] + $best[1], $s[2] + $best[2] );
+		}
+		$sel = substr( $sel, 0, $m[0][1] ) . ' ' . substr( $sel, $i );
+	}
+	$s[2] += preg_match_all( '/::[\w-]+/', $sel );
+	$sel   = (string) preg_replace( '/::[\w-]+/', '', $sel );
+	$s[0] += preg_match_all( '/#[\w-]+/', $sel );
+	$s[1] += preg_match_all( '/\.[\w-]+|\[[^\]]*\]|:[\w-]+/', $sel );
+	$s[2] += preg_match_all( '/(?:^|[\s>+~])[a-z][\w-]*/', $sel );
+	return $s;
+}
 
 $root  = dirname( __DIR__ );
 $strip = static fn( $s ) => (string) preg_replace( '#/\*.*?\*/#s', '', (string) $s );
@@ -63,9 +85,29 @@ ok( null !== $link && 1 === preg_match( '/color:\s*var\(--wp--preset--color--bon
 $focus = $rule( $css, '.sn-resume-hunk a:focus-visible' );
 ok( null !== $focus && 1 === preg_match( '/background:\s*var\(--wp--preset--color--blood\)/', $focus ) && 1 === preg_match( '/outline:\s*2px solid/', $focus ), 'a focused hunk link fills blood with a ring, as the switch does' );
 ok( 1 === substr_count( $css, '.sn-resume-hunk a:hover' ) && 1 === preg_match( '/@media \(hover: hover\)\s*\{\s*\.sn-resume-hunk a:hover\s*\{[^}]*background:\s*var\(--wp--preset--color--blood\)/', $css ), 'the blood hover fill lives only inside @media (hover: hover), so a tap never leaves it stuck' );
-ok( 1 === preg_match( '/,\s*\.sn-resume-hunk a\s*\{\s*transition:\s*none/', $block( $css, '@media (prefers-reduced-motion: reduce)' ) ), 'a hunk link\'s transition stops under reduced motion, in the switch\'s own pairing' );
 ok( null !== $rule( $css, '.sn-resume-formats a' ) && 1 === preg_match( '/color:\s*var\(--wp--preset--color--bone\)/', (string) $rule( $css, '.sn-resume-formats a' ) ), 'the formats line\'s links are bone' );
 ok( 0 === preg_match( '/#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(/', $css ), 'colors are preset tokens only' );
+
+echo "\nA receipt and a hunk link inside a paragraph keep their own look\n";
+$receipt_sel = '.wp-block-post-content .sn-resume-variant p a.sn-resume-receipt:not(.wp-element-button)';
+$hunk_sel    = '.wp-block-post-content .sn-resume-variant p.sn-resume-hunk a:not(.wp-element-button)';
+$receipt_r   = $rule( $css, $receipt_sel );
+$hunk_r      = $rule( $css, $hunk_sel );
+$own_only    = static fn( $b, $fade ) => null !== $b && 1 === preg_match( '/text-decoration:\s*none/', $b ) && 1 === preg_match( '/transition:\s*' . preg_quote( $fade, '/' ) . ';/', $b ) && 0 === preg_match( '/(^|;)\s*color:/', $b );
+ok( $own_only( $receipt_r, 'color 0.15s ease, border-color 0.15s ease' ), 'a receipt in a paragraph keeps the line off and its own color and border fade, and leaves color to its hover and focus rules' );
+ok( $own_only( $hunk_r, 'color 0.15s ease, background-color 0.15s ease' ), 'a hunk link keeps the line off and its own fill fade, and leaves color to its hover and focus rules' );
+$article = $strip( file_get_contents( "$root/assets/css/article.css" ) );
+$prose   = 1 === preg_match( '/(?:^|\})\s*([^{}]*a:not\(\.wp-element-button, sup a\))\s*\{[^}]*text-decoration-line:\s*underline/', $article, $am ) ? trim( $am[1] ) : null;
+ok( null !== $prose && snm_spec( $receipt_sel ) > snm_spec( $prose ) && snm_spec( $hunk_sel ) > snm_spec( $prose ), 'both outrank article.css\'s prose link (' . ( $prose ? implode( ',', snm_spec( $prose ) ) : 'not found' ) . '), so its underline never draws inside a receipt\'s box' );
+$states = preg_match_all( '/(?:^|[{}])\s*([^{}]*a:not\(\.wp-element-button, sup a\):(?:hover|focus-visible))\s*\{([^}]*)\}/', $article, $sm ) ? $sm[2] : array();
+ok( 2 === count( $states ) && 0 === preg_match( '/text-decoration(-line)?:/', implode( ';', $states ) ), 'the prose link\'s hover and focus rules (0,4,2) only recolor and thicken the line, so the line kept off at rest stays off' );
+$critical = $strip( file_get_contents( "$root/assets/css/critical.css" ) );
+$rail     = 1 === preg_match( '/(?:^|\})\s*([^{}]*\.sn-resume-rail a[^{}]*)\{[^}]*text-decoration-line:\s*underline/', $critical, $cm ) ? array_map( 'trim', explode( ',', $cm[1] ) ) : array();
+$rail_max = array( 0, 0, 0 );
+foreach ( $rail as $sel ) { $rail_max = max( $rail_max, snm_spec( $sel ) ); }
+ok( count( $rail ) > 0 && snm_spec( $receipt_sel ) > $rail_max, 'a receipt on a contact or employer rail outranks critical.css\'s dim-text underline, so none shows at rest' );
+$reduce = preg_match( '/([^{}]*)\{\s*transition:\s*none;?\s*\}/', $block( $css, '@media (prefers-reduced-motion: reduce)' ), $rm ) ? array_map( 'trim', explode( ",\n", trim( $rm[1] ) ) ) : array();
+ok( in_array( $receipt_sel, $reduce, true ) && in_array( $hunk_sel, $reduce, true ), 'both restated fades stop under reduced motion, in the switch\'s own pairing at their own specificity' );
 
 echo "\nForced colors\n";
 $fc = (string) $rule( $block( $css, '@media (forced-colors: active)' ), '.sn-resume-variant .sn-resume-only::before,.sn-resume-legend::before' );
@@ -81,7 +123,7 @@ $paper_sel  = null;
 if ( preg_match_all( '/(?:^|[{}])\s*([^{}]*\.sn-resume-only::before)\s*\{\s*content:\s*none;?\s*\}/', $print, $pm ) ) {
 	$paper_sel = trim( end( $pm[1] ) );
 }
-ok( null !== $paper_sel && sn_css_specificity( $paper_sel ) > sn_css_specificity( $screen_sel ), 'paper drops the bar with a selector that outranks the screen one: resume-switch.css loads after print.css, so a tie would print the bar' );
+ok( null !== $paper_sel && snm_spec( $paper_sel ) > snm_spec( $screen_sel ), 'paper drops the bar with a selector that outranks the screen one: resume-switch.css loads after print.css, so a tie would print the bar' );
 
 echo "\nThe arrival rule, on every page but an essay\n";
 require_once __DIR__ . '/lib/components-source.php';
