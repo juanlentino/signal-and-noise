@@ -37,10 +37,12 @@ function fixture({ at = '/resume/', server = 'music', history = true } = {}) {
   doc.createElement = (t) => el(t);
   let url = new URL(at, SITE);
   const pushed = [];
+  const replaced = [];
   const popHandlers = [];
   const win = {
     location: { get href() { return url.href; }, get search() { return url.search; }, get hash() { return url.hash; } },
-    history: history ? { pushState(state, title, u) { pushed.push(u); url = new URL(u, url.href); } } : {},
+    history: history ? { pushState(state, title, u) { pushed.push(u); url = new URL(u, url.href); },
+      replaceState(state, title, u) { replaced.push(u); url = new URL(u, url.href); } } : {},
     addEventListener(type, fn) { if (type === 'popstate') popHandlers.push(fn); },
   };
   vm.runInNewContext(SRC, { window: win, document: doc, URL, URLSearchParams });
@@ -49,7 +51,7 @@ function fixture({ at = '/resume/', server = 'music', history = true } = {}) {
   const shown = () => Object.keys(lanes).filter((l) => !lanes[l].hidden);
   const current = () => Object.keys(a).filter((l) => a[l].getAttribute('aria-current') === 'page');
   const live = () => nav.querySelector('p[role="status"]');
-  return { doc, a, lanes, downloads, links, canon, og, pushed, click, pop, shown, current, live, url: () => url.href };
+  return { doc, a, lanes, downloads, links, canon, og, pushed, replaced, click, pop, shown, current, live, url: () => url.href };
 }
 
 module.exports = { fixture, SITE };

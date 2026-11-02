@@ -135,3 +135,21 @@ test('focus outside a hidden lane stays where it is', () => {
   h.pop('/resume/?lane=operations');
   assert.equal(h.doc.activeElement.tagName, 'BODY', 'nothing focused, nothing moved');
 });
+
+test('a lane named by the hash moves into the query at load, so the skip link keeps it', () => {
+  const f = fixture({ at: '/resume/#resume-operations' });
+  assert.deepEqual(f.replaced, [SITE + '/resume/?lane=operations']);
+  // The skip link changes only the hash, as any in-page anchor does.
+  f.pop('#wp--skip-link--target');
+  assert.equal(f.url(), SITE + '/resume/?lane=operations#wp--skip-link--target');
+  assert.deepEqual(f.shown(), ['operations']);
+  assert.deepEqual(f.current(), ['operations']);
+  assert.equal(f.live().textContent, '', 'an in-page anchor announces nothing');
+  assert.deepEqual(fixture({ at: '/resume/?lane=music#resume-operations' }).replaced, [], '?lane already decides');
+  assert.deepEqual(fixture({ at: '/resume/#experience' }).replaced, [], 'any other anchor stays');
+});
+
+test('the lane is stripped before it is lowercased, as sanitize_key does: ?lane=operat%C4%B0ons is music', () => {
+  assert.deepEqual(fixture({ at: '/resume/?lane=operat%C4%B0ons' }).shown(), ['music']);
+  assert.deepEqual(fixture({ at: '/resume/?lane=OPERATIONS' }).shown(), ['operations']);
+});

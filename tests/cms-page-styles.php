@@ -166,10 +166,10 @@ ok( strpos( $resume_css, '.sn-resume-skills' ) !== false, 'resume.css restyles t
 ok( strpos( $resume_css, '--wp--preset--color--' ) !== false, 'resume.css uses theme preset color tokens (no bespoke palette)' );
 ok( strpos( $resume_css, 'max(0.7rem, 11px)' ) !== false, 'resume.css honours the 11px type floor idiom' );
 ok( strpos( $resume_css, 'prefers-reduced-motion' ) !== false, 'resume.css neutralizes motion under reduced-motion' );
-// 2026-11-01 (owner yes, UX proposal 5): Download PDF is a 44px target; border-box keeps
-// the padding inside the 44px (without it the button measured 64px).
 ok( false !== strpos( $resume_css, '.sn-resume-pub:not(.sn-resume-built):hover {' ) && false === strpos( $resume_css, '.sn-resume-pub:hover' ), 'a "What I\'ve Built" card is not a link, so it has no card hover; its receipt keeps its own' );
 ok( 1 === preg_match( '/\.sn-resume-rail a \{\s*white-space: nowrap;\s*\}/', $resume_css ), 'a contact-rail link never breaks inside its address (UX proposal 7)' );
+// 2026-11-01 (owner yes, UX proposal 5): Download PDF is a 44px target; border-box keeps
+// the padding inside the 44px (without it the button measured 64px).
 ok( 1 === preg_match( '/\.wp-block-file\.sn-resume-download a\.wp-block-file__button \{[^}]*display: inline-flex;[^}]*align-items: center;[^}]*box-sizing: border-box;[^}]*min-height: 44px;/', $resume_css ), 'Download PDF is a 44px target, padding inside it' );
 
 // /workflow: the plugin writes the Page with page_template => 'page-workflow'.

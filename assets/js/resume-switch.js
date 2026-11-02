@@ -38,7 +38,9 @@
 		var lanes = new URLSearchParams( window.location.search ).getAll( 'lane' );
 		var hash = laneHash.exec( window.location.hash );
 		var raw = lanes.length ? lanes[ lanes.length - 1 ] : ( hash ? hash[ 1 ] : '' );
-		return 'operations' === raw.toLowerCase().replace( /[^a-z0-9_\-]/g, '' ) ? 'operations' : 'music';
+		// Strip, then lowercase: PHP's strtolower is ASCII-only, so a non-ASCII
+		// letter (İ lowercases to i plus a dot in JS) never becomes a lane.
+		return 'operations' === raw.replace( /[^A-Za-z0-9_\-]/g, '' ).toLowerCase() ? 'operations' : 'music';
 	}
 
 	// An address with only `lane` changed: a draft preview keeps its
@@ -61,6 +63,12 @@
 	// spoken from a polite status region that starts empty, so a screen reader
 	// hears the change and never the page load.
 	var current = fromUrl();
+	// A lane named only by the hash moves into the query, where the server
+	// and every later read find it: otherwise the first in-page anchor (the
+	// skip link) drops the hash and the lane with it.
+	if ( ! new URLSearchParams( window.location.search ).has( 'lane' ) && laneHash.test( window.location.hash ) && window.history.replaceState ) {
+		window.history.replaceState( null, '', withLane( window.location.href, current ) );
+	}
 	var live = document.createElement( 'p' );
 	live.setAttribute( 'class', 'screen-reader-text' );
 	live.setAttribute( 'role', 'status' );
