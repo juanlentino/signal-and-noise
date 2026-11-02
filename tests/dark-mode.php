@@ -290,7 +290,10 @@ $ALLOWED = array(
 	'assets/css/components.css' => 4,
 	// /resume's lane switch (2026-11-01): its current lane, drawn like the
 	// EN | ES switch above, the same filled key in either palette.
-	'assets/css/resume-switch.css' => 1,
+	// SECOND and THIRD (2026-11-02): the edition bar beside a lane-only entry
+	// and the legend's sample of it, 2px wide. Ink drawn as a line, the
+	// article.css case: a black rule on white becomes a white rule on black.
+	'assets/css/resume-switch.css' => 3,
 );
 
 $offenders = array();
