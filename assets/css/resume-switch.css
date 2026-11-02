@@ -101,6 +101,42 @@
 	color: var(--wp--preset--color--rust);
 	margin: 0;
 }
+/* The head split (the plugin's columns block around eyebrow + H1 and the
+   switch): from 900px the switch sits bottom-right, its caption above it,
+   which keeps Download above the fold on a laptop. Below 900px the columns
+   stack and the switch keeps its margin, so the phone layout is as it was.
+   Core sets flex-wrap: nowrap !important from 782px, hence the (0,2,0)
+   !important wrap, and zeroes a column's first child at (0,2,0), hence the
+   (0,3,0) margin restated. */
+.wp-block-columns.sn-resume-head-split {
+	column-gap: var(--wp--custom--air--xl) !important;
+	margin-bottom: 0;
+}
+@media (min-width: 900px) {
+	.wp-block-columns.sn-resume-head-split {
+		margin-bottom: var(--wp--preset--spacing--50);
+	}
+	.sn-resume-head-split .sn-resume-switch {
+		margin-top: 0;
+		row-gap: 0.75rem;
+	}
+	.sn-resume-head-split .sn-resume-switch-caption {
+		order: -1;
+		flex-basis: 100%;
+	}
+}
+@media (max-width: 899.98px) {
+	.wp-block-columns.sn-resume-head-split {
+		flex-wrap: wrap !important;
+		row-gap: 0 !important;
+	}
+	.sn-resume-head-split > .wp-block-column {
+		flex-basis: 100% !important;
+	}
+	.wp-block-columns.sn-resume-head-split .sn-resume-switch {
+		margin-top: var(--wp--custom--air--md);
+	}
+}
 
 /* Each lane's hero opens with its headline and subhead over the summary. */
 .sn-resume-headline {
