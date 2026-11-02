@@ -53,12 +53,12 @@ ok( 1 === preg_match( '/\.sn-resume-switch,\s*\.sn-resume-receipt,\s*\.sn-resume
 ok( false !== strpos( $print, 'main .sn-resume-variant > .wp-block-group {' ) || 1 === preg_match( '/main \.sn-resume-variant > \.wp-block-group\s*\{\s*padding:\s*0/', $print ), 'paper flattens the bands inside a lane as it does the top-level ones' );
 ok( 1 === preg_match( "/is_page\( 'resume' \) \) \{ \/\/ the two lanes, English only\.\s*wp_enqueue_style\(\s*'sn-resume-switch'/", $cms ), 'the lane stylesheet loads on the English /resume only' );
 // The switch is two links to two addresses (2026-11-02): the in-place script is
-// gone, and nothing in inc/ may load it again under any name.
+// gone. This checks the file and the old handle and filename in inc/, not behavior.
 $inc = '';
 foreach ( glob( "$root/inc/*.php" ) as $f ) {
 	$inc .= (string) file_get_contents( $f );
 }
-ok( ! file_exists( "$root/assets/js/resume-switch.js" ) && false === strpos( $inc, 'resume-switch.js' ) && 0 === preg_match( "/wp_(enqueue|register)_script\(\s*'sn-resume-switch'/", $inc ), 'no lane-switch script: the file and its enqueue are gone, each lane is its own page' );
+ok( ! file_exists( "$root/assets/js/resume-switch.js" ) && false === strpos( $inc, 'resume-switch.js' ) && 0 === preg_match( "/wp_(enqueue|register)_script\(\s*'sn-resume-switch'/", $inc ), 'no lane-switch script file, and inc/ names neither resume-switch.js nor an sn-resume-switch script handle' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
