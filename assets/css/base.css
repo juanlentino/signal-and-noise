@@ -98,6 +98,14 @@ body {
 	background-color: var(--wp--preset--color--blood);
 }
 
+/* Narrow screens: 0.6em of a large h2 is wider than the 16px gutter, so the
+   rule would be clipped off-screen. Cap the offset at 14px there. */
+@media (max-width: 781px) {
+	:is(h2, h3, h4)[id]:target::before {
+		inset-inline-start: max(calc(-1 * (2px + 0.6em)), -14px);
+	}
+}
+
 @media (prefers-reduced-motion: no-preference) {
 	:is(h2, h3, h4)[id]:target::before {
 		animation: sn-acquire 0.6s ease-out 1;

@@ -12,6 +12,8 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+- **Fixed:** a heading's arrival rule stays inside the 16px gutter on narrow screens (its offset is capped at 14px below 782px; desktop unchanged); the /resume lane prerender rule now honors core's opt-outs (`rel=nofollow`, `.no-prerender`, `.no-prefetch`); and the shared test specificity helper follows Selectors 4 for `:not()`, `:is()`, `:where()`, attributes and pseudo-elements, which `tests/resume-marks.php` now uses instead of its own copy.
+
 ## [2026.11.3] - 2026-11-02 — Résumé lanes are real pages: edition marks, prerender, lane in analytics
 
 ### Added

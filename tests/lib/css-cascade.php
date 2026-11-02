@@ -11,17 +11,33 @@
 
 if ( ! function_exists( 'sn_css_specificity' ) ) {
 	/**
-	 * (ids, classes, elements) for one simple selector.
+	 * (ids, classes, elements) for one complex selector, per Selectors 4:
+	 * :is(), :not() and :has() count only their most specific argument (the
+	 * pseudo-class name itself counts nothing), :where() counts nothing, an
+	 * attribute is a class, a pseudo-element is an element.
 	 *
 	 * @param string $sel
 	 * @return int[]
 	 */
 	function sn_css_specificity( $sel ) {
-		$ids = preg_match_all( '/#[\w-]+/', $sel );
-		$cls = preg_match_all( '/\.[\w-]+/', $sel ) + preg_match_all( '/:(?!:)[\w-]+/', $sel );
-		$els = preg_match_all( '/(?:^|[\s>+~])([a-z][\w-]*)/', $sel );
+		$s = array( 0, 0, 0 );
+		while ( preg_match( '/:(is|not|has|where)\(/', $sel, $m, PREG_OFFSET_CAPTURE ) ) {
+			$open = $m[0][1] + strlen( $m[0][0] );
+			for ( $i = $open, $d = 1; $d > 0 && $i < strlen( $sel ); $i++ ) { $d += ( '(' === $sel[ $i ] ) - ( ')' === $sel[ $i ] ); }
+			if ( 'where' !== $m[1][0] ) {
+				$best = array( 0, 0, 0 );
+				foreach ( preg_split( '/,(?![^(]*\))/', substr( $sel, $open, $i - 1 - $open ) ) as $arg ) { $best = max( $best, sn_css_specificity( $arg ) ); }
+				$s = array( $s[0] + $best[0], $s[1] + $best[1], $s[2] + $best[2] );
+			}
+			$sel = substr( $sel, 0, $m[0][1] ) . ' ' . substr( $sel, $i );
+		}
+		$s[2] += preg_match_all( '/::[\w-]+/', $sel );
+		$sel   = (string) preg_replace( '/::[\w-]+/', '', $sel );
+		$s[0] += preg_match_all( '/#[\w-]+/', $sel );
+		$s[1] += preg_match_all( '/\.[\w-]+|\[[^\]]*\]|:[\w-]+/', $sel );
+		$s[2] += preg_match_all( '/(?:^|[\s>+~])[a-z][\w-]*/', $sel );
 
-		return array( (int) $ids, (int) $cls, (int) $els );
+		return $s;
 	}
 }
 
