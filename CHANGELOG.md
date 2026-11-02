@@ -12,6 +12,9 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Added
+- **The beacon names the résumé lane a view showed, for the owner's analytics only.** On /resume every beacon of a view (pageview, scroll, time, vitals, custom events) carries `lane`, `music` or `operations`, read once when the view begins from the one `.sn-resume-variant` without `hidden`, whose id must be `resume-music` or `resume-operations`; with no lane, two lanes or any other id the key is left out, and every other page sends none. Held in memory like the pageview ID: no cookie, storage or identifier. The analytics worker stores it from 1.28.0 and the plugin's analytics rows read can group by it; no public page shows it. `assets/js/sn-beacon.js`. Tests: `tests/js/beacon-resume-lane.test.cjs` (new, 7; the pageview payload pinned in `tests/js/fixtures/beacon-payload-resume.json`, which the worker parses).
+
 ## [2026.11.2] - 2026-11-02 — The résumé's lane switch: Music and Operations & AI Strategy
 
 ### Added
