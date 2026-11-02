@@ -76,7 +76,16 @@ function sn_speculation_resume_lanes( $rules ) {
 		'sn-resume-lanes',
 		array(
 			'source'    => 'document',
-			'where'     => array( 'selector_matches' => '.sn-resume-switch a[data-lane]:not([aria-current]), .sn-resume-hunk a[data-lane]' ),
+			// Core's own opt-outs, mirrored from its main rule: a link a plugin
+			// marks rel=nofollow, .no-prerender or .no-prefetch is never prerendered.
+			'where'     => array(
+				'and' => array(
+					array( 'selector_matches' => '.sn-resume-switch a[data-lane]:not([aria-current]), .sn-resume-hunk a[data-lane]' ),
+					array( 'not' => array( 'selector_matches' => 'a[rel~="nofollow"]' ) ),
+					array( 'not' => array( 'selector_matches' => '.no-prerender, .no-prerender a' ) ),
+					array( 'not' => array( 'selector_matches' => '.no-prefetch, .no-prefetch a' ) ),
+				),
+			),
 			'eagerness' => 'moderate',
 		)
 	);

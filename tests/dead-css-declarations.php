@@ -112,5 +112,13 @@ ok( 1 === count( $flipped ), '!important at lower specificity still wins: the fi
 ok( ! empty( $flipped[0]['value'] ) && false !== strpos( $flipped[0]['value'], '2rem' ),
 	'   ...and the newly-unreachable declaration is the plain 2rem one, not the !important 1rem' );
 
+echo "\nGroup 5: specificity follows Selectors 4\n";
+ok( array( 0, 1, 1 ) === sn_css_specificity( 'a:not(.a)' ), ':not(.a) counts its argument only, not itself: a:not(.a) is (0,1,1)' );
+ok( array( 1, 0, 1 ) === sn_css_specificity( 'a:not(#a)' ), ':not(#a) counts the id: (1,0,1)' );
+ok( array( 1, 0, 0 ) === sn_css_specificity( ':not(.a, #b)' ), ':not() with a list counts its most specific argument: (1,0,0)' );
+ok( array( 0, 1, 0 ) === sn_css_specificity( ':is(h2, .a)' ), ':is(h2, .a) counts its most specific argument: (0,1,0)' );
+ok( array( 0, 1, 0 ) === sn_css_specificity( '.b :where(#a .c)' ), ':where() counts nothing: .b :where(#a .c) is (0,1,0)' );
+ok( array( 0, 2, 1 ) === sn_css_specificity( 'h2[id]:target' ) && array( 0, 1, 2 ) === sn_css_specificity( 'h2:target::before' ), 'an attribute counts as a class, a pseudo-element as an element' );
+
 echo sprintf( "\nResult: %d passed, %d failed.\n", $pass, $fail );
 exit( $fail > 0 ? 1 : 0 );

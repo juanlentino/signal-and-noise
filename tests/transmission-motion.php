@@ -84,6 +84,8 @@ $hd = isset( $h[2] ) ? $h[2] : '';
 ok( 1 === preg_match( '/width:\s*2px;/', $hd ) && false !== strpos( $hd, 'background-color: var(--wp--preset--color--blood)' ), '5: the rule is a 2px blood stroke from the token' );
 ok( 1 === preg_match( '/position:\s*absolute;/', $hd ) && 1 === preg_match( '/inset-inline-start:\s*calc\(-1/', $hd ), '5: the rule is drawn in the margin, so the heading text does not move' );
 ok( 0 === preg_match( '/:target\s*\{[^}]*(margin|padding|border)/', $b ), '5: the heading box itself gains no margin, padding or border' );
+ok( 1 === preg_match( '/inset-inline-start:\s*calc\(-1 \* \(2px \+ 0\.6em\)\);/', $hd ), '5: on wide screens the rule sits 0.6em into the margin, unchanged' );
+ok( 1 === preg_match( '/@media \(max-width: 781px\)\s*\{\s*:is\(h2, h3, h4\)\[id\]:target::before\s*\{\s*inset-inline-start:\s*max\(calc\(-1 \* \(2px \+ 0\.6em\)\), -14px\);\s*\}\s*\}/', $b ), '5: on narrow screens the offset is capped at 14px, so a large h2\'s rule stays inside the 16px gutter instead of being clipped' );
 $ac = tm_no_preference_block( $b, 'sn-acquire' );
 ok( 1 === preg_match( '/:target::before\s*\{\s*animation:\s*sn-acquire\s+[0-9.]+m?s[^;]*\b1;/', $ac ), '5: the rule fades in once per arrival, only under no-preference' );
 ok( 1 === preg_match( '/@keyframes sn-acquire\s*\{\s*from\s*\{\s*opacity:\s*0;\s*\}\s*\}/', $b ), '5: the arrival is an opacity fade, nothing moves' );
