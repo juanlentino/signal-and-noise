@@ -76,6 +76,18 @@ ok( null !== $bar && 1 === preg_match( '/content:\s*""/', $bar ) && 1 === preg_m
 ok( null !== $bar && 1 === preg_match( '/inset-inline-start:\s*calc\(-1 \* \(2px \+ 0\.6em\)\);/', $bar ) && 1 === preg_match( '/width:\s*2px/', $bar ), 'the bar sits where base.css\'s arrival rule sits: 2px wide, 0.6em into the margin' );
 ok( null !== $bar && 1 === preg_match( '/background:\s*var\(--wp--preset--color--bone\)/', $bar ) && false === strpos( $bar, 'blood' ), 'the bar is bone, never blood: blood is the arrival rule' );
 
+echo "\nThe wrapper group (plugin #2359)\n";
+// Core's flow layout: the global gap rule is :root :where(.is-layout-flow) > *
+// (0,1,0); a group with its own blockGap gets .wp-container-X.wp-container-X
+// > * + * (0,2,0), whose order against this sheet is not ours to rely on.
+$gap_sel = '.sn-resume-variant .sn-resume-only > .sn-resume-only-mark + *';
+$gap_r   = $rule( $css, $gap_sel );
+ok( null !== $gap_r && 1 === preg_match( '/margin-block-start:\s*0;/', $gap_r ) && snm_spec( $gap_sel ) > snm_spec( ':root :where(.is-layout-flow) > *' ) && snm_spec( $gap_sel ) > snm_spec( '.wp-container-core-group-is-layout-1.wp-container-core-group-is-layout-1 > * + *' ), 'a wrapped entry\'s first real block takes no block-gap above it: the screen-reader mark is the group\'s first child, and the zero (' . implode( ',', snm_spec( $gap_sel ) ) . ') outranks core\'s flow gap, global (0,1,0) or per-group (0,2,0)' );
+$resume_css = $strip( file_get_contents( "$root/assets/css/resume.css" ) );
+$fold_sel   = '.sn-resume-fold > .sn-resume-only:last-child > :last-child';
+$fold_r     = $rule( $resume_css, '.sn-resume-fold > :last-child,' . $fold_sel );
+ok( null !== $fold_r && 1 === preg_match( '/margin-bottom:\s*var\(--wp--custom--air--xs\)/', $fold_r ) && snm_spec( $fold_sel ) > snm_spec( ':root :where(.is-layout-flow) > :last-child' ), 'a fold whose last child is a wrapped entry gives that entry\'s last block the fold\'s closing air, over core\'s flow-layout last-child zero (0,2,0)' );
+
 echo "\nThe legend, the hunk row, the formats line\n";
 $tier = $rule( $css, '.sn-resume-legend,.sn-resume-hunk,.sn-resume-formats' );
 ok( null !== $tier && 1 === preg_match( '/font-size:\s*max\(0\.7rem, 11px\)/', $tier ) && 1 === preg_match( '/text-transform:\s*uppercase/', $tier ) && 1 === preg_match( '/letter-spacing:\s*0\.14em/', $tier ) && 1 === preg_match( '/color:\s*var\(--wp--preset--color--rust\)/', $tier ), 'legend, hunk and formats line speak in the caption\'s tier: mono, 11px floor, uppercase, .14em, rust' );

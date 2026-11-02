@@ -307,6 +307,9 @@ body:has(.sn-resume-hero-split) .sn-resume-pub-title { font-size: 9pt !important
 /* The credential chips repeat the Credentials section below; paper keeps one copy. */
 body:has(.sn-resume-hero-split) .sn-resume-chips { display: none !important; }
 /* Credentials: Education beside Affiliations, as on screen; halves their height. */
+/* Known ceiling: an Experience role marked lane-only (an .sn-resume-only
+   group around its parts) can fall outside these two selectors and print
+   stacked; none is marked today. Widen them when one is. */
 body:has(.sn-resume-hero-split) main .wp-block-columns:has(> .wp-block-column > .sn-resume-title) { display: flex !important; gap: 18pt; }
 body:has(.sn-resume-hero-split) main .wp-block-columns:has(> .wp-block-column > .sn-resume-title) > .wp-block-column { flex: 1 1 0 !important; }
 

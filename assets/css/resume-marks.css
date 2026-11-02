@@ -28,6 +28,13 @@
 	width: 2px;
 	background: var(--wp--preset--color--bone);
 }
+/* A wrapper group is a flow layout whose first child is the screen-reader
+   "Only in this version." mark, so the first real block is not :first-child
+   and core's flow gap lands above it: global (0,1,0), or (0,2,0) on a group
+   with its own block gap. (0,3,0) puts it back flush. */
+.sn-resume-variant .sn-resume-only > .sn-resume-only-mark + * {
+	margin-block-start: 0;
+}
 /* The legend under the switch, a hunk row, and the formats line at a lane's
    end speak in the caption's tier. */
 .sn-resume-legend,
