@@ -85,8 +85,10 @@ main:has(> .wp-block-post-content > .sn-provenance-section) > .wp-block-post-con
 	/* The arrival rule base.css draws beside a jumped-to heading competes with
 	   the margin lane, and only a loose section's heading carries an id (a
 	   wrapped one is reached through its section), so on an essay it marked
-	   Section 6 alone. The lane and the tracklist already say where you are. */
-	.wp-block-post-content :is(h2, h3, h4)[id]:target::before { content: none; }
+	   Section 6 alone. The lane and the tracklist already say where you are.
+	   Essays only (2026-11-02): unscoped, it took the rule off every page at
+	   this width, /resume's hunk landings among them. */
+	main:has(> .wp-block-post-content > .sn-provenance-section) .wp-block-post-content :is(h2, h3, h4)[id]:target::before { content: none; }
 	/* Signal lock: only while a label is pinned, a tally lights beside it and a
 	   patch line bridges the gutter to the column. At rest it is plain. */
 	@container scroll-state(stuck: top) {

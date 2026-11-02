@@ -53,6 +53,10 @@ if ( ! function_exists( 'add_action' ) ) {
 	}
 }
 
+if ( ! function_exists( 'sn_lang_is_page' ) ) {
+	// /cv/ is the Spanish twin of /resume (the language layer's pairing).
+	function sn_lang_is_page( $slug ) { return 'resume' === $slug && 'cv' === $GLOBALS['__page']; }
+}
 require __DIR__ . '/../inc/cms-page-styles.php';
 
 $pass = 0; $fail = 0;
@@ -115,6 +119,18 @@ ok( strpos( (string) ( $resume['src'] ?? '' ), 'assets/css/resume.css' ) !== fal
 ok( in_array( 'sn-components', (array) ( $resume['deps'] ?? array() ), true ), 'sn-resume DEPENDS on sn-components' );
 ok( ( $resume['ver'] ?? false ) !== false, 'sn-resume carries a cache-bust version' );
 ok( ! isset( $GLOBALS['__enqueued']['sn-now'] ) && ! isset( $GLOBALS['__enqueued']['sn-uses'] ) && ! isset( $GLOBALS['__enqueued']['sn-a11y'] ), 'only sn-resume enqueued on /resume' );
+$marks = $GLOBALS['__enqueued']['sn-resume-marks'] ?? null;
+ok( isset( $GLOBALS['__enqueued']['sn-resume-switch'] ) && $marks !== null && strpos( (string) $marks['src'], 'assets/css/resume-marks.css' ) !== false && array( 'sn-resume-switch' ) === $marks['deps'] && false !== $marks['ver'], 'sn-resume-marks enqueued on /resume with sn-resume-switch, which it DEPENDS on, so it loads after the receipt rules it resets' );
+reset_enqueue();
+$GLOBALS['__page'] = 'cv';
+sn_enqueue_cms_page_styles();
+ok( isset( $GLOBALS['__enqueued']['sn-resume'] ), 'the stub reaches the résumé branch on /cv (or the next check would pass on nothing)' );
+foreach ( array( 'now', 'about/uses', 'accessibility', 'workflow', 'cv', 'about' ) as $other ) {
+	reset_enqueue();
+	$GLOBALS['__page'] = $other;
+	sn_enqueue_cms_page_styles();
+	ok( ! isset( $GLOBALS['__enqueued']['sn-resume-marks'] ) && ! isset( $GLOBALS['__enqueued']['sn-resume-switch'] ), "neither lane stylesheet (switch, marks) loads on /$other" );
+}
 
 // ── /workflow → sn-workflow only ──
 reset_enqueue();

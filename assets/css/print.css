@@ -93,6 +93,11 @@ header.wp-block-template-part,
 .sn-cited-by,
 .sn-cmdk-trigger,
 .sn-cmdk,
+.sn-resume-legend,
+.sn-resume-hunk-band,
+.sn-resume-hunk,
+.sn-resume-formats,
+.sn-resume-only-mark,
 .sn-resume-switch,
 .sn-resume-receipt,
 .sn-resume-download {
@@ -260,6 +265,10 @@ body:has(.sn-resume-hero-split) main .sn-resume-headline { font-size: 8.5pt !imp
 body:has(.sn-resume-hero-split) main h3,
 body:has(.sn-resume-hero-split) .sn-resume-role { font-size: 10pt !important; margin: 6pt 0 1pt !important; line-height: 1.25 !important; letter-spacing: 0.02em; }
 body:has(.sn-resume-hero-split) .sn-catalog-eyebrow { display: none !important; }
+/* The edition bar is a screen mark; its legend and the hidden "Only in this
+   version." are off paper above. resume-marks.css loads after this sheet, so
+   the body:has() scope is what outranks its (0,2,1) bar. */
+body:has(.sn-resume-hero-split) .sn-resume-variant .sn-resume-only::before { content: none; }
 body:has(.sn-resume-hero-split) main p,
 body:has(.sn-resume-hero-split) main li,
 body:has(.sn-resume-hero-split) main td { font-size: 8.5pt !important; line-height: 1.3 !important; margin: 0 0 2pt !important; }
@@ -298,6 +307,9 @@ body:has(.sn-resume-hero-split) .sn-resume-pub-title { font-size: 9pt !important
 /* The credential chips repeat the Credentials section below; paper keeps one copy. */
 body:has(.sn-resume-hero-split) .sn-resume-chips { display: none !important; }
 /* Credentials: Education beside Affiliations, as on screen; halves their height. */
+/* Known ceiling: an Experience role marked lane-only (an .sn-resume-only
+   group around its parts) can fall outside these two selectors and print
+   stacked; none is marked today. Widen them when one is. */
 body:has(.sn-resume-hero-split) main .wp-block-columns:has(> .wp-block-column > .sn-resume-title) { display: flex !important; gap: 18pt; }
 body:has(.sn-resume-hero-split) main .wp-block-columns:has(> .wp-block-column > .sn-resume-title) > .wp-block-column { flex: 1 1 0 !important; }
 

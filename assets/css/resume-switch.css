@@ -5,7 +5,8 @@
  * subhead, receipts, and the "What I've Built" cards, for the English /resume
  * only (the plugin's inc/resume-page-lanes.php emits them; /cv has none). Same
  * idiom as resume.css: Bebas heads, mono labels, hairlines, blood on hover,
- * preset tokens only, an 11px floor, motion off under reduced motion.
+ * preset tokens only, an 11px floor, motion off under reduced motion. The
+ * edition marks (what only one lane carries) are resume-marks.css.
  */
 /* ── Two lanes (2026-11-01): the switch, each lane's headline, receipts ──
    The plugin stores both résumés in the page and hides the one not asked
@@ -226,6 +227,7 @@
 		margin: 0;
 	}
 }
+
 @media (prefers-reduced-motion: reduce) {
 	.sn-resume-switch-list a,
 	.sn-resume-receipt {
