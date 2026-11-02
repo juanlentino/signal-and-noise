@@ -12,6 +12,9 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Changed
+- **llms.txt's Key pages name Services and the Spanish CV.** Owner yes 2026-11-01. "Curriculum vitae" (/cv/, "the résumé in Spanish") follows the Résumé, and "Services" (/services/) lists the page's own scope; titles are the pages' own. No other Spanish twin is listed there, so /servicios/ is not either. `inc/llms-txt.php`. Tests: `tests/llms-txt.php` (+2).
+
 ### Fixed
 - **The lane switch reads a repeated `?lane=` the way the server does: the last one wins.** `?lane=operations&lane=music` rendered music (PHP's `$_GET` keeps the last value) and then the script, reading the first, flipped to operations after paint (PERF-1). With no `?lane`, a `#resume-operations` or `#resume-music` link now names its lane, where before it showed music with its target hidden; switching away from such an address drops that anchor, so Back and a reload land on the lane chosen. `assets/js/resume-switch.js`. Tests: `tests/js/resume-switch.test.cjs` (new, drives the script under node:vm: an inverted `show()` passed the source pins 19 of 19 and fails here), `tests/resume-switch.php` (+1).
 - **A screen reader hears the lane switch, and Back or Forward no longer drops focus into a hidden lane.** The switch changed the page in silence (A11Y-1): the script now adds an empty polite status region to the switch's nav and fills it on a real change, by click or by Back and Forward, never on load, with the link's own label ("Showing the Operations & AI Strategy résumé"). When Back or Forward hides the lane that held focus (A11Y-3), focus moves to the current switch link instead of falling to the top of the page. `assets/js/resume-switch.js`. Tests: `tests/js/resume-switch.test.cjs` (+4).
