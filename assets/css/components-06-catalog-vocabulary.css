@@ -115,9 +115,7 @@
 	margin: 0 0 0.5rem;
 }
 
-/* Ruled rows on the service pages: the two doors on /services, the services on
-   /services/consulting. The same shape as the /index and /notes rows, as plain
-   Group blocks, so the rows stay editable in the page body. (0,2,0) to beat the
+/* Ruled rows on /services/consulting: a label and a line. (0,2,0) to beat the
    layout's generated gap. */
 .wp-block-group.sn-door {
 	display: grid;
@@ -132,7 +130,7 @@
 }
 @media (min-width: 782px) {
 	.wp-block-group.sn-door {
-		grid-template-columns: minmax(0, 2fr) minmax(0, 3fr) 12rem; /* fixed, so every row's columns line up, with a link or without */
+		grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
 		gap: 2rem;
 		align-items: baseline;
 	}
@@ -152,25 +150,174 @@
 	line-height: 1.7;
 	color: var(--wp--preset--color--rust);
 }
-.sn-door-link {
-	margin: 0;
-	font-size: 0.85rem;
-	white-space: nowrap;
+
+/* The record sleeve on /services: Side A and Side B, each a Column block with
+   its photo, name, line and track list. One real link per side, stretched over
+   the column, so the whole side opens the page. .sn-side-photo, not
+   .sn-service-image: the card rules in responsive.css key on that class and
+   would resize this type and slide the whole side on hover. */
+.wp-block-columns.sn-sides {
+	gap: 0;
+	align-items: stretch;
+	margin-block: 0;
+}
+.sn-side {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+}
+.sn-side + .sn-side {
+	margin-top: var(--wp--custom--air--lg);
 }
 @media (min-width: 782px) {
-	.sn-door-link {
-		text-align: right;
+	.sn-side {
+		padding-inline-end: var(--wp--custom--air--lg);
+	}
+	.sn-side + .sn-side {
+		margin-top: 0;
+		padding-inline: var(--wp--custom--air--lg) 0;
+		border-left: 1px solid var(--wp--preset--color--concrete);
 	}
 }
-.sn-door-link a {
+.sn-side .sn-side-photo {
+	margin: 0 0 var(--wp--custom--air--xs);
+}
+.sn-side-photo img {
+	display: block;
+	width: 100%;
+	aspect-ratio: 16 / 9;
+	object-fit: cover;
+	filter: grayscale(40%) contrast(1.1);
+	transition: filter 0.5s ease; /* non-vestibular; stays ungated */
+}
+@media (hover: hover) {
+	.sn-side:hover .sn-side-photo img {
+		filter: grayscale(0%) contrast(1.05);
+	}
+}
+.sn-service-crop img {
+	display: block;
+	width: 100%;
+	aspect-ratio: 3 / 2;
+	object-fit: cover;
+}
+.sn-side-key {
+	margin: 0;
+	font-size: max(0.7rem, 11px);
+	letter-spacing: 0.3em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--blood);
+}
+.sn-side-title {
+	margin: 0.5rem 0;
+	font-size: clamp(2.75rem, 5.4vw, 5rem); /* not a step: the mid display size the two sides share */
+	line-height: 0.95;
+	color: var(--wp--preset--color--bone);
+}
+.sn-side-line {
+	margin: 0 0 var(--wp--custom--air--xs);
+	max-width: 46ch;
+	font-size: 0.9rem;
+	line-height: 1.7;
+	color: var(--wp--preset--color--rust);
+}
+.sn-tracks {
+	margin: 0 0 var(--wp--custom--air--xs);
+	padding: 0;
+	list-style: decimal-leading-zero; /* real markers: a list stays a list in Safari and VoiceOver */
+	border-top: 1px solid var(--wp--preset--color--concrete);
+}
+.sn-tracks li {
+	position: relative;
+	margin-inline-start: 2.5rem;
+	padding-block: 0.6rem;
+	font-size: 0.9rem;
+	color: var(--wp--preset--color--bone);
+}
+.sn-tracks li::marker {
+	font-size: 0.75rem;
+	color: var(--wp--preset--color--rust);
+}
+/* The rule runs under the marker too, so it sits on the row, not the item's box. */
+.sn-tracks li::after {
+	content: "";
+	position: absolute;
+	inset-inline: -2.5rem 0;
+	bottom: 0;
+	height: 1px;
+	background-color: var(--wp--preset--color--concrete);
+}
+/* The note sits under the name, and beside it once a side has the room. */
+.sn-tracks em {
+	display: block;
+	font-size: 0.75rem;
+	font-style: normal;
+	color: var(--wp--preset--color--rust);
+}
+@media (min-width: 1100px) {
+	.sn-tracks li:has(em) {
+		padding-inline-end: 11.5rem;
+	}
+	.sn-tracks em {
+		position: absolute;
+		inset-inline-end: 0;
+		top: 0.6rem;
+		line-height: 1.8;
+	}
+}
+.sn-side-go {
+	margin: auto 0 0;
+	font-size: 0.85rem;
+}
+.sn-side-go a {
 	display: inline-block;
 	padding-block: 0.25rem; /* a 24px target on its own line, WCAG 2.5.8 */
 	color: var(--wp--preset--color--bone);
 	text-decoration: underline;
 	text-underline-offset: 0.2em;
 }
+.sn-side-go a::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+}
 @media (hover: hover) {
-	.sn-door-link a:hover {
+	.sn-side:hover .sn-side-title {
 		color: var(--wp--preset--color--blood);
+	}
+}
+/* The keyboard gets what the mouse gets: the whole side, and the title. */
+.sn-side:has(.sn-side-go a:focus-visible) {
+	outline: 2px solid var(--wp--preset--color--blood);
+	outline-offset: 3px;
+}
+.sn-side:has(.sn-side-go a:focus-visible) .sn-side-title {
+	color: var(--wp--preset--color--blood);
+}
+/* The home page's pulse and playhead, closing the sleeve. Decorative. */
+.sn-side-pulse {
+	position: relative;
+	height: 2.5rem;
+	margin-top: var(--wp--custom--air--sm);
+}
+.sn-side-pulse::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background-color: var(--wp--preset--color--concrete);
+	-webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 40' preserveAspectRatio='none'%3E%3Cpath d='M0 12h6v16h-6zM10 16h6v8h-6zM20 10h6v20h-6zM30 18h6v4h-6zM40 17h6v6h-6zM50 4h6v32h-6zM60 17h6v6h-6zM70 12h6v16h-6zM80 1h6v38h-6zM90 18h6v4h-6zM100 4h6v32h-6zM110 15h6v10h-6zM120 18h6v4h-6zM130 17h6v6h-6zM140 10h6v20h-6zM150 10h6v20h-6zM160 17h6v6h-6zM170 15h6v10h-6zM180 17h6v6h-6zM190 4h6v32h-6zM200 10h6v20h-6zM210 18h6v4h-6zM220 1h6v38h-6zM230 17h6v6h-6zM240 15h6v10h-6zM250 1h6v38h-6zM260 18h6v4h-6zM270 1h6v38h-6zM280 1h6v38h-6zM290 10h6v20h-6zM300 18h6v4h-6zM310 15h6v10h-6zM320 18h6v4h-6zM330 4h6v32h-6zM340 16h6v8h-6zM350 14h6v12h-6zM360 10h6v20h-6zM370 16h6v8h-6zM380 4h6v32h-6zM390 17h6v6h-6zM400 1h6v38h-6zM410 14h6v12h-6zM420 4h6v32h-6zM430 16h6v8h-6zM440 17h6v6h-6zM450 1h6v38h-6zM460 1h6v38h-6zM470 15h6v10h-6zM480 12h6v16h-6zM490 17h6v6h-6zM500 4h6v32h-6zM510 17h6v6h-6zM520 1h6v38h-6zM530 18h6v4h-6zM540 1h6v38h-6zM550 15h6v10h-6zM560 7h6v26h-6zM570 4h6v32h-6zM580 10h6v20h-6zM590 12h6v16h-6zM600 7h6v26h-6zM610 1h6v38h-6zM620 7h6v26h-6zM630 12h6v16h-6zM640 14h6v12h-6zM650 15h6v10h-6zM660 16h6v8h-6zM670 15h6v10h-6zM680 17h6v6h-6zM690 1h6v38h-6zM700 14h6v12h-6zM710 4h6v32h-6zM720 7h6v26h-6zM730 12h6v16h-6zM740 7h6v26h-6zM750 14h6v12h-6zM760 1h6v38h-6zM770 17h6v6h-6zM780 17h6v6h-6zM790 4h6v32h-6zM800 10h6v20h-6zM810 16h6v8h-6zM820 12h6v16h-6zM830 16h6v8h-6zM840 7h6v26h-6zM850 10h6v20h-6zM860 18h6v4h-6zM870 17h6v6h-6zM880 4h6v32h-6zM890 1h6v38h-6zM900 12h6v16h-6zM910 12h6v16h-6zM920 12h6v16h-6zM930 1h6v38h-6zM940 7h6v26h-6zM950 1h6v38h-6zM960 7h6v26h-6zM970 17h6v6h-6zM980 17h6v6h-6zM990 14h6v12h-6zM1000 7h6v26h-6zM1010 17h6v6h-6zM1020 18h6v4h-6zM1030 14h6v12h-6zM1040 1h6v38h-6zM1050 7h6v26h-6zM1060 14h6v12h-6zM1070 10h6v20h-6zM1080 12h6v16h-6zM1090 18h6v4h-6zM1100 7h6v26h-6zM1110 12h6v16h-6zM1120 16h6v8h-6zM1130 1h6v38h-6zM1140 17h6v6h-6zM1150 7h6v26h-6zM1160 18h6v4h-6zM1170 15h6v10h-6zM1180 14h6v12h-6zM1190 16h6v8h-6z'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 40' preserveAspectRatio='none'%3E%3Cpath d='M0 12h6v16h-6zM10 16h6v8h-6zM20 10h6v20h-6zM30 18h6v4h-6zM40 17h6v6h-6zM50 4h6v32h-6zM60 17h6v6h-6zM70 12h6v16h-6zM80 1h6v38h-6zM90 18h6v4h-6zM100 4h6v32h-6zM110 15h6v10h-6zM120 18h6v4h-6zM130 17h6v6h-6zM140 10h6v20h-6zM150 10h6v20h-6zM160 17h6v6h-6zM170 15h6v10h-6zM180 17h6v6h-6zM190 4h6v32h-6zM200 10h6v20h-6zM210 18h6v4h-6zM220 1h6v38h-6zM230 17h6v6h-6zM240 15h6v10h-6zM250 1h6v38h-6zM260 18h6v4h-6zM270 1h6v38h-6zM280 1h6v38h-6zM290 10h6v20h-6zM300 18h6v4h-6zM310 15h6v10h-6zM320 18h6v4h-6zM330 4h6v32h-6zM340 16h6v8h-6zM350 14h6v12h-6zM360 10h6v20h-6zM370 16h6v8h-6zM380 4h6v32h-6zM390 17h6v6h-6zM400 1h6v38h-6zM410 14h6v12h-6zM420 4h6v32h-6zM430 16h6v8h-6zM440 17h6v6h-6zM450 1h6v38h-6zM460 1h6v38h-6zM470 15h6v10h-6zM480 12h6v16h-6zM490 17h6v6h-6zM500 4h6v32h-6zM510 17h6v6h-6zM520 1h6v38h-6zM530 18h6v4h-6zM540 1h6v38h-6zM550 15h6v10h-6zM560 7h6v26h-6zM570 4h6v32h-6zM580 10h6v20h-6zM590 12h6v16h-6zM600 7h6v26h-6zM610 1h6v38h-6zM620 7h6v26h-6zM630 12h6v16h-6zM640 14h6v12h-6zM650 15h6v10h-6zM660 16h6v8h-6zM670 15h6v10h-6zM680 17h6v6h-6zM690 1h6v38h-6zM700 14h6v12h-6zM710 4h6v32h-6zM720 7h6v26h-6zM730 12h6v16h-6zM740 7h6v26h-6zM750 14h6v12h-6zM760 1h6v38h-6zM770 17h6v6h-6zM780 17h6v6h-6zM790 4h6v32h-6zM800 10h6v20h-6zM810 16h6v8h-6zM820 12h6v16h-6zM830 16h6v8h-6zM840 7h6v26h-6zM850 10h6v20h-6zM860 18h6v4h-6zM870 17h6v6h-6zM880 4h6v32h-6zM890 1h6v38h-6zM900 12h6v16h-6zM910 12h6v16h-6zM920 12h6v16h-6zM930 1h6v38h-6zM940 7h6v26h-6zM950 1h6v38h-6zM960 7h6v26h-6zM970 17h6v6h-6zM980 17h6v6h-6zM990 14h6v12h-6zM1000 7h6v26h-6zM1010 17h6v6h-6zM1020 18h6v4h-6zM1030 14h6v12h-6zM1040 1h6v38h-6zM1050 7h6v26h-6zM1060 14h6v12h-6zM1070 10h6v20h-6zM1080 12h6v16h-6zM1090 18h6v4h-6zM1100 7h6v26h-6zM1110 12h6v16h-6zM1120 16h6v8h-6zM1130 1h6v38h-6zM1140 17h6v6h-6zM1150 7h6v26h-6zM1160 18h6v4h-6zM1170 15h6v10h-6zM1180 14h6v12h-6zM1190 16h6v8h-6z'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+}
+.sn-side-pulse::after {
+	content: "";
+	position: absolute;
+	inset-block: -0.4rem;
+	left: 50%;
+	width: 2px;
+	background-color: var(--wp--preset--color--blood);
+}
+@media (forced-colors: active) {
+	.sn-side-pulse {
+		display: none;
 	}
 }
