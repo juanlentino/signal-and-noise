@@ -200,9 +200,11 @@
 	text-transform: uppercase;
 	color: var(--wp--preset--color--blood);
 }
-.sn-side-title {
+/* (0,3,0) with !important: responsive.css shrinks every h2 in a column that
+   holds a .sn-service-image on phones, and this one is the side's name. */
+.wp-block-column.sn-side .sn-side-title {
 	margin: 0.5rem 0;
-	font-size: clamp(2.75rem, 5.4vw, 5rem); /* not a step: the mid display size the two sides share */
+	font-size: clamp(2.75rem, 5.4vw, 5rem) !important; /* not a step: the mid display size the two sides share */
 	line-height: 0.95;
 	color: var(--wp--preset--color--bone);
 }
