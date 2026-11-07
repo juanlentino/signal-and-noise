@@ -153,8 +153,9 @@
 
 /* The record sleeve on /services: Side A and Side B, each a Column block with
    its photo, name, line and track list. One real link per side, stretched over
-   the column, so the whole side opens the page. The photo keeps the
-   .sn-service-image treatment of the service cards. */
+   the column, so the whole side opens the page. .sn-side-photo, not
+   .sn-service-image: the card rules in responsive.css key on that class and
+   would resize this type and slide the whole side on hover. */
 .wp-block-columns.sn-sides {
 	gap: 0;
 	align-items: stretch;
@@ -178,14 +179,21 @@
 		border-left: 1px solid var(--wp--preset--color--concrete);
 	}
 }
-.sn-side .wp-block-image {
+.sn-side .sn-side-photo {
 	margin: 0 0 var(--wp--custom--air--xs);
 }
-.sn-side .wp-block-image img {
+.sn-side-photo img {
 	display: block;
 	width: 100%;
 	aspect-ratio: 16 / 9;
 	object-fit: cover;
+	filter: grayscale(40%) contrast(1.1);
+	transition: filter 0.5s ease; /* non-vestibular; stays ungated */
+}
+@media (hover: hover) {
+	.sn-side:hover .sn-side-photo img {
+		filter: grayscale(0%) contrast(1.05);
+	}
 }
 .sn-service-crop img {
 	display: block;
@@ -200,11 +208,9 @@
 	text-transform: uppercase;
 	color: var(--wp--preset--color--blood);
 }
-/* (0,3,0) with !important: responsive.css shrinks every h2 in a column that
-   holds a .sn-service-image on phones, and this one is the side's name. */
-.wp-block-column.sn-side .sn-side-title {
+.sn-side-title {
 	margin: 0.5rem 0;
-	font-size: clamp(2.75rem, 5.4vw, 5rem) !important; /* not a step: the mid display size the two sides share */
+	font-size: clamp(2.75rem, 5.4vw, 5rem); /* not a step: the mid display size the two sides share */
 	line-height: 0.95;
 	color: var(--wp--preset--color--bone);
 }
@@ -218,30 +224,46 @@
 .sn-tracks {
 	margin: 0 0 var(--wp--custom--air--xs);
 	padding: 0;
-	list-style: none;
-	counter-reset: sn-track;
+	list-style: decimal-leading-zero; /* real markers: a list stays a list in Safari and VoiceOver */
 	border-top: 1px solid var(--wp--preset--color--concrete);
 }
 .sn-tracks li {
-	display: grid;
-	grid-template-columns: 2.5rem minmax(0, 1fr) auto;
-	column-gap: 0.5rem;
-	align-items: baseline;
+	position: relative;
+	margin-inline-start: 2.5rem;
 	padding-block: 0.6rem;
 	font-size: 0.9rem;
 	color: var(--wp--preset--color--bone);
-	border-bottom: 1px solid var(--wp--preset--color--concrete);
-	counter-increment: sn-track;
 }
-.sn-tracks li::before {
-	content: counter(sn-track, decimal-leading-zero);
+.sn-tracks li::marker {
 	font-size: 0.75rem;
 	color: var(--wp--preset--color--rust);
 }
+/* The rule runs under the marker too, so it sits on the row, not the item's box. */
+.sn-tracks li::after {
+	content: "";
+	position: absolute;
+	inset-inline: -2.5rem 0;
+	bottom: 0;
+	height: 1px;
+	background-color: var(--wp--preset--color--concrete);
+}
+/* The note sits under the name, and beside it once a side has the room. */
 .sn-tracks em {
+	display: block;
 	font-size: 0.75rem;
 	font-style: normal;
 	color: var(--wp--preset--color--rust);
+}
+@media (min-width: 1100px) {
+	.sn-tracks li:has(em) {
+		padding-inline-end: 11.5rem;
+	}
+	.sn-tracks em {
+		position: absolute;
+		inset-inline-end: 0;
+		top: 0.6rem;
+		line-height: 1.8;
+	}
 }
 .sn-side-go {
 	margin: auto 0 0;
@@ -263,6 +285,14 @@
 	.sn-side:hover .sn-side-title {
 		color: var(--wp--preset--color--blood);
 	}
+}
+/* The keyboard gets what the mouse gets: the whole side, and the title. */
+.sn-side:has(.sn-side-go a:focus-visible) {
+	outline: 2px solid var(--wp--preset--color--blood);
+	outline-offset: 3px;
+}
+.sn-side:has(.sn-side-go a:focus-visible) .sn-side-title {
+	color: var(--wp--preset--color--blood);
 }
 /* The home page's pulse and playhead, closing the sleeve. Decorative. */
 .sn-side-pulse {
