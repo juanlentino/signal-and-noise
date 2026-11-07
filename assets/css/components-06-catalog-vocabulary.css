@@ -115,4 +115,62 @@
 	margin: 0 0 0.5rem;
 }
 
-
+/* Ruled rows on the service pages: the two doors on /services, the services on
+   /services/consulting. The same shape as the /index and /notes rows, as plain
+   Group blocks, so the rows stay editable in the page body. (0,2,0) to beat the
+   layout's generated gap. */
+.wp-block-group.sn-door {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: 0.5rem;
+	margin-block: 0;
+	padding-block: var(--wp--custom--air--sm);
+	border-top: 1px solid var(--wp--preset--color--concrete);
+}
+.wp-block-group.sn-door:last-child {
+	border-bottom: 1px solid var(--wp--preset--color--concrete);
+}
+@media (min-width: 782px) {
+	.wp-block-group.sn-door {
+		grid-template-columns: minmax(0, 2fr) minmax(0, 3fr) 12rem; /* fixed, so every row's columns line up, with a link or without */
+		gap: 2rem;
+		align-items: baseline;
+	}
+}
+.sn-door-label {
+	margin: 0;
+	font-size: clamp(1.35rem, 2.2vw, 1.75rem); /* not a step: clamp(1.35rem, 2.2vw, 1.75rem) is its own value, the /index row title's */
+	font-weight: 400;
+	line-height: 1.05;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--bone);
+}
+.sn-door-line {
+	margin: 0;
+	max-width: 60ch;
+	font-size: 0.9rem;
+	line-height: 1.7;
+	color: var(--wp--preset--color--rust);
+}
+.sn-door-link {
+	margin: 0;
+	font-size: 0.85rem;
+	white-space: nowrap;
+}
+@media (min-width: 782px) {
+	.sn-door-link {
+		text-align: right;
+	}
+}
+.sn-door-link a {
+	display: inline-block;
+	padding-block: 0.25rem; /* a 24px target on its own line, WCAG 2.5.8 */
+	color: var(--wp--preset--color--bone);
+	text-decoration: underline;
+	text-underline-offset: 0.2em;
+}
+@media (hover: hover) {
+	.sn-door-link a:hover {
+		color: var(--wp--preset--color--blood);
+	}
+}
