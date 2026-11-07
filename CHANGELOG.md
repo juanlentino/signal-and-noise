@@ -12,6 +12,15 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Added
+- **Ruled rows for the service pages.** `.sn-door` and its label, line and link classes draw the two doors on `/services` and the services on `/services/consulting`, in the same shape as the `/index` rows. They load with the shared components stylesheet. The plugin migration that creates those pages reads best with this theme, so install it first.
+
+### Changed
+- **`llms.txt` lists the service doors.** Key pages now name `/services/music/` and `/services/consulting/`, and the Services line describes the hub.
+
+### Fixed
+- **The discography script stays on the discography pages.** `/services/music/` shares the slug `music`, so a bare `is_page( 'music' )` loaded the script there. The gate now asks the plugin's `sn_lang_is_page()`, which means the top-level page.
+
 ## [2026.11.4] - 2026-11-02 — Arrival bar on phones, prerender opt-outs, CSS specificity helper
 
 

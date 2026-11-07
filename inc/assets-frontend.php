@@ -282,7 +282,9 @@ add_action( 'init', 'sn_register_note_share' );
  */
 function sn_enqueue_discography() {
 	// /musica/ (the Spanish page, paired by the plugin) carries the same timeline.
-	if ( is_page( 'music' ) || ( function_exists( 'sn_lang_is_page' ) && sn_lang_is_page( 'music' ) ) ) {
+	// sn_lang_is_page() means the top-level page; a bare is_page( 'music' ) is
+	// also true on /services/music/, which shares the slug.
+	if ( function_exists( 'sn_lang_is_page' ) ? sn_lang_is_page( 'music' ) : is_page( 'music' ) ) {
 		wp_enqueue_script(
 			'sn-discography',
 			get_theme_file_uri( 'assets/js/discography.js' ),

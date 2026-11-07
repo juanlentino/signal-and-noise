@@ -194,6 +194,16 @@ $GLOBALS['__page_slug'] = 'contact';
 sn_enqueue_discography();
 ok( ! isset( $GLOBALS['__enqueued_scripts']['sn-discography'] ), 'sn-discography NOT enqueued off the /music page' );
 
+// Past the plugin's gate: /services/music/ has the slug music, so a bare
+// is_page( 'music' ) is true there, and the plugin's answer has to win.
+if ( ! function_exists( 'sn_lang_is_page' ) ) {
+	function sn_lang_is_page( $slug ) { return false; }
+}
+reset_scripts();
+$GLOBALS['__page_slug'] = 'music';
+sn_enqueue_discography();
+ok( ! isset( $GLOBALS['__enqueued_scripts']['sn-discography'] ), 'sn-discography NOT enqueued when the plugin says this is not the top-level page' );
+
 // JS CONTENT: lazy mount only — no eager iframe in the source, swaps the
 // cover for the Spotify embed on click; plus client-side role filtering (v9.14.0).
 $disco_js = (string) @file_get_contents( realpath( __DIR__ . '/..' ) . '/assets/js/discography.js' );
