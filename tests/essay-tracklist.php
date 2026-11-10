@@ -17,6 +17,8 @@ function apply_filters( $h, $v ) { return 'sn_reading_time_wpm' === $h && isset(
 function get_post( $id ) { return $GLOBALS['__posts'][ (int) $id ] ?? null; }
 function sn_get_reading_time( $p ) { return 5; }
 require dirname( __DIR__ ) . '/inc/essay-tracklist.php';
+require __DIR__ . '/lib/wp-html-api.php';
+snt_require_wp_html_api();
 
 $pass = 0; $fail = 0;
 function ok( $c, $m ) { global $pass, $fail; if ( $c ) { ++$pass; echo "PASS: $m\n"; } else { ++$fail; echo "FAIL: $m\n"; } }
@@ -54,6 +56,16 @@ ok( '' === sn_essay_tracklist_html( 8 ), 'a single section is not a tracklist' )
 ok( '' === sn_essay_tracklist_html( 9 ), 'headings without Section labels are not tracks' );
 ok( '' === sn_essay_tracklist_html( 404 ), 'no post, no tracklist' );
 ok( false !== strpos( (string) file_get_contents( dirname( __DIR__ ) . '/inc/pillar-title-eyebrow.php' ), 'sn_essay_tracklist_html( $page_id )' ), 'the eyebrow filter emits it after the signal path, outside the signed content' );
+
+// Read with the HTML API (2026-11-10). Characterized against the old regex on
+// block-built sections: identical tracks. A label whose next tag is not an H2,
+// and a "Section 9" inside a sentence, are body text, not tracks.
+$real = "<!-- wp:group {\"tagName\":\"section\"} -->\n<section id=\"why\" class=\"wp-block-group\"><!-- wp:paragraph -->\n<p class=\"sn-eyebrow\">Section 1</p>\n<!-- /wp:paragraph -->\n\n<!-- wp:heading -->\n<h2 class=\"wp-block-heading\">Why now</h2>\n<!-- /wp:heading -->\n\n<!-- wp:paragraph -->\n<p>" . $w( 225 ) . "</p>\n<!-- /wp:paragraph -->\n<p>Not a label: Section 9 of the act.</p></section>\n<!-- /wp:group -->\n<section id=\"how\"><p>Section 2</p><h2 id=\"how-it-works\">How it <strong>works</strong></h2><p>" . $w( 450 ) . "</p><p>Section 3</p><h3>Not a heading two</h3><p>tail</p></section>";
+$t = sn_essay_tracks( $real, 225 );
+ok( 2 === count( $t ) && 'why' === $t[0]['id'] && 'how-it-works' === $t[1]['id'] && 'How it works' === $t[1]['title'], 'block-built sections: ids from the section or the heading, a label without an H2 is no track' );
+ok( 62 === $t[0]['seconds'] && 121 === $t[1]['seconds'], 'a non-track label and a sentence that names a section count as body words' );
+$t = sn_essay_tracks( '<p>Section 1</p><!-- note --><h2 id="a">A</h2><p>x</p><p>Section 2</p><h2 id="b">B</h2><p>Tom&amp;Jerry</p>', 225 );
+ok( 2 === count( $t ), 'any comment between label and heading is skipped (the regex skipped only block delimiters)' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

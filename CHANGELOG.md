@@ -15,6 +15,7 @@ adds a bullet below. A release is a separate, deliberate act:
 ### Changed
 - **Each AI ability's `tokens_used` now says what it is.** The output schema of all five generative abilities describes the figure as an output-only estimate (characters / 4) that leaves out the prompt. The field keeps its name, so nothing that reads it breaks. Test: `tests/ai-tokens-used-schema.php`.
 - **The /notes summary ability runs on the official AI plugin when it can.** `signal-and-noise/ai-generate-page-note-summary` keeps its name and its `{summary, post_id, tokens_used}` answer, but when the AI plugin registers `ai/summarization` it now runs that ability for the post, with the /notes voice and the word cap appended to the official instruction for that one call. An error from the official ability is returned as is. Without the AI plugin, the theme's own path runs as before. Test: `tests/ai-note-summary-official.php`.
+- **The essay tracklist and the résumé lanes read the stored content with the HTML API.** `sn_essay_tracks()` and `sn_resume_lane_axis_start()` walk the markup with `WP_HTML_Tag_Processor` instead of regular expressions. On block-built essays and résumés the output is the same. Three cases the regex got wrong now work: a rail with a single-quoted class, a date written with an encoded en dash, and an HTML comment between a "Section N" label and its heading. Tests: `tests/essay-tracklist.php`, `tests/surface-lanes.php`.
 
 ## [2026.11.6] - 2026-11-07 — The record sleeve for /services
 

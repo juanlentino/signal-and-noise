@@ -85,12 +85,15 @@ function sn_resume_lane_axis_start() {
 	$min  = null;
 	$post = function_exists( 'get_queried_object' ) ? get_queried_object() : null;
 	$raw  = is_object( $post ) ? (string) ( $post->post_content ?? '' ) : '';
-	if ( preg_match_all( '#<p[^>]*class="[^"]*\bsn-resume-rail\b[^"]*"[^>]*>(.*?)</p>#is', $raw, $ms ) ) {
-		foreach ( $ms[1] as $inner ) {
-			$span = sn_resume_lane_span( wp_strip_all_tags( $inner ) );
-			if ( $span && ( null === $min || $span['start'] < $min ) ) {
-				$min = $span['start'];
-			}
+	$tags = class_exists( 'WP_HTML_Tag_Processor' ) ? new WP_HTML_Tag_Processor( $raw ) : null;
+	while ( $tags && $tags->next_tag( array( 'tag_name' => 'P', 'class_name' => 'sn-resume-rail' ) ) ) {
+		$text = '';
+		while ( $tags->next_token() && ! ( 'P' === $tags->get_tag() && $tags->is_tag_closer() ) ) {
+			$text .= '#text' === $tags->get_token_type() ? $tags->get_modifiable_text() : '';
+		}
+		$span = sn_resume_lane_span( trim( $text ) );
+		if ( $span && ( null === $min || $span['start'] < $min ) ) {
+			$min = $span['start'];
 		}
 	}
 	$GLOBALS['sn_resume_lane_axis'] = $min;
