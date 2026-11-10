@@ -12,6 +12,9 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Changed
+- **Each AI ability's `tokens_used` now says what it is.** The output schema of all five generative abilities describes the figure as an output-only estimate (characters / 4) that leaves out the prompt. The field keeps its name, so nothing that reads it breaks. Test: `tests/ai-tokens-used-schema.php`.
+
 ## [2026.11.6] - 2026-11-07 — The record sleeve for /services
 
 ### Added
