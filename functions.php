@@ -161,6 +161,7 @@ require_once __DIR__ . '/inc/related-notes.php';
 require_once __DIR__ . '/inc/cited-by.php'; // v10.21.0: [sn_cited_by] reverse-link footer (complement to deliberately-dead pingbacks)
 require_once __DIR__ . '/inc/next-essay.php'; // 14.9.0: the next pillar, at the end of each essay
 require_once __DIR__ . '/inc/404-recovery.php';
+require_once __DIR__ . '/inc/search-404.php'; // 2026-11-10: the 404 search is core/search, submitting to /notes/
 require_once __DIR__ . '/inc/post-share.php';
 require_once __DIR__ . '/inc/note-formats.php'; // "Also as Markdown · JSON · Print" under the Cite line (2026-10-31)
 require_once __DIR__ . '/inc/note-cite.php'; // Cite this note: the plugin's APA line and DOI under the share row, with APA and BibTeX copy buttons (plugin-guarded)
