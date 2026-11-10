@@ -8,7 +8,8 @@
  *                                      browser supports navigator.share
  *
  * Without JS: COPY no-ops, SHARE stays hidden. Nothing breaks. The
- * clipboard and the announcement come from sn-copy.js (window.snCopy).
+ * clipboard comes from sn-copy.js (window.snCopy), the announcement from
+ * core's wp.a11y.speak() (sn-copy's dependency, 2026-11-10).
  *
  * Data carried on each button:
  *   data-sn-share-url    — the canonical permalink
@@ -25,19 +26,17 @@
 
 	var COPIED_MS = 1600;
 
-	function wireCopy( btn, live ) {
+	// Core's polite region; it repeats an identical message itself. Absent
+	// only on a stale page that predates the dependency: the label still swaps.
+	function announce( msg ) {
+		if ( window.wp && window.wp.a11y && window.wp.a11y.speak ) {
+			window.wp.a11y.speak( msg );
+		}
+	}
+
+	function wireCopy( btn ) {
 		var original = btn.textContent;
 		var timer = null;
-
-		function announce( msg ) {
-			if ( ! live ) {
-				return;
-			}
-			// Clear first so an identical consecutive message still fires the
-			// live-region announcement.
-			live.textContent = '';
-			live.textContent = msg;
-		}
 
 		btn.addEventListener( 'click', function () {
 			// The share row copies a permalink, the cite line its text.
@@ -97,20 +96,18 @@
 			var copyBtn = row.querySelector( '.sn-note-share__copy' );
 			var nativeBtn = row.querySelector( '.sn-note-share__native' );
 			if ( copyBtn && window.snCopy ) { // sn-copy.js, its dependency.
-				wireCopy( copyBtn, window.snCopy.liveRegion( row, 'sn-note-share__status' ) );
+				wireCopy( copyBtn );
 			}
 			if ( nativeBtn ) {
 				wireNativeShare( nativeBtn );
 			}
 		}
-		// One polite region per cite line, shared by its two buttons. Without
-		// the copy helper the buttons stay unwired, like COPY above.
+		// Without the copy helper the buttons stay unwired, like COPY above.
 		var cites = window.snCopy ? document.querySelectorAll( '.sn-note-cite' ) : [];
 		for ( var j = 0; j < cites.length; j++ ) {
 			var buttons = cites[ j ].querySelectorAll( '.sn-note-cite__copy' );
-			var live = buttons.length ? window.snCopy.liveRegion( cites[ j ], 'sn-note-cite__status' ) : null;
 			for ( var k = 0; k < buttons.length; k++ ) {
-				wireCopy( buttons[ k ], live );
+				wireCopy( buttons[ k ] );
 			}
 		}
 	}

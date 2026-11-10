@@ -3,8 +3,8 @@
 // carrying data-sn-share-url and data-sn-share-title). Pinned: COPY writes the
 // copy permalink to the clipboard (or the textarea + execCommand fallback),
 // swaps its label to COPIED or COPY FAILED and back after 1.6 s, and says so
-// in a polite live region, since a label swap on the focused button is not
-// reliably announced. SHARE is revealed and calls navigator.share only where
+// through core's wp.a11y.speak() (2026-11-10), since a label swap on the
+// focused button is not reliably announced. SHARE is revealed and calls navigator.share only where
 // the Web Share API exists; elsewhere it stays hidden. Drives the REAL file.
 const { test, mock } = require('node:test');
 const assert = require('node:assert/strict');
@@ -31,7 +31,7 @@ function el(tag, attrs = {}) {
 }
 
 // The row exactly as sn_note_share_shortcode() prints it.
-function page({ clipboard = 'ok', execCommand = true, share = null, url = true, helper = true } = {}) {
+function page({ clipboard = 'ok', execCommand = true, share = null, url = true, helper = true, a11y = true } = {}) {
   const copy = el('BUTTON', url ? { 'data-sn-share-url': COPY_URL, 'data-sn-share-title': 'A note' } : {});
   copy.textContent = 'COPY LINK';
   const native = el('BUTTON', { 'data-sn-share-url': NATIVE_URL, 'data-sn-share-title': 'A note' });
@@ -40,7 +40,7 @@ function page({ clipboard = 'ok', execCommand = true, share = null, url = true, 
   const row = el('DIV');
   row.querySelector = (sel) => ({ '.sn-note-share__copy': copy, '.sn-note-share__native': native })[sel] || null;
   const body = el('BODY');
-  const log = { writes: [], shares: [], exec: [] };
+  const log = { writes: [], shares: [], exec: [], spoken: [] };
   const document = {
     readyState: 'complete', body,
     querySelectorAll: (sel) => (sel === '.sn-note-share' ? [row] : []),
@@ -54,15 +54,17 @@ function page({ clipboard = 'ok', execCommand = true, share = null, url = true, 
     navigator.clipboard = { writeText: (t) => { log.writes.push(t); return ctl.clipboard === 'ok' ? Promise.resolve() : Promise.reject(new Error('denied')); } };
   }
   if (share) navigator.share = (data) => { log.shares.push({ ...data }); return share === 'ok' ? Promise.resolve() : Promise.reject(new Error('AbortError')); };
+  const window = { document, navigator };
+  // Core's wp-a11y (sn-copy.js's dependency): speak() records what is said.
+  if (a11y) window.wp = { a11y: { speak: (msg, politeness) => log.spoken.push([msg, politeness]) } };
   const ctx = {
-    window: { document, navigator }, document, navigator,
+    window, document, navigator,
     setTimeout: (fn, ms) => setTimeout(fn, ms), clearTimeout: (id) => clearTimeout(id),
   };
   // sn-copy.js (the shared clipboard helper, 2026-10-31) first, as the script declares.
   if (helper) vm.runInNewContext(readFileSync(path.join(__dirname, '..', '..', 'assets', 'js', 'sn-copy.js'), 'utf8'), ctx);
   vm.runInNewContext(SRC, ctx);
-  const live = row.children.find((c) => c.attrs.role === 'status') || null;
-  return { copy, native, row, body, live, log, ctl };
+  return { copy, native, row, body, log, ctl };
 }
 
 const flush = () => new Promise((r) => setImmediate(r));
@@ -73,14 +75,14 @@ async function withTimers(fn) {
 
 test('COPY writes the permalink, shows COPIED, announces it politely, and reverts after 1.6 s', () => withTimers(async () => {
   const p = page();
-  assert.equal(p.live.attrs['aria-live'], 'polite');
-  assert.equal(p.live.textContent, '', 'silent until something happens');
+  assert.deepEqual(p.log.spoken, [], 'silent until something happens');
+  assert.equal(p.row.children.length, 0, 'no region of its own: core keeps the one polite region');
   p.copy.listeners.click();
   await flush();
   assert.deepEqual(p.log.writes, [COPY_URL]);
   assert.equal(p.copy.textContent, 'COPIED');
   assert.ok(p.copy.classList.contains('is-copied'));
-  assert.equal(p.live.textContent, 'Link copied to clipboard');
+  assert.deepEqual(p.log.spoken, [['Link copied to clipboard', undefined]], 'once, at core\'s default politeness (polite)');
   mock.timers.tick(1599);
   assert.equal(p.copy.textContent, 'COPIED', 'not before the 1.6 s');
   mock.timers.tick(1);
@@ -94,7 +96,7 @@ test('a refused clipboard shows COPY FAILED, announces it, and reverts', () => w
   await flush();
   assert.equal(p.copy.textContent, 'COPY FAILED');
   assert.ok(!p.copy.classList.contains('is-copied'));
-  assert.equal(p.live.textContent, 'Copy failed');
+  assert.deepEqual(p.log.spoken, [['Copy failed', undefined]]);
   mock.timers.tick(1600);
   assert.equal(p.copy.textContent, 'COPY LINK');
 }));
@@ -124,6 +126,7 @@ test('a second copy inside the window restarts the 1.6 s', () => withTimers(asyn
   assert.equal(p.copy.textContent, 'COPIED', 'the first timer no longer reverts it');
   mock.timers.tick(600);
   assert.equal(p.copy.textContent, 'COPY LINK');
+  assert.deepEqual(p.log.spoken.map((x) => x[0]), ['Link copied to clipboard', 'Link copied to clipboard'], 'the repeat is said again (core repeats an identical message)');
 }));
 
 test('a failure right after a success drops the COPIED style and restarts the 1.6 s', () => withTimers(async () => {
@@ -166,10 +169,11 @@ test('negative control: no Web Share keeps SHARE hidden and unwired; no URL make
 
 // The cite line (inc/note-cite.php) rides the same wiring: each
 // .sn-note-cite__copy button copies its data-sn-copy-text, swaps its label the
-// same way and announces its own data-sn-copied message in one polite region.
+// same way and announces its own data-sn-copied message through wp.a11y.speak().
 const APA = 'Lentino, J. (2026, October 17). A note (Version 2). Signal & Noise. https://doi.org/10.5281/zenodo.1';
 const BIB = '@online{lentino2026note,\n  author = {Lentino, Juan},\n  doi = {10.5281/zenodo.1}\n}';
 function citePage({ clipboard = 'ok', helper = true } = {}) {
+  const spoken = [];
   const apa = el('BUTTON', { 'data-sn-copy-text': APA, 'data-sn-copied': 'APA citation copied to clipboard' });
   apa.textContent = 'COPY APA';
   const bib = el('BUTTON', { 'data-sn-copy-text': BIB, 'data-sn-copied': 'BibTeX copied to clipboard' });
@@ -183,34 +187,33 @@ function citePage({ clipboard = 'ok', helper = true } = {}) {
     createElement: (tag) => el(tag.toUpperCase()),
   };
   const navigator = { clipboard: { writeText: (t) => { log.writes.push(t); return clipboard === 'ok' ? Promise.resolve() : Promise.reject(new Error('denied')); } } };
+  const window = { document, navigator, wp: { a11y: { speak: (msg) => spoken.push(msg) } } };
   const ctx = {
-    window: { document, navigator }, document, navigator,
+    window, document, navigator,
     setTimeout: (fn, ms) => setTimeout(fn, ms), clearTimeout: (id) => clearTimeout(id),
   };
   // sn-copy.js first, as the script declares (#621): the cite line copies through it too.
   if (helper) vm.runInNewContext(readFileSync(path.join(__dirname, '..', '..', 'assets', 'js', 'sn-copy.js'), 'utf8'), ctx);
   vm.runInNewContext(SRC, ctx);
-  const lives = row.children.filter((c) => c.attrs.role === 'status');
-  return { apa, bib, row, lives, log };
+  return { apa, bib, row, spoken, log };
 }
 
 test('cite: COPY BIBTEX writes the whole entry, shows COPIED, announces its own message, and reverts', () => withTimers(async () => {
   const p = citePage();
-  assert.equal(p.lives.length, 1, 'one polite region for the line, shared by both buttons');
-  assert.equal(p.lives[0].attrs['aria-live'], 'polite');
+  assert.equal(p.row.children.length, 0, 'no region of its own: core keeps the one polite region');
   p.bib.listeners.click();
   await flush();
   assert.deepEqual(p.log.writes, [BIB], 'the multi-line entry, byte for byte');
   assert.equal(p.bib.textContent, 'COPIED');
   assert.ok(p.bib.classList.contains('is-copied'));
-  assert.equal(p.lives[0].textContent, 'BibTeX copied to clipboard');
+  assert.deepEqual(p.spoken, ['BibTeX copied to clipboard']);
   assert.equal(p.apa.textContent, 'COPY APA', 'the other button is untouched');
   mock.timers.tick(1600);
   assert.equal(p.bib.textContent, 'COPY BIBTEX');
   p.apa.listeners.click();
   await flush();
   assert.deepEqual(p.log.writes, [BIB, APA]);
-  assert.equal(p.lives[0].textContent, 'APA citation copied to clipboard');
+  assert.deepEqual(p.spoken, ['BibTeX copied to clipboard', 'APA citation copied to clipboard']);
 }));
 
 test('cite: a refused clipboard shows COPY FAILED, drops the copied style, and announces it', () => withTimers(async () => {
@@ -219,7 +222,7 @@ test('cite: a refused clipboard shows COPY FAILED, drops the copied style, and a
   await flush();
   assert.equal(p.apa.textContent, 'COPY FAILED');
   assert.ok(!p.apa.classList.contains('is-copied'));
-  assert.equal(p.lives[0].textContent, 'Copy failed');
+  assert.deepEqual(p.spoken, ['Copy failed']);
   mock.timers.tick(1600);
   assert.equal(p.apa.textContent, 'COPY APA');
 }));
@@ -235,8 +238,18 @@ test('without the copy helper COPY stays unwired and SHARE still works (no throw
 test('cite: without the copy helper the buttons stay unwired and nothing throws', () => {
   const p = citePage({ helper: false });
   assert.equal(p.apa.listeners.click, undefined);
-  assert.equal(p.lives.length, 0);
+  assert.deepEqual(p.spoken, []);
 });
+
+test('a stale page without core\'s wp-a11y still copies and swaps the label, and nothing throws', () => withTimers(async () => {
+  const p = page({ a11y: false });
+  p.copy.listeners.click();
+  await flush();
+  assert.deepEqual(p.log.writes, [COPY_URL]);
+  assert.equal(p.copy.textContent, 'COPIED');
+  mock.timers.tick(1600);
+  assert.equal(p.copy.textContent, 'COPY LINK');
+}));
 
 // 2026-10-31: the formats line's Print is drawn here, so it never ships dead.
 function formatsPage({ print = true, readyState = 'complete' } = {}) {

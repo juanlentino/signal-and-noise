@@ -59,8 +59,6 @@
   var here = window.location.origin + window.location.pathname;
   var base = (canon && canon.href && canon.href.indexOf(window.location.origin + '/') === 0 ? canon.href : here).split('#')[0];
   var tocLinks = toc.querySelectorAll('a[href^="#"]');
-  // In place before the first message: a region added along with its text may say nothing.
-  var live = tocLinks.length ? copy.liveRegion(document.body, 'sn-section-link__status') : null;
   for (var i = 0; i < tocLinks.length; i++) { addSectionLink(tocLinks[i]); }
 
   function addSectionLink(tocLink) {
@@ -83,10 +81,12 @@
       );
     });
     // The label stays "#": the state shows as a CSS label above it, out of
-    // flow, so a copy never reflows the heading (review of #621).
+    // flow, so a copy never reflows the heading (review of #621). The message
+    // goes to core's polite region (wp-a11y, sn-copy's dependency), which
+    // repeats an identical one; a stale page without it still shows the state.
     function show(state, msg) {
-      live.textContent = ''; // cleared first, so the same message is announced again.
-      live.textContent = msg;
+      var a11y = window.wp && window.wp.a11y;
+      if (a11y && a11y.speak) { a11y.speak(msg); }
       btn.setAttribute('data-sn-state', state);
       if (timer) { clearTimeout(timer); }
       timer = setTimeout(function () { btn.removeAttribute('data-sn-state'); }, 1600);

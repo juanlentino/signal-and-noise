@@ -18,14 +18,10 @@ function el(tag, attrs = {}) {
     addEventListener(t, cb) { this.listeners[t] = cb; }, select() { this.selected = true; },
     contains(n) { for (let x = n; x; x = x.parentNode) { if (x === this) return true; } return false; },
   };
-  if (tag === 'SPAN') { // the live region: every write is logged
-    let t = ''; node.writes = [];
-    Object.defineProperty(node, 'textContent', { get() { return t; }, set(v) { t = v; node.writes.push(v); } });
-  }
   return node;
 }
 
-function page({ copy = true, clipboard = 'ok', canonical = 'https://juanlentino.com/notes/a-note/', origin = 'https://juanlentino.com', pathname = '/' } = {}) {
+function page({ copy = true, a11y = true, clipboard = 'ok', canonical = 'https://juanlentino.com/notes/a-note/', origin = 'https://juanlentino.com', pathname = '/' } = {}) {
   const nav = el('NAV', { class: 'sn-article-toc' });
   const link = (href, text) => { const a = el('A', { href }); a.textContent = text; return a; };
   const links = [link('#intro', 'Intro'), link('#the-gap', 'The gap'), link('#gone', 'Gone'), link('#references', 'References')];
@@ -41,12 +37,13 @@ function page({ copy = true, clipboard = 'ok', canonical = 'https://juanlentino.
     createElement: (t) => el(t.toUpperCase()),
   };
   const window = { document, navigator, location: { origin, pathname } };
+  const spoken = []; // core's wp-a11y (sn-copy.js's dependency): what speak() was given.
+  if (a11y) window.wp = { a11y: { speak: (msg, politeness) => spoken.push([msg, politeness]) } };
   const ctx = { window, document, navigator, setTimeout: (f, ms) => setTimeout(f, ms), clearTimeout: (t) => clearTimeout(t) };
   if (copy) vm.runInNewContext(read('sn-copy.js'), ctx);
   vm.runInNewContext(read('article-toc.js'), ctx);
   const btn = (key) => h[key].children.find((c) => c.tagName === 'BUTTON') || null;
-  const live = () => body.children.find((c) => c.attrs.role === 'status') || null;
-  return { h, btn, live, writes, ctl };
+  return { h, btn, body, spoken, writes, ctl };
 }
 const flush = () => new Promise((r) => setImmediate(r));
 
@@ -72,8 +69,7 @@ test('a click copies the canonical URL with the section id, shows COPIED, announ
     assert.deepEqual(p.writes, ['https://juanlentino.com/notes/a-note/#the-gap'], 'the canonical URL, not the address this copy was read at');
     assert.equal(b.textContent, '#', 'the label never changes width, so the heading never reflows (review of #621)');
     assert.equal(b.getAttribute('data-sn-state'), 'copied', 'the state shows beside it, out of flow');
-    assert.equal(p.live().textContent, 'Link to section copied');
-    assert.equal(p.live().attrs['aria-live'], 'polite');
+    assert.deepEqual(p.spoken, [['Link to section copied', undefined]], 'said once, at core\'s default politeness (polite)');
     mock.timers.tick(1600);
     assert.equal(b.getAttribute('data-sn-state'), null);
   } finally { mock.timers.reset(); }
@@ -87,7 +83,7 @@ test('a refused clipboard says so; without a canonical link the page URL is used
     await flush();
     assert.deepEqual(p.writes, ['https://juanlentino.com/notes/a-note/#intro'], 'the page URL when no canonical is declared');
     assert.equal(p.btn('intro').getAttribute('data-sn-state'), 'failed');
-    assert.equal(p.live().textContent, 'Copy failed');
+    assert.deepEqual(p.spoken, [['Copy failed', undefined]]);
   } finally { mock.timers.reset(); }
 });
 
@@ -97,13 +93,23 @@ test('negative control: without the copy helper no button is drawn (never a dead
   assert.equal(p.h.intro.getAttribute('aria-label'), null);
 });
 
-test('the live region exists before the first copy (a region added with its message may say nothing)', () => {
+test('no region of its own: core keeps the one polite region, and nothing is said before a copy', () => {
   const p = page();
-  assert.ok(p.live(), 'drawn with the buttons');
-  assert.equal(p.live().textContent, '');
+  assert.equal(p.body.children.length, 0);
+  assert.deepEqual(p.spoken, []);
 });
 
-test('a second copy inside the window restarts it, and the message is cleared before it is set again', async () => {
+test('a stale page without core\'s wp-a11y still copies and shows the state, and nothing throws', async () => {
+  mock.timers.enable({ apis: ['setTimeout'] });
+  try {
+    const p = page({ a11y: false });
+    p.btn('intro').listeners.click(); await flush();
+    assert.deepEqual(p.writes, ['https://juanlentino.com/notes/a-note/#intro']);
+    assert.equal(p.btn('intro').getAttribute('data-sn-state'), 'copied');
+  } finally { mock.timers.reset(); }
+});
+
+test('a second copy inside the window restarts it, and the message is said again', async () => {
   mock.timers.enable({ apis: ['setTimeout'] });
   try {
     const p = page();
@@ -115,7 +121,7 @@ test('a second copy inside the window restarts it, and the message is cleared be
     assert.equal(b.getAttribute('data-sn-state'), 'copied', 'the first timer no longer clears it');
     mock.timers.tick(600);
     assert.equal(b.getAttribute('data-sn-state'), null);
-    assert.deepEqual(p.live().writes, ['', 'Link to section copied', '', 'Link to section copied'], 'cleared first, so a repeat is announced');
+    assert.deepEqual(p.spoken.map((x) => x[0]), ['Link to section copied', 'Link to section copied'], 'each copy is said (core repeats an identical message)');
   } finally { mock.timers.reset(); }
 });
 
