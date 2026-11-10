@@ -138,6 +138,8 @@ function cron_events( $hook ) {
 
 require $theme_root . '/inc/purge-verify.php';       // sn_purge_verify_routes, report writer (priority 10), constants
 require $theme_root . '/inc/purge-verify-cron.php';  // the module under test
+require __DIR__ . '/lib/wp-html-api.php';
+snt_require_wp_html_api();
 
 $pass = 0; $fail = 0;
 function ok( $cond, $label ) {
