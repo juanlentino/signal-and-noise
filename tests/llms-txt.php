@@ -211,8 +211,8 @@ class WP_Query {
 function get_the_title( $p ) { return is_object( $p ) ? $p->post_title : ''; }
 function get_permalink( $p ) { return 'https://juanlentino.com/notes/' . ( is_object( $p ) ? $p->ID : $p ) . '/'; }
 function has_excerpt( $p ) { return false; }
-function get_the_excerpt( $p ) { return ''; }
-function wp_trim_words( $s, $n, $more ) { return $s; }
+function get_the_excerpt( $p ) { return $GLOBALS['__excerpts'][ $p->ID ] ?? ''; }
+function wp_trim_words( $s, $n, $more ) { $w = preg_split( '/\s+/', trim( (string) $s ) ); return count( $w ) > $n ? implode( ' ', array_slice( $w, 0, $n ) ) . $more : implode( ' ', $w ); }
 function wp_strip_all_tags( $s ) { return strip_tags( (string) $s ); }
 function wp_reset_postdata() { return true; }
 
@@ -222,6 +222,22 @@ $GLOBALS['__llms_query_posts'] = array(
 $recent = sn_llms_txt_recent_notes( 10 );
 ok( 'Signal & Noise' === ( $recent[0]['title'] ?? null ),
 	'recent-notes title decodes HTML entities before it reaches the text/plain body — got: ' . var_export( $recent[0]['title'] ?? null, true ) );
+
+// 2026-11-10: the summary comes from core's excerpt pipeline (get_the_excerpt,
+// which drops shortcodes and the blocks core leaves out of an excerpt), never
+// from raw post_content; a password-protected post never reaches the file.
+$GLOBALS['__llms_query_posts'] = array(
+	(object) array( 'ID' => 2, 'post_title' => 'Open', 'post_content' => 'RAW body [sn_shortcode] with <!-- wp:html -->markup<!-- /wp:html -->', 'post_password' => '' ),
+	(object) array( 'ID' => 3, 'post_title' => 'Locked', 'post_content' => 'PROTECTED body text', 'post_password' => 'pw' ),
+);
+$GLOBALS['__excerpts'] = array( 2 => 'Core&#8217;s excerpt of the open note, ' . implode( ' ', array_fill( 0, 40, 'word' ) ), 3 => 'PROTECTED excerpt' );
+$recent = sn_llms_txt_recent_notes( 10 );
+$sum    = (string) ( $recent[0]['summary'] ?? '' );
+ok( 0 === strpos( $sum, "Core\u{2019}s excerpt" ) && false === strpos( $sum, 'RAW' ) && false === strpos( $sum, 'sn_shortcode' ), 'the summary is core\'s excerpt, decoded for text/plain, not raw post_content: ' . $sum );
+ok( 28 === count( explode( ' ', $sum ) ) && '…' === mb_substr( $sum, -1 ), 'and it is trimmed to 28 words' );
+ok( 1 === count( $recent ) && false === strpos( serialize( $recent ), 'PROTECTED' ), 'a password-protected post never reaches llms-full.txt, even if the query let it through' );
+ok( 'publish' === WP_Query::$args['post_status'] && false === WP_Query::$args['has_password'], 'the recent-notes query asks for published, unprotected posts only' );
+unset( $GLOBALS['__excerpts'] );
 
 
 // --- 2026-10-10: Start Here and Objections listed; the summary counts derived ---
