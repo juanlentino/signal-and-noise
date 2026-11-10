@@ -58,7 +58,8 @@ add_filter( 'wpai_summarization_system_instruction', 'sn_theme_ai_note_summary_v
 function sn_theme_ai_official_note_summary( $input ) {
 	// By name: the AI plugin is optional and registers this ability only when
 	// its Summarization feature is on.
-	$ability = function_exists( 'wp_get_ability' ) ? wp_get_ability( 'ai/summarization' ) : null;
+	// wp_has_ability() first: wp_get_ability() on a missing name raises a _doing_it_wrong notice.
+	$ability = function_exists( 'wp_has_ability' ) && wp_has_ability( 'ai/summarization' ) ? wp_get_ability( 'ai/summarization' ) : null;
 	if ( ! $ability ) {
 		return null;
 	}
