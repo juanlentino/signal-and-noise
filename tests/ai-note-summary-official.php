@@ -45,7 +45,8 @@ class Fake_Ability {
 	}
 }
 $GLOBALS['__ability'] = null;
-function wp_get_ability( $name ) { return 'ai/summarization' === $name ? $GLOBALS['__ability'] : null; }
+function wp_has_ability( $name ) { return 'ai/summarization' === $name && null !== $GLOBALS['__ability']; }
+function wp_get_ability( $name ) { if ( null === $GLOBALS['__ability'] ) { $GLOBALS['__doing_it_wrong'] = ( $GLOBALS['__doing_it_wrong'] ?? 0 ) + 1; } return 'ai/summarization' === $name ? $GLOBALS['__ability'] : null; }
 
 $GLOBALS['__helper_calls'] = 0;
 function snt_ai_generate_with_constraints( $p, $s, $t ) { $GLOBALS['__helper_calls']++; return 'Helper summary.'; }
@@ -87,5 +88,6 @@ $GLOBALS['__ability'] = null;
 $out = sn_theme_ability_ai_page_note_summary( array( 'post_id' => 7 ) );
 ok( is_array( $out ) && 'Helper summary.' === $out['summary'] && 1 === $GLOBALS['__helper_calls'], 'without ai/summarization the helper path runs' );
 
+ok( empty( $GLOBALS['__doing_it_wrong'] ), 'a missing ai/summarization is checked with wp_has_ability(), so no _doing_it_wrong notice is raised' );
 echo "Result: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
