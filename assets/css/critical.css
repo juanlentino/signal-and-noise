@@ -286,8 +286,9 @@ p.has-rust-color a:not(.wp-element-button),
 }
 
 /* v10.38.3 — own the .screen-reader-text primitive. WordPress core ships this
-   accessibility utility ONLY inside its inline block styles (wp-block-library
-   + the skip-link block). The theme relied on those. When they don't take
+   accessibility utility only in block-library's common.css and the
+   wp-block-template-skip-link stylesheet. The theme relied on those. When
+   they don't take
    effect (an optimizer that strips block CSS, or the edge serving a stripped/
    older document), EVERY screen-reader-only label becomes visible text: the
    footer social-link labels ("Spotify", "LinkedIn", …, from the logos-only

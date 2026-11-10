@@ -55,5 +55,10 @@ ok(
 	'the hide rule targets the bare .screen-reader-text (covers social labels + search label, not just the skip link)'
 );
 
+// 2026-11-10: this is the one theme copy. The scoped copy in notes.css (clip:
+// rect(), no focus reveal) is gone: critical.css is inlined on /notes/ too.
+$notes = (string) file_get_contents( __DIR__ . '/../assets/css/notes.css' );
+ok( false === strpos( $notes, '.screen-reader-text' ), 'notes.css carries no second .screen-reader-text' );
+ok( false !== strpos( $css, "block-library's common.css and the" ) && false === strpos( $css, 'the skip-link block)' ), 'the comment names where core really ships the utility' );
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

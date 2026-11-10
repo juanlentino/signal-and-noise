@@ -36,6 +36,7 @@ adds a bullet below. A release is a separate, deliberate act:
 ### Removed
 - **The hand-printed Bebas Neue `@font-face` (`<style id="sn-critical-fonts">`).** Core already prints the same face from `theme.json` through `wp_print_font_faces()` in `<head>`, at the URL the theme preloads. The two font preloads stay. Test: `tests/head-sweep.php`.
 - **`a:focus-visible` and `.wp-block-button__link:focus-visible` from the global focus rule in `base.css`.** `theme.json`'s link and button elements already draw the same 2px blood ring at a 3px offset. The rule keeps bare buttons, ARIA roles, checkable and submit inputs, and `summary`, which those selectors do not reach. Nothing visible changes. Test: `tests/theme-json-elements.php`.
+- **The third copy of `.screen-reader-text`, in `notes.css`.** `critical.css` is inlined on `/notes/` too, and its copy matches core (`clip-path`, with the focus reveal). The `critical.css` comment now names where core ships the utility: block-library's `common.css` and the `wp-block-template-skip-link` stylesheet. Test: `tests/screen-reader-text-critical.php`.
 
 ## [2026.11.6] - 2026-11-07 — The record sleeve for /services
 
