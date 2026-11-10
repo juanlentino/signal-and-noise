@@ -323,7 +323,6 @@ ok( empty( $offenders ),
 foreach ( array(
 	'assets/css/command-palette.css' => 'the command palette',
 	'assets/css/keyboard-nav.css'    => 'the keyboard-help modal',
-	'assets/css/base.css'            => 'the skip link',
 	'assets/css/critical.css'        => 'the inlined skip link',
 ) as $rel => $what ) {
 	$css = (string) file_get_contents( $root . '/' . $rel );

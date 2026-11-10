@@ -51,7 +51,7 @@ $pass = 0; $fail = 0;
 function ok( $cond, $msg ) { global $pass, $fail; if ( $cond ) { $pass++; echo "PASS: $msg\n"; } else { $fail++; echo "FAIL: $msg\n"; } }
 
 // ── 1. Wiring: every closure is now a NAMED function on its hook ──
-ok( in_array( 'sn_skip_link', $GLOBALS['__test_actions']['wp_body_open'] ?? array(), true ), 'wp_body_open → sn_skip_link (named)' );
+ok( empty( $GLOBALS['__test_actions']['wp_body_open'] ), "nothing on wp_body_open: block templates get core's skip link, not a theme copy" );
 ok( in_array( 'sn_spotify_embed_dark', $GLOBALS['__test_filters']['embed_oembed_html'] ?? array(), true ), 'embed_oembed_html → sn_spotify_embed_dark (named)' );
 ok( in_array( 'sn_social_link_relative_url', $GLOBALS['__test_filters']['render_block_data'] ?? array(), true ), 'render_block_data → sn_social_link_relative_url (named)' );
 ok( in_array( '__return_empty_string', $GLOBALS['__test_filters']['the_generator'] ?? array(), true ), 'the_generator → __return_empty_string' );
@@ -109,11 +109,21 @@ foreach ( array(
 ok( false !== strpos( $real_out, 'src="https://open.spotify.com/embed/album/4aawyAB9vmqN3uQ7FjRGTy?utm_source=generator&#038;theme=0"' ) && false !== strpos( $real_out, 'style="border-radius: 0"' ), '#383: the live embed shape, bytes as shipped' );
 ok( false !== strpos( $ff_src, "next_tag( 'IFRAME' )" ) && false !== strpos( $ff_src, "set_attribute( 'src'" ), '#383: the iframe is found and written through WP_HTML_Tag_Processor' );
 
-// ── 5. Skip link ──
+// ── 5. Skip link: core's, plus the same link on the PHP-rendered pages ──
+if ( ! function_exists( 'esc_html__' ) ) { function esc_html__( $s, $d = null ) { return $s; } }
 ob_start();
-sn_skip_link();
+sn_skip_link_outside_block_templates();
 $link = ob_get_clean();
-ok( false !== strpos( $link, 'class="sn-skip-link"' ) && false !== strpos( $link, 'href="#wp--skip-link--target"' ), 'skip link renders with brand class + skip target' );
+ok( '<a class="skip-link screen-reader-text" id="wp-skip-link" href="#wp--skip-link--target">Skip to content</a>' === $link, "the PHP-rendered pages print core's own skip link markup" );
+foreach ( array( 'page-notes-render', 'page-index-render', 'page-notes-tags-render' ) as $r ) {
+	$src = (string) file_get_contents( __DIR__ . "/../inc/$r.php" );
+	$at  = strpos( $src, '<?php sn_skip_link_outside_block_templates(); ?>' );
+	ok( false !== $at && $at > strpos( $src, 'wp_body_open();' ) && $at < strpos( $src, '<main class="' ), "$r: the skip link comes right after wp_body_open(), before the header and the main" );
+	ok( false !== strpos( $src, '<main class="' ) && false !== strpos( $src, 'id="wp--skip-link--target"' ), "$r: its <main> is the target" );
+}
+$crit = (string) file_get_contents( __DIR__ . '/../assets/css/critical.css' );
+ok( 1 === preg_match( '/#wp-skip-link:focus\s*\{[^}]*clip-path:\s*none;[^}]*background:\s*var\(--sn-panel\);[^}]*color:\s*var\(--sn-panel-ink\);[^}]*outline:\s*2px solid var\(--wp--preset--color--blood\)/s', $crit ), 'on focus the link shows: unclipped, the panel and its ink, the blood outline' );
+ok( false === strpos( $crit, "#wp-skip-link {\n\tdisplay: none;" ) && 1 === preg_match( '/\.screen-reader-text\s*\{[^}]*clip-path:\s*inset\(50%\)/s', $crit ), "core's link is no longer hidden; .screen-reader-text keeps it off screen until focus" );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

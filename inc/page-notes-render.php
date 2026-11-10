@@ -159,6 +159,7 @@ wp_head();
 </head>
 <body <?php body_class( 'sn-notes-body' ); ?>>
 <?php wp_body_open(); ?>
+<?php sn_skip_link_outside_block_templates(); ?>
 
 <?php
 // Header was pre-rendered above (before wp_head ran) so the block-

@@ -246,8 +246,6 @@ $expected_shared = array(
 		'body::after',    // scanline
 		'::selection',
 		'::-moz-selection',
-		'.sn-skip-link',  // first tab stop: must be styled before any script runs
-		'.sn-skip-link:focus',
 	),
 	// Breakpoint overrides live in media queries, which Group 1 does not compare,
 	// so the base-context overlap here is empty and must stay empty.

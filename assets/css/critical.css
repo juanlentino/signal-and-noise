@@ -253,38 +253,36 @@ p.has-rust-color a:not(.wp-element-button),
 	text-underline-offset: 3px;
 }
 
-/* --- Skip to Content (Accessibility) --- */
-.sn-skip-link {
+/* --- Skip to Content (Accessibility) ---
+   Core's link: <a id="wp-skip-link" class="skip-link screen-reader-text">,
+   inserted first in .wp-site-blocks' place by _block_template_add_skip_link()
+   and pointed at the template's <main> (inc/frontend-filters.php prints the
+   same link on the three PHP-rendered pages). .screen-reader-text hides it
+   until it has focus; then it shows as the panel, in the heading face, with
+   the blood outline. The ID selector beats core's skip-link stylesheet, and
+   this lives in critical.css because that stylesheet can be dropped
+   (the v10.38.3 lesson). */
+#wp-skip-link:focus {
 	position: absolute;
-	top: -100%;
+	top: 0.5rem;
 	left: 1rem;
 	z-index: 999999;
+	display: block;
+	width: auto;
+	height: auto;
+	margin: 0;
+	clip-path: none;
 	background: var(--sn-panel);
 	color: var(--sn-panel-ink);
 	padding: 0.75rem 1.5rem;
 	font-family: var(--wp--preset--font-family--heading);
 	font-size: 0.85rem;
+	line-height: normal;
 	letter-spacing: 0.1em;
 	text-transform: uppercase;
 	text-decoration: none;
-}
-
-.sn-skip-link:focus {
-	top: 0.5rem;
 	outline: 2px solid var(--wp--preset--color--blood);
 	outline-offset: 2px;
-}
-
-/* v9.5.1: hide WordPress core's native block-template skip-link
-   (<a id="wp-skip-link">, emitted by _block_template_add_skip_link()). The
-   theme already provides its own brand-styled .sn-skip-link first in the DOM
-   via wp_body_open(), so core's is a DUPLICATE "Skip to content" link on every
-   block-template page. ID-selector specificity (1,0,0) beats core's inline
-   .skip-link.screen-reader-text rule, so this wins regardless of load order.
-   Not an a11y regression: the theme's link comes first in tab order and points
-   at the same #wp--skip-link--target. */
-#wp-skip-link {
-	display: none;
 }
 
 /* v10.38.3 — own the .screen-reader-text primitive. WordPress core ships this

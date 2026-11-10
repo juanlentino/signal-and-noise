@@ -43,6 +43,7 @@ $sn_footer_html = ob_get_clean();
 </head>
 <body <?php body_class( 'sn-notes-body' ); ?>>
 <?php wp_body_open(); ?>
+<?php sn_skip_link_outside_block_templates(); ?>
 <?php
 // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- captured do_blocks() output.
 echo $sn_header_html;
