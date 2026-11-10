@@ -160,9 +160,17 @@ foreach ( array( 'print_emoji_detection_script', 'wp_enqueue_emoji_styles' ) as 
 	ok( array() === $emoji_hit, "emoji stays: the theme never removes $emoji_cb" );
 }
 
+// Core's inline-style API, recorded: src-less handle, inline CSS, printed by handle.
+$GLOBALS['__styles'] = array();
+function wp_register_style( $h, $src, $deps = array(), $ver = false ) { $GLOBALS['__styles'][ $h ] = array( 'src' => $src, 'css' => array() ); return true; }
+function wp_add_inline_style( $h, $css ) { $GLOBALS['__styles'][ $h ]['css'][] = $css; return true; }
+function wp_print_styles( $h = '' ) { $GLOBALS['__printed'][] = $h; echo '<style id="' . $h . '-inline-css">' . "\n" . implode( "\n", $GLOBALS['__styles'][ $h ]['css'] ?? array() ) . "\n</style>\n"; return array( $h ); }
+
 // ── 2. theme-color meta (inc/assets-frontend.php) ──
 require __DIR__ . '/../inc/assets-frontend.php';
 
+require_once __DIR__ . '/lib/wp-inline-script.php';
+snt_require_wp_inline_script();
 require __DIR__ . '/../inc/dark-mode.php';
 
 // 2026-11-10: one @font-face source. Core prints theme.json's fontFace through
@@ -178,6 +186,13 @@ foreach ( $sn_tj['settings']['typography']['fontFamilies'] as $sn_fam ) {
 }
 preg_match_all( '/<link rel="preload" href="([^"]+)" as="font"/', $sn_heads, $sn_pre );
 ok( 2 === count( $sn_pre[1] ) && array() === array_diff( $sn_pre[1], $sn_srcs ), 'both font preloads match a URL core prints for a theme.json face' );
+
+// 2026-11-10: critical.css goes through core's inline-style API at priority 50.
+$GLOBALS['__printed'] = array();
+$sn_h50 = render_wp_head_at( 50 );
+ok( false === ( $GLOBALS['__styles']['sn-critical']['src'] ?? true ) && 1 === count( $GLOBALS['__styles']['sn-critical']['css'] ?? array() ), 'critical.css is a src-less handle with one inline style' );
+ok( array( 'sn-critical' ) === $GLOBALS['__printed'] && false !== strpos( $sn_h50, '<style id="sn-critical-inline-css">' ), 'and it is printed by handle at priority 50, where the raw tag was' );
+ok( false === strpos( (string) file_get_contents( __DIR__ . '/../inc/assets-frontend.php' ), '<style id="sn-critical-inline">' ), 'no raw <style> echo is left' );
 
 $head1 = strtolower( render_wp_head_at( 1 ) );
 ok( strpos( $head1, 'name="theme-color"' ) !== false, 'A4: <meta name="theme-color"> emitted in priority-1 wp_head closure' );

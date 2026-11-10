@@ -50,7 +50,13 @@ No page had an inline event handler (`onload=` and the like).
 
 The theme-init hash is pinned in code as `SN_THEME_INIT_SHA256`, and
 `tests/theme-init-csp-hash.php` fails if the script, the constant and the
-comment disagree. The two core hashes are pinned nowhere: they come from the
+comment disagree. Since 2026-11-10 the theme prints it through core's
+`wp_print_inline_script_tag()`, which wraps the data in one newline on each
+side: the same bytes as the hand-written tag, so the hash did not change. The
+suite renders it through core's real function (fetched by
+`tools/fetch-wp-test-core.sh`). A plugin that adds an attribute through
+`wp_inline_script_attributes` (a nonce, say) leaves the hash alone, but the
+suite's no-nonce check will say so. The two core hashes are pinned nowhere: they come from the
 live page. The emoji loader stays (owner decision 2026-09-29), so its hash
 stays in the policy.
 

@@ -29,6 +29,8 @@ function is_customize_preview() { return false; }
 function has_site_icon() { return ! empty( $GLOBALS['__icon'] ); }
 function get_site_icon_url( $size ) { return empty( $GLOBALS['__icon'] ) ? '' : "https://x.test/up/icon-$size.png"; }
 
+require_once __DIR__ . '/lib/wp-inline-script.php';
+snt_require_wp_inline_script();
 require __DIR__ . '/../inc/dark-mode.php';
 
 // core's wp_site_icon(), verbatim from wp-includes/general-template.php (7.1.4).

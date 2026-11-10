@@ -3,7 +3,7 @@
  * Guard: critical.css carries its own prefers-reduced-motion override for
  * `html { scroll-behavior: smooth }`, AFTER the smooth rule.
  *
- * The inline <style id="sn-critical-inline"> prints at wp_head priority 50,
+ * The inline <style id="sn-critical-inline-css"> prints at wp_head priority 50,
  * after the combined stylesheet, so base.css's reduce override (same
  * specificity, earlier in the cascade) lost to it: the 2026-10-18 sweep
  * measured smooth scrolling surviving prefers-reduced-motion: reduce. Only an

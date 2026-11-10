@@ -86,10 +86,13 @@ function sn_asset_ver( $relative_path ) {
 add_action( 'wp_head', function() {
 	$css_file = get_theme_file_path( 'assets/css/critical.css' );
 	if ( file_exists( $css_file ) ) {
-		echo '<style id="sn-critical-inline">' . "\n";
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents, WordPress.Security.EscapeOutput.OutputNotEscaped -- repo-shipped, theme-owned CSS file (assets/css/critical.css); trusted by construction and intentionally emitted raw. Escaping would corrupt the stylesheet.
-		echo file_get_contents( $css_file );
-		echo '</style>' . "\n";
+		// Core's inline-style API (2026-11-10): a src-less handle carries the
+		// CSS and is printed here, at priority 50, so its place in <head> does
+		// not move. Core prints it as <style id="sn-critical-inline-css">.
+		wp_register_style( 'sn-critical', false, array(), null ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion -- no file, nothing to version.
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- repo-shipped, theme-owned CSS file (assets/css/critical.css); trusted by construction.
+		wp_add_inline_style( 'sn-critical', (string) file_get_contents( $css_file ) );
+		wp_print_styles( 'sn-critical' );
 	}
 }, 50 );
 
