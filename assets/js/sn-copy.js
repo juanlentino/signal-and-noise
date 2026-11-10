@@ -5,9 +5,13 @@
  * text( s ) resolves once s is on the clipboard: the Clipboard API, else a
  * transient off-screen textarea that is SELECTED and copied with
  * execCommand (which copies the selection, nothing else). It rejects when
- * neither works. liveRegion( parent, className ) appends a visually hidden
- * polite status region, so a copy can be announced: a button's own label
- * swap is not reliably re-announced while it has focus.
+ * neither works.
+ *
+ * The callers announce a copy through core's wp.a11y.speak() (this script
+ * depends on 'wp-a11y', inc/sn-copy.php): a button's own label swap is not
+ * reliably re-announced while it has focus. Core keeps one polite region per
+ * page and repeats an identical message (2026-11-10; this file used to build
+ * its own region per row).
  *
  * Buildless ES5. Loaded as a dependency of both scripts.
  *
@@ -41,27 +45,6 @@
 					reject( e );
 				}
 			} );
-		},
-
-		// Inline styles keep it hidden without theme CSS; the WP-provided
-		// .screen-reader-text class is belt-and-braces.
-		liveRegion: function ( parent, className ) {
-			var live = document.createElement( 'span' );
-			live.className = className + ' screen-reader-text';
-			live.setAttribute( 'role', 'status' );
-			live.setAttribute( 'aria-live', 'polite' );
-			live.style.position = 'absolute';
-			live.style.width = '1px';
-			live.style.height = '1px';
-			live.style.margin = '-1px';
-			live.style.padding = '0';
-			live.style.border = '0';
-			live.style.overflow = 'hidden';
-			live.style.clip = 'rect(0 0 0 0)';
-			live.style.clipPath = 'inset(50%)';
-			live.style.whiteSpace = 'nowrap';
-			parent.appendChild( live );
-			return live;
 		}
 	};
 }() );

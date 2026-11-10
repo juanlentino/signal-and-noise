@@ -47,6 +47,7 @@ No page had an inline event handler (`onload=` and the like).
 | `<script id="wp-importmap" type="importmap">` | core | `sha256-Jf2lCBPqQiy5BB3Wn7wYsahOkxB6fFTQrCph9O3wswc=` | every core update (the map carries module `ver=` hashes) |
 | `<script type="module">` (emoji loader) | core | `sha256-iplf8gaE6Q7wxi4LmVk6F7Cwwuk4JEp+qC/FWJul78o=` | core changes the loader |
 | `<script type="speculationrules">` | core + `inc/speculation.php` | none needed | allowed by `'inline-speculation-rules'` |
+| `<script id="wp-i18n-js-after">` (single notes only) | core, through the theme's `sn-copy` dependency on `wp-a11y` (`inc/sn-copy.php`) | `sha256-wv9t8ovqnH4ayVaS46LraLM76HAxxF+W6+UxmHbZ6oI=` | core changes wp-i18n's text-direction line, or the site's locale writes right to left |
 
 The theme-init hash is pinned in code as `SN_THEME_INIT_SHA256`, and
 `tests/theme-init-csp-hash.php` fails if the script, the constant and the
@@ -59,6 +60,29 @@ suite renders it through core's real function (fetched by
 suite's no-nonce check will say so. The two core hashes are pinned nowhere: they come from the
 live page. The emoji loader stays (owner decision 2026-09-29), so its hash
 stays in the policy.
+
+Since 2026-11-10 the share row and the section links announce a copy through
+core's `wp.a11y.speak()`, so `sn-copy` depends on `wp-a11y`. That pulls in
+`wp-dom-ready`, `wp-i18n` and `wp-hooks` (files, so `'self'`) and one inline
+script, wp-i18n's text direction:
+
+```
+wp.i18n.setLocaleData( { 'text direction\u0004ltr': [ 'ltr' ] } );
+//# sourceURL=wp-i18n-js-after
+```
+
+99 bytes between the tags, one newline on each side, on WordPress 7.1.4 in
+en_US. It prints only where `sn-copy` loads: the pages `templates/single.html`
+serves (notes, and attachment pages), not the home page, the index pages or
+the Spanish pages. The Spanish pages change only `lang`,
+never the locale, so the bytes would not differ there. Its hash is pinned as
+`SN_COPY_I18N_CSP_SHA256`, and `tests/sn-copy-csp-hash.php` prints the footer
+through core's real `WP_Scripts` and fails unless that is the only inline
+script on the chain and the constant, this table and the bytes agree. Add the
+one source to the live rule's `script-src`; do not paste a line rebuilt from
+this page, since the live rule carries hashes this table does not. Without it
+nothing breaks (`wp.i18n` then defaults to left to right), but every note logs
+a violation and the plugin's daily check raises a watch.
 
 Each hash is over exactly the bytes between the opening tag's `>` and
 `</script>`, leading and trailing newline included. Sizes on 2026-10-17:
@@ -128,7 +152,8 @@ import sys, re, hashlib, base64
 h = open(sys.argv[1], 'rb').read()
 for name, pat in [('theme-init', rb'<script id="sn-theme-init">(.*?)</script>'),
                   ('importmap', rb'<script id="wp-importmap" type="importmap">(.*?)</script>'),
-                  ('emoji-module', rb'<script type="module">(.*?)</script>')]:
+                  ('emoji-module', rb'<script type="module">(.*?)</script>'),
+                  ('wp-i18n-after', rb'<script id="wp-i18n-js-after">(.*?)</script>')]:
     for b in re.findall(pat, h, re.S):
         print(name, len(b), 'sha256-' + base64.b64encode(hashlib.sha256(b).digest()).decode())
 EOF
@@ -136,7 +161,8 @@ EOF
 
 Compare with the table, update the Transform Rule, and update this doc. Run it
 against a few pages, not just the home page: a page that enqueues another
-script module gets a different import map.
+script module gets a different import map, and only a single note carries
+`wp-i18n-js-after`.
 
 **WordPress 7.2 might change this** (unverified): any core release can add,
 drop or reshape an inline script. Check

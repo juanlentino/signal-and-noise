@@ -157,6 +157,7 @@ foreach ( $expected as $handle => list( $slug ) ) {
 }
 ok( isset( $GLOBALS['__enq_js']['sn-article-toc'] ), 'control: a sibling singular-gated handle (sn-article-toc) IS enqueued on the same request, so the absence above is a reading, not a blind harness' );
 ok( array( 'sn-copy' ) === ( $GLOBALS['__enq_js']['sn-article-toc']['deps'] ?? null ) && isset( $GLOBALS['__reg_js']['sn-copy'] ), 'sn-article-toc depends on sn-copy, registered on the same request (the section links copy through it; without it they are never drawn)' );
+ok( array( 'wp-a11y' ) === ( $GLOBALS['__reg_js']['sn-copy']['deps'] ?? null ), "sn-copy depends on core's wp-a11y, so both copy scripts announce through wp.a11y.speak() (2026-11-10; its inline script is pinned in tests/sn-copy-csp-hash.php)" );
 
 $GLOBALS['__singular'] = false; $GLOBALS['__page'] = 'contact'; $GLOBALS['__enq_js'] = array();
 fire( 'wp_enqueue_scripts' );
