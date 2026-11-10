@@ -99,8 +99,8 @@ foreach ( token_get_all( $dm ) as $t ) {
 ok( false !== strpos( $code, 'assets/brand/apple-touch-icon.png' ), 'the opaque brand icon is emitted' );
 ok( 1 === substr_count( $code, "'apple-touch-icon'" ) || 1 === substr_count( $code, 'rel="apple-touch-icon"' ),
 	'exactly ONE apple-touch-icon is emitted' );
-ok( 1 === preg_match( "/add_filter\\(\\s*'site_icon_meta_tags',\\s*'__return_empty_array'\\s*\\)/", $code ),
-	"core's Site Icon tags are removed wholesale — wp_site_icon() runs at wp_head:99, AFTER this theme's :1, so its apple-touch-icon would be the link iOS takes and its icon pair a second, competing favicon set" );
+ok( false === strpos( $code, '__return_empty_array' ) && 1 === preg_match( "/add_filter\\(\\s*'site_icon_meta_tags',\\s*'sn_site_icon_meta_tags'\\s*\\)/", $code ),
+	"core's Site Icon tags are kept, with the theme SVG put first (tests/site-icon.php); the theme's own apple-touch-icon prints only when no Site Icon is set, so iOS never gets two. With a Site Icon set, core's apple-touch-icon is made from the upload, which must be the opaque icon-512.png above" );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

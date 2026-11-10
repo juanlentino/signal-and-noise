@@ -75,6 +75,26 @@ add_action(
 );
 
 /**
+ * One icon link from assets/brand/, versioned: a browser's favicon cache is
+ * keyed on the URL and outlives every page cache, so a changed icon at the
+ * same URL never shows (the 13.5.0 .ico was a black tile and stayed one after
+ * it was fixed).
+ *
+ * @param string $rel   The rel value.
+ * @param string $path  Theme-relative path.
+ * @param string $extra Literal extra attributes.
+ * @return string
+ */
+function sn_brand_icon_link( $rel, $path, $extra ) {
+	return sprintf(
+		'<link rel="%1$s" href="%2$s"%3$s>',
+		esc_attr( $rel ),
+		esc_url( add_query_arg( 'ver', sn_asset_ver( $path ), get_theme_file_uri( $path ) ) ),
+		$extra
+	);
+}
+
+/**
  * Browser-chrome colour and icons.
  *
  * `theme-color` cannot read a CSS variable, so the two literals here are the
@@ -83,12 +103,13 @@ add_action(
  * browser bar brand-red regardless of the page under it, which read as a
  * notification rather than as chrome.
  *
- * ONE icon set, from assets/brand/. favicon.svg is the JL tile and
- * carries its own `prefers-color-scheme` rule, so it inverts on the OS scheme
- * with no light/dark pair and nothing for the toggle script to swap. The .ico
- * is the raster fallback for browsers that skip SVG icons; the apple-touch-icon
- * is a single OPAQUE 180px PNG — iOS renders home-screen transparency as
- * black, so there is no transparent variant to offer.
+ * The icons are core's Site Icon (Settings > General), which wp_site_icon()
+ * prints at wp_head priority 99: the PNG sizes and the apple-touch-icon. The
+ * theme puts its versioned favicon.svg (the JL tile, which inverts on the OS
+ * scheme by itself) at the front of that list (sn_site_icon_meta_tags()).
+ * Core prints nothing when no Site Icon is set, so then the theme prints its
+ * own set here: the SVG, the .ico raster fallback and the opaque 180px
+ * apple-touch-icon (iOS renders home-screen transparency as black).
  */
 add_action(
 	'wp_head',
@@ -96,39 +117,32 @@ add_action(
 		echo '<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">' . "\n";
 		echo '<meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)">' . "\n";
 
-		// Versioned: a browser's favicon cache is keyed on the URL and outlives
-		// every page cache, so a changed icon at the same URL never shows (the
-		// 13.5.0 .ico was a black tile and stayed one after it was fixed).
+		if ( function_exists( 'has_site_icon' ) && has_site_icon() ) {
+			return; // Core prints the set; the SVG joins it below.
+		}
 		foreach ( array(
 			array( 'icon', 'assets/brand/favicon.svg', ' type="image/svg+xml"' ),
 			array( 'icon', 'assets/brand/favicon.ico', ' sizes="any"' ),
 			array( 'apple-touch-icon', 'assets/brand/apple-touch-icon.png', '' ),
 		) as $icon ) {
-			list( $rel, $path, $extra ) = $icon;
-			printf(
-				'<link rel="%1$s" href="%2$s"%3$s>' . "\n",
-				esc_attr( $rel ),
-				esc_url( add_query_arg( 'ver', sn_asset_ver( $path ), get_theme_file_uri( $path ) ) ),
-				$extra // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- literal attribute strings from the array above.
-			);
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in sn_brand_icon_link().
+			echo sn_brand_icon_link( $icon[0], $icon[1], $icon[2] ) . "\n";
 		}
 	},
 	1
 );
 
 /**
- * Drop core's Site Icon tags from the front end.
+ * Put the theme's SVG icon first in core's Site Icon tags. Runs only when a
+ * Site Icon is set (wp_site_icon() returns early otherwise).
  *
- * `wp_site_icon()` runs on wp_head at priority 99 — AFTER the block above at
- * priority 1 — and emits its own `icon`, `apple-touch-icon` and
- * `msapplication-TileImage` links for the Site Icon set in Settings → General.
- * Being last, its apple-touch-icon is the one iOS takes, and its `icon` pair
- * would sit beside the theme's as a second, competing favicon set. Returning
- * an empty list removes all of them; the uploaded Site Icon still serves the
- * surfaces that read it directly (wp-admin, the login screen, the web app
- * manifest).
+ * @param string[] $tags Core's tags.
+ * @return string[]
  */
-add_filter( 'site_icon_meta_tags', '__return_empty_array' );
+function sn_site_icon_meta_tags( $tags ) {
+	return array_merge( array( sn_brand_icon_link( 'icon', 'assets/brand/favicon.svg', ' type="image/svg+xml"' ) ), (array) $tags );
+}
+add_filter( 'site_icon_meta_tags', 'sn_site_icon_meta_tags' );
 
 /**
  * The toggle's words in the page's language (Spanish on a Spanish page,
