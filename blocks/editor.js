@@ -52,7 +52,18 @@
 					onChange: function ( v ) { props.setAttributes( { attribution: v } ); }, placeholder: '— attribution' } )
 			);
 		},
-		save: function () { return null; }
+		save: function () { return null; },
+		// Out of the inserter (block.json): core/pullquote with the Pull-quote
+		// style is the house pull-quote. A written one converts in one step.
+		transforms: {
+			to: [ {
+				type: 'block',
+				blocks: [ 'core/pullquote' ],
+				transform: function ( a ) {
+					return blocks.createBlock( 'core/pullquote', { value: a.body, citation: a.attribution, className: 'is-style-pull-quote' } );
+				}
+			} ]
+		}
 	} );
 
 	// Owner-placeable pillar rail. No attributes: render.php derives the
@@ -123,7 +134,8 @@
 		{ block: 'core/quote', style: 'epigraph', title: 'Epigraph', description: 'An opening quotation, set above the argument.' },
 		{ block: 'core/list', style: 'references', title: 'References', description: 'A source list set in mono.' },
 		{ block: 'core/list', style: 'checklist', title: 'Checklist', description: 'Steps the reader acts on, each with an empty box.' },
-		{ block: 'core/table', style: 'sn-table', title: 'Comparison table', description: 'Hairline rules and a small-caps header row.' }
+		{ block: 'core/table', style: 'sn-table', title: 'Comparison table', description: 'Hairline rules and a small-caps header row.' },
+		{ block: 'core/pullquote', style: 'pull-quote', title: 'Pull-quote', description: 'Black rules, italic body, mono uppercase attribution.' }
 	];
 
 	SN_STYLE_VARIATIONS.forEach( function ( v ) {

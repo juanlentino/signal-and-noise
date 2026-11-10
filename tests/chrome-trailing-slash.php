@@ -29,6 +29,11 @@ foreach ( $files as $file ) {
 	$src = (string) file_get_contents( $file );
 	// href="/x" in markup and "url":"/x" in block attributes; root-relative only.
 	preg_match_all( '#(?:href=\\\\?"|"url":")(/[^"\\\\]*)#', $src, $m );
+	if ( 'lang-chrome-footer.php' === basename( $file ) ) {
+		// The Spanish meta-nav is keyed on each link's href ('/now/' => ...).
+		preg_match_all( "#'(/[^']*)'\\s*=>#", $src, $k );
+		$m[1] = array_merge( $m[1], $k[1] );
+	}
 	foreach ( $m[1] as $path ) {
 		$bare = (string) preg_replace( '/[?#].*$/', '', $path );
 		if ( '/' === $bare || '//' === substr( $path, 0, 2 ) || false !== strpos( basename( $bare ), '.' ) ) {

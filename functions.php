@@ -36,7 +36,8 @@
  *   inc/abilities-registration.php — WP 7.0 Abilities registration (theme-owned read + generative; splits into abilities-*.php)
  *   inc/post-frontmatter.php     — long-form post frontmatter rendering
  *   inc/pillar-title-eyebrow.php — designation eyebrow on flagged essay Pages (v10.48.0)
- *   inc/block-bindings.php       — signal-noise/post-field Block Bindings source (reading_time|pillar|canonical|og_title) (v9.11.0)
+ *   inc/block-bindings.php       — signal-noise/post-field Block Bindings source (pillar|canonical|og_title) (v9.11.0)
+ *   inc/post-time-to-read.php    - core/post-time-to-read shows the plugin's reading-time figure (2026-11-10)
  *   inc/post-updated-date.php    — [sn_updated_date] "Updated YYYY.MM.DD" line for materially-revised notes (v9.10.0)
  *   inc/provenance-surface.php   — [sn_prov_chip] byline pill + [sn_prov_panel] record, plugin-guarded (v10.30.0)
  *   inc/hero-pulse.php           — the home hero's pulse: last 24h of traffic as a waveform mask, plugin-guarded
@@ -68,6 +69,7 @@
  *   inc/llms-txt.php             — /llms.txt + /llms-full.txt AEO discoverability virtual routes (v10.19.0; pillar section v10.49.0)
  *   inc/gpc-json.php             — /.well-known/gpc.json Global Privacy Control declaration (v10.19.0)
  *   inc/opensearch.php           — /opensearch.xml OSDD + rel=search autodiscovery over /notes/?s= (v10.19.0)
+ *   inc/machine-routes.php       - rewrite rules + sn_machine query var for the five machine files, so they resolve as routes, not 404s (2026-11-10)
  *   inc/agents-manifest.php      — /.well-known/agents.json machine-surfaces discovery manifest + <head> alternate link (v10.37.0)
  *   inc/note-uid.php             — canonical lowercase+trim read of the plugin-owned _sn_prov_uid meta (v10.49.0)
  *   inc/content-json-document.php — content-as-data JSON document builder (machine-readability sub-project C, v10.38.0)
@@ -151,6 +153,7 @@ require_once __DIR__ . '/inc/search-marker-lane.php'; // 2026.10: where a search
 require_once __DIR__ . '/inc/resume-lanes.php'; // 2026.10: résumé roles on one shared timeline
 require_once __DIR__ . '/inc/provenance-title-badge.php'; // v11.11.0: the provenance badge joins the BROW on signed Pages (was appended at the content foot by the plugin's the_content filter).
 require_once __DIR__ . '/inc/block-bindings.php';
+require_once __DIR__ . '/inc/post-time-to-read.php'; // 2026-11-10: core's Time to Read block, worded "N min read" from the plugin's figure
 require_once __DIR__ . '/inc/post-updated-date.php';
 require_once __DIR__ . '/inc/provenance-surface.php'; // v10.30.0: [sn_prov_chip] byline pill + [sn_prov_panel] record — theme-side placement for the plugin's public provenance rendering (plugin-guarded)
 require_once __DIR__ . '/inc/print-colophon.php'; // the printed note's proof: full hash, status, verify address written out
@@ -158,6 +161,7 @@ require_once __DIR__ . '/inc/related-notes.php';
 require_once __DIR__ . '/inc/cited-by.php'; // v10.21.0: [sn_cited_by] reverse-link footer (complement to deliberately-dead pingbacks)
 require_once __DIR__ . '/inc/next-essay.php'; // 14.9.0: the next pillar, at the end of each essay
 require_once __DIR__ . '/inc/404-recovery.php';
+require_once __DIR__ . '/inc/search-404.php'; // 2026-11-10: the 404 search is core/search, submitting to /notes/
 require_once __DIR__ . '/inc/post-share.php';
 require_once __DIR__ . '/inc/note-formats.php'; // "Also as Markdown · JSON · Print" under the Cite line (2026-10-31)
 require_once __DIR__ . '/inc/note-cite.php'; // Cite this note: the plugin's APA line and DOI under the share row, with APA and BibTeX copy buttons (plugin-guarded)
@@ -182,6 +186,7 @@ require_once __DIR__ . '/inc/cache-headers-hooks.php'; // sends them: public HTM
 require_once __DIR__ . '/inc/llms-txt.php'; // v10.19.0: /llms.txt + /llms-full.txt virtual routes (llmstxt.org AEO discoverability)
 require_once __DIR__ . '/inc/gpc-json.php'; // v10.19.0: /.well-known/gpc.json virtual route (Global Privacy Control declaration)
 require_once __DIR__ . '/inc/opensearch.php'; // v10.19.0: /opensearch.xml virtual route + rel=search autodiscovery (search provider over /notes/?s=)
+require_once __DIR__ . '/inc/machine-routes.php'; // 2026-11-10: rewrite rules + sn_machine query var for the five machine files, so they resolve as routes, not 404s (live after the plugin's next flush)
 require_once __DIR__ . '/inc/agents-manifest.php'; // v10.37.0: /.well-known/agents.json machine-surfaces discovery manifest (machine-readability program, sub-project A)
 require_once __DIR__ . '/inc/note-uid.php'; // v10.49.0: canonical lowercase+trim read of the plugin-owned _sn_prov_uid meta (shared by the .json twin + both feeds; closes a trim drift)
 require_once __DIR__ . '/inc/content-json-document.php'; // v10.38.0: content-as-data JSON document builder (machine-readability, sub-project C)
@@ -202,3 +207,4 @@ require_once __DIR__ . '/inc/dark-mode.php'; // v11.13.0: dark palette plumbing 
 require_once __DIR__ . '/inc/lang-toggle.php'; // The EN / ES link on the bilingual storefront pages (pairing lives in the companion plugin's inc/bilingual.php)
 require_once __DIR__ . '/inc/header-lang-menu.php'; // EN | ES inside the menu dialog below 375px
 require_once __DIR__ . '/inc/lang-chrome.php'; // The header and footer in Spanish on the Spanish pages, and the site-wide Español link
+require_once __DIR__ . '/inc/site-title-logo.php'; // The header logo: core/site-title, with the wordmark class, its label, and the Spanish home

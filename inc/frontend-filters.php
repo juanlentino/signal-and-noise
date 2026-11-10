@@ -2,7 +2,7 @@
 /**
  * Signal & Noise — Frontend output modifications.
  *
- * - Skip-to-content link (a11y)
+ * - Skip-to-content link for the PHP-rendered pages (core adds it to block templates)
  * - oEmbed filter forcing dark theme + square corners on Spotify embeds
  *   (through WP_HTML_Tag_Processor since #383)
  * - Strip WordPress's generator meta tag (fingerprinting reduction): the
@@ -26,10 +26,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Accessibility: skip-to-content link, first element in <body>.
+ * Accessibility: core's skip link, for the three pages that are not block
+ * templates (/notes/, /index/ and the tag pages render whole from PHP, so
+ * core's _block_template_add_skip_link() never sees them). Every block
+ * template gets core's own link before .wp-site-blocks. Same markup, string
+ * and target as core's, so critical.css styles both as #wp-skip-link.
  */
-function sn_skip_link() {
-	echo '<a class="sn-skip-link" href="#wp--skip-link--target">Skip to content</a>';
+function sn_skip_link_outside_block_templates() {
+	printf( '<a class="skip-link screen-reader-text" id="wp-skip-link" href="#wp--skip-link--target">%s</a>', esc_html__( 'Skip to content' ) ); // phpcs:ignore WordPress.WP.I18n.MissingArgDomainDefault -- core's own string, translated by core.
 }
 
 /**
@@ -105,7 +109,6 @@ function sn_social_link_relative_url( $parsed_block ) {
 }
 
 if ( ! defined( 'SN_FRONTEND_FILTERS_TEST' ) || ! SN_FRONTEND_FILTERS_TEST ) {
-	add_action( 'wp_body_open', 'sn_skip_link' );
 	add_filter( 'embed_oembed_html', 'sn_spotify_embed_dark', 10, 2 );
 	add_filter( 'render_block_data', 'sn_social_link_relative_url' );
 

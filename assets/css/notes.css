@@ -762,20 +762,6 @@ details.sn-notes-year > summary:focus-visible .sn-notes-year-band {
 	margin: 0 0 clamp(1.25rem, 2.5vw, 1.75rem); /* not a step: clamp(1.25rem, 2.5vw, 1.75rem) is its own value; the nearest air step, air--xs, would move it 5px */
 }
 
-/* Visually-hidden label. Scoped + self-contained — /notes inlines all
-   its own CSS, so we don't rely on a global .screen-reader-text. */
-.sn-notes-page .screen-reader-text {
-	position: absolute !important;
-	width: 1px;
-	height: 1px;
-	padding: 0;
-	margin: -1px;
-	overflow: hidden;
-	clip: rect(0, 0, 0, 0);
-	white-space: nowrap;
-	border: 0;
-}
-
 /* SUBSCRIBE NOTE — compact colophon nested in the hero column.
    Tertiary in the hero hierarchy (title > dek > meta > subscribe).
    Same DM Mono / 0.7rem / uppercase as eyebrow + meta; inline links

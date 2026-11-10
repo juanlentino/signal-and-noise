@@ -136,7 +136,11 @@ function sn_prov_brow_segment( $page_id, $with_separator = true ) {
  * @return bool
  */
 function sn_prov_brow_is_eyebrow( $html ) {
-	return (bool) preg_match( '/class="[^"]*\bsn-(?:catalog|provenance)-eyebrow\b/', (string) $html );
+	if ( ! class_exists( 'WP_HTML_Tag_Processor' ) ) {
+		return false;
+	}
+	$tags = new WP_HTML_Tag_Processor( (string) $html );
+	return $tags->next_tag( 'P' ) && ( $tags->has_class( 'sn-catalog-eyebrow' ) || $tags->has_class( 'sn-provenance-eyebrow' ) );
 }
 
 /**
@@ -147,7 +151,18 @@ function sn_prov_brow_is_eyebrow( $html ) {
  */
 function sn_prov_brow_content_has_eyebrow( $page_id ) {
 	$post = get_post( $page_id );
-	return $post && (bool) preg_match( '/sn-(?:catalog|provenance)-eyebrow/', (string) $post->post_content );
+	if ( ! $post || ! class_exists( 'WP_HTML_Tag_Processor' ) ) {
+		return false;
+	}
+	// A P element carrying a brow class: a mention of the class in text or a
+	// comment is not a brow.
+	$tags = new WP_HTML_Tag_Processor( (string) $post->post_content );
+	while ( $tags->next_tag( 'P' ) ) {
+		if ( $tags->has_class( 'sn-catalog-eyebrow' ) || $tags->has_class( 'sn-provenance-eyebrow' ) ) {
+			return true;
+		}
+	}
+	return false;
 }
 
 /**
@@ -173,7 +188,8 @@ function sn_prov_brow_filter( $block_content, $block = array() ) {
 		return $block_content;
 	}
 	// Insert INSIDE the paragraph, before its closing tag, so the badge shares
-	// the brow's line and baseline rather than starting a second one.
+	// the brow's line and baseline rather than starting a second one. Safe as a
+	// string search: the processor above confirmed the block is that P.
 	$pos = strrpos( $block_content, '</p>' );
 	if ( false === $pos ) {
 		return $block_content;

@@ -25,29 +25,94 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return array<int, array{title: string, id: string, seconds: int}>
  */
 function sn_essay_tracks( $content, $wpm ) {
-	$content = (string) preg_replace( '/<!--\s*\/?wp:[^>]*-->/', ' ', (string) $content );
-	if ( ! preg_match_all( '#<p\b[^>]*>\s*Section\s+\d+\s*</p>\s*<h2\b([^>]*)>(.*?)</h2>#is', $content, $m, PREG_SET_ORDER | PREG_OFFSET_CAPTURE ) ) {
+	if ( ! class_exists( 'WP_HTML_Tag_Processor' ) ) {
 		return array();
 	}
+	$tags   = new WP_HTML_Tag_Processor( (string) $content );
 	$tracks = array();
-	$prev   = 0;
-	foreach ( $m as $i => $hit ) {
-		$start = $hit[0][1];
-		$end   = $start + strlen( $hit[0][0] );
-		$next  = isset( $m[ $i + 1 ] ) ? $m[ $i + 1 ][0][1] : strlen( $content );
-		$id    = preg_match( '/\bid="([^"]+)"/', $hit[1][0], $hid ) ? $hid[1] : '';
-		if ( '' === $id && preg_match_all( '/<section\b[^>]*\bid="([^"]+)"/i', substr( $content, $prev, $start - $prev ), $sid ) ) {
-			$id = end( $sid[1] );
+	$open   = null; // The track being measured, {title, id}.
+	$words  = '';   // Text since its heading, up to the next label.
+	$sec_id = '';   // The id of the last <section> opened since the previous heading.
+	$state  = '';   // '' | 'label' (inside a P) | 'wait' (label done, H2 next?) | 'title'.
+	$label  = '';   // Text of the P being tested, or the heading's title.
+	$cand   = '';   // The candidate heading's id.
+	while ( $tags->next_token() ) {
+		$type   = $tags->get_token_type();
+		$tag    = '#tag' === $type ? $tags->get_tag() : '';
+		$closer = '#tag' === $type && $tags->is_tag_closer();
+		$text   = '#text' === $type ? $tags->get_modifiable_text() : '';
+
+		if ( 'title' === $state ) {
+			if ( 'H2' === $tag && $closer ) {
+				if ( null !== $open ) {
+					$tracks[] = sn_essay_track_close( $open, $words, $wpm );
+				}
+				$open   = array( 'title' => trim( $label ), 'id' => '' !== $cand ? $cand : $sec_id );
+				$words  = '';
+				$sec_id = '';
+				$state  = '';
+			} else {
+				$label .= $text;
+			}
+			continue;
 		}
-		$words    = sn_essay_word_count( wp_strip_all_tags( substr( $content, $end, $next - $end ) ) );
-		$tracks[] = array(
-			'title'   => html_entity_decode( wp_strip_all_tags( $hit[2][0] ), ENT_QUOTES | ENT_HTML5, 'UTF-8' ),
-			'id'      => $id,
-			'seconds' => (int) round( $words / max( 1, (int) $wpm ) * 60 ),
-		);
-		$prev = $end;
+		if ( 'label' === $state ) {
+			if ( '#text' === $type ) {
+				$label .= $text;
+				continue;
+			}
+			$is_label = 'P' === $tag && $closer && preg_match( '/^\s*Section\s+\d+\s*$/i', $label );
+			$state    = $is_label ? 'wait' : '';
+			$words   .= $is_label ? '' : $label;
+			if ( $is_label ) {
+				continue;
+			}
+		} elseif ( 'wait' === $state ) {
+			if ( '#comment' === $type || ( '#text' === $type && '' === trim( $text ) ) ) {
+				continue;
+			}
+			$state = '';
+			if ( 'H2' === $tag && ! $closer ) {
+				$id    = $tags->get_attribute( 'id' );
+				$cand  = is_string( $id ) ? $id : '';
+				$label = '';
+				$state = 'title';
+				continue;
+			}
+			$words .= $label; // Not a section after all: the label text is body text.
+		}
+
+		if ( '#comment' === $type ) {
+			$words .= ' '; // A block delimiter separates words.
+		} elseif ( '#text' === $type ) {
+			$words .= $text;
+		} elseif ( 'SECTION' === $tag && ! $closer && is_string( $tags->get_attribute( 'id' ) ) && '' !== $tags->get_attribute( 'id' ) ) {
+			$sec_id = (string) $tags->get_attribute( 'id' );
+		} elseif ( 'P' === $tag && ! $closer ) {
+			$label = '';
+			$state = 'label';
+		}
+	}
+	if ( null !== $open ) {
+		$tracks[] = sn_essay_track_close( $open, $words, $wpm );
 	}
 	return $tracks;
+}
+
+/**
+ * A finished track: its length from the words read since its heading.
+ *
+ * @param array  $open  {title, id}.
+ * @param string $words Plain text since the heading.
+ * @param int    $wpm   Reading rate.
+ * @return array{title: string, id: string, seconds: int}
+ */
+function sn_essay_track_close( $open, $words, $wpm ) {
+	return array(
+		'title'   => $open['title'],
+		'id'      => $open['id'],
+		'seconds' => (int) round( sn_essay_word_count( $words ) / max( 1, (int) $wpm ) * 60 ),
+	);
 }
 
 /**

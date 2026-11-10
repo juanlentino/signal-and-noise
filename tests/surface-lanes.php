@@ -17,6 +17,9 @@ function esc_html( $s ) { return htmlspecialchars( (string) $s, ENT_QUOTES ); }
 function add_filter() {}
 require dirname( __DIR__ ) . '/inc/search-marker-lane.php';
 require dirname( __DIR__ ) . '/inc/resume-lanes.php';
+require __DIR__ . '/lib/wp-html-api.php';
+snt_require_wp_html_api();
+function get_queried_object() { return $GLOBALS['__q'] ?? null; }
 
 $pass = 0; $fail = 0;
 function ok( $c, $m ) { global $pass, $fail; if ( $c ) { ++$pass; echo "PASS: $m\n"; } else { ++$fail; echo "FAIL: $m\n"; } }
@@ -47,6 +50,20 @@ $html = sn_resume_lane_html( array( 'start' => 2018.5, 'end' => null ), 2016.0, 
 ok( false !== strpos( $html, '<div class="sn-resume-lane" aria-hidden="true"><i class="is-open" style="--s:25.00%;--w:75.00%"></i></div>' ), 'an open role runs from its start to now on the shared axis' );
 ok( false !== strpos( sn_resume_lane_html( array( 'start' => 2016.0, 'end' => 2021.0 ), 2016.0, 2026.0 ), '<i style="--s:0.00%;--w:50.00%">' ), 'a closed role spans only its own years' );
 ok( '' === sn_resume_lane_html( array( 'start' => 2016.0, 'end' => null ), 2016.0, 2016.0 ), 'a zero-length axis draws nothing' );
+
+// The axis is read from the stored content with the HTML API (2026-11-10).
+// Characterized against the old regex: block markup with the class in either
+// position gives the same axis; the two cases below were bugs the regex had.
+$axis = static function ( $content ) {
+	$GLOBALS['__q'] = (object) array( 'post_content' => $content );
+	unset( $GLOBALS['sn_resume_lane_axis'] );
+	return sn_resume_lane_axis_start();
+};
+$real = "<!-- wp:paragraph {\"className\":\"sn-resume-rail\"} -->\n<p class=\"sn-resume-rail\">Sep 2018 - Present</p>\n<!-- /wp:paragraph -->\n<p class=\"has-small sn-resume-rail\"><strong>Jan 2016</strong> - Mar 2019</p><p class=\"x\">Jan 2001 - Feb 2002</p>";
+ok( 2016.0 == $axis( $real ), 'the axis starts at the earliest rail, inline markup and class order notwithstanding; a non-rail paragraph is ignored' );
+ok( 2014.0 == $axis( '<p class="sn-resume-rail">Jan 2014 &ndash; Mar 2015</p><p class="sn-resume-rail">Sep 2018 - Present</p>' ), 'an encoded en dash is read as a dash (the regex missed it)' );
+ok( abs( $axis( "<p class='sn-resume-rail'>Feb 2012 - Present</p>" ) - ( 2012 + 1 / 12 ) ) < 1e-9, 'a single-quoted class still marks a rail (the regex missed it)' );
+ok( null === $axis( '<p>Jan 2010 - Feb 2011</p>' ), 'no rail, no axis' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

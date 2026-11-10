@@ -11,6 +11,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+/*
+ * tokens_used is ceil(strlen(output)/4): an estimate of the output alone. The
+ * prompt is not counted. Real usage needs the plugin helper to return the core
+ * result's getTokenUsage(). The field keeps its name so consumers do not break.
+ */
+const SN_AI_TOKENS_USED_SCHEMA = array(
+	'type'        => 'integer',
+	'description' => 'Output-only estimate (characters / 4). The prompt is not counted; this is not metered usage.',
+);
+
 function sn_theme_register_ai_generation_abilities() {
 	if ( ! function_exists( 'wp_register_ability' ) ) {
 		return;
@@ -18,7 +28,7 @@ function sn_theme_register_ai_generation_abilities() {
 
 	wp_register_ability( 'signal-and-noise/ai-generate-page-note-summary', array(
 		'label'               => 'Generate /notes-voice summary',
-		'description'         => "Generates a brand-voiced single-sentence summary of a post in the SN /notes catalog vocabulary. Calls the plugin's AI helper (model configurable via the plugin's Front-End settings; defaults to Claude Sonnet 5). Requires the signal-and-noise-tools plugin.",
+		'description'         => "Generates a brand-voiced single-sentence summary of a post in the SN /notes catalog vocabulary. Runs the official AI plugin's ai/summarization ability with the /notes voice attached when it is registered; otherwise calls the plugin's AI helper (model configurable via the plugin's Front-End settings; defaults to Claude Sonnet 5). Requires the signal-and-noise-tools plugin.",
 		'category'            => 'ai-generation',
 		// Per-post gate (v9.15.3): this ability reads a specific post's body, so
 		// it must check edit_post(post_id), not the blanket edit_posts — otherwise
@@ -40,7 +50,7 @@ function sn_theme_register_ai_generation_abilities() {
 			'properties' => array(
 				'summary'     => array( 'type' => 'string' ),
 				'post_id'     => array( 'type' => 'integer' ),
-				'tokens_used' => array( 'type' => 'integer' ),
+				'tokens_used' => SN_AI_TOKENS_USED_SCHEMA,
 			),
 		),
 		'meta'                => array(
@@ -95,7 +105,7 @@ function sn_theme_register_ai_generation_abilities() {
 						),
 					),
 				),
-				'tokens_used' => array( 'type' => 'integer' ),
+				'tokens_used' => SN_AI_TOKENS_USED_SCHEMA,
 			),
 		),
 		'meta'                => array(
@@ -150,7 +160,7 @@ function sn_theme_register_ai_generation_abilities() {
 						),
 					),
 				),
-				'tokens_used'   => array( 'type' => 'integer' ),
+				'tokens_used'   => SN_AI_TOKENS_USED_SCHEMA,
 			),
 		),
 		'meta'                => array(
@@ -199,7 +209,7 @@ function sn_theme_register_ai_generation_abilities() {
 			'properties' => array(
 				'block_markup' => array( 'type' => 'string' ),
 				'pattern_name' => array( 'type' => 'string' ),
-				'tokens_used'  => array( 'type' => 'integer' ),
+				'tokens_used'  => SN_AI_TOKENS_USED_SCHEMA,
 				'warnings'     => array(
 					'type'        => 'array',
 					'description' => 'Non-fatal advisories surfaced during generation (e.g., parse_blocks failed to validate the output).',
@@ -251,7 +261,7 @@ function sn_theme_register_ai_generation_abilities() {
 				'rewritten_text'     => array( 'type' => 'string' ),
 				'summary_of_changes' => array( 'type' => 'string' ),
 				'preserved_elements' => array( 'type' => 'object' ),
-				'tokens_used'        => array( 'type' => 'integer' ),
+				'tokens_used'        => SN_AI_TOKENS_USED_SCHEMA,
 			),
 		),
 		'meta'                => array(

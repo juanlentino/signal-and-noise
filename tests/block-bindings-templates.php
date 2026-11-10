@@ -25,7 +25,7 @@ foreach ( $callbacks as $source => $fn ) {
 	preg_match_all( "/case '([a-z_]+)':/", $body, $km );
 	$keys[ $source ] = array_unique( $km[1] );
 }
-ok( in_array( 'reading_time', $keys['signal-noise/post-field'], true ) && in_array( 'pillar', $keys['signal-noise/post-field'], true ), 'post-field implements reading_time and pillar (' . implode( ',', $keys['signal-noise/post-field'] ) . ')' );
+ok( ! in_array( 'reading_time', $keys['signal-noise/post-field'], true ) && in_array( 'pillar', $keys['signal-noise/post-field'], true ), 'post-field implements pillar, and reading time is core/post-time-to-read now (' . implode( ',', $keys['signal-noise/post-field'] ) . ')' );
 ok( array( 'copyright' ) === array_values( $keys['signal-noise/site-field'] ), 'site-field implements copyright and nothing else (#389)' );
 
 $files = array_merge( glob( $root . '/templates/*.html' ), glob( $root . '/parts/*.html' ) );
@@ -52,12 +52,12 @@ foreach ( $files as $f ) {
 		}
 	}
 }
-// Four slots: front-matter reading time, the home card, the notes card (post-field)
-// and the footer's copyright line (site-field, #389).
+// One slot: the footer's copyright line (site-field, #389). The three
+// reading-time slots are core/post-time-to-read since 2026-11-10.
 // NOT bound: the pillar-card eyebrows keep the plugin's [sn_reading_time slug]
 // (prefix text + figure in one <p>; a content binding replaces the prefix), and
 // the pillar is a PHP-only block (a bound <p> would wrap the <a> — not parity).
-ok( 4 === $bound, "four bound paragraphs across templates/parts (found $bound): front-matter reading time, the home card, the notes card, the footer line, and nothing else" );
+ok( 1 === $bound, "one bound paragraph across templates/parts (found $bound): the footer line, and nothing else" );
 ok( array() === $bad, 'every binding is well-formed' . ( $bad ? "\n  - " . implode( "\n  - ", $bad ) : '' ) );
 
 $gone = array( '[sn_reading_time]', '[current_year]' ); // the bare reading-time form only: the eyebrows' [sn_reading_time slug="…"] is the plugin's and stays. [current_year] is the footer binding since #389.

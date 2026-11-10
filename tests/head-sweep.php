@@ -165,6 +165,20 @@ require __DIR__ . '/../inc/assets-frontend.php';
 
 require __DIR__ . '/../inc/dark-mode.php';
 
+// 2026-11-10: one @font-face source. Core prints theme.json's fontFace through
+// wp_print_font_faces(); the theme prints no hand-copied second face, and its
+// two preloads are the exact URLs core resolves the file:./ srcs to.
+$sn_heads = '';
+foreach ( array( 1, 2, 3, 5, 10, 50, 51, 99 ) as $sn_p ) { $sn_heads .= render_wp_head_at( $sn_p ); }
+ok( false === stripos( $sn_heads, '@font-face' ) && false === strpos( $sn_heads, 'sn-critical-fonts' ), 'the theme prints no @font-face of its own: theme.json is the one source' );
+$sn_tj = json_decode( (string) file_get_contents( __DIR__ . '/../theme.json' ), true );
+$sn_srcs = array();
+foreach ( $sn_tj['settings']['typography']['fontFamilies'] as $sn_fam ) {
+	foreach ( $sn_fam['fontFace'] ?? array() as $sn_face ) { foreach ( (array) $sn_face['src'] as $sn_src ) { $sn_srcs[] = get_theme_file_uri( str_replace( 'file:./', '', $sn_src ) ); } }
+}
+preg_match_all( '/<link rel="preload" href="([^"]+)" as="font"/', $sn_heads, $sn_pre );
+ok( 2 === count( $sn_pre[1] ) && array() === array_diff( $sn_pre[1], $sn_srcs ), 'both font preloads match a URL core prints for a theme.json face' );
+
 $head1 = strtolower( render_wp_head_at( 1 ) );
 ok( strpos( $head1, 'name="theme-color"' ) !== false, 'A4: <meta name="theme-color"> emitted in priority-1 wp_head closure' );
 ok( substr_count( $head1, 'name="theme-color"' ) === 2, 'A4: TWO theme-color metas — one per colour scheme' );

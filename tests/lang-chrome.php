@@ -77,10 +77,9 @@ foreach ( array(
 }
 
 echo "\nGroup: the chrome strings\n";
-$logo = '<a href="/" class="sn-logo-link" aria-label="Juan Lentino — home">';
-ok( '<a href="https://x.test/inicio/" class="sn-logo-link" aria-label="Juan Lentino, inicio">' === sn_lang_chrome_strings( $logo, 'https://x.test/inicio/' ), 'the logo goes to /inicio/ and says so' );
-ok( false !== strpos( sn_lang_chrome_strings( '<nav aria-label="Main navigation"><button aria-label="Open menu"></button><button aria-label="Close menu"></button></nav>', '' ), 'aria-label="Navegación principal"><button aria-label="Abrir el menú"></button><button aria-label="Cerrar el menú">' ), 'the nav and menu buttons are named in Spanish' );
-ok( false !== strpos( sn_lang_chrome_strings( '<span class="sn-cmdk-trigger-label">Search</span>', '' ), '>Buscar<' ), 'Search becomes Buscar' );
+ok( false === strpos( (string) file_get_contents( __DIR__ . '/../inc/lang-chrome.php' ), 'sn-logo-link' ), 'the logo is not string-swapped here: it is core/site-title, named in inc/site-title-logo.php' );
+ok( false !== strpos( sn_lang_chrome_strings( '<nav aria-label="Main navigation"><button aria-label="Open menu"></button><button aria-label="Close menu"></button></nav>' ), 'aria-label="Navegación principal"><button aria-label="Abrir el menú"></button><button aria-label="Cerrar el menú">' ), 'the nav and menu buttons are named in Spanish' );
+ok( false !== strpos( sn_lang_chrome_strings( '<span class="sn-cmdk-trigger-label">Search</span>' ), '>Buscar<' ), 'Search becomes Buscar' );
 
 echo "\nGroup: the footer\n";
 $nav = (string) shell_exec( 'php -r ' . escapeshellarg( 'define("ABSPATH","/"); require "' . __DIR__ . '/../blocks/meta-nav/render.php";' ) );
@@ -89,6 +88,16 @@ ok( '' !== $nav && 5 === substr_count( $es_nav, 'hreflang="en"' ), 'all five met
 ok( false === strpos( $es_nav, 'title=' ), 'the Spanish footer carries no title either' );
 ok( false !== strpos( $es_nav, 'data-hint="Colofón"' ) && false !== strpos( $es_nav, '(en inglés)' ), 'labels are Spanish and say the page is English' );
 ok( false === strpos( $nav, 'Colofón' ), 'the English meta-nav is untouched (the pinned bytes render without the plugin)' );
+// HTML API, not exact bytes (2026-11-10): attribute order, an added class or
+// single quotes no longer stop the Spanish from applying.
+$odd = "<nav class=\"wp-block-navigation x\" aria-label='Main navigation'><button data-x=\"1\" aria-label=\"Open menu\" class=\"a\"></button></nav><span class=\"sn-cmdk-trigger-label extra\">Search</span>";
+$got = sn_lang_chrome_strings( $odd );
+ok( false !== strpos( $got, 'Navegación principal' ) && false !== strpos( $got, 'Abrir el menú' ) && false !== strpos( $got, '>Buscar<' ), 'the chrome strings switch on reordered, re-quoted, extra-class markup: ' . $got );
+ok( '<p aria-label="Main navigation menu">Search</p>' === sn_lang_chrome_strings( '<p aria-label="Main navigation menu">Search</p>' ), 'only whole values are translated, and Search only in the trigger label' );
+$re = str_replace( '<a href="/now/" aria-label="Now: what I&#8217;m focused on" data-hint="Now">', '<a data-hint="Now" class="z" href="/now/" aria-label="Now: what I&#8217;m focused on">', $nav );
+$es_re = sn_lang_meta_nav( $re );
+ok( 5 === substr_count( $es_re, 'hreflang="en"' ) && false !== strpos( $es_re, 'data-hint="Ahora"' ), 'the meta-nav switches with its attributes reordered' );
+
 $footer = (string) file_get_contents( __DIR__ . '/../parts/footer.html' );
 ok( false === strpos( $footer, 'lang-toggle' ) && false === strpos( $footer, 'sn-lang-footer' ), 'the footer carries no language link: the header switch is the one place' );
 ok( ! function_exists( 'sn_lang_footer_link_html' ), 'the footer link builder is gone' );

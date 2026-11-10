@@ -2,12 +2,15 @@
 /**
  * Signal & Noise — speculative loading tuning (WP 6.8+ Speculation Rules API).
  *
- * Core defaults to a conservative 'prefetch' when speculative loading is
- * enabled at all (pretty permalinks, logged-out — see
- * wp_get_speculation_rules_configuration() in
- * wp-includes/speculative-loading.php). That is raised here to
- * 'prerender'/'moderate' so a note hovered on the index is rendered before
- * the click, not just prefetched.
+ * When speculative loading is enabled at all (pretty permalinks, logged
+ * out), core sets mode and eagerness to 'auto'
+ * (wp_get_speculation_rules_configuration() in
+ * wp-includes/speculative-loading.php). 'auto' resolves to prefetch and
+ * conservative, unless the host sets WP_SPECULATIVE_LOADING_DEFAULT_MODE or
+ * WP_SPECULATIVE_LOADING_DEFAULT_EAGERNESS in wp-config. This filter sets
+ * 'prerender'/'moderate' explicitly, which core says takes precedence over
+ * those host defaults, so a note hovered on the index is rendered before the
+ * click, not just prefetched. The constants are a host knob outside this repo.
  *
  * `null` must be passed through unchanged: it means speculative loading is
  * disabled (logged-in user, no pretty permalinks, or another filter callback

@@ -3,8 +3,9 @@
  * Signal & Noise: the Block Bindings sources signal-noise/post-field and
  * signal-noise/site-field.
  *
- * post-field is a read-only source resolving reading_time|pillar|canonical|
- * og_title for the current post. site-field resolves site-level lines with no
+ * post-field is a read-only source resolving pillar|canonical|og_title for
+ * the current post (reading time is core's Time to Read block since
+ * 2026-11-10, inc/post-time-to-read.php). site-field resolves site-level lines with no
  * post in them (today one key, `copyright`, the footer line; it replaced the
  * inline [current_year] token, #389). PHP-only registration → read-only in the
  * editor (acceptable). All plugin reads function_exists-guarded; returns null
@@ -43,11 +44,6 @@ function sn_post_field_binding_value( $source_args, $block_instance = null, $att
 	}
 
 	switch ( $key ) {
-		case 'reading_time':
-			if ( ! function_exists( 'sn_get_reading_time' ) ) {
-				return null;
-			}
-			return esc_html( sprintf( '%d min read', max( 1, (int) sn_get_reading_time( $post_id ) ) ) );
 		case 'pillar':
 			// Pass the RESOLVED $post_id (context or global) so the pillar honors
 			// the same post the other keys do — not the global get_post() (BND-4:

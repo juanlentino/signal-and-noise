@@ -271,9 +271,9 @@ function sn_llms_txt_recent_notes( $limit = 40 ) {
 			'post_type'           => 'post',
 			'post_status'         => 'publish',
 			// v10.51.1 (hardening gate): a password-protected post IS
-			// status=publish, and the no-excerpt branch below trims raw
-			// post_content — bypassing the post_password_required() guard core
-			// applies inside get_the_excerpt(). /llms-full.txt is read by LLM
+			// status=publish. The summary comes from get_the_excerpt(), whose
+			// post_password_required() guard depends on the reader's cookie;
+			// this gate does not. /llms-full.txt is read by LLM
 			// crawlers, so ingestion is irreversible. Matches feed-json's gate.
 			'has_password'        => false,
 			'posts_per_page'      => (int) $limit,
@@ -289,7 +289,12 @@ function sn_llms_txt_recent_notes( $limit = 40 ) {
 		if ( '' !== (string) ( $post->post_password ?? '' ) ) {
 			continue;
 		}
-		$summary = has_excerpt( $post ) ? get_the_excerpt( $post ) : wp_trim_words( wp_strip_all_tags( (string) $post->post_content ), 28, '…' );
+		// Core's excerpt pipeline, not raw post_content: get_the_excerpt() drops
+		// shortcodes and the blocks core leaves out of an excerpt, and applies
+		// post_password_required(). A manual excerpt is kept whole. Decoded,
+		// because wptexturize's entities would read literally in text/plain.
+		$summary = get_the_excerpt( $post );
+		$summary = html_entity_decode( wp_strip_all_tags( has_excerpt( $post ) ? $summary : wp_trim_words( $summary, 28, '…' ) ), ENT_QUOTES, 'UTF-8' );
 		// 13.2.8: the search title ("Aphorism: plain words", the plugin's
 		// _sn_seo_title override) rides beside the H1 when it exists, so an
 		// engine reading this index gets both names for every note.

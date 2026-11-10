@@ -12,6 +12,7 @@
 	display: flex;
 	align-items: center;
 	text-decoration: none;
+	margin: 0; /* the wrapper is core/site-title's P */
 	flex-shrink: 0;
 	/* Breathing room above and below the wordmark box; with the box heights
 	   it sets the header height that --sn-chrome-top is keyed to. */
@@ -21,6 +22,7 @@
 .sn-wordmark {
 	display: flex;
 	align-items: center;
+	text-decoration: none; /* the wordmark is the link itself */
 	/* The box keeps the old mark's heights (64, 48, 36), so the header and
 	   every offset keyed to it (--sn-chrome-top) are unchanged. The text is
 	   sized on its own and centred in the box. */

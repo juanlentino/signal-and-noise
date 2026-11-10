@@ -137,23 +137,40 @@ add_filter(
 /**
  * The fixed English strings of the header and footer chrome, in Spanish. Pure.
  *
- * @param string $html    Rendered markup.
- * @param string $es_home The Spanish home URL ('' to leave the logo link).
+ * The logo is core/site-title now; inc/site-title-logo.php names it.
+ *
+ * @param string $html Rendered markup.
  * @return string
  */
-function sn_lang_chrome_strings( $html, $es_home ) {
-	$map = array(
-		'aria-label="Main navigation"'          => 'aria-label="Navegación principal"',
-		'aria-label="Open menu"'                => 'aria-label="Abrir el menú"',
-		'aria-label="Close menu"'               => 'aria-label="Cerrar el menú"',
-		'class="sn-cmdk-trigger-label">Search<' => 'class="sn-cmdk-trigger-label">Buscar<',
-		'aria-label="Juan Lentino — home"'      => 'aria-label="Juan Lentino, inicio"',
+function sn_lang_chrome_strings( $html ) {
+	$labels = array(
+		'Main navigation' => 'Navegación principal',
+		'Open menu'       => 'Abrir el menú',
+		'Close menu'      => 'Cerrar el menú',
 	);
-	$html = strtr( $html, $map );
-	if ( '' !== $es_home && false !== strpos( $html, 'class="sn-logo-link"' ) ) {
-		$html = str_replace( '<a href="/" class="sn-logo-link"', '<a href="' . esc_url( $es_home ) . '" class="sn-logo-link"', $html );
+	// Core's HTML API: an attribute is found by name and value and written as
+	// an attribute, so order, quoting and extra classes do not matter.
+	$tags  = new WP_HTML_Tag_Processor( (string) $html );
+	$label = false; // Inside the command palette trigger's label span.
+	while ( $tags->next_token() ) {
+		if ( '#text' === $tags->get_token_type() ) {
+			if ( $label && 'Search' === $tags->get_modifiable_text() ) {
+				$tags->set_modifiable_text( 'Buscar' );
+			}
+			$label = false;
+			continue;
+		}
+		if ( '#tag' !== $tags->get_token_type() || $tags->is_tag_closer() ) {
+			$label = false;
+			continue;
+		}
+		$aria  = $tags->get_attribute( 'aria-label' );
+		$label = 'SPAN' === $tags->get_tag() && $tags->has_class( 'sn-cmdk-trigger-label' );
+		if ( is_string( $aria ) && isset( $labels[ $aria ] ) ) {
+			$tags->set_attribute( 'aria-label', $labels[ $aria ] );
+		}
 	}
-	return $html;
+	return $tags->get_updated_html();
 }
 
 foreach ( array( 'core/navigation', 'core/html' ) as $sn_chrome_block ) {
@@ -163,9 +180,7 @@ foreach ( array( 'core/navigation', 'core/html' ) as $sn_chrome_block ) {
 			if ( ! sn_theme_is_spanish() ) {
 				return $html;
 			}
-			// Only the logo needs the Spanish home; skip the lookup elsewhere.
-			$es_home = false !== strpos( (string) $html, 'sn-logo-link' ) ? sn_lang_spanish_url_for( '/' ) : '';
-			return sn_lang_chrome_strings( (string) $html, $es_home );
+			return sn_lang_chrome_strings( (string) $html );
 		}
 	);
 }

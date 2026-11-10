@@ -112,6 +112,8 @@ if ( ! function_exists( 'sn_cf_purge_everything_verified' ) ) {
 function epoch_html( $n ) { return "<html><head><meta name=\"sn-render-epoch\" content=\"$n\">\n</head><body>x</body></html>"; }
 
 require $theme_root . '/inc/purge-verify.php';
+require __DIR__ . '/lib/wp-html-api.php';
+snt_require_wp_html_api();
 
 $pass = 0; $fail = 0;
 function ok( $cond, $label ) {
@@ -260,6 +262,14 @@ $u = sn_purge_probe( 'https://example.test/', 5 );
 ok( null === $u['fresh'] && null === $u['epoch_seen'], 'no epoch meta => unknown (never coerced to fresh)' );
 $GLOBALS['__http_queue'] = array( new WP_Error() );
 ok( null === sn_purge_probe( 'https://example.test/', 5 )['fresh'], 'WP_Error => unknown, never a false pass' );
+// 2026-11-10: the tag is read with the HTML API, so a minifier or an edge
+// rewrite that reorders or unquotes the attributes still reads.
+$GLOBALS['__http_queue'] = array( array( 'code' => 200, 'body' => '<meta content="7" name="sn-render-epoch">', 'headers' => array() ) );
+ok( 7 === sn_purge_probe( 'https://example.test/', 5 )['epoch_seen'], 'content before name still reads' );
+$GLOBALS['__http_queue'] = array( array( 'code' => 200, 'body' => '<meta name=sn-render-epoch content=9>', 'headers' => array() ) );
+ok( 9 === sn_purge_probe( 'https://example.test/', 5 )['epoch_seen'], 'unquoted attributes still read' );
+$GLOBALS['__http_queue'] = array( array( 'code' => 200, 'body' => '<meta name="sn-render-epoch" content="7x"><meta name="other" content="8">', 'headers' => array() ) );
+ok( null === sn_purge_probe( 'https://example.test/', 5 )['epoch_seen'], 'a non-digit epoch is unknown, and another meta is not read' );
 
 // ── 9. Verify + bounded escalate ──
 echo "\nScenario 9: verify + bounded escalate\n";

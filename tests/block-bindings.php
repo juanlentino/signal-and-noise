@@ -46,9 +46,8 @@ ok( empty( $site['uses_context'] ), 'site-field uses no post context (a site-lev
 
 // reading_time.
 $GLOBALS['__rt'] = 5;
-ok( sn_post_field_binding_value( array( 'key' => 'reading_time' ) ) === '5 min read', 'reading_time formats' );
+ok( null === sn_post_field_binding_value( array( 'key' => 'reading_time' ) ), 'reading_time is not a binding key: core/post-time-to-read carries it (tests/post-time-to-read.php)' );
 $GLOBALS['__rt'] = 0;
-ok( sn_post_field_binding_value( array( 'key' => 'reading_time' ) ) === '1 min read', 'reading_time min-1 floor' );
 
 // pillar: anchor passes through; empty → null (keep fallback).
 $GLOBALS['__pillar'] = '<a class="sn-post-frontmatter__pillar" href="/provenance/x/">PROVENANCE</a>';
@@ -71,7 +70,6 @@ ok( sn_post_field_binding_value( array() ) === null, 'missing key → null' );
 // postId-context precedence (get_post returns null here, context supplies id).
 $blk = (object) array( 'context' => array( 'postId' => 42 ) );
 $GLOBALS['__rt'] = 9;
-ok( sn_post_field_binding_value( array( 'key' => 'reading_time' ), $blk ) === '9 min read', 'uses block context postId' );
 
 // pillar must honor the SAME resolved postId, not the global get_post() — BND-4.
 $GLOBALS['__pillar'] = '<a class="sn-post-frontmatter__pillar">P</a>';

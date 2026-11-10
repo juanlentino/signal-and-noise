@@ -224,8 +224,14 @@ function sn_purge_probe( $url, $expect_epoch ) {
 	$cf   = (string) wp_remote_retrieve_header( $res, 'cf-cache-status' );
 
 	$epoch_seen = null;
-	if ( preg_match( '/<meta[^>]+name=["\']sn-render-epoch["\'][^>]+content=["\'](\d+)["\']/i', $body, $m ) ) {
-		$epoch_seen = (int) $m[1];
+	// The HTML API, not a regex: attribute order and quoting do not matter.
+	$tags = class_exists( 'WP_HTML_Tag_Processor' ) ? new WP_HTML_Tag_Processor( $body ) : null;
+	while ( $tags && $tags->next_tag( 'META' ) ) {
+		if ( 'sn-render-epoch' === $tags->get_attribute( 'name' ) ) {
+			$content    = $tags->get_attribute( 'content' );
+			$epoch_seen = is_string( $content ) && ctype_digit( $content ) ? (int) $content : null;
+			break;
+		}
 	}
 	$fresh = ( null === $epoch_seen ) ? null : ( $epoch_seen >= (int) $expect_epoch );
 

@@ -1,17 +1,15 @@
 /* ── 404 recovery — search + recent-notes suggestions ──────────────────
  * Beneath the "SIGNAL LOST" hero. Suggestions reuse .sn-notes-row; this adds
  * the search form + section spacing. Blood-red accents, brutalist tokens. */
-/* The <search> landmark stands where the form stood: no block gap of its own,
-   since the form's own margin below zeroes the one it used to get. */
-search:has(> .sn-404-search) {
-	margin: 0;
-}
+/* core/search (inc/search-404.php): .sn-404-search is the <search> landmark,
+   and core's inside-wrapper holds the field and the button in a flex row. */
 .sn-404-search {
-	display: flex;
-	gap: var(--wp--preset--spacing--20);
-	align-items: baseline;
 	max-width: 760px;
 	margin: 0 0 var(--wp--preset--spacing--40);
+}
+.sn-404-search .wp-block-search__inside-wrapper {
+	gap: var(--wp--preset--spacing--20);
+	align-items: baseline;
 }
 .sn-404-search__input {
 	flex: 1 1 auto;
@@ -38,6 +36,7 @@ search:has(> .sn-404-search) {
 }
 .sn-404-search__submit {
 	flex: 0 0 auto;
+	margin-left: 0; /* core's .wp-block-search__button sets 10px; the row gap spaces it */
 	padding: 0.4rem 1rem;
 	border: 1px solid var(--wp--preset--color--bone);
 	background: transparent;

@@ -1,0 +1,10 @@
+{
+	"$schema": "https://schemas.wp.org/wp/7.1/theme.json",
+	"version": 3,
+	"title": "Pull-quote",
+	"slug": "pull-quote",
+	"blockTypes": ["core/pullquote"],
+	"styles": {
+		"css": "text-align:left"
+	}
+}

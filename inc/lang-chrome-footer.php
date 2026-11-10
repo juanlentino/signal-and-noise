@@ -20,15 +20,28 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return string
  */
 function sn_lang_meta_nav( $html ) {
-	return strtr(
-		$html,
-		array(
-			'aria-label="Site meta"'                                   => 'aria-label="Información del sitio"',
-			'<a href="/now/" aria-label="Now: what I&#8217;m focused on" data-hint="Now">' => '<a href="/now/" hreflang="en" aria-label="Ahora: en qué estoy (en inglés)" data-hint="Ahora">',
-			'<a href="/accessibility/" aria-label="Accessibility statement" data-hint="Accessibility">' => '<a href="/accessibility/" hreflang="en" aria-label="Declaración de accesibilidad (en inglés)" data-hint="Accesibilidad">',
-			'<a href="/colophon/" aria-label="Colophon: how this site is made" data-hint="Colophon">' => '<a href="/colophon/" hreflang="en" aria-label="Colofón: cómo está hecho este sitio (en inglés)" data-hint="Colofón">',
-			'<a href="/stats/" aria-label="Stats: what gets read here" data-hint="Stats">' => '<a href="/stats/" hreflang="en" aria-label="Estadísticas: qué se lee acá (en inglés)" data-hint="Estadísticas">',
-			'<a href="/privacy-policy/" aria-label="Privacy policy" data-hint="Privacy">' => '<a href="/privacy-policy/" hreflang="en" aria-label="Política de privacidad (en inglés)" data-hint="Privacidad">',
-		)
+	$links = array(
+		'/now/'            => array( 'Ahora: en qué estoy (en inglés)', 'Ahora' ),
+		'/accessibility/'  => array( 'Declaración de accesibilidad (en inglés)', 'Accesibilidad' ),
+		'/colophon/'       => array( 'Colofón: cómo está hecho este sitio (en inglés)', 'Colofón' ),
+		'/stats/'          => array( 'Estadísticas: qué se lee acá (en inglés)', 'Estadísticas' ),
+		'/privacy-policy/' => array( 'Política de privacidad (en inglés)', 'Privacidad' ),
 	);
+	// Keyed on the nav's label and each link's href with the HTML API, so an
+	// attribute reorder or an added class cannot stop the switch.
+	$tags = new WP_HTML_Tag_Processor( (string) $html );
+	while ( $tags->next_tag() ) {
+		if ( 'NAV' === $tags->get_tag() && 'Site meta' === $tags->get_attribute( 'aria-label' ) ) {
+			$tags->set_attribute( 'aria-label', 'Información del sitio' );
+			continue;
+		}
+		$href = 'A' === $tags->get_tag() ? $tags->get_attribute( 'href' ) : null;
+		if ( ! is_string( $href ) || ! isset( $links[ $href ] ) ) {
+			continue;
+		}
+		$tags->set_attribute( 'hreflang', 'en' );
+		$tags->set_attribute( 'aria-label', $links[ $href ][0] );
+		$tags->set_attribute( 'data-hint', $links[ $href ][1] );
+	}
+	return $tags->get_updated_html();
 }

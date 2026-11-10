@@ -45,7 +45,7 @@ ok( false !== strpos( $base, $sel . '::before' ), 'the ticks hang on the button 
 ok( 8 === preg_match_all( '/linear-gradient\(var\(--sn-crop\),\s*var\(--sn-crop\)\)\s*(top|bottom)\s+(left|right)/', $base ), 'four corners, two strokes each' );
 ok( 1 === preg_match( '/--sn-crop:\s*var\(--wp--preset--color--blood\)/', $base ), 'drawn in the blood token, so dark mode recalibrates them' );
 ok( 1 === preg_match( '/@media\s*\(forced-colors:\s*active\)\s*\{[^@]*' . preg_quote( $sel, '/' ) . '::before\s*\{[^}]*display:\s*none/s', $base ), 'forced colors drop the ticks and keep the Highlight outline' );
-ok( 1 === preg_match( '/a:focus-visible,[^{]*\.wp-block-button__link:focus-visible[^{]*\{[^}]*outline:\s*2px solid var\(--wp--preset--color--blood\)/s', $base ), 'the existing 2px focus outline is untouched: the ticks are additive' );
+ok( 1 === preg_match( '/\nbutton:focus-visible,[^{]*\{[^}]*outline:\s*2px solid var\(--wp--preset--color--blood\)/s', $base ) && isset( json_decode( (string) file_get_contents( __DIR__ . '/../theme.json' ), true )['styles']['elements']['button'][':focus-visible']['outline'] ), 'the existing 2px focus outline is untouched (core buttons take it from theme.json): the ticks are additive' );
 
 echo "\nGroup 9: signal lock links\n";
 $lnk = '.wp-block-post-content p:not(.has-rust-color, .wp-block-signal-noise-sidenote) a:not(.wp-element-button, sup a)';

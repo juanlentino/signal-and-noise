@@ -234,28 +234,25 @@ ha_true(
 // "the inverse of the page". That is only the same as "a contrasting panel"
 // while the page is white. When dark mode inverted the palette it inverted a
 // second time and became a white pill on a black page.
-$skip = sv_block( $css, '.sn-skip-link {', '}' );
+// 2026-11-10: the link is core's #wp-skip-link; its focus rule carries the
+// panel. The block starts after the selector, so the ID's '#' is not read as hex.
+$skip = sv_block( $css, '#wp-skip-link:focus {', '}' );
+$skip = (string) substr( $skip, strlen( '#wp-skip-link:focus {' ) );
 ha_true(
 	false !== strpos( $skip, 'var(--sn-panel)' ),
-	'.sn-skip-link draws its surface from the panel token, not from the ink slug'
+	'#wp-skip-link:focus draws its surface from the panel token, not from the ink slug'
 );
 ha_true(
 	false === strpos( $skip, '--wp--preset--color--bone' ),
-	'.sn-skip-link no longer uses the INK slug as a background (the double-inversion bug)'
+	'#wp-skip-link:focus does not use the INK slug as a background (the double-inversion bug)'
 );
 ha_true(
-	false === strpos( $skip, '#' ),
-	'.sn-skip-link has no bare hex'
-);
-
-$skip_focus = sv_block( $css, '.sn-skip-link:focus', '}' );
-ha_true(
-	false !== strpos( $skip_focus, 'var(--wp--preset--color--' ),
-	'.sn-skip-link:focus uses palette vars'
+	false === strpos( $skip, '#' ) && false !== strpos( $skip, 'var(--wp--preset--color--blood)' ),
+	'#wp-skip-link:focus has no bare hex, and its outline is the blood palette var'
 );
 ha_true(
-	false === strpos( $skip_focus, '#' ),
-	'.sn-skip-link:focus has no bare hex'
+	false === strpos( $css, '.sn-skip-link' ) && false === strpos( $css, "#wp-skip-link {\n\tdisplay: none;" ),
+	"no theme copy of the link and core's is no longer hidden"
 );
 
 echo "\nResult: $pass passed, $fail failed.\n";

@@ -117,7 +117,10 @@ $main_bytes = "@media (min-width: 1280px){.wp-block-post-content .sn-sidenote{fl
 // change since: the doubled class (2026-10-16), so the rules stay identical
 // in every declaration and differ only in winning on notes.
 $main_bytes = str_replace( '.wp-block-post-content .sn-sidenote{', '.wp-block-post-content .sn-sidenote.sn-sidenote{', $main_bytes );
-ok( sn_css_minify( $raw ) === $main_bytes, 'the block sheet minifies to the exact bytes article.css put in the combined sheet before the move, plus only the doubled class (identical declarations)' );
+// And the second (2026-11-10): the retyped DM Mono stack names its theme.json
+// preset, which resolves to the same stack (tests/block-css-font-presets.php).
+$main_bytes = str_replace( "font-family: 'DM Mono', 'Courier New', monospace;", 'font-family: var(--wp--preset--font-family--body);', $main_bytes );
+ok( sn_css_minify( $raw ) === $main_bytes, 'the block sheet minifies to the exact bytes article.css put in the combined sheet before the move, plus only the doubled class and the font preset (identical declarations)' );
 
 // The pattern inserts the block, never a bare paragraph: a paragraph carrying
 // the class would style on no page now that the sheet loads only where the

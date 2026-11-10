@@ -177,6 +177,9 @@ $variations = array(
 	// hairlines, the small-caps header row), so no typography key to govern.
 	'checklist'  => array( 'title' => 'Checklist',       'block' => 'core/list' ),
 	'sn-table'   => array( 'title' => 'Comparison table', 'block' => 'core/table' ),
+	// 2026-11-10: registers the style; its type is in assets/css/article.css,
+	// shared with the custom block it replaces, so no typography key here.
+	'pull-quote' => array( 'title' => 'Pull-quote',      'block' => 'core/pullquote' ),
 );
 
 $variation_files = (array) glob( "$theme_root/styles/blocks/*.json" );
