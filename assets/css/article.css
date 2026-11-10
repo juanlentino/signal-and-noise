@@ -94,6 +94,10 @@
 }
 
 /* ─── v9.2.0: pull-quote pattern (patterns/pull-quote.php) ────────── */
+/* 2026-11-10: core/pullquote with the Pull-quote style (styles/blocks/
+   pull-quote.json) is the house pull-quote now; the rules below paint it too,
+   and the custom block stays registered (out of the inserter) so anything
+   written with it renders as before. */
 /* v9.11.0: the signal-noise/pull-quote BLOCK renders .sn-pull-quote (an <aside>);
    the box frame must target it too, not only the pattern wrapper, or the block
    renders as bare text. */
@@ -118,7 +122,8 @@
    !important entirely; the .wp-block-post-content scope (0,2,0) outranks
    core's max-width on specificity rather than source order. */
 .wp-block-post-content .sn-pattern-pull-quote,
-.wp-block-post-content .sn-pull-quote {
+.wp-block-post-content .sn-pull-quote,
+.wp-block-post-content .wp-block-pullquote.is-style-pull-quote {
 	position: relative;
 	box-sizing: border-box;
 	left: -1rem;
@@ -131,7 +136,8 @@
 	border-bottom: 3px solid var(--wp--preset--color--bone);
 }
 
-.sn-pull-quote__body {
+.sn-pull-quote__body,
+.wp-block-pullquote.is-style-pull-quote blockquote p {
 	font-family: var(--wp--preset--font-family--body);
 	font-size: 1.5rem;
 	line-height: 1.4;
@@ -140,7 +146,9 @@
 	color: var(--wp--preset--color--bone);
 }
 
-.sn-pull-quote__attribution {
+.sn-pull-quote__attribution,
+.wp-block-pullquote.is-style-pull-quote cite {
+	display: block; /* a cite is inline; the attribution line is a block */
 	font-family: var(--wp--preset--font-family--body);
 	font-size: max(0.7rem, 11px);
 	letter-spacing: 0.1em;
