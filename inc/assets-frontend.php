@@ -159,17 +159,11 @@ add_action( 'wp_head', function() {
 	echo '<link rel="preload" href="' . esc_url( get_theme_file_uri( 'assets/fonts/dm-mono-300-latin.woff2' ) ) . '" as="font" type="font/woff2" crossorigin>' . "\n";
 }, 1 );
 
-/**
- * Performance: Inline critical @font-face so the browser can use the preloaded
- * heading font immediately, without waiting for the external stylesheet.
+/*
+ * No hand-printed @font-face: core prints theme.json's fontFace entries inline
+ * in <head> through wp_print_font_faces(), at the URLs the two preloads above
+ * name. A second, hand-copied Bebas face only duplicated it (2026-11-10).
  */
-add_action( 'wp_head', function() {
-	?>
-	<style id="sn-critical-fonts">
-	@font-face{font-family:'Bebas Neue';font-style:normal;font-weight:400;font-display:swap;src:url('<?php echo esc_url( get_theme_file_uri( 'assets/fonts/bebas-neue-latin.woff2' ) ); ?>') format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
-	</style>
-	<?php
-}, 2 );
 
 /**
  * Performance: inline the navigation block's stylesheet with the rest of

@@ -27,6 +27,9 @@ adds a bullet below. A release is a separate, deliberate act:
 ### Added
 - **The machine files are registered with the rewrite API.** `inc/machine-routes.php` adds a rewrite rule and the `sn_machine` query var for `/opensearch.xml`, `/humans.txt`, `/.well-known/security.txt`, `/llms.txt` and `/llms-full.txt`, the way core registers `robots.txt`, so WordPress resolves them as routes instead of 404s. The same `template_redirect` handlers answer them, after `send_headers` and `wp` have run. The rules take effect at the plugin's next rewrite flush; the theme does not flush. Until that flush is confirmed live, the `REQUEST_URI` handlers, their `status_header( 200 )` and the 404-header undo in `cache-headers-hooks.php` stay as the fallback. Test: `tests/machine-routes.php`.
 
+### Removed
+- **The hand-printed Bebas Neue `@font-face` (`<style id="sn-critical-fonts">`).** Core already prints the same face from `theme.json` through `wp_print_font_faces()` in `<head>`, at the URL the theme preloads. The two font preloads stay. Test: `tests/head-sweep.php`.
+
 ## [2026.11.6] - 2026-11-07 — The record sleeve for /services
 
 ### Added
