@@ -47,7 +47,7 @@ No page had an inline event handler (`onload=` and the like).
 | `<script id="wp-importmap" type="importmap">` | core | `sha256-Jf2lCBPqQiy5BB3Wn7wYsahOkxB6fFTQrCph9O3wswc=` | every core update (the map carries module `ver=` hashes) |
 | `<script type="module">` (emoji loader) | core | `sha256-iplf8gaE6Q7wxi4LmVk6F7Cwwuk4JEp+qC/FWJul78o=` | core changes the loader |
 | `<script type="speculationrules">` | core + `inc/speculation.php` | none needed | allowed by `'inline-speculation-rules'` |
-| `<script id="wp-i18n-js-after">` (single notes only) | core, through the theme's `sn-copy` dependency on `wp-a11y` (`inc/sn-copy.php`) | `sha256-wv9t8ovqnH4ayVaS46LraLM76HAxxF+W6+UxmHbZ6oI=` | core changes wp-i18n's text-direction line, or the site's locale writes right to left |
+| `<script id="wp-i18n-js-after">` (notes and attachment pages) | core, through the theme's `sn-copy` dependency on `wp-a11y` (`inc/sn-copy.php`) | `sha256-wv9t8ovqnH4ayVaS46LraLM76HAxxF+W6+UxmHbZ6oI=` | core changes wp-i18n's text-direction line, or the site's locale writes right to left |
 
 The theme-init hash is pinned in code as `SN_THEME_INIT_SHA256`, and
 `tests/theme-init-csp-hash.php` fails if the script, the constant and the
@@ -81,8 +81,10 @@ through core's real `WP_Scripts` and fails unless that is the only inline
 script on the chain and the constant, this table and the bytes agree. Add the
 one source to the live rule's `script-src`; do not paste a line rebuilt from
 this page, since the live rule carries hashes this table does not. Without it
-nothing breaks (`wp.i18n` then defaults to left to right), but every note logs
-a violation and the plugin's daily check raises a watch.
+nothing breaks (`wp.i18n` then defaults to left to right, and the copy is still
+announced: checked in Chrome under `script-src 'self'`, 2026-11-10), but every
+note logs a violation and the plugin's daily check raises a watch. Chrome's own
+violation message names this hash.
 
 Each hash is over exactly the bytes between the opening tag's `>` and
 `</script>`, leading and trailing newline included. Sizes on 2026-10-17:

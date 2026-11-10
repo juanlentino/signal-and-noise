@@ -16,8 +16,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * wp-a11y needs wp-i18n, and core prints wp-i18n's text direction after it:
  * <script id="wp-i18n-js-after">, 99 bytes on WordPress 7.1.4, en_US. The
  * strict CSP allows inline scripts by hash only, so this hash must be in the
- * Cloudflare rule, or the browser refuses that script on every single note
- * (nothing breaks: wp.i18n then defaults to left-to-right, but the console
+ * Cloudflare rule, or the browser refuses that script on every note and
+ * attachment page, the pages templates/single.html serves (nothing breaks:
+ * wp.i18n then defaults to left-to-right, but the console
  * logs a violation and the plugin's daily CSP check raises a watch).
  * tests/sn-copy-csp-hash.php prints the footer through core's real WP_Scripts
  * and fails unless this constant is the hash of the only inline script there.
