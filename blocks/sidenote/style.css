@@ -38,7 +38,7 @@
 		margin-top: 0;
 		margin-bottom: 1rem;
 		padding-left: 1rem;
-		font-family: 'DM Mono', 'Courier New', monospace;
+		font-family: var(--wp--preset--font-family--body);
 		font-size: max(0.75rem, 11px);
 		line-height: 1.45;
 		color: var(--wp--preset--color--rust);
@@ -55,7 +55,7 @@
 		padding-top: 0.5rem;
 		padding-left: 0;
 		border-top: 1px solid var(--wp--preset--color--concrete);
-		font-family: 'DM Mono', 'Courier New', monospace;
+		font-family: var(--wp--preset--font-family--body);
 		font-size: 0.85rem;
 		line-height: 1.5;
 		color: var(--wp--preset--color--rust);

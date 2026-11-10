@@ -24,7 +24,7 @@
 	border-bottom: 1px solid var(--wp--preset--color--concrete);
 }
 .sn-notes-pillars-section .sn-notes-section-label {
-	font-family: 'DM Mono', 'Courier New', monospace;
+	font-family: var(--wp--preset--font-family--body);
 	font-size: max(0.7rem, 11px);
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
@@ -32,7 +32,7 @@
 	margin: 0;
 }
 .sn-notes-pillars-section .sn-notes-section-count {
-	font-family: 'DM Mono', 'Courier New', monospace;
+	font-family: var(--wp--preset--font-family--body);
 	font-size: max(0.7rem, 11px);
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
@@ -84,7 +84,7 @@
 	transform: translateX(2px);
 }
 .sn-notes-pillar-number {
-	font-family: 'DM Mono', 'Courier New', monospace;
+	font-family: var(--wp--preset--font-family--body);
 	font-size: clamp(0.95rem, 1.4vw, 1.15rem);
 	color: var(--wp--preset--color--blood);
 	padding: clamp(1.1rem, 2vw, 1.4rem) 0.9rem 0 1.1rem;
@@ -96,7 +96,7 @@
 	padding: clamp(1.1rem, 2vw, 1.4rem) clamp(1.25rem, 2.5vw, 1.6rem) clamp(1.1rem, 2vw, 1.4rem) 0;
 }
 .sn-notes-pillar-eyebrow {
-	font-family: 'DM Mono', 'Courier New', monospace;
+	font-family: var(--wp--preset--font-family--body);
 	font-size: 0.7rem;
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
@@ -104,7 +104,7 @@
 	margin: 0 0 0.5rem;
 }
 .sn-notes-pillar-title {
-	font-family: 'Bebas Neue', Impact, sans-serif;
+	font-family: var(--wp--preset--font-family--heading);
 	font-weight: 400;
 	font-size: clamp(1.4rem, 2.4vw, 1.9rem);
 	line-height: 1;
@@ -120,7 +120,7 @@
 	max-width: 42ch;
 }
 .sn-notes-pillar-cta {
-	font-family: 'DM Mono', 'Courier New', monospace;
+	font-family: var(--wp--preset--font-family--body);
 	font-size: max(0.75rem, 11px);
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
@@ -204,7 +204,7 @@
 
 .is-compact .sn-notes-pillar-title {
 	/* A <span> in compact, so the card's h2 margins do not apply. */
-	font-family: 'Bebas Neue', Impact, sans-serif;
+	font-family: var(--wp--preset--font-family--heading);
 	font-weight: 400;
 	font-size: clamp(1.05rem, 1.5vw, 1.25rem);
 	line-height: 1.15;
