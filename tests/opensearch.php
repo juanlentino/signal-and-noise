@@ -5,7 +5,7 @@
  * inc/opensearch.php serves an OpenSearch Description Document pointed at the
  * owned /notes/?s= search route, and emits a <link rel="search"> head tag so
  * browsers can register the site as a search provider. Virtual route +
- * status_header(200) (WORDPRESS-REFERENCE gotcha #40).
+ * the sn_machine query var (inc/machine-routes.php).
  *
  * @since theme v10.19.0
  */
@@ -35,10 +35,9 @@ function esc_html( $s ) { return htmlspecialchars( (string) $s, ENT_QUOTES ); }
 require __DIR__ . '/../inc/opensearch.php';
 
 // --- Route matcher ---
-ok( sn_opensearch_is_request( '/opensearch.xml' ) === true, 'matches /opensearch.xml' );
-ok( sn_opensearch_is_request( '/opensearch.xml?v=1' ) === true, 'matches with a query string' );
-ok( sn_opensearch_is_request( '/opensearch' ) === false, 'rejects the extensionless path' );
-ok( sn_opensearch_is_request( '/' ) === false, 'rejects site root' );
+ok( sn_opensearch_is_request( 'opensearch' ) === true, 'matches the sn_machine=opensearch query var' );
+ok( sn_opensearch_is_request( '/opensearch.xml' ) === false, 'the REQUEST_URI path alone no longer matches (fallback removed)' );
+ok( sn_opensearch_is_request( '' ) === false, 'rejects an empty query var' );
 
 // --- OSDD body ---
 $body = sn_opensearch_body();
@@ -55,7 +54,7 @@ ok( strpos( $head, '/opensearch.xml' ) !== false, 'head link points at /opensear
 
 // --- send() sets 200 (gotcha #40) ---
 ob_start(); sn_opensearch_send(); ob_end_clean();
-ok( $GLOBALS['__status'] === 200, 'send() calls status_header(200)' );
+ok( $GLOBALS['__status'] === 0, 'send() leaves the status to core (the rewrite route resolves as 200)' );
 
 $report = ob_get_clean();
 echo $report;

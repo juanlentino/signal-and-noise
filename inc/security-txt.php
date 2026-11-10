@@ -5,8 +5,8 @@
  * Serves a flat /.well-known/security.txt (RFC 9116's canonical location; the
  * deprecated top-level alias was removed in v11.0.0) advertising how to report a security
  * issue. The spiritual sibling of /humans.txt — same flush-free virtual-route
- * mechanism (template_redirect priority 0, no add_rewrite_rule; the theme must
- * not flush, that is the plugin's job).
+ * mechanism (a rewrite rule and the sn_machine query var, inc/machine-routes.php,
+ * answered at template_redirect priority 0).
  *
  * The mandatory `Expires` field is derived as ~1 year from the request time, so
  * the file never silently expires and needs zero recurring maintenance. Contact
@@ -21,20 +21,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Is this request for the security.txt? Pure helper (takes the path) so it is
- * testable without $_SERVER. Matches the RFC 9116 canonical
- * /.well-known/security.txt only (v11.0.0 removed the legacy top-level alias).
+ * Is this request for the security.txt? Pure helper (takes the sn_machine
+ * query var) so it is testable without WordPress. The rule in
+ * inc/machine-routes.php names the RFC 9116 canonical /.well-known/security.txt
+ * only (v11.0.0 removed the legacy top-level alias).
  *
- * @param string $uri Request URI (may carry a query string).
+ * @param string $route The sn_machine query var.
  * @return bool
  */
-function sn_security_txt_is_request( $uri ) {
-	$path = strtok( (string) $uri, '?' );
-	$path = '/' . trim( (string) $path, '/' );
-	// v11.0.0: the deprecated top-level /security.txt alias is REMOVED. RFC 9116
-	// names /.well-known/security.txt as the only canonical location, and every
-	// compliant scanner reads it there.
-	return ( '/.well-known/security.txt' === $path );
+function sn_security_txt_is_request( $route ) {
+	return 'security' === $route;
 }
 
 /**
@@ -74,18 +70,14 @@ function sn_security_txt_body( $now = null ) {
 }
 
 /**
- * Emit the 200 status + text/plain header + body. Split from the
- * template_redirect handler so it is testable without exit().
+ * Emit the text/plain header + body. Split from the template_redirect
+ * handler so it is testable without exit().
  *
- * status_header( 200 ) is REQUIRED: a virtual path with no backing post has
- * already been handed a 404 by WP's handle_404() before template_redirect, so
- * without this the file would return its body under a 404 and status-aware
- * disclosure scanners would treat it as absent (WORDPRESS-REFERENCE gotcha #40).
+ * The rewrite rule in inc/machine-routes.php resolves the path as a route, not
+ * a 404, so core already answers 200; the handler only reads the sn_machine
+ * query var.
  */
 function sn_security_txt_send() {
-	if ( function_exists( 'status_header' ) ) {
-		status_header( 200 );
-	}
 	header( 'Content-Type: text/plain; charset=' . get_option( 'blog_charset', 'UTF-8' ) );
 	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- plain-text body from home_url() + a derived expiry; esc_html would corrupt a text/plain document.
 	echo sn_security_txt_body();
@@ -96,7 +88,7 @@ function sn_security_txt_send() {
  * loader never runs.
  */
 function sn_security_txt_maybe_serve() {
-	$req = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
+	$req = (string) get_query_var( 'sn_machine' );
 	if ( ! sn_security_txt_is_request( $req ) ) {
 		return;
 	}

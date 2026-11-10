@@ -29,12 +29,10 @@ function home_url( $p = '' ) { return 'https://juanlentino.com' . $p; }
 require __DIR__ . '/../inc/security-txt.php';
 
 // --- Route matcher (pure helper) ---
-ok( sn_security_txt_is_request( '/.well-known/security.txt' ) === true, 'matches the RFC 9116 canonical /.well-known/security.txt' );
-ok( sn_security_txt_is_request( '/security.txt' ) === false, 'v11.0.0: the legacy top-level /security.txt alias is REMOVED (RFC 9116 names only the well-known path)' );
-ok( sn_security_txt_is_request( '/.well-known/security.txt?x=1' ) === true, 'matches with a query string' );
-ok( sn_security_txt_is_request( '/' ) === false, 'rejects site root' );
-ok( sn_security_txt_is_request( '/humans.txt' ) === false, 'rejects /humans.txt' );
-ok( sn_security_txt_is_request( '/.well-known/security.txt.bak' ) === false, 'rejects a near-miss' );
+ok( sn_security_txt_is_request( 'security' ) === true, 'matches the sn_machine=security query var (the /.well-known/security.txt rule)' );
+ok( sn_security_txt_is_request( '/.well-known/security.txt' ) === false, 'the REQUEST_URI path alone no longer matches (fallback removed)' );
+ok( sn_security_txt_is_request( 'humans' ) === false, 'rejects another machine file' );
+ok( sn_security_txt_is_request( '' ) === false, 'rejects an empty query var' );
 
 // --- Expires (pure, deterministic with injected $now) ---
 $now = 1750000000; // fixed
@@ -57,7 +55,7 @@ $GLOBALS['__status'] = 0;
 ob_start();
 sn_security_txt_send();
 $served = ob_get_clean();
-ok( 200 === $GLOBALS['__status'], 'serve path forces HTTP 200 (overrides WP 404 for the postless virtual route)' );
+ok( 0 === $GLOBALS['__status'], 'serve path leaves the status to core (the rewrite route resolves as 200, not a 404)' );
 ok( strpos( $served, 'Contact:' ) !== false, 'serve path emits the security.txt body' );
 
 echo "\nResult: $pass passed, $fail failed.\n";

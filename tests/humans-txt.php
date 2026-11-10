@@ -45,12 +45,10 @@ require __DIR__ . '/../inc/humans-txt.php';
 
 // --- Route matcher (pure helper) ---
 ok( function_exists( 'sn_humans_txt_is_request' ), 'sn_humans_txt_is_request() is defined' );
-ok( sn_humans_txt_is_request( '/humans.txt' ) === true, 'matches /humans.txt' );
-ok( sn_humans_txt_is_request( '/humans.txt?v=1' ) === true, 'matches /humans.txt with query string' );
-ok( sn_humans_txt_is_request( 'humans.txt' ) === true, 'matches bare humans.txt (no leading slash)' );
-ok( sn_humans_txt_is_request( '/notes' ) === false, 'rejects /notes' );
-ok( sn_humans_txt_is_request( '/' ) === false, 'rejects site root' );
-ok( sn_humans_txt_is_request( '/humans.txt.bak' ) === false, 'rejects near-miss /humans.txt.bak' );
+ok( sn_humans_txt_is_request( 'humans' ) === true, 'matches the sn_machine=humans query var' );
+ok( sn_humans_txt_is_request( '/humans.txt' ) === false, 'the REQUEST_URI path alone no longer matches (fallback removed)' );
+ok( sn_humans_txt_is_request( 'security' ) === false, 'rejects another machine file' );
+ok( sn_humans_txt_is_request( '' ) === false, 'rejects an empty query var' );
 
 // --- Body (pure builder) ---
 ok( function_exists( 'sn_humans_txt_body' ), 'sn_humans_txt_body() is defined' );
@@ -99,7 +97,7 @@ $GLOBALS['__status'] = 0;
 ob_start();
 sn_humans_txt_send();
 $served = ob_get_clean();
-ok( 200 === $GLOBALS['__status'], 'serve path forces HTTP 200 (overrides WP 404 for the postless virtual route)' );
+ok( 0 === $GLOBALS['__status'], 'serve path leaves the status to core (the rewrite route resolves as 200, not a 404)' );
 ok( strpos( $served, 'Juan Lentino' ) !== false, 'serve path emits the humans.txt body' );
 
 echo "\nResult: $pass passed, $fail failed.\n";

@@ -186,7 +186,7 @@ require_once __DIR__ . '/inc/cache-headers-hooks.php'; // sends them: public HTM
 require_once __DIR__ . '/inc/llms-txt.php'; // v10.19.0: /llms.txt + /llms-full.txt virtual routes (llmstxt.org AEO discoverability)
 require_once __DIR__ . '/inc/gpc-json.php'; // v10.19.0: /.well-known/gpc.json virtual route (Global Privacy Control declaration)
 require_once __DIR__ . '/inc/opensearch.php'; // v10.19.0: /opensearch.xml virtual route + rel=search autodiscovery (search provider over /notes/?s=)
-require_once __DIR__ . '/inc/machine-routes.php'; // 2026-11-10: rewrite rules + sn_machine query var for the five machine files, so they resolve as routes, not 404s (live after the plugin's next flush)
+require_once __DIR__ . '/inc/machine-routes.php'; // 2026-11-10: rewrite rules + sn_machine query var for the five machine files, so they resolve as routes, not 404s; flushed once when the rule set changes
 require_once __DIR__ . '/inc/agents-manifest.php'; // v10.37.0: /.well-known/agents.json machine-surfaces discovery manifest (machine-readability program, sub-project A)
 require_once __DIR__ . '/inc/note-uid.php'; // v10.49.0: canonical lowercase+trim read of the plugin-owned _sn_prov_uid meta (shared by the .json twin + both feeds; closes a trim drift)
 require_once __DIR__ . '/inc/content-json-document.php'; // v10.38.0: content-as-data JSON document builder (machine-readability, sub-project C)
