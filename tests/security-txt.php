@@ -58,5 +58,6 @@ $served = ob_get_clean();
 ok( 0 === $GLOBALS['__status'], 'serve path leaves the status to core (the rewrite route resolves as 200, not a 404)' );
 ok( strpos( $served, 'Contact:' ) !== false, 'serve path emits the security.txt body' );
 
+ok( 1 === preg_match( '/function sn_security_txt_send\(\).*?sn_edge_cache_send_machine\(\)/s', (string) file_get_contents( dirname( __DIR__ ) . '/inc/security-txt.php' ) ), 'security.txt sends the machine cache lifetime: since the rewrite rule serves it, core no longer sends its 404 no-cache headers' );
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

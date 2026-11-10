@@ -100,5 +100,6 @@ $served = ob_get_clean();
 ok( 0 === $GLOBALS['__status'], 'serve path leaves the status to core (the rewrite route resolves as 200, not a 404)' );
 ok( strpos( $served, 'Juan Lentino' ) !== false, 'serve path emits the humans.txt body' );
 
+ok( 1 === preg_match( '/function sn_humans_txt_send\(\).*?sn_edge_cache_send_machine\(\)/s', (string) file_get_contents( dirname( __DIR__ ) . '/inc/humans-txt.php' ) ), 'humans.txt sends the machine cache lifetime: since the rewrite rule serves it, core no longer sends its 404 no-cache headers' );
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

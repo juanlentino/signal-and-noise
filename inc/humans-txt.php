@@ -93,6 +93,9 @@ function sn_humans_txt_body() {
  */
 function sn_humans_txt_send() {
 	header( 'Content-Type: text/plain; charset=' . get_option( 'blog_charset', 'UTF-8' ) );
+	if ( function_exists( 'sn_edge_cache_send_machine' ) ) {
+		sn_edge_cache_send_machine();
+	}
 	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- plain-text body built from theme-header values, literals and the companion plugin's colophon facts (its own literals); esc_html would corrupt the "&" in "Signal & Noise" inside a text/plain document.
 	echo sn_humans_txt_body();
 }
