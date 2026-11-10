@@ -25,6 +25,13 @@
 	}
 
 	window.snCopy = {
+		// Kept for one release (2026-11-10): a page cached before the switch to
+		// wp.a11y.speak() may still run the old callers, which call this. It
+		// returns a detached element, so their writes are harmless and the copy
+		// buttons still work. Remove in the release after next.
+		liveRegion: function () {
+			return document.createElement( 'span' );
+		},
 		text: function ( s ) {
 			if ( navigator.clipboard && navigator.clipboard.writeText ) {
 				return navigator.clipboard.writeText( s );
