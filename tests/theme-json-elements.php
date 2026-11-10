@@ -142,9 +142,14 @@ foreach ( array( 'link', 'button' ) as $el ) {
 // PARITY with the shipped rule. Two places now describe one ring; this is the
 // assertion that stops them drifting.
 tje_ok(
-	1 === preg_match( '/a:focus-visible,.*?\{([^}]*)\}/s', $base, $m_ring ),
+	1 === preg_match( '/\nbutton:focus-visible,.*?\{([^}]*)\}/s', $base, $m_ring ),
 	'the global :focus-visible rule was located in base.css (guard: the regex still matches)'
 );
+// 2026-11-10: links and core buttons take the ring from theme.json alone; the
+// CSS rule keeps only what theme.json cannot reach (bare buttons, roles,
+// inputs, summary).
+$sel_list = (string) ( preg_match( '/\n(button:focus-visible,[^{]*)\{/s', $base, $m_sel ) ? $m_sel[1] : '' );
+tje_ok( false === strpos( $sel_list, 'a:focus-visible' ) && false === strpos( $sel_list, '.wp-block-button__link:focus-visible' ) && false !== strpos( $sel_list, 'summary:focus-visible' ), 'base.css no longer repeats the link and button rings theme.json declares' );
 $ring = preg_replace( '/\s+/', ' ', $m_ring[1] ?? '' );
 preg_match( '/outline:\s*([^;]+);/', $ring, $m_o );
 preg_match( '/outline-offset:\s*([^;]+);/', $ring, $m_off );

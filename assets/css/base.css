@@ -166,11 +166,13 @@ body::after {
    mouse-click users don't see the indicator.
 
    Form-input :focus-visible is handled separately in forms.css with
-   its own border-color flourish; this rule covers links, buttons, and
-   anything else interactive.
+   its own border-color flourish. Links and core buttons
+   (.wp-element-button, .wp-block-button__link) take the same ring from
+   theme.json's elements; this rule covers what those selectors miss:
+   bare buttons (nav toggles), ARIA roles, checkable and submit inputs,
+   and summary.
    ============================================ */
 
-a:focus-visible,
 button:focus-visible,
 [role="button"]:focus-visible,
 [role="link"]:focus-visible,
@@ -178,7 +180,6 @@ input[type="submit"]:focus-visible,
 input[type="button"]:focus-visible,
 input[type="checkbox"]:focus-visible,
 input[type="radio"]:focus-visible,
-.wp-block-button__link:focus-visible,
 summary:focus-visible {
 	outline: 2px solid var(--wp--preset--color--blood);
 	outline-offset: 3px;
