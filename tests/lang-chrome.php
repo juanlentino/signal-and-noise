@@ -88,6 +88,16 @@ ok( '' !== $nav && 5 === substr_count( $es_nav, 'hreflang="en"' ), 'all five met
 ok( false === strpos( $es_nav, 'title=' ), 'the Spanish footer carries no title either' );
 ok( false !== strpos( $es_nav, 'data-hint="Colofón"' ) && false !== strpos( $es_nav, '(en inglés)' ), 'labels are Spanish and say the page is English' );
 ok( false === strpos( $nav, 'Colofón' ), 'the English meta-nav is untouched (the pinned bytes render without the plugin)' );
+// HTML API, not exact bytes (2026-11-10): attribute order, an added class or
+// single quotes no longer stop the Spanish from applying.
+$odd = "<nav class=\"wp-block-navigation x\" aria-label='Main navigation'><button data-x=\"1\" aria-label=\"Open menu\" class=\"a\"></button></nav><span class=\"sn-cmdk-trigger-label extra\">Search</span>";
+$got = sn_lang_chrome_strings( $odd );
+ok( false !== strpos( $got, 'Navegación principal' ) && false !== strpos( $got, 'Abrir el menú' ) && false !== strpos( $got, '>Buscar<' ), 'the chrome strings switch on reordered, re-quoted, extra-class markup: ' . $got );
+ok( '<p aria-label="Main navigation menu">Search</p>' === sn_lang_chrome_strings( '<p aria-label="Main navigation menu">Search</p>' ), 'only whole values are translated, and Search only in the trigger label' );
+$re = str_replace( '<a href="/now/" aria-label="Now: what I&#8217;m focused on" data-hint="Now">', '<a data-hint="Now" class="z" href="/now/" aria-label="Now: what I&#8217;m focused on">', $nav );
+$es_re = sn_lang_meta_nav( $re );
+ok( 5 === substr_count( $es_re, 'hreflang="en"' ) && false !== strpos( $es_re, 'data-hint="Ahora"' ), 'the meta-nav switches with its attributes reordered' );
+
 $footer = (string) file_get_contents( __DIR__ . '/../parts/footer.html' );
 ok( false === strpos( $footer, 'lang-toggle' ) && false === strpos( $footer, 'sn-lang-footer' ), 'the footer carries no language link: the header switch is the one place' );
 ok( ! function_exists( 'sn_lang_footer_link_html' ), 'the footer link builder is gone' );

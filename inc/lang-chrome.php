@@ -143,13 +143,34 @@ add_filter(
  * @return string
  */
 function sn_lang_chrome_strings( $html ) {
-	$map = array(
-		'aria-label="Main navigation"'          => 'aria-label="Navegación principal"',
-		'aria-label="Open menu"'                => 'aria-label="Abrir el menú"',
-		'aria-label="Close menu"'               => 'aria-label="Cerrar el menú"',
-		'class="sn-cmdk-trigger-label">Search<' => 'class="sn-cmdk-trigger-label">Buscar<',
+	$labels = array(
+		'Main navigation' => 'Navegación principal',
+		'Open menu'       => 'Abrir el menú',
+		'Close menu'      => 'Cerrar el menú',
 	);
-	return strtr( $html, $map );
+	// Core's HTML API: an attribute is found by name and value and written as
+	// an attribute, so order, quoting and extra classes do not matter.
+	$tags  = new WP_HTML_Tag_Processor( (string) $html );
+	$label = false; // Inside the command palette trigger's label span.
+	while ( $tags->next_token() ) {
+		if ( '#text' === $tags->get_token_type() ) {
+			if ( $label && 'Search' === $tags->get_modifiable_text() ) {
+				$tags->set_modifiable_text( 'Buscar' );
+			}
+			$label = false;
+			continue;
+		}
+		if ( '#tag' !== $tags->get_token_type() || $tags->is_tag_closer() ) {
+			$label = false;
+			continue;
+		}
+		$aria  = $tags->get_attribute( 'aria-label' );
+		$label = 'SPAN' === $tags->get_tag() && $tags->has_class( 'sn-cmdk-trigger-label' );
+		if ( is_string( $aria ) && isset( $labels[ $aria ] ) ) {
+			$tags->set_attribute( 'aria-label', $labels[ $aria ] );
+		}
+	}
+	return $tags->get_updated_html();
 }
 
 foreach ( array( 'core/navigation', 'core/html' ) as $sn_chrome_block ) {
