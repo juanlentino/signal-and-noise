@@ -5,28 +5,22 @@
  * Categories: signal-noise
  * Description: Brutalist pull-quote for highlighting thesis statements. Top + bottom black rules, serif italic body, monospace small-caps attribution.
  * Keywords: thesis, quote, callout, emphasis, pull-quote
- * Block Types: core/quote
+ * Block Types: core/pullquote
  * Viewport Width: 1200
  *
  * Added in theme v9.2.0 — tuned for /notes analytical posts where the
  * thesis statement deserves visual emphasis.
  *
- * Superseded by the signal-noise/pull-quote BLOCK as of v9.11.0; retained as a
- * no-block fallback / scaffold.
+ * 2026-11-10: core/pullquote with the Pull-quote style (styles/blocks/
+ * pull-quote.json). It replaces the group-and-paragraphs scaffold and the
+ * custom signal-noise/pull-quote block, which stays registered, out of the
+ * inserter, so anything written with it renders as before.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 ?>
-<!-- wp:group {"className":"sn-pattern-pull-quote","tagName":"aside","layout":{"type":"constrained"}} -->
-<aside class="wp-block-group sn-pattern-pull-quote">
-	<!-- wp:paragraph {"className":"sn-pull-quote__body"} -->
-	<p class="sn-pull-quote__body">"The classifier always loses on cost before it loses on accuracy."</p>
-	<!-- /wp:paragraph -->
-
-	<!-- wp:paragraph {"className":"sn-pull-quote__attribution"} -->
-	<p class="sn-pull-quote__attribution">From the post above</p>
-	<!-- /wp:paragraph -->
-</aside>
-<!-- /wp:group -->
+<!-- wp:pullquote {"className":"is-style-pull-quote"} -->
+<figure class="wp-block-pullquote is-style-pull-quote"><blockquote><p>"The classifier always loses on cost before it loses on accuracy."</p><cite>From the post above</cite></blockquote></figure>
+<!-- /wp:pullquote -->

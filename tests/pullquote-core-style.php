@@ -31,5 +31,10 @@ ok( array( 'body', 'attribution' ) === array_keys( $bj['attributes'] ?? array() 
 $js = (string) file_get_contents( "$root/blocks/editor.js" );
 ok( 1 === preg_match( "/blocks: \\[ 'core\\/pullquote' \\]/", $js ) && false !== strpos( $js, "createBlock( 'core/pullquote', { value: a.body, citation: a.attribution, className: 'is-style-pull-quote' } )" ), 'the editor offers a transform to core/pullquote that keeps body, attribution and the style' );
 
+$pat = (string) file_get_contents( "$root/patterns/pull-quote.php" );
+ok( false !== strpos( $pat, 'Slug: signal-noise/pull-quote' ) && false !== strpos( $pat, 'Block Types: core/pullquote' ), 'the pattern keeps its slug and is offered for core/pullquote' );
+ok( 1 === preg_match( '#<!-- wp:pullquote \{"className":"is-style-pull-quote"\} -->\s*<figure class="wp-block-pullquote is-style-pull-quote"><blockquote><p>[^<]+</p><cite>[^<]+</cite></blockquote></figure>\s*<!-- /wp:pullquote -->#', $pat ) && false === strpos( $pat, 'sn-pattern-pull-quote' ), "the pattern is core/pullquote's saved markup with the style, not the group scaffold" );
+$ec = (string) file_get_contents( "$root/inc/editorial-conventions.php" );
+ok( false !== strpos( $ec, "'selector'         => 'is-style-pull-quote'" ), 'editorial conventions name the new selector' );
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );
