@@ -28,7 +28,7 @@ function sn_theme_register_ai_generation_abilities() {
 
 	wp_register_ability( 'signal-and-noise/ai-generate-page-note-summary', array(
 		'label'               => 'Generate /notes-voice summary',
-		'description'         => "Generates a brand-voiced single-sentence summary of a post in the SN /notes catalog vocabulary. Calls the plugin's AI helper (model configurable via the plugin's Front-End settings; defaults to Claude Sonnet 5). Requires the signal-and-noise-tools plugin.",
+		'description'         => "Generates a brand-voiced single-sentence summary of a post in the SN /notes catalog vocabulary. Runs the official AI plugin's ai/summarization ability with the /notes voice attached when it is registered; otherwise calls the plugin's AI helper (model configurable via the plugin's Front-End settings; defaults to Claude Sonnet 5). Requires the signal-and-noise-tools plugin.",
 		'category'            => 'ai-generation',
 		// Per-post gate (v9.15.3): this ability reads a specific post's body, so
 		// it must check edit_post(post_id), not the blanket edit_posts — otherwise

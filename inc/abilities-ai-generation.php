@@ -38,6 +38,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 // The parts, in the original top-to-bottom order.
 require_once __DIR__ . '/abilities-ai-generation-register.php';
 require_once __DIR__ . '/abilities-ai-generation-page-note-summary.php';
+require_once __DIR__ . '/abilities-ai-generation-note-summary-official.php';
 require_once __DIR__ . '/abilities-ai-generation-suggest-block-pattern.php';
 require_once __DIR__ . '/abilities-ai-generation-validate-brand-alignment.php';
 require_once __DIR__ . '/abilities-ai-generation-generate-pattern-content.php';

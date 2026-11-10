@@ -14,6 +14,7 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ### Changed
 - **Each AI ability's `tokens_used` now says what it is.** The output schema of all five generative abilities describes the figure as an output-only estimate (characters / 4) that leaves out the prompt. The field keeps its name, so nothing that reads it breaks. Test: `tests/ai-tokens-used-schema.php`.
+- **The /notes summary ability runs on the official AI plugin when it can.** `signal-and-noise/ai-generate-page-note-summary` keeps its name and its `{summary, post_id, tokens_used}` answer, but when the AI plugin registers `ai/summarization` it now runs that ability for the post, with the /notes voice and the word cap appended to the official instruction for that one call. An error from the official ability is returned as is. Without the AI plugin, the theme's own path runs as before. Test: `tests/ai-note-summary-official.php`.
 
 ## [2026.11.6] - 2026-11-07 — The record sleeve for /services
 

@@ -18,6 +18,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function sn_theme_ability_ai_page_note_summary( $input ) {
 	try {
+		$official = sn_theme_ai_official_note_summary( $input );
+		if ( null !== $official ) {
+			return $official;
+		}
 		if ( ! sn_theme_ai_helper_available() ) {
 			return sn_theme_ai_unavailable_error();
 		}
@@ -75,3 +79,4 @@ function sn_theme_ability_ai_page_note_summary( $input ) {
 		);
 	}
 }
+
