@@ -41,6 +41,8 @@ function sn_prov_genesis_root_state() { return array( 'status' => 'confirmed' );
 function sn_prov_present_status( $s, $r ) { return array( 'state' => 'confirmed', 'label' => 'Verified' ); }
 function sn_prov_primary_explorer( $vm, $root ) { return array( 'href' => 'https://mempool.space/block/962042' ); }
 
+require_once __DIR__ . '/lib/wp-html-api.php';
+snt_require_wp_html_api();
 require_once __DIR__ . '/../inc/provenance-title-badge.php';
 
 $pass = 0; $fail = 0;
@@ -88,6 +90,16 @@ ok( 7 === sn_prov_brow_page_id(), 'a reader-facing singular page: placement allo
 
 // 2026.10: the reset helper reset nothing and had no caller; it is gone.
 ok( ! function_exists( 'sn_prov_brow_reset' ), 'no sn_prov_brow_reset(): a reset that cannot reset is not kept as a seam' );
+
+echo "\nGroup: the brow tests read markup, not bytes (HTML API, 2026-11-10)\n";
+ok( sn_prov_brow_is_eyebrow( "<p class='wp-block-paragraph sn-catalog-eyebrow'>X</p>" ), 'a single-quoted class is a brow (the regex missed it)' );
+ok( sn_prov_brow_is_eyebrow( '<p class=sn-provenance-eyebrow>X</p>' ), 'an unquoted class is a brow (the regex missed it)' );
+ok( ! sn_prov_brow_is_eyebrow( '<p class="sn-catalog-eyebrow-x">X</p>' ), 'a longer class name is not the brow class' );
+ok( ! sn_prov_brow_is_eyebrow( '<p>Our sn-catalog-eyebrow class</p>' ), 'the class name in text is not a brow' );
+$GLOBALS['__content'] = '<!-- wp:paragraph --><p>We style a brow with class="sn-catalog-eyebrow".</p><!-- /wp:paragraph --><!-- sn-provenance-eyebrow -->';
+ok( ! sn_prov_brow_content_has_eyebrow( 7 ), 'content that only MENTIONS the class, in text or a comment, has no brow (the regex said it did)' );
+$GLOBALS['__content'] = '<!-- wp:group --><div class="wp-block-group"><!-- wp:paragraph {"className":"sn-provenance-eyebrow"} --><p class="sn-provenance-eyebrow">A short read</p><!-- /wp:paragraph --></div><!-- /wp:group -->';
+ok( sn_prov_brow_content_has_eyebrow( 7 ), 'a brow paragraph nested in a group is found' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

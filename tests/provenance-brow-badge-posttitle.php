@@ -45,6 +45,8 @@ function sn_prov_genesis_root_state() { return array( 'status' => 'confirmed' );
 function sn_prov_present_status( $s, $r ) { return array( 'state' => 'confirmed', 'label' => 'Verified' ); }
 function sn_prov_primary_explorer( $vm, $root ) { return array( 'href' => 'https://mempool.space/block/962042' ); }
 
+require_once __DIR__ . '/lib/wp-html-api.php';
+snt_require_wp_html_api();
 require_once __DIR__ . '/../inc/provenance-title-badge.php';
 
 $pass = 0; $fail = 0;
