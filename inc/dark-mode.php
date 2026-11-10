@@ -64,12 +64,12 @@ const SN_THEME_INIT_SHA256 = 'sha256-+aDIk0AQYDEK+tK47t/wNITT4nprLRPhL+LH2Hb8THs
 add_action(
 	'wp_head',
 	function () {
-		$key = SN_THEME_STORAGE_KEY;
-		?>
-<script id="sn-theme-init">
-(function(){try{var t=localStorage.getItem('<?php echo esc_js( $key ); ?>');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();
-</script>
-		<?php
+		// Core's inline-script API, so wp_inline_script_attributes sees the tag.
+		// Core wraps the data in one newline each side, the bytes hashed above.
+		wp_print_inline_script_tag(
+			"(function(){try{var t=localStorage.getItem('" . esc_js( SN_THEME_STORAGE_KEY ) . "');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();",
+			array( 'id' => 'sn-theme-init' )
+		);
 	},
 	1
 );

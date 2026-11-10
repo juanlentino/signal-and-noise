@@ -12,6 +12,8 @@
 #   speculative-loading.php, class-wp-speculation-rules.php,
 #   class-wp-url-pattern-prefixer.php   core's speculation rules, for
 #                      tests/speculation.php (the rules core prints).
+#   script-loader.php   core's wp_get_inline_script_tag(), for
+#                      tests/theme-init-csp-hash.php (the bytes core prints).
 #
 # The files come from a wordpress-develop release tag, so a run is reproducible.
 # Bump WP_REF here when the site moves to a new core release.
@@ -30,7 +32,7 @@ mkdir -p "$dest/html-api" "$dest/interactivity-api"
 for f in class-wp-html-tag-processor.php class-wp-html-attribute-token.php class-wp-html-span.php class-wp-html-text-replacement.php class-wp-html-decoder.php html5-named-character-references.php; do
 	curl -sSfL --connect-timeout 10 --max-time 60 --retry 2 "$base/html-api/$f" -o "$dest/html-api/$f"
 done
-for f in class-wp-token-map.php speculative-loading.php class-wp-speculation-rules.php class-wp-url-pattern-prefixer.php; do
+for f in class-wp-token-map.php speculative-loading.php class-wp-speculation-rules.php class-wp-url-pattern-prefixer.php script-loader.php; do
 	curl -sSfL --connect-timeout 10 --max-time 60 --retry 2 "$base/$f" -o "$dest/$f"
 done
 for f in class-wp-interactivity-api.php class-wp-interactivity-api-directives-processor.php interactivity-api.php; do

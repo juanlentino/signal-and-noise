@@ -188,7 +188,10 @@ function sn_hero_pulse_print() {
 	if ( '' === $css ) {
 		return;
 	}
-	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built here from integers and a fixed template; the SVG is rawurlencoded, so it holds no quote or angle bracket. Escaping would corrupt the CSS.
-	echo '<style id="sn-hero-pulse">' . $css . "</style>\n";
+	// Core's inline-style API, printed right after the critical CSS (51).
+	// Built from integers and a fixed template; the SVG is rawurlencoded.
+	wp_register_style( 'sn-hero-pulse', false, array(), null ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion -- no file, nothing to version.
+	wp_add_inline_style( 'sn-hero-pulse', $css );
+	wp_print_styles( 'sn-hero-pulse' );
 }
 add_action( 'wp_head', 'sn_hero_pulse_print', 51 );

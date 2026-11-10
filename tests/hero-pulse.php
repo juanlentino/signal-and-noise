@@ -110,6 +110,7 @@ ok( 1 === preg_match( '/@media\s*\(forced-colors:\s*active\)\s*\{[^{}]*\.sn-hero
 echo "\nGroup 6: wiring\n";
 $src = (string) file_get_contents( $root . '/inc/hero-pulse.php' );
 ok( 1 === preg_match( "/add_action\(\s*'wp_head',\s*'sn_hero_pulse_print',\s*51\s*\)/", $src ), 'printed in <head> right after the inline critical CSS (priority 50)' );
+ok( false !== strpos( $src, "wp_register_style( 'sn-hero-pulse', false" ) && false !== strpos( $src, 'wp_add_inline_style( \'sn-hero-pulse\', $css )' ) && false !== strpos( $src, "wp_print_styles( 'sn-hero-pulse' )" ) && false === strpos( $src, '<style id=' ), "the rule goes through core's inline-style API, printed by handle at 51 (no raw <style>)" );
 ok( false !== strpos( $src, "set_transient( SN_HERO_PULSE_TRANSIENT" ) && false !== strpos( $src, '10 * MINUTE_IN_SECONDS' ), 'the computed rule is cached for ten minutes, the empty answer too' );
 ok( false !== strpos( $src, "function_exists( 'sn_analytics_hour_dow_grid' )" ), 'every plugin read is guarded on the plugin being loaded' );
 ok( 1 === preg_match( "/require_once __DIR__ \. '\/inc\/hero-pulse\.php'/", (string) file_get_contents( $root . '/functions.php' ) ), 'functions.php loads it' );

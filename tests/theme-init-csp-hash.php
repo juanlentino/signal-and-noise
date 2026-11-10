@@ -6,7 +6,8 @@
  * meant to drop 'unsafe-inline' from script-src and allow the one blocking
  * head script by its sha256 instead. A changed byte in that script without a
  * changed hash means the browser refuses it and every reader who chose a theme
- * sees the other one flash first. This suite renders the real wp_head callback,
+ * sees the other one flash first. This suite renders the real wp_head callback
+ * through core's real wp_print_inline_script_tag() (2026-11-10),
  * hashes exactly what the browser hashes (the text between the tags), and
  * fails unless the computed hash, SN_THEME_INIT_SHA256 and the hash quoted in
  * the doc comment are one value. (2026-10-16 CSP prep.)
@@ -31,6 +32,9 @@ function esc_attr( $a ) { return htmlspecialchars( (string) $a, ENT_QUOTES ); }
 function get_theme_file_uri( $p = '' ) { return 'https://x.test/' . $p; }
 function sn_asset_ver( $p ) { return '1'; }
 function add_query_arg( $k, $v, $u ) { return $u . '?' . $k . '=' . $v; }
+
+require __DIR__ . '/lib/wp-inline-script.php';
+snt_require_wp_inline_script();
 
 $src = (string) file_get_contents( __DIR__ . '/../inc/dark-mode.php' );
 require __DIR__ . '/../inc/dark-mode.php';
