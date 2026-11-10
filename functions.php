@@ -36,7 +36,8 @@
  *   inc/abilities-registration.php — WP 7.0 Abilities registration (theme-owned read + generative; splits into abilities-*.php)
  *   inc/post-frontmatter.php     — long-form post frontmatter rendering
  *   inc/pillar-title-eyebrow.php — designation eyebrow on flagged essay Pages (v10.48.0)
- *   inc/block-bindings.php       — signal-noise/post-field Block Bindings source (reading_time|pillar|canonical|og_title) (v9.11.0)
+ *   inc/block-bindings.php       — signal-noise/post-field Block Bindings source (pillar|canonical|og_title) (v9.11.0)
+ *   inc/post-time-to-read.php    - core/post-time-to-read shows the plugin's reading-time figure (2026-11-10)
  *   inc/post-updated-date.php    — [sn_updated_date] "Updated YYYY.MM.DD" line for materially-revised notes (v9.10.0)
  *   inc/provenance-surface.php   — [sn_prov_chip] byline pill + [sn_prov_panel] record, plugin-guarded (v10.30.0)
  *   inc/hero-pulse.php           — the home hero's pulse: last 24h of traffic as a waveform mask, plugin-guarded
@@ -152,6 +153,7 @@ require_once __DIR__ . '/inc/search-marker-lane.php'; // 2026.10: where a search
 require_once __DIR__ . '/inc/resume-lanes.php'; // 2026.10: résumé roles on one shared timeline
 require_once __DIR__ . '/inc/provenance-title-badge.php'; // v11.11.0: the provenance badge joins the BROW on signed Pages (was appended at the content foot by the plugin's the_content filter).
 require_once __DIR__ . '/inc/block-bindings.php';
+require_once __DIR__ . '/inc/post-time-to-read.php'; // 2026-11-10: core's Time to Read block, worded "N min read" from the plugin's figure
 require_once __DIR__ . '/inc/post-updated-date.php';
 require_once __DIR__ . '/inc/provenance-surface.php'; // v10.30.0: [sn_prov_chip] byline pill + [sn_prov_panel] record — theme-side placement for the plugin's public provenance rendering (plugin-guarded)
 require_once __DIR__ . '/inc/print-colophon.php'; // the printed note's proof: full hash, status, verify address written out
