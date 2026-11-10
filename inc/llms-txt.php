@@ -21,19 +21,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Which llms file is being requested? Pure helper (takes the path) so it is
- * testable without $_SERVER.
+ * Which llms file is being requested? Pure helper (takes the sn_machine query
+ * var, inc/machine-routes.php) so it is testable without WordPress.
  *
- * @param string $uri Request URI (may carry a query string).
+ * @param string $route The sn_machine query var.
  * @return string 'basic' for /llms.txt, 'full' for /llms-full.txt, '' otherwise.
  */
-function sn_llms_txt_variant( $uri ) {
-	$path = strtok( (string) $uri, '?' );
-	$path = '/' . trim( (string) $path, '/' );
-	if ( '/llms.txt' === $path ) {
+function sn_llms_txt_variant( $route ) {
+	if ( 'llms' === $route ) {
 		return 'basic';
 	}
-	if ( '/llms-full.txt' === $path ) {
+	if ( 'llms-full' === $route ) {
 		return 'full';
 	}
 	return '';
@@ -314,9 +312,9 @@ function sn_llms_txt_recent_notes( $limit = 40 ) {
 }
 
 /**
- * Emit the 200 status + text/plain header + body. Split from the handler so it
- * is testable without exit(). status_header( 200 ) is REQUIRED — a postless
- * virtual path is already a 404 by template_redirect (WORDPRESS-REFERENCE #40).
+ * Emit the text/plain header + body. Split from the handler so it is testable
+ * without exit(). No forced status: the sn_machine rewrite route
+ * (inc/machine-routes.php) already resolves as 200, not a 404.
  *
  * @param bool $full Serve the full corpus variant.
  */
@@ -354,12 +352,8 @@ function sn_llms_txt_topics() {
 }
 
 function sn_llms_txt_send( $full = false ) {
-	if ( function_exists( 'status_header' ) ) {
-		status_header( 200 );
-	}
 	header( 'Content-Type: text/plain; charset=' . get_option( 'blog_charset', 'UTF-8' ) );
-	// The shared-cache lifetime replaces the 404 nocache headers WordPress
-	// committed for this postless path (inc/cache-headers.php); anonymous only.
+	// The shared-cache lifetime (inc/cache-headers.php); anonymous only.
 	if ( function_exists( 'sn_edge_cache_send_machine' ) ) {
 		sn_edge_cache_send_machine();
 	}
@@ -377,7 +371,7 @@ function sn_llms_txt_send( $full = false ) {
  * template_redirect handler: serve the requested llms file, then exit.
  */
 function sn_llms_txt_maybe_serve() {
-	$req     = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
+	$req     = (string) get_query_var( 'sn_machine' );
 	$variant = sn_llms_txt_variant( $req );
 	if ( '' === $variant ) {
 		return;

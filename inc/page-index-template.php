@@ -9,7 +9,7 @@
  * Why a virtual route (not a real Page): the listing is theme-generated from
  * live queries, so there is nothing for an author to edit. We match on
  * REQUEST_URI at template_redirect (priority 0) — the same flush-free
- * mechanism /humans.txt and /notes use (no add_rewrite_rule; the theme must
+ * mechanism /notes uses (no add_rewrite_rule; the theme must
  * not flush rewrites — that is the plugin's job). The render file forces HTTP
  * 200 because a postless path inherits WP's handle_404() (gotcha #40).
  *

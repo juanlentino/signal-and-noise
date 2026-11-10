@@ -135,8 +135,8 @@ function sn_edge_cache_recheck() {
 
 /**
  * For the virtual machine files, which answer at template_redirect priority 0
- * with WordPress's 404 nocache headers already committed: replace them, for an
- * anonymous read only.
+ * through their own rewrite rule (a 200 with no cache header of WordPress's):
+ * set the machine lifetime, for an anonymous read only.
  *
  * @return void
  */

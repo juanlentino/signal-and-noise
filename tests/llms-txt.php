@@ -5,7 +5,7 @@
  * inc/llms-txt.php serves the llmstxt.org AEO discoverability file via a
  * template_redirect virtual route (basic = curated key pages; full = + a Notes
  * section). Mirrors humans-txt.php / security-txt.php: pure body builder + a
- * send handler that MUST call status_header(200) (WORDPRESS-REFERENCE gotcha #40).
+ * send handler, answered on the sn_machine query var (inc/machine-routes.php).
  *
  * @since theme v10.19.0
  */
@@ -32,12 +32,11 @@ function get_bloginfo( $k = '' ) { return 'name' === $k ? 'Signal & Noise' : '';
 require __DIR__ . '/../inc/llms-txt.php';
 
 // --- Variant matcher (pure helper) ---
-ok( sn_llms_txt_variant( '/llms.txt' ) === 'basic', 'matches /llms.txt as basic' );
-ok( sn_llms_txt_variant( '/llms-full.txt' ) === 'full', 'matches /llms-full.txt as full' );
-ok( sn_llms_txt_variant( '/llms.txt?ref=x' ) === 'basic', 'matches with a query string' );
-ok( sn_llms_txt_variant( '/' ) === '', 'rejects site root' );
-ok( sn_llms_txt_variant( '/humans.txt' ) === '', 'rejects /humans.txt' );
-ok( sn_llms_txt_variant( '/llms.txt.bak' ) === '', 'rejects a near-miss' );
+ok( sn_llms_txt_variant( 'llms' ) === 'basic', 'sn_machine=llms is the basic variant' );
+ok( sn_llms_txt_variant( 'llms-full' ) === 'full', 'sn_machine=llms-full is the full variant' );
+ok( sn_llms_txt_variant( '/llms.txt' ) === '' && sn_llms_txt_variant( '/llms-full.txt' ) === '', 'the REQUEST_URI paths alone no longer match (fallback removed)' );
+ok( sn_llms_txt_variant( 'humans' ) === '', 'rejects another machine file' );
+ok( sn_llms_txt_variant( '' ) === '', 'rejects an empty query var' );
 
 // --- Body builder (pure) ---
 $body = sn_llms_txt_body( false );
@@ -163,9 +162,9 @@ ok( strpos( $pf, '## Pillar essays' ) !== false && strpos( $pf, 'A Test Note' ) 
 $pm = sn_llms_txt_body( false, array(), array( array( 'dek' => 'orphan' ), array( 'slug' => 'x', 'title' => 'X Row', 'dek' => '', 'designation' => '' ) ) );
 ok( strpos( $pm, 'orphan' ) === false && strpos( $pm, '[X Row](https://juanlentino.com/x/)' ) !== false, 'malformed descriptor rows are skipped; valid rows still render' );
 
-// --- send() sets a 200 so the virtual route is not served under a 404 (gotcha #40) ---
+// --- send() leaves the status to core: the sn_machine rewrite route is not a 404 ---
 ob_start(); sn_llms_txt_send( false ); ob_end_clean();
-ok( $GLOBALS['__status'] === 200, 'send() calls status_header(200)' );
+ok( $GLOBALS['__status'] === 0, 'send() leaves the status to core (the rewrite route resolves as 200)' );
 
 $report = ob_get_clean();
 echo $report;

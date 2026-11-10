@@ -20,15 +20,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Is this request for /opensearch.xml? Pure helper (takes the path).
+ * Is this request for /opensearch.xml? Pure helper (takes the sn_machine query
+ * var, inc/machine-routes.php).
  *
- * @param string $uri Request URI (may carry a query string).
+ * @param string $route The sn_machine query var.
  * @return bool
  */
-function sn_opensearch_is_request( $uri ) {
-	$path = strtok( (string) $uri, '?' );
-	$path = '/' . trim( (string) $path, '/' );
-	return ( '/opensearch.xml' === $path );
+function sn_opensearch_is_request( $route ) {
+	return 'opensearch' === $route;
 }
 
 /**
@@ -78,16 +77,14 @@ function sn_opensearch_body() {
 }
 
 /**
- * Emit the 200 status + OSDD MIME header + body. status_header( 200 ) is REQUIRED
- * (postless virtual path → 404 by template_redirect; WP-REFERENCE #40).
+ * Emit the OSDD MIME header + body.
+ * The rewrite rule in inc/machine-routes.php resolves the path as a route, not
+ * a 404, so core already answers 200; the handler only reads the sn_machine
+ * query var.
  */
 function sn_opensearch_send() {
-	if ( function_exists( 'status_header' ) ) {
-		status_header( 200 );
-	}
 	header( 'Content-Type: application/opensearchdescription+xml; charset=' . get_option( 'blog_charset', 'UTF-8' ) );
-	// The shared-cache lifetime replaces the 404 nocache headers WordPress
-	// committed for this postless path (inc/cache-headers.php); anonymous only.
+	// The shared-cache lifetime (inc/cache-headers.php); anonymous only.
 	if ( function_exists( 'sn_edge_cache_send_machine' ) ) {
 		sn_edge_cache_send_machine();
 	}
@@ -99,7 +96,7 @@ function sn_opensearch_send() {
  * template_redirect handler: serve the OSDD, then exit.
  */
 function sn_opensearch_maybe_serve() {
-	$req = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
+	$req = (string) get_query_var( 'sn_machine' );
 	if ( ! sn_opensearch_is_request( $req ) ) {
 		return;
 	}

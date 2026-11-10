@@ -8,10 +8,9 @@
  *
  * WHY A VIRTUAL ROUTE. The theme is installed under wp-content/themes/, so a
  * static humans.txt shipped in the theme is never reachable at the site root.
- * It must be served by PHP. We match on REQUEST_URI at template_redirect
- * (priority 0) — the same lightweight, flush-free mechanism the /notes index
- * uses (inc/page-notes-template.php). No add_rewrite_rule: the theme must not
- * flush rewrites (that is the plugin's job).
+ * It must be served by PHP. A rewrite rule and the sn_machine query var
+ * (inc/machine-routes.php) resolve the path, and the handler below answers it
+ * at template_redirect (priority 0).
  *
  * Owner + theme facts come from wp_get_theme() so they never drift from
  * style.css. The profile URLs are hardcoded in lockstep with parts/footer.html.
@@ -27,16 +26,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Is this request for /humans.txt? Pure helper (takes the path) so it is
- * testable without $_SERVER.
+ * Is this request for /humans.txt? Pure helper (takes the sn_machine query
+ * var, inc/machine-routes.php) so it is testable without WordPress.
  *
- * @param string $uri Request URI (may carry a query string).
+ * @param string $route The sn_machine query var.
  * @return bool
  */
-function sn_humans_txt_is_request( $uri ) {
-	$path = strtok( (string) $uri, '?' );
-	$path = '/' . trim( (string) $path, '/' );
-	return ( '/humans.txt' === $path );
+function sn_humans_txt_is_request( $route ) {
+	return 'humans' === $route;
 }
 
 /**
@@ -87,22 +84,18 @@ function sn_humans_txt_body() {
 }
 
 /**
- * Emit the 200 status + text/plain header + body. Split out from the
- * template_redirect handler so it is testable without exit().
+ * Emit the text/plain header + body. Split out from the template_redirect
+ * handler so it is testable without exit().
  *
- * status_header( 200 ) is REQUIRED: /humans.txt is a virtual path with no
- * backing post, so WP's handle_404() already committed a 404 + nocache headers
- * during $wp->main(), which runs BEFORE template_redirect. Without this the
- * advertised resource would return its body under a 404 status, and
- * status-aware crawlers/IndieWeb tooling would treat it as nonexistent. (The
- * sibling /notes route avoids this only because /notes is a real published
- * Page that already resolved to 200.)
+ * The rewrite rule in inc/machine-routes.php resolves the path as a route, not
+ * a 404, so core already answers 200; the handler only reads the sn_machine
+ * query var.
  */
 function sn_humans_txt_send() {
-	if ( function_exists( 'status_header' ) ) {
-		status_header( 200 );
-	}
 	header( 'Content-Type: text/plain; charset=' . get_option( 'blog_charset', 'UTF-8' ) );
+	if ( function_exists( 'sn_edge_cache_send_machine' ) ) {
+		sn_edge_cache_send_machine();
+	}
 	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- plain-text body built from theme-header values, literals and the companion plugin's colophon facts (its own literals); esc_html would corrupt the "&" in "Signal & Noise" inside a text/plain document.
 	echo sn_humans_txt_body();
 }
@@ -112,7 +105,7 @@ function sn_humans_txt_send() {
  * loader never runs.
  */
 function sn_humans_txt_maybe_serve() {
-	$req = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
+	$req = (string) get_query_var( 'sn_machine' );
 	if ( ! sn_humans_txt_is_request( $req ) ) {
 		return;
 	}
