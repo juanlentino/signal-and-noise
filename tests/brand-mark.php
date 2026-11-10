@@ -21,8 +21,8 @@ $root   = dirname( __DIR__ );
 $header = (string) file_get_contents( $root . '/parts/header.html' );
 
 echo "brand-mark — the header wordmark\n\nGroup 1: the header carries the wordmark as live text\n";
-ok( 1 === preg_match( '/<a href="\/" class="sn-logo-link" aria-label="Juan Lentino[^"]*"[^>]*>\s*<span class="sn-wordmark">Juan Lentino<\/span>\s*<\/a>/', $header ),
-	'the home link wraps <span class="sn-wordmark">Juan Lentino</span>, and its aria-label starts with the same name' );
+ok( false !== strpos( $header, '<!-- wp:site-title {"level":0,"isLink":true,"className":"sn-logo-link"} /-->' ) && false === strpos( $header, 'wp:html' ),
+	'the logo is core/site-title (a P wrapper, the name from Settings, the link from home_url), not a hand-written anchor; tests/site-title-logo.php pins its link' );
 ok( false === strpos( $header, '<svg' ) && false === strpos( $header, 'jl-mark' ), 'the header carries no SVG and no monogram: the page brand is the wordmark' );
 ok( false === strpos( $header, '<img' ) && false === strpos( $header, 'wp-content/uploads' ), 'no <img> and no uploads URL remain in the header' );
 // The monogram lives on off the page: favicon, touch icon, OG image.
@@ -142,7 +142,7 @@ ok( ! str_contains( $footer, 'footer-signature' ) && ! str_contains( $footer, 'j
 $first_block = preg_match( '/<div class="wp-block-group sn-footer[^>]*>\s*(?:<!--(?! wp:).*?-->\s*)*<!-- wp:([a-z0-9\/-]+)/s', $footer, $fb ) ? $fb[1] : '';
 ok( 'social-links' === $first_block, "the social links are the footer's first block, so they sit at its left edge (got: {$first_block})" );
 ok( ! is_dir( $root . '/blocks/footer-signature' ), 'the signature block is deleted, not just unplaced (a registered, unused block still shows in the inserter)' );
-$mark_count = substr_count( (string) file_get_contents( $root . '/parts/header.html' ), 'class="sn-wordmark"' );
+$mark_count = substr_count( (string) file_get_contents( $root . '/parts/header.html' ), 'wp:site-title' );
 ok( 1 === $mark_count, "the header places the wordmark exactly once (got {$mark_count})" );
 ok( ! str_contains( $footer, 'sn-wordmark' ), 'the footer carries no wordmark' );
 // The wordmark is ~160px wider than the monogram. Core shows the full nav from

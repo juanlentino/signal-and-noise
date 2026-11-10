@@ -137,23 +137,19 @@ add_filter(
 /**
  * The fixed English strings of the header and footer chrome, in Spanish. Pure.
  *
- * @param string $html    Rendered markup.
- * @param string $es_home The Spanish home URL ('' to leave the logo link).
+ * The logo is core/site-title now; inc/site-title-logo.php names it.
+ *
+ * @param string $html Rendered markup.
  * @return string
  */
-function sn_lang_chrome_strings( $html, $es_home ) {
+function sn_lang_chrome_strings( $html ) {
 	$map = array(
 		'aria-label="Main navigation"'          => 'aria-label="Navegación principal"',
 		'aria-label="Open menu"'                => 'aria-label="Abrir el menú"',
 		'aria-label="Close menu"'               => 'aria-label="Cerrar el menú"',
 		'class="sn-cmdk-trigger-label">Search<' => 'class="sn-cmdk-trigger-label">Buscar<',
-		'aria-label="Juan Lentino — home"'      => 'aria-label="Juan Lentino, inicio"',
 	);
-	$html = strtr( $html, $map );
-	if ( '' !== $es_home && false !== strpos( $html, 'class="sn-logo-link"' ) ) {
-		$html = str_replace( '<a href="/" class="sn-logo-link"', '<a href="' . esc_url( $es_home ) . '" class="sn-logo-link"', $html );
-	}
-	return $html;
+	return strtr( $html, $map );
 }
 
 foreach ( array( 'core/navigation', 'core/html' ) as $sn_chrome_block ) {
@@ -163,9 +159,7 @@ foreach ( array( 'core/navigation', 'core/html' ) as $sn_chrome_block ) {
 			if ( ! sn_theme_is_spanish() ) {
 				return $html;
 			}
-			// Only the logo needs the Spanish home; skip the lookup elsewhere.
-			$es_home = false !== strpos( (string) $html, 'sn-logo-link' ) ? sn_lang_spanish_url_for( '/' ) : '';
-			return sn_lang_chrome_strings( (string) $html, $es_home );
+			return sn_lang_chrome_strings( (string) $html );
 		}
 	);
 }

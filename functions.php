@@ -202,3 +202,4 @@ require_once __DIR__ . '/inc/dark-mode.php'; // v11.13.0: dark palette plumbing 
 require_once __DIR__ . '/inc/lang-toggle.php'; // The EN / ES link on the bilingual storefront pages (pairing lives in the companion plugin's inc/bilingual.php)
 require_once __DIR__ . '/inc/header-lang-menu.php'; // EN | ES inside the menu dialog below 375px
 require_once __DIR__ . '/inc/lang-chrome.php'; // The header and footer in Spanish on the Spanish pages, and the site-wide Español link
+require_once __DIR__ . '/inc/site-title-logo.php'; // The header logo: core/site-title, with the wordmark class, its label, and the Spanish home

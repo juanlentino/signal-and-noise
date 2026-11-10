@@ -77,10 +77,9 @@ foreach ( array(
 }
 
 echo "\nGroup: the chrome strings\n";
-$logo = '<a href="/" class="sn-logo-link" aria-label="Juan Lentino — home">';
-ok( '<a href="https://x.test/inicio/" class="sn-logo-link" aria-label="Juan Lentino, inicio">' === sn_lang_chrome_strings( $logo, 'https://x.test/inicio/' ), 'the logo goes to /inicio/ and says so' );
-ok( false !== strpos( sn_lang_chrome_strings( '<nav aria-label="Main navigation"><button aria-label="Open menu"></button><button aria-label="Close menu"></button></nav>', '' ), 'aria-label="Navegación principal"><button aria-label="Abrir el menú"></button><button aria-label="Cerrar el menú">' ), 'the nav and menu buttons are named in Spanish' );
-ok( false !== strpos( sn_lang_chrome_strings( '<span class="sn-cmdk-trigger-label">Search</span>', '' ), '>Buscar<' ), 'Search becomes Buscar' );
+ok( false === strpos( (string) file_get_contents( __DIR__ . '/../inc/lang-chrome.php' ), 'sn-logo-link' ), 'the logo is not string-swapped here: it is core/site-title, named in inc/site-title-logo.php' );
+ok( false !== strpos( sn_lang_chrome_strings( '<nav aria-label="Main navigation"><button aria-label="Open menu"></button><button aria-label="Close menu"></button></nav>' ), 'aria-label="Navegación principal"><button aria-label="Abrir el menú"></button><button aria-label="Cerrar el menú">' ), 'the nav and menu buttons are named in Spanish' );
+ok( false !== strpos( sn_lang_chrome_strings( '<span class="sn-cmdk-trigger-label">Search</span>' ), '>Buscar<' ), 'Search becomes Buscar' );
 
 echo "\nGroup: the footer\n";
 $nav = (string) shell_exec( 'php -r ' . escapeshellarg( 'define("ABSPATH","/"); require "' . __DIR__ . '/../blocks/meta-nav/render.php";' ) );
