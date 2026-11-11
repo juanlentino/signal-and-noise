@@ -85,14 +85,18 @@ ok( 1 === substr_count( $css, '.sn-resume-hunk a:hover' ) && 1 === preg_match( '
 ok( null !== $rule( $css, '.sn-resume-formats a' ) && 1 === preg_match( '/color:\s*var\(--wp--preset--color--bone\)/', (string) $rule( $css, '.sn-resume-formats a' ) ), 'the formats line\'s links are bone' );
 ok( 0 === preg_match( '/#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(/', $css ), 'colors are preset tokens only' );
 
-echo "\nA receipt and a hunk link inside a paragraph keep their own look\n";
+echo "\nA receipt and a hunk link inside a paragraph keep their own look; a hunk link carries a line\n";
 $receipt_sel = '.wp-block-post-content .sn-resume-variant p a.sn-resume-receipt:not(.wp-element-button)';
 $hunk_sel    = '.wp-block-post-content .sn-resume-variant p.sn-resume-hunk a:not(.wp-element-button)';
 $receipt_r   = $rule( $css, $receipt_sel );
 $hunk_r      = $rule( $css, $hunk_sel );
 $own_only    = static fn( $b, $fade ) => null !== $b && 1 === preg_match( '/text-decoration:\s*none/', $b ) && 1 === preg_match( '/transition:\s*' . preg_quote( $fade, '/' ) . ';/', $b ) && 0 === preg_match( '/(^|;)\s*color:/', $b );
 ok( $own_only( $receipt_r, 'color 0.15s ease, border-color 0.15s ease' ), 'a receipt in a paragraph keeps the line off and its own color and border fade, and leaves color to its hover and focus rules' );
-ok( $own_only( $hunk_r, 'color 0.15s ease, background-color 0.15s ease' ), 'a hunk link keeps the line off and its own fill fade, and leaves color to its hover and focus rules' );
+// WCAG 1.4.1: beside the row's label the link differed by color alone, under
+// 3:1 in both palettes (the live contrast check, 2026-11-10). Its own line,
+// in its own color, is the cue that does not depend on color.
+$hunk_line = null !== $hunk_r && 1 === preg_match( '/text-decoration-line:\s*underline/', $hunk_r ) && 1 === preg_match( '/text-decoration-color:\s*currentColor/', $hunk_r ) && 1 === preg_match( '/text-decoration-thickness:\s*1px/', $hunk_r ) && 0 === preg_match( '/text-decoration:\s*none/', $hunk_r ) && 1 === preg_match( '/transition:\s*color 0\.15s ease, background-color 0\.15s ease;/', $hunk_r ) && 0 === preg_match( '/(^|;)\s*color:/', $hunk_r );
+ok( $hunk_line, 'a hunk link draws its own 1px line in its own color at rest (WCAG 1.4.1), keeps its own fill fade, and leaves color to its hover and focus rules' );
 $article = $strip( file_get_contents( "$root/assets/css/article.css" ) );
 $prose   = 1 === preg_match( '/(?:^|\})\s*([^{}]*a:not\(\.wp-element-button, sup a\))\s*\{[^}]*text-decoration-line:\s*underline/', $article, $am ) ? trim( $am[1] ) : null;
 ok( null !== $prose && sn_css_specificity( $receipt_sel ) > sn_css_specificity( $prose ) && sn_css_specificity( $hunk_sel ) > sn_css_specificity( $prose ), 'both outrank article.css\'s prose link (' . ( $prose ? implode( ',', sn_css_specificity( $prose ) ) : 'not found' ) . '), so its underline never draws inside a receipt\'s box' );
