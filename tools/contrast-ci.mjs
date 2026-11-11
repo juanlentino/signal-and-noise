@@ -117,7 +117,7 @@ async function main() {
 		// lost the match (the endpoint moved) and is being counted as traffic.
 		// That is not a measurement problem, so it warns and never changes the verdict.
 		console.log(`${routed.beacons} analytics beacon request(s) blocked.`);
-		if (!routed.beacons) console.log('::warning::no analytics beacon was blocked; if the beacon endpoint moved, this run is being recorded as site traffic (tools/contrast-route.mjs BEACON_PATH).');
+		if (!routed.beacons) console.log('::warning::no analytics beacon was blocked: either the beacon endpoint moved and this run is being recorded as site traffic (tools/contrast-route.mjs BEACON_PATH), or the browser sent Do Not Track or GPC, which stops the beacon on its own.');
 		if (out.unloaded.length) console.log(`::warning::${out.unloaded.length} page(s) rendered no <main> (blocked or broken): ${out.unloaded.join(', ')}`);
 
 		for (const v of out.violations) console.log(`::error::${v.page} (${v.palette}) ${v.sel} "${v.text}": ${v.ratio}:1, needs ${v.need}:1 (${v.size}px, opacity ${v.opacity})`);
