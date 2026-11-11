@@ -14,6 +14,9 @@ name: Contrast (live)
 #
 # Security: no github.event.* reaches a shell; the smoke token is a masked
 # secret passed through env, the same allow-list header smoke-test.yml sends.
+# SN_FIRST_PARTY_TOKEN (optional, same handling) marks the run as this site's
+# own tooling to the analytics Workers. The run blocks its own analytics
+# beacon either way (tools/contrast-route.mjs), so it is not counted as traffic.
 on:
   push:
     branches: [main]
@@ -35,6 +38,7 @@ jobs:
     timeout-minutes: 20
     env:
       SN_SMOKE_TOKEN: ${{ secrets.SN_SMOKE_TOKEN }}
+      SN_FIRST_PARTY_TOKEN: ${{ secrets.SN_FIRST_PARTY_TOKEN }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

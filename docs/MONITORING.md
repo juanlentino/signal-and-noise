@@ -72,7 +72,11 @@ mark. Only a run that reaches measurement prints the `contrast-summary`
 notice (pages, pairs, links, failures). The plugin's Health report reads that
 notice and says unknown when a green run carries none. The cron-liveness
 guard in `ci.yml` fails if the daily run stops firing. Requests carry the
-`X-SN-Smoke` header only to the site's own origin.
+`X-SN-Smoke` header (and `x-sn-first-party`, when the `SN_FIRST_PARTY_TOKEN`
+secret is set) only to the site's own origin. The run blocks the site's
+analytics beacon (`/_sn/px`) for every page and frame it opens, so a run is
+never recorded as traffic; the log line "N analytics beacon request(s)
+blocked" shows it worked, and a warning appears if a run blocked none.
 
 ## Tier 3: Better Stack monitors
 

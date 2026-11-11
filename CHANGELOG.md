@@ -12,6 +12,9 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+### Fixed
+- **The live contrast check no longer counts as site traffic.** `tools/contrast-ci.mjs` loads every sitemap page in headless Chromium, and each page ran the analytics beacon, so every push to `main` and every nightly run recorded 20 to 29 views from GitHub's runners, filed as `suspect`. The route moved into `tools/contrast-route.mjs`, which now aborts the beacon (`/_sn/px`) for the whole browser context before it leaves the runner, `sendBeacon` and `fetch` alike, in every frame. A blocked beacon is not a route issue and cannot make a run inconclusive; asset failures are recorded as before. The log prints how many beacons were blocked and warns when a run blocked none (the endpoint moved). What the check measures is unchanged. With the optional `SN_FIRST_PARTY_TOKEN` repository secret set, the run also sends `x-sn-first-party` on same-origin requests, the header the analytics Workers already accept as proof of this site's own tooling. `smoke-test.yml` uses curl and runs no beacon. Test: `tests/js/contrast-route.test.cjs` (new), red against the route without the block; a real Chromium run against a local page confirmed both beacon forms reach the route and none reach the server.
+
 ## [2026.11.9] - 2026-11-10 — Copy announcements through core's announcer
 
 ### Changed
