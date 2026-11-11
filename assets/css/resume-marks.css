@@ -99,15 +99,20 @@
    (0,3,2; 0,4,2 on hover and focus) would draw its 2px underline inside the
    receipt's box or under the blood fill, and trade their fades for its own;
    on a contact or employer rail, critical.css's dim-text underline (0,2,1)
-   would show at rest. At (0,4,2) these keep the line off in every state and
-   restate their own fades. Color stays in the rules above, so hover and
-   focus still recolor. */
+   would show at rest. At (0,4,2) these restate their own fades. A receipt
+   keeps the line off (its box is its cue). A hunk link draws its own 1px
+   line in its own color at rest: next to the row's label it differs by
+   color alone otherwise, under 3:1 in both palettes (WCAG 1.4.1). Color
+   stays in the rules above, so hover and focus still recolor. */
 .wp-block-post-content .sn-resume-variant p a.sn-resume-receipt:not(.wp-element-button) {
 	text-decoration: none;
 	transition: color 0.15s ease, border-color 0.15s ease;
 }
 .wp-block-post-content .sn-resume-variant p.sn-resume-hunk a:not(.wp-element-button) {
-	text-decoration: none;
+	text-decoration-line: underline;
+	text-decoration-color: currentColor;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 0.25em;
 	transition: color 0.15s ease, background-color 0.15s ease;
 }
 /* A rail that is not a <p> misses the pair above, so critical.css's rail
