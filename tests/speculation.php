@@ -9,7 +9,7 @@
  * and returns the same shape (null disables the feature and must be
  * respected, never overridden).
  *
- * /resume's lane rule (2026-11-02) is pinned on what core itself prints: the
+ * What /resume prints (one résumé since 2026-11-12: core's rule only) is pinned on what core itself prints: the
  * suite loads core's speculative-loading.php and WP_Speculation_Rules (fetched
  * beside html-api/ by tools/fetch-wp-test-core.sh) and ends RED without them.
  * @since theme v13.1.0
@@ -90,7 +90,7 @@ echo "\nGroup: negative control — the module registers no href-exclude filter 
 $src = (string) file_get_contents( __DIR__ . '/../inc/speculation.php' );
 ok( false === strpos( $src, 'href_exclude_paths' ), 'the module source does not reference wp_speculation_rules_href_exclude_paths' );
 
-// /resume prerenders its other lane (2026-11-02). Run through core itself:
+// What /resume prints. Run through core itself:
 // wp_print_speculation_rules() builds the rules, fires wp_load_speculation_rules,
 // and prints the JSON; these pins read what it printed.
 function sn_test_printed_rules( $page ) {
@@ -100,40 +100,14 @@ function sn_test_printed_rules( $page ) {
 	$printed = $GLOBALS['__printed'][0] ?? null;
 	return null === $printed ? null : array( 'json' => $printed[0], 'type' => $printed[1]['type'] ?? '', 'rules' => json_decode( $printed[0], true ) );
 }
-$lane_rule = array(
-	'source'    => 'document',
-	'where'     => array(
-		'and' => array(
-			array( 'selector_matches' => '.sn-resume-switch a[data-lane]:not([aria-current]), .sn-resume-hunk a[data-lane]' ),
-			array( 'not' => array( 'selector_matches' => 'a[rel~="nofollow"]' ) ),
-			array( 'not' => array( 'selector_matches' => '.no-prerender, .no-prerender a' ) ),
-			array( 'not' => array( 'selector_matches' => '.no-prefetch, .no-prefetch a' ) ),
-		),
-	),
-	'eagerness' => 'moderate',
-);
-
-echo "\nGroup: /resume prerenders its other lane, and only there\n";
+echo "\nGroup: /resume is one résumé (2026-11-12), so it adds no rule of its own\n";
 $resume = sn_test_printed_rules( 'resume' );
-$pre    = $resume['rules']['prerender'] ?? array();
-ok( 'speculationrules' === ( $resume['type'] ?? '' ) && 2 === count( $pre ) && array( 'prerender' ) === array_keys( (array) $resume['rules'] ), 'on /resume core prints two prerender rules: its own and the lane rule' );
-ok( ( $pre[1] ?? null ) === $lane_rule, 'the lane rule is exactly a moderate document rule on the switch\'s other link and a hunk\'s lane link, minus core\'s opt-outs (rel=nofollow, .no-prerender, .no-prefetch)' );
-$core_nots = array_slice( (array) ( $pre[0]['where']['and'] ?? array() ), 2 );
-ok( 3 === count( $core_nots ) && array_slice( (array) ( $pre[1]['where']['and'] ?? array() ), 1 ) === $core_nots, 'the lane rule\'s opt-outs are core\'s own, clause for clause, read from core\'s printed main rule' );
-ok( false !== strpos( (string) $resume['json'], (string) wp_json_encode( $lane_rule ) ), 'the printed JSON carries the lane rule byte for byte' );
-$notes = sn_test_printed_rules( 'notes' );
-ok( is_array( $notes ) && 1 === count( $notes['rules']['prerender'] ?? array() ) && false === strpos( $notes['json'], 'sn-resume' ), 'on any other page (here /notes) only core\'s rule is printed: no lane rule' );
-$cv = sn_test_printed_rules( 'cv' );
-ok( is_array( $cv ) && false === strpos( $cv['json'], 'sn-resume' ), 'the Spanish /cv has one lane, so no lane rule' );
-
-echo "\nGroup: core's query-string exclusion does not reach ?lane=operations\n";
-$main = $pre[0] ?? array();
-ok( in_array( '/*\\?(.+)', (array) ( $main['where']['and'][1]['not']['href_matches'] ?? array() ), true ), 'core\'s own rule still excludes every query-string URL, inside its own where' );
-ok( false === strpos( (string) wp_json_encode( $pre[1] ?? array() ), 'href_matches' ) && array( 'and' ) === array_keys( (array) ( $pre[1]['where'] ?? array() ) ), 'the lane rule is a separate rule with no URL condition at all, so /resume/?lane=operations is a candidate (a browser speculates a link any rule matches)' );
+ok( is_array( $resume ) && 'speculationrules' === $resume['type'] && 1 === count( $resume['rules']['prerender'] ?? array() ) && false === strpos( $resume['json'], 'sn-resume' ) && false === strpos( $resume['json'], 'data-lane' ), 'on /resume only core\'s rule is printed: no lane rule' );
+ok( ! function_exists( 'sn_speculation_resume_lanes' ), 'the lane prerender hook is gone' );
 
 echo "\nGroup: speculative loading off means no rules at all\n";
 $GLOBALS['__logged_in'] = true;
-ok( null === sn_test_printed_rules( 'resume' ), 'a signed-in visitor gets no rules, the lane rule included' );
+ok( null === sn_test_printed_rules( 'resume' ), 'a signed-in visitor gets no rules' );
 $GLOBALS['__logged_in'] = false;
 
 $total = $pass + $fail;

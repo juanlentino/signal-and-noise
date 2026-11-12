@@ -119,18 +119,13 @@ ok( strpos( (string) ( $resume['src'] ?? '' ), 'assets/css/resume.css' ) !== fal
 ok( in_array( 'sn-components', (array) ( $resume['deps'] ?? array() ), true ), 'sn-resume DEPENDS on sn-components' );
 ok( ( $resume['ver'] ?? false ) !== false, 'sn-resume carries a cache-bust version' );
 ok( ! isset( $GLOBALS['__enqueued']['sn-now'] ) && ! isset( $GLOBALS['__enqueued']['sn-uses'] ) && ! isset( $GLOBALS['__enqueued']['sn-a11y'] ), 'only sn-resume enqueued on /resume' );
-$marks = $GLOBALS['__enqueued']['sn-resume-marks'] ?? null;
-ok( isset( $GLOBALS['__enqueued']['sn-resume-switch'] ) && $marks !== null && strpos( (string) $marks['src'], 'assets/css/resume-marks.css' ) !== false && array( 'sn-resume-switch' ) === $marks['deps'] && false !== $marks['ver'], 'sn-resume-marks enqueued on /resume with sn-resume-switch, which it DEPENDS on, so it loads after the receipt rules it resets' );
+// One résumé (2026-11-12): /resume has no lanes, so resume.css is its only sheet.
+ok( 1 === count( array_filter( array_keys( $GLOBALS['__enqueued'] ), static fn( $h ) => 0 === strpos( $h, 'sn-resume' ) ) ), 'resume.css is the only résumé sheet on /resume: no lane switch or edition-mark sheet' );
 reset_enqueue();
 $GLOBALS['__page'] = 'cv';
 sn_enqueue_cms_page_styles();
-ok( isset( $GLOBALS['__enqueued']['sn-resume'] ), 'the stub reaches the résumé branch on /cv (or the next check would pass on nothing)' );
-foreach ( array( 'now', 'about/uses', 'accessibility', 'workflow', 'cv', 'about' ) as $other ) {
-	reset_enqueue();
-	$GLOBALS['__page'] = $other;
-	sn_enqueue_cms_page_styles();
-	ok( ! isset( $GLOBALS['__enqueued']['sn-resume-marks'] ) && ! isset( $GLOBALS['__enqueued']['sn-resume-switch'] ), "neither lane stylesheet (switch, marks) loads on /$other" );
-}
+ok( isset( $GLOBALS['__enqueued']['sn-resume'] ), 'the stub reaches the résumé branch on /cv' );
+ok( ! file_exists( dirname( __DIR__ ) . '/assets/css/resume-switch.css' ) && ! file_exists( dirname( __DIR__ ) . '/assets/css/resume-marks.css' ), 'the lane stylesheets are gone; their surviving rules live in resume.css' );
 
 // ── /workflow → sn-workflow only ──
 reset_enqueue();
