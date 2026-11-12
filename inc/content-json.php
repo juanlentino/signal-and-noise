@@ -132,11 +132,6 @@ function sn_content_json_head_link() {
 		return;
 	}
 	$href = rtrim( $permalink, '/' ) . '.json';
-	// /resume/?lane=operations renders the operations lane, so its twin names it
-	// too; the lane is read as the plugin reads it, and only operations is added.
-	if ( function_exists( 'is_page' ) && is_page( 'resume' ) && isset( $_GET['lane'] ) && 'operations' === sanitize_key( wp_unslash( $_GET['lane'] ) ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- a read-only view selector.
-		$href .= '?lane=operations';
-	}
 	printf(
 		'<link rel="alternate" type="application/json" href="%s" title="This page as JSON">' . "\n",
 		esc_url( $href )

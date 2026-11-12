@@ -229,11 +229,7 @@ body div.wp-block-group:not(:has(h1)) > .sn-catalog-eyebrow {
 		color: var(--wp--preset--color--blood);
 	}
 }
-/* A fold that ends on an edition-marked entry (resume-marks.css) ends on its
-   wrapper group, whose own last block core's flow layout zeroes (0,2,0): the
-   closing air reaches that block too. */
-.sn-resume-fold > :last-child,
-.sn-resume-fold > .sn-resume-only:last-child > :last-child {
+.sn-resume-fold > :last-child {
 	margin-bottom: var(--wp--custom--air--xs);
 }
 .sn-resume-fold-co {
@@ -430,3 +426,131 @@ body div.wp-block-group:not(:has(h1)) > .sn-catalog-eyebrow {
 	.sn-resume-lane i, .sn-resume-lane i.is-open { background: CanvasText; }
 }
 
+
+/* ── The hero's headline, receipts, "What I've Built", the formats line ──
+   English /resume only (the plugin's inc/resume-page-lanes.php emits them;
+   /cv carries none). Moved here from resume-switch.css and resume-marks.css
+   when /resume became one résumé (2026-11-12), in their old load order. */
+/* The hero opens with its headline and subhead over the summary. */
+.sn-resume-headline {
+	font-family: 'Bebas Neue', Impact, sans-serif;
+	font-weight: 400;
+	font-size: clamp(1.75rem, 3.5vw, 2.6rem); /* not a step: between the role heads and the section h2s */
+	letter-spacing: 0.02em;
+	line-height: 1;
+	color: var(--wp--preset--color--bone);
+	margin: 0;
+}
+/* As an h2 it keeps this box: critical.css trims h2.wp-block-heading to cap
+   height at (0,2,2); the hero split scope makes this (0,3,0). */
+.sn-resume-hero-split .sn-resume-headline.wp-block-heading {
+	text-box: normal;
+}
+.sn-resume-tagline {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.7rem, 11px);
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--rust);
+	margin: 0.6rem 0 0;
+}
+
+/* A receipt: the quiet mark beside a claim that links the page backing it. */
+.sn-resume-receipt,
+.sn-resume-pub-title a.sn-resume-receipt {
+	display: inline-block;
+	margin-left: 0.4em;
+	padding: 0.3em 0.45em; /* about 24px tall: a target, not only a mark */
+	border: 1px solid color-mix( in srgb, var(--wp--preset--color--rust) 50%, transparent );
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.7rem, 11px);
+	font-weight: 400;
+	letter-spacing: 0.12em;
+	line-height: 1.4;
+	text-transform: lowercase;
+	vertical-align: 0.1em;
+	white-space: nowrap;
+	color: var(--wp--preset--color--rust);
+	text-decoration: none;
+	transition: color 0.15s ease, border-color 0.15s ease;
+}
+.sn-resume-pub-title a.sn-resume-receipt::after {
+	content: none;
+}
+.sn-resume-receipt:focus-visible {
+	outline: 2px solid var(--wp--preset--color--blood);
+	outline-offset: 2px;
+}
+@media (hover: hover) {
+	.sn-resume-receipt:hover,
+	.sn-resume-pub-title a.sn-resume-receipt:hover {
+		color: var(--wp--preset--color--blood);
+		border-color: var(--wp--preset--color--blood);
+		text-decoration: none;
+	}
+}
+/* "What I've Built" cards are publication cards; the intro reads as their kicker. */
+.sn-resume-built-intro {
+	font-size: 0.95rem;
+	line-height: 1.6;
+	max-width: 80ch;
+	color: var(--wp--preset--color--rust);
+	margin: 1rem 0 0.5rem;
+}
+.sn-resume-built p {
+	font-size: 0.95rem;
+	line-height: 1.6;
+	max-width: 80ch;
+	color: var(--wp--preset--color--bone);
+	margin: 0.5rem 0 0;
+}
+.sn-resume-built-grid {
+	margin-top: 1rem;
+}
+/* Three across where the track is wide enough (the plugin wraps the cards in
+   .sn-resume-built-grid); publications stay stacked. */
+@media (min-width: 1280px) {
+	.sn-resume-built-grid {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: var(--wp--custom--air--sm);
+	}
+	.sn-resume-built-grid > .sn-resume-built {
+		margin: 0;
+	}
+}
+
+/* The formats line at the résumé's end speaks in the caption's tier. */
+.sn-resume-formats {
+	font-family: 'DM Mono', 'Courier New', monospace;
+	font-size: max(0.7rem, 11px);
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--rust);
+}
+.sn-resume-formats a {
+	color: var(--wp--preset--color--bone);
+}
+/* A receipt sits inside a <p>, where article.css's prose link (0,3,2; 0,4,2
+   on hover and focus) would draw its 2px underline inside the receipt's box
+   and trade its fade for its own. Every résumé band is a group, so at
+   (0,4,2) this restates the receipt's fade and keeps the line off (its box
+   is its cue). Color stays in the rules above, so hover and focus still
+   recolor. */
+.wp-block-post-content .wp-block-group p a.sn-resume-receipt:not(.wp-element-button) {
+	text-decoration: none;
+	transition: color 0.15s ease, border-color 0.15s ease;
+}
+/* A rail that is not a <p> misses the rule above, so critical.css's rail
+   underline (0,2,1) would still draw under a receipt there; (0,3,1) keeps it
+   off. No fade is restated: none outranks the receipt's own here. */
+.sn-resume-rail a.sn-resume-receipt:not(.wp-element-button) {
+	text-decoration: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.sn-resume-receipt,
+	.wp-block-post-content .wp-block-group p a.sn-resume-receipt:not(.wp-element-button) {
+		transition: none;
+	}
+}

@@ -60,21 +60,6 @@ function sn_enqueue_cms_page_styles() {
 			array( 'sn-components' ),
 			sn_asset_ver( 'assets/css/resume.css' )
 		);
-		if ( is_page( 'resume' ) ) { // the two lanes, English only.
-			wp_enqueue_style(
-				'sn-resume-switch',
-				get_theme_file_uri( 'assets/css/resume-switch.css' ),
-				array( 'sn-resume' ),
-				sn_asset_ver( 'assets/css/resume-switch.css' )
-			);
-			// The edition marks, after the receipt rules they reset.
-			wp_enqueue_style(
-				'sn-resume-marks',
-				get_theme_file_uri( 'assets/css/resume-marks.css' ),
-				array( 'sn-resume-switch' ),
-				sn_asset_ver( 'assets/css/resume-marks.css' )
-			);
-		}
 	}
 }
 add_action( 'wp_enqueue_scripts', 'sn_enqueue_cms_page_styles', 30 );
