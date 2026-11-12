@@ -70,22 +70,8 @@
     var pid = 0;
     function newPid() { pid = Math.floor(Math.random() * 9007199254740991) + 1; }
 
-    // Résumé lane (2026-11-02, owner-only): on /resume, the lane that shows,
-    // read once per view like pid, so a view's scroll, time and vitals rows
-    // carry its pageview's lane. Only the two known ids ever leave the
-    // browser: no lane, two lanes or any other id sends no `lane` key, and
-    // so does every other page. resume-switch.js is printed first, so a lane
-    // it shows on load is the one read here.
-    var lane = '';
-    function readLane() {
-      if (!document.querySelectorAll) return '';
-      var shown = document.querySelectorAll('.sn-resume-variant:not([hidden])');
-      var m = 1 === shown.length && /^resume-(music|operations)$/.exec(String(shown[0].id || ''));
-      return m ? m[1] : '';
-    }
-
     function send(payload) {
-      var json = JSON.stringify(Object.assign({ k: cfg.k, pid: pid, sg: { wd: sig.wd, ni: noInput, um: sig.um, hl: sig.hl, tz: sig.tz } }, lane ? { lane: lane } : null, payload));
+      var json = JSON.stringify(Object.assign({ k: cfg.k, pid: pid, sg: { wd: sig.wd, ni: noInput, um: sig.um, hl: sig.hl, tz: sig.tz } }, payload));
       if (navigator.sendBeacon) {
         var ok = navigator.sendBeacon(cfg.endpoint, new Blob([json], { type: 'application/json' }));
         if (ok) return;
@@ -116,7 +102,6 @@
 
     function pageview() {
       newPid();
-      lane = readLane();
       var pv = { e: 'pv', u: location.pathname, r: document.referrer || '' };
       if (!utmSent) { // first pageview only; a bfcache restore never re-attributes
         utmSent = true;
