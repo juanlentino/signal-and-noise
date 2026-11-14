@@ -141,11 +141,46 @@
     // after returning to the tab was tracked but never reported. A zero/negative
     // delta is never sent: it carries no signal and would inflate the flush count.
     var visibleMs = 0, lastVisible = document.visibilityState === 'visible' ? performance.now() : null, flushed = false;
-    function accumulate() { if (lastVisible !== null) { visibleMs += performance.now() - lastVisible; lastVisible = null; } }
+    var viewMs = 0; // all visible time on this page view, flushed or not (the ping's clock)
+    function accumulate() { if (lastVisible !== null) { var d = performance.now() - lastVisible; visibleMs += d; viewMs += d; lastVisible = null; } }
     document.addEventListener('visibilitychange', function () {
-      if (document.visibilityState === 'hidden') { flush(); }
-      else { flushed = false; lastVisible = performance.now(); } // visible again → re-arm + resume counting
+      if (document.visibilityState === 'hidden') { cancelPing(); flush(); }
+      else { flushed = false; lastVisible = performance.now(); armPing(); } // visible again → re-arm + resume counting
     });
+
+    // 3b) "Still here" (2026-11-14): after 10 s of accumulated VISIBLE time,
+    // send the accrued delta once as the same `tm` event and reset the
+    // accumulator, so a reader who stays shows as reading while still on the
+    // page, and the view is a read even if its leave signal is later lost.
+    // Same event and delta semantics, so the per-view sum is unchanged. One
+    // ping per page view; a bfcache restore re-arms it. Never while hidden:
+    // the timer is cleared on hide and set again for the time still owed.
+    var PING_MS = 10000, pinged = false, pingTimer = null, armedAt = 0;
+    function visibleSoFar() { return viewMs + (lastVisible !== null ? performance.now() - lastVisible : 0); }
+    function cancelPing() { if (pingTimer !== null && typeof clearTimeout === 'function') { clearTimeout(pingTimer); } pingTimer = null; }
+    function armPing() {
+      cancelPing();
+      if (pinged || typeof setTimeout !== 'function' || document.visibilityState !== 'visible') return;
+      armedAt = performance.now();
+      pingTimer = setTimeout(ping, Math.max(0, PING_MS - visibleSoFar()));
+    }
+    function ping() {
+      pingTimer = null;
+      if (pinged || document.visibilityState !== 'visible') return;
+      // Not there yet (the timer ran early): wait for the rest, but only if the
+      // clock moved, so a stopped clock can never keep re-arming a timer.
+      if (visibleSoFar() < PING_MS) { if (performance.now() > armedAt) armPing(); return; }
+      accumulate();
+      var delta = Math.round(visibleMs);
+      visibleMs = 0;
+      lastVisible = performance.now(); // still visible: keep counting from here
+      pinged = true;
+      if (delta <= 0) return; // all of it already sent by a leave flush
+      // No engagedNow(): the ping is visible time, not an input-timing signal,
+      // so a reader who reads before touching anything never latches `ni`.
+      send({ e: 'tm', u: location.pathname, ms: delta });
+    }
+    armPing();
     function flush() {
       if (flushed) return; // one send per hidden episode (hidden + pagehide both fire on exit)
       accumulate();
@@ -156,8 +191,8 @@
       engagedNow();
       send({ e: 'tm', u: location.pathname, ms: delta });
     }
-    window.addEventListener('pagehide', flush);
-    window.addEventListener('pageshow', function (ev) { if (ev.persisted) { flushed = false; visibleMs = 0; lastVisible = performance.now(); sent = {}; window.addEventListener('scroll', onScroll, { passive: true }); } });
+    window.addEventListener('pagehide', function () { cancelPing(); flush(); });
+    window.addEventListener('pageshow', function (ev) { if (ev.persisted) { flushed = false; visibleMs = 0; lastVisible = performance.now(); sent = {}; pinged = false; viewMs = 0; armPing(); window.addEventListener('scroll', onScroll, { passive: true }); } });
 
     // 4) Custom events — window.SN_BEACON.event(name, props). On the tracked path
     // this replaces the no-op stub. Clamps name (64) + up to 4 string→string props
