@@ -17,6 +17,7 @@ adds a bullet below. A release is a separate, deliberate act:
   - One ping per page view. A back-forward cache restore re-arms it.
   - It never fires while the page is hidden: the timer is cleared on hide and set again on return for the time still owed.
   - No new event type, no storage.
+  - The ping never sets the no-input bot signal (`ni`). It measures visible time, not input timing, so a reader who reads before touching anything is not flagged.
   - Effect: a reader who stays 10 seconds shows as reading while still on the page, and the view is a read even if its leave signal is lost.
   - Test: `tests/js/beacon-still-here.test.cjs` (new). It checks one ping at 10 s, nothing while hidden, deltas that sum to the visible time, the restore re-arm, and a page left early. It goes red when the ping keeps its delta or fires early.
 

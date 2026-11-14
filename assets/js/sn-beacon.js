@@ -176,7 +176,8 @@
       lastVisible = performance.now(); // still visible: keep counting from here
       pinged = true;
       if (delta <= 0) return; // all of it already sent by a leave flush
-      engagedNow();
+      // No engagedNow(): the ping is visible time, not an input-timing signal,
+      // so a reader who reads before touching anything never latches `ni`.
       send({ e: 'tm', u: location.pathname, ms: delta });
     }
     armPing();

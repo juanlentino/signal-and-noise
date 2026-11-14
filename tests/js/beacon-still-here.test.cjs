@@ -105,3 +105,14 @@ test('a page left before 10 s sends its one leave flush and no ping', () => {
   p.advance(20000);
   assert.deepEqual(p.tm().map((e) => e.ms), [4000]);
 });
+
+test('the ping never sets the no-input signal: a reader may read before touching anything', () => {
+  const p = page();
+  p.advance(10000);
+  const ping = p.tm()[0];
+  assert.equal(ping.ms, 10000);
+  assert.equal(ping.sg.ni, false, 'ni stays clear on the ping');
+  p.fire('wheel');
+  p.fire('pagehide');
+  assert.ok(p.sent.every((e) => e.sg.ni === false), 'and on every later row once the reader touches the page');
+});
