@@ -49,6 +49,7 @@ ok( strpos( $body, 'Contact: https://juanlentino.com/contact/' ) !== false, 'bod
 ok( strpos( $body, 'Expires: ' . $exp ) !== false, 'body carries the mandatory Expires field' );
 ok( strpos( $body, 'Canonical: https://juanlentino.com/.well-known/security.txt' ) !== false, 'body carries the Canonical field at the RFC location' );
 ok( strpos( $body, 'Preferred-Languages: en, es' ) !== false, 'body advertises preferred languages' );
+ok( strpos( $body, '# There is no bug bounty program and no payment is offered for reports.' ) !== false && strpos( $body, '# ' ) === 0, 'body says there is no bug bounty, as a comment (RFC 9116 section 2.3)' );
 
 // --- Serve path forces HTTP 200 (postless virtual route would otherwise 404) ---
 $GLOBALS['__status'] = 0;
