@@ -60,6 +60,10 @@ function sn_security_txt_body( $now = null ) {
 	}
 	$lines = array(
 		'# Security policy for ' . home_url( '/' ),
+		// 2026-11-18 (owner): said once, so no one has to ask.
+		'# There is no bug bounty program and no payment is offered for reports.',
+		'# A report with the affected URL, steps to reproduce and impact is welcome',
+		'# through the contact form below.',
 		'Contact: ' . home_url( '/contact/' ),
 		'Expires: ' . sn_security_txt_expires( (int) $now ),
 		'Preferred-Languages: en, es',
