@@ -32,7 +32,9 @@
 		return 'https://open.spotify.com/embed/' + kind + '/' + encodeURIComponent( id );
 	}
 
-	function play( wrap ) {
+	// fromKeyboard: the cover was played with Enter or Space, so focus was on
+	// the wrapper, which stops being a control below.
+	function play( wrap, fromKeyboard ) {
 		if ( wrap.classList.contains( 'is-playing' ) ) {
 			return;
 		}
@@ -63,6 +65,12 @@
 		wrap.removeAttribute( 'tabindex' );
 		wrap.removeAttribute( 'aria-label' );
 		wrap.appendChild( iframe );
+		// Without this the keyboard's focus falls to <body> and the next Tab
+		// starts from the top of the page. An iframe takes focus natively, and
+		// its title names it. A click keeps the pointer's own behavior.
+		if ( fromKeyboard ) {
+			iframe.focus();
+		}
 	}
 
 	function initPlay() {
@@ -75,7 +83,7 @@
 				wrap.addEventListener( 'keydown', function ( e ) {
 					if ( e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar' ) {
 						e.preventDefault();
-						play( wrap );
+						play( wrap, true );
 					}
 				} );
 			} )( wraps[ i ] );

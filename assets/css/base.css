@@ -79,16 +79,21 @@ body {
    the text does not move (core's constrained layout pins headings' inline
    margins with !important, so a margin trick would shift them), which fades in once per arrival under no-preference (a color fade,
    nothing moves) and is simply there under reduce. Forced colors keep the
-   rule in CanvasText; the highlight takes the system colors. */
+   rule in CanvasText; the highlight takes the system colors. A contents click
+   (assets/js/article-toc.js) replaces the URL without moving :target, so the
+   script marks the heading with data-sn-arrived and every rule here lists the
+   mark beside :target: the same bar, the same fade, the same reduce. */
 ::target-text {
 	background-color: var(--wp--preset--color--blood);
 	color: var(--wp--preset--color--void);
 }
 
+:is(h2, h3, h4)[id][data-sn-arrived],
 :is(h2, h3, h4)[id]:target {
 	position: relative;
 }
 
+:is(h2, h3, h4)[id][data-sn-arrived]::before,
 :is(h2, h3, h4)[id]:target::before {
 	content: "";
 	position: absolute;
@@ -101,22 +106,31 @@ body {
 /* Narrow screens: 0.6em of a large h2 is wider than the 16px gutter, so the
    rule would be clipped off-screen. Cap the offset at 14px there. */
 @media (max-width: 781px) {
+	:is(h2, h3, h4)[id][data-sn-arrived]::before,
 	:is(h2, h3, h4)[id]:target::before {
 		inset-inline-start: max(calc(-1 * (2px + 0.6em)), -14px);
 	}
 }
 
 @media (prefers-reduced-motion: no-preference) {
+	:is(h2, h3, h4)[id][data-sn-arrived]::before,
 	:is(h2, h3, h4)[id]:target::before {
 		animation: sn-acquire 0.6s ease-out 1;
 	}
 }
 
 @media (forced-colors: active) {
+	:is(h2, h3, h4)[id][data-sn-arrived]::before,
 	:is(h2, h3, h4)[id]:target::before {
 		forced-color-adjust: none;
 		background-color: CanvasText;
 	}
+}
+
+/* One bar at a time: while a heading carries the mark, a different heading
+   the page loaded at is still :target, and it stands its bar down. */
+:root:has([data-sn-arrived]) :is(h2, h3, h4)[id]:target:not([data-sn-arrived])::before {
+	content: none;
 }
 
 @keyframes sn-acquire {

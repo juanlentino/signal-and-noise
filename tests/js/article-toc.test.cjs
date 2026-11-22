@@ -19,6 +19,7 @@ function el(tag, attrs = {}) {
     tagName: tag, attrs: { ...attrs }, parentNode: null, children: [], listeners: {}, calls: [],
     getAttribute(k) { return k in this.attrs ? this.attrs[k] : null; },
     setAttribute(k, v) { this.attrs[k] = String(v); },
+    removeAttribute(k) { delete this.attrs[k]; },
     appendChild(c) { c.parentNode = this; this.children.push(c); return c; },
     addEventListener(type, cb) { this.listeners[type] = cb; },
     contains(n) { for (; n; n = n.parentNode) { if (n === this) return true; } return false; },
@@ -35,12 +36,13 @@ function el(tag, attrs = {}) {
 }
 
 // The nav as article_toc prints it, plus the H2s it points at.
-function page({ toc = true, reduce = false, matchMedia = true, history = true } = {}) {
+function page({ toc = true, reduce = false, matchMedia = true, history = true, events = false } = {}) {
   const nav = el('NAV', { class: 'sn-article-toc' });
   const ol = nav.appendChild(el('OL'));
   const mk = (href) => ol.appendChild(el('LI')).appendChild(el('A', { href }));
-  const links = { intro: mk('#intro'), gone: mk('#not-on-page'), empty: mk('#') };
-  const headings = { intro: el('H2', { id: 'intro' }) };
+  const links = { intro: mk('#intro'), more: mk('#more'), gone: mk('#not-on-page'), empty: mk('#') };
+  const headings = { intro: el('H2', { id: 'intro' }), more: el('H2', { id: 'more' }) };
+  const winListeners = {};
   const replaced = [];
   const document = {
     querySelector: (sel) => (sel === '.sn-article-toc' && toc ? nav : null),
@@ -49,13 +51,16 @@ function page({ toc = true, reduce = false, matchMedia = true, history = true } 
   const window = { document };
   if (matchMedia) window.matchMedia = (q) => ({ matches: reduce && q === '(prefers-reduced-motion: reduce)' });
   if (history) window.history = { replaceState: (...a) => replaced.push([...a]) };
+  // A cached page's window always has it; the fake leaves it off unless asked,
+  // which is also how a missing one is shown not to throw.
+  if (events) window.addEventListener = (type, cb) => { winListeners[type] = cb; };
   vm.runInNewContext(SRC, { window, document });
   const click = (target, extra = {}) => {
     const e = { target, defaultPrevented: false, preventDefault() { this.defaultPrevented = true; }, ...extra };
     nav.listeners.click(e);
     return e;
   };
-  return { nav, links, headings, replaced, click };
+  return { nav, links, headings, replaced, click, winListeners };
 }
 
 test('a TOC click scrolls smoothly to the section, focuses it without a second jump, and sets the hash', () => {
@@ -108,4 +113,47 @@ test('a note without a TOC: the script does nothing and does not throw', () => {
   assert.doesNotThrow(() => page({ toc: false, matchMedia: false }));
   const p = page({ toc: false });
   assert.equal(p.nav.listeners.click, undefined, 'no handler bound');
+});
+
+// history.replaceState does not move :target, which is what draws the arrival
+// bar (assets/css/base.css), so a contents click marks its heading with
+// data-sn-arrived and the bar's rule matches that too (tests/transmission-motion.php
+// pins the CSS half).
+const arrived = (p) => Object.keys(p.headings).filter((k) => p.headings[k].getAttribute('data-sn-arrived') !== null);
+
+test('a contents click marks the destination heading for the arrival bar, one heading at a time', () => {
+  const p = page({ events: true });
+  p.click(p.links.intro);
+  assert.deepEqual(arrived(p), ['intro']);
+  assert.deepEqual(p.replaced, [[null, '', '#intro']], 'still replaceState: no history entry per click');
+  p.click(p.links.more);
+  assert.deepEqual(arrived(p), ['more'], 'the previous heading gives the mark up');
+  p.click(p.links.more);
+  assert.deepEqual(arrived(p), ['more'], 'the same link again keeps it');
+  assert.deepEqual(p.headings.more.calls.slice(0, 2), [['scrollIntoView', { behavior: 'smooth', block: 'start' }], ['focus', { preventScroll: true }]], 'scroll and focus are as before');
+});
+
+test('a real fragment jump (hashchange) hands the bar back to :target', () => {
+  const p = page({ events: true });
+  p.click(p.links.intro);
+  assert.equal(typeof p.winListeners.hashchange, 'function');
+  p.winListeners.hashchange();
+  assert.deepEqual(arrived(p), []);
+  assert.doesNotThrow(() => p.winListeners.hashchange(), 'and a second one with nothing marked is quiet');
+});
+
+test('the mark is set under reduced motion too (the CSS decides whether it fades), and without history or window events', () => {
+  const r = page({ reduce: true, events: true });
+  r.click(r.links.intro);
+  assert.deepEqual(arrived(r), ['intro']);
+  const bare = page({ matchMedia: false, history: false });
+  assert.doesNotThrow(() => bare.click(bare.links.intro));
+  assert.deepEqual(arrived(bare), ['intro']);
+});
+
+test('negative control: a click the script leaves to the browser marks nothing', () => {
+  const p = page({ events: true });
+  p.click(p.links.gone);
+  p.click(p.links.intro, { metaKey: true });
+  assert.deepEqual(arrived(p), []);
 });

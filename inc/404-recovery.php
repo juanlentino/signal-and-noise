@@ -43,6 +43,7 @@ function sn_404_recent_notes( $limit ) {
 		array(
 			'post_type'              => 'post',
 			'post_status'            => 'publish',
+			'has_password'           => false, // Never a "Protected: ..." title.
 			'posts_per_page'         => $limit,
 			'orderby'                => 'date',
 			'order'                  => 'DESC',

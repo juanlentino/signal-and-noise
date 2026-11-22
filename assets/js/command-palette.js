@@ -44,6 +44,17 @@
 	var data = readData() || { notesUrl: '/notes/', recent: [], pillars: [], notes: [] };
 	if ( ! data.notes ) { data.notes = []; } // Pre-11.2.0 island shape.
 
+	// The dialog speaks the page's language. English is the default; a Spanish
+	// page says so on <html lang="es-AR"> (the companion plugin), which every
+	// cached copy already carries, so this needs no new markup. The Spanish is
+	// Argentine (voseo), like sn_theme_t() in inc/lang-chrome.php. Titles from
+	// the data island are never translated.
+	var htmlEl = document.documentElement;
+	var isSpanish = /^es\b/i.test( ( htmlEl && htmlEl.lang ) || '' );
+	function t( en, es ) {
+		return isSpanish ? es : en;
+	}
+
 	// Ranked-search cap: how many scored notes render for a query.
 	var MAX_RANKED = 8;
 
@@ -130,7 +141,7 @@
 
 		var searchItem = {
 			type: 'search',
-			label: trimmed ? 'Search notes for “' + trimmed + '”' : 'Search all notes',
+			label: trimmed ? t( 'Search notes for “', 'Buscar en las notas “' ) + trimmed + '”' : t( 'Search all notes', 'Buscar en todas las notas' ),
 			sub: 'Enter',
 			query: trimmed
 		};
@@ -138,29 +149,29 @@
 		if ( ! trimmed ) {
 			out.push( searchItem );
 			for ( i = 0; i < data.pillars.length; i++ ) {
-				out.push( { type: 'pillar', label: data.pillars[ i ].t, sub: 'Pillar', url: data.pillars[ i ].u } );
+				out.push( { type: 'pillar', label: data.pillars[ i ].t, sub: t( 'Pillar', 'Pilar' ), url: data.pillars[ i ].u } );
 			}
 			for ( i = 0; i < data.recent.length; i++ ) {
-				out.push( { type: 'note', label: data.recent[ i ].t, sub: 'Note', url: data.recent[ i ].u } );
+				out.push( { type: 'note', label: data.recent[ i ].t, sub: t( 'Note', 'Nota' ), url: data.recent[ i ].u } );
 			}
 			// WCAG 2.1.4: the switch for / and the note shortcuts j, k, ?.
 			out.push( {
 				type: 'shortcuts',
-				label: ( singleKeysOn() ? 'Turn off' : 'Turn on' ) + ' single-key shortcuts (/, J, K, ?)',
-				sub: 'Setting'
+				label: ( singleKeysOn() ? t( 'Turn off', 'Desactivar' ) : t( 'Turn on', 'Activar' ) ) + t( ' single-key shortcuts (/, J, K, ?)', ' los atajos de una tecla (/, J, K, ?)' ),
+				sub: t( 'Setting', 'Ajuste' )
 			} );
 			return out;
 		}
 
 		var ranked = rankNotes( trimmed );
 		for ( i = 0; i < ranked.length; i++ ) {
-			out.push( { type: 'note', label: ranked[ i ].t, sub: 'Note', url: ranked[ i ].u } );
+			out.push( { type: 'note', label: ranked[ i ].t, sub: t( 'Note', 'Nota' ), url: ranked[ i ].u } );
 		}
 
 		var needle = trimmed.toLowerCase();
 		for ( i = 0; i < data.pillars.length; i++ ) {
 			if ( data.pillars[ i ].t.toLowerCase().indexOf( needle ) !== -1 ) {
-				out.push( { type: 'pillar', label: data.pillars[ i ].t, sub: 'Pillar', url: data.pillars[ i ].u } );
+				out.push( { type: 'pillar', label: data.pillars[ i ].t, sub: t( 'Pillar', 'Pilar' ), url: data.pillars[ i ].u } );
 			}
 		}
 
@@ -319,7 +330,7 @@
 		root = document.createElement( 'dialog' );
 		root.id = 'sn-cmdk';
 		root.className = 'sn-cmdk';
-		root.setAttribute( 'aria-label', 'Search and navigate' );
+		root.setAttribute( 'aria-label', t( 'Search and navigate', 'Buscar y navegar' ) );
 		// The close event is queued: after close() and a quick reopen it would
 		// arrive for a dialog that is open again, so it acts only on a closed one.
 		root.addEventListener( 'close', function () { if ( ! root.open ) { close(); } } );
@@ -341,8 +352,8 @@
 		input.setAttribute( 'aria-controls', 'sn-cmdk-list' );
 		input.setAttribute( 'aria-autocomplete', 'list' );
 		input.setAttribute( 'aria-activedescendant', '' );
-		input.setAttribute( 'aria-label', 'Search notes' );
-		input.setAttribute( 'placeholder', 'Search notes, jump to a page…' );
+		input.setAttribute( 'aria-label', t( 'Search notes', 'Buscar notas' ) );
+		input.setAttribute( 'placeholder', t( 'Search notes, jump to a page…', 'Buscá notas, saltá a una página…' ) );
 		input.setAttribute( 'autocomplete', 'off' );
 		input.setAttribute( 'autocapitalize', 'off' );
 		input.setAttribute( 'spellcheck', 'false' );
@@ -352,7 +363,7 @@
 		list.id = 'sn-cmdk-list';
 		list.className = 'sn-cmdk-list';
 		list.setAttribute( 'role', 'listbox' );
-		list.setAttribute( 'aria-label', 'Results' );
+		list.setAttribute( 'aria-label', t( 'Results', 'Resultados' ) );
 		panel.appendChild( list );
 
 		root.appendChild( panel );

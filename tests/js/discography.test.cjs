@@ -146,6 +146,26 @@ test('Enter and Space play a cover (default prevented); other keys and static co
   assert.equal(iframes(p2.cards.c).length, 0, 'a Muso-only card is not playable');
 });
 
+// Enter or Space on a cover replaces it with the player and takes the wrapper's
+// tabindex away, which left keyboard focus on <body>: the next Tab started from
+// the top of the page. Focus follows the control it replaced, onto the frame.
+test('a cover played from the keyboard hands focus to the player, once it is in the page; a click moves no focus', () => {
+  for (const key of ['Enter', ' ']) {
+    const p = page();
+    const wrap = all(p.cards.a, '.sn-disco-cover-wrap')[0];
+    wrap.key(key);
+    const [f] = iframes(p.cards.a);
+    assert.deepEqual(f.focusedIn, [wrap], JSON.stringify(key) + ': focused once, after it was mounted in the wrapper');
+    assert.equal(f.getAttribute('title'), 'Spotify player', 'and the frame focus lands on has a name');
+    wrap.key(key);
+    assert.equal(f.focusedIn.length, 1, 'a second press on a playing card does nothing');
+  }
+  const m = page();
+  const wrapM = all(m.cards.a, '.sn-disco-cover-wrap')[0];
+  wrapM.click();
+  assert.deepEqual(iframes(m.cards.a)[0].focusedIn, [], 'mouse: unchanged');
+});
+
 test('liner-notes previews: one shared audio, toggle off, switch, end, and a dead preview retires', () => {
   const p = page();
   const { one, two, none } = p.tracks;

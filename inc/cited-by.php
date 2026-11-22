@@ -73,12 +73,14 @@ function sn_cited_by_query_uncached( $post_id, $limit ) {
 	}
 
 	$needle = '/notes/' . $post->post_name;
+	// A citer with a password is left out: its title is gated content.
 	// LIKE prefilter is broad (prefix collisions included) — LIMIT 50 bounds
 	// the PHP pass; the boundary regex below is the precise filter.
 	$rows = $wpdb->get_results( $wpdb->prepare(
 		"SELECT ID, post_content FROM {$wpdb->posts}
 		 WHERE post_status = 'publish'
 		   AND post_type = 'post'
+		   AND post_password = ''
 		   AND ID != %d
 		   AND post_content LIKE %s
 		 ORDER BY post_date DESC

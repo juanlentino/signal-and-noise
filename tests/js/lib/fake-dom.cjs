@@ -50,6 +50,10 @@ function el(tag, attrs = {}) {
     addEventListener: (type, cb) => { (listeners[type] = listeners[type] || []).push(cb); },
     dispatch: (type, e) => { for (const cb of listeners[type] || []) cb(e); return e; },
     click: () => n.dispatch('click', { target: n }),
+    // Records each call with the parent at that moment: a focus() before the
+    // node is in the tree does nothing in a browser.
+    focusedIn: [],
+    focus: () => { n.focusedIn.push(n.parentNode); },
     key: (key) => n.dispatch('keydown', { key, target: n, defaultPrevented: false, preventDefault() { this.defaultPrevented = true; } }),
     closest: (sel) => { for (let x = n; x; x = x.parentNode) { if (match(x, sel)) return x; } return null; },
     querySelectorAll: (sel) => all(n, sel),
