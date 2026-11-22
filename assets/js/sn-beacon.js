@@ -217,10 +217,15 @@
     // tiny event when the library finalizes it (on interaction / page-hide): vl=LCP,
     // vi=INP, vc=CLS. CLS is unitless → sent x1000 as an integer so it stores cleanly.
     // No-op when the lib is absent (e.g. an unsupported browser).
+    // The CLS event alone may also carry `s`: the tag, id and class names of the
+    // page element that moved most (shiftSelector below), and nothing about the reader.
     if (window.webVitals) {
       var reportVital = function (ev, scale) {
         return function (metric) {
-          send({ e: ev, u: location.pathname, v: Math.round(metric.value * scale) });
+          var payload = { e: ev, u: location.pathname, v: Math.round(metric.value * scale) };
+          var sel = 'vc' === ev ? shiftSelector(metric) : '';
+          if (sel) payload.s = sel;
+          send(payload);
         };
       };
       window.webVitals.onLCP(reportVital('vl', 1));
@@ -310,6 +315,43 @@
       out.tz = isFinite(tz) ? tz : null;
     } catch (e) { /* a signal that cannot be read stays false */ }
     return out;
+  }
+  // Which element moved: a short selector for the largest source of the largest
+  // layout shift in a CLS metric's entries (the standard web-vitals build carries
+  // them, so no attribution build). Lower-case tag, then #id, then up to three
+  // .classes. An id or class with a character outside [A-Za-z0-9_-] is dropped
+  // whole, and so is any token that would push the string past SEL_MAX. Markup
+  // names only: no text, no attributes, no ancestors. Returns '' when there is
+  // nothing to name, and on any error, so the caller's beacon always goes out.
+  var SEL_MAX = 96, SEL_CLASSES = 3, SEL_TOKEN = /^[A-Za-z0-9_-]+$/;
+  function rectArea(r) { return r ? (r.width || 0) * (r.height || 0) : 0; }
+  function movedArea(src) { return Math.max(rectArea(src.previousRect), rectArea(src.currentRect)); }
+  function elementSelector(node) {
+    if (!node || 1 !== node.nodeType) return ''; // removed from the DOM, or a text node
+    var out = String(node.tagName || '').toLowerCase();
+    if (!SEL_TOKEN.test(out) || out.length > SEL_MAX) return '';
+    var id = node.getAttribute('id');
+    if (id && SEL_TOKEN.test(id) && out.length + id.length + 1 <= SEL_MAX) out += '#' + id;
+    var classes = String(node.getAttribute('class') || '').split(/\s+/).filter(function (c) { return SEL_TOKEN.test(c); });
+    for (var i = 0; i < classes.length && i < SEL_CLASSES; i++) {
+      if (out.length + classes[i].length + 1 > SEL_MAX) break;
+      out += '.' + classes[i];
+    }
+    return out;
+  }
+  function shiftSelector(metric) {
+    try {
+      var worst = null;
+      (metric.entries || []).forEach(function (en) { if (!worst || en.value > worst.value) worst = en; });
+      if (!worst || !worst.sources) return '';
+      // sources is frozen in browsers: sort a copy, largest moved area first.
+      var sources = Array.prototype.slice.call(worst.sources).sort(function (a, b) { return movedArea(b) - movedArea(a); });
+      for (var i = 0; i < sources.length; i++) {
+        var sel = elementSelector(sources[i].node);
+        if (sel) return sel;
+      }
+    } catch (e) { /* no selector: the reading is sent without one */ }
+    return '';
   }
   if (document.prerendering) {
     document.addEventListener('prerenderingchange', init, { once: true });
