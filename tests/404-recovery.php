@@ -143,6 +143,7 @@ mk_post( 3, 4000, 'C', 'https://x/notes/3/' );
 $GLOBALS['__filters']['sn_404_suggestions_count'] = 2;
 sn_404_suggestions_shortcode();
 ok( (int) $GLOBALS['__last_qargs']['posts_per_page'] === 2, 'count: honors sn_404_suggestions_count filter' );
+ok( false === ( $GLOBALS['__last_qargs']['has_password'] ?? null ), 'protected: the suggestions query asks for notes without a password, so the list never carries a "Protected: ..." title' );
 
 // ── #386: the template slot is the block; the bridge is gone ─────────
 // The old path (origin/main): core do_shortcode()s the raw template markup

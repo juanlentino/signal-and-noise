@@ -4,7 +4,7 @@
  * Progressive enhancement on core/footnotes (WP 6.3+). Footnotes work
  * without this JS via WP's default scroll-to-footnote-list behavior.
  * This module adds a hover-preview popover so readers don't lose their
- * reading position.
+ * reading position. Escape puts the popover away (2026-11).
  *
  * Security: uses safe DOM cloning (cloneNode + appendChild) — never
  * innerHTML. Source content (the footnote li) is already-sanitized WP
@@ -23,6 +23,8 @@
 	}
 
 	var activePopover = null;
+	var activeAnchor = null;   // The footnote reference that opened it.
+	var restoringFocus = false;
 
 	/**
 	 * The footnote marker anchor inside a sup, in EITHER format: the
@@ -97,10 +99,53 @@
 	}
 
 	function removeActive() {
-		if ( activePopover && activePopover.parentNode ) {
+		if ( ! activePopover ) { return; }
+		if ( activePopover.parentNode ) {
 			activePopover.parentNode.removeChild( activePopover );
 		}
 		activePopover = null;
+		activeAnchor = null;
+		document.removeEventListener( 'keydown', onKeyDown );
+	}
+
+	/**
+	 * Open the popover for one reference, replacing any open one. The keydown
+	 * listener lives only while a popover is open.
+	 *
+	 * @param {Element} anchor The footnote reference link.
+	 * @param {Element} sup    Its <sup>, which the popover sits against.
+	 * @return {Element|null} The popover, or null when the note is not on the page.
+	 */
+	function show( anchor, sup ) {
+		removeActive();
+		var popover = buildPopover( anchor );
+		if ( ! popover ) { return null; }
+		activePopover = popover;
+		activeAnchor = anchor;
+		positionPopover( popover, sup.getBoundingClientRect() );
+		document.addEventListener( 'keydown', onKeyDown );
+		return popover;
+	}
+
+	/**
+	 * Escape dismisses the popover without moving the pointer or the focus
+	 * (WCAG 1.4.13), like the note-link preview card. A keyboard reader's focus
+	 * is already on the reference. Focus inside the popover being removed goes
+	 * back to the reference that opened it, and that focus does not reopen it.
+	 *
+	 * @param {KeyboardEvent} event
+	 */
+	function onKeyDown( event ) {
+		// Composition keys belong to the IME, Escape included.
+		if ( 'Escape' !== event.key || event.isComposing || 229 === event.keyCode || ! activePopover ) { return; }
+		var anchor = activeAnchor;
+		var inside = activePopover.contains( document.activeElement );
+		removeActive();
+		if ( inside && anchor && anchor.focus ) {
+			restoringFocus = true;
+			anchor.focus();
+			restoringFocus = false;
+		}
 	}
 
 	/**
@@ -123,12 +168,8 @@
 		if ( ! sup ) { return; }
 		var anchor = findFootnoteAnchor( sup );
 		if ( ! anchor ) { return; }
-		removeActive();
-		var popover = buildPopover( anchor );
-		if ( ! popover ) { return; }
-		activePopover = popover;
-		positionPopover( popover, sup.getBoundingClientRect() );
-		popover.addEventListener( 'pointerleave', removeActive );
+		var popover = show( anchor, sup );
+		if ( popover ) { popover.addEventListener( 'pointerleave', removeActive ); }
 	}
 
 	function onLeave( event ) {
@@ -147,15 +188,12 @@
 	 * for keyboard users. Audit D PA-11.
 	 */
 	function onFocusIn( event ) {
+		if ( restoringFocus ) { return; }
 		var sup = supOf( event );
 		if ( ! sup ) { return; }
 		var anchor = findFootnoteAnchor( sup );
 		if ( ! anchor || anchor !== event.target ) { return; }
-		removeActive();
-		var popover = buildPopover( anchor );
-		if ( ! popover ) { return; }
-		activePopover = popover;
-		positionPopover( popover, sup.getBoundingClientRect() );
+		show( anchor, sup );
 	}
 
 	function onFocusOut( event ) {

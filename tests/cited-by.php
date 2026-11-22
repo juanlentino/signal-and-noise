@@ -131,5 +131,12 @@ require_once __DIR__ . '/lib/component-css.php';
 $css = snt_component_css();
 ok( false !== strpos( $css, '.sn-cited-by' ), 'the component layer styles .sn-cited-by (now assets/css/blocks/related-notes.css, a block stylesheet)' );
 
+// A password-protected citer would show as "Protected: <title>" on another
+// note's page: the scan leaves it out.
+unset( $GLOBALS['sn_cited_by_memo'] );
+$GLOBALS['__last_sql'] = '';
+sn_cited_by_query_uncached( 10, 5 );
+ok( 1 === preg_match( "/AND post_password = ''/", $GLOBALS['__last_sql'] ), 'protected: the citer scan asks only for notes without a password' );
+
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

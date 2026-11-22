@@ -22,6 +22,21 @@
   var reduce = window.matchMedia &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  // history.replaceState (below) does not move :target, and :target is what
+  // draws the arrival bar beside a jumped-to heading (assets/css/base.css). So
+  // a contents click marks its heading, and the bar's rule matches the mark
+  // too. One heading carries it at a time; a real fragment jump (hashchange,
+  // which replaceState never fires) hands the bar back to :target.
+  var arrived = null;
+  function markArrived(heading) {
+    if (arrived && arrived !== heading) { arrived.removeAttribute('data-sn-arrived'); }
+    arrived = heading;
+    if (heading) { heading.setAttribute('data-sn-arrived', ''); }
+  }
+  if (window.addEventListener) {
+    window.addEventListener('hashchange', function () { markArrived(null); });
+  }
+
   toc.addEventListener('click', function (e) {
     // A modified click means a new tab, window or download: the browser's.
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) { return; }
@@ -38,6 +53,7 @@
     // Move focus to the section for keyboard users without a second jump.
     target.setAttribute('tabindex', '-1');
     target.focus({ preventScroll: true });
+    markArrived(target);
 
     // Keep the URL shareable/back-navigable without re-triggering a jump.
     if (window.history && window.history.replaceState) {

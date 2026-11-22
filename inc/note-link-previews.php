@@ -20,6 +20,10 @@
  * this site's host, the slug must resolve to a PUBLISHED post, and a note
  * never previews itself. Everything else passes through byte-identical.
  *
+ * A password-protected note is never a target: its title and opening are
+ * gated content, and this page is cached for every reader, so the gate is the
+ * post_password field, not the reader's unlock cookie (2026-11).
+ *
  * @package SignalNoise
  * @since 12.10.0
  */
@@ -36,9 +40,12 @@ const SN_LINK_PREVIEW_WORDS = 28;
  * words of the stripped content.
  *
  * @param WP_Post|object $post Target note.
- * @return string Plain-text summary ('' when the note has no words at all).
+ * @return string Plain-text summary ('' when the note has no words at all, or has a password).
  */
 function sn_link_preview_summary( $post ) {
+	if ( '' !== (string) ( $post->post_password ?? '' ) ) {
+		return '';
+	}
 	if ( has_excerpt( $post ) ) {
 		return trim( wp_strip_all_tags( (string) get_the_excerpt( $post ) ) );
 	}
@@ -47,7 +54,9 @@ function sn_link_preview_summary( $post ) {
 }
 
 /**
- * Resolve a note slug to its published post, or null.
+ * Resolve a note slug to its published post, or null. Never a note with a
+ * password: the query leaves it out, and a row that arrives anyway (a filtered
+ * query) is refused by its field.
  *
  * @param string $slug post_name from the matched href.
  * @return object|null
@@ -59,9 +68,13 @@ function sn_link_preview_target( $slug ) {
 			'post_type'      => 'post',
 			'post_status'    => 'publish',
 			'posts_per_page' => 1,
+			'has_password'   => false,
 		)
 	);
-	return $found ? $found[0] : null;
+	if ( ! $found || '' !== (string) ( $found[0]->post_password ?? '' ) ) {
+		return null;
+	}
+	return $found[0];
 }
 
 /**

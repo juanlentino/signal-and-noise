@@ -37,6 +37,8 @@ ok( false !== strpos( $h, 'The credit that has to &lt;stay&gt; private' ), 'its 
 ok( false !== strpos( $h, '2026.10.16' ), 'its date in the index format' );
 ok( false !== strpos( $h, '>Latest<' ), 'labelled Latest' );
 ok( 'post' === ( $GLOBALS['__q']['post_type'] ?? '' ) && 'publish' === ( $GLOBALS['__q']['post_status'] ?? '' ) && 1 === ( $GLOBALS['__q']['posts_per_page'] ?? 0 ), 'the newest published note, one row' );
+ok( false === ( $GLOBALS['__q']['has_password'] ?? null ), 'protected: the newest note WITHOUT a password, so home never prints a "Protected: ..." title' );
+ok( '<a class="sn-home-latest" href="https://x.test/notes/the-credit/"><span class="sn-home-latest__k">Latest</span><span>&#8470; 055</span><span class="sn-home-latest__t">The credit that has to &lt;stay&gt; private</span><span>2026.10.16 <span aria-hidden="true">&rarr;</span></span></a>' === $h, 'the line for an unprotected newest note is the same bytes as before the password gate' );
 $GLOBALS['__es'] = true;
 ok( false !== strpos( sn_home_latest_line_html(), '>Lo último<' ), 'the Spanish home says Lo último' );
 $es_line = sn_home_latest_line_html();

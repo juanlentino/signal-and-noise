@@ -52,6 +52,7 @@ function mk_note( $id, $name, $title, $content, $excerpt = '', $mins = 3 ) {
 	return $p;
 }
 function get_posts( $args ) {
+	$GLOBALS['__last_get_posts'] = $args;
 	$p = $GLOBALS['__posts_by_name'][ (string) ( $args['name'] ?? '' ) ] ?? null;
 	return $p ? array( $p ) : array();
 }
@@ -150,6 +151,24 @@ ok( 'It’s the reader’s call & nobody else’s.' === $tex->get_attribute( 'da
 $lp_src = (string) file_get_contents( __DIR__ . '/../inc/note-link-previews.php' );
 ok( 0 === preg_match( '/preg_replace(?:_callback)?\s*\(|substr_replace\s*\(|substr\s*\(\s*\$whole/', $lp_src ), '#383: inc/note-link-previews.php carries no preg_replace, no preg_replace_callback and no byte splice; the anchors are read and stamped through WP_HTML_Tag_Processor' );
 ok( false !== strpos( $lp_src, 'new WP_HTML_Tag_Processor(' ) && 3 === substr_count( $lp_src, '$tags->set_attribute( \'data-sn-preview-' ), '#383: the three stamps land through set_attribute() on the processor' );
+
+// ── 9. A password-protected note is never previewed on another page ──
+// The page is cached for every reader, so the gate is the post_password field,
+// not the reader's unlock cookie. Two layers: the query leaves protected notes
+// out, and a row that arrives anyway (a filtered query) is still refused.
+sn_link_preview_target( 'two-kinds' );
+ok( false === ( $GLOBALS['__last_get_posts']['has_password'] ?? null ), 'protected: the slug lookup asks for notes without a password' );
+$locked = mk_note( 11, 'locked', 'The locked title', 'The locked body text.', 'The locked excerpt.' );
+$locked->post_password = 'hunter2';
+ok( null === sn_link_preview_target( 'locked' ), 'protected: a protected note that reaches the lookup anyway is not a target (this stub ignores has_password)' );
+ok( '' === sn_link_preview_summary( $locked ), 'protected: its summary is empty, hand-set excerpt or not' );
+$GLOBALS['__excerpts'][11] = '';
+ok( '' === sn_link_preview_summary( $locked ), 'protected: and empty when it would be derived from the body' );
+$locked_link = '<a href="/notes/locked/">l</a>';
+ok( sn_note_link_previews_filter( $locked_link ) === $locked_link, 'protected: a link to it passes through byte-identical, no title, summary or meta' );
+$open = mk_note( 12, 'unlocked', 'Open title', 'Open body.', 'Open excerpt.' );
+$open->post_password = '';
+ok( 'Open excerpt.' === sn_link_preview_summary( $open ) && $open === sn_link_preview_target( 'unlocked' ), 'protected: a note with an empty post_password previews as before (control)' );
 
 echo "\nResult: $pass passed, $fail failed.\n";
 exit( $fail > 0 ? 1 : 0 );

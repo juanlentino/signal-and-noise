@@ -74,6 +74,7 @@ ok( 0 === preg_match( '/(^|[\s}])main\s*\{[^}]*view-transition-name/', $a ), '3:
 ok( false !== strpos( $a, '.sn-header { view-transition-name: sn-header; }' ) && false !== strpos( $a, '.sn-footer { view-transition-name: sn-footer; }' ), '3: header and footer keep their own names, so they stay still' );
 
 // Group 2: signal acquired (base.css).
+$arrived_re = '(?::is\(h2, h3, h4\)\[id\]\[data-sn-arrived\]::before,\s*)?';
 $b = $read( 'base.css' );
 ok( 1 === preg_match( '/(^|[\s}])::target-text\s*\{([^}]*)\}/', $b, $m ), '5: text fragments get the house highlight' );
 $tt = isset( $m[2] ) ? $m[2] : '';
@@ -85,11 +86,20 @@ ok( 1 === preg_match( '/width:\s*2px;/', $hd ) && false !== strpos( $hd, 'backgr
 ok( 1 === preg_match( '/position:\s*absolute;/', $hd ) && 1 === preg_match( '/inset-inline-start:\s*calc\(-1/', $hd ), '5: the rule is drawn in the margin, so the heading text does not move' );
 ok( 0 === preg_match( '/:target\s*\{[^}]*(margin|padding|border)/', $b ), '5: the heading box itself gains no margin, padding or border' );
 ok( 1 === preg_match( '/inset-inline-start:\s*calc\(-1 \* \(2px \+ 0\.6em\)\);/', $hd ), '5: on wide screens the rule sits 0.6em into the margin, unchanged' );
-ok( 1 === preg_match( '/@media \(max-width: 781px\)\s*\{\s*:is\(h2, h3, h4\)\[id\]:target::before\s*\{\s*inset-inline-start:\s*max\(calc\(-1 \* \(2px \+ 0\.6em\)\), -14px\);\s*\}\s*\}/', $b ), '5: on narrow screens the offset is capped at 14px, so a large h2\'s rule stays inside the 16px gutter instead of being clipped' );
+ok( 1 === preg_match( '/@media \(max-width: 781px\)\s*\{\s*' . $arrived_re . ':is\(h2, h3, h4\)\[id\]:target::before\s*\{\s*inset-inline-start:\s*max\(calc\(-1 \* \(2px \+ 0\.6em\)\), -14px\);\s*\}\s*\}/', $b ), '5: on narrow screens the offset is capped at 14px, so a large h2\'s rule stays inside the 16px gutter instead of being clipped' );
 $ac = tm_no_preference_block( $b, 'sn-acquire' );
 ok( 1 === preg_match( '/:target::before\s*\{\s*animation:\s*sn-acquire\s+[0-9.]+m?s[^;]*\b1;/', $ac ), '5: the rule fades in once per arrival, only under no-preference' );
 ok( 1 === preg_match( '/@keyframes sn-acquire\s*\{\s*from\s*\{\s*opacity:\s*0;\s*\}\s*\}/', $b ), '5: the arrival is an opacity fade, nothing moves' );
-ok( 1 === preg_match( '/@media \(forced-colors: active\)\s*\{\s*:is\(h2, h3, h4\)\[id\]:target::before\s*\{[^}]*CanvasText/', $b ), '5: forced colors keep the rule in CanvasText' );
+ok( 1 === preg_match( '/@media \(forced-colors: active\)\s*\{\s*' . $arrived_re . ':is\(h2, h3, h4\)\[id\]:target::before\s*\{[^}]*CanvasText/', $b ), '5: forced colors keep the rule in CanvasText' );
+// A contents click uses history.replaceState, which does not move :target, so
+// assets/js/article-toc.js marks the heading with data-sn-arrived and every
+// rule above lists that mark beside :target (tests/js/article-toc.test.cjs
+// pins the script half). The two regexes above that sit right after a media
+// brace allow the mark's selector ahead of :target for that reason.
+ok( 1 === preg_match( '/(^|[\s}]):is\(h2, h3, h4\)\[id\]\[data-sn-arrived\],\s*:is\(h2, h3, h4\)\[id\]:target\s*\{\s*position:\s*relative;\s*\}/', $b ), '5b: a heading a contents click arrived at is positioned like a :target one' );
+ok( 4 === preg_match_all( '/:is\(h2, h3, h4\)\[id\]\[data-sn-arrived\]::before,\s*:is\(h2, h3, h4\)\[id\]:target::before\s*\{/', $b ), '5b: the rule, its narrow offset, its fade and its forced-colors ink all list the mark beside :target, so it is the same bar' );
+ok( 1 === preg_match( '/\[data-sn-arrived\]::before,\s*:is\(h2, h3, h4\)\[id\]:target::before\s*\{\s*animation:\s*sn-acquire/', $ac ), '5b: the mark fades in only under no-preference, like :target' );
+ok( 1 === preg_match( '/(^|[\s}]):root:has\(\[data-sn-arrived\]\) :is\(h2, h3, h4\)\[id\]:target:not\(\[data-sn-arrived\]\)::before\s*\{\s*content:\s*none;\s*\}/', $b ), '5b: while a heading carries the mark, a different heading the page loaded at (still :target) stands its bar down, so there is one bar' );
 
 // Group 3: nothing in the snapshot runs its own entrance. The new page's image
 // is live, so a load-in fade under it showed through the raster: content came

@@ -96,11 +96,17 @@ foreach ( array_merge( glob( "$root/assets/css/*.css" ), glob( "$root/assets/css
 }
 $offs = array();
 foreach ( $sheets as $name => $src ) {
-	if ( preg_match_all( '/(?:^|[{}])\s*([^{}]*:target::before)\s*\{\s*content:\s*none;?\s*\}/', $src, $tm ) ) {
+	if ( preg_match_all( '/(?:^|[{}])\s*([^{}]*:target[^{}\s,]*::before)\s*\{\s*content:\s*none;?\s*\}/', $src, $tm ) ) {
 		foreach ( $tm[1] as $sel ) { $offs[] = array( $name, trim( $sel ) ); }
 	}
 }
 $essay = 'main:has(> .wp-block-post-content > .sn-provenance-section) ';
+// The one other stand-down (base.css): a heading that is still :target after a
+// contents click marked a DIFFERENT heading. It cannot hide a landing: with no
+// mark on the page it matches nothing, and the marked heading draws the bar.
+$stale = ':root:has([data-sn-arrived]) :is(h2, h3, h4)[id]:target:not([data-sn-arrived])::before';
+ok( in_array( array( 'base.css', $stale ), $offs, true ), 'the scan sees the stale-target stand-down in base.css (a :target with a :not() after it is still read)' );
+$offs = array_values( array_filter( $offs, static function ( $o ) use ( $stale ) { return $stale !== $o[1]; } ) );
 ok( count( $offs ) > 0, 'the essay rule that stands the arrival rule down is still there (or this check would pass on nothing)' );
 foreach ( $offs as $o ) {
 	ok( 0 === strpos( $o[1], $essay ), "{$o[0]}: \"{$o[1]}\" turns the arrival rule off on essays only, so a #resume-experience link draws it on /resume" );

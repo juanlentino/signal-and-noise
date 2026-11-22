@@ -24,6 +24,7 @@ function sn_home_latest_line_html() {
 		array(
 			'post_type'      => 'post',
 			'post_status'    => 'publish',
+			'has_password'   => false, // Never a "Protected: ..." title on home.
 			'posts_per_page' => 1,
 			'orderby'        => array( 'date' => 'DESC', 'ID' => 'DESC' ),
 			'no_found_rows'  => true,
