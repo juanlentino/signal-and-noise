@@ -199,7 +199,7 @@ add_action( 'wp_enqueue_scripts', function() {
 			'sn-footnotes-popover',
 			get_theme_file_uri( 'assets/js/footnotes-popover.js' ),
 			array(),
-			wp_get_theme()->get( 'Version' ),
+			sn_asset_ver( 'assets/js/footnotes-popover.js' ),
 			array( 'in_footer' => true, 'strategy' => 'defer' )
 		);
 	}
@@ -259,7 +259,10 @@ function sn_register_note_share() {
 		get_theme_file_uri( 'assets/js/note-share.js' ),
 		array( 'sn-copy' ),
 		sn_asset_ver( 'assets/js/note-share.js' ),
-		true
+		// Deferred (2026-11-22): the script waits for DOMContentLoaded itself and
+		// has no inline dependent; a blocking dependent made core print sn-copy
+		// blocking too.
+		array( 'in_footer' => true, 'strategy' => 'defer' )
 	);
 }
 add_action( 'init', 'sn_register_note_share' );
@@ -287,7 +290,7 @@ function sn_enqueue_discography() {
 			get_theme_file_uri( 'assets/js/discography.js' ),
 			array(),
 			sn_asset_ver( 'assets/js/discography.js' ),
-			true
+			array( 'in_footer' => true, 'strategy' => 'defer' )
 		);
 	}
 }

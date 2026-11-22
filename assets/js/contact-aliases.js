@@ -14,7 +14,8 @@
  * readable (just not clickable). The residual JS-executing scraper is handled
  * downstream by the Proton aliases + Cloudflare obfuscation (kept enabled).
  *
- * Enqueued only on /contact (inc/contact-email.php), footer + deferred.
+ * Enqueued on /contact and wherever [sn_email] renders (inc/contact-email.php),
+ * and by the note-reply block; footer + deferred.
  */
 (function () {
 	'use strict';

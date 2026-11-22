@@ -218,7 +218,7 @@ ok( strpos( $js, 'if (!utmSent)' ) !== false || strpos( $js, 'if(!utmSent)' ) !=
 ok( strpos( $js, 'sessionStorage' ) === false && strpos( $js, 'localStorage' ) === false, 'UTM once flag uses no web storage (storageless)' );
 // 15.3.0: the pageview ID rides every event, is redrawn per pageview, and is never stored.
 ok( strpos( $js, '{ k: cfg.k, pid: pid, sg:' ) !== false, 'pid rides every event through send()' );
-ok( (bool) preg_match( '/function pageview\(\) \{\s+newPid\(\);/', $js ), 'each pageview (bfcache restore included) draws a new pid' );
+ok( (bool) preg_match( '/function pageview\(restored\) \{\s+newPid\(\);/', $js ), 'each pageview (bfcache restore included) draws a new pid' );
 ok( 1 === substr_count( $js, 'newPid();' ), 'the pid is drawn in pageview() only' );
 // 2026-10-15 traffic lanes: the beacon no longer reads any cookie. Owner-device
 // views are sent and the analytics Worker lanes them; DNT/GPC and the Claude
