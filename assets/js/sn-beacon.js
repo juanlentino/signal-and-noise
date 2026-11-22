@@ -334,8 +334,12 @@
     // to body), so they are named by tag alone.
     if ('html' === out || 'body' === out) return out;
     var id = node.getAttribute('id');
+    // The admin bar exists only for a signed-in reader: naming it would say so.
+    if ('wpadminbar' === id) return '';
     if (id && SEL_TOKEN.test(id) && out.length + id.length + 1 <= SEL_MAX) out += '#' + id;
-    var classes = String(node.getAttribute('class') || '').split(/\s+/).filter(function (c) { return SEL_TOKEN.test(c); });
+    // is-* classes are state a reader's own actions set (is-hidden, is-active,
+    // is-playing), not the page's markup, so they are left out.
+    var classes = String(node.getAttribute('class') || '').split(/\s+/).filter(function (c) { return SEL_TOKEN.test(c) && 0 !== c.indexOf('is-'); });
     for (var i = 0; i < classes.length && i < SEL_CLASSES; i++) {
       if (out.length + classes[i].length + 1 > SEL_MAX) break;
       out += '.' + classes[i];

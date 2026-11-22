@@ -92,6 +92,13 @@ test('html and body are named by tag alone: their classes hold reader state', ()
   assert.equal(html.s, 'html');
 });
 
+test('state a reader set is left out: is-* classes, and the admin bar entirely', () => {
+  const card = cls([entry(0.1, [src(node('div', { class: 'sn-disco-card is-hidden is-active' }), rect(9, 9), rect(9, 9))])]);
+  assert.equal(card.s, 'div.sn-disco-card');
+  const bar = cls([entry(0.1, [src(node('div', { id: 'wpadminbar', class: 'nojq' }), rect(9, 9), rect(9, 9))])]);
+  assert.ok(!('s' in bar));
+});
+
 test('nothing to name: the vc beacon goes out exactly as before, with no s key', () => {
   const bare = (metric) => {
     const p = page().report('vc', metric);
