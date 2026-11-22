@@ -16,6 +16,11 @@ nothing here is edited by hand again.
 
 All notable changes to Signal & Noise are documented here.
 
+## [2026.11.14] - 2026-11-18 — security.txt says there is no bug bounty
+
+### Changed
+- **security.txt says there is no bug bounty.** Three comment lines at the top of `/.well-known/security.txt`: no bug bounty program and no payment for reports; a report with the affected URL, steps to reproduce and impact is welcome through the contact form. Comments, so the RFC 9116 fields are unchanged. Test: `tests/security-txt.php` (+1).
+
 ## [2026.11.13] - 2026-11-14 — The beacon says still here at 10 seconds of visible time
 
 ### Added

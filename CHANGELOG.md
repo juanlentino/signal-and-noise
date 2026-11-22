@@ -12,6 +12,8 @@ adds a bullet below. A release is a separate, deliberate act:
 
 ## [Unreleased]
 
+## [2026.11.15] - 2026-11-22 — Protected notes stay off other pages; the arrival bar, palette, player and footnotes for keyboard and Spanish readers
+
 ### Security
 - **A password-protected note's title and text stay on its own page.** A link to a protected note no longer gets a hover preview (title, opening, date) on another note: the slug lookup in `inc/note-link-previews.php` leaves notes with a password out, and a row that arrives anyway is refused by its `post_password` field, which is the gate because the page is cached for every reader. The Cited-by list (`inc/cited-by.php`), the 404 suggestions (`inc/404-recovery.php`) and the home page's latest line (`inc/home-latest-line.php`) leave protected notes out too, so none of them prints a "Protected: ..." title. With no protected note published, all four render the same bytes as before. Tests: `tests/note-link-previews.php` (+6), `tests/cited-by.php` (+1), `tests/404-recovery.php` (+1), `tests/home-latest-line.php` (+2).
 
@@ -20,9 +22,4 @@ adds a bullet below. A release is a separate, deliberate act:
 - **The command palette is Spanish on the Spanish pages.** The trigger said "Buscar" and the dialog it opened was English. On a page whose `<html lang>` starts with `es`, the dialog's name, the field's name and placeholder, the list's name and every row the script writes are Argentine Spanish; note and page titles are not translated. English is the default and is unchanged. Test: `tests/js/command-palette-lang.test.cjs` (10).
 - **A cover played from the keyboard hands focus to the player.** On `/music`, Enter or Space on a cover replaced it with the Spotify frame and left focus on `<body>`. Focus now lands on the frame once it is mounted. A click moves no focus, as before. Test: `tests/js/discography.test.cjs` (+1).
 - **Escape puts a footnote popover away.** `assets/js/footnotes-popover.js` had no dismissal that kept the pointer and the focus where they were (WCAG 1.4.13). Escape now removes the popover; focus stays where it is, and focus inside the popover goes back to the reference that opened it. The keydown listener exists only while a popover is open. Test: `tests/js/footnotes-popover-escape.test.cjs` (5).
-
-## [2026.11.14] - 2026-11-18 — security.txt says there is no bug bounty
-
-### Changed
-- **security.txt says there is no bug bounty.** Three comment lines at the top of `/.well-known/security.txt`: no bug bounty program and no payment for reports; a report with the affected URL, steps to reproduce and impact is welcome through the contact form. Comments, so the RFC 9116 fields are unchanged. Test: `tests/security-txt.php` (+1).
 
