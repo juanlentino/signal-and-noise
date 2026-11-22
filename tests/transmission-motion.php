@@ -110,6 +110,8 @@ $num = 'h2\.wp-block-heading:not\(#references\):is\(:target, \[data-sn-arrived\]
 ok( 1 === preg_match( '/' . $num . '::before\s*\{\s*position:\s*static;\s*inset:\s*auto;\s*width:\s*auto;\s*background-color:\s*transparent;\s*animation:\s*none;\s*\}/', $art ), '5c: on a numbered heading the numeral keeps its ::before (static, full width, no bar ink, no fade)' );
 ok( 1 === preg_match( '/' . $num . '::after\s*\{\s*content:\s*"";\s*position:\s*absolute;\s*inset-block:\s*0;[^}]*width:\s*2px;\s*background-color:\s*var\(--wp--preset--color--blood\);\s*\}/', $art ), '5c: the same 2px blood bar draws in ::after there' );
 ok( 1 === preg_match( '/@media \(prefers-reduced-motion: no-preference\)\s*\{\s*[^{}]*' . $num . '::after\s*\{\s*animation:\s*sn-acquire/', $art ), '5c: its fade only under no-preference' );
+ok( 1 === preg_match( '/@media \(max-width: 781px\)\s*\{\s*[^{}]*' . $num . '::after\s*\{\s*inset-inline-start:\s*max\([^;]*-14px\);/', $art ), '5c: the narrow-screen cap holds there too' );
+ok( 1 === preg_match( '/@media \(forced-colors: active\)\s*\{\s*[^{}]*' . $num . '::before\s*\{\s*forced-color-adjust:\s*auto;\s*background-color:\s*transparent;\s*\}\s*[^{}]*' . $num . '::after\s*\{\s*forced-color-adjust:\s*none;\s*background-color:\s*CanvasText;/', $art ), '5c: under forced colors the numeral takes the system color like every other numeral, and the bar is CanvasText' );
 ok( 1 === preg_match( '/:root:has\(\[data-sn-arrived\]\) [^{]*:target:not\(\[data-sn-arrived\]\)::after\s*\{\s*content:\s*none;\s*\}/', $art ), '5c: one bar at a time there too' );
 
 // Group 3: nothing in the snapshot runs its own entrance. The new page's image

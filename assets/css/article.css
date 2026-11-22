@@ -1217,6 +1217,7 @@ body.single-post .wp-block-post-content:has(> h2.wp-block-heading:nth-of-type(3)
 }
 @media (forced-colors: active) {
 	body.single-post .wp-block-post-content:has(> h2.wp-block-heading:nth-of-type(3)) > h2.wp-block-heading:not(#references):is(:target, [data-sn-arrived])::before {
+		forced-color-adjust: auto;
 		background-color: transparent;
 	}
 	body.single-post .wp-block-post-content:has(> h2.wp-block-heading:nth-of-type(3)) > h2.wp-block-heading:not(#references):is(:target, [data-sn-arrived])::after {
