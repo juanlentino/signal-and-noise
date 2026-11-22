@@ -85,6 +85,13 @@ test('the 96-character cap drops trailing classes and never cuts a token', () =>
   assert.equal(long.s, 'div.kept', 'an id that cannot fit is dropped whole');
 });
 
+test('html and body are named by tag alone: their classes hold reader state', () => {
+  const body = cls([entry(0.1, [src(node('body', { id: 'top', class: 'error404 logged-in admin-bar' }), rect(9, 9), rect(9, 9))])]);
+  assert.equal(body.s, 'body');
+  const html = cls([entry(0.1, [src(node('html', { class: 'js dark' }), rect(9, 9), rect(9, 9))])]);
+  assert.equal(html.s, 'html');
+});
+
 test('nothing to name: the vc beacon goes out exactly as before, with no s key', () => {
   const bare = (metric) => {
     const p = page().report('vc', metric);

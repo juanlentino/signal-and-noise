@@ -330,6 +330,9 @@
     if (!node || 1 !== node.nodeType) return ''; // removed from the DOM, or a text node
     var out = String(node.tagName || '').toLowerCase();
     if (!SEL_TOKEN.test(out) || out.length > SEL_MAX) return '';
+    // html and body carry reader state (WordPress adds logged-in and admin-bar
+    // to body), so they are named by tag alone.
+    if ('html' === out || 'body' === out) return out;
     var id = node.getAttribute('id');
     if (id && SEL_TOKEN.test(id) && out.length + id.length + 1 <= SEL_MAX) out += '#' + id;
     var classes = String(node.getAttribute('class') || '').split(/\s+/).filter(function (c) { return SEL_TOKEN.test(c); });
