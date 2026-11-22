@@ -31,13 +31,14 @@
     // window.SN_BEACON stays the public API: callers use
     // window.SN_BEACON.event(name, props), so the parsed object is exposed.
     window.SN_BEACON = cfg;
-    if (!cfg.endpoint || !cfg.k) return;
 
-    // Custom-event API: a no-op stub set BEFORE the privacy gate so callers can
-    // always invoke window.SN_BEACON.event(name, props) without a guard. Under
-    // DNT/GPC the beacon bails entirely and this stays a no-op; on the tracked
-    // path it is reassigned to the real sender at the end of the IIFE.
+    // Custom-event API: a no-op stub set BEFORE every gate so callers can
+    // always invoke window.SN_BEACON.event(name, props) without a guard. With
+    // no endpoint or token, and under DNT/GPC, the beacon bails entirely and
+    // this stays a no-op; on the tracked path it is reassigned to the real
+    // sender at the end of the IIFE.
     cfg.event = function () {};
+    if (!cfg.endpoint || !cfg.k) return;
 
     // Privacy gate — bail completely (no listeners, no beacon) when opted out.
     var dnt = navigator.doNotTrack === '1' || window.doNotTrack === '1' || navigator.msDoNotTrack === '1';
@@ -100,9 +101,17 @@
       return any ? out : null;
     }
 
-    function pageview() {
+    // The view's referrer. The first view's is the document's. A bfcache
+    // restore is a new view of the same document, whose referrer still names
+    // where the reader FIRST came from (a search engine, say): resending it
+    // would count that arrival twice. A restored view sends the site's own
+    // origin instead, what an in-site navigation sends, which the collector
+    // files as same-site. Custom events carry their view's referrer.
+    var ref = document.referrer || '';
+    function pageview(restored) {
       newPid();
-      var pv = { e: 'pv', u: location.pathname, r: document.referrer || '' };
+      if (restored) ref = location.origin ? location.origin + '/' : '';
+      var pv = { e: 'pv', u: location.pathname, r: ref };
       if (!utmSent) { // first pageview only; a bfcache restore never re-attributes
         utmSent = true;
         var utm = readUtm();
@@ -113,7 +122,7 @@
 
     // 1) Pageview on load + on bfcache restore (Back button = a new view).
     pageview();
-    window.addEventListener('pageshow', function (ev) { if (ev.persisted) pageview(); });
+    window.addEventListener('pageshow', function (ev) { if (ev.persisted) pageview(true); });
 
     // 2) Scroll milestones 25/50/75/100, each once, passive + rAF-throttled.
     var sent = {}, ticking = false;
@@ -192,7 +201,7 @@
       send({ e: 'tm', u: location.pathname, ms: delta });
     }
     window.addEventListener('pagehide', function () { cancelPing(); flush(); });
-    window.addEventListener('pageshow', function (ev) { if (ev.persisted) { flushed = false; visibleMs = 0; lastVisible = performance.now(); sent = {}; pinged = false; viewMs = 0; armPing(); window.addEventListener('scroll', onScroll, { passive: true }); } });
+    window.addEventListener('pageshow', function (ev) { if (ev.persisted) { flushed = false; visibleMs = 0; lastVisible = performance.now(); sent = {}; pinged = false; viewMs = 0; armPing(); window.addEventListener('scroll', onScroll, { passive: true }); checkScroll(); } }); // checkScroll: like the first load, so a page too short to scroll reports again
 
     // 4) Custom events — window.SN_BEACON.event(name, props). On the tracked path
     // this replaces the no-op stub. Clamps name (64) + up to 4 string→string props
@@ -209,7 +218,7 @@
           pr[String(k).slice(0, 60)] = String(props[k]).slice(0, 180);
         }
       }
-      send({ e: 'ce', u: location.pathname, r: document.referrer || '', n: n, pr: pr });
+      send({ e: 'ce', u: location.pathname, r: ref, n: n, pr: pr });
     };
 
     // 5) Core Web Vitals (field) — real-user LCP/INP/CLS via the web-vitals lib

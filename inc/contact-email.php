@@ -127,7 +127,16 @@ function sn_email_shortcode( $atts ) {
 		$atts,
 		'sn_email'
 	);
-	return sn_email_markup( $atts['user'], $atts['domain'] );
+	$html = sn_email_markup( $atts['user'], $atts['domain'] );
+	// The script follows the shortcode: wherever an alias renders (a Spanish
+	// contact page the plugin pairs, any other page), it is assembled, not left
+	// as "[at]/[dot]" text. The handle is registered at init by
+	// inc/note-reply.php; sn_enqueue_contact_aliases() below still covers
+	// /contact by slug.
+	if ( '' !== $html && function_exists( 'wp_enqueue_script' ) ) {
+		wp_enqueue_script( 'sn-contact-aliases' );
+	}
+	return $html;
 }
 
 /**

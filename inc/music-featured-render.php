@@ -52,7 +52,7 @@ function sn_music_featured_shortcode() {
 	$out .= '<iframe class="sn-music-featured__player" src="' . esc_url( $embed )
 		. '" width="100%" height="' . (int) $height . '" loading="lazy"'
 		. ' allow="encrypted-media; clipboard-write; fullscreen; picture-in-picture"'
-		. ' title="' . esc_attr( 'Featured Spotify player' ) . '"></iframe>';
+		. ' title="' . esc_attr( function_exists( 'sn_theme_is_spanish' ) && sn_theme_is_spanish() ? 'Reproductor destacado de Spotify' : 'Featured Spotify player' ) . '"></iframe>'; // read, not painted
 	$out .= '</div>';
 
 	// The player's keyboard focus ring needs a script (assets/js/frame-focus.js).

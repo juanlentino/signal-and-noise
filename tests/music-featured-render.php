@@ -80,6 +80,18 @@ ok( strpos( $html, 'height="152"' ) !== false, 'track → compact 152px player' 
 ok( strpos( $html, 'Featured' ) !== false && strpos( $html, 'Press play' ) !== false, 'label present' );
 ok( strpos( $html, 'loading="lazy"' ) !== false, 'iframe lazy-loaded' );
 
+ok( strpos( $html, 'title="Featured Spotify player"' ) !== false, 'English page: the frame is named "Featured Spotify player", as before' );
+// The frame's name is not painted, and a screen reader reads it: Spanish on a
+// Spanish page, by the same question the label above it asks.
+if ( ! function_exists( 'sn_theme_is_spanish' ) ) {
+	function sn_theme_is_spanish() { return ! empty( $GLOBALS['__es'] ); }
+}
+$GLOBALS['__es'] = true;
+$es_html = sn_music_featured_shortcode();
+$GLOBALS['__es'] = false;
+ok( strpos( $es_html, 'title="Reproductor destacado de Spotify"' ) !== false && strpos( $es_html, 'Featured Spotify player' ) === false, 'Spanish page: the frame is named "Reproductor destacado de Spotify"' );
+ok( $html === sn_music_featured_shortcode(), 'and the English markup is the same bytes afterwards' );
+
 // ── ALBUM → full player ───────────────────────────────────────────────
 $GLOBALS['__test_filters']['sn_music_featured'] = array( function () {
 	return array( 'type' => 'album', 'id' => '4m2880jivSbbyEGAKfITCa', 'embed_url' => 'https://open.spotify.com/embed/album/4m2880jivSbbyEGAKfITCa', 'open_url' => 'https://open.spotify.com/album/4m2880jivSbbyEGAKfITCa' );

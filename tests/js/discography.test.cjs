@@ -25,7 +25,7 @@ function card(roles, id, type, playable = true) {
   return c;
 }
 
-function page({ search = '', play } = {}) {
+function page({ search = '', play, lang } = {}) {
   const root = el('div');
   const chip = (role) => root.append(el('button', { class: role === '*' ? 'sn-disco-chip is-active' : 'sn-disco-chip', 'data-role': role, 'aria-pressed': role === '*' ? 'true' : 'false' }));
   const count = root.append(el('strong', { 'data-disco-count': '' }));
@@ -54,6 +54,7 @@ function page({ search = '', play } = {}) {
     querySelector: (sel) => all(root, sel)[0] || null,
     createElement: (tag) => el(tag),
   };
+  if (lang !== undefined) document.documentElement = { lang };
   class Audio {
     constructor() { this.listeners = {}; this.paused = true; this.calls = []; audios.push(this); }
     addEventListener(type, cb) { this.listeners[type] = cb; }
@@ -63,6 +64,16 @@ function page({ search = '', play } = {}) {
   vm.runInNewContext(SRC, { window, document, Audio, URLSearchParams });
   const visible = () => Object.keys(cards).filter((k) => !cards[k].classList.contains('is-hidden'));
   return { root, chips, cards, count, empty, years: [y24, y23], tracks, pushed, winListeners, audios, location, visible };
+}
+
+// The frame's name is read, not painted. English is the default; a Spanish
+// page says so on <html lang> (es-AR), which every cached copy carries.
+for (const [lang, title] of [['es-AR', 'Reproductor de Spotify'], ['es', 'Reproductor de Spotify'], ['en-US', 'Spotify player'], ['et', 'Spotify player'], ['', 'Spotify player'], [undefined, 'Spotify player']]) {
+  test(`<html lang=${JSON.stringify(lang)}>: a played cover's frame is named "${title}"`, () => {
+    const p = page({ lang });
+    all(p.cards.a, '.sn-disco-cover-wrap')[0].click();
+    assert.equal(all(p.root, 'iframe')[0].getAttribute('title'), title);
+  });
 }
 
 const pressed = (p) => Object.keys(p.chips).filter((k) => p.chips[k].getAttribute('aria-pressed') === 'true');

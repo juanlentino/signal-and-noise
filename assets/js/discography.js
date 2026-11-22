@@ -54,7 +54,10 @@
 		iframe.setAttribute( 'frameborder', '0' );
 		iframe.setAttribute( 'loading', 'lazy' );
 		iframe.setAttribute( 'allow', 'encrypted-media; clipboard-write; fullscreen; picture-in-picture' );
-		iframe.setAttribute( 'title', 'Spotify player' );
+		// The frame's name is read, not painted: Spanish on a Spanish page, by
+		// <html lang> (es-AR there), the command palette's own question.
+		var root = document.documentElement;
+		iframe.setAttribute( 'title', /^es\b/i.test( ( root && root.lang ) || '' ) ? 'Reproductor de Spotify' : 'Spotify player' );
 
 		// Clear the cover + play badge, then mount the embed in place.
 		while ( wrap.firstChild ) {

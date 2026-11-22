@@ -101,7 +101,7 @@ function fire( $hook ) {
 // handle => [ block slug, script path, registration args ]. The args are the
 // fixture: what origin/main's wp_enqueue_script() call passed for each.
 $expected = array(
-	'sn-note-share'       => array( 'note-share',   'assets/js/note-share.js',       true ),
+	'sn-note-share'       => array( 'note-share',   'assets/js/note-share.js',       array( 'in_footer' => true, 'strategy' => 'defer' ) ), // deferred 2026-11-22: a blocking dependent made core print sn-copy blocking too
 	'sn-contact-aliases'  => array( 'note-reply',   'assets/js/contact-aliases.js',  array( 'in_footer' => true, 'strategy' => 'defer' ) ),
 );
 // #384 step two: the toggle is an ES module (an Interactivity API store), named

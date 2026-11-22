@@ -185,7 +185,9 @@ $GLOBALS['__page_slug'] = 'music';
 sn_enqueue_discography();
 ok( isset( $GLOBALS['__enqueued_scripts']['sn-discography'] ), 'sn-discography enqueued on /music page' );
 ok( strpos( (string) ( $GLOBALS['__enqueued_scripts']['sn-discography']['src'] ?? '' ), 'assets/js/discography.js' ) !== false, 'sn-discography src points at assets/js/discography.js' );
-ok( ( $GLOBALS['__enqueued_scripts']['sn-discography']['in_footer'] ?? null ) === true, 'sn-discography loaded in footer' );
+ok( array( 'in_footer' => true, 'strategy' => 'defer' ) === ( $GLOBALS['__enqueued_scripts']['sn-discography']['in_footer'] ?? null ), 'sn-discography loaded in the footer, deferred (it waits for DOMContentLoaded itself and nothing depends on it)' );
+$af_src = (string) file_get_contents( realpath( __DIR__ . '/..' ) . '/inc/assets-frontend.php' );
+ok( false !== strpos( $af_src, "sn_asset_ver( 'assets/js/footnotes-popover.js' )" ) && 0 === preg_match( "~footnotes-popover\\.js' \\),\\s*array\\( \\),\\s*wp_get_theme~", $af_src ), 'the footnotes script is versioned by sn_asset_ver(), like every other script' );
 ok( ( $GLOBALS['__enqueued_scripts']['sn-discography']['ver'] ?? null ) !== false, 'sn-discography carries a cache-bust version (sn_asset_ver)' );
 
 // On any other page → NOT enqueued.

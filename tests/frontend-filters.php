@@ -40,6 +40,11 @@ function add_action( $hook, $callback, $priority = 10, $accepted_args = 1 ) {
 function remove_action( $hook, $callback, $priority = 10 ) { return true; }
 function home_url( $path = '' ) { return 'https://example.com' . $path; }
 function __return_empty_string() { return ''; }
+// Core's add_query_arg( key, value, url ) for the one shape used here: a new
+// key on a URL with no fragment ("?" when the URL has no query, "&" after one).
+function add_query_arg( $key, $value, $url ) {
+	return $url . ( false === strpos( $url, '?' ) ? '?' : '&' ) . $key . '=' . $value;
+}
 
 // Deliberately NOT defining SN_FRONTEND_FILTERS_TEST: the wiring must run
 // against the stub registries so the registrations themselves are pinned.
@@ -90,7 +95,10 @@ $sp_out = sn_spotify_embed_dark( $sp_in, 'https://open.spotify.com/album/xyz' );
 // set_attribute() runs src through esc_url(), whose display step writes a
 // bare '&' as '&#038;'. The bytes moved from '&theme=0' (origin/main's regex);
 // the request a browser makes did not, and the decoded value below says so.
-ok( false !== strpos( $sp_out, 'src="https://open.spotify.com/embed/album/xyz&#038;theme=0"' ), '#383: Spotify src gains theme=0 (dark), serialised as &#038;theme=0 by esc_url' );
+// A src with no query string starts one: "xyz&theme=0" was a path, not a
+// parameter, so Spotify never saw theme=0 (2026-11-22).
+ok( false !== strpos( $sp_out, 'src="https://open.spotify.com/embed/album/xyz?theme=0"' ), 'a Spotify src with no query string gains ?theme=0 (dark): ' . $sp_out );
+ok( false !== strpos( $ff_src, "add_query_arg( 'theme', '0', \$src )" ), 'theme=0 is added with add_query_arg(), not appended blind' );
 ok( false !== strpos( $sp_out, 'border-radius: 0' ) && false === strpos( $sp_out, 'border-radius: 12px' ), 'Spotify inline border-radius squared off' );
 $yt = '<iframe src="https://www.youtube.com/embed/xyz"></iframe>';
 ok( $yt === sn_spotify_embed_dark( $yt, 'https://www.youtube.com/watch?v=xyz' ), 'non-Spotify embeds pass through unchanged' );
@@ -101,7 +109,7 @@ ok( $yt === sn_spotify_embed_dark( $yt, 'https://www.youtube.com/watch?v=xyz' ),
 $real_in  = '<iframe style="border-radius: 12px" src="https://open.spotify.com/embed/album/4aawyAB9vmqN3uQ7FjRGTy?utm_source=generator" width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>';
 $real_out = sn_spotify_embed_dark( $real_in, 'https://open.spotify.com/album/4aawyAB9vmqN3uQ7FjRGTy' );
 foreach ( array(
-	'fixture' => array( $sp_out, '<iframe src="https://open.spotify.com/embed/album/xyz&theme=0" style="border-radius: 0"></iframe>' ),
+	'fixture' => array( $sp_out, '<iframe src="https://open.spotify.com/embed/album/xyz?theme=0" style="border-radius: 0"></iframe>' ),
 	'real'    => array( $real_out, '<iframe style="border-radius: 0" src="https://open.spotify.com/embed/album/4aawyAB9vmqN3uQ7FjRGTy?utm_source=generator&theme=0" width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>' ),
 ) as $name => $pair ) {
 	ok( snt_html_shape( $pair[1] ) === snt_html_shape( $pair[0] ), "#383 $name: the port paints the iframe origin/main's regex painted (same decoded src, same style, same everything else)" );

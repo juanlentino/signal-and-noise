@@ -100,6 +100,21 @@ ok( strpos( $s, 'press@juanlentino.com' ) === false, 'shortcode LEAK GUARD: no c
 $s2 = sn_email_shortcode( array( 'user' => 'a', 'domain' => 'b.org' ) );
 ok( strpos( $s2, 'data-ed="' . base64_encode( 'b.org' ) . '"' ) !== false, 'shortcode honors an explicit domain' );
 
+// ── the shortcode brings its own script: wherever [sn_email] renders (a
+// Spanish contact page paired by the plugin, any other page), the address is
+// assembled, not left as "[at]/[dot]" text. The handle is the one
+// inc/note-reply.php registers at init.
+$GLOBALS['__enqueued_scripts'] = array(); $GLOBALS['__page_slug'] = 'contacto';
+sn_email_shortcode( array( 'user' => 'press' ) );
+ok( isset( $GLOBALS['__enqueued_scripts']['sn-contact-aliases'] ), 'rendering [sn_email] enqueues sn-contact-aliases, off /contact too' );
+ok( '' === ( $GLOBALS['__enqueued_scripts']['sn-contact-aliases']['src'] ?? null ), 'by its registered handle (no second src to drift)' );
+$GLOBALS['__enqueued_scripts'] = array();
+sn_email_shortcode( array( 'user' => '' ) );
+ok( ! isset( $GLOBALS['__enqueued_scripts']['sn-contact-aliases'] ), 'a shortcode that renders nothing enqueues nothing' );
+$GLOBALS['__enqueued_scripts'] = array();
+sn_email_markup( 'press', 'juanlentino.com' );
+ok( ! isset( $GLOBALS['__enqueued_scripts']['sn-contact-aliases'] ), 'sn_email_markup() itself enqueues nothing (the note-reply block names the script in its manifest)' );
+
 // ── the render_block bridge is gone (#389): [sn_email] sits in the /contact
 // page's post content, which the_content resolves at priority 11 ──────
 ok( ! function_exists( 'sn_email_render_block_bridge' ), 'the global render_block bridge is gone (#389)' );

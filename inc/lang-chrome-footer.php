@@ -45,3 +45,42 @@ function sn_lang_meta_nav( $html ) {
 	}
 	return $tags->get_updated_html();
 }
+
+/**
+ * The footer's RSS link in Spanish (owner, 2026-11-22). parts/footer.html
+ * keeps its English label; this rewrites what core/social-link rendered from
+ * it: the label's text, and an aria-label or title that repeats it. Whole
+ * values only, and the href is never touched. Pure.
+ *
+ * @param string $html A rendered core/social-link.
+ * @return string
+ */
+function sn_lang_feed_link( $html ) {
+	$en   = 'Subscribe via RSS';
+	$es   = 'Suscribite por RSS';
+	$tags = new WP_HTML_Tag_Processor( (string) $html );
+	while ( $tags->next_token() ) {
+		if ( '#text' === $tags->get_token_type() ) {
+			if ( $en === $tags->get_modifiable_text() ) {
+				$tags->set_modifiable_text( $es );
+			}
+			continue;
+		}
+		if ( '#tag' !== $tags->get_token_type() || $tags->is_tag_closer() ) {
+			continue;
+		}
+		foreach ( array( 'aria-label', 'title' ) as $attr ) {
+			if ( $en === $tags->get_attribute( $attr ) ) {
+				$tags->set_attribute( $attr, $es );
+			}
+		}
+	}
+	return $tags->get_updated_html();
+}
+
+add_filter(
+	'render_block_core/social-link',
+	static function ( $html ) {
+		return sn_theme_is_spanish() ? sn_lang_feed_link( (string) $html ) : $html;
+	}
+);

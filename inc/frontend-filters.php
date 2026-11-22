@@ -43,7 +43,8 @@ function sn_skip_link_outside_block_templates() {
  * own HTML API, where a regex on the src and a str_replace over the whole
  * markup used to do it. set_attribute() runs a URI attribute through
  * esc_url(), so the src serialises with `&#038;theme=0`; a browser reads it
- * as `&theme=0`, the same request as before.
+ * as `&theme=0`, the same request as before. theme=0 goes on with
+ * add_query_arg(), so a src with no query string gets `?theme=0`.
  *
  * @param string $html oEmbed markup.
  * @param string $url  The embedded URL.
@@ -58,7 +59,7 @@ function sn_spotify_embed_dark( $html, $url ) {
 		// Add theme=0 (dark) to the iframe src.
 		$src = $tags->get_attribute( 'src' );
 		if ( is_string( $src ) && false !== strpos( $src, 'spotify' ) ) {
-			$tags->set_attribute( 'src', $src . '&theme=0' );
+			$tags->set_attribute( 'src', add_query_arg( 'theme', '0', $src ) ); // "?" on a src with no query string
 		}
 		// Square the inline border-radius.
 		$style = $tags->get_attribute( 'style' );

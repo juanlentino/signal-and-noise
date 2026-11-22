@@ -71,8 +71,18 @@
 	 * only — the site's public commitment: no model ever ships to the reader's
 	 * browser, so scoring is transparent token matching, nothing learned.
 	 */
+	/**
+	 * Fold a string for MATCHING only: lower case, accents removed (NFD, then
+	 * the combining marks dropped), so "musica" finds "música" and an accented
+	 * word still splits into whole words. Never used for what a row shows.
+	 */
+	function fold( s ) {
+		s = String( s ).toLowerCase();
+		return s.normalize ? s.normalize( 'NFD' ).replace( /[\u0300-\u036f]/g, '' ) : s;
+	}
+
 	function tokenize( s ) {
-		var raw = s.toLowerCase().split( /\s+/ );
+		var raw = fold( s ).split( /\s+/ );
 		var out = [];
 		for ( var i = 0; i < raw.length; i++ ) {
 			if ( raw[ i ] ) { out.push( raw[ i ] ); }
@@ -86,7 +96,7 @@
 	 * (every token must land somewhere). Returns 0 when disqualified.
 	 */
 	function scoreNote( tokens, title ) {
-		var lower = title.toLowerCase();
+		var lower = fold( title );
 		var words = lower.split( /[^a-z0-9]+/ );
 		var score = 0;
 		for ( var i = 0; i < tokens.length; i++ ) {
@@ -168,9 +178,9 @@
 			out.push( { type: 'note', label: ranked[ i ].t, sub: t( 'Note', 'Nota' ), url: ranked[ i ].u } );
 		}
 
-		var needle = trimmed.toLowerCase();
+		var needle = fold( trimmed );
 		for ( i = 0; i < data.pillars.length; i++ ) {
-			if ( data.pillars[ i ].t.toLowerCase().indexOf( needle ) !== -1 ) {
+			if ( fold( data.pillars[ i ].t ).indexOf( needle ) !== -1 ) {
 				out.push( { type: 'pillar', label: data.pillars[ i ].t, sub: t( 'Pillar', 'Pilar' ), url: data.pillars[ i ].u } );
 			}
 		}
