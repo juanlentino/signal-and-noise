@@ -98,6 +98,24 @@ $re = str_replace( '<a href="/now/" aria-label="Now: what I&#8217;m focused on" 
 $es_re = sn_lang_meta_nav( $re );
 ok( 5 === substr_count( $es_re, 'hreflang="en"' ) && false !== strpos( $es_re, 'data-hint="Ahora"' ), 'the meta-nav switches with its attributes reordered' );
 
+// The footer's RSS link (core/social-link, service feed): its label in Spanish
+// on a Spanish page (owner, 2026-11-22). Core prints the label in a span; an
+// aria-label or title that repeats it switches with it. The feed URL stays.
+$rss = '<li class="wp-social-link wp-social-link-feed  wp-block-social-link"><a href="https://x.test/notes/feed/" class="wp-block-social-link-anchor"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M2,8.667V12"></path></svg><span class="wp-block-social-link-label screen-reader-text">Subscribe via RSS</span></a></li>';
+ok( function_exists( 'sn_lang_feed_link' ), 'sn_lang_feed_link() is defined' );
+$es_rss = function_exists( 'sn_lang_feed_link' ) ? sn_lang_feed_link( $rss ) : '';
+ok( str_replace( 'Subscribe via RSS', 'Suscribite por RSS', $rss ) === $es_rss, 'the RSS label reads "Suscribite por RSS", and nothing else in the link moves: ' . $es_rss );
+ok( false !== strpos( $es_rss, 'href="https://x.test/notes/feed/"' ), 'the feed URL is the same' );
+$rss_named = str_replace( '<a href=', '<a title="Subscribe via RSS" aria-label="Subscribe via RSS" href=', $rss );
+$es_named  = function_exists( 'sn_lang_feed_link' ) ? sn_lang_feed_link( $rss_named ) : '';
+ok( 3 === substr_count( $es_named, 'Suscribite por RSS' ) && false === strpos( $es_named, 'Subscribe' ), 'an aria-label or title that repeats the label switches with it' );
+$other = '<li class="wp-social-link wp-social-link-github"><a href="https://github.com/x" aria-label="Subscribe via RSS feed"><span class="wp-block-social-link-label screen-reader-text">GitHub</span></a></li>';
+ok( function_exists( 'sn_lang_feed_link' ) && $other === sn_lang_feed_link( $other ), 'only the whole label is translated: another link is untouched' );
+// English pages: the filter returns core's markup, the same bytes as before.
+$lc_src = (string) file_get_contents( __DIR__ . '/../inc/lang-chrome-footer.php' );
+ok( 1 === preg_match( "~'render_block_core/social-link',\s*static function \( \\\$html \) \{\s*return sn_theme_is_spanish\(\) \? sn_lang_feed_link\( \(string\) \\\$html \) : \\\$html;~", $lc_src ), 'the social-link filter passes an English page through untouched and translates only on a Spanish one' );
+ok( false !== strpos( (string) file_get_contents( __DIR__ . '/../parts/footer.html' ), '"label":"Subscribe via RSS"' ), 'the template part keeps its English label' );
+
 $footer = (string) file_get_contents( __DIR__ . '/../parts/footer.html' );
 ok( false === strpos( $footer, 'lang-toggle' ) && false === strpos( $footer, 'sn-lang-footer' ), 'the footer carries no language link: the header switch is the one place' );
 ok( ! function_exists( 'sn_lang_footer_link_html' ), 'the footer link builder is gone' );
