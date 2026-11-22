@@ -168,7 +168,7 @@ ok( false === strpos( $notes, 'sn-note-counter' ), 'the orphaned sn-note-counter
 echo "\nGroup 8: fixes from the 2026-10-17 live sweep\n";
 $article = $css( 'article.css' );
 ok( 0 === preg_match( '/(^|\})\s*\.wp-block-post-content:has\(> h2\.wp-block-heading:nth-of-type\(3\)\)/', $article ), 'section numerals are never unscoped: /provenance (a page with four h2s and no TOC) showed 01 to 04' );
-ok( 2 === preg_match_all( '/body\.single-post \.wp-block-post-content:has\(> h2\.wp-block-heading:nth-of-type\(3\)\)/', $article ), 'notes only, for the counter reset and the numbers' );
+ok( 9 === preg_match_all( '/body\.single-post \.wp-block-post-content:has\(> h2\.wp-block-heading:nth-of-type\(3\)\)/', $article ), 'notes only: the counter reset, the numbers, and the arrival bar moved to ::after on a numbered heading' );
 ok( 4 === preg_match_all( '/body\.single-post:has\(\.wp-block-post-content > h2\.wp-block-heading:nth-of-type\(3\)\) \.sn-article-toc__list/', $article ), '...and the TOC (its reset, its hanging indent, its slots, its numbers) under the same gate' );
 ok( 1 === preg_match( '/\.sn-article-toc__list > li::before\s*\{[^}]*content:\s*""\s*\/\s*"";[^}]*display:\s*inline-block;[^}]*width:\s*2\.6em/s', $article ), 'every TOC entry gets the same numeral slot, References an empty one, so all entries align (References sat 25px left)' );
 ok( 1 === preg_match( '/\.wp-block-button:has\(> \.wp-block-button__link:focus-visible\)::before\s*\{[^}]*inset:\s*-9px/s', $css( 'base.css' ) ), 'crop marks sit 9px out: clear of the 2px outline and its 3px offset, off a neighbour 11px away' );

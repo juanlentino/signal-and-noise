@@ -101,6 +101,17 @@ ok( 4 === preg_match_all( '/:is\(h2, h3, h4\)\[id\]\[data-sn-arrived\]::before,\
 ok( 1 === preg_match( '/\[data-sn-arrived\]::before,\s*:is\(h2, h3, h4\)\[id\]:target::before\s*\{\s*animation:\s*sn-acquire/', $ac ), '5b: the mark fades in only under no-preference, like :target' );
 ok( 1 === preg_match( '/(^|[\s}]):root:has\(\[data-sn-arrived\]\) :is\(h2, h3, h4\)\[id\]:target:not\(\[data-sn-arrived\]\)::before\s*\{\s*content:\s*none;\s*\}/', $b ), '5b: while a heading carries the mark, a different heading the page loaded at (still :target) stands its bar down, so there is one bar' );
 
+// 5c. A numbered note heading (assets/css/article.css, three or more sections)
+// already uses ::before for its numeral. The bar's ::before rule squashed the
+// numeral into 2px and pulled the heading up a line, so there the numeral
+// keeps ::before and the bar draws in ::after.
+$art = (string) file_get_contents( dirname( __DIR__ ) . '/assets/css/article.css' );
+$num = 'h2\.wp-block-heading:not\(#references\):is\(:target, \[data-sn-arrived\]\)';
+ok( 1 === preg_match( '/' . $num . '::before\s*\{\s*position:\s*static;\s*inset:\s*auto;\s*width:\s*auto;\s*background-color:\s*transparent;\s*animation:\s*none;\s*\}/', $art ), '5c: on a numbered heading the numeral keeps its ::before (static, full width, no bar ink, no fade)' );
+ok( 1 === preg_match( '/' . $num . '::after\s*\{\s*content:\s*"";\s*position:\s*absolute;\s*inset-block:\s*0;[^}]*width:\s*2px;\s*background-color:\s*var\(--wp--preset--color--blood\);\s*\}/', $art ), '5c: the same 2px blood bar draws in ::after there' );
+ok( 1 === preg_match( '/@media \(prefers-reduced-motion: no-preference\)\s*\{\s*[^{}]*' . $num . '::after\s*\{\s*animation:\s*sn-acquire/', $art ), '5c: its fade only under no-preference' );
+ok( 1 === preg_match( '/:root:has\(\[data-sn-arrived\]\) [^{]*:target:not\(\[data-sn-arrived\]\)::after\s*\{\s*content:\s*none;\s*\}/', $art ), '5c: one bar at a time there too' );
+
 // Group 3: nothing in the snapshot runs its own entrance. The new page's image
 // is live, so a load-in fade under it showed through the raster: content came
 // in at about a third of its ink, and the logo (a .wp-block-group inside the

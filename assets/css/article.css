@@ -1186,6 +1186,47 @@ body.single-post .wp-block-post-content:has(> h2.wp-block-heading:nth-of-type(3)
 	letter-spacing: 0.2em;
 	color: var(--wp--preset--color--rust);
 }
+/* The arrival bar (assets/css/base.css) draws in a heading's ::before, which a
+   numbered heading already uses for its numeral: arriving squashed the numeral
+   into the 2px bar and pulled the heading up a line. Here the numeral keeps
+   ::before as it is, and the same bar draws in ::after. */
+body.single-post .wp-block-post-content:has(> h2.wp-block-heading:nth-of-type(3)) > h2.wp-block-heading:not(#references):is(:target, [data-sn-arrived])::before {
+	position: static;
+	inset: auto;
+	width: auto;
+	background-color: transparent;
+	animation: none;
+}
+body.single-post .wp-block-post-content:has(> h2.wp-block-heading:nth-of-type(3)) > h2.wp-block-heading:not(#references):is(:target, [data-sn-arrived])::after {
+	content: "";
+	position: absolute;
+	inset-block: 0;
+	inset-inline-start: calc(-1 * (2px + 0.6em));
+	width: 2px;
+	background-color: var(--wp--preset--color--blood);
+}
+@media (max-width: 781px) {
+	body.single-post .wp-block-post-content:has(> h2.wp-block-heading:nth-of-type(3)) > h2.wp-block-heading:not(#references):is(:target, [data-sn-arrived])::after {
+		inset-inline-start: max(calc(-1 * (2px + 0.6em)), -14px);
+	}
+}
+@media (prefers-reduced-motion: no-preference) {
+	body.single-post .wp-block-post-content:has(> h2.wp-block-heading:nth-of-type(3)) > h2.wp-block-heading:not(#references):is(:target, [data-sn-arrived])::after {
+		animation: sn-acquire 0.6s ease-out 1;
+	}
+}
+@media (forced-colors: active) {
+	body.single-post .wp-block-post-content:has(> h2.wp-block-heading:nth-of-type(3)) > h2.wp-block-heading:not(#references):is(:target, [data-sn-arrived])::before {
+		background-color: transparent;
+	}
+	body.single-post .wp-block-post-content:has(> h2.wp-block-heading:nth-of-type(3)) > h2.wp-block-heading:not(#references):is(:target, [data-sn-arrived])::after {
+		forced-color-adjust: none;
+		background-color: CanvasText;
+	}
+}
+:root:has([data-sn-arrived]) body.single-post .wp-block-post-content:has(> h2.wp-block-heading:nth-of-type(3)) > h2.wp-block-heading:not(#references):target:not([data-sn-arrived])::after {
+	content: none;
+}
 body.single-post:has(.wp-block-post-content > h2.wp-block-heading:nth-of-type(3)) .sn-article-toc__list {
 	counter-reset: sn-toc;
 }
